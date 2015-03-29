@@ -77,7 +77,7 @@ public class Page{
 	}
 	
 	public void refreshElements(){
-		this.elements = this.getVisibleLeafElements(driver);
+		this.elements = this.getVisibleElements(driver);
 	}
 	
 	public void findActionsThatProduceValidResults(WebDriver driver, List<int[]> elemSequences){

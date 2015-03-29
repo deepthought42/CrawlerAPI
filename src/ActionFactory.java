@@ -8,7 +8,6 @@ public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
 								"sendKeys",
-								"clickAndHold",
 								"contextClick"};
 	private static Actions builder;
 	

@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -59,7 +60,7 @@ public class DiffHandler {
 				Map.Entry pair = (Map.Entry)iter.next();
 				System.out.println(pair.getKey() + " = " + pair.getValue());
 				ConcurrentNode<PageElement> pageElement = (ConcurrentNode<PageElement>)pair.getKey();
-				
+				ArrayList<Attribute> attributeList = pageElement.data.getAttributes();
 				
 				//ITERATE OVER EACH ACTION IN AN ELEMENT NODE.
 
@@ -69,17 +70,58 @@ public class DiffHandler {
 				for(String action : actions){
 					ConcurrentNode<String> actionNode = new ConcurrentNode<String>(action);
 					pageElement.addOutput(actionNode);
+					ActionFactory.execAction(driver, pageElement.data, actionNode.data);
 					System.err.println("ACTION WEIGHT :: " + pageElement.getOutputWeight(actionNode));
 					
 					//IF THE ACTION RESULTS IN ANY SORT OF CHANGE TO THE PAGE(# OF VISIBLE ELEMENTS,
 					//			STYLING ON CURRENTLY VISIBLE ELEMENTS, ATTRIBUTES OF CURRENT ELEMENTS)
+					
+					//Page postActionPage = new Page(driver, pageSrc, url, DateFormat.getDateInstance(), false);
+					page.refreshElements();
+					List<PageElement> visibleElements = page.getVisibleElements(driver);
 						//DID THE NUMBER OF VISIBLE ELEMENTS CHANGE?
-						//DID ANY OF THE ATTRIBUTES OF THE CURRENTLY VISIBLE ELEMENTS CHANGE?
+					System.out.println("NEW VISIBLE ELEMENT NUMBER :: " + visibleElements.size());
+					if(visibleElements.size() != visibleLeafElements.size()){
+						actionNode.addOutput(new ConcurrentNode<Page>(page));
+						driver.navigate().refresh();
+						System.err.println("The number of visible elements has changed. So a new state is coming");
+					}
+					else{
+						//Are the elements the same in both lists
+						for(PageElement element : visibleLeafElements){
+							if(visibleElements.contains(element)){
+								System.out.println("VISIBLE ELEMENT IN BOTH LISTS");
+								visibleElements.remove(element);
+							}
+							
+						}
+						System.err.println("THE REMAINING NEW VISIBLE ELEMENTS IS :: " + visibleElements.size());
+							//DID ANY OF THE ATTRIBUTES OF THE CURRENTLY VISIBLE ELEMENTS CHANGE?
+						
+						if(pageElement.data.getAttributes().equals(attributeList)){
+							for(Attribute attribute : pageElement.data.getAttributes()){
+								int attrIdx = attributeList.indexOf(attribute);
+								Attribute attr2 = attributeList.get(attrIdx);
+								
+								if(attribute.equals(attr2)){
+									System.out.println("ATTRIBUTES MATCH");
+								}
+								else{
+									
+									System.out.println("ATTRIBUTES DO NOT MATCH");
+								}
+							}
+							System.err.println("Attributes LIST match");
+						}
+						else{
+							System.err.println("Attributes LIST did not match");
+						}
+					}
 					//DID THE STYLING ON ANY OF THE CURRENTLY VISIBLE ELEMENTS CHANGE?(THIS MIGHT NOT BE NECESSARY IF IT IS INCLUDED IN ATTRIBUTES)
 
 						
 				}
-		        iter.remove(); // avoids a ConcurrentModificationException
+		        //iter.remove(); // avoids a ConcurrentModificationException
 			}
 			
 			

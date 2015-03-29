@@ -1,13 +1,18 @@
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+
+import util.Timing;
 
 
 
@@ -18,51 +23,65 @@ public class DiffHandler {
 			FirefoxProfile firefoxProfile = new FirefoxProfile();
 			
 			WebDriver driver = new FirefoxDriver(firefoxProfile);
-			String url = "localhost:8080/adminweb/app";
+			String url = "localhost:3000/ideas";
 			driver.get(url);
 			//WebElement email = driver.findElement(By.id("username"));
 			//WebElement password = driver.findElement(By.id("password"));
 			//email.sendKeys("root");
 			//password.sendKeys("ciscotxbu");
+			Timing.pauseThread(10);
 			String pageSrc = driver.getPageSource();
 					
 			//create list of all possible actions
 			Page page = new Page(driver, pageSrc, url, DateFormat.getDateInstance(), false);
-			
 
-			//reduce element list to only visible elements
-			List<PageElement> visibleLeafElements = page.getVisibleLeafElements(driver);
-			System.err.println("VISIBLE ELEMENT LIST SIZE :: " + visibleLeafElements.size());
-			List<int[]> elementSequences = new ArrayList<int[]>();
-			
-			for(int size = 1; size <= visibleLeafElements.size(); size++){
-				//array that will contain elementList indices for combinatorics to create all possible element action sequences using any subset of elements available
-				int[] elementIndices = new int[size];
-				//initilize elementIndices
-				for(int i = 0; i < elementIndices.length; i++){
-					elementIndices[i] = i;
-				}
-				do{
-					//print(elementIndices);
-					//add webElement Array to elementSequences List
-					elementSequences.add(elementIndices.clone());
-										
-					//increment elementIndicies for next value combination
-					for(int j = elementIndices.length-1; j >= 0; j--){
-						elementIndices[j] = getNextLowestValueNotYetPresent(elementIndices, elementIndices[j], visibleLeafElements.size()-1);
-						if(elementIndices[j] < visibleLeafElements.size() && elementIndices[j] != -1){
-							break;
-						}
-						else if(j > 0 && elementIndices[j] == -1){
-							getNextHighestCombinatorial(elementIndices, visibleLeafElements.size()-1);
-							break;
-						}
-					}
-				}while(elementIndices[0] < visibleLeafElements.size() && elementIndices[0] != -1);
+			//CREATE NODE FOR PAGE
+			ConcurrentNode<Page> currentPageNode = new ConcurrentNode<Page>(page);
+
+			//FOR CURRENT PAGE CREATE NODES FOR ALL ELEMENTS THAT ARE CURRENTLY VISIBLE. 
+			List<PageElement> visibleLeafElements = currentPageNode.data.getVisibleElements(driver);
+			System.out.println("VISIBLE LEAF ELEMENTS FOR THIS PAGE :: "+ visibleLeafElements.size());
+			for(PageElement elem : visibleLeafElements){
+				ConcurrentNode<PageElement> element = new ConcurrentNode<PageElement>(elem);
+				currentPageNode.addOutput(element);
+				//System.err.println("ELEMENT WEIGHT :: " + currentPageNode.getOutputWeight(element));
 			}
-		
+			System.out.println("----------------------------------------------------");
+			System.err.println("loaded up elements. there were " + currentPageNode.getOutputs().size());
+			System.out.println("----------------------------------------------------");
 			
-			page.findActionsThatProduceValidResults(driver, elementSequences);
+			//FOR EACH NODE ADD ALL ACTIONS THAT ARE POSSIBLE FOR AN ELEMENT
+
+			ConcurrentHashMap<ConcurrentNode<?>, Double> outputHash = currentPageNode.getOutputs();
+			outputHash.keys();
+			Iterator iter = outputHash.entrySet().iterator();
+			while(iter.hasNext()){
+				Map.Entry pair = (Map.Entry)iter.next();
+				System.out.println(pair.getKey() + " = " + pair.getValue());
+				ConcurrentNode<PageElement> pageElement = (ConcurrentNode<PageElement>)pair.getKey();
+				
+				
+				//ITERATE OVER EACH ACTION IN AN ELEMENT NODE.
+
+				String[] actions = ActionFactory.getActions();
+				System.err.println("Setting Actions for :: " + pageElement);
+
+				for(String action : actions){
+					ConcurrentNode<String> actionNode = new ConcurrentNode<String>(action);
+					pageElement.addOutput(actionNode);
+					System.err.println("ACTION WEIGHT :: " + pageElement.getOutputWeight(actionNode));
+					
+					//IF THE ACTION RESULTS IN ANY SORT OF CHANGE TO THE PAGE(# OF VISIBLE ELEMENTS,
+					//			STYLING ON CURRENTLY VISIBLE ELEMENTS, ATTRIBUTES OF CURRENT ELEMENTS)
+						//DID THE NUMBER OF VISIBLE ELEMENTS CHANGE?
+						//DID ANY OF THE ATTRIBUTES OF THE CURRENTLY VISIBLE ELEMENTS CHANGE?
+					//DID THE STYLING ON ANY OF THE CURRENTLY VISIBLE ELEMENTS CHANGE?(THIS MIGHT NOT BE NECESSARY IF IT IS INCLUDED IN ATTRIBUTES)
+
+						
+				}
+		        iter.remove(); // avoids a ConcurrentModificationException
+			}
+			
 			
 			//Get all elements within page
 			//go to each element and perform each action

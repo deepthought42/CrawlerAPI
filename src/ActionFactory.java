@@ -7,7 +7,9 @@ import org.openqa.selenium.interactions.Actions;
 public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
-								"sendKeys"};
+								"sendKeys",
+								"clickAndHold",
+								"contextClick"};
 	private static Actions builder;
 	
 	public static void execAction(WebDriver driver, PageElement pageElem, String action){
@@ -45,6 +47,10 @@ public class ActionFactory {
 		builder.perform();
 	}
 	
+	/**
+	 * The list of actions possible
+	 * @return
+	 */
 	public static String[] getActions(){
 		return actions;
 	}

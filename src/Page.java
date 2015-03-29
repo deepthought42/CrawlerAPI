@@ -23,13 +23,22 @@ public class Page{
 	HashMap<WebElement, HashMap<String, Page>> elementActionMap = new HashMap<WebElement, HashMap<String, Page>>();
 	HashMap<ElementActionSequence, Page> elementActionSequencenMap = new HashMap<ElementActionSequence, Page>();
 
+	/**
+	 * 
+	 * 
+	 * @param driver
+	 * @param src
+	 * @param url
+	 * @param date
+	 * @param valid
+	 */
 	public Page(WebDriver driver, String src, String url, DateFormat date, boolean valid){
 		this.driver = driver;
 		this.src = src;
 		this.url = url;
 		this.date = date;
 		this.isValid = valid;
-		this.elements = this.getVisibleLeafElements(driver);
+		this.elements = this.getVisibleElements(driver);
 	}
 	
 	public String getSrc() {
@@ -88,12 +97,12 @@ public class Page{
 
 			do{
 				Timing.pauseThread(1);
-				/*
+				
 				System.out.print("ACTION :: ");
 				DiffHandler.print(actionSeq);
 				System.out.print("ELEMENT :: ");
 				DiffHandler.print(elementSequence);
-				*/
+				
 				
 				if(refreshRequired){
 					//System.err.println("Refreshing page!");
@@ -178,6 +187,11 @@ public class Page{
 		System.out.println(seq.actionSequence + " : ACTION AND ELEMENT SEQUENCE ADDED TO ELEMENT ACTION MAP");
 	}
 
+	/**
+	 * retreives all leaf elements on a given page
+	 * @param driver
+	 * @return
+	 */
 	public List<PageElement> getVisibleLeafElements(WebDriver driver){
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
 
@@ -185,8 +199,27 @@ public class Page{
 		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
 		for(WebElement element: pageElements){
 			List<WebElement> childElements = element.findElements(By.xpath("./*"));
-			//System.err.println("CHILD ELEMENT LIST SIZE :: " + childElements.size());
+			System.err.println("CHILD ELEMENT LIST SIZE :: " + childElements.size());
 			if(element.isDisplayed() && childElements.isEmpty() && (!element.getAttribute("id").equals("") || (element.getAttribute("name") != null && !element.getAttribute("name").equals("")))){
+				visiblePageElements.add(new PageElement(driver, element));
+			}
+		}
+		return visiblePageElements;
+	}
+	
+	/**
+	 * retreives all elements on a given page that are visible
+	 * @param driver
+	 * @return
+	 */
+	public List<PageElement> getVisibleElements(WebDriver driver){
+		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
+
+		//reduce element list to only visible elements
+		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
+		//iterate over every element and grab only those that are currently displayed
+		for(WebElement element: pageElements){
+			if(element.isDisplayed()){
 				visiblePageElements.add(new PageElement(driver, element));
 			}
 		}

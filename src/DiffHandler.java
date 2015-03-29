@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -70,7 +71,13 @@ public class DiffHandler {
 				for(String action : actions){
 					ConcurrentNode<String> actionNode = new ConcurrentNode<String>(action);
 					pageElement.addOutput(actionNode);
-					ActionFactory.execAction(driver, pageElement.data, actionNode.data);
+					try{
+						ActionFactory.execAction(driver, pageElement.data, actionNode.data);
+					}
+					catch(StaleElementReferenceException e){
+						System.err.println("A SYSTEM ERROR WAS ENCOUNTERED WHILE PERFORMING ACTION : "+
+								actionNode.data + ". ");
+					}
 					System.err.println("ACTION WEIGHT :: " + pageElement.getOutputWeight(actionNode));
 					
 					//IF THE ACTION RESULTS IN ANY SORT OF CHANGE TO THE PAGE(# OF VISIBLE ELEMENTS,
@@ -113,6 +120,11 @@ public class DiffHandler {
 							}
 							System.err.println("Attributes LIST match");
 						}
+						
+						//CHECK FOR CSS MATCHES
+						// in order to check for css matches we will need to first
+						// find all css values that are attributed to the element at hand
+						// for both the current version and the previous version of the element
 						else{
 							System.err.println("Attributes LIST did not match");
 						}

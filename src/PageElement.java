@@ -1,10 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.JavascriptExecutor;
@@ -15,21 +11,46 @@ public class PageElement {
 	private String tagName;
 	private String text;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+	
+	//map loaded with k,v where k=propertyName, and v=propertyValue
+	private HashMap<String, String> cssValues = new HashMap<String,String>();
+	
 	//transfer list to enum class
 	private String[] attributeList = {"id", "class", "name", "style"};
-	
+	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family"};
+
+	/**
+	 * Constructs a PageElement.
+	 * @param driver
+	 * @param elem
+	 */
 	public PageElement(WebDriver driver, WebElement elem){
 		this.element = elem;
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
-
+		
+		loadAttributes();
+		loadCssProperties();
+	}
+	
+	public void loadAttributes(){
 		for(String attributeString : attributeList){
 			//get attribute
 			Attribute attr = new Attribute(attributeString, this.element.getAttribute(attributeString));
 			this.attributes.add(attr);
 		}
 	}
-
+	
+	
+	public void loadCssProperties(){
+		for(String propertyName : cssList){
+			//get attribute
+			if(this.element.getCssValue(propertyName) != null){
+				System.out.println(propertyName + " : " + this.element.getCssValue(propertyName));
+				this.cssValues.put(propertyName, this.element.getCssValue(propertyName));	
+			}			
+		}	
+	}
 
 	public WebElement getElement() {
 		return this.element;

@@ -208,7 +208,11 @@ public class Page{
 	}
 	
 	/**
-	 * retreives all elements on a given page that are visible
+	 * retreives all elements on a given page that are visible. In this instance we take 
+	 *  visible to mean that it is not currently set to {@css display: none} and that it
+	 *  is visible within the confines of the screen. If an element is not hidden but is also 
+	 *  outside of the bounds of the screen it is assumed hidden
+	 *  
 	 * @param driver
 	 * @return
 	 */
@@ -219,7 +223,17 @@ public class Page{
 		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
 		//iterate over every element and grab only those that are currently displayed
 		for(WebElement element: pageElements){
-			if(element.isDisplayed()){
+				/**
+				 * Should go through each element and check for a number of attributes, 
+				 * 	ie (display, visiblity, backface-visibility, etc)
+				 * 
+				 */
+			if(element.isDisplayed()
+					&& element.getLocation().getX() > 0 
+					&& element.getLocation().getY() > 0
+					&& ((element.getCssValue("backface-visibility") != null 
+						&& !element.getCssValue("backface-visibility").contains("hidden"))
+						)){
 				visiblePageElements.add(new PageElement(driver, element));
 			}
 		}

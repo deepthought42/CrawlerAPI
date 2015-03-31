@@ -226,8 +226,9 @@ public class Page{
 		for(WebElement element: pageElements){
 			WebElement elem = null;
 			try{
-				elem = element.findElement(By.xpath("../"));
+				elem = element.findElement(By.xpath(".."));
 			}catch(InvalidSelectorException e){
+				System.err.println("unable to find parent");
 				 elem = element;
 			}
 
@@ -240,9 +241,8 @@ public class Page{
 			if((element.isDisplayed()
 					&& element.getLocation().getX() > 0 
 					&& element.getLocation().getY() > 0
-					&& ((element.getCssValue("backface-visibility") != null 
-						&& !element.getCssValue("backface-visibility").contains("hidden")) 
-					&& elem.isDisplayed())
+					&& !element.getCssValue("backface-visibility").contains("hidden")
+					&& !elem.getCssValue("backface-visibility").contains("hidden")
 						)){
 				visiblePageElements.add(new PageElement(driver, element));
 			}

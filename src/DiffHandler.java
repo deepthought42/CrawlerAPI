@@ -31,7 +31,7 @@ public class DiffHandler {
 			//WebElement password = driver.findElement(By.id("password"));
 			//email.sendKeys("root");
 			//password.sendKeys("ciscotxbu");
-			Timing.pauseThread(5);
+
 			String pageSrc = driver.getPageSource();
 					
 			//create list of all possible actions
@@ -45,13 +45,15 @@ public class DiffHandler {
 			System.out.println("VISIBLE LEAF ELEMENTS FOR THIS PAGE :: "+ visibleLeafElements.size());
 			for(PageElement elem : visibleLeafElements){
 				ConcurrentNode<PageElement> element = new ConcurrentNode<PageElement>(elem);
-				for(Attribute attribute : elem.getAttributes()){
+				currentPageNode.addOutput(element);
+
+				/*for(Attribute attribute : elem.getAttributes()){
 					System.out.println("name = '"+attribute.getName()+
 						", val = "+ attribute.getVal());
 				}
 				System.out.println("tag name :: "+element.data.getTagName());
 				System.out.println("-------------------------------------------------------");
-				currentPageNode.addOutput(element);
+				*/
 				//System.err.println("ELEMENT WEIGHT :: " + currentPageNode.getOutputWeight(element));
 			}
 			System.out.println("----------------------------------------------------");
@@ -72,8 +74,6 @@ public class DiffHandler {
 				//ITERATE OVER EACH ACTION IN AN ELEMENT NODE.
 
 				String[] actions = ActionFactory.getActions();
-				System.err.println("Setting Actions for :: " + pageElement);
-
 				for(String action : actions){
 					ConcurrentNode<String> actionNode = new ConcurrentNode<String>(action);
 					pageElement.addOutput(actionNode);
@@ -84,8 +84,7 @@ public class DiffHandler {
 						System.err.println("A SYSTEM ERROR WAS ENCOUNTERED WHILE PERFORMING ACTION : "+
 								actionNode.data + ". ");
 					}
-					System.err.println("ACTION WEIGHT :: " + pageElement.getOutputWeight(actionNode));
-					
+					System.err.println("ACTION :: " +actionNode.data);
 					//IF THE ACTION RESULTS IN ANY SORT OF CHANGE TO THE PAGE(# OF VISIBLE ELEMENTS,
 					//			STYLING ON CURRENTLY VISIBLE ELEMENTS, ATTRIBUTES OF CURRENT ELEMENTS)
 					
@@ -103,12 +102,11 @@ public class DiffHandler {
 						//Are the elements the same in both lists
 						for(PageElement element : visibleLeafElements){
 							if(visibleElements.contains(element)){
-								System.out.println("VISIBLE ELEMENT IN BOTH LISTS");
+								//System.out.println("VISIBLE ELEMENT IN BOTH LISTS");
 								visibleElements.remove(element);
 							}
 							
 						}
-						System.err.println("THE REMAINING NEW VISIBLE ELEMENTS IS :: " + visibleElements.size());
 							//DID ANY OF THE ATTRIBUTES OF THE CURRENTLY VISIBLE ELEMENTS CHANGE?
 						
 						if(pageElement.data.getAttributes().equals(attributeList)){
@@ -116,11 +114,7 @@ public class DiffHandler {
 								int attrIdx = attributeList.indexOf(attribute);
 								Attribute attr2 = attributeList.get(attrIdx);
 								
-								if(attribute.equals(attr2)){
-									System.out.println("ATTRIBUTES MATCH");
-								}
-								else{
-									
+								if(!attribute.equals(attr2)){
 									System.out.println("ATTRIBUTES DO NOT MATCH");
 								}
 							}

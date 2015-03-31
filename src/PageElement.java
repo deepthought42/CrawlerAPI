@@ -17,7 +17,7 @@ public class PageElement {
 	
 	//transfer list to enum class
 	private String[] attributeList = {"id", "class", "name", "style"};
-	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family"};
+	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom"};
 
 	/**
 	 * Constructs a PageElement.
@@ -46,7 +46,7 @@ public class PageElement {
 		for(String propertyName : cssList){
 			//get attribute
 			if(this.element.getCssValue(propertyName) != null){
-				System.out.println(propertyName + " : " + this.element.getCssValue(propertyName));
+				//System.out.println(propertyName + " : " + this.element.getCssValue(propertyName));
 				this.cssValues.put(propertyName, this.element.getCssValue(propertyName));	
 			}			
 		}	
@@ -67,6 +67,20 @@ public class PageElement {
 	public ArrayList<Attribute> getAttributes() {
 		return this.attributes;
 	}
+	
+	
+	public boolean cssMatches(PageElement elem){
+		for(String propertyName : cssValues.keySet()){
+			if(!cssValues.get(propertyName).equals(elem.cssValues.get(propertyName))){
+				System.err.println("PROPERTIES DO NO MATCH");
+				return false;
+			}
+		}
+		System.err.println("ALL PROPERTIES MATCH");
+
+		return true;
+	}
+	
 	
 	public boolean equals(PageElement elem){
 		ArrayList<Attribute> oldPageElementAttributes = this.getAttributes();
@@ -92,6 +106,8 @@ public class PageElement {
 				 }
 			}
 		}
+		
+		this.cssMatches(elem);
 		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
 		return areElementsEqual;

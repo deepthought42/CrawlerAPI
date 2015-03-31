@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -96,7 +97,7 @@ public class Page{
 			boolean moreActionSequences = true;
 
 			do{
-				Timing.pauseThread(1);
+				Timing.pauseThread(500);
 				
 				System.out.print("ACTION :: ");
 				DiffHandler.print(actionSeq);
@@ -109,7 +110,7 @@ public class Page{
 					try{
 						driver.navigate().refresh();
 					}catch(Exception e){
-						Timing.pauseThread(2);
+						Timing.pauseThread(1000);
 						driver.navigate().refresh();
 					}
 
@@ -124,7 +125,7 @@ public class Page{
 				for(int idx = 0; idx < elementSequence.length; idx++){
 					try{
 						ActionFactory.execAction(driver, elems[idx] , actions[actionSeq[idx]]);
-						Timing.pauseThread(1);
+						Timing.pauseThread(500);
 						
 						Page newPage = new Page(driver, driver.getPageSource(), url, DateFormat.getDateInstance(), false);
 
@@ -223,19 +224,29 @@ public class Page{
 		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
 		//iterate over every element and grab only those that are currently displayed
 		for(WebElement element: pageElements){
-				/**
+			WebElement elem = null;
+			try{
+				elem = element.findElement(By.xpath("../"));
+			}catch(InvalidSelectorException e){
+				 elem = element;
+			}
+
+			/**
 				 * Should go through each element and check for a number of attributes, 
 				 * 	ie (display, visiblity, backface-visibility, etc)
 				 * 
 				 */
-			if(element.isDisplayed()
+			
+			if((element.isDisplayed()
 					&& element.getLocation().getX() > 0 
 					&& element.getLocation().getY() > 0
 					&& ((element.getCssValue("backface-visibility") != null 
-						&& !element.getCssValue("backface-visibility").contains("hidden"))
+						&& !element.getCssValue("backface-visibility").contains("hidden")) 
+					&& elem.isDisplayed())
 						)){
 				visiblePageElements.add(new PageElement(driver, element));
 			}
+			
 		}
 		return visiblePageElements;
 	}

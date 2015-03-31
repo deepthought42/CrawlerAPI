@@ -31,7 +31,7 @@ public class DiffHandler {
 			//WebElement password = driver.findElement(By.id("password"));
 			//email.sendKeys("root");
 			//password.sendKeys("ciscotxbu");
-			Timing.pauseThread(10);
+			Timing.pauseThread(5);
 			String pageSrc = driver.getPageSource();
 					
 			//create list of all possible actions
@@ -45,6 +45,12 @@ public class DiffHandler {
 			System.out.println("VISIBLE LEAF ELEMENTS FOR THIS PAGE :: "+ visibleLeafElements.size());
 			for(PageElement elem : visibleLeafElements){
 				ConcurrentNode<PageElement> element = new ConcurrentNode<PageElement>(elem);
+				for(Attribute attribute : elem.getAttributes()){
+					System.out.println("name = '"+attribute.getName()+
+						", val = "+ attribute.getVal());
+				}
+				System.out.println("tag name :: "+element.data.getTagName());
+				System.out.println("-------------------------------------------------------");
 				currentPageNode.addOutput(element);
 				//System.err.println("ELEMENT WEIGHT :: " + currentPageNode.getOutputWeight(element));
 			}

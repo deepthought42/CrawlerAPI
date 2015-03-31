@@ -7,8 +7,7 @@ import org.openqa.selenium.interactions.Actions;
 public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
-								"sendKeys",
-								"contextClick"};
+								"sendKeys"};
 	private static Actions builder;
 	
 	public static void execAction(WebDriver driver, PageElement pageElem, String action){

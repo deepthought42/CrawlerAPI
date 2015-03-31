@@ -97,8 +97,7 @@ public class Page{
 			boolean moreActionSequences = true;
 
 			do{
-				Timing.pauseThread(500);
-				
+			
 				System.out.print("ACTION :: ");
 				DiffHandler.print(actionSeq);
 				System.out.print("ELEMENT :: ");
@@ -125,7 +124,6 @@ public class Page{
 				for(int idx = 0; idx < elementSequence.length; idx++){
 					try{
 						ActionFactory.execAction(driver, elems[idx] , actions[actionSeq[idx]]);
-						Timing.pauseThread(500);
 						
 						Page newPage = new Page(driver, driver.getPageSource(), url, DateFormat.getDateInstance(), false);
 
@@ -224,14 +222,6 @@ public class Page{
 		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
 		//iterate over every element and grab only those that are currently displayed
 		for(WebElement element: pageElements){
-			WebElement elem = null;
-			try{
-				elem = element.findElement(By.xpath(".."));
-			}catch(InvalidSelectorException e){
-				System.err.println("unable to find parent");
-				 elem = element;
-			}
-
 			/**
 				 * Should go through each element and check for a number of attributes, 
 				 * 	ie (display, visiblity, backface-visibility, etc)
@@ -239,11 +229,9 @@ public class Page{
 				 */
 			
 			if((element.isDisplayed()
-					&& element.getLocation().getX() > 0 
-					&& element.getLocation().getY() > 0
-					&& !element.getCssValue("backface-visibility").contains("hidden")
-					&& !elem.getCssValue("backface-visibility").contains("hidden")
-						)){
+					&& element.getLocation().getX() > 0 && element.getLocation().getX() < element.getLocation().getX()+element.getSize().getWidth()
+					&& element.getLocation().getY() > 0 && element.getLocation().getY() < element.getLocation().getY()+element.getSize().getHeight()
+			)){
 				visiblePageElements.add(new PageElement(driver, element));
 			}
 			

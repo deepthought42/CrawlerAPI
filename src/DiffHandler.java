@@ -6,32 +6,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 
-import util.Timing;
-
-
 
 public class DiffHandler {
 
 		public static void main(String[] args){
 			
-			FirefoxProfile firefoxProfile = new FirefoxProfile();
 			
-			WebDriver driver = new FirefoxDriver(firefoxProfile);
-			String url = "localhost:3000/ideas";
-			driver.get(url);
 			//WebElement email = driver.findElement(By.id("username"));
 			//WebElement password = driver.findElement(By.id("password"));
 			//email.sendKeys("root");
 			//password.sendKeys("ciscotxbu");
-
+			String url = "localhost:3000/ideas";
+			WebDriver driver = openWithFirefox(url);
 			String pageSrc = driver.getPageSource();
 					
 			//create list of all possible actions
@@ -97,10 +89,17 @@ public class DiffHandler {
 						actionNode.addOutput(new ConcurrentNode<Page>(page));
 						driver.navigate().refresh();
 						System.err.println("The number of visible elements has changed. So a new state is coming");
+						break;
 					}
 					else{
 						//Are the elements the same in both lists
 						for(PageElement element : visibleLeafElements){
+							//CHECK FOR CSS MATCHES
+							if(!pageElement.data.cssMatches(element)){
+								actionNode.addOutput(new ConcurrentNode<Page>(page));
+								driver.navigate().refresh();
+								System.err.println("The css properties of an element changed. So a new state is coming");
+							}
 							if(visibleElements.contains(element)){
 								//System.out.println("VISIBLE ELEMENT IN BOTH LISTS");
 								visibleElements.remove(element);
@@ -120,14 +119,14 @@ public class DiffHandler {
 							}
 							System.err.println("Attributes LIST match");
 						}
-						
-						//CHECK FOR CSS MATCHES
-						// in order to check for css matches we will need to first
-						// find all css values that are attributed to the element at hand
-						// for both the current version and the previous version of the element
 						else{
 							System.err.println("Attributes LIST did not match");
 						}
+						
+						// in order to check for css matches we will need to first
+						// find all css values that are attributed to the element at hand
+						// for both the current version and the previous version of the element
+
 					}
 					//DID THE STYLING ON ANY OF THE CURRENTLY VISIBLE ELEMENTS CHANGE?(THIS MIGHT NOT BE NECESSARY IF IT IS INCLUDED IN ATTRIBUTES)
 
@@ -154,6 +153,15 @@ public class DiffHandler {
 
 			
 			driver.close();
+		}
+		
+		public static WebDriver openWithFirefox(String url){
+			FirefoxProfile firefoxProfile = new FirefoxProfile();
+			
+			WebDriver driver = new FirefoxDriver(firefoxProfile);
+			driver.get(url);	
+			
+			return driver;
 		}
 		
 		public void generateMap(WebDriver driver, List<PageElement> elements, String[] actions){

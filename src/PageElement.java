@@ -17,7 +17,7 @@ public class PageElement {
 	
 	//transfer list to enum class
 	private String[] attributeList = {"id", "class", "name", "style"};
-	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom"};
+	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
 
 	/**
 	 * Constructs a PageElement.
@@ -72,7 +72,6 @@ public class PageElement {
 	public boolean cssMatches(PageElement elem){
 		for(String propertyName : cssValues.keySet()){
 			if(!cssValues.get(propertyName).equals(elem.cssValues.get(propertyName))){
-				System.err.println("PROPERTIES DO NO MATCH");
 				return false;
 			}
 		}

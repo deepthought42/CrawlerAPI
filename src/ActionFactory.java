@@ -1,5 +1,6 @@
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
@@ -42,7 +43,11 @@ public class ActionFactory {
 			builder.sendKeys(elem, Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
 			builder.sendKeys(elem, "Some src Val");
 		}
-		builder.perform();
+		try{
+			builder.perform();
+		}catch(WebDriverException e ){
+			System.err.println("Failed to execute action :"+action);
+		}
 	}
 	
 	/**

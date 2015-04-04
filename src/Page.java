@@ -23,17 +23,15 @@ public class Page{
 	HashMap<ElementActionSequence, Page> elementActionSequencenMap = new HashMap<ElementActionSequence, Page>();
 
 	/**
-	 * 
+	 * Creates a page instance that is meant to contain the information found using the driver passed
 	 * 
 	 * @param driver
-	 * @param src
-	 * @param url
 	 * @param date
 	 * @param valid
 	 */
-	public Page(WebDriver driver, String src, DateFormat date, boolean valid){
+	public Page(WebDriver driver, DateFormat date, boolean valid){
 		this.driver = driver;
-		this.src = src;
+		this.src = driver.getPageSource();
 		this.date = date;
 		this.isValid = valid;
 		this.elements = this.getVisibleElements(driver);
@@ -117,7 +115,7 @@ public class Page{
 					try{
 						ActionFactory.execAction(driver, elems[idx] , actions[actionSeq[idx]]);
 						
-						Page newPage = new Page(driver, driver.getPageSource(), DateFormat.getDateInstance(), false);
+						Page newPage = new Page(driver, DateFormat.getDateInstance(), false);
 
 						List<diff_match_patch.Diff> actualDiffList = getDiffList(newPage);
 						

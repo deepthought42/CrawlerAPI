@@ -1,5 +1,4 @@
 import java.text.DateFormat;
-import java.util.HashMap;
 import java.util.List;
 
 import org.openqa.selenium.WebDriver;
@@ -16,7 +15,7 @@ public class Browser {
 	
 	public Browser(String url) {
 		this.driver = openWithFirefox(url);
-		this.page = new Page(driver, driver.getPageSource(), DateFormat.getDateInstance(), false);
+		this.page = new Page(driver, DateFormat.getDateInstance(), false);
 	}
 	
 	public WebDriver getDriver(){
@@ -32,7 +31,14 @@ public class Browser {
 	}
 
 	public Page updatePage(DateFormat date, boolean valid){
-		return new Page(driver, driver.getPageSource(), date, valid);
+		return new Page(driver, date, valid);
+	}
+	
+	/**
+	 * @inherit
+	 */
+	public void close(){
+		driver.close();
 	}
 	
 	public static WebDriver openWithFirefox(String url){

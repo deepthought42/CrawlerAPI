@@ -6,8 +6,8 @@ import org.openqa.selenium.interactions.Actions;
 
 
 public class ActionFactory {
-	private static String[] actions = {"click"};/*,
-								"doubleClick",
+	private static String[] actions = {"click",
+								"doubleClick"};/*,
 								"sendKeys",
 								"mouseover"};*/
 	private static Actions builder;

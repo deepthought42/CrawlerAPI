@@ -5,6 +5,7 @@ import java.util.List;
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -12,7 +13,12 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import util.Timing;
 
-public class Actor implements Runnable {
+/**
+ * An this threadable class is implemented to handle the interaction with a browser 
+ * @author Brandon Kindred
+ *
+ */
+public class BrowserActor implements Runnable {
 
 	private String url = null;
 	private HashMap<WebElement, String> elementActionMap = new HashMap<WebElement, String>();
@@ -20,11 +26,11 @@ public class Actor implements Runnable {
 	private String action = null;
 	private WebDriver driver = null;
 	
-	public Actor(String url) {
+	public BrowserActor(String url) {
 		this.url = url;
 	}
 
-	public Actor(String url, WebElement element, String action) {
+	public BrowserActor(String url, WebElement element, String action) {
 		this.url = url;
 		this.element = element;
 		this.action = action;
@@ -55,7 +61,7 @@ public class Actor implements Runnable {
 		System.out.println("Built page instance.");
 		
 		ConcurrentNode<Page> currentPageNode = new ConcurrentNode<Page>(page);
-		List<PageElement> visibleElements = currentPageNode.data.getVisibleElements(driver);
+		List<PageElement> visibleElements = currentPageNode.data.getElements();
 		System.out.println("Wrapped page instance in a graph node");
 		
 		for(PageElement elem : visibleElements){
@@ -78,19 +84,28 @@ public class Actor implements Runnable {
 				ActionFactory.execAction(driver, visibleElements.get(element_idx), actions[action_idx]);
 				
 				//execute the following if it there is no problem executing action
-				List<PageElement> newVisibleElements = page.getVisibleElements(driver);
+				Page newPage = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);
+
+				List<PageElement> newVisibleElements = newPage.getElements();
 				//DID THE NUMBER OF VISIBLE ELEMENTS CHANGE?
 				System.out.println("NEW VISIBLE ELEMENT NUMBER :: " + newVisibleElements.size());
 				// then add page to map and set action as an input to the page
-				if(visibleElements.size() != newVisibleElements.size()){
-					System.err.println("Sizes not equal");
-				}
-				if(!visibleElements.get(element_idx).cssMatches(newVisibleElements.get(element_idx))){
-					System.out.println("CSS ATTRIBUTES DO NOT MATCH");
-				}
-
-				ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
-				
+				if(!page.equals(newPage)){
+					System.out.println("PAGE HAS CHANGED. GROWING GRAPH...");
+					//add action node to current element node
+					//add current element node as input to the action node
+					ConcurrentNode<PageElement> elementNode = new ConcurrentNode<PageElement>(visibleElements.get(element_idx));
+					currentPageNode.addOutput(elementNode);
+					elementNode.addInput(currentPageNode);
+					
+					ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
+					elementNode.addOutput(actionNode);
+					actionNode.addInput(elementNode);
+					
+					driver.navigate().refresh();
+					pageSrc = driver.getPageSource();
+					page = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);					
+				}	
 			}
 			catch(StaleElementReferenceException e){
 				System.err.println("A SYSTEM ERROR WAS ENCOUNTERED WHILE ACTOR WAS PERFORMING ACTION : "+
@@ -99,9 +114,18 @@ public class Actor implements Runnable {
 			}
 			catch(UnreachableBrowserException e){
 				System.err.println("Browser is unreachable, pausing for 5 seconds");
-				Timing.pauseThread(5000);
+				Timing.pauseThread(10000);
 			}
-			//catch()
+			catch(WebDriverException e){
+				System.err.println("problem accessing webDriver instance");
+				driver.close();
+				this.driver = DiffHandler.openWithFirefox(url);		
+				pageSrc = driver.getPageSource();
+				page = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);
+				visibleElements = currentPageNode.data.getVisibleElements(driver);
+
+			}
+			
 			if(action_idx >= actions.length-1){
 				action_idx = 0;
 				element_idx++;

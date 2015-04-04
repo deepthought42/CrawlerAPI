@@ -1,9 +1,13 @@
-
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class EntryPoint {
 	public static void main(String[] args){
 		String url = "localhost:3000";
 		
-		Actor actor = new Actor(url);
+		BrowserActor actor = new BrowserActor(url);
 		actor.run();
 	}
 }

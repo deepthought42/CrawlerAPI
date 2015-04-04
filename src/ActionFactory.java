@@ -6,10 +6,10 @@ import org.openqa.selenium.interactions.Actions;
 
 
 public class ActionFactory {
-	private static String[] actions = {"click",
+	private static String[] actions = {"click"};/*,
 								"doubleClick",
 								"sendKeys",
-								"mouseover"};
+								"mouseover"};*/
 	private static Actions builder;
 	
 	public static void execAction(WebDriver driver, PageElement pageElem, String action){

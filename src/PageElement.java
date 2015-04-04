@@ -3,7 +3,6 @@ import java.util.HashMap;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.JavascriptExecutor;
 
 public class PageElement {
 
@@ -35,7 +34,6 @@ public class PageElement {
 	
 	public void loadAttributes(){
 		for(String attributeString : attributeList){
-			//get attribute
 			Attribute attr = new Attribute(attributeString, this.element.getAttribute(attributeString));
 			this.attributes.add(attr);
 		}
@@ -44,7 +42,6 @@ public class PageElement {
 	
 	public void loadCssProperties(){
 		for(String propertyName : cssList){
-			//get attribute
 			if(this.element.getCssValue(propertyName) != null){
 				//System.out.println(propertyName + " : " + this.element.getCssValue(propertyName));
 				this.cssValues.put(propertyName, this.element.getCssValue(propertyName));	
@@ -72,11 +69,11 @@ public class PageElement {
 	public boolean cssMatches(PageElement elem){
 		for(String propertyName : cssValues.keySet()){
 			if(!cssValues.get(propertyName).equals(elem.cssValues.get(propertyName))){
+				System.err.println("CSS PROPERTIES DO NOT MATCH");
+
 				return false;
 			}
 		}
-		System.err.println("ALL PROPERTIES MATCH");
-
 		return true;
 	}
 	
@@ -106,9 +103,9 @@ public class PageElement {
 			}
 		}
 		
-		this.cssMatches(elem);
-		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++");
-
+		if(!this.cssMatches(elem)){
+			areElementsEqual = false;
+		}
 		return areElementsEqual;
 	}
 	

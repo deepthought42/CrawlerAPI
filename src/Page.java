@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -220,7 +219,6 @@ public class Page{
 				 * 	ie (display, visiblity, backface-visibility, etc)
 				 * 
 				 */
-			Timing.pauseThread(500);
 			if((element.isDisplayed()
 					&& element.getLocation().getX() > 0 && element.getLocation().getX() < element.getLocation().getX()+element.getSize().getWidth()
 					&& element.getLocation().getY() > 0 && element.getLocation().getY() < element.getLocation().getY()+element.getSize().getHeight()
@@ -277,12 +275,7 @@ public class Page{
 		return isEqual;
 	}
 	
-	public boolean hasChanged(){
-		
-		
-		return isValid;
-	}
-	
+
 	public String toString(){
 		String pageString = "";
 		

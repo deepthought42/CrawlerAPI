@@ -22,8 +22,10 @@ public class BrowserActor implements Runnable {
 
 	private String url = null;
 	private HashMap<WebElement, String> elementActionMap = new HashMap<WebElement, String>();
-	private WebElement element = null;
+
 	private String action = null;
+	private WebElement element = null;
+
 	private WebDriver driver = null;
 	
 	public BrowserActor(String url) {
@@ -53,14 +55,17 @@ public class BrowserActor implements Runnable {
 	public void run() {
 		//get a web browser driver and open the browser to the desired url
 		//get the page
-		this.driver = DiffHandler.openWithFirefox(url);
+		Browser browser = new Browser(url);
+		this.driver = browser.getDriver();
+		
+		this.driver = Browser.openWithFirefox(url);
 		signIn("test@test.com", "testtest");
 
-		String pageSrc = driver.getPageSource();
-		Page page = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);
+		//String pageSrc = driver.getPageSource();
+		//Page page = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);
 		System.out.println("Built page instance.");
 		
-		ConcurrentNode<Page> currentPageNode = new ConcurrentNode<Page>(page);
+		ConcurrentNode<Page> currentPageNode = new ConcurrentNode<Page>(browser.getPage());
 		List<PageElement> visibleElements = currentPageNode.data.getElements();
 		System.out.println("Wrapped page instance in a graph node");
 		
@@ -78,19 +83,19 @@ public class BrowserActor implements Runnable {
 		String[] actions = ActionFactory.getActions();
 		System.out.println("Starting iteration over elements");
 		while(element_idx < visibleElements.size()){
-			
+			Timing.pauseThread(2000);
 			try{
 				System.out.println("EXECUTING ACTION :"+ actions[action_idx]+ " Now");
 				ActionFactory.execAction(driver, visibleElements.get(element_idx), actions[action_idx]);
 				
 				//execute the following if it there is no problem executing action
-				Page newPage = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);
+				Page newPage = new Page(driver, driver.getPageSource(), DateFormat.getDateInstance(), false);
 
 				List<PageElement> newVisibleElements = newPage.getElements();
 				//DID THE NUMBER OF VISIBLE ELEMENTS CHANGE?
 				System.out.println("NEW VISIBLE ELEMENT NUMBER :: " + newVisibleElements.size());
 				// then add page to map and set action as an input to the page
-				if(!page.equals(newPage)){
+				if(!browser.getPage().equals(newPage)){
 					System.out.println("PAGE HAS CHANGED. GROWING GRAPH...");
 					//add action node to current element node
 					//add current element node as input to the action node
@@ -103,8 +108,7 @@ public class BrowserActor implements Runnable {
 					actionNode.addInput(elementNode);
 					
 					driver.navigate().refresh();
-					pageSrc = driver.getPageSource();
-					page = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);					
+					browser.updatePage(DateFormat.getDateInstance(), false);					
 				}	
 			}
 			catch(StaleElementReferenceException e){
@@ -113,15 +117,15 @@ public class BrowserActor implements Runnable {
 				System.err.println("ACTOR EXECUTED ACTION :: " +actions[action_idx]);
 			}
 			catch(UnreachableBrowserException e){
-				System.err.println("Browser is unreachable, pausing for 5 seconds");
+				System.err.println("Browser is unreachable, pausing for 10 seconds");
+				this.driver = browser.getDriver();
 				Timing.pauseThread(10000);
 			}
 			catch(WebDriverException e){
 				System.err.println("problem accessing webDriver instance");
 				driver.close();
-				this.driver = DiffHandler.openWithFirefox(url);		
-				pageSrc = driver.getPageSource();
-				page = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);
+				browser = new Browser(url);
+				//this.driver = Browser.openWithFirefox(url);		
 				visibleElements = currentPageNode.data.getVisibleElements(driver);
 
 			}

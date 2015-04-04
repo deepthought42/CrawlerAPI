@@ -9,14 +9,6 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 
 public class DiffHandler {
 		
-		public static WebDriver openWithFirefox(String url){
-			FirefoxProfile firefoxProfile = new FirefoxProfile();
-			
-			WebDriver driver = new FirefoxDriver(firefoxProfile);
-			driver.get(url);	
-			
-			return driver;
-		}
 		
 		public void generateMap(WebDriver driver, List<PageElement> elements, String[] actions){
 			List<PageElement> reducedElementsList = new ArrayList<PageElement>();

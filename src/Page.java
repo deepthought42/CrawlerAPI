@@ -15,7 +15,6 @@ public class Page{
 	
 	private WebDriver driver = null;
 	private String src = "";
-	private String url = "";
 	private DateFormat date = null;
 	private boolean isValid = false;
 	private List<PageElement> elements = null;
@@ -33,10 +32,9 @@ public class Page{
 	 * @param date
 	 * @param valid
 	 */
-	public Page(WebDriver driver, String src, String url, DateFormat date, boolean valid){
+	public Page(WebDriver driver, String src, DateFormat date, boolean valid){
 		this.driver = driver;
 		this.src = src;
-		this.url = url;
 		this.date = date;
 		this.isValid = valid;
 		this.elements = this.getVisibleElements(driver);
@@ -48,12 +46,7 @@ public class Page{
 	public void setSrc(String src) {
 		this.src = src;
 	}
-	public String getUrl() {
-		return url;
-	}
-	public void setUrl(String url) {
-		this.url = url;
-	}
+
 	public DateFormat getDate() {
 		return date;
 	}
@@ -125,7 +118,7 @@ public class Page{
 					try{
 						ActionFactory.execAction(driver, elems[idx] , actions[actionSeq[idx]]);
 						
-						Page newPage = new Page(driver, driver.getPageSource(), url, DateFormat.getDateInstance(), false);
+						Page newPage = new Page(driver, driver.getPageSource(), DateFormat.getDateInstance(), false);
 
 						List<diff_match_patch.Diff> actualDiffList = getDiffList(newPage);
 						
@@ -227,7 +220,7 @@ public class Page{
 				 * 	ie (display, visiblity, backface-visibility, etc)
 				 * 
 				 */
-			
+			Timing.pauseThread(500);
 			if((element.isDisplayed()
 					&& element.getLocation().getX() > 0 && element.getLocation().getX() < element.getLocation().getX()+element.getSize().getWidth()
 					&& element.getLocation().getY() > 0 && element.getLocation().getY() < element.getLocation().getY()+element.getSize().getHeight()
@@ -284,10 +277,15 @@ public class Page{
 		return isEqual;
 	}
 	
+	public boolean hasChanged(){
+		
+		
+		return isValid;
+	}
+	
 	public String toString(){
 		String pageString = "";
 		
-		pageString += this.url + "\n";
 		pageString += this.date + "\n";
 		pageString += this.isValid + "\n";
 		pageString += this.elements.size() + "\n";

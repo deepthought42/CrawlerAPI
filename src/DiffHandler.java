@@ -27,7 +27,7 @@ public class DiffHandler {
 			String pageSrc = driver.getPageSource();
 					
 			//create list of all possible actions
-			Page page = new Page(driver, pageSrc, url, DateFormat.getDateInstance(), false);
+			Page page = new Page(driver, pageSrc, DateFormat.getDateInstance(), false);
 
 			//CREATE NODE FOR PAGE
 			ConcurrentNode<Page> currentPageNode = new ConcurrentNode<Page>(page);

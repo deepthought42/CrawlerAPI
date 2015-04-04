@@ -8,7 +8,8 @@ import org.openqa.selenium.interactions.Actions;
 public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
-								"sendKeys"};
+								"sendKeys",
+								"mouseover"};
 	private static Actions builder;
 	
 	public static void execAction(WebDriver driver, PageElement pageElem, String action){
@@ -42,6 +43,9 @@ public class ActionFactory {
 			
 			builder.sendKeys(elem, Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
 			builder.sendKeys(elem, "Some src Val");
+		}
+		else if(action.equals("mouseover")){
+			builder.moveToElement(elem);
 		}
 		try{
 			builder.perform();

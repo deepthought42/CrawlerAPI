@@ -22,6 +22,11 @@
 		<artifactId>openutils-testing-testng</artifactId>
 		<version>2.2.1</version>
 	</dependency>
+	<dependency> 
+	    <groupId>xml-apis</groupId>
+	    <artifactId>xml-apis</artifactId>
+	    <version>1.4.01</version>
+	</dependency>
   	<dependency>
     	<groupId>org.testng</groupId>
     	<artifactId>testng</artifactId>
@@ -43,6 +48,17 @@
 		<artifactId>jtidy</artifactId>
 		<version>4aug2000r7-dev</version>
 	</dependency>
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>5.1.6</version>
+	</dependency>
+	<dependency>
+		<groupId>org.hibernate</groupId>
+		<artifactId>hibernate-core</artifactId>
+		<version>4.3.8.Final</version>
+	</dependency>
+	
   </dependencies>
   <groupId>com.QA.testSuite</groupId>
   <version>0.0.1</version>
@@ -54,8 +70,12 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>3.2.1</version>
                 <configuration>
-                    <url>jdbc:h2:file:target/WebTestVisualizer</url>
+                    <url>jdbc:mysql://localhost:3306/mysql</url>
                     <user>root</user>
+        			<password>password</password>
+        			<schemas>
+			            <schema>qa_development</schema>
+			        </schemas>
                 </configuration>
                 <dependencies>
                     <dependency>

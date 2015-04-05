@@ -62,23 +62,36 @@ public class BrowserActor implements Runnable {
 		System.out.println("Built page instance.");
 		
 		ConcurrentNode<Page> currentPageNode = new ConcurrentNode<Page>(browser.getPage());
-		List<PageElement> visibleElements = currentPageNode.data.getElements();
 		System.out.println("Wrapped page instance in a graph node");
 		
 		System.out.println("----------------------------------------------------");
 		System.err.println("loaded up elements. there were " + currentPageNode.data.getElements().size());
 		System.out.println("----------------------------------------------------");
-		
+		pageCrawler(browser, currentPageNode);
+
+		System.out.println("FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
+		browser.close();
+	}
+	
+	/**
+	 * Retrieves all elements on a page, and performs all known actions on each element.
+	 * 	Generates a map consisting of the page nodes outputs being Elements and elements 
+	 *  outputs being actions.
+	 *  
+	 * @param browser A Browser instance
+	 * @param pageNode The network node of type Page that is to be crawled
+	 */
+	private void pageCrawler(Browser browser, ConcurrentNode<Page> pageNode){
 		int element_idx = 0;
 		int action_idx = 0;
 		String[] actions = ActionFactory.getActions();
 		System.out.println("Starting iteration over elements");
-		while(element_idx < visibleElements.size()){
+		while(element_idx < pageNode.getData().getElements().size()){
 			
 			Timing.pauseThread(2000);
 			try{
 				System.out.println("EXECUTING ACTION :"+ actions[action_idx]+ " Now");
-				ActionFactory.execAction(driver, visibleElements.get(element_idx), actions[action_idx]);
+				ActionFactory.execAction(driver, pageNode.getData().getElements().get(element_idx), actions[action_idx]);
 				
 				//execute the following if it there is no problem executing action
 				Page newPage = new Page(driver, DateFormat.getDateInstance(), false);
@@ -87,16 +100,16 @@ public class BrowserActor implements Runnable {
 					System.out.println("PAGE HAS CHANGED. GROWING GRAPH...");
 					//add action node to current element node
 					//add current element node as input to the action node
-					ConcurrentNode<PageElement> elementNode = new ConcurrentNode<PageElement>(visibleElements.get(element_idx));
-					currentPageNode.addOutput(elementNode);
-					elementNode.addInput(currentPageNode);
+					ConcurrentNode<PageElement> elementNode = new ConcurrentNode<PageElement>(pageNode.getData().getElements().get(element_idx));
+					pageNode.addOutput(elementNode);
+					elementNode.addInput(pageNode);
 					
 					ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
 					elementNode.addOutput(actionNode);
 					actionNode.addInput(elementNode);
 					
-					driver.navigate().refresh();
-					browser.updatePage(DateFormat.getDateInstance(), false);
+					//driver.navigate().refresh();
+					//browser.updatePage(DateFormat.getDateInstance(), false);
 				}	
 				browser.close();
 				browser = new Browser(url);
@@ -110,15 +123,17 @@ public class BrowserActor implements Runnable {
 			}
 			catch(UnreachableBrowserException e){
 				System.err.println("Browser is unreachable, pausing for 10 seconds");
-				Timing.pauseThread(10000);
+				//Timing.pauseThread(5000);
 			}
 			catch(WebDriverException e){
 				System.err.println("problem accessing webDriver instance");
 				driver.close();
 				browser = new Browser(url);
-				this.driver = browser.getDriver();		
-				visibleElements = currentPageNode.data.getVisibleElements(driver);
+				
+				this.driver = browser.getDriver();	
 				signIn("test@test.com", "testtest");
+
+				//visibleElements = pageNode.data.getVisibleElements(driver);
 			}
 			
 			if(action_idx >= actions.length-1){
@@ -128,6 +143,7 @@ public class BrowserActor implements Runnable {
 			else{
 				action_idx++;
 			}
+			System.out.println("ACTION IDS :: "+ action_idx + "; ELEMENT IDX :: "+element_idx);
 		}
 	}
 }

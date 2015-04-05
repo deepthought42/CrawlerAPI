@@ -46,4 +46,8 @@ public class ConcurrentNode<T> {
 	public ConcurrentHashMap<ConcurrentNode<?>, Double> getOutputs(){
 		return this.outputs;
 	}
+	
+	public T getData(){
+		return this.data;
+	}
 }

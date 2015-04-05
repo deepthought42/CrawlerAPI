@@ -1,6 +1,7 @@
 import java.text.DateFormat;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -155,6 +156,27 @@ public class BrowserActor implements Runnable {
 	}
 	
 	private void mapCrawler(Browser browser, ConcurrentNode<Page> pageNode){
-		
+		ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
+		for(ConcurrentNode<?> element : pageNode.getOutputs().keySet()){
+			PageElement pageElement = (PageElement)element.getData();
+			ConcurrentHashMap<ConcurrentNode<?>, Double> elementMap = element.getOutputs();
+			for(ConcurrentNode<?> action : elementMap.keySet()){
+				//perform action on element. 
+				ActionFactory.execAction(driver, pageElement, action.getData().toString());
+				
+				//check that response matches expected response based on action output
+				ConcurrentHashMap<ConcurrentNode<?>, Double> actionOutputs = action.getOutputs();
+				
+				Page page = (Page)actionOutputs.keys().nextElement().getData();
+				//retrieve current browser page
+				Page browserPage = browser.getPage();
+				if(page.equals(browserPage)){
+					//Everything is looking good. 
+				}
+				else{
+					System.out.println("PAGE IS NOT THE SAME!!!! A CHANGE HAS BEEN ENCOUNTERED");
+				}
+			}
+		}
 	}
 }

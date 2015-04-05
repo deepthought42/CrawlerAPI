@@ -44,6 +44,27 @@
 		<version>4aug2000r7-dev</version>
 	</dependency>
   </dependencies>
-  <groupId>com.att.testSuite</groupId>
+  <groupId>com.QA.testSuite</groupId>
   <version>0.0.1</version>
+  
+  <build>
+        <plugins>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>3.2.1</version>
+                <configuration>
+                    <url>jdbc:h2:file:target/WebTestVisualizer</url>
+                    <user>root</user>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.h2database</groupId>
+                        <artifactId>h2</artifactId>
+                        <version>1.3.170</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
 </project>

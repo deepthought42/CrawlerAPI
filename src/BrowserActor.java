@@ -21,10 +21,7 @@ import util.Timing;
 public class BrowserActor implements Runnable {
 
 	private String url = null;
-	private HashMap<WebElement, String> elementActionMap = new HashMap<WebElement, String>();
-
-	private String action = null;
-	private WebElement element = null;
+	private ConcurrentNode<Page> pageNode = null;
 
 	private WebDriver driver = null;
 	
@@ -32,10 +29,9 @@ public class BrowserActor implements Runnable {
 		this.url = url;
 	}
 
-	public BrowserActor(String url, WebElement element, String action) {
+	public BrowserActor(String url, ConcurrentNode<Page> pageNode) {
 		this.url = url;
-		this.element = element;
-		this.action = action;
+		this.pageNode = pageNode;
 	}
 	
 	public void signIn(String username, String pass){
@@ -60,23 +56,34 @@ public class BrowserActor implements Runnable {
 		signIn("test@test.com", "testtest");
 
 		System.out.println("Built page instance.");
-		
-		ConcurrentNode<Page> currentPageNode = new ConcurrentNode<Page>(browser.getPage());
+		//TODO :: LOAD PAGE NODE FROM MEMORY FOR GIVEN URL.
+		// IF IT EXISTS CHECK IF IT HAS BEEN MAPPED. IF IT HAS NOT THEN MAP IT
+		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
+		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
 		System.out.println("Wrapped page instance in a graph node");
 		
 		System.out.println("----------------------------------------------------");
-		System.err.println("loaded up elements. there were " + currentPageNode.data.getElements().size());
+		System.err.println("loaded up elements. there were " + this.pageNode.data.getElements().size());
 		System.out.println("----------------------------------------------------");
-		pageCrawler(browser, currentPageNode);
+		if(this.pageNode.getOutputs() != null & this.pageNode.getOutputs().isEmpty()){
+			pageCrawler(browser, this.pageNode);
+		}
+		else{
+			System.out.println("Page node already has outputs. lets crawl them!");
+			mapCrawler(browser, this.pageNode);
+		}
 
 		System.out.println("FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
 		browser.close();
+		System.exit(1);
 	}
 	
 	/**
 	 * Retrieves all elements on a page, and performs all known actions on each element.
 	 * 	Generates a map consisting of the page nodes outputs being Elements and elements 
 	 *  outputs being actions.
+	 *  
+	 *  TODO :: Remove sign in from crawler. It should be abstracted away.
 	 *  
 	 * @param browser A Browser instance
 	 * @param pageNode The network node of type Page that is to be crawled
@@ -145,5 +152,9 @@ public class BrowserActor implements Runnable {
 			}
 			System.out.println("ACTION IDS :: "+ action_idx + "; ELEMENT IDX :: "+element_idx);
 		}
+	}
+	
+	private void mapCrawler(Browser browser, ConcurrentNode<Page> pageNode){
+		
 	}
 }

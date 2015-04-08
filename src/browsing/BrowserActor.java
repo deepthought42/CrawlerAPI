@@ -68,12 +68,15 @@ public class BrowserActor implements Runnable {
 		if(this.pageNode.getOutputs() != null & this.pageNode.getOutputs().isEmpty()){
 			pageCrawler(browser, this.pageNode);
 			System.out.println("FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
-			browser.close();
 		}
-		else{
+		System.out.println("CRAWLING PAGE COMPLETE...");
+		System.out.println("Number of elements in page output :: " + pageNode.getOutputs().size());
+		
+		//else{
 			System.out.println("Page node already has outputs. lets crawl them!");
-			mapCrawler(browser, this.pageNode);
-		}
+			//browser = new Browser(url);
+			mapCrawler(browser, url, this.pageNode);
+		//}
 
 
 		System.exit(1);
@@ -116,6 +119,9 @@ public class BrowserActor implements Runnable {
 					elementNode.addOutput(actionNode);
 					actionNode.addInput(elementNode);
 					
+					//Add new page to action output
+					Page page = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
+					actionNode.addOutput(new ConcurrentNode<Page>(page));
 					//driver.navigate().refresh();
 					//browser.updatePage(DateFormat.getDateInstance(), false);
 				}	
@@ -155,26 +161,42 @@ public class BrowserActor implements Runnable {
 		}
 	}
 	
-	private void mapCrawler(Browser browser, ConcurrentNode<Page> pageNode){
+	private void mapCrawler(Browser browser, String url, ConcurrentNode<Page> pageNode){
+		browser = new Browser(url);
 		ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
+		System.out.println("Map created");
 		for(ConcurrentNode<?> element : pageNode.getOutputs().keySet()){
 			PageElement pageElement = (PageElement)element.getData();
 			ConcurrentHashMap<ConcurrentNode<?>, Double> elementMap = element.getOutputs();
+			System.out.println("---Element and element map created");
 			for(ConcurrentNode<?> action : elementMap.keySet()){
 				//perform action on element. 
+				System.out.println("EXECUTING ACTION :: " + action.getData().toString());
 				ActionFactory.execAction(driver, pageElement, action.getData().toString());
 				
 				//check that response matches expected response based on action output
 				ConcurrentHashMap<ConcurrentNode<?>, Double> actionOutputs = action.getOutputs();
 				
-				Page page = (Page)actionOutputs.keys().nextElement().getData();
-				//retrieve current browser page
-				Page browserPage = browser.getPage();
-				if(page.equals(browserPage)){
-					//Everything is looking good. 
+				if(actionOutputs.keys().hasMoreElements()){
+					System.out.println("ACTION HAS PAGES ASSOCIEATED THAT ARE EQUAL");
+					Page page = (Page)actionOutputs.keys().nextElement().getData();
+
+					//retrieve current browser page
+					Page browserPage = browser.getPage();
+					if(page.equals(browserPage)){
+						System.out.println("PAGES MATCH AFTER CRAWL...LOOKIN GOOD!");
+						//Everything is looking good. 
+					}
+					else{
+						System.out.println("PAGE IS NOT THE SAME!!!! A CHANGE HAS BEEN ENCOUNTERED");
+					}
+					browser.close();
+					browser = new Browser(url);
 				}
 				else{
-					System.out.println("PAGE IS NOT THE SAME!!!! A CHANGE HAS BEEN ENCOUNTERED");
+					Page page = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
+					action.addOutput(new ConcurrentNode<Page>(page));
+					System.out.println("Added page to action since it didn't yet exist, yet here we are.");
 				}
 			}
 		}

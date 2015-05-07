@@ -16,7 +16,9 @@ public class Browser {
 	
 	public Browser(String url) {
 		this.driver = openWithFirefox(url);
+		System.out.println("CREATING PAGE...");
 		this.page = new Page(driver, DateFormat.getDateInstance(), false);
+		System.out.println("PAGE CREATED.");
 	}
 	
 	public WebDriver getDriver(){
@@ -44,10 +46,10 @@ public class Browser {
 	
 	public static WebDriver openWithFirefox(String url){
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
-		
+		System.out.println("FIREFOX PROFILE LOADED!");
 		WebDriver driver = new FirefoxDriver(firefoxProfile);
+		System.out.println("DRIVER LOADED.");
 		driver.get(url);
-		
 		return driver;
 	}
 	

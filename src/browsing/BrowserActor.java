@@ -36,7 +36,7 @@ public class BrowserActor implements Runnable {
 	
 	public void signIn(String username, String pass){
 		driver.findElement(By.xpath("//a[@id='signInLink']")).click();
-	    new WebDriverWait(driver, 5).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@id='userFormEmailField']")));
+	    //new WebDriverWait(driver, 5).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@id='userFormEmailField']")));
 		WebElement user = driver.findElement(By.xpath("//input[@id='userFormEmailField']"));
 		user.sendKeys(username);
 		WebElement password = driver.findElement(By.xpath("//input[@id='userFormPasswordField']"));
@@ -52,8 +52,9 @@ public class BrowserActor implements Runnable {
 		//get a web browser driver and open the browser to the desired url
 		//get the page
 		Browser browser = new Browser(url);
+		System.out.println("RETRIEVING DRIVER...");
 		this.driver = browser.getDriver();
-		signIn("test@test.com", "testtest");
+		//signIn("test@test.com", "testtest");
 
 		System.out.println("Built page instance.");
 		//TODO :: LOAD PAGE NODE FROM MEMORY FOR GIVEN URL.

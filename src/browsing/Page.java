@@ -207,12 +207,16 @@ public class Page{
 	 * @return
 	 */
 	public List<PageElement> getVisibleElements(WebDriver driver){
+		System.out.println("Finding all elements by CSS selector *...");
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-
+		
 		//reduce element list to only visible elements
 		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
 		//iterate over every element and grab only those that are currently displayed
+		System.out.println("Iterating through page elements...");
+		int i = 1;
 		for(WebElement element: pageElements){
+			System.out.println("Element "+(i++)+" is being evaluated for visibility...");
 			/**
 				 * Should go through each element and check for a number of attributes, 
 				 * 	ie (display, visiblity, backface-visibility, etc)
@@ -223,6 +227,7 @@ public class Page{
 					&& element.getLocation().getY() > 0 && element.getLocation().getY() < element.getLocation().getY()+element.getSize().getHeight()
 			)){
 				visiblePageElements.add(new PageElement(driver, element));
+				System.out.println("Element "+(i++)+" is visible.");
 			}
 			
 		}

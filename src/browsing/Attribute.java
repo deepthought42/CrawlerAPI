@@ -2,12 +2,9 @@ package browsing;
 
 public class Attribute {
 	private String name;
-	private String val;
+	private String[] val;
 	
-	public Attribute(String attrName, String val){
-		if(val == null){
-			val = "";
-		}
+	public Attribute(String attrName, String[] val){
 		this.name = attrName;
 		this.val = val;
 	}
@@ -16,7 +13,7 @@ public class Attribute {
 		return this.name;
 	}
 	
-	public String getVal(){
+	public String[] getVal(){
 		return this.val;
 	}
 	

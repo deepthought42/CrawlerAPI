@@ -8,14 +8,20 @@ import org.openqa.selenium.interactions.Actions;
 
 public class ActionFactory {
 	private static String[] actions = {"click",
-								"doubleClick"};/*,
+								"doubleClick",
+								"mouseover"};/*,
 								"sendKeys",
 								"mouseover"};*/
 	private static Actions builder;
 	
-	public static void execAction(WebDriver driver, PageElement pageElem, String action){
+	/**
+	 * 
+	 * @param driver
+	 * @param elem
+	 * @param action
+	 */
+	public static void execAction(WebDriver driver, WebElement elem, String action){
 		builder = new Actions(driver);
-		WebElement elem = pageElem.getElement();
 		if(action.equals("click")){
 			builder.click(elem);
 		}

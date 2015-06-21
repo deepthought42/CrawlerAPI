@@ -2,6 +2,7 @@ package browsing;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -29,17 +30,53 @@ public class PageElement {
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		
-		loadAttributes();
-		loadCssProperties();
+		//System.out.println("LOADING ELEMENT ATTRIBUTES...");
+		loadAttributes(driver);
+		//loadCssProperties();
 	}
 	
-	public void loadAttributes(){
-		for(String attributeString : attributeList){
-			Attribute attr = new Attribute(attributeString, this.element.getAttribute(attributeString));
-			this.attributes.add(attr);
+	/**
+	 * Loads attributes for this element into a list of {@link Attribute}s
+	 * @param driver
+	 */
+	public void loadAttributes(WebDriver driver){
+		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
+
+		String attributeString = javascriptDriver.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", this.element).toString();
+		attributeString = attributeString.replace("{","");
+		attributeString = attributeString.replace("}","");
+		attributeString = attributeString.trim();
+		if(!attributeString.isEmpty()){
+			String[] attributeArray = attributeString.split(",");
+			for(int i=0; i < attributeArray.length; i++){
+				String[] attributes = attributeArray[i].split("=");
+				System.out.println("ATTRIBUTES VALUE ARRAY LENGTH :: "+ attributes.length);
+				String[] attributeVals;
+				if(attributes.length > 1){
+					attributeVals = attributes[1].split(" ");
+				}
+				else{
+					attributeVals = new String[0];
+				}
+				
+				this.attributes.add(new Attribute(attributes[0].trim(), attributeVals));
+			}
 		}
 	}
 	
+	/**
+	 * Print Attributes for this element in a prettyish format
+	 */
+	public void printAttributes(){
+		System.out.println("+++++++++++++++++++++++++++++++++++++++");
+		for(int j=0; j < this.attributes.size(); j++){
+			System.out.print(this.attributes.get(j).getName() + " : ");
+			for(int i=0; i < attributes.get(j).getVal().length; i++){
+				System.out.print( this.attributes.get(j).getVal()[i] + " ");
+			}
+		}
+		System.out.println("\n+++++++++++++++++++++++++++++++++++++++");
+	}
 	
 	public void loadCssProperties(){
 		for(String propertyName : cssList){

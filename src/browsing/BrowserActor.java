@@ -64,7 +64,7 @@ public class BrowserActor implements Runnable {
 		System.out.println("Wrapped page instance in a graph node");
 		
 		System.out.println("----------------------------------------------------");
-		System.err.println("loaded up elements. there were " + this.pageNode.data.getElements().size());
+		System.out.println("loaded up elements. there were " + this.pageNode.data.getElements().size());
 		System.out.println("----------------------------------------------------");
 		if(this.pageNode.getOutputs() != null & this.pageNode.getOutputs().isEmpty()){
 			pageCrawler(browser, this.pageNode);
@@ -94,16 +94,17 @@ public class BrowserActor implements Runnable {
 	 * @param pageNode The network node of type Page that is to be crawled
 	 */
 	private void pageCrawler(Browser browser, ConcurrentNode<Page> pageNode){
+		System.out.println("Preparing to crawl..");
 		int element_idx = 0;
 		int action_idx = 0;
 		String[] actions = ActionFactory.getActions();
 		System.out.println("Starting iteration over elements");
 		while(element_idx < pageNode.getData().getElements().size()){
 			
-			Timing.pauseThread(2000);
+			//Timing.pauseThread(2000);
 			try{
 				System.out.println("EXECUTING ACTION :"+ actions[action_idx]+ " Now");
-				ActionFactory.execAction(driver, pageNode.getData().getElements().get(element_idx), actions[action_idx]);
+				ActionFactory.execAction(driver, pageNode.getData().getElements().get(element_idx).getElement(), actions[action_idx]);
 				
 				//execute the following if it there is no problem executing action
 				Page newPage = new Page(driver, DateFormat.getDateInstance(), false);
@@ -173,7 +174,7 @@ public class BrowserActor implements Runnable {
 			for(ConcurrentNode<?> action : elementMap.keySet()){
 				//perform action on element. 
 				System.out.println("EXECUTING ACTION :: " + action.getData().toString());
-				ActionFactory.execAction(driver, pageElement, action.getData().toString());
+				ActionFactory.execAction(driver, pageElement.getElement(), action.getData().toString());
 				
 				//check that response matches expected response based on action output
 				ConcurrentHashMap<ConcurrentNode<?>, Double> actionOutputs = action.getOutputs();

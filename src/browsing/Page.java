@@ -20,7 +20,7 @@ public class Page{
 	private List<PageElement> elements = null;
 	private Page prevPage;
 	
-	HashMap<WebElement, HashMap<String, Page>> elementActionMap = new HashMap<WebElement, HashMap<String, Page>>();
+	HashMap<PageElement, HashMap<String, Page>> elementActionMap = new HashMap<PageElement, HashMap<String, Page>>();
 	HashMap<ElementActionSequence, Page> elementActionSequencenMap = new HashMap<ElementActionSequence, Page>();
 
 	/**
@@ -109,12 +109,12 @@ public class Page{
 					refreshRequired = false;
 				}
 
-				PageElement[] elems = DiffHandler.convertToPageElements(this.elements, elementSequence);
+				//PageElement[] elems = DiffHandler.convertToPageElements(driver, this.elements, elementSequence);
 
 				//perform action sequence for element sequence
 				for(int idx = 0; idx < elementSequence.length; idx++){
 					try{
-						ActionFactory.execAction(driver, elems[idx] , actions[actionSeq[idx]]);
+						ActionFactory.execAction(driver, this.elements.get(idx).getElement() , actions[actionSeq[idx]]);
 						
 						Page newPage = new Page(driver, DateFormat.getDateInstance(), false);
 
@@ -189,7 +189,6 @@ public class Page{
 		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
 		for(WebElement element: pageElements){
 			List<WebElement> childElements = element.findElements(By.xpath("./*"));
-			System.err.println("CHILD ELEMENT LIST SIZE :: " + childElements.size());
 			if(element.isDisplayed() && childElements.isEmpty() && (!element.getAttribute("id").equals("") || (element.getAttribute("name") != null && !element.getAttribute("name").equals("")))){
 				visiblePageElements.add(new PageElement(driver, element));
 			}
@@ -204,36 +203,59 @@ public class Page{
 	 *  outside of the bounds of the screen it is assumed hidden
 	 *  
 	 * @param driver
-	 * @return
+	 * @return list of webelements that are currently visible on the page
 	 */
 	public List<PageElement> getVisibleElements(WebDriver driver){
-		System.out.println("Finding all elements by CSS selector *...");
-		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-		
-		//reduce element list to only visible elements
+		//initialize list for visible page elements
 		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
-		//iterate over every element and grab only those that are currently displayed
-		System.out.println("Iterating through page elements...");
+		
+		//find all immediate children of body element
+		WebElement body = driver.findElement(By.xpath("//body"));
+		List<WebElement> pageElements = getChildElements(body);
+		List<WebElement> childPageElements;
+
 		int i = 1;
-		for(WebElement element: pageElements){
-			System.out.println("Element "+(i++)+" is being evaluated for visibility...");
-			/**
+		while(!pageElements.isEmpty()){
+			childPageElements = new ArrayList<WebElement>();
+			//iterate through elements, if element is visible then load in child elements and recurse
+			for(WebElement element : pageElements){
+				//System.out.println("Finding all elements that are direct children of the " + element.getTagName() +"[id='" + element.getAttribute("id") + "']" + " tag");
+
+				/**
 				 * Should go through each element and check for a number of attributes, 
 				 * 	ie (display, visiblity, backface-visibility, etc)
 				 * 
 				 */
-			if((element.isDisplayed()
-					&& element.getLocation().getX() > 0 && element.getLocation().getX() < element.getLocation().getX()+element.getSize().getWidth()
-					&& element.getLocation().getY() > 0 && element.getLocation().getY() < element.getLocation().getY()+element.getSize().getHeight()
-			)){
-				visiblePageElements.add(new PageElement(driver, element));
-				System.out.println("Element "+(i++)+" is visible.");
+				if((element.isDisplayed())){
+					childPageElements.addAll(getChildElements(element));
+					visiblePageElements.add(new PageElement(this.driver, element));
+				}
+				i++;
 			}
-			
+			//clear list and add all newly found child page elements to it
+			pageElements.clear();
+			pageElements.addAll(childPageElements);
 		}
+		System.out.println("ALL VISIBLE ELEMENT FOUND! THERE WERE :: " + visiblePageElements.size());
 		return visiblePageElements;
 	}
 	
+	/**
+	 * Get immediate child elements for a given element
+	 * @param elem	WebElement to get children for
+	 * @return list of WebElements
+	 */
+	public List<WebElement> getChildElements(WebElement elem){
+		return elem.findElements(By.xpath("*"));
+	}
+	
+	/**
+	 * 
+	 * @param elementActionMap
+	 * @param currElemActionSeq
+	 * @param page
+	 * @return
+	 */
 	public boolean hasElementActionResponseAlreadyBeenEncountered(
 				HashMap<ElementActionSequence, Page> elementActionMap, 
 				ElementActionSequence currElemActionSeq, 
@@ -262,12 +284,17 @@ public class Page{
 		return exists;
 	}
 	
+	/**
+	 * Checks if Pages are equal
+	 * @param page
+	 * @return
+	 */
 	public boolean equals(Page page){
 		boolean isEqual = false;
-		if(this.getElements().size() == page.getElements().size())
+		if(this.getElements().size() == page.getElements().size()){
 			for(int idx = 0; idx < this.elements.size(); idx++){
-				try{
-									
+				try{	
+					System.out.println("Checking if elements are equal...");
 					isEqual = this.elements.get(idx).equals(page.elements.get(idx));
 					if(!isEqual){
 						break;
@@ -276,6 +303,7 @@ public class Page{
 					e.printStackTrace();
 				}
 			}
+		}
 		return isEqual;
 	}
 	

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 
@@ -11,10 +12,10 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 public class DiffHandler {
 		
 		
-		public void generateMap(WebDriver driver, List<PageElement> elements, String[] actions){
-			List<PageElement> reducedElementsList = new ArrayList<PageElement>();
+		public void generateMap(WebDriver driver, List<WebElement> elements, String[] actions){
+			List<WebElement> reducedElementsList = new ArrayList<WebElement>();
 			Collections.copy(reducedElementsList, elements);
-			for(PageElement element : elements){
+			for(WebElement element : elements){
 				try{
 					ActionFactory.execAction(driver, element, actions[0]);
 				}catch(Exception e){}
@@ -114,10 +115,10 @@ public class DiffHandler {
 			}while(isValuePresent(indexes, -1) && indexes[0] != -1);
 		}
 		
-		public static PageElement[] convertToPageElements(List<PageElement> elements, int[] elementSequenceIndices){
+		public static PageElement[] convertToPageElements(WebDriver driver, List<WebElement> elements, int[] elementSequenceIndices){
 			PageElement[] elementSequence = new PageElement[elementSequenceIndices.length];
 			for(int idx = 0; idx< elementSequenceIndices.length; idx++){
-				elementSequence[idx] = elements.get(elementSequenceIndices[idx]);
+				elementSequence[idx] = new PageElement(driver, elements.get(elementSequenceIndices[idx]));
 			}
 			
 			return elementSequence;

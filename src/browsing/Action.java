@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 public class Action{
 	public Class<?> className;
 	public Method[] knownActions;
+	
 	/**
 	 * instantiate a new class
 	 * @param className

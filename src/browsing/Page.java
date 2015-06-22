@@ -72,6 +72,11 @@ public class Page{
 		this.elements = this.getVisibleElements(driver);
 	}
 	
+	/**
+	 * 
+	 * @param driver
+	 * @param elemSequences
+	 */
 	public void findActionsThatProduceValidResults(WebDriver driver, List<int[]> elemSequences){
 		String[] actions = ActionFactory.getActions();
 

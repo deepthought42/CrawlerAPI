@@ -12,12 +12,12 @@ public class PageElement {
 	private String tagName;
 	private String text;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+	private ArrayList<String> actionsPerformed = new ArrayList<String>();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
 	
 	//transfer list to enum class
-	private String[] attributeList = {"id", "class", "name", "style"};
 	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
 
 	/**
@@ -35,6 +35,14 @@ public class PageElement {
 		//loadCssProperties();
 	}
 	
+	public String generateXpath(){
+		String xpath = "";
+		xpath += "//"+this.element.getTagName();
+		xpath += "[@id='" + this.getElement().getAttribute("id") 
+					+ "' and contains(@class, '" + this.getElement().getAttribute("class")+"')]";
+		return xpath;
+	}
+	
 	/**
 	 * Loads attributes for this element into a list of {@link Attribute}s
 	 * @param driver
@@ -50,7 +58,6 @@ public class PageElement {
 			String[] attributeArray = attributeString.split(",");
 			for(int i=0; i < attributeArray.length; i++){
 				String[] attributes = attributeArray[i].split("=");
-				System.out.println("ATTRIBUTES VALUE ARRAY LENGTH :: "+ attributes.length);
 				String[] attributeVals;
 				if(attributes.length > 1){
 					attributeVals = attributes[1].split(" ");
@@ -154,5 +161,14 @@ public class PageElement {
 		pageElementString += this.text + "\n";
 		
 		return pageElementString;
+	}
+
+	/**
+	 * Adds given action to list of actions that have been performed on this element
+	 * @param action
+	 */
+	public void addAction(String action) {
+		this.actionsPerformed.add(action);
+		
 	}
 }

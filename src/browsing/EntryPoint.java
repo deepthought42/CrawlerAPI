@@ -11,7 +11,7 @@ public class EntryPoint {
 		//registerShutdownHook( graphDb );
 		
 		String url = "localhost:3000";
-		System.out.println("INITIALIZING ACTOR...");
+		System.out.print("INITIALIZING ACTOR...");
 		BrowserActor actor = new BrowserActor(url);
 		System.out.println("ACTOR INITIALIZED!");
 		actor.run();

@@ -29,7 +29,7 @@ public class ActionFactory {
 			builder.clickAndHold(elem);
 		}
 		else if(action.equals("contextClick")){
-			//builder.contextClick(elem);
+			builder.contextClick(elem);
 		}
 		else if(action.equals("doubleClick")){
 			builder.doubleClick(elem);
@@ -58,6 +58,7 @@ public class ActionFactory {
 			builder.perform();
 		}catch(WebDriverException e ){
 			System.err.println("Failed to execute action :"+action);
+			e.printStackTrace();
 		}
 	}
 	

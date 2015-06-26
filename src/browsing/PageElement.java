@@ -1,18 +1,26 @@
 package browsing;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import util.ArrayUtility;
+
 public class PageElement {
 
-	private WebElement element;
 	private String tagName;
 	private String text;
+	private String xpath;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	private ArrayList<String> actionsPerformed = new ArrayList<String>();
+	
+	//list of performed actions is not required with node coloring being implemented.
+	//TODO :: Remove once node coloring is in place
+	//private ArrayList<String> actionsPerformed = new ArrayList<String>();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
@@ -26,20 +34,54 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem){
-		this.element = elem;
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
-		
-		//System.out.println("LOADING ELEMENT ATTRIBUTES...");
-		loadAttributes(driver);
+		loadAttributes(driver, elem);
 		//loadCssProperties();
+		this.xpath = this.generateXpath();
 	}
 	
+	/**
+	 * Constructs a PageElement.
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement(WebDriver driver, WebElement elem, String parentXpath){
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		loadAttributes(driver, elem);
+		//loadCssProperties();
+		this.xpath = parentXpath + this.generateXpath();
+	}
+	
+	/**
+	 * generates an xpath for this element.
+	 * 
+	 * @return an xpath that identifies this element uniquely
+	 */
 	public String generateXpath(){
 		String xpath = "";
-		xpath += "//"+this.element.getTagName();
-		xpath += "[@id='" + this.getElement().getAttribute("id") 
-					+ "' and contains(@class, '" + this.getElement().getAttribute("class")+"')]";
+		ArrayList<String> attributeChecks = new ArrayList<String>();
+		xpath += "//"+this.tagName;
+		for(Attribute attr : attributes){
+			if(attr.getName().equals("id")){
+				attributeChecks.add("@id='" + ArrayUtility.joinArray(attr.getVal()) + "'"); 
+			}
+			if(attr.getName().equals("class")){
+				attributeChecks.add("contains(@class, '" + ArrayUtility.joinArray(attr.getVal()) +"')");
+			}
+		}
+
+		if(attributeChecks.size()>0){
+			xpath += "[";
+			for(int i = 0; i < attributeChecks.size(); i++){
+				xpath += attributeChecks.get(i).toString();
+				if(i < attributeChecks.size()-1){
+					xpath += " and ";
+				}
+			}
+			xpath += "]";
+		}
 		return xpath;
 	}
 	
@@ -47,10 +89,10 @@ public class PageElement {
 	 * Loads attributes for this element into a list of {@link Attribute}s
 	 * @param driver
 	 */
-	public void loadAttributes(WebDriver driver){
+	public void loadAttributes(WebDriver driver, WebElement element){
 		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
 
-		String attributeString = javascriptDriver.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", this.element).toString();
+		String attributeString = javascriptDriver.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", element).toString();
 		attributeString = attributeString.replace("{","");
 		attributeString = attributeString.replace("}","");
 		attributeString = attributeString.trim();
@@ -85,32 +127,20 @@ public class PageElement {
 		System.out.println("\n+++++++++++++++++++++++++++++++++++++++");
 	}
 	
-	public void loadCssProperties(){
+	public void loadCssProperties(WebElement element){
 		for(String propertyName : cssList){
-			if(this.element.getCssValue(propertyName) != null){
+			if(element.getCssValue(propertyName) != null){
 				//System.out.println(propertyName + " : " + this.element.getCssValue(propertyName));
-				this.cssValues.put(propertyName, this.element.getCssValue(propertyName));	
+				this.cssValues.put(propertyName, element.getCssValue(propertyName));	
 			}			
 		}	
 	}
-
-	public WebElement getElement() {
-		return this.element;
-	}
 	
-	public String getTagName(){
-		return this.tagName;
-	}
-
-	public String getText(){
-		return this.text;
-	}
-
-	public ArrayList<Attribute> getAttributes() {
-		return this.attributes;
-	}
-	
-	
+	/**
+	 * 
+	 * @param elem
+	 * @return
+	 */
 	public boolean cssMatches(PageElement elem){
 		for(String propertyName : cssValues.keySet()){
 			if(!cssValues.get(propertyName).equals(elem.cssValues.get(propertyName))){
@@ -122,6 +152,20 @@ public class PageElement {
 		return true;
 	}
 	
+	/**
+	 * Get immediate child elements for a given element
+	 * @param elem	WebElement to get children for
+	 * @return list of WebElements
+	 */
+	public ArrayList<PageElement> getChildElements(WebDriver driver, WebElement elem){
+		List<WebElement> childElements = elem.findElements(By.xpath("*"));
+		ArrayList<PageElement> childPageElements = new ArrayList<PageElement>();
+		for(WebElement childElement : childElements){
+			childPageElements.add(new PageElement(driver, childElement, this.xpath));
+		}
+		
+		return childPageElements;
+	}
 	
 	public boolean equals(PageElement elem){
 		ArrayList<Attribute> oldPageElementAttributes = this.getAttributes();
@@ -167,8 +211,42 @@ public class PageElement {
 	 * Adds given action to list of actions that have been performed on this element
 	 * @param action
 	 */
+	/*
+	 * TODO : remove once node coloring is implemented
 	public void addAction(String action) {
 		this.actionsPerformed.add(action);
 		
+	}
+	*/
+
+	/**
+	 * returns the xpath generated for this element
+	 * @return xpath of this element
+	 */
+	public String getXpath() {
+		return this.xpath;
+	}
+
+	/**
+	 * Sets the xpath for this element
+	 * 
+	 * @param xpath the xpath that identifies the unique location 
+	 * 				of this element on the page
+	 */
+	public void setXpath(String new_xpath) {
+		this.xpath = new_xpath;
+	}
+	
+
+	public String getText(){
+		return this.text;
+	}
+
+	public ArrayList<Attribute> getAttributes() {
+		return this.attributes;
+	}
+	
+	public String getTagName(){
+		return this.tagName;
 	}
 }

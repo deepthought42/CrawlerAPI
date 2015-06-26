@@ -17,7 +17,7 @@ public class Page{
 	private String src = "";
 	private DateFormat date = null;
 	private boolean isValid = false;
-	private List<PageElement> elements = null;
+	private List<PageElement> elements = new ArrayList<PageElement>();
 	private Page prevPage;
 	
 	HashMap<PageElement, HashMap<String, Page>> elementActionMap = new HashMap<PageElement, HashMap<String, Page>>();
@@ -35,7 +35,8 @@ public class Page{
 		this.src = driver.getPageSource();
 		this.date = date;
 		this.isValid = valid;
-		this.elements = this.getVisibleElements(driver);
+		this.getVisibleElements(driver, driver.findElement(By.xpath("//body")), this.elements, "");
+		System.out.println(" PAGE HAS " + this.elements.size() + " ELEMENTS VISIBLE!");
 	}
 	
 	public String getSrc() {
@@ -69,7 +70,7 @@ public class Page{
 	}
 	
 	public void refreshElements(){
-		this.elements = this.getVisibleElements(driver);
+		this.getVisibleElements(driver, null, this.elements, "");
 	}
 	
 	/**
@@ -77,6 +78,7 @@ public class Page{
 	 * @param driver
 	 * @param elemSequences
 	 */
+	/*
 	public void findActionsThatProduceValidResults(WebDriver driver, List<int[]> elemSequences){
 		String[] actions = ActionFactory.getActions();
 
@@ -151,7 +153,13 @@ public class Page{
 			}while(moreActionSequences);
 		}
 	}
+	*/
 	
+	/**
+	 * 
+	 * @param page
+	 * @return
+	 */
 	private List<diff_match_patch.Diff> getDiffList(Page page){
 		diff_match_patch diff = new diff_match_patch();
 		List<diff_match_patch.Diff> diffList = diff.diff_main(this.getSrc(), page.getSrc());
@@ -210,39 +218,68 @@ public class Page{
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	public List<PageElement> getVisibleElements(WebDriver driver){
-		//initialize list for visible page elements
-		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
+	public void getVisibleElements(WebDriver driver, WebElement element, List<PageElement> pageElementList, String xpath){
 		
+		List<WebElement> pageElements = getChildElements(element);
+		
+		for(WebElement elem : pageElements){
+			if(elem.isDisplayed()){
+				PageElement pageElem = new PageElement(driver, elem, xpath);
+				pageElementList.add(pageElem);
+				getVisibleElements(driver, elem, pageElementList, pageElem.getXpath());
+			}
+		}
+		//initialize list for visible page elements
+		//List<PageElement> visiblePageElements = new ArrayList<PageElement>();
+		
+		
+		/*
 		//find all immediate children of body element
 		WebElement body = driver.findElement(By.xpath("//body"));
 		List<WebElement> pageElements = getChildElements(body);
 		List<WebElement> childPageElements;
-
-		int i = 1;
+		List<PageElement> actualPageElements = new ArrayList<PageElement>();
+		//create list of all visible top level page elements. Each element includes the
+		// tree of elements contained within, so this is sufficient for retrieval.
 		while(!pageElements.isEmpty()){
+			for(WebElement element : pageElements){
+				if((element.isDisplayed())){
+					actualPageElements.add(new PageElement(this.driver, element));
+				}
+			}
+		}
+		
+		for(PageElement pageElement : actualPageElements){
+			if((pageElement.isDisplayed())){
+				childPageElements.addAll(getChildElements(element));
+				visiblePageElements.add(new PageElement(this.driver, element));
+			}
+		}
+		*/
+		/*while(!actualPageElements.isEmpty()){
 			childPageElements = new ArrayList<WebElement>();
 			//iterate through elements, if element is visible then load in child elements and recurse
 			for(WebElement element : pageElements){
 				//System.out.println("Finding all elements that are direct children of the " + element.getTagName() +"[id='" + element.getAttribute("id") + "']" + " tag");
-
+			*/
 				/**
 				 * Should go through each element and check for a number of attributes, 
 				 * 	ie (display, visiblity, backface-visibility, etc)
 				 * 
 				 */
+		/*
 				if((element.isDisplayed())){
 					childPageElements.addAll(getChildElements(element));
 					visiblePageElements.add(new PageElement(this.driver, element));
 				}
-				i++;
 			}
 			//clear list and add all newly found child page elements to it
 			pageElements.clear();
 			pageElements.addAll(childPageElements);
 		}
-		System.out.println("ALL VISIBLE ELEMENT FOUND! THERE WERE :: " + visiblePageElements.size());
-		return visiblePageElements;
+		*/
+		//System.out.println("ALL VISIBLE ELEMENT FOUND! THERE WERE :: " + visiblePageElements.size());
+		//return visiblePageElements;
 	}
 	
 	/**
@@ -299,7 +336,7 @@ public class Page{
 		if(this.getElements().size() == page.getElements().size()){
 			for(int idx = 0; idx < this.elements.size(); idx++){
 				try{	
-					System.out.println("Checking if elements are equal...");
+					//System.out.println("Checking if elements are equal...");
 					isEqual = this.elements.get(idx).equals(page.elements.get(idx));
 					if(!isEqual){
 						break;

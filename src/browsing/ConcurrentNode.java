@@ -1,11 +1,13 @@
 package browsing;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ConcurrentNode<T> {
 	public ConcurrentHashMap<ConcurrentNode<?>, Double> inputs;
 	public ConcurrentHashMap<ConcurrentNode<?>, Double> outputs;
 	public T data;
+	volatile AtomicInteger coloring = new AtomicInteger(0);
 	
 	public ConcurrentNode(T data){
 		this.inputs = new ConcurrentHashMap<ConcurrentNode<?>, Double>();

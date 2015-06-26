@@ -58,7 +58,6 @@ public class ActionFactory {
 			builder.perform();
 		}catch(WebDriverException e ){
 			System.err.println("Failed to execute action :"+action);
-			e.printStackTrace();
 		}
 	}
 	

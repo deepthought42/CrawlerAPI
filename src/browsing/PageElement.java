@@ -170,31 +170,26 @@ public class PageElement {
 	public boolean equals(PageElement elem){
 		ArrayList<Attribute> oldPageElementAttributes = this.getAttributes();
 		ArrayList<Attribute> newPageElementAttributes = elem.getAttributes();
-		boolean areElementsEqual =  true;
+		boolean areElementsEqual =  false;
 		
-		if(!this.getTagName().equals(elem.getTagName())
-				|| !this.getText().equals(elem.getText()))
+		if(this.getTagName().equals(elem.getTagName())
+				|| this.getText().equals(elem.getText()))
 		{
-			areElementsEqual = false;
+			areElementsEqual = true;
 		}
 		
-		if(areElementsEqual 
-				&& oldPageElementAttributes.size() == newPageElementAttributes.size())
+		if(oldPageElementAttributes.size() == newPageElementAttributes.size())
 		{
 			for(int attrIdx = 0; attrIdx < oldPageElementAttributes.size(); attrIdx++)
 			{
-				//System.err.println("OLD PAGE ATTRIBUTE :: " + oldPageElementAttributes.get(attrIdx).getName() + " -- " + oldPageElementAttributes.get(attrIdx).getVal());
-				//System.err.println("NEW PAGE ATTRIBUTE :: " + newPageElementAttributes.get(attrIdx).getName() + " -- " + newPageElementAttributes.get(attrIdx).getVal());
-				 areElementsEqual = oldPageElementAttributes.get(attrIdx).equals(newPageElementAttributes.get(attrIdx));
-				 if(!areElementsEqual){
-					 break;
-				 }
+				areElementsEqual = oldPageElementAttributes.get(attrIdx).equals(newPageElementAttributes.get(attrIdx));
+				if(!areElementsEqual){
+					return false;
+				}
 			}
 		}
 		
-		if(!this.cssMatches(elem)){
-			areElementsEqual = false;
-		}
+		areElementsEqual = this.cssMatches(elem);
 		return areElementsEqual;
 	}
 	

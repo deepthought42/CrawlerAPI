@@ -20,7 +20,7 @@ public class ActionFactory {
 	 * @param elem
 	 * @param action
 	 */
-	public static void execAction(WebDriver driver, WebElement elem, String action){
+	public static void execAction(WebDriver driver, WebElement elem, String action) throws WebDriverException{
 		builder = new Actions(driver);
 		if(action.equals("click")){
 			builder.click(elem);
@@ -54,11 +54,7 @@ public class ActionFactory {
 		else if(action.equals("mouseover")){
 			builder.moveToElement(elem);
 		}
-		try{
-			builder.perform();
-		}catch(WebDriverException e ){
-			System.err.println("Failed to execute action :"+action);
-		}
+		builder.perform();
 	}
 	
 	/**

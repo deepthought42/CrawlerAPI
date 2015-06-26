@@ -3,6 +3,7 @@ import java.text.DateFormat;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -134,22 +135,17 @@ public class BrowserActor implements Runnable {
 				//execute the following if there is no problem executing action
 				Page newPage = new Page(driver, DateFormat.getDateInstance(), false);
 
-				
+				ActionFactory.execAction(driver, elem , actions[action_idx]);
 				//add action node to current element node
 				//add current element node as input to the action node
 				ConcurrentNode<PageElement> elementNode = new ConcurrentNode<PageElement>(pageNode.getData().getElements().get(element_idx));
 				pageNode.addOutput(elementNode);
 				elementNode.addInput(pageNode);
-				
-				
+
 				ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
 				elementNode.addOutput(actionNode);
 				actionNode.addInput(elementNode);
 				
-				//System.out.println("ELEMENT :: " + elem.getTagName());
-				ActionFactory.execAction(driver, elem , actions[action_idx]);
-				//pageNode.getData().getElements().get(element_idx).addAction(actions[action_idx]);
-
 				//if the page has changed the create a new page node and associate it with the current actionNode
 				// otherwise link the action back to the last seen pageNode.
 				if(!browser.getPage().equals(newPage)){
@@ -160,10 +156,9 @@ public class BrowserActor implements Runnable {
 					browser = new Browser(url, pageNode.getData());
 				}	
 				else{
-					System.out.println("PAGE DIDN'T CHANGED. Creating cycle back to page state...");
-					//Add new page to action output
-					actionNode.addOutput(pageNode);
-					pageNode.addInput(actionNode);
+					System.out.println("PAGE DIDN'T CHANGED. DEAD ENDING FOR NOW.");
+					//Since there was no change we want to dead end here. This will allow for later passes to 
+					//	build out more complex functionality recognition by chaining element action sequences.
 				}
 				//signIn("test@test.com", "testtest");
 			}
@@ -188,16 +183,10 @@ public class BrowserActor implements Runnable {
 			catch(WebDriverException e){
 				err = true;
 				System.err.println("problem accessing WebDriver instance");
-				System.out.println("DRIVER :: " + driver);
 				e.printStackTrace();
-				break;
-				//driver.close();
-				//driver = Browser.openWithFirefox(url);
-				//browser = new Browser(url, pageNode.getData());
+				driver.get(url);
+				browser = new Browser(url, pageNode.getData());
 				//signIn("test@test.com", "testtest");
-			}
-			finally{
-				
 			}
 			
 			if(!err){

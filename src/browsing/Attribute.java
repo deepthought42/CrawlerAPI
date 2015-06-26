@@ -1,5 +1,9 @@
 package browsing;
 
+import org.apache.commons.lang.ArrayUtils;
+
+import util.ArrayUtility;
+
 public class Attribute {
 	private String name;
 	private String[] val;
@@ -19,7 +23,7 @@ public class Attribute {
 	
 	public boolean equals(Attribute attr){
 		if(this.getName().equals(attr.getName())
-			&& this.getVal().equals(attr.getVal())){
+			&& ArrayUtility.joinArray(this.getVal()).equals(ArrayUtility.joinArray(attr.getVal()))){
 			return true;
 		}
 		return false;

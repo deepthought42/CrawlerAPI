@@ -215,29 +215,7 @@ public class Page{
 	 * @return boolean value
 	 */
 	public boolean equals(Page page){
-
 		return this.src.equals(page.src);
-		
-		/*boolean isEqual = true;
-		if(this.getElements().size() == page.getElements().size()){
-			for(int idx = 0; idx < this.elements.size(); idx++){
-				try{	
-					//System.out.println("Checking if elements are equal...");
-					isEqual = this.elements.get(idx).equals(page.elements.get(idx));
-					if(!isEqual){
-						//System.out.println("+++ELEMENTS ARE NOT EQUAL!+++");
-						return false;
-					}
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-		}
-		else{
-			return false;
-		}
-		return isEqual;
-		*/
 	}
 	
 

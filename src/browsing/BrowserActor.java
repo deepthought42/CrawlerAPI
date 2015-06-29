@@ -167,7 +167,7 @@ public class BrowserActor implements Runnable {
 				
 				//if the page has changed the create a new page node and associate it with the current actionNode
 				// otherwise link the action back to the last seen pageNode.
-				if(!browser.getPage().equals(newPage)){
+				if(!page.equals(newPage)){
 					boolean previouslySeen = false;
 					for(Page pageSeen : pagesSeen){
 						if(pageSeen.equals(newPage)){
@@ -187,6 +187,7 @@ public class BrowserActor implements Runnable {
 					//	build out more complex functionality recognition by chaining element action sequences.
 				}
 				browser.getUrl(url);
+				
 				//browser = new Browser(url, pageNode.getData());
 
 				//signIn("test@test.com", "testtest");

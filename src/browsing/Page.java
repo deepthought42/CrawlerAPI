@@ -1,4 +1,6 @@
 package browsing;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +19,7 @@ public class Page{
 	private String src = "";
 	private DateFormat date = null;
 	private boolean isValid = false;
-	private List<PageElement> elements = new ArrayList<PageElement>();
+	private ArrayList<PageElement> elements = new ArrayList<PageElement>();
 	private Page prevPage;
 	
 	HashMap<PageElement, HashMap<String, Page>> elementActionMap = new HashMap<PageElement, HashMap<String, Page>>();
@@ -33,10 +35,10 @@ public class Page{
 	public Page(WebDriver driver, DateFormat date, boolean valid){
 		this.driver = driver;
 		this.src = driver.getPageSource();
+
 		this.date = date;
 		this.isValid = valid;
-		this.getVisibleElements(driver, driver.findElement(By.xpath("//body")), this.elements, "");
-		System.out.println(" PAGE HAS " + this.elements.size() + " ELEMENTS VISIBLE!");
+		//System.out.println(" PAGE HAS " + this.elements.size() + " ELEMENTS VISIBLE!");
 	}
 	
 	public String getSrc() {
@@ -70,90 +72,8 @@ public class Page{
 	}
 	
 	public void refreshElements(){
-		this.getVisibleElements(driver, null, this.elements, "");
+		this.getVisibleElements(driver, this.elements, "//body");
 	}
-	
-	/**
-	 * 
-	 * @param driver
-	 * @param elemSequences
-	 */
-	/*
-	public void findActionsThatProduceValidResults(WebDriver driver, List<int[]> elemSequences){
-		String[] actions = ActionFactory.getActions();
-
-		System.out.println("------------------------------------------------------------------------------------------");
-		boolean refreshRequired = false;
-		for(int[] elementSequence : elemSequences){
-			int[] actionSeq = new int[elementSequence.length];
-			//initialize actions in sequence to the action at index 0;
-			for(int idx = 0; idx< actionSeq.length;idx++){
-				actionSeq[idx] = 0;
-			}
-			
-			//DO WHILE THERE ARE MORE ELEMENT-ACTION SEQUENCES TO EVALUTATE
-			boolean moreActionSequences = true;
-
-			do{
-			
-				System.out.print("ACTION :: ");
-				DiffHandler.print(actionSeq);
-				System.out.print("ELEMENT :: ");
-				DiffHandler.print(elementSequence);
-				
-				
-				if(refreshRequired){
-					//System.err.println("Refreshing page!");
-					try{
-						driver.navigate().refresh();
-					}catch(Exception e){
-						Timing.pauseThread(1000);
-						driver.navigate().refresh();
-					}
-
-					this.setSrc(driver.getPageSource());
-					this.refreshElements();
-					refreshRequired = false;
-				}
-
-				//PageElement[] elems = DiffHandler.convertToPageElements(driver, this.elements, elementSequence);
-
-				//perform action sequence for element sequence
-				for(int idx = 0; idx < elementSequence.length; idx++){
-					try{
-						ActionFactory.execAction(driver, this.elements.get(idx).getElement() , actions[actionSeq[idx]]);
-						
-						Page newPage = new Page(driver, DateFormat.getDateInstance(), false);
-
-						List<diff_match_patch.Diff> actualDiffList = getDiffList(newPage);
-						
-						if(actualDiffList.size() > 0){
-							System.err.println("Something changed!");
-							refreshRequired = true;
-							ElementActionSequence seq = new ElementActionSequence(actionSeq, elementSequence);
-							if(idx == elementSequence.length-1
-									&& !this.hasElementActionResponseAlreadyBeenEncountered(elementActionSequencenMap, seq, newPage)){
-								addToSequenceMap(seq, newPage);
-							}
-
-							break;
-						}
-					}
-					catch(Exception e){	
-						break;
-					}
-				}
-				actionSeq = DiffHandler.generateNextPermutation(actionSeq, actions.length-1);
-				
-				if(actionSeq[0] >= actions.length){
-					moreActionSequences = false;
-					refreshRequired = true;
-				}
-
-			}while(moreActionSequences);
-		}
-	}
-	*/
 	
 	/**
 	 * 
@@ -218,68 +138,20 @@ public class Page{
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	public void getVisibleElements(WebDriver driver, WebElement element, List<PageElement> pageElementList, String xpath){
-		
-		List<WebElement> pageElements = getChildElements(element);
-		
+	public void getVisibleElements(WebDriver driver, List<PageElement> pageElementList, String xpath){
+		System.out.println("CURRENT XPATH AT START OF VISIBLE ELEMENT OP :::: "+xpath);
+		List<WebElement> pageElements = getChildElements(xpath);
+		//System.out.println("THERE ARE "+pageElements.size() + " CHILD ELEMENTS FOUND");
+		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
+		String temp_xpath = xpath;
 		for(WebElement elem : pageElements){
 			if(elem.isDisplayed()){
-				PageElement pageElem = new PageElement(driver, elem, xpath);
+				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash);
 				pageElementList.add(pageElem);
-				getVisibleElements(driver, elem, pageElementList, pageElem.getXpath());
+				System.out.println("Retrieving visible elements for element with xpath ---- "+pageElem.getXpath());
+				getVisibleElements(driver, pageElementList, pageElem.getXpath());
 			}
 		}
-		//initialize list for visible page elements
-		//List<PageElement> visiblePageElements = new ArrayList<PageElement>();
-		
-		
-		/*
-		//find all immediate children of body element
-		WebElement body = driver.findElement(By.xpath("//body"));
-		List<WebElement> pageElements = getChildElements(body);
-		List<WebElement> childPageElements;
-		List<PageElement> actualPageElements = new ArrayList<PageElement>();
-		//create list of all visible top level page elements. Each element includes the
-		// tree of elements contained within, so this is sufficient for retrieval.
-		while(!pageElements.isEmpty()){
-			for(WebElement element : pageElements){
-				if((element.isDisplayed())){
-					actualPageElements.add(new PageElement(this.driver, element));
-				}
-			}
-		}
-		
-		for(PageElement pageElement : actualPageElements){
-			if((pageElement.isDisplayed())){
-				childPageElements.addAll(getChildElements(element));
-				visiblePageElements.add(new PageElement(this.driver, element));
-			}
-		}
-		*/
-		/*while(!actualPageElements.isEmpty()){
-			childPageElements = new ArrayList<WebElement>();
-			//iterate through elements, if element is visible then load in child elements and recurse
-			for(WebElement element : pageElements){
-				//System.out.println("Finding all elements that are direct children of the " + element.getTagName() +"[id='" + element.getAttribute("id") + "']" + " tag");
-			*/
-				/**
-				 * Should go through each element and check for a number of attributes, 
-				 * 	ie (display, visiblity, backface-visibility, etc)
-				 * 
-				 */
-		/*
-				if((element.isDisplayed())){
-					childPageElements.addAll(getChildElements(element));
-					visiblePageElements.add(new PageElement(this.driver, element));
-				}
-			}
-			//clear list and add all newly found child page elements to it
-			pageElements.clear();
-			pageElements.addAll(childPageElements);
-		}
-		*/
-		//System.out.println("ALL VISIBLE ELEMENT FOUND! THERE WERE :: " + visiblePageElements.size());
-		//return visiblePageElements;
 	}
 	
 	/**
@@ -289,6 +161,15 @@ public class Page{
 	 */
 	public List<WebElement> getChildElements(WebElement elem){
 		return elem.findElements(By.xpath("*"));
+	}
+	
+	/**
+	 * Get immediate child elements for a given element
+	 * @param elem	WebElement to get children for
+	 * @return list of WebElements
+	 */
+	public List<WebElement> getChildElements(String xpath){
+		return driver.findElement(By.xpath(xpath)).findElements(By.xpath("*"));
 	}
 	
 	/**
@@ -334,14 +215,17 @@ public class Page{
 	 * @return boolean value
 	 */
 	public boolean equals(Page page){
-		boolean isEqual = true;
+
+		return this.src.equals(page.src);
+		
+		/*boolean isEqual = true;
 		if(this.getElements().size() == page.getElements().size()){
 			for(int idx = 0; idx < this.elements.size(); idx++){
 				try{	
 					//System.out.println("Checking if elements are equal...");
 					isEqual = this.elements.get(idx).equals(page.elements.get(idx));
 					if(!isEqual){
-						System.out.println("+++ELEMENTS ARE NOT EQUAL!+++");
+						//System.out.println("+++ELEMENTS ARE NOT EQUAL!+++");
 						return false;
 					}
 				}catch(Exception e){
@@ -353,6 +237,7 @@ public class Page{
 			return false;
 		}
 		return isEqual;
+		*/
 	}
 	
 

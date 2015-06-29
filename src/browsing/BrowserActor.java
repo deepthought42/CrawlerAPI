@@ -1,14 +1,25 @@
 package browsing;
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotVisibleException;
+import org.openqa.selenium.InvalidSelectorException;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 
 /**
@@ -21,12 +32,11 @@ public class BrowserActor implements Runnable {
 	private static WebDriver driver;
 	private String url = null;
 	private ConcurrentNode<Page> pageNode = null;
-
+	private List<Page> pagesSeen = new ArrayList<Page>();
 	private static Browser browser = null;
 	
 	public BrowserActor(String url) {
 		this.url = url;
-		driver = Browser.openWithFirefox(url);
 		browser = new Browser(driver, url);
 	}
 
@@ -34,7 +44,6 @@ public class BrowserActor implements Runnable {
 		this.url = url;
 		browser = new Browser(driver, url);
 		this.pageNode = pageNode;
-		driver = Browser.openWithFirefox(url);
 	}
 	
 	public void signIn(String username, String pass){
@@ -69,17 +78,27 @@ public class BrowserActor implements Runnable {
 		System.out.println("loaded up elements. there were " + this.pageNode.data.getElements().size());
 		System.out.println("----------------------------------------------------");
 		if(this.pageNode.getOutputs() != null & this.pageNode.getOutputs().isEmpty()){
+			long tStart = System.currentTimeMillis();
 			pageCrawler(this.pageNode);
+			long tEnd = System.currentTimeMillis();
+			long tDelta = tEnd - tStart;
+			double elapsedSeconds = tDelta / 1000.0;
+			
+			System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
 			System.out.println("FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
 			System.out.println("#######################################################");
 		}
 		System.out.println("CRAWLING PAGE COMPLETE...");
+		System.out.println("TOTAL NUMBER OF NEW PAGES :: "+pagesSeen.size());
 		System.out.println("Number of elements in page output :: " + pageNode.getOutputs().size());
 		
 		//else{
 			System.out.println("Page node already has outputs. lets crawl them!");
 			//browser = new Browser(url);
-			mapCrawler(browser, url, this.pageNode);
+			//mapCrawler(browser, url, this.pageNode);
+			
+			ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
+			System.out.println("Map created. There were " + map.size() + " output links for this node");
 		//}
 
 
@@ -99,49 +118,49 @@ public class BrowserActor implements Runnable {
 	private void pageCrawler(ConcurrentNode<Page> pageNode){
 		System.out.println("Commencing page crawl...");
 		int element_idx = 0;
+		int last_element_idx = -1;
+		ConcurrentNode<PageElement> elementNode = null;
 		int action_idx = 0;
 		String[] actions = ActionFactory.getActions();
 		//System.out.println("Starting iteration over elements");
+		Page page = pageNode.getData();
+		page.getVisibleElements(browser.getDriver(), page.getElements(), "//body");
+		pagesSeen.add(page);
 		while(element_idx < pageNode.getData().getElements().size()){
 			boolean err = false;
-			Page page = pageNode.getData();
 			try{
 				//System.out.println("EXECUTING ACTION :"+ actions[action_idx]+ " ON ELEMENT WITH ID " + element_idx + " Now");
 				//System.out.println("PAGE NODE :: " + pageNode);
 				PageElement pageElement = page.getElements().get(element_idx);
 				//System.out.println("WEB ELEMENT ATTRIBUTES :: " + pageElement.getAttributes().size());
-				String xpath = pageElement.getXpath();
-				
-				//if xpath comes back without conditions of tag then find its index within the page by counting how many 
-				// tags with the same tag name came before it.
-				if(!xpath.contains("[")){
-					//start at 1 because xpath elements start counting at 1
-					int tag_idx = 1;
-					for(int i=0; i<page.getElements().size(); i++){
-						if(i == element_idx){
-							break;
-						}
-						if(page.getElements().get(i).getTagName().equals(pageElement.getTagName())){
-							tag_idx++;
-						}
-					}
-					xpath+="["+tag_idx+"]";
-					pageElement.setXpath(xpath);
-				}
-				//System.out.println("GENERATED XPATH == " + xpath);
-				WebElement elem = driver.findElement(By.xpath(xpath));
-				
+				//System.out.println("THERE WERE " +driver.findElements(By.xpath(pageElement.getXpath())).size()+" ELEMENTS FOR XPATH :: "+ pageElement.getXpath());
+
+				//System.out.println("GENERATED XPATH == " + pageElement.getXpath());
+				WebElement elem = browser.getDriver().findElement(By.xpath(pageElement.getXpath()));
+				//JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
+
+		        //javascriptDriver.executeScript("arguments[0].style.border='3px solid red'", elem);
+
 								
 				//execute the following if there is no problem executing action
-				Page newPage = new Page(driver, DateFormat.getDateInstance(), false);
 
-				ActionFactory.execAction(driver, elem , actions[action_idx]);
+				ActionFactory.execAction(browser.getDriver(), elem , actions[action_idx]);
+				
+				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
+
+				//check if element already has been added. If it has then skip
+				// adding element to page and just add action to element
+				
 				//add action node to current element node
 				//add current element node as input to the action node
-				ConcurrentNode<PageElement> elementNode = new ConcurrentNode<PageElement>(pageNode.getData().getElements().get(element_idx));
-				pageNode.addOutput(elementNode);
-				elementNode.addInput(pageNode);
-
+				
+				if(element_idx != last_element_idx){
+					elementNode = new ConcurrentNode<PageElement>(pageElement);
+					pageNode.addOutput(elementNode);
+					elementNode.addInput(pageNode);
+					last_element_idx = element_idx;
+				}
+				
 				ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
 				elementNode.addOutput(actionNode);
 				actionNode.addInput(elementNode);
@@ -149,25 +168,34 @@ public class BrowserActor implements Runnable {
 				//if the page has changed the create a new page node and associate it with the current actionNode
 				// otherwise link the action back to the last seen pageNode.
 				if(!browser.getPage().equals(newPage)){
+					boolean previouslySeen = false;
+					for(Page pageSeen : pagesSeen){
+						if(pageSeen.equals(newPage)){
+							previouslySeen = true;
+						}
+					}
+					if(!previouslySeen){
+						pagesSeen.add(newPage);
+					}
 					System.out.println("PAGE HAS CHANGED. GROWING GRAPH...");
 					//Add new page to action output
 					actionNode.addOutput(new ConcurrentNode<Page>(newPage));
-					driver.get(url);
-					browser = new Browser(url, pageNode.getData());
 				}	
 				else{
 					System.out.println("PAGE DIDN'T CHANGED. DEAD ENDING FOR NOW.");
 					//Since there was no change we want to dead end here. This will allow for later passes to 
 					//	build out more complex functionality recognition by chaining element action sequences.
 				}
+				browser.getUrl(url);
+				//browser = new Browser(url, pageNode.getData());
+
 				//signIn("test@test.com", "testtest");
 			}
 			catch(StaleElementReferenceException e){
 				System.err.println("A SYSTEM ERROR WAS ENCOUNTERED WHILE ACTOR WAS PERFORMING ACTION : "+
 						actions[action_idx] + ". ");
-				System.err.println("ACTOR EXECUTED ACTION :: " +actions[action_idx]);
-				e.printStackTrace();
-				driver.get(url);
+				//e.printStackTrace();
+				browser.getUrl(url);
 			}
 			catch(UnreachableBrowserException e){
 				System.err.println("Browser is unreachable.");
@@ -180,12 +208,19 @@ public class BrowserActor implements Runnable {
 				
 				//e.printStackTrace();
 			}
+			catch(ElementNotVisibleException e){
+				System.out.println("ELEMENT IS NOT CURRENTLY VISIBLE.");
+			}
+			catch(InvalidSelectorException e){
+				System.out.println("INVALID SELECTOR");
+				//e.printStackTrace();
+			}
 			catch(WebDriverException e){
 				err = true;
 				System.err.println("problem accessing WebDriver instance");
 				e.printStackTrace();
-				driver.get(url);
-				browser = new Browser(url, pageNode.getData());
+				browser.getUrl(url);
+				//browser = new Browser(url, pageNode.getData());
 				//signIn("test@test.com", "testtest");
 			}
 			
@@ -204,14 +239,14 @@ public class BrowserActor implements Runnable {
 	
 	private void mapCrawler(Browser browser, String url, ConcurrentNode<Page> pageNode){
 		browser = new Browser(driver, url);
-		driver.get(url);
+		browser.getUrl(url);
 		ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
 		System.out.println("Map created. There were " + map.size() + " output links for this node");
 		for(ConcurrentNode<?> element : pageNode.getOutputs().keySet()){
 			PageElement pageElement = (PageElement)element.getData();
 			ConcurrentHashMap<ConcurrentNode<?>, Double> elementMap = element.getOutputs();
 			System.out.println("---Element and element map created");
-			String xpath = pageElement.generateXpath();
+			String xpath = pageElement.generateXpath(driver);
 
 			WebElement elem = driver.findElement(By.xpath(xpath));
 			for(ConcurrentNode<?> action : elementMap.keySet()){
@@ -247,4 +282,6 @@ public class BrowserActor implements Runnable {
 			}
 		}
 	}
+	
+	
 }

@@ -2,30 +2,35 @@ package browsing;
 import java.text.DateFormat;
 import java.util.List;
 
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-
-import util.Timing;
-
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class Browser {
 
-	private static WebDriver driver;
-	private static List<WebElement> elements = null;
-	private static Page page = null;
+	private WebDriver driver;
+	private List<WebElement> elements = null;
+	private Page page = null;
 	
 	public Browser(WebDriver driver, String url) {
 		System.out.println("CREATING PAGE...");
 		
-		page = new Page(driver, DateFormat.getDateInstance(), false);
+		this.driver = openWithFirefox(url);
+		page = new Page(this.driver, DateFormat.getDateInstance(), false);
+
 		System.out.println("PAGE CREATED.");
 	}
 	
 	public Browser(String url, Page browserPage) {
-		//openWithFirefox(url);
+		driver = openWithFirefox(url);
 		System.out.print("CREATING PAGE...");
 		
 		page = browserPage;
@@ -66,6 +71,21 @@ public class Browser {
 		}
 	}
 	
+	public void getUrl(String url){
+		try{
+			this.driver.get(url);
+		}
+		catch(UnhandledAlertException exc){
+			HandleAlert(driver, new WebDriverWait(driver, 5));
+		}
+	}
+	
+	/**
+	 * open new firefox browser
+	 * 
+	 * @param url
+	 * @return
+	 */
 	public static WebDriver openWithFirefox(String url){
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
 		System.out.println("FIREFOX PROFILE LOADED!");
@@ -73,5 +93,30 @@ public class Browser {
 		System.out.println("DRIVER LOADED.");
 		driver.get(url);
 		return driver;
+	}
+
+	/**
+	 * 
+	 * @param driver
+	 * @param wait
+	 */
+	public static void HandleAlert(WebDriver driver, WebDriverWait wait) {
+	    if (wait == null) {
+	        wait = new WebDriverWait(driver, 5);
+	    }
+	    try{
+	        Alert alert = wait.until(new ExpectedCondition<Alert>(){
+				public Alert apply(WebDriver driver) {
+	                try {
+	                  return driver.switchTo().alert();
+	                } catch (NoAlertPresentException e) {
+	                  return null;
+	                }
+	              }
+	            }
+	        );
+	        alert.accept();
+	    }
+	    catch(TimeoutException e){}
 	}
 }

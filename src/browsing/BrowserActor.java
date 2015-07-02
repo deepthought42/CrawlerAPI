@@ -2,23 +2,20 @@ package browsing;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.openqa.selenium.Alert;
+import observableStructs.ObservableQueue;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.InvalidSelectorException;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoAlertPresentException;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 
@@ -27,28 +24,38 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  * @author Brandon Kindred
  *
  */
-public class BrowserActor implements Runnable {
+public class BrowserActor extends Thread{
 
 	private static WebDriver driver;
 	private String url = null;
+	private ObservableQueue<ConcurrentNode<Page>> pageQueue = null;
 	private ConcurrentNode<Page> pageNode = null;
 	private List<Page> pagesSeen = new ArrayList<Page>();
-	private static Browser browser = null;
+	private Browser browser = null;
 	
 	public BrowserActor(String url) {
 		this.url = url;
-		browser = new Browser(driver, url);
+		browser = new Browser(url);
 	}
 
-	public BrowserActor(String url, ConcurrentNode<Page> pageNode) {
+	public BrowserActor(String url, ObservableQueue<ConcurrentNode<Page>> queue) {
 		this.url = url;
-		browser = new Browser(driver, url);
-		this.pageNode = pageNode;
+		browser = new Browser(url);
+		this.pageQueue = queue;
+	}
+	
+	public BrowserActor(String url, ObservableQueue<ConcurrentNode<Page>> queue, ConcurrentNode<Page> page) {
+		this.url = url;
+		browser = new Browser(url);
+		this.pageQueue = queue;
+	}
+	
+	public ConcurrentNode<Page> getPageNode(){
+		return this.pageNode;
 	}
 	
 	public void signIn(String username, String pass){
 		driver.findElement(By.xpath("//a[@id='signInLink']")).click();
-	    //new WebDriverWait(driver, 5).until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@id='userFormEmailField']")));
 		WebElement user = driver.findElement(By.xpath("//input[@id='userFormEmailField']"));
 		user.sendKeys(username);
 		WebElement password = driver.findElement(By.xpath("//input[@id='userFormPasswordField']"));
@@ -72,6 +79,9 @@ public class BrowserActor implements Runnable {
 		// IF IT EXISTS CHECK IF IT HAS BEEN MAPPED. IF IT HAS NOT THEN MAP IT
 		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
 		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+		boolean offerAccepted = pageQueue.offer(pageNode);
+		System.out.println("OFFER ACCEPTED? :::  " + offerAccepted);
+		System.out.println("------------------------------------------------------------");
 		System.out.println("Wrapped page instance in a graph node");
 		
 		System.out.println("----------------------------------------------------");
@@ -100,9 +110,6 @@ public class BrowserActor implements Runnable {
 			ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
 			System.out.println("Map created. There were " + map.size() + " output links for this node");
 		//}
-
-
-		System.exit(1);
 	}
 	
 	/**
@@ -144,10 +151,20 @@ public class BrowserActor implements Runnable {
 								
 				//execute the following if there is no problem executing action
 
-				ActionFactory.execAction(browser.getDriver(), elem , actions[action_idx]);
-				
-				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
-
+				(new ActionFactory(browser.getDriver())).execAction(elem , actions[action_idx]);
+				Page newPage = null;
+				while(newPage == null){
+					try{
+						newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
+					}
+					catch(UnhandledAlertException e){
+						try{
+							browser.HandleAlert(driver, new WebDriverWait(driver, 2000) );
+						}catch(NullPointerException e1){
+							
+						}
+					}
+				}
 				//check if element already has been added. If it has then skip
 				// adding element to page and just add action to element
 				
@@ -166,7 +183,7 @@ public class BrowserActor implements Runnable {
 				actionNode.addInput(elementNode);
 				
 				//if the page has changed the create a new page node and associate it with the current actionNode
-				// otherwise link the action back to the last seen pageNode.
+				// dead end so that complex functionality can be built out later.
 				if(!page.equals(newPage)){
 					boolean previouslySeen = false;
 					for(Page pageSeen : pagesSeen){
@@ -176,17 +193,19 @@ public class BrowserActor implements Runnable {
 					}
 					if(!previouslySeen){
 						pagesSeen.add(newPage);
+						pageQueue.offer(new ConcurrentNode<Page>(newPage));
 					}
 					System.out.println("PAGE HAS CHANGED. GROWING GRAPH...");
 					//Add new page to action output
 					actionNode.addOutput(new ConcurrentNode<Page>(newPage));
+					browser.getUrl(url);
+
 				}	
 				else{
 					System.out.println("PAGE DIDN'T CHANGED. DEAD ENDING FOR NOW.");
 					//Since there was no change we want to dead end here. This will allow for later passes to 
 					//	build out more complex functionality recognition by chaining element action sequences.
 				}
-				browser.getUrl(url);
 				
 				//browser = new Browser(url, pageNode.getData());
 
@@ -235,11 +254,13 @@ public class BrowserActor implements Runnable {
 				}
 			}
 			System.out.println("PERFORMING ACTION :: "+ actions[action_idx] + " on element at index :: "+element_idx);
+			
+			//if element has no actions connected to it remove its connection from page.
 		}
 	}
 	
 	private void mapCrawler(Browser browser, String url, ConcurrentNode<Page> pageNode){
-		browser = new Browser(driver, url);
+		browser = new Browser(url);
 		browser.getUrl(url);
 		ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
 		System.out.println("Map created. There were " + map.size() + " output links for this node");
@@ -253,7 +274,7 @@ public class BrowserActor implements Runnable {
 			for(ConcurrentNode<?> action : elementMap.keySet()){
 				//perform action on element. 
 				System.out.println("EXECUTING ACTION :: " + action.getData().toString());
-				ActionFactory.execAction(driver, elem, action.getData().toString());
+				(new ActionFactory(browser.getDriver())).execAction(elem, action.getData().toString());
 				
 				//check that response matches expected response based on action output
 				ConcurrentHashMap<ConcurrentNode<?>, Double> actionOutputs = action.getOutputs();
@@ -272,7 +293,7 @@ public class BrowserActor implements Runnable {
 						System.out.println("PAGE IS NOT THE SAME!!!! A CHANGE HAS BEEN ENCOUNTERED");
 					}
 					//browser.close();
-					browser = new Browser(driver, url);
+					browser = new Browser(url);
 					driver.get(url);
 				}
 				else{

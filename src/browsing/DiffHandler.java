@@ -17,7 +17,7 @@ public class DiffHandler {
 			Collections.copy(reducedElementsList, elements);
 			for(WebElement element : elements){
 				try{
-					ActionFactory.execAction(driver, element, actions[0]);
+					(new ActionFactory(driver)).execAction(element, actions[0]);
 				}catch(Exception e){}
 				reducedElementsList.remove(element);
 			}

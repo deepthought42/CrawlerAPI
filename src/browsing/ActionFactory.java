@@ -14,14 +14,16 @@ public class ActionFactory {
 								"mouseover"};*/
 	private static Actions builder;
 	
+	public ActionFactory(WebDriver driver){
+		builder = new Actions(driver);
+	}
 	/**
 	 * 
 	 * @param driver
 	 * @param elem
 	 * @param action
 	 */
-	public static void execAction(WebDriver driver, WebElement elem, String action) throws WebDriverException{
-		builder = new Actions(driver);
+	public void execAction(WebElement elem, String action) throws WebDriverException{
 		if(action.equals("click")){
 			builder.click(elem);
 		}

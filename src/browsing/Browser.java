@@ -20,7 +20,7 @@ public class Browser {
 	private List<WebElement> elements = null;
 	private Page page = null;
 	
-	public Browser(WebDriver driver, String url) {
+	public Browser(String url) {
 		System.out.println("CREATING PAGE...");
 		
 		this.driver = openWithFirefox(url);

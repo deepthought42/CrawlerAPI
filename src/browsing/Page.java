@@ -19,6 +19,7 @@ public class Page{
 	private String src = "";
 	private DateFormat date = null;
 	private boolean isValid = false;
+	private String pageUrl = "";
 	private ArrayList<PageElement> elements = new ArrayList<PageElement>();
 	private Page prevPage;
 	
@@ -38,7 +39,7 @@ public class Page{
 
 		this.date = date;
 		this.isValid = valid;
-		//System.out.println(" PAGE HAS " + this.elements.size() + " ELEMENTS VISIBLE!");
+		this.pageUrl = driver.getCurrentUrl();
 	}
 	
 	public String getSrc() {
@@ -65,6 +66,10 @@ public class Page{
 	}
 	public void setPrevPage(Page prevPage) {
 		this.prevPage = prevPage;
+	}
+	
+	public String getUrl(){
+		return this.pageUrl;
 	}
 	
 	public List<PageElement> getElements(){
@@ -139,7 +144,7 @@ public class Page{
 	 * @return list of webelements that are currently visible on the page
 	 */
 	public void getVisibleElements(WebDriver driver, List<PageElement> pageElementList, String xpath){
-		System.out.println("CURRENT XPATH AT START OF VISIBLE ELEMENT OP :::: "+xpath);
+		//System.out.println("CURRENT XPATH AT START OF VISIBLE ELEMENT OP :::: "+xpath);
 		List<WebElement> pageElements = getChildElements(xpath);
 		//System.out.println("THERE ARE "+pageElements.size() + " CHILD ELEMENTS FOUND");
 		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
@@ -148,7 +153,7 @@ public class Page{
 			if(elem.isDisplayed()){
 				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash);
 				pageElementList.add(pageElem);
-				System.out.println("Retrieving visible elements for element with xpath ---- "+pageElem.getXpath());
+				//System.out.println("Retrieving visible elements for element with xpath ---- "+pageElem.getXpath());
 				getVisibleElements(driver, pageElementList, pageElem.getXpath());
 			}
 		}

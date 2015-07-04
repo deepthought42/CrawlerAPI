@@ -7,6 +7,7 @@ import java.util.Observer;
 import org.openqa.selenium.NoSuchElementException;
 
 import observableStructs.ObservableQueue;
+import structs.Path;
 
 /**
  * Graph Condensing Agent iterates over a graph of nodes and condenses
@@ -39,25 +40,31 @@ public class WorkAllocationActor extends Thread implements Observer{
 	
 	public void run(){
 		long tStart = System.currentTimeMillis();
+		int threadCount = Thread.activeCount();
 		while(true){
-			try{
-				if(queue.size() >0){
-					try{
-						ConcurrentNode<Page> element = (ConcurrentNode<Page>) queue.poll();
-				        System.out.println("Element outputs ::: " + element.getOutputs().size());
-				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-			    	}
-					catch(NoSuchElementException e){
-			    	}
-			    	catch(NullPointerException e){
-			    	}
+			if(threadCount < 4){
+				try{
+					if(queue.size() >0){
+						try{
+							Path path = (Path)queue.poll();
+							ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst();
+					        System.out.println("Element outputs ::: " + node.getOutputs().size());
+					        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+					        
+					        System.out.print("STARTING NEW THREAD TO MAP PATH..");
+					        BrowserActor browserActor = new BrowserActor(queue, path);
+							browserActor.start();
+					        System.out.println("STARTED!");
+				    	}
+						catch(NoSuchElementException e){
+				    	}
+				    	catch(NullPointerException e){
+				    	}
+					}
 				}
-			}
-			catch(NullPointerException e){
-				
-			}
-			if(System.currentTimeMillis() > (tStart + 200000)){
-				break;
+				catch(NullPointerException e){
+					
+				}
 			}
 		}
 	}

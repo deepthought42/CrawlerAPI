@@ -24,6 +24,15 @@ public class Path {
 	 * 
 	 * @param current_path
 	 */
+	public Path(ConcurrentNode<?> current_node){
+		this.path = new LinkedList<ConcurrentNode<?>>();
+		this.path.offer(current_node);
+	}
+	
+	/**
+	 * 
+	 * @param current_path
+	 */
 	public Path(Path current_path){
 		this.path = new LinkedList<ConcurrentNode<?>>();
 		this.append(current_path);

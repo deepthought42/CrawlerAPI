@@ -1,6 +1,7 @@
 package browsing;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -9,6 +10,7 @@ public class ConcurrentNode<T> extends Observable {
 	private ConcurrentHashMap<ConcurrentNode<?>, Double> outputs;
 	public T data;
 	volatile AtomicInteger coloring = new AtomicInteger(0);
+	volatile AtomicBoolean isEntryNode = new AtomicBoolean(false);
 	
 	public ConcurrentNode(T data){
 		this.inputs = new ConcurrentHashMap<ConcurrentNode<?>, Double>();

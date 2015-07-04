@@ -18,6 +18,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import structs.Path;
+
 
 /**
  * An this threadable class is implemented to handle the interaction with a browser 
@@ -28,8 +30,9 @@ public class BrowserActor extends Thread{
 
 	private static WebDriver driver;
 	private String url = null;
-	private ObservableQueue<ConcurrentNode<Page>> pageQueue = null;
+	private ObservableQueue<Path> pathQueue = null;
 	private ConcurrentNode<Page> pageNode = null;
+	private Path path = null;
 	private List<Page> pagesSeen = new ArrayList<Page>();
 	private Browser browser = null;
 	
@@ -38,16 +41,48 @@ public class BrowserActor extends Thread{
 		browser = new Browser(url);
 	}
 
-	public BrowserActor(String url, ObservableQueue<ConcurrentNode<Page>> queue) {
+	/**
+	 * 
+	 * @param url
+	 * @param queue
+	 * 
+	 * @pre queue != null
+	 * @pre !queue.isEmpty()
+	 */
+	public BrowserActor(String url, ObservableQueue<Path> queue) {
+		assert(queue != null);
+		assert(queue.isEmpty());
 		this.url = url;
 		browser = new Browser(url);
-		this.pageQueue = queue;
+		this.pathQueue = queue;
 	}
 	
-	public BrowserActor(String url, ObservableQueue<ConcurrentNode<Page>> queue, ConcurrentNode<Page> page) {
+	/**
+	 * 
+	 * @param url
+	 * @param queue
+	 * 
+	 * @pre queue != null
+	 * @pre !queue.isEmpty()
+	 */
+	public BrowserActor(ObservableQueue<Path> queue, Path path) {
+		assert(queue != null);
+		assert(queue.isEmpty());
+		
+		this.path = path;
 		this.url = url;
-		browser = new Browser(url);
-		this.pageQueue = queue;
+		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().poll(); 
+		
+		System.out.println("PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
+		if(node.getData().getClass().getName().equals("browsing.Page")){
+			System.out.println("$$$$$$   CANONICAL NAME IS PAGE   $$$$$$$$");
+			browser = new Browser(((Page)node.getData()).getUrl());
+		}
+		else {
+			//find first page in path
+		}
+		this.pathQueue = queue;
+		
 	}
 	
 	public ConcurrentNode<Page> getPageNode(){
@@ -78,8 +113,14 @@ public class BrowserActor extends Thread{
 		//TODO :: LOAD PAGE NODE FROM MEMORY FOR GIVEN URL.
 		// IF IT EXISTS CHECK IF IT HAS BEEN MAPPED. IF IT HAS NOT THEN MAP IT
 		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
-		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
-		boolean offerAccepted = pageQueue.offer(pageNode);
+		if(pathQueue.isEmpty()){
+			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+		}
+		else{
+			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+		}
+		boolean offerAccepted = pathQueue.offer(new Path(pageNode));
+		
 		System.out.println("OFFER ACCEPTED? :::  " + offerAccepted);
 		System.out.println("------------------------------------------------------------");
 		System.out.println("Wrapped page instance in a graph node");
@@ -193,7 +234,7 @@ public class BrowserActor extends Thread{
 					}
 					if(!previouslySeen){
 						pagesSeen.add(newPage);
-						pageQueue.offer(new ConcurrentNode<Page>(newPage));
+						pathQueue.offer(new Path(new ConcurrentNode<Page>(newPage)));
 					}
 					System.out.println("PAGE HAS CHANGED. GROWING GRAPH...");
 					//Add new page to action output

@@ -74,8 +74,12 @@ public class BrowserActor extends Thread{
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
+		
+		this.path = path;
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().poll(); 
 		assert(((Page)node.getData()).getUrl() != null);
+
+		this.url = ((Page)node.getData()).getUrl();
 		
 		System.out.println("BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
 
@@ -128,6 +132,8 @@ public class BrowserActor extends Thread{
 		//boolean offerAccepted = pathQueue.offer(new Path(pageNode));
 		
 		//System.out.println(this.getName() + " :: OFFER ACCEPTED? :::  " + offerAccepted);
+		boolean offerAccepted = pathQueue.offer(new Path(pageNode));
+		
 		System.out.println("------------------------------------------------------------");
 		System.out.println(this.getName() + " :: Wrapped page instance in a graph node");
 		

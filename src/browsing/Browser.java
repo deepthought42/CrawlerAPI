@@ -54,7 +54,7 @@ public class Browser {
 	}
 	
 	/**
-	 * @inherit
+	 * Closes the browser opened by the current driver.
 	 */
 	public void close(){
 		try{

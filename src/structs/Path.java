@@ -49,6 +49,11 @@ public class Path {
 		}				
 	}
 	
+	
+	public boolean add(ConcurrentNode<?> node){
+		return this.path.offer(node);
+	}
+	
 	/**
 	 * 
 	 * @return

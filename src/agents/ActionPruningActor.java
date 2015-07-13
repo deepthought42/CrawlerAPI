@@ -1,4 +1,6 @@
-package browsing;
+package agents;
+
+import browsing.Page;
 
 /**
  * Action Pruning Actor is meant to compliment the browser actor in web mapping graphs.

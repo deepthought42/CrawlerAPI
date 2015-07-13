@@ -227,9 +227,8 @@ public class Page{
 	public String toString(){
 		String pageString = "";
 		
-		pageString += this.date + "\n";
-		pageString += this.isValid + "\n";
-		pageString += this.elements.size() + "\n";
+		pageString += "DATE :: "+ this.date + "\n";
+		pageString += "ELEMENT COUNT :: " +this.elements.size() + "\n";
 		
 		return pageString;
 	}

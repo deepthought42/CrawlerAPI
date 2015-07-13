@@ -1,6 +1,7 @@
 package browsing;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,12 +40,14 @@ public class BrowserActor extends Thread{
 	public BrowserActor(String url) {
 		this.url = url;
 		browser = new Browser(url);
+		this.path = new Path();
 	}
 
 	/**
+	 * Creates instance of BrowserActor with given url for entry into website
 	 * 
-	 * @param url
-	 * @param queue
+	 * @param url	url of page to be accessed
+	 * @param queue observable path queue
 	 * 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
@@ -55,12 +58,14 @@ public class BrowserActor extends Thread{
 		this.url = url;
 		browser = new Browser(url);
 		this.pathQueue = queue;
+		this.path = new Path();
 	}
 	
 	/**
+	 * Creates instance of browserActor with existing path to crawl.
 	 * 
-	 * @param url
-	 * @param queue
+	 * @param queue ovservable path queue
+	 * @param path	path to use to navigate to desired page
 	 * 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
@@ -69,20 +74,21 @@ public class BrowserActor extends Thread{
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
-		this.path = path;
-		this.url = url;
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().poll(); 
+		assert(((Page)node.getData()).getUrl() != null);
 		
-		System.out.println("PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
-		if(node.getData().getClass().getName().equals("browsing.Page")){
-			System.out.println("$$$$$$   CANONICAL NAME IS PAGE   $$$$$$$$");
-			browser = new Browser(((Page)node.getData()).getUrl());
+		System.out.println("BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
+
+		this.path = path;
+		this.url = ((Page)node.getData()).getUrl();
+		
+		browser = new Browser(url);
+
+		if(path.getPath().size() > 0){
+			//	find first page in path
 		}
-		else {
-			//find first page in path
-		}
+
 		this.pathQueue = queue;
-		
 	}
 	
 	public ConcurrentNode<Page> getPageNode(){
@@ -106,27 +112,27 @@ public class BrowserActor extends Thread{
 		//get a web browser driver and open the browser to the desired url
 		//get the page
 
-		System.out.println("RETRIEVING DRIVER...");
+		System.out.println(this.getName() + " :: RETRIEVING DRIVER...");
 		//signIn("test@test.com", "testtest");
 
-		System.out.println("Built page instance.");
+		System.out.println(this.getName() + " :: Built page instance.");
 		//TODO :: LOAD PAGE NODE FROM MEMORY FOR GIVEN URL.
 		// IF IT EXISTS CHECK IF IT HAS BEEN MAPPED. IF IT HAS NOT THEN MAP IT
 		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
-		if(pathQueue.isEmpty()){
-			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+
+		if(this.path.getPath().isEmpty()){
+			this.path.add(pageNode);
 		}
-		else{
-			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
-		}
-		boolean offerAccepted = pathQueue.offer(new Path(pageNode));
+
+		//boolean offerAccepted = pathQueue.offer(new Path(pageNode));
 		
-		System.out.println("OFFER ACCEPTED? :::  " + offerAccepted);
+		//System.out.println(this.getName() + " :: OFFER ACCEPTED? :::  " + offerAccepted);
 		System.out.println("------------------------------------------------------------");
-		System.out.println("Wrapped page instance in a graph node");
+		System.out.println(this.getName() + " :: Wrapped page instance in a graph node");
 		
 		System.out.println("----------------------------------------------------");
-		System.out.println("loaded up elements. there were " + this.pageNode.data.getElements().size());
+		System.out.println(this.getName() + " :: loaded up elements. there were " + this.pageNode.data.getElements().size());
 		System.out.println("----------------------------------------------------");
 		if(this.pageNode.getOutputs() != null & this.pageNode.getOutputs().isEmpty()){
 			long tStart = System.currentTimeMillis();
@@ -136,12 +142,12 @@ public class BrowserActor extends Thread{
 			double elapsedSeconds = tDelta / 1000.0;
 			
 			System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
-			System.out.println("FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
+			System.out.println(this.getName() + " :: FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
 			System.out.println("#######################################################");
 		}
-		System.out.println("CRAWLING PAGE COMPLETE...");
-		System.out.println("TOTAL NUMBER OF NEW PAGES :: "+pagesSeen.size());
-		System.out.println("Number of elements in page output :: " + pageNode.getOutputs().size());
+		System.out.println(this.getName() + " :: CRAWLING PAGE COMPLETE...");
+		System.out.println(this.getName() + " :: NUMBER OF NEW PAGES :: "+pagesSeen.size());
+		System.out.println(this.getName() + " :: Number of elements in page output :: " + pageNode.getOutputs().size());
 		
 		//else{
 			System.out.println("Page node already has outputs. lets crawl them!");
@@ -151,6 +157,7 @@ public class BrowserActor extends Thread{
 			ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
 			System.out.println("Map created. There were " + map.size() + " output links for this node");
 		//}
+		this.browser.close();
 	}
 	
 	/**
@@ -173,25 +180,33 @@ public class BrowserActor extends Thread{
 		//System.out.println("Starting iteration over elements");
 		Page page = pageNode.getData();
 		page.getVisibleElements(browser.getDriver(), page.getElements(), "//body");
-		pagesSeen.add(page);
 		while(element_idx < pageNode.getData().getElements().size()){
+			if(this.path.getPath().size() > 1){
+				System.out.println("%%%    PATH SIZE IS GREATER THAN 1...CRAWLING PATH");
+				pageNode = mapCrawler();
+				page = pageNode.getData();
+				page.getVisibleElements(browser.getDriver(), page.getElements(), "//body");
+				pagesSeen.add(page);
+				boolean previouslySeen = false;
+
+				for(Page pageSeen : pagesSeen){
+					if(pageSeen.equals(page)){
+						previouslySeen = true;
+					}
+				}
+				if(!previouslySeen){
+					pagesSeen.add(page);
+				}
+				System.out.println("%%%%   PATH CRAWLED!");
+			}
 			boolean err = false;
 			try{
-				//System.out.println("EXECUTING ACTION :"+ actions[action_idx]+ " ON ELEMENT WITH ID " + element_idx + " Now");
-				//System.out.println("PAGE NODE :: " + pageNode);
 				PageElement pageElement = page.getElements().get(element_idx);
-				//System.out.println("WEB ELEMENT ATTRIBUTES :: " + pageElement.getAttributes().size());
-				//System.out.println("THERE WERE " +driver.findElements(By.xpath(pageElement.getXpath())).size()+" ELEMENTS FOR XPATH :: "+ pageElement.getXpath());
-
-				//System.out.println("GENERATED XPATH == " + pageElement.getXpath());
 				WebElement elem = browser.getDriver().findElement(By.xpath(pageElement.getXpath()));
 				//JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
-
 		        //javascriptDriver.executeScript("arguments[0].style.border='3px solid red'", elem);
-
 								
 				//execute the following if there is no problem executing action
-
 				(new ActionFactory(browser.getDriver())).execAction(elem , actions[action_idx]);
 				Page newPage = null;
 				while(newPage == null){
@@ -217,6 +232,7 @@ public class BrowserActor extends Thread{
 					pageNode.addOutput(elementNode);
 					elementNode.addInput(pageNode);
 					last_element_idx = element_idx;
+					
 				}
 				
 				ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
@@ -234,16 +250,25 @@ public class BrowserActor extends Thread{
 					}
 					if(!previouslySeen){
 						pagesSeen.add(newPage);
-						pathQueue.offer(new Path(new ConcurrentNode<Page>(newPage)));
+
+						//add element, action and new page to path
+						this.path.add(elementNode);
+						this.path.add(actionNode);
+						this.path.add(new ConcurrentNode<Page>(newPage));
+						System.out.println(this.getName() + " :: PATH LENGTH === " + this.path.getPath().size());
+						pathQueue.offer(this.path);
+						
+						this.path = new Path();
+						path.add(pageNode);
 					}
-					System.out.println("PAGE HAS CHANGED. GROWING GRAPH...");
+					System.out.println(this.getName() + " :: PAGE HAS CHANGED. GROWING GRAPH...");
 					//Add new page to action output
 					actionNode.addOutput(new ConcurrentNode<Page>(newPage));
 					browser.getUrl(url);
-
+					mapCrawler();
 				}	
 				else{
-					System.out.println("PAGE DIDN'T CHANGED. DEAD ENDING FOR NOW.");
+					//System.out.println("PAGE DIDN'T CHANGED. DEAD ENDING FOR NOW.");
 					//Since there was no change we want to dead end here. This will allow for later passes to 
 					//	build out more complex functionality recognition by chaining element action sequences.
 				}
@@ -253,14 +278,13 @@ public class BrowserActor extends Thread{
 				//signIn("test@test.com", "testtest");
 			}
 			catch(StaleElementReferenceException e){
-				System.err.println("A SYSTEM ERROR WAS ENCOUNTERED WHILE ACTOR WAS PERFORMING ACTION : "+
+				System.err.println(this.getName() + " :: A SYSTEM ERROR WAS ENCOUNTERED WHILE ACTOR WAS PERFORMING ACTION : "+
 						actions[action_idx] + ". ");
 				//e.printStackTrace();
 				browser.getUrl(url);
 			}
 			catch(UnreachableBrowserException e){
-				System.err.println("Browser is unreachable.");
-				System.out.println("DRIVER :: " + driver);
+				System.err.println(this.getName() + " :: Browser is unreachable.");
 				err = true;
 				break;
 				//driver.close();
@@ -270,17 +294,17 @@ public class BrowserActor extends Thread{
 				//e.printStackTrace();
 			}
 			catch(ElementNotVisibleException e){
-				System.out.println("ELEMENT IS NOT CURRENTLY VISIBLE.");
+				System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
 			}
 			catch(InvalidSelectorException e){
-				System.out.println("INVALID SELECTOR");
+				System.out.println(this.getName() + " :: INVALID SELECTOR");
 				//e.printStackTrace();
 			}
 			catch(WebDriverException e){
 				err = true;
-				System.err.println("problem accessing WebDriver instance");
-				e.printStackTrace();
-				browser.getUrl(url);
+				System.err.println(this.getName() + " :: problem accessing WebDriver instance");
+				//e.printStackTrace();
+				//browser.getUrl(url);
 				//browser = new Browser(url, pageNode.getData());
 				//signIn("test@test.com", "testtest");
 			}
@@ -294,56 +318,48 @@ public class BrowserActor extends Thread{
 					action_idx++;
 				}
 			}
-			System.out.println("PERFORMING ACTION :: "+ actions[action_idx] + " on element at index :: "+element_idx);
+			System.out.println(this.getName() + " :: PERFORMING ACTION :: "+ actions[action_idx] + " on element at index :: "+element_idx);
 			
 			//if element has no actions connected to it remove its connection from page.
 		}
 	}
 	
-	private void mapCrawler(Browser browser, String url, ConcurrentNode<Page> pageNode){
-		browser = new Browser(url);
-		browser.getUrl(url);
-		ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
-		System.out.println("Map created. There were " + map.size() + " output links for this node");
-		for(ConcurrentNode<?> element : pageNode.getOutputs().keySet()){
-			PageElement pageElement = (PageElement)element.getData();
-			ConcurrentHashMap<ConcurrentNode<?>, Double> elementMap = element.getOutputs();
-			System.out.println("---Element and element map created");
-			String xpath = pageElement.generateXpath(driver);
-
-			WebElement elem = driver.findElement(By.xpath(xpath));
-			for(ConcurrentNode<?> action : elementMap.keySet()){
-				//perform action on element. 
-				System.out.println("EXECUTING ACTION :: " + action.getData().toString());
-				(new ActionFactory(browser.getDriver())).execAction(elem, action.getData().toString());
-				
-				//check that response matches expected response based on action output
-				ConcurrentHashMap<ConcurrentNode<?>, Double> actionOutputs = action.getOutputs();
-				
-				if(actionOutputs.keys().hasMoreElements()){
-					System.out.println("ACTION HAS PAGES ASSOCIEATED THAT ARE EQUAL");
-					Page page = (Page)actionOutputs.keys().nextElement().getData();
-
-					//retrieve current browser page
-					Page browserPage = browser.getPage();
-					if(page.equals(browserPage)){
-						System.out.println("PAGES MATCH AFTER CRAWL...LOOKIN GOOD!");
-						//Everything is looking good. 
-					}
-					else{
-						System.out.println("PAGE IS NOT THE SAME!!!! A CHANGE HAS BEEN ENCOUNTERED");
-					}
-					//browser.close();
-					browser = new Browser(url);
-					driver.get(url);
-				}
-				else{
-					Page page = new Page(driver, DateFormat.getDateInstance(), true);
-					action.addOutput(new ConcurrentNode<Page>(page));
-					System.out.println("Added page to action since it didn't yet exist, yet here we are.");
-				}
+	/**
+	 * Crawls path to from start to end node
+	 * 
+	 * @param path {@link Path path} to crawl
+	 */
+	private ConcurrentNode<Page> mapCrawler(){
+		//crawl path to end node then resume page crawling.
+		
+		Page currentPage = null;
+		PageElement currentElement = null;
+		WebElement elem = null;
+		String currentAction = null;
+		Object lastNode = null;
+		
+		//iterate over elements to navigate to last node in path
+		Iterator pathIter = this.path.getPath().iterator();
+		
+		while(pathIter.hasNext()){
+			Object o = ((ConcurrentNode<?>)pathIter.next()).getData();
+			
+			if(o.getClass().getName().equals("browsing.Page")){
+				currentPage = (Page)o;
 			}
+			else if(o.getClass().getName().equals("browsing.PageElement")){
+				currentElement = (PageElement)o;
+				elem = browser.getDriver().findElement(By.xpath(currentElement.getXpath()));
+			}
+			else if(o.getClass().getName().equals("String")){
+				currentAction = (String)o;
+				(new ActionFactory(browser.getDriver())).execAction(elem , currentAction);
+			}
+			lastNode = o;
 		}
+		
+		System.out.println(this.getName() + " :: Done iterating over path. Now on element with class "+lastNode.getClass().getName() +"; data = " + lastNode.toString());
+		return new ConcurrentNode<Page>(browser.getPage()); 
 	}
 	
 	

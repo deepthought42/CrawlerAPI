@@ -31,7 +31,7 @@ public class WorkAllocationActor extends Thread implements Observer{
 		//System.out.println("O CLASS :::: "+o.getClass());
 	    if (o instanceof ObservableQueue){
 	    	queue = (ObservableQueue) o;
-	        System.out.println("MyObserver1 says: OUTPUTS size is now : [" + queue.size() + "]");
+	        System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
 	    	
 	    }else{
 	        System.out.println("The observable object was not of the correct type");
@@ -41,20 +41,30 @@ public class WorkAllocationActor extends Thread implements Observer{
 	public void run(){
 		long tStart = System.currentTimeMillis();
 		int threadCount = Thread.activeCount();
+		int processorCount = Runtime.getRuntime().availableProcessors()+2;
 		while(true){
-			if(threadCount < 4){
+			if(threadCount != Thread.activeCount()){
+				threadCount = Thread.activeCount();
+				System.out.println("!!!!!     CURRENT THREAD COUNT :: "+threadCount +   "!!!!!!!");
+			}
+			if(Thread.activeCount() < processorCount){
 				try{
-					if(queue.size() >0){
+					if(queue.size() > 0){
 						try{
 							Path path = (Path)queue.poll();
-							ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst();
-					        System.out.println("Element outputs ::: " + node.getOutputs().size());
-					        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-					        
-					        System.out.print("STARTING NEW THREAD TO MAP PATH..");
-					        BrowserActor browserActor = new BrowserActor(queue, path);
-							browserActor.start();
-					        System.out.println("STARTED!");
+							if(path != null){
+								System.out.println("PATH LENGTH :: " + path.getPath().size());
+								ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst();
+						        System.out.println("Element outputs ::: " + node.getOutputs().size());
+						        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+						        
+						        BrowserActor browserActor = new BrowserActor(queue, path);
+								browserActor.start();
+						        System.out.println("BROWSER ACTOR STARTED!");
+							}
+							else{
+								System.out.println(this.getName() + " :: PATH is null.");
+							}
 				    	}
 						catch(NoSuchElementException e){
 				    	}

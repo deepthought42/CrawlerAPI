@@ -80,7 +80,7 @@ public class PageElement {
 		while(!elementStack.isEmpty()){			
 			if(driver.findElements(By.xpath(newXpath+elementStack.peek())).size() <= 1){
 				newXpath = newXpath+elementStack.pop();
-				System.out.println("NEW1 UNIQUE XPATH :: "+newXpath +" HAS "+driver.findElements(By.xpath(newXpath)).size() + " ELEMENTS ASSOCIATED WITH IT");
+				//System.out.println("NEW1 UNIQUE XPATH :: "+newXpath +" HAS "+driver.findElements(By.xpath(newXpath)).size() + " ELEMENTS ASSOCIATED WITH IT");
 				continue;
 			}
 			
@@ -93,7 +93,7 @@ public class PageElement {
 			}
 			else{
 				xpathHash.put(newXpath+elementStack.peek(), 0);
-				System.out.println("ADDING XPATH STEM TO HASH ++++ " + newXpath+elementStack.peek());
+				//System.out.println("ADDING XPATH STEM TO HASH ++++ " + newXpath+elementStack.peek());
 			}
 		}
 		//System.out.println("NEW UNIQUE XPATH :: "+newXpath +" HAS "+driver.findElements(By.xpath(newXpath)).size() + " ELEMENTS ASSOCIATED WITH IT");

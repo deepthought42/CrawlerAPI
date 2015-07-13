@@ -82,13 +82,10 @@ public class BrowserActor extends Thread{
 		this.url = ((Page)node.getData()).getUrl();
 		
 		System.out.println("BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
-
-		this.path = path;
-		this.url = ((Page)node.getData()).getUrl();
 		
 		browser = new Browser(url);
 
-		if(path.getPath().size() > 0){
+		if(path.getPath().size() > 0 && !node.getClass().equals("browsing.Page")){
 			//	find first page in path
 		}
 

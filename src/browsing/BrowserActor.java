@@ -70,8 +70,9 @@ public class BrowserActor extends Thread{
 		assert(queue.isEmpty());
 		
 		this.path = path;
-		this.url = url;
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().poll(); 
+
+		this.url = ((Page)node.getData()).getUrl();
 		
 		System.out.println("PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
 		if(node.getData().getClass().getName().equals("browsing.Page")){
@@ -113,15 +114,10 @@ public class BrowserActor extends Thread{
 		//TODO :: LOAD PAGE NODE FROM MEMORY FOR GIVEN URL.
 		// IF IT EXISTS CHECK IF IT HAS BEEN MAPPED. IF IT HAS NOT THEN MAP IT
 		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
-		if(pathQueue.isEmpty()){
-			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
-		}
-		else{
-			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
-		}
+		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+
 		boolean offerAccepted = pathQueue.offer(new Path(pageNode));
 		
-		System.out.println("OFFER ACCEPTED? :::  " + offerAccepted);
 		System.out.println("------------------------------------------------------------");
 		System.out.println("Wrapped page instance in a graph node");
 		

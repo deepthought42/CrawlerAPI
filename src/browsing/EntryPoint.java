@@ -29,16 +29,5 @@ public class EntryPoint {
 		
 		System.out.println("Registered observer!");
 
-		//e.execute( new BrowserActor(url, pageNode));
-		//BrowserActor actor = new BrowserActor(url, pageNode);
-		//BrowserActor actor2 = new BrowserActor(url, pageNode);
-
-		
-		//actor.start();
-		//actor2.start();
-		
-		
-		//pageNode = actor.getPageNode();
-		
 	}
 }

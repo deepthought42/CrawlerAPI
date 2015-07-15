@@ -33,11 +33,6 @@
     	<version>6.8.8</version>
     	<scope>test</scope>
     </dependency>
-    <dependency>
-		<groupId>javax.mail</groupId>
-		<artifactId>mail</artifactId>
-		<version>1.4.1</version>
-	</dependency>
 	<dependency>
     	<groupId>org.seleniumhq.selenium</groupId>
         <artifactId>selenium-java</artifactId>
@@ -48,21 +43,6 @@
 		<artifactId>jtidy</artifactId>
 		<version>4aug2000r7-dev</version>
 	</dependency>
-	<dependency>
-		<groupId>mysql</groupId>
-		<artifactId>mysql-connector-java</artifactId>
-		<version>5.1.6</version>
-	</dependency>
-	<dependency>
-		<groupId>org.hibernate</groupId>
-		<artifactId>hibernate-core</artifactId>
-		<version>4.3.8.Final</version>
-	</dependency>
-	<dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j</artifactId>
-      <version>2.2.1</version>
-    </dependency>
   </dependencies>
   <groupId>com.QA.testSuite</groupId>
   <version>0.0.1</version>

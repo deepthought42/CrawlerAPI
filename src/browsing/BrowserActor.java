@@ -228,19 +228,16 @@ public class BrowserActor extends Thread{
 				// adding element to page and just add action to element
 				
 				//add action node to current element node
-				//add current element node as input to the action node
-				
+				//there is no connection through inputs for nodes due to choice to keep graph directed
 				if(element_idx != last_element_idx){
 					elementNode = new ConcurrentNode<PageElement>(pageElement);
 					pageNode.addOutput(elementNode);
-					elementNode.addInput(pageNode);
 					last_element_idx = element_idx;
-					
 				}
 				
 				ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
 				elementNode.addOutput(actionNode);
-				actionNode.addInput(elementNode);
+				
 				
 				//if the page has changed the create a new page node and associate it with the current actionNode
 				// dead end so that complex functionality can be built out later.
@@ -249,36 +246,30 @@ public class BrowserActor extends Thread{
 					for(Page pageSeen : pagesSeen){
 						if(pageSeen.equals(newPage)){
 							previouslySeen = true;
+							newPage = pageSeen;
 						}
 					}
+					//add element, action and new page to path
+					this.path.add(elementNode);
+					this.path.add(actionNode);
+					
 					if(!previouslySeen){
 						pagesSeen.add(newPage);
-
-						//add element, action and new page to path
-						this.path.add(elementNode);
-						this.path.add(actionNode);
+						actionNode.addOutput(new ConcurrentNode<Page>(newPage));
 						this.path.add(new ConcurrentNode<Page>(newPage));
-						System.out.println(this.getName() + " :: PATH LENGTH === " + this.path.getPath().size());
-						pathQueue.offer(this.path);
-						
-						this.path = new Path();
-						path.add(pageNode);
 					}
+
+					System.out.println(this.getName() + " :: PATH LENGTH === " + this.path.getPath().size());
+					pathQueue.offer(this.path);
+					
+					//set new path with pageNode as starting point
+					this.path = new Path(pageNode);
+					
 					System.out.println(this.getName() + " :: PAGE HAS CHANGED. GROWING GRAPH...");
 					//Add new page to action output
-					actionNode.addOutput(new ConcurrentNode<Page>(newPage));
 					browser.getUrl(url);
 					mapCrawler();
-				}	
-				else{
-					//System.out.println("PAGE DIDN'T CHANGED. DEAD ENDING FOR NOW.");
-					//Since there was no change we want to dead end here. This will allow for later passes to 
-					//	build out more complex functionality recognition by chaining element action sequences.
 				}
-				
-				//browser = new Browser(url, pageNode.getData());
-
-				//signIn("test@test.com", "testtest");
 			}
 			catch(StaleElementReferenceException e){
 				System.err.println(this.getName() + " :: A SYSTEM ERROR WAS ENCOUNTERED WHILE ACTOR WAS PERFORMING ACTION : "+
@@ -290,26 +281,16 @@ public class BrowserActor extends Thread{
 				System.err.println(this.getName() + " :: Browser is unreachable.");
 				err = true;
 				break;
-				//driver.close();
-				//driver = Browser.openWithFirefox(url);
-				//browser = new Browser(url, pageNode.getData());
-				
-				//e.printStackTrace();
 			}
 			catch(ElementNotVisibleException e){
 				System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
 			}
 			catch(InvalidSelectorException e){
 				System.out.println(this.getName() + " :: INVALID SELECTOR");
-				//e.printStackTrace();
 			}
 			catch(WebDriverException e){
 				err = true;
 				System.err.println(this.getName() + " :: problem accessing WebDriver instance");
-				//e.printStackTrace();
-				//browser.getUrl(url);
-				//browser = new Browser(url, pageNode.getData());
-				//signIn("test@test.com", "testtest");
 			}
 			
 			if(!err){
@@ -322,8 +303,6 @@ public class BrowserActor extends Thread{
 				}
 			}
 			System.out.println(this.getName() + " :: PERFORMING ACTION :: "+ actions[action_idx] + " on element at index :: "+element_idx);
-			
-			//if element has no actions connected to it remove its connection from page.
 		}
 	}
 	

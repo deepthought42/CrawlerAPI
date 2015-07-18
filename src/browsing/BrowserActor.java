@@ -21,7 +21,28 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import structs.Path;
 
-
+/*
+ * NEEDED:
+ * 		NAVIGATOR/CRAWLER -- crawl path to end
+ * 		MAPCOLORER -- mark completely evaluated nodes as seen{1}, mapped{2}
+ * 		NODE_BUILDER -- find all possible nodes that can be added and add them to the current node. 
+ * 						for each new node added, create a new path with the new node as the last node on path
+ * 
+ * 
+ * 
+ * Retrieve path fom current path variable. 
+ * Crawl path to end of chain.
+ * If node at end of chain is a page, then add element to path
+ * If node at end of chain is an element, then perform action and add action to path following element
+ * 		If performing action results in change of page then add page to action. add page to path
+ * If node at end of chain is an action, then add an element to the action node and to end of path.
+ * 
+ * if all elements for a page have been evaluated and added to the page node then mark page node as mapped {1}
+ * If last element in path is an action node and all elements not including the elements preceding the action in the path 
+ *    have been added to the action node then color node as mapped
+ * 
+ *    
+ */
 /**
  * An this threadable class is implemented to handle the interaction with a browser 
  * @author Brandon Kindred
@@ -168,12 +189,12 @@ public class BrowserActor extends Thread{
 	 * 	Generates a map consisting of the page nodes outputs being Elements and elements 
 	 *  outputs being actions.
 	 *  
-	 *  TODO :: Remove sign in from crawler. It should be abstracted away.
-	 *  
-	 * @param browser A Browser instance
 	 * @param pageNode The network node of type Page that is to be crawled
 	 */
 	private void pageCrawler(ConcurrentNode<Page> pageNode){
+		
+
+		
 		System.out.println("Commencing page crawl...");
 		int element_idx = 0;
 		int last_element_idx = -1;

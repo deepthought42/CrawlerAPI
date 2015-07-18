@@ -41,7 +41,7 @@ public class WorkAllocationActor extends Thread implements Observer{
 	public void run(){
 		long tStart = System.currentTimeMillis();
 		int threadCount = Thread.activeCount();
-		int processorCount = Runtime.getRuntime().availableProcessors()+2;
+		int processorCount = Runtime.getRuntime().availableProcessors()*3;
 		while(true){
 			if(threadCount != Thread.activeCount()){
 				threadCount = Thread.activeCount();

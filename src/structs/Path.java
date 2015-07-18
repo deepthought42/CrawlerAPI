@@ -61,4 +61,47 @@ public class Path {
 	public LinkedList<?> getPath(){
 		return this.path;
 	}
+	
+	public boolean equals(Path path){
+		int thisPathLength = this.path.size();
+		int comparatorPathLength = path.getPath().size();
+				
+		if(thisPathLength != comparatorPathLength){
+			System.out.println("PATHS ARE NOT EQUAL");
+			return false;
+		}
+		for(int i = 0; i < thisPathLength; i++){
+			ConcurrentNode<?> thisPathNode = this.path.get(i);
+			ConcurrentNode<?> comparatorPathNode = (ConcurrentNode<?>)path.getPath().get(i);
+			
+			if(!thisPathNode.getClass().getCanonicalName().equals(comparatorPathNode.getClass().getCanonicalName())){
+				System.out.println("NODE CLASS NAMES ARE NOT EQUAL");
+				return false;
+			}
+			if(!thisPathNode.getData().equals(comparatorPathNode.getData())){
+				System.out.println("NODE DATA NOT EQUAL.");
+				return false;
+			}
+		}
+		
+		System.out.println("NODE PATHS ARE EQUAL");
+		return true;
+		
+	}
+	
+	/**
+	 * 
+	 * @param path
+	 * @return
+	 */
+	public static Path clone(Path path){
+		Path clonePath = new Path();
+		
+		Iterator pathIterator = path.getPath().iterator();
+		while(pathIterator.hasNext()){
+			clonePath.add((ConcurrentNode<?>) pathIterator.next());
+		}
+		
+		return clonePath;
+	}
 }

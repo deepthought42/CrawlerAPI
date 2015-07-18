@@ -55,6 +55,7 @@ public class BrowserActor extends Thread{
 	private ObservableQueue<Path> pathQueue = null;
 	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
+	private Path clonePath = null;
 	private List<Page> pagesSeen = new ArrayList<Page>();
 	private Browser browser = null;
 	
@@ -131,6 +132,8 @@ public class BrowserActor extends Thread{
 	 *  The actor will load the page into memory, access the element it needs, and then perform an action on it.
 	 */
 	public void run() {
+		
+		this.clonePath = Path.clone(this.path);
 		//get a web browser driver and open the browser to the desired url
 		//get the page
 
@@ -143,8 +146,8 @@ public class BrowserActor extends Thread{
 		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
 		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
 
-		if(this.path.getPath().isEmpty()){
-			this.path.add(pageNode);
+		if(this.clonePath.getPath().isEmpty()){
+			this.clonePath.add(pageNode);
 		}
 
 		//boolean offerAccepted = pathQueue.offer(new Path(pageNode));
@@ -205,7 +208,7 @@ public class BrowserActor extends Thread{
 		Page page = pageNode.getData();
 		page.getVisibleElements(browser.getDriver(), page.getElements(), "//body");
 		while(element_idx < pageNode.getData().getElements().size()){
-			if(this.path.getPath().size() > 1){
+			if(this.clonePath.getPath().size() > 1){
 				System.out.println("%%%    PATH SIZE IS GREATER THAN 1...CRAWLING PATH");
 				pageNode = mapCrawler();
 				page = pageNode.getData();
@@ -221,7 +224,7 @@ public class BrowserActor extends Thread{
 				if(!previouslySeen){
 					pagesSeen.add(page);
 				}
-				System.out.println("%%%%   PATH CRAWLED!");
+				System.out.println("%%%%   PATH NODE CRAWLED!");
 			}
 			boolean err = false;
 			try{

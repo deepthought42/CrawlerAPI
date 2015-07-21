@@ -137,6 +137,24 @@ public class BrowserActor extends Thread{
 	 */
 	public void run() {
 		
+		crawlPath();
+		expandNodePath();
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		this.clonePath = Path.clone(this.path);
 		//get a web browser driver and open the browser to the desired url
 		//get the page
@@ -199,7 +217,8 @@ public class BrowserActor extends Thread{
 	 */
 	private void crawlPath(){
 		Iterator pathIterator = this.path.getPath().iterator();
-		
+		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
+
 		ConcurrentNode<?> entryNode = (ConcurrentNode<?>) pathIterator.next();
 		String className = entryNode.getData().getClass().getCanonicalName();
 
@@ -216,7 +235,7 @@ public class BrowserActor extends Thread{
 				ElementAction elemAction = (ElementAction)pathNode.getData();
 				WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
 				//execute element action
-				new ActionFactory(this.browser.getDriver()).execAction(element, elemAction.getAction());
+				actionFactory.execAction(element, elemAction.getAction());
 			}
 		}
 	}
@@ -250,18 +269,36 @@ public class BrowserActor extends Thread{
 					ElementAction elemAction = new ElementAction(elem, actions[i]);
 					
 					//Clone path then add ElementAciton to path and push path onto path queue					
-					Path clonePath = Path.clone(path);
-					this.clonePath.add(new ConcurrentNode<ElementAction>(elemAction));
+					ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
+					elementAction.addInput(node);
+					node.addOutput(elementAction);
 					
-					this.pathQueue.add(clonePath);
+					putPathOnQueue(elementAction);
 				}				
 			}
 		}
 		else if(className.equals("browsing.ElementAction")){
-			ElementAction elemAction = (ElementAction)node.getData();
-			WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
-			//execute element action
-			actionFactory.execAction(element, elemAction.getAction());
+			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
+			List<PageElement> elementActionAvailableList;
+			//navigate path back to last seen page
+			//for each ElementAction seen, record elementAction.
+			Iterator descendingIterator = this.path.getPath().descendingIterator();
+			
+			while(descendingIterator.hasNext()){
+				ConcurrentNode<?> descNode = (ConcurrentNode<?>) descendingIterator.next();
+				
+				if(descNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
+					Page page = (Page)descNode.getData();
+					elementActionAvailableList = page.getElements();
+					break;
+				}
+				else{
+					elementActionSeenList.add((ElementAction)descNode.getData());
+				}
+			}
+			
+			//add each elementAction for last seen page excluding elementActions seen while finding page
+			
 		}
 	}
 	
@@ -270,8 +307,10 @@ public class BrowserActor extends Thread{
 	 * 
 	 * @param path path to be added
 	 */
-	private void putPathOnQueue(Path path){
-		
+	private boolean putPathOnQueue(ConcurrentNode<?> node){
+		Path clonePath = Path.clone(path);
+		this.clonePath.add(node);
+		return this.pathQueue.add(clonePath);
 	}
 	
 	

@@ -72,6 +72,10 @@ public class Page{
 		return this.pageUrl;
 	}
 	
+	/**
+	 * Retrieves list of {@link PageElement page elements} for current Page
+	 * @return
+	 */
 	public List<PageElement> getElements(){
 		return this.elements;
 	}

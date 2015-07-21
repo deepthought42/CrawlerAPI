@@ -226,11 +226,12 @@ public class BrowserActor extends Thread{
 	 */
 	private void expandNodePath(ConcurrentNode<?> node){
 		String className = node.getData().getClass().getCanonicalName();
+		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
+		String[] actions = ActionFactory.getActions();
 
 		//if node is a page then find all potential elementActions that can be taken including different values
 		//if node is an elementAction find all elementActions for the last seen page node that have not been seen
 		//   since the page node was encountered and add them.
-		
 		if(className.equals("browsing.Page")){
 			//verify current page matches current node data
 			//if not mark as different
@@ -240,13 +241,27 @@ public class BrowserActor extends Thread{
 				return;
 			}
 			
+			//get all known possible compinations of PageElement actions and add them as potential expansions
+			Iterator elementIterator = page.getElements().iterator();
 			
+			while(elementIterator.hasNext()){
+				PageElement elem = (PageElement) elementIterator.next();
+				for(int i = 0; i < actions.length; i++){
+					ElementAction elemAction = new ElementAction(elem, actions[i]);
+					
+					//Clone path then add ElementAciton to path and push path onto path queue					
+					Path clonePath = Path.clone(path);
+					this.clonePath.add(new ConcurrentNode<ElementAction>(elemAction));
+					
+					this.pathQueue.add(clonePath);
+				}				
+			}
 		}
 		else if(className.equals("browsing.ElementAction")){
 			ElementAction elemAction = (ElementAction)node.getData();
 			WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
 			//execute element action
-			new ActionFactory(this.browser.getDriver()).execAction(element, elemAction.getAction());
+			actionFactory.execAction(element, elemAction.getAction());
 		}
 	}
 	

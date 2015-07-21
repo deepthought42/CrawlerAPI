@@ -108,12 +108,16 @@ public class BrowserActor extends Thread{
 		browser = new Browser(url);
 
 		if(path.getPath().size() > 0 && !node.getClass().equals("browsing.Page")){
-			//	find first page in path
+			crawlPath();
 		}
 
 		this.pathQueue = queue;
 	}
 	
+	/**
+	 * 
+	 * @return PageNode
+	 */
 	public ConcurrentNode<Page> getPageNode(){
 		return this.pageNode;
 	}
@@ -148,6 +152,9 @@ public class BrowserActor extends Thread{
 
 		if(this.clonePath.getPath().isEmpty()){
 			this.clonePath.add(pageNode);
+		}
+		else{
+			
 		}
 
 		//boolean offerAccepted = pathQueue.offer(new Path(pageNode));
@@ -187,6 +194,32 @@ public class BrowserActor extends Thread{
 		this.browser.close();
 	}
 	
+	/**
+	 * Crawls the path for the current BrowserActor.
+	 */
+	private void crawlPath(){
+		Iterator pathIterator = this.path.getPath().iterator();
+		
+		ConcurrentNode<?> entryNode = (ConcurrentNode<?>) pathIterator.next();
+		String className = entryNode.getData().getClass().getCanonicalName();
+
+		while(pathIterator.hasNext()){
+			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
+			
+			className = pathNode.getData().getClass().getCanonicalName();
+			
+			if(className.equals("browsing.Page")){
+				
+			}
+			else if(className.equals("browsing.PageElement")){
+				
+			}
+			else if(className.equals("String")){
+				
+			}
+			
+		}
+	}
 	/**
 	 * Retrieves all elements on a page, and performs all known actions on each element.
 	 * 	Generates a map consisting of the page nodes outputs being Elements and elements 

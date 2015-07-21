@@ -209,17 +209,57 @@ public class BrowserActor extends Thread{
 			className = pathNode.getData().getClass().getCanonicalName();
 			
 			if(className.equals("browsing.Page")){
-				
+				//verify current page matches current node data
+				//if not mark as different
 			}
-			else if(className.equals("browsing.PageElement")){
-				
+			else if(className.equals("browsing.ElementAction")){
+				ElementAction elemAction = (ElementAction)pathNode.getData();
+				WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
+				//execute element action
+				new ActionFactory(this.browser.getDriver()).execAction(element, elemAction.getAction());
 			}
-			else if(className.equals("String")){
-				
-			}
-			
 		}
 	}
+	
+	/**
+	 * Finds all potential expansion nodes from current node
+	 */
+	private void expandNodePath(ConcurrentNode<?> node){
+		String className = node.getData().getClass().getCanonicalName();
+
+		//if node is a page then find all potential elementActions that can be taken including different values
+		//if node is an elementAction find all elementActions for the last seen page node that have not been seen
+		//   since the page node was encountered and add them.
+		
+		if(className.equals("browsing.Page")){
+			//verify current page matches current node data
+			//if not mark as different
+			Page page = (Page)node.getData();
+			Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
+			if(!page.equals(newPage)){
+				return;
+			}
+			
+			
+		}
+		else if(className.equals("browsing.ElementAction")){
+			ElementAction elemAction = (ElementAction)node.getData();
+			WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
+			//execute element action
+			new ActionFactory(this.browser.getDriver()).execAction(element, elemAction.getAction());
+		}
+	}
+	
+	/**
+	 * Adds the given {@link Path path} to the queue
+	 * 
+	 * @param path path to be added
+	 */
+	private void putPathOnQueue(Path path){
+		
+	}
+	
+	
 	/**
 	 * Retrieves all elements on a page, and performs all known actions on each element.
 	 * 	Generates a map consisting of the page nodes outputs being Elements and elements 

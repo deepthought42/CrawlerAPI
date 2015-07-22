@@ -22,4 +22,12 @@ public class ElementAction {
 	public String getAction(){
 		return this.action;
 	}
+	
+	public boolean equals(ElementAction elemAction){
+		if(elemAction.getPageElement().equals(this.element)
+				&& elemAction.getAction().equals(this.action)){
+			return true;
+		}
+		return false;
+	}
 }

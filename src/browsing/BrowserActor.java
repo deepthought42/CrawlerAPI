@@ -98,7 +98,7 @@ public class BrowserActor extends Thread{
 		
 		
 		this.path = path;
-		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().poll(); 
+		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
 		assert(((Page)node.getData()).getUrl() != null);
 
 		this.url = ((Page)node.getData()).getUrl();
@@ -153,7 +153,7 @@ public class BrowserActor extends Thread{
 		
 		
 		
-		
+		/*
 		
 		this.clonePath = Path.clone(this.path);
 		//get a web browser driver and open the browser to the desired url
@@ -209,6 +209,8 @@ public class BrowserActor extends Thread{
 			ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
 			System.out.println("Map created. There were " + map.size() + " output links for this node");
 		//}
+		 * */
+		 */
 		this.browser.close();
 	}
 	
@@ -221,7 +223,9 @@ public class BrowserActor extends Thread{
 
 		ConcurrentNode<?> entryNode = (ConcurrentNode<?>) pathIterator.next();
 		String className = entryNode.getData().getClass().getCanonicalName();
-
+		
+		//skip first node since we should have already loaded it during initialization
+		pathIterator.next();
 		while(pathIterator.hasNext()){
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
 			
@@ -243,7 +247,8 @@ public class BrowserActor extends Thread{
 	/**
 	 * Finds all potential expansion nodes from current node
 	 */
-	private void expandNodePath(ConcurrentNode<?> node){
+	private void expandNodePath(){
+		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
 		String className = node.getData().getClass().getCanonicalName();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
 		String[] actions = ActionFactory.getActions();
@@ -283,12 +288,13 @@ public class BrowserActor extends Thread{
 			//navigate path back to last seen page
 			//for each ElementAction seen, record elementAction.
 			Iterator descendingIterator = this.path.getPath().descendingIterator();
+			Page page = null;
 			
 			while(descendingIterator.hasNext()){
 				ConcurrentNode<?> descNode = (ConcurrentNode<?>) descendingIterator.next();
 				
 				if(descNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
-					Page page = (Page)descNode.getData();
+					page = (Page)descNode.getData();
 					elementActionAvailableList = page.getElements();
 					break;
 				}
@@ -298,7 +304,30 @@ public class BrowserActor extends Thread{
 			}
 			
 			//add each elementAction for last seen page excluding elementActions seen while finding page
+			Iterator elementIterator = page.getElements().iterator();
 			
+			while(elementIterator.hasNext()){
+				PageElement elem = (PageElement) elementIterator.next();
+				for(int i = 0; i < actions.length; i++){
+					ElementAction elemAction = new ElementAction(elem, actions[i]);
+					
+					Iterator seenElementIterator = elementActionSeenList.iterator();
+					boolean seen = false;
+					while(seenElementIterator.hasNext()){
+						if(((ElementAction)seenElementIterator.next()).equals(elemAction)){
+							seen = true;
+						}
+					}
+					if(!seen){
+						//Clone path then add ElementAciton to path and push path onto path queue					
+						ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
+						elementAction.addInput(node);
+						node.addOutput(elementAction);
+					
+						putPathOnQueue(elementAction);
+					}
+				}				
+			}
 		}
 	}
 	

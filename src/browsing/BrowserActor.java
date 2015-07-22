@@ -3,6 +3,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -136,13 +137,28 @@ public class BrowserActor extends Thread{
 	 *  The actor will load the page into memory, access the element it needs, and then perform an action on it.
 	 */
 	public void run() {
-		
-		crawlPath();
+		long tStart = System.currentTimeMillis();
+		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+		if(this.path.getPath().isEmpty()){
+			this.path.add(pageNode);
+			System.out.println("PATH LENGTH :: "+this.path.getPath().size());
+		}
+		try{
+			crawlPath();
+		}catch(NoSuchElementException e){
+			System.err.println("NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
+			e.printStackTrace();
+		}
 		expandNodePath();
 		
 		
+		long tEnd = System.currentTimeMillis();
+		long tDelta = tEnd - tStart;
+		double elapsedSeconds = tDelta / 1000.0;
 		
-		
+		System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
+		System.out.println("#######################################################");
+
 		
 		
 		
@@ -166,11 +182,8 @@ public class BrowserActor extends Thread{
 		//TODO :: LOAD PAGE NODE FROM MEMORY FOR GIVEN URL.
 		// IF IT EXISTS CHECK IF IT HAS BEEN MAPPED. IF IT HAS NOT THEN MAP IT
 		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
-		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
 
-		if(this.clonePath.getPath().isEmpty()){
-			this.clonePath.add(pageNode);
-		}
+		
 		else{
 			
 		}
@@ -180,22 +193,11 @@ public class BrowserActor extends Thread{
 		//System.out.println(this.getName() + " :: OFFER ACCEPTED? :::  " + offerAccepted);
 		boolean offerAccepted = pathQueue.offer(new Path(pageNode));
 		
-		System.out.println("------------------------------------------------------------");
-		System.out.println(this.getName() + " :: Wrapped page instance in a graph node");
 		
-		System.out.println("----------------------------------------------------");
-		System.out.println(this.getName() + " :: loaded up elements. there were " + this.pageNode.data.getElements().size());
-		System.out.println("----------------------------------------------------");
 		if(this.pageNode.getOutputs() != null & this.pageNode.getOutputs().isEmpty()){
-			long tStart = System.currentTimeMillis();
 			pageCrawler(this.pageNode);
-			long tEnd = System.currentTimeMillis();
-			long tDelta = tEnd - tStart;
-			double elapsedSeconds = tDelta / 1000.0;
-			
-			System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
+
 			System.out.println(this.getName() + " :: FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
-			System.out.println("#######################################################");
 		}
 		System.out.println(this.getName() + " :: CRAWLING PAGE COMPLETE...");
 		System.out.println(this.getName() + " :: NUMBER OF NEW PAGES :: "+pagesSeen.size());
@@ -210,14 +212,14 @@ public class BrowserActor extends Thread{
 			System.out.println("Map created. There were " + map.size() + " output links for this node");
 		//}
 		 * */
-		 */
+		
 		this.browser.close();
 	}
 	
 	/**
 	 * Crawls the path for the current BrowserActor.
 	 */
-	private void crawlPath(){
+	private void crawlPath() throws NoSuchElementException{
 		Iterator pathIterator = this.path.getPath().iterator();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
 
@@ -225,7 +227,6 @@ public class BrowserActor extends Thread{
 		String className = entryNode.getData().getClass().getCanonicalName();
 		
 		//skip first node since we should have already loaded it during initialization
-		pathIterator.next();
 		while(pathIterator.hasNext()){
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
 			
@@ -248,6 +249,7 @@ public class BrowserActor extends Thread{
 	 * Finds all potential expansion nodes from current node
 	 */
 	private void expandNodePath(){
+		System.out.println("SETTING UP EXPANSION VARIABLES..");
 		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
 		String className = node.getData().getClass().getCanonicalName();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
@@ -257,22 +259,26 @@ public class BrowserActor extends Thread{
 		//if node is an elementAction find all elementActions for the last seen page node that have not been seen
 		//   since the page node was encountered and add them.
 		if(className.equals("browsing.Page")){
+			//System.out.println("FOUND PAGE NODE...Expanding now.");
 			//verify current page matches current node data
 			//if not mark as different
 			Page page = (Page)node.getData();
 			Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
 			if(!page.equals(newPage)){
+				//System.out.println("PAGES DO NOT MATCH!!!!");
 				return;
 			}
-			
+			//System.out.print("CREATING ELEMENT ITERATOR...");
 			//get all known possible compinations of PageElement actions and add them as potential expansions
 			Iterator elementIterator = page.getElements().iterator();
-			
+			//System.out.println("SIZE :: "+page.getElements().size());
 			while(elementIterator.hasNext()){
 				PageElement elem = (PageElement) elementIterator.next();
+				//System.out.println("ADDING ELEMENT WITH XPATH :: "+ elem.getXpath());
+						
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i]);
-					
+					//System.out.println("ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
 					elementAction.addInput(node);
@@ -283,6 +289,7 @@ public class BrowserActor extends Thread{
 			}
 		}
 		else if(className.equals("browsing.ElementAction")){
+			//System.out.println("FOUND ELMENT ACTION NODE...EXPANDING WIHT ELEMENT ACTIONS");
 			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
 			List<PageElement> elementActionAvailableList;
 			//navigate path back to last seen page
@@ -310,7 +317,7 @@ public class BrowserActor extends Thread{
 				PageElement elem = (PageElement) elementIterator.next();
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i]);
-					
+					System.out.println("TOTAL ELEMENT ACTIONS SEEN..."+elementActionSeenList.size());
 					Iterator seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;
 					while(seenElementIterator.hasNext()){
@@ -338,7 +345,8 @@ public class BrowserActor extends Thread{
 	 */
 	private boolean putPathOnQueue(ConcurrentNode<?> node){
 		Path clonePath = Path.clone(path);
-		this.clonePath.add(node);
+		clonePath.add(node);
+		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
 		return this.pathQueue.add(clonePath);
 	}
 	

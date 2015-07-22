@@ -40,6 +40,7 @@ public class Page{
 		this.date = date;
 		this.isValid = valid;
 		this.pageUrl = driver.getCurrentUrl();
+		getVisibleElements(driver, this.elements, "//body");
 	}
 	
 	public String getSrc() {

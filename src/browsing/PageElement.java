@@ -36,7 +36,7 @@ public class PageElement {
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);
-		//loadCssProperties();
+		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver);
 	}
 	
@@ -49,7 +49,7 @@ public class PageElement {
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);
-		//loadCssProperties();
+		loadCssProperties(elem);
 		this.xpath = parentXpath + this.generateXpath(driver);
 		this.xpath = uniqifyXpath(driver, xpathHash);
 	}
@@ -176,7 +176,7 @@ public class PageElement {
 	public void loadCssProperties(WebElement element){
 		for(String propertyName : cssList){
 			if(element.getCssValue(propertyName) != null){
-				//System.out.println(propertyName + " : " + this.element.getCssValue(propertyName));
+				System.out.println(propertyName + " : " + element.getCssValue(propertyName));
 				this.cssValues.put(propertyName, element.getCssValue(propertyName));	
 			}			
 		}	

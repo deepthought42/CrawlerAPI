@@ -21,10 +21,6 @@ public class PageElement {
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart"};
 	
-	//list of performed actions is not required with node coloring being implemented.
-	//TODO :: Remove once node coloring is in place
-	//private ArrayList<String> actionsPerformed = new ArrayList<String>();
-	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
 	
@@ -172,6 +168,11 @@ public class PageElement {
 		System.out.println("\n+++++++++++++++++++++++++++++++++++++++");
 	}
 	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * @param element the element to for which css styles should be loaded.
+	 */
 	public void loadCssProperties(WebElement element){
 		for(String propertyName : cssList){
 			if(element.getCssValue(propertyName) != null){
@@ -182,9 +183,10 @@ public class PageElement {
 	}
 	
 	/**
+	 * checks if css properties match between {@link WebElement elements}
 	 * 
 	 * @param elem
-	 * @return
+	 * @return whether attributes match or not
 	 */
 	public boolean cssMatches(PageElement elem){
 		for(String propertyName : cssValues.keySet()){
@@ -199,6 +201,7 @@ public class PageElement {
 	
 	/**
 	 * Get immediate child elements for a given element
+	 * 
 	 * @param elem	WebElement to get children for
 	 * @return list of WebElements
 	 */
@@ -212,6 +215,12 @@ public class PageElement {
 		return childPageElements;
 	}
 	
+	/**
+	 * Checks if {@link PageElement elements} are equal
+	 * 
+	 * @param elem
+	 * @return whether or not elements are equal
+	 */
 	public boolean equals(PageElement elem){
 		ArrayList<Attribute> oldPageElementAttributes = this.getAttributes();
 		ArrayList<Attribute> newPageElementAttributes = elem.getAttributes();
@@ -238,6 +247,9 @@ public class PageElement {
 		return areElementsEqual;
 	}
 	
+	/**
+	 * 
+	 */
 	public String toString(){
 		String pageElementString = "";
 		
@@ -246,18 +258,6 @@ public class PageElement {
 		
 		return pageElementString;
 	}
-
-	/**
-	 * Adds given action to list of actions that have been performed on this element
-	 * @param action
-	 */
-	/*
-	 * TODO : remove once node coloring is implemented
-	public void addAction(String action) {
-		this.actionsPerformed.add(action);
-		
-	}
-	*/
 
 	/**
 	 * returns the xpath generated for this element

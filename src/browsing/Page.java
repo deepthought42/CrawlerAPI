@@ -24,7 +24,6 @@ public class Page{
 	private Page prevPage;
 	
 	HashMap<PageElement, HashMap<String, Page>> elementActionMap = new HashMap<PageElement, HashMap<String, Page>>();
-	HashMap<ElementActionSequence, Page> elementActionSequencenMap = new HashMap<ElementActionSequence, Page>();
 
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
@@ -114,11 +113,6 @@ public class Page{
 			System.out.println("-------------------------------------------");
 		}
 	}
-	
-	private void addToSequenceMap(ElementActionSequence seq, Page page){
-		elementActionSequencenMap.put(seq, page);
-		System.out.println(seq.actionSequence + " : ACTION AND ELEMENT SEQUENCE ADDED TO ELEMENT ACTION MAP");
-	}
 
 	/**
 	 * retreives all leaf elements on a given page
@@ -180,41 +174,6 @@ public class Page{
 	 */
 	public List<WebElement> getChildElements(String xpath){
 		return driver.findElement(By.xpath(xpath)).findElements(By.xpath("*"));
-	}
-	
-	/**
-	 * 
-	 * @param elementActionMap
-	 * @param currElemActionSeq
-	 * @param page
-	 * @return
-	 */
-	public boolean hasElementActionResponseAlreadyBeenEncountered(
-				HashMap<ElementActionSequence, Page> elementActionMap, 
-				ElementActionSequence currElemActionSeq, 
-				Page page)
-	{
-		int[] currElemSeq = currElemActionSeq.elementSequence;
-		int[] currActionSeq = currElemActionSeq.actionSequence;
-		boolean exists = false;
-		for(ElementActionSequence seq : elementActionMap.keySet()){
-			int[] knownElemSeq = seq.elementSequence;
-			int[] knownActionSeq = seq.actionSequence;
-			int knownLen = knownElemSeq.length-1;
-
-
-			for(int knownIdx = 0; knownIdx <= knownLen; knownIdx++){
-				if(knownElemSeq.length <= currElemSeq.length){
-					if(knownActionSeq[knownLen-knownIdx] == currActionSeq[currActionSeq.length-1-knownIdx] 
-							&& knownElemSeq[knownLen-knownIdx] == currElemSeq[currElemSeq.length-1-knownIdx]
-							&& elementActionMap.get(seq).equals(page)){
-						exists = true;
-						break;
-					}
-				}
-			}
-		}
-		return exists;
 	}
 	
 	/**

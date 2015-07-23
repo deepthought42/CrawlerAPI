@@ -158,60 +158,6 @@ public class BrowserActor extends Thread{
 		
 		System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
 		System.out.println("#######################################################");
-
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		/*
-		
-		this.clonePath = Path.clone(this.path);
-		//get a web browser driver and open the browser to the desired url
-		//get the page
-
-		System.out.println(this.getName() + " :: RETRIEVING DRIVER...");
-		//signIn("test@test.com", "testtest");
-
-		System.out.println(this.getName() + " :: Built page instance.");
-		//TODO :: LOAD PAGE NODE FROM MEMORY FOR GIVEN URL.
-		// IF IT EXISTS CHECK IF IT HAS BEEN MAPPED. IF IT HAS NOT THEN MAP IT
-		// ELSE CRAWL MAP TO FIND NEW PAGES TO MAP
-
-		
-		else{
-			
-		}
-
-		//boolean offerAccepted = pathQueue.offer(new Path(pageNode));
-		
-		//System.out.println(this.getName() + " :: OFFER ACCEPTED? :::  " + offerAccepted);
-		boolean offerAccepted = pathQueue.offer(new Path(pageNode));
-		
-		
-		if(this.pageNode.getOutputs() != null & this.pageNode.getOutputs().isEmpty()){
-			pageCrawler(this.pageNode);
-
-			System.out.println(this.getName() + " :: FINISHED EXECUTING ALL ACTIONS FOR THIS PAGE");
-		}
-		System.out.println(this.getName() + " :: CRAWLING PAGE COMPLETE...");
-		System.out.println(this.getName() + " :: NUMBER OF NEW PAGES :: "+pagesSeen.size());
-		System.out.println(this.getName() + " :: Number of elements in page output :: " + pageNode.getOutputs().size());
-		
-		//else{
-			System.out.println("Page node already has outputs. lets crawl them!");
-			//browser = new Browser(url);
-			//mapCrawler(browser, url, this.pageNode);
-			
-			ConcurrentHashMap<ConcurrentNode<?>, Double> map = pageNode.getOutputs();
-			System.out.println("Map created. There were " + map.size() + " output links for this node");
-		//}
-		 * */
 		
 		this.browser.close();
 	}

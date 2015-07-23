@@ -176,7 +176,6 @@ public class PageElement {
 	public void loadCssProperties(WebElement element){
 		for(String propertyName : cssList){
 			if(element.getCssValue(propertyName) != null){
-				System.out.println(propertyName + " : " + element.getCssValue(propertyName));
 				this.cssValues.put(propertyName, element.getCssValue(propertyName));	
 			}			
 		}	

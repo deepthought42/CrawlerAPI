@@ -144,26 +144,26 @@ public class BrowserActor extends Thread{
 			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
 			if(this.path.getPath().isEmpty()){
 				this.path.add(pageNode);
-				System.out.println("PATH LENGTH :: "+this.path.getPath().size());
+				System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 			}
 			try{
 				crawlPath();
 			}catch(NoSuchElementException e){
-				System.err.println("NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
+				System.err.println(this.getName() + " NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
 				e.printStackTrace();
 			}
 			
-			System.out.println("EXPANDING NODE...");
+			System.out.println(this.getName() + " EXPANDING NODE...");
 			expandNodePath();
-			System.out.println("NODE EXPANDED..");
+			System.out.println(this.getName() + " NODE EXPANDED..");
 			
 			long tEnd = System.currentTimeMillis();
 			long tDelta = tEnd - tStart;
 			double elapsedSeconds = tDelta / 1000.0;
 			
-			System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
-			System.out.println("#######################################################");
-			System.out.println("THREADS STILL RUNNING :: "+Thread.activeCount());
+			System.out.println(this.getName() + " -----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
+			System.out.println(this.getName() + " #######################################################");
+			System.out.println(this.getName() + " THREADS STILL RUNNING :: "+Thread.activeCount());
 			this.path = this.pathQueue.poll();
 		}while(!this.pathQueue.isEmpty());
 		this.browser.close();
@@ -201,8 +201,8 @@ public class BrowserActor extends Thread{
 				System.out.println("NEW PAGE :: "+newPage);
 				
 				if(pageNode != null && !pageNode.equals(newPage)){
-					System.out.println("PAGE NODE :: "+pageNode);
-					System.out.println("Page has changed...adding new page to path");
+					System.out.println(this.getName() + " PAGE NODE :: "+pageNode);
+					System.out.println(this.getName() + " Page has changed...adding new page to path");
 					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
 					pathNode.addOutput(newPageNode);
 					newPageNode.addInput(pathNode);
@@ -219,7 +219,7 @@ public class BrowserActor extends Thread{
 	 * Finds all potential expansion nodes from current node
 	 */
 	private void expandNodePath(){
-		System.out.println("SETTING UP EXPANSION VARIABLES..");
+		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
 		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
 		String className = node.getData().getClass().getCanonicalName();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
@@ -287,7 +287,7 @@ public class BrowserActor extends Thread{
 				PageElement elem = (PageElement) elementIterator.next();
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i]);
-					System.out.println("TOTAL ELEMENT ACTIONS SEEN..."+elementActionSeenList.size());
+					System.out.println(this.getName() + " TOTAL ELEMENT ACTIONS SEEN..."+elementActionSeenList.size());
 					Iterator seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;
 					while(seenElementIterator.hasNext()){

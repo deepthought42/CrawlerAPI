@@ -1,6 +1,7 @@
 package browsing;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -107,11 +108,11 @@ public class BrowserActor extends Thread{
 		System.out.println("BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
 		
 		browser = new Browser(url);
-
+/*
 		if(path.getPath().size() > 0 && !node.getClass().equals("browsing.Page")){
 			crawlPath();
 		}
-
+*/
 		this.pathQueue = queue;
 	}
 	
@@ -149,8 +150,10 @@ public class BrowserActor extends Thread{
 			System.err.println("NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
 			e.printStackTrace();
 		}
-		expandNodePath();
 		
+		System.out.println("EXPANDING NODE...");
+		expandNodePath();
+		System.out.println("NODE EXPANDED..");
 		
 		long tEnd = System.currentTimeMillis();
 		long tDelta = tEnd - tStart;
@@ -158,7 +161,7 @@ public class BrowserActor extends Thread{
 		
 		System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
 		System.out.println("#######################################################");
-		
+		System.out.println("THREADS STILL RUNNING :: "+Thread.activeCount());
 		this.browser.close();
 	}
 	
@@ -171,7 +174,7 @@ public class BrowserActor extends Thread{
 
 		ConcurrentNode<?> entryNode = (ConcurrentNode<?>) pathIterator.next();
 		String className = entryNode.getData().getClass().getCanonicalName();
-		
+		Page pageNode = null;
 		//skip first node since we should have already loaded it during initialization
 		while(pathIterator.hasNext()){
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
@@ -179,6 +182,7 @@ public class BrowserActor extends Thread{
 			className = pathNode.getData().getClass().getCanonicalName();
 			
 			if(className.equals("browsing.Page")){
+				pageNode = (Page)pathNode.getData();
 				//verify current page matches current node data
 				//if not mark as different
 			}
@@ -187,6 +191,22 @@ public class BrowserActor extends Thread{
 				WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
 				//execute element action
 				actionFactory.execAction(element, elemAction.getAction());
+				
+				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
+				//if after performing action page is no longer equal do stuff
+				System.out.println("NEW PAGE :: "+newPage);
+				
+				if(pageNode != null && !pageNode.equals(newPage)){
+					System.out.println("PAGE NODE :: "+pageNode);
+					System.out.println("Page has changed...adding new page to path");
+					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
+					pathNode.addOutput(newPageNode);
+					newPageNode.addInput(pathNode);
+					this.path.add(newPageNode);
+				}
+				
+				//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
+				//	An element that has changed cannot change again. If it does then the path is marked as dead
 			}
 		}
 	}

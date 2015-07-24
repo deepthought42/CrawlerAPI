@@ -44,7 +44,11 @@ public class Browser {
 	public List<WebElement> findElement(WebElement elem){		
 		return elements;
 	}
-	
+
+	/**
+	 * 
+	 * @return
+	 */
 	public Page getPage(){
 		return page;
 	}

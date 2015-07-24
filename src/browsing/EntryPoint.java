@@ -24,10 +24,12 @@ public class EntryPoint {
 		//e.execute(new BrowserActor(url, pageNode));
 		
 		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue);
+		workAllocator.start();
 		BrowserActor browserActor = new BrowserActor(url, pathQueue);
 		browserActor.start();
 		
 		System.out.println("Registered observer!");
+		System.out.println("THREADS STILL RUNNING AT END :: "+Thread.activeCount());
 
 	}
 }

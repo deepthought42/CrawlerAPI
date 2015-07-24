@@ -138,30 +138,34 @@ public class BrowserActor extends Thread{
 	 *  The actor will load the page into memory, access the element it needs, and then perform an action on it.
 	 */
 	public void run() {
-		long tStart = System.currentTimeMillis();
-		this.pageNode = new ConcurrentNode<Page>(browser.getPage());
-		if(this.path.getPath().isEmpty()){
-			this.path.add(pageNode);
-			System.out.println("PATH LENGTH :: "+this.path.getPath().size());
-		}
-		try{
-			crawlPath();
-		}catch(NoSuchElementException e){
-			System.err.println("NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
-			e.printStackTrace();
-		}
 		
-		System.out.println("EXPANDING NODE...");
-		expandNodePath();
-		System.out.println("NODE EXPANDED..");
-		
-		long tEnd = System.currentTimeMillis();
-		long tDelta = tEnd - tStart;
-		double elapsedSeconds = tDelta / 1000.0;
-		
-		System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
-		System.out.println("#######################################################");
-		System.out.println("THREADS STILL RUNNING :: "+Thread.activeCount());
+		do{
+			long tStart = System.currentTimeMillis();
+			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+			if(this.path.getPath().isEmpty()){
+				this.path.add(pageNode);
+				System.out.println("PATH LENGTH :: "+this.path.getPath().size());
+			}
+			try{
+				crawlPath();
+			}catch(NoSuchElementException e){
+				System.err.println("NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
+				e.printStackTrace();
+			}
+			
+			System.out.println("EXPANDING NODE...");
+			expandNodePath();
+			System.out.println("NODE EXPANDED..");
+			
+			long tEnd = System.currentTimeMillis();
+			long tDelta = tEnd - tStart;
+			double elapsedSeconds = tDelta / 1000.0;
+			
+			System.out.println("-----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
+			System.out.println("#######################################################");
+			System.out.println("THREADS STILL RUNNING :: "+Thread.activeCount());
+			this.path = this.pathQueue.poll();
+		}while(!this.pathQueue.isEmpty());
 		this.browser.close();
 	}
 	

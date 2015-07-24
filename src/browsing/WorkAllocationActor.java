@@ -40,45 +40,40 @@ public class WorkAllocationActor extends Thread implements Observer{
 	public void run(){
 		long tStart = System.currentTimeMillis();
 		int threadCount = Thread.activeCount();
-		int processorCount = Runtime.getRuntime().availableProcessors()*3;
-		System.out.println("TOTAL PROCESSES ALLOWED..."+processorCount);
-		//while(!queue.isEmpty() || ((System.currentTimeMillis()-tStart) / 1000.0) < 120){
-			if(threadCount != Thread.activeCount()){
-				threadCount = Thread.activeCount();
-				System.out.println("!!!!!     CURRENT THREAD COUNT :: "+threadCount +   "!!!!!!!");
-			}
-			if(Thread.activeCount() < processorCount){
-				try{
-					if(queue.size() > 0){
-						//System.out.println("QUEUE IS NOT EMPTY...");
-						try{
-							Path path = (Path)queue.poll();
-							if(path != null){
-								//System.out.println("PATH IS NOT NULL...");
-								System.out.println("WORK ALLOCATION ACTOR PATH LENGTH :: " + path.getPath().size());
-								ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst();
-						        System.out.println("Element outputs ::: " + node.getOutputs().size());
-						        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-						        
-						        BrowserActor browserActor = new BrowserActor(queue, path);
-								browserActor.start();
-						        System.out.println("BROWSER ACTOR STARTED!");
-							}
-							else{
-								System.out.println(this.getName() + " :: PATH is null.");
-							}
-				    	}
-						catch(NoSuchElementException e){
-				    	}
-				    	catch(NullPointerException e){
-				    	}
-					}
-				}
-				catch(NullPointerException e){
-					
+		int processorCount = Runtime.getRuntime().availableProcessors()*2;
+		System.out.println("#####  TOTAL PROCESSES ALLOWED... "+processorCount+"     ######");
+		System.out.println("!!!!!     CURRENT THREAD COUNT :: "+threadCount +   "!!!!!!!");
+		if(Thread.activeCount() < processorCount){
+			try{
+				if(queue.size() > 0){
+					//System.out.println("QUEUE IS NOT EMPTY...");
+					try{
+						Path path = (Path)queue.poll();
+						if(path != null){
+							//System.out.println("PATH IS NOT NULL...");
+							System.out.println("WORK ALLOCATION ACTOR PATH LENGTH :: " + path.getPath().size());
+							ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst();
+					        System.out.println("Element outputs ::: " + node.getOutputs().size());
+					        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+					        
+					        BrowserActor browserActor = new BrowserActor(queue, path);
+							browserActor.start();
+					        System.out.println("BROWSER ACTOR STARTED!");
+						}
+						else{
+							System.out.println(this.getName() + " :: PATH is null.");
+						}
+			    	}
+					catch(NoSuchElementException e){
+			    	}
+			    	catch(NullPointerException e){
+			    	}
 				}
 			}
-		//}
+			catch(NullPointerException e){
+				
+			}
+		}
 		System.err.println("EXITING WORK ALLOCATOR");
 	}
 }

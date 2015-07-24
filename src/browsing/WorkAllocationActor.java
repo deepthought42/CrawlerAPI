@@ -16,13 +16,15 @@ import structs.Path;
  * @author Brandon Kindred
  *
  */
-public class WorkAllocationActor extends Thread implements Observer{
+public class WorkAllocationActor implements Observer{
 	
 	ObservableQueue<Path> queue = null;
+	int processorCount = 0;
 	public WorkAllocationActor(ObservableQueue<Path> queue){
 		this.queue = queue;
 		this.queue.addObserver(this);
-		
+		this.processorCount = Runtime.getRuntime().availableProcessors()*2;
+
 	}
 
 	//Whenever an update is observed the current queue is updated
@@ -31,19 +33,18 @@ public class WorkAllocationActor extends Thread implements Observer{
 	    if (o instanceof ObservableQueue){
 	    	queue = (ObservableQueue) o;
 	        System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
-	        this.run();
+	        this.allocatePathProcessing();
 	    }else{
 	        System.out.println("The observable object was not of the correct type");
 	    }
 	}
 	
-	public void run(){
+	public void allocatePathProcessing(){
 		long tStart = System.currentTimeMillis();
 		int threadCount = Thread.activeCount();
-		int processorCount = Runtime.getRuntime().availableProcessors()*2;
 		System.out.println("#####  TOTAL PROCESSES ALLOWED... "+processorCount+"     ######");
 		System.out.println("!!!!!     CURRENT THREAD COUNT :: "+threadCount +   "!!!!!!!");
-		if(Thread.activeCount() < processorCount){
+		if(Thread.activeCount() < this.processorCount){
 			try{
 				if(queue.size() > 0){
 					//System.out.println("QUEUE IS NOT EMPTY...");

@@ -105,8 +105,8 @@ public class BrowserActor extends Thread{
 
 		this.url = ((Page)node.getData()).getUrl();
 		
-		System.out.println("BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
-		
+		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
+		System.out.println(this.getName() + " CURRENT THREAD COUNT :: "+Thread.activeCount());
 		browser = new Browser(url);
 /*
 		if(path.getPath().size() > 0 && !node.getClass().equals("browsing.Page")){

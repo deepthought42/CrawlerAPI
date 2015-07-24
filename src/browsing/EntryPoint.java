@@ -24,7 +24,6 @@ public class EntryPoint {
 		//e.execute(new BrowserActor(url, pageNode));
 		
 		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue);
-		workAllocator.start();
 		BrowserActor browserActor = new BrowserActor(url, pathQueue);
 		browserActor.start();
 		

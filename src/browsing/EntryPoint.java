@@ -18,7 +18,7 @@ public class EntryPoint {
 	public static void main(String[] args){
 		//graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( DB_PATH );
 		//registerShutdownHook( graphDb );
-		ResourceManagementActor resourceManager = new ResourceManagementActor(5);
+		ResourceManagementActor resourceManager = new ResourceManagementActor(1);
 		ObservableQueue<Path> pathQueue = new ObservableQueue<Path>();
 		String url = "localhost:3000";
 		System.out.print("INITIALIZING ACTOR...");

@@ -95,6 +95,11 @@ public class BrowserActor extends Thread implements Actor{
 		this.pathQueue = queue;
 		this.path = new Path();
 		this.resourceManager = resourceManager;
+		
+		if(this.path.getPath().isEmpty()){
+			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
+			System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
+		}
 	}
 	
 	/**
@@ -149,10 +154,15 @@ public class BrowserActor extends Thread implements Actor{
 		resourceManager.punchIn(this);
 		do{
 			long tStart = System.currentTimeMillis();
-			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
+
 			if(this.path.getPath().isEmpty()){
-				this.path.add(pageNode);
+				this.path.add(new ConcurrentNode<Page>(browser.getPage()));
 				System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
+			}
+			else{
+				this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl();
+				System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
+				browser.getDriver().get(this.url);
 			}
 			try{
 				crawlPath();
@@ -180,64 +190,53 @@ public class BrowserActor extends Thread implements Actor{
 	/**
 	 * Crawls the path for the current BrowserActor.
 	 */
-	private void crawlPath() throws NoSuchElementException{
+	private void crawlPath() throws NoSuchElementException, StaleElementReferenceException{
 		Iterator pathIterator = this.path.getPath().iterator();
+		Path additionalNodes = new Path();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
-
-		ConcurrentNode<?> entryNode = (ConcurrentNode<?>) pathIterator.next();
-		String className = entryNode.getData().getClass().getCanonicalName();
 		Page pageNode = null;
 		//skip first node since we should have already loaded it during initialization
+		int i = 0;
 		while(pathIterator.hasNext()){
+			System.out.println(this.getName() + " -> current path index :: " + i++);
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
 			
-			className = pathNode.getData().getClass().getCanonicalName();
+			String className = pathNode.getData().getClass().getCanonicalName();
 			
 			if(className.equals("browsing.Page")){
 				pageNode = (Page)pathNode.getData();
+				System.out.println(this.getName() + " -> PAGE NODE SEEN");
 				//verify current page matches current node data
 				//if not mark as different
 			}
 			else if(className.equals("browsing.ElementAction")){
 				ElementAction elemAction = (ElementAction)pathNode.getData();
-				WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
 				//execute element action
-				try{
-					actionFactory.execAction(element, elemAction.getAction());
-				}
-				catch(StaleElementReferenceException e){
-					System.err.println(this.getName() + " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "+
-							elemAction.getAction() + ". ");
-					//e.printStackTrace();
-					browser.getUrl(url);
-				}
-				catch(UnreachableBrowserException e){
-					System.err.println(this.getName() + " :: Browser is unreachable.");
-					break;
-				}
-				catch(ElementNotVisibleException e){
-					System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
-				}
-				catch(InvalidSelectorException e){
-					System.out.println(this.getName() + " :: INVALID SELECTOR");
-				}
+				boolean actionPerformedSuccessfully;
+				do{
+					actionPerformedSuccessfully = performAction(elemAction);
+					
+				}while(!actionPerformedSuccessfully);
+				
 				
 				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
 				//if after performing action page is no longer equal do stuff
-				System.out.println("NEW PAGE :: "+newPage);
+				System.out.println(this.getName() + " -> NEW PAGE :: "+ newPage);
 				
 				if(pageNode != null && !pageNode.equals(newPage)){
-					System.out.println(this.getName() + " Page has changed...adding new page to path");
+					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
 					pathNode.addOutput(newPageNode);
 					newPageNode.addInput(pathNode);
-					this.path.add(newPageNode);
+					additionalNodes.add(newPageNode);
 				}
 				
 				//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
 				//	An element that has changed cannot change again. If it does then the path is marked as dead
 			}
 		}
+		this.path.append(additionalNodes);
+		System.out.println(this.getName() + " -> DONE CRAWLING PATH");
 	}
 	
 	/**
@@ -247,29 +246,23 @@ public class BrowserActor extends Thread implements Actor{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
 		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
 		String className = node.getData().getClass().getCanonicalName();
-		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
 		String[] actions = ActionFactory.getActions();
 
 		//if node is a page then find all potential elementActions that can be taken including different values
 		//if node is an elementAction find all elementActions for the last seen page node that have not been seen
 		//   since the page node was encountered and add them.
 		if(className.equals("browsing.Page")){
-			//System.out.println("FOUND PAGE NODE...Expanding now.");
 			//verify current page matches current node data
 			//if not mark as different
 			Page page = (Page)node.getData();
 			Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
 			if(!page.equals(newPage)){
-				//System.out.println("PAGES DO NOT MATCH!!!!");
 				return;
 			}
-			//System.out.print("CREATING ELEMENT ITERATOR...");
 			//get all known possible compinations of PageElement actions and add them as potential expansions
 			Iterator elementIterator = page.getElements().iterator();
-			//System.out.println("SIZE :: "+page.getElements().size());
 			while(elementIterator.hasNext()){
 				PageElement elem = (PageElement) elementIterator.next();
-				//System.out.println("ADDING ELEMENT WITH XPATH :: "+ elem.getXpath());
 						
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i]);
@@ -284,7 +277,6 @@ public class BrowserActor extends Thread implements Actor{
 			}
 		}
 		else if(className.equals("browsing.ElementAction")){
-			//System.out.println("FOUND ELMENT ACTION NODE...EXPANDING WIHT ELEMENT ACTIONS");
 			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
 			List<PageElement> elementActionAvailableList;
 			//navigate path back to last seen page
@@ -350,5 +342,44 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public UUID getActorId(){
 		return uuid;
+	}
+	
+	
+	/**
+	 * Executes the given {@link ElementAction element action} pair. 
+	 * 
+	 * @param elemAction 
+	 * @return whether action was able to be performed on element or not
+	 */
+	private boolean performAction(ElementAction elemAction){
+		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
+		boolean wasPerformedSuccessfully = true;
+		
+		try{
+			WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
+
+			System.out.println(this.getName() + " -> WEB ELEMENT :: " + element.getTagName());
+			actionFactory.execAction(browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath())), elemAction.getAction());
+			System.err.println(this.getName() + " -> Performed action "+elemAction.getAction()+ " On element with xpath :: "+elemAction.getPageElement().getXpath());
+		}
+		catch(StaleElementReferenceException e){
+			System.out.println(this.getName() + " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "+
+					elemAction.getAction() + ". ");
+			//e.printStackTrace();
+			wasPerformedSuccessfully = false;
+		}
+		catch(UnreachableBrowserException e){
+			System.err.println(this.getName() + " :: Browser is unreachable.");
+			wasPerformedSuccessfully = false;
+		}
+		catch(ElementNotVisibleException e){
+			System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
+			//wasPerformedSuccessfully = false;
+		}
+		catch(InvalidSelectorException e){
+			System.out.println(this.getName() + " :: INVALID SELECTOR");
+		}
+		
+		return wasPerformedSuccessfully;
 	}
 }

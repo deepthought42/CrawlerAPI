@@ -2,6 +2,7 @@ package browsing;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -19,7 +20,7 @@ public class PageElement {
 	private String text;
 	private String xpath;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart"};
+	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click"};
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
@@ -133,24 +134,19 @@ public class PageElement {
 	public void loadAttributes(WebDriver driver, WebElement element){
 		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
 
-		String attributeString = javascriptDriver.executeScript("var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;", element).toString();
-		attributeString = attributeString.replace("{","");
-		attributeString = attributeString.replace("}","");
-		attributeString = attributeString.trim();
-		if(!attributeString.isEmpty()){
-			String[] attributeArray = attributeString.split(",");
-			for(int i=0; i < attributeArray.length; i++){
-				String[] attributes = attributeArray[i].split("=");
-				String[] attributeVals;
-				if(attributes.length > 1){
-					attributeVals = attributes[1].split(" ");
-				}
-				else{
-					attributeVals = new String[0];
-				}
-				
-				this.attributes.add(new Attribute(attributes[0].trim(), attributeVals));
+		ArrayList<String> attributeList = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + ':' + arguments[0].attributes[index].value) }; return items;", element);
+		for(int i = 0; i < attributeList.size(); i++){
+			//System.out.println("ATTRIBUTE ITEM :: "+attributeList.get(i));
+			String[] attributes = attributeList.get(i).split(":");
+			String[] attributeVals;
+			if(attributes.length > 1){
+				attributeVals = attributes[1].split(" ");
 			}
+			else{
+				attributeVals = new String[0];
+			}
+			
+			this.attributes.add(new Attribute(attributes[0].trim(), attributeVals));
 		}
 	}
 	

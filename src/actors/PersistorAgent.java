@@ -1,4 +1,4 @@
-package agents;
+package actors;
 
 public class PersistorAgent {
 

@@ -1,4 +1,4 @@
-package browsing;
+package actors;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Observable;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import observableStructs.ObservableQueue;
@@ -21,6 +22,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import browsing.ActionFactory;
+import browsing.Browser;
+import browsing.ConcurrentNode;
+import browsing.ElementAction;
+import browsing.Page;
+import browsing.PageElement;
 import structs.Path;
 
 /*
@@ -50,8 +57,9 @@ import structs.Path;
  * @author Brandon Kindred
  *
  */
-public class BrowserActor extends Thread{
+public class BrowserActor extends Thread implements Actor{
 
+	private UUID uuid = null;
 	private static WebDriver driver;
 	private String url = null;
 	private ObservableQueue<Path> pathQueue = null;
@@ -60,6 +68,7 @@ public class BrowserActor extends Thread{
 	private Path clonePath = null;
 	private List<Page> pagesSeen = new ArrayList<Page>();
 	private Browser browser = null;
+	private ResourceManagementActor resourceManager = null;
 	
 	public BrowserActor(String url) {
 		this.url = url;
@@ -76,13 +85,16 @@ public class BrowserActor extends Thread{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(String url, ObservableQueue<Path> queue) {
+	public BrowserActor(String url, ObservableQueue<Path> queue, ResourceManagementActor resourceManager) {
 		assert(queue != null);
 		assert(queue.isEmpty());
+		
+		this.uuid = UUID.randomUUID();
 		this.url = url;
 		browser = new Browser(url);
 		this.pathQueue = queue;
 		this.path = new Path();
+		this.resourceManager = resourceManager;
 	}
 	
 	/**
@@ -94,26 +106,22 @@ public class BrowserActor extends Thread{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(ObservableQueue<Path> queue, Path path) {
+	public BrowserActor(ObservableQueue<Path> queue, Path path, ResourceManagementActor resourceManager) {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
-		
+		this.uuid = UUID.randomUUID();
 		this.path = path;
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
 		assert(((Page)node.getData()).getUrl() != null);
 
 		this.url = ((Page)node.getData()).getUrl();
 		
-		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES; preparing to crawl");
-		System.out.println(this.getName() + " CURRENT THREAD COUNT :: "+Thread.activeCount());
+		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
 		browser = new Browser(url);
-/*
-		if(path.getPath().size() > 0 && !node.getClass().equals("browsing.Page")){
-			crawlPath();
-		}
-*/
+
 		this.pathQueue = queue;
+		this.resourceManager = resourceManager;
 	}
 	
 	/**
@@ -138,7 +146,7 @@ public class BrowserActor extends Thread{
 	 *  The actor will load the page into memory, access the element it needs, and then perform an action on it.
 	 */
 	public void run() {
-		
+		resourceManager.punchIn(this);
 		do{
 			long tStart = System.currentTimeMillis();
 			this.pageNode = new ConcurrentNode<Page>(browser.getPage());
@@ -153,9 +161,9 @@ public class BrowserActor extends Thread{
 				e.printStackTrace();
 			}
 			
-			System.out.println(this.getName() + " EXPANDING NODE...");
+			//System.out.println(this.getName() + " EXPANDING NODE...");
 			expandNodePath();
-			System.out.println(this.getName() + " NODE EXPANDED..");
+			//System.out.println(this.getName() + " NODE EXPANDED..");
 			
 			long tEnd = System.currentTimeMillis();
 			long tDelta = tEnd - tStart;
@@ -163,10 +171,10 @@ public class BrowserActor extends Thread{
 			
 			System.out.println(this.getName() + " -----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
 			System.out.println(this.getName() + " #######################################################");
-			System.out.println(this.getName() + " THREADS STILL RUNNING :: "+Thread.activeCount());
 			this.path = this.pathQueue.poll();
 		}while(!this.pathQueue.isEmpty());
 		this.browser.close();
+		resourceManager.punchOut(this);
 	}
 	
 	/**
@@ -194,14 +202,31 @@ public class BrowserActor extends Thread{
 				ElementAction elemAction = (ElementAction)pathNode.getData();
 				WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
 				//execute element action
-				actionFactory.execAction(element, elemAction.getAction());
+				try{
+					actionFactory.execAction(element, elemAction.getAction());
+				}
+				catch(StaleElementReferenceException e){
+					System.err.println(this.getName() + " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "+
+							elemAction.getAction() + ". ");
+					//e.printStackTrace();
+					browser.getUrl(url);
+				}
+				catch(UnreachableBrowserException e){
+					System.err.println(this.getName() + " :: Browser is unreachable.");
+					break;
+				}
+				catch(ElementNotVisibleException e){
+					System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
+				}
+				catch(InvalidSelectorException e){
+					System.out.println(this.getName() + " :: INVALID SELECTOR");
+				}
 				
 				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
 				//if after performing action page is no longer equal do stuff
 				System.out.println("NEW PAGE :: "+newPage);
 				
 				if(pageNode != null && !pageNode.equals(newPage)){
-					System.out.println(this.getName() + " PAGE NODE :: "+pageNode);
 					System.out.println(this.getName() + " Page has changed...adding new page to path");
 					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
 					pathNode.addOutput(newPageNode);
@@ -287,7 +312,7 @@ public class BrowserActor extends Thread{
 				PageElement elem = (PageElement) elementIterator.next();
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i]);
-					System.out.println(this.getName() + " TOTAL ELEMENT ACTIONS SEEN..."+elementActionSeenList.size());
+					//System.out.println(this.getName() + " TOTAL ELEMENT ACTIONS SEEN..."+elementActionSeenList.size());
 					Iterator seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;
 					while(seenElementIterator.hasNext()){
@@ -319,188 +344,11 @@ public class BrowserActor extends Thread{
 		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
 		return this.pathQueue.add(clonePath);
 	}
-	
-	
+
 	/**
-	 * Retrieves all elements on a page, and performs all known actions on each element.
-	 * 	Generates a map consisting of the page nodes outputs being Elements and elements 
-	 *  outputs being actions.
-	 *  
-	 * @param pageNode The network node of type Page that is to be crawled
+	 * Get the UUID for this Agent
 	 */
-	private void pageCrawler(ConcurrentNode<Page> pageNode){
-		
-
-		
-		System.out.println("Commencing page crawl...");
-		int element_idx = 0;
-		int last_element_idx = -1;
-		ConcurrentNode<PageElement> elementNode = null;
-		int action_idx = 0;
-		String[] actions = ActionFactory.getActions();
-		//System.out.println("Starting iteration over elements");
-		Page page = pageNode.getData();
-		page.getVisibleElements(browser.getDriver(), page.getElements(), "//body");
-		while(element_idx < pageNode.getData().getElements().size()){
-			if(this.clonePath.getPath().size() > 1){
-				System.out.println("%%%    PATH SIZE IS GREATER THAN 1...CRAWLING PATH");
-				pageNode = mapCrawler();
-				page = pageNode.getData();
-				page.getVisibleElements(browser.getDriver(), page.getElements(), "//body");
-				pagesSeen.add(page);
-				boolean previouslySeen = false;
-
-				for(Page pageSeen : pagesSeen){
-					if(pageSeen.equals(page)){
-						previouslySeen = true;
-					}
-				}
-				if(!previouslySeen){
-					pagesSeen.add(page);
-				}
-				System.out.println("%%%%   PATH NODE CRAWLED!");
-			}
-			boolean err = false;
-			try{
-				PageElement pageElement = page.getElements().get(element_idx);
-				WebElement elem = browser.getDriver().findElement(By.xpath(pageElement.getXpath()));
-				//JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
-		        //javascriptDriver.executeScript("arguments[0].style.border='3px solid red'", elem);
-								
-				//execute the following if there is no problem executing action
-				(new ActionFactory(browser.getDriver())).execAction(elem , actions[action_idx]);
-				Page newPage = null;
-				while(newPage == null){
-					try{
-						newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
-					}
-					catch(UnhandledAlertException e){
-						try{
-							browser.HandleAlert(driver, new WebDriverWait(driver, 2000) );
-						}catch(NullPointerException e1){
-							
-						}
-					}
-				}
-				//check if element already has been added. If it has then skip
-				// adding element to page and just add action to element
-				
-				//add action node to current element node
-				//there is no connection through inputs for nodes due to choice to keep graph directed
-				if(element_idx != last_element_idx){
-					elementNode = new ConcurrentNode<PageElement>(pageElement);
-					pageNode.addOutput(elementNode);
-					last_element_idx = element_idx;
-				}
-				
-				ConcurrentNode<String> actionNode = new ConcurrentNode<String>(actions[action_idx]);
-				elementNode.addOutput(actionNode);
-				
-				
-				//if the page has changed the create a new page node and associate it with the current actionNode
-				// dead end so that complex functionality can be built out later.
-				if(!page.equals(newPage)){
-					boolean previouslySeen = false;
-					for(Page pageSeen : pagesSeen){
-						if(pageSeen.equals(newPage)){
-							previouslySeen = true;
-							newPage = pageSeen;
-						}
-					}
-					//add element, action and new page to path
-					this.path.add(elementNode);
-					this.path.add(actionNode);
-					
-					if(!previouslySeen){
-						pagesSeen.add(newPage);
-						actionNode.addOutput(new ConcurrentNode<Page>(newPage));
-						this.path.add(new ConcurrentNode<Page>(newPage));
-					}
-
-					System.out.println(this.getName() + " :: PATH LENGTH === " + this.path.getPath().size());
-					pathQueue.offer(this.path);
-					
-					//set new path with pageNode as starting point
-					this.path = new Path(pageNode);
-					
-					System.out.println(this.getName() + " :: PAGE HAS CHANGED. GROWING GRAPH...");
-					//Add new page to action output
-					browser.getUrl(url);
-					mapCrawler();
-				}
-			}
-			catch(StaleElementReferenceException e){
-				System.err.println(this.getName() + " :: A SYSTEM ERROR WAS ENCOUNTERED WHILE ACTOR WAS PERFORMING ACTION : "+
-						actions[action_idx] + ". ");
-				//e.printStackTrace();
-				browser.getUrl(url);
-			}
-			catch(UnreachableBrowserException e){
-				System.err.println(this.getName() + " :: Browser is unreachable.");
-				err = true;
-				break;
-			}
-			catch(ElementNotVisibleException e){
-				System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
-			}
-			catch(InvalidSelectorException e){
-				System.out.println(this.getName() + " :: INVALID SELECTOR");
-			}
-			catch(WebDriverException e){
-				err = true;
-				System.err.println(this.getName() + " :: problem accessing WebDriver instance");
-			}
-			
-			if(!err){
-				if(action_idx >= actions.length-1){
-					action_idx = 0;
-					element_idx++;
-				}
-				else{
-					action_idx++;
-				}
-			}
-			System.out.println(this.getName() + " :: PERFORMING ACTION :: "+ actions[action_idx] + " on element at index :: "+element_idx);
-		}
+	public UUID getActorId(){
+		return uuid;
 	}
-	
-	/**
-	 * Crawls path to from start to end node
-	 * 
-	 * @param path {@link Path path} to crawl
-	 */
-	private ConcurrentNode<Page> mapCrawler(){
-		//crawl path to end node then resume page crawling.
-		
-		Page currentPage = null;
-		PageElement currentElement = null;
-		WebElement elem = null;
-		String currentAction = null;
-		Object lastNode = null;
-		
-		//iterate over elements to navigate to last node in path
-		Iterator pathIter = this.path.getPath().iterator();
-		
-		while(pathIter.hasNext()){
-			Object o = ((ConcurrentNode<?>)pathIter.next()).getData();
-			
-			if(o.getClass().getName().equals("browsing.Page")){
-				currentPage = (Page)o;
-			}
-			else if(o.getClass().getName().equals("browsing.PageElement")){
-				currentElement = (PageElement)o;
-				elem = browser.getDriver().findElement(By.xpath(currentElement.getXpath()));
-			}
-			else if(o.getClass().getName().equals("String")){
-				currentAction = (String)o;
-				(new ActionFactory(browser.getDriver())).execAction(elem , currentAction);
-			}
-			lastNode = o;
-		}
-		
-		System.out.println(this.getName() + " :: Done iterating over path. Now on element with class "+lastNode.getClass().getName() +"; data = " + lastNode.toString());
-		return new ConcurrentNode<Page>(browser.getPage()); 
-	}
-	
-	
 }

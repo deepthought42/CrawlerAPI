@@ -3,6 +3,9 @@ package browsing;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import actors.BrowserActor;
+import actors.ResourceManagementActor;
+import actors.WorkAllocationActor;
 import observableStructs.ObservableQueue;
 import structs.Path;
 
@@ -15,7 +18,7 @@ public class EntryPoint {
 	public static void main(String[] args){
 		//graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( DB_PATH );
 		//registerShutdownHook( graphDb );
-		
+		ResourceManagementActor resourceManager = new ResourceManagementActor(5);
 		ObservableQueue<Path> pathQueue = new ObservableQueue<Path>();
 		String url = "localhost:3000";
 		System.out.print("INITIALIZING ACTOR...");
@@ -23,8 +26,8 @@ public class EntryPoint {
 		System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
 		//e.execute(new BrowserActor(url, pageNode));
 		
-		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue);
-		BrowserActor browserActor = new BrowserActor(url, pathQueue);
+		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue, resourceManager);
+		BrowserActor browserActor = new BrowserActor(url, pathQueue, resourceManager);
 		browserActor.start();
 		
 		System.out.println("Registered observer!");

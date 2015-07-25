@@ -1,4 +1,4 @@
-package agents;
+package actors;
 
 import browsing.Page;
 

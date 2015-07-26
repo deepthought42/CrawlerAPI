@@ -53,7 +53,12 @@
 		<artifactId>orient-commons</artifactId>
 		<version>2.0-M1</version>
 	</dependency>
-		
+	<dependency>
+		<groupId>com.orientechnologies</groupId>
+		<artifactId>orientdb-graphdb</artifactId>
+		<version>2.1-rc5</version>
+	</dependency>
+			
   </dependencies>
   <groupId>com.QA.testSuite</groupId>
   <version>0.0.1</version>

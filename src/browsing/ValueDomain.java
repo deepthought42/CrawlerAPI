@@ -14,6 +14,13 @@ public class ValueDomain {
 		values.add("");
 	}
 	
+	public void generateAllValueTypes(){
+		addRandomRealNumbers();
+		addRandomDecimals();
+		addRandomAlphabeticStrings();
+		addRandomSpecialCharacterAlphabeticStrings();
+	}
+	
 	/**
 	 * Adds 100 random long values to values of domain
 	 */

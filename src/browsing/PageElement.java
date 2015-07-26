@@ -21,6 +21,7 @@ public class PageElement {
 	private String xpath;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class"};
+	private ValueDomain positiveDomain = new ValueDomain();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
@@ -50,6 +51,10 @@ public class PageElement {
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);
+		
+		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
+		positiveDomain.generateAllValueTypes();
+		
 		//loadCssProperties(elem);
 		this.xpath = parentXpath + this.generateXpath(driver);
 		this.xpath = uniqifyXpath(driver, xpathHash);

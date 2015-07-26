@@ -20,7 +20,7 @@ public class PageElement {
 	private String text;
 	private String xpath;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click"};
+	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class"};
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();

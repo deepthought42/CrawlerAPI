@@ -7,7 +7,7 @@ public class ValueDomain {
 	
 	private ArrayList<String> values = new ArrayList<String>();
 	private String alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	private String specialCharacters = "+={}/\\:;!@#$%^&*()~|<>?[]-_";
+	private String specialCharacters = alphabet+"+={}/\\:;!@#$%^&*()~|<>?[]-_";
 	
 	public ValueDomain(){
 		//add empty string as bare minimum
@@ -56,14 +56,14 @@ public class ValueDomain {
 	/**
 	 * Adds 100 random specialCharacter strings to values of domain
 	 */
-	public void addRandomSpecialCharacterStrings(){
+	public void addRandomSpecialCharacterAlphabeticStrings(){
 		Random random = new Random();
 		
-		for(int i= 0; i< 100; i++){
+		for(int i= 0; i< 10; i++){
 			StringBuilder valueSeq = new StringBuilder();
 			
 			for(int j = 0; j< random.nextInt(); j++){
-				int  n = random.nextInt(27) + 1;
+				int  n = random.nextInt(79) + 1;
 				valueSeq.append(specialCharacters.charAt(n));
 			}
 			values.add(valueSeq.toString());

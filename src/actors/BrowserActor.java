@@ -7,8 +7,10 @@ import java.util.UUID;
 
 import observableStructs.ObservableQueue;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
+import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.UnhandledAlertException;
@@ -166,6 +168,16 @@ public class BrowserActor extends Thread implements Actor{
 			}catch(NoSuchElementException e){
 				System.err.println(this.getName() + " NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
 				e.printStackTrace();
+			}
+			catch(UnhandledAlertException e){
+				System.err.println(this.getName() + " -> UNHANDLED ALERT EXCEPTION OCCURRED");
+				try{
+					Alert alert = browser.getDriver().switchTo().alert();
+			        alert.accept();
+				}
+				catch(NoAlertPresentException nae){
+					System.err.println(this.getName() + " -> Alert not present");
+				}
 			}
 			
 			//System.out.println(this.getName() + " EXPANDING NODE...");

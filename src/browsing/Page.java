@@ -190,7 +190,7 @@ public class Page{
 	 * @return boolean value
 	 */
 	public boolean equals(Page page){
-		return this.src.equals(page.src);
+		return this.elements.size()==page.getElements().size() && this.src.equals(page.src);
 	}
 	
 

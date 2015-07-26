@@ -57,7 +57,7 @@ public class WorkAllocationActor implements Observer{
 						System.out.println("WORK ALLOCATION ACTOR PATH LENGTH :: " + path.getPath().size());
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 				        
-				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager);
+				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager, this);
 						browserActor.start();
 				        System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
 					}

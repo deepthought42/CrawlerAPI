@@ -3,6 +3,11 @@ package browsing;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * Encapsulates the possible values for a value field as a domain of values.
+ * 
+ * @author Brandon Kindred
+ */
 public class ValueDomain {
 	
 	private ArrayList<String> values = new ArrayList<String>();
@@ -14,6 +19,10 @@ public class ValueDomain {
 		values.add("");
 	}
 	
+	/**
+	 * Generate random values of real numbers, decimals, alphabetic sequences 
+	 *   and alphabetic sequences with special characters
+	 */
 	public void generateAllValueTypes(){
 		addRandomRealNumbers();
 		addRandomDecimals();
@@ -52,7 +61,7 @@ public class ValueDomain {
 			StringBuilder valueSeq = new StringBuilder();
 			
 			for(long j = 0L; j< random.nextLong(); j++){
-				int  n = random.nextInt(52) + 1;
+				int  n = random.nextInt(51) + 1;
 				valueSeq.append(alphabet.charAt(n));
 			}
 			values.add(valueSeq.toString());
@@ -70,7 +79,7 @@ public class ValueDomain {
 			StringBuilder valueSeq = new StringBuilder();
 			
 			for(int j = 0; j< random.nextInt(); j++){
-				int  n = random.nextInt(79) + 1;
+				int  n = random.nextInt(78) + 1;
 				valueSeq.append(specialCharacters.charAt(n));
 			}
 			values.add(valueSeq.toString());

@@ -32,7 +32,7 @@ public class ResourceManagementActor {
 	 * @return whether or not there is room for another actor
 	 */
 	public boolean areResourcesAvailable(){
-		if(this.presentActors.size() > allowedActors){
+		if(this.presentActors.size() >= allowedActors){
 			return false;
 		}
 		return true;

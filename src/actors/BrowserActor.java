@@ -69,6 +69,7 @@ public class BrowserActor extends Thread implements Actor{
 	private List<Page> pagesSeen = new ArrayList<Page>();
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
+	private WorkAllocationActor workAllocator = null;
 	
 	public BrowserActor(String url) {
 		this.url = url;
@@ -85,7 +86,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(String url, ObservableQueue<Path> queue, ResourceManagementActor resourceManager) {
+	public BrowserActor(String url, ObservableQueue<Path> queue, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -95,6 +96,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.pathQueue = queue;
 		this.path = new Path();
 		this.resourceManager = resourceManager;
+		this.workAllocator = workAllocator;
 		
 		if(this.path.getPath().isEmpty()){
 			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
@@ -111,7 +113,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(ObservableQueue<Path> queue, Path path, ResourceManagementActor resourceManager) {
+	public BrowserActor(ObservableQueue<Path> queue, Path path, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -127,6 +129,7 @@ public class BrowserActor extends Thread implements Actor{
 
 		this.pathQueue = queue;
 		this.resourceManager = resourceManager;
+		this.workAllocator = workAllocator;
 	}
 	
 	/**
@@ -181,7 +184,7 @@ public class BrowserActor extends Thread implements Actor{
 			
 			System.out.println(this.getName() + " -----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
 			System.out.println(this.getName() + " #######################################################");
-			this.path = this.pathQueue.poll();
+			this.path = workAllocator.retrieveNextPath();
 		}while(!this.pathQueue.isEmpty());
 		this.browser.close();
 		resourceManager.punchOut(this);

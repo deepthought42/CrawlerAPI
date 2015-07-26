@@ -45,6 +45,7 @@ public class Page{
 	public String getSrc() {
 		return src;
 	}
+	
 	public void setSrc(String src) {
 		this.src = src;
 	}
@@ -52,18 +53,23 @@ public class Page{
 	public DateFormat getDate() {
 		return date;
 	}
+	
 	public void setDate(DateFormat date) {
 		this.date = date;
 	}
+	
 	public boolean isValid() {
 		return isValid;
 	}
+	
 	public void setValid(boolean valid) {
 		this.isValid = valid;
 	}
+	
 	public Page getPrevPage() {
 		return prevPage;
 	}
+	
 	public void setPrevPage(Page prevPage) {
 		this.prevPage = prevPage;
 	}

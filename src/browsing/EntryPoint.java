@@ -27,7 +27,7 @@ public class EntryPoint {
 		//e.execute(new BrowserActor(url, pageNode));
 		
 		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue, resourceManager);
-		BrowserActor browserActor = new BrowserActor(url, pathQueue, resourceManager);
+		BrowserActor browserActor = new BrowserActor(url, pathQueue, resourceManager, workAllocator);
 		browserActor.start();
 		
 		System.out.println("Registered observer!");

@@ -72,4 +72,8 @@ public class WorkAllocationActor implements Observer{
 	    	}
 		}
 	}
+	
+	public Path retrieveNextPath(){
+		return (Path)queue.poll();
+	}
 }

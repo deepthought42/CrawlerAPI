@@ -134,10 +134,10 @@ public class PageElement {
 	public void loadAttributes(WebDriver driver, WebElement element){
 		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
 
-		ArrayList<String> attributeList = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + ':' + arguments[0].attributes[index].value) }; return items;", element);
+		ArrayList<String> attributeList = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		for(int i = 0; i < attributeList.size(); i++){
 			//System.out.println("ATTRIBUTE ITEM :: "+attributeList.get(i));
-			String[] attributes = attributeList.get(i).split(":");
+			String[] attributes = attributeList.get(i).split("::");
 			String[] attributeVals;
 			if(attributes.length > 1){
 				attributeVals = attributes[1].split(" ");
@@ -146,7 +146,7 @@ public class PageElement {
 				attributeVals = new String[0];
 			}
 			
-			this.attributes.add(new Attribute(attributes[0].trim(), attributeVals));
+			this.attributes.add(new Attribute(attributes[0].trim().replace("\'", "'"), attributeVals));
 		}
 	}
 	

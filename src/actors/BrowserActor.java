@@ -214,14 +214,11 @@ public class BrowserActor extends Thread implements Actor{
 				//execute element action
 				boolean actionPerformedSuccessfully;
 				do{
-					actionPerformedSuccessfully = performAction(elemAction);
-					
+					actionPerformedSuccessfully = performAction(elemAction);	
 				}while(!actionPerformedSuccessfully);
-				
-				
+								
 				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
 				//if after performing action page is no longer equal do stuff
-				System.out.println(this.getName() + " -> NEW PAGE :: "+ newPage);
 				
 				if(pageNode != null && !pageNode.equals(newPage)){
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
@@ -357,9 +354,7 @@ public class BrowserActor extends Thread implements Actor{
 		
 		try{
 			WebElement element = browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath()));
-
-			System.out.println(this.getName() + " -> WEB ELEMENT :: " + element.getTagName());
-			actionFactory.execAction(browser.getDriver().findElement(By.xpath(elemAction.getPageElement().getXpath())), elemAction.getAction());
+			actionFactory.execAction(element, elemAction.getAction());
 			System.err.println(this.getName() + " -> Performed action "+elemAction.getAction()+ " On element with xpath :: "+elemAction.getPageElement().getXpath());
 		}
 		catch(StaleElementReferenceException e){
@@ -374,10 +369,6 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		catch(ElementNotVisibleException e){
 			System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
-			//wasPerformedSuccessfully = false;
-		}
-		catch(InvalidSelectorException e){
-			System.out.println(this.getName() + " :: INVALID SELECTOR");
 		}
 		
 		return wasPerformedSuccessfully;

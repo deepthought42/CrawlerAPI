@@ -1,26 +1,20 @@
 package actors;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Observable;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import observableStructs.ObservableQueue;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.InvalidSelectorException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import browsing.ActionFactory;
 import browsing.Browser;
@@ -193,7 +187,7 @@ public class BrowserActor extends Thread implements Actor{
 	/**
 	 * Crawls the path for the current BrowserActor.
 	 */
-	private void crawlPath() throws NoSuchElementException, StaleElementReferenceException{
+	private void crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException{
 		Iterator pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
@@ -372,6 +366,10 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		catch(ElementNotVisibleException e){
 			System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
+		}
+		catch(NoSuchElementException e){
+			System.err.println("NO SUCH ELEMENT EXCEPTION");
+			wasPerformedSuccessfully = false;
 		}
 		
 		return wasPerformedSuccessfully;

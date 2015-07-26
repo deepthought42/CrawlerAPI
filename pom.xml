@@ -58,7 +58,12 @@
 		<artifactId>orientdb-graphdb</artifactId>
 		<version>2.1-rc5</version>
 	</dependency>
-			
+	<dependency>
+		<groupId>com.tinkerpop.blueprints</groupId>
+		<artifactId>blueprints-core</artifactId>
+		<version>2.6.0</version>
+	</dependency>
+		
   </dependencies>
   <groupId>com.QA.testSuite</groupId>
   <version>0.0.1</version>

@@ -151,47 +151,51 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public void run() {
 		resourceManager.punchIn(this);
-		do{
-			long tStart = System.currentTimeMillis();
-
-			if(this.path.getPath().isEmpty()){
-				this.path.add(new ConcurrentNode<Page>(browser.getPage()));
-				System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
-			}
-			else{
-				this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl();
-				System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
-				browser.getDriver().get(this.url);
-			}
-			try{
-				crawlPath();
-			}catch(NoSuchElementException e){
-				System.err.println(this.getName() + " NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
-				e.printStackTrace();
-			}
-			catch(UnhandledAlertException e){
-				System.err.println(this.getName() + " -> UNHANDLED ALERT EXCEPTION OCCURRED");
+		try{
+			do{
+				long tStart = System.currentTimeMillis();
+	
+				if(this.path.getPath().isEmpty()){
+					this.path.add(new ConcurrentNode<Page>(browser.getPage()));
+					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
+				}
+				else{
+					this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl();
+					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
+					browser.getDriver().get(this.url);
+				}
 				try{
-					Alert alert = browser.getDriver().switchTo().alert();
-			        alert.accept();
+					crawlPath();
+				}catch(NoSuchElementException e){
+					System.err.println(this.getName() + " NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
+					e.printStackTrace();
 				}
-				catch(NoAlertPresentException nae){
-					System.err.println(this.getName() + " -> Alert not present");
+				catch(UnhandledAlertException e){
+					System.err.println(this.getName() + " -> UNHANDLED ALERT EXCEPTION OCCURRED");
+					try{
+						Alert alert = browser.getDriver().switchTo().alert();
+				        alert.accept();
+					}
+					catch(NoAlertPresentException nae){
+						System.err.println(this.getName() + " -> Alert not present");
+					}
 				}
-			}
-			
-			//System.out.println(this.getName() + " EXPANDING NODE...");
-			expandNodePath();
-			//System.out.println(this.getName() + " NODE EXPANDED..");
-			
-			long tEnd = System.currentTimeMillis();
-			long tDelta = tEnd - tStart;
-			double elapsedSeconds = tDelta / 1000.0;
-			
-			System.out.println(this.getName() + " -----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
-			System.out.println(this.getName() + " #######################################################");
-			this.path = workAllocator.retrieveNextPath();
-		}while(!this.pathQueue.isEmpty());
+				
+				//System.out.println(this.getName() + " EXPANDING NODE...");
+				expandNodePath();
+				//System.out.println(this.getName() + " NODE EXPANDED..");
+				
+				long tEnd = System.currentTimeMillis();
+				long tDelta = tEnd - tStart;
+				double elapsedSeconds = tDelta / 1000.0;
+				
+				System.out.println(this.getName() + " -----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
+				System.out.println(this.getName() + " #######################################################");
+				this.path = workAllocator.retrieveNextPath();
+			}while(!this.pathQueue.isEmpty());
+		}catch(OutOfMemoryError e){
+			System.err.println(this.getName() + " -> Out of memory error");
+		}
 		this.browser.close();
 		resourceManager.punchOut(this);
 	}

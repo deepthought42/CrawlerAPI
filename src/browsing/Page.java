@@ -82,7 +82,7 @@ public class Page{
 	 * Retrieves list of {@link PageElement page elements} for current Page
 	 * @return
 	 */
-	public List<PageElement> getElements(){
+	public ArrayList<PageElement> getElements(){
 		return this.elements;
 	}
 	

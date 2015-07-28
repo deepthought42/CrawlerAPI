@@ -3,6 +3,7 @@ package actors;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -26,7 +27,7 @@ public class WorkAllocationActor implements Observer{
 	
 	ObservableQueue<Path> queue = null;
 	ResourceManagementActor resourceManager = null;
-	
+	ArrayList<Path> processedPaths = new ArrayList<Path>();
 	/**
 	 * 
 	 * @param queue
@@ -65,6 +66,7 @@ public class WorkAllocationActor implements Observer{
 				        
 				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager, this);
 						browserActor.start();
+						processedPaths.add(path);
 				        System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
 					}
 					else{
@@ -93,9 +95,12 @@ public class WorkAllocationActor implements Observer{
 	 * @param path2 {@link Path path} to be evaluated against
 	 * @return the parent {@link Path path} or null if they are unrelated
 	 */
-	public Path evaluatePaths(Path path1, Path path2){
-		Page path1Page = getFurthestPage(path1);
-		Page path2Page = getFurthestPage(path2);
+	public Path evaluatePaths(Path path1, Path path2) throws NullPointerException{
+		int path1Idx = getFurthestPageIndex(path1);
+		int path2Idx = getFurthestPageIndex(path2);
+		Page path1Page = (Page)((ConcurrentNode<?>)path1.getPath().get(path1Idx)).getData();
+		Page path2Page = (Page)((ConcurrentNode<?>)path2.getPath().get(path2Idx)).getData();
+		
 		ArrayList<PageElement> path1Elements = path1Page.getElements();
 		ArrayList<PageElement> path2Elements = path2Page.getElements();
 		
@@ -109,8 +114,8 @@ public class WorkAllocationActor implements Observer{
 		}
 		
 		//get previous node in both paths
-		ConcurrentNode<?> path1PrevNode = (ConcurrentNode<?>) path1.getPath().get(path1.getPath().size()-2);
-		ConcurrentNode<?> path2PrevNode = (ConcurrentNode<?>) path1.getPath().get(path2.getPath().size()-2);
+		ConcurrentNode<?> path1PrevNode = (ConcurrentNode<?>) path1.getPath().get(path1Idx - 1);
+		ConcurrentNode<?> path2PrevNode = (ConcurrentNode<?>) path1.getPath().get(path2Idx - 1);
 		
 		if(allElementsEqual 
 				&& path1PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction") 
@@ -133,14 +138,20 @@ public class WorkAllocationActor implements Observer{
 		return null;
 	}
 	
-	public Page getFurthestPage(Path path){
+	/**
+	 * Retreives the index for the page node closest to the end of the path
+	 * 
+	 * @param path
+	 * @return
+	 */
+	public int getFurthestPageIndex(Path path){
 		int pathSize = path.getPath().size();
 		for(int i = pathSize-1; i >= 0; i--){
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) path.getPath().get(i);
 			if(pathNode.getClass().getCanonicalName().equals("browsing.Page")){
-				return (Page)pathNode.getData();
+				return i;
 			}
 		}
-		return null;
+		return -1;
 	}
 }

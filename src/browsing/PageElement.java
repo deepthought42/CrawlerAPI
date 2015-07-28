@@ -290,4 +290,17 @@ public class PageElement {
 	public String getTagName(){
 		return this.tagName;
 	}
+	
+	/**
+	 * checks if the current element is a child of the element passed
+	 * 
+	 * @param elem
+	 * @return
+	 */
+	public boolean isChildElement(PageElement elem){
+		if(elem.getXpath().contains(this.getXpath())){
+			return true;
+		}
+		return false;
+	}
 }

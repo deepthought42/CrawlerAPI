@@ -94,46 +94,40 @@ public class WorkAllocationActor implements Observer{
 	 * @return the parent {@link Path path} or null if they are unrelated
 	 */
 	public Path evaluatePaths(Path path1, Path path2){
-		ConcurrentNode<?> path1Tail = (ConcurrentNode<?>) path1.getPath().getLast();
-		ConcurrentNode<?> path2Tail = (ConcurrentNode<?>) path2.getPath().getLast();
-		if(path1Tail.getData().getClass().getCanonicalName().equals("browsing.Page") 
-				&& path2Tail.getData().getClass().getCanonicalName().equals("browsing.Page"))
-		{
-			Page path1Page = (Page) path1Tail.getData();
-			Page path2Page = (Page) path2Tail.getData();
-			ArrayList<PageElement> path1Elements = path1Page.getElements();
-			ArrayList<PageElement> path2Elements = path2Page.getElements();
-			
-			boolean allElementsEqual = true;
-			if(path1Page.getElements().size() == path2Page.getElements().size()){
-				for(int idx = 0; idx < path1Page.getElements().size(); idx++){
-					if(!path1Elements.get(idx).equals(path2Elements.get(idx))){
-						allElementsEqual = false;
-					}
+		Page path1Page = getFurthestPage(path1);
+		Page path2Page = getFurthestPage(path2);
+		ArrayList<PageElement> path1Elements = path1Page.getElements();
+		ArrayList<PageElement> path2Elements = path2Page.getElements();
+		
+		boolean allElementsEqual = true;
+		if(path1Page.getElements().size() == path2Page.getElements().size()){
+			for(int idx = 0; idx < path1Page.getElements().size(); idx++){
+				if(!path1Elements.get(idx).equals(path2Elements.get(idx))){
+					allElementsEqual = false;
 				}
 			}
+		}
+		
+		//get previous node in both paths
+		ConcurrentNode<?> path1PrevNode = (ConcurrentNode<?>) path1.getPath().get(path1.getPath().size()-2);
+		ConcurrentNode<?> path2PrevNode = (ConcurrentNode<?>) path1.getPath().get(path2.getPath().size()-2);
+		
+		if(allElementsEqual 
+				&& path1PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction") 
+				&& path2PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction"))
+		{
+			//determine which node is the parent
+			ElementAction path1ElemAction = (ElementAction) path1PrevNode.getData();
+			ElementAction path2ElemAction = (ElementAction) path2PrevNode.getData();
 			
-			//get previous node in both paths
-			ConcurrentNode<?> path1PrevNode = (ConcurrentNode<?>) path1.getPath().get(path1.getPath().size()-2);
-			ConcurrentNode<?> path2PrevNode = (ConcurrentNode<?>) path1.getPath().get(path2.getPath().size()-2);
-			
-			if(allElementsEqual 
-					&& path1PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction") 
-					&& path2PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction"))
-			{
-				//determine which node is the parent
-				ElementAction path1ElemAction = (ElementAction) path1PrevNode.getData();
-				ElementAction path2ElemAction = (ElementAction) path2PrevNode.getData();
-				
-				if(path1ElemAction.getPageElement().getXpath().contains(path2ElemAction.getPageElement().getXpath())){
-					return path1;
-				}
-				else if(path1ElemAction.getPageElement().getXpath().contains(path2ElemAction.getPageElement().getXpath())){
-					return path2;
-				}
-				else{
-					System.err.println("NEITHER PATH 1 OR PATH 2 ARE PARENTS OF EACH OTHER");
-				}
+			if(path1ElemAction.getPageElement().getXpath().contains(path2ElemAction.getPageElement().getXpath())){
+				return path1;
+			}
+			else if(path1ElemAction.getPageElement().getXpath().contains(path2ElemAction.getPageElement().getXpath())){
+				return path2;
+			}
+			else{
+				System.err.println("NEITHER PATH 1 OR PATH 2 ARE PARENTS OF EACH OTHER");
 			}
 		}
 		return null;

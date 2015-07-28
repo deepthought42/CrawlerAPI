@@ -2,6 +2,7 @@ package actors;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -133,6 +134,17 @@ public class WorkAllocationActor implements Observer{
 				else{
 					System.err.println("NEITHER PATH 1 OR PATH 2 ARE PARENTS OF EACH OTHER");
 				}
+			}
+		}
+		return null;
+	}
+	
+	public Page getFurthestPage(Path path){
+		int pathSize = path.getPath().size();
+		for(int i = pathSize-1; i >= 0; i--){
+			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) path.getPath().get(i);
+			if(pathNode.getClass().getCanonicalName().equals("browsing.Page")){
+				return (Page)pathNode.getData();
 			}
 		}
 		return null;

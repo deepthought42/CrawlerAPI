@@ -90,12 +90,15 @@ public class WorkAllocationActor implements Observer{
 	 * {@link Path new path}
 	 * @param newPath
 	 * @return The path that is the parent
-	 */
+	 */	
 	private Path checkPathsForRelation(Path newPath){
 		for(Path path : processedPaths){
-			Path parentPath = evaluatePaths(path, newPath);
-			if(parentPath != null){
-				return parentPath;
+			int parentPath = evaluatePaths(path, newPath);
+			if(parentPath == 0 ){
+				return path;
+			}
+			else if(parentPath == 1){
+				return newPath;
 			}
 		}
 		return null;	
@@ -109,9 +112,9 @@ public class WorkAllocationActor implements Observer{
 	 *   
 	 * @param path1 {@link Path path} to be evaluated against
 	 * @param path2 {@link Path path} to be evaluated against
-	 * @return the parent {@link Path path} or null if they are unrelated
+	 * @return 0 if path1 is parent, 1 if path2 is parent. -1 if they are unrelated
 	 */
-	private Path evaluatePaths(Path path1, Path path2) throws NullPointerException{
+	private int evaluatePaths(Path path1, Path path2) throws NullPointerException{
 		int path1Idx = getFurthestPageIndex(path1);
 		int path2Idx = getFurthestPageIndex(path2);
 		Page path1Page = (Page)((ConcurrentNode<?>)path1.getPath().get(path1Idx)).getData();
@@ -142,16 +145,16 @@ public class WorkAllocationActor implements Observer{
 			ElementAction path2ElemAction = (ElementAction) path2PrevNode.getData();
 			
 			if(path1ElemAction.getPageElement().isChildElement(path2ElemAction.getPageElement())){
-				return path1;
+				return 0;
 			}
 			else if(path1ElemAction.getPageElement().isChildElement(path2ElemAction.getPageElement())){
-				return path2;
+				return 1;
 			}
 			else{
 				System.err.println("NEITHER PATH 1 OR PATH 2 ARE PARENTS OF EACH OTHER");
 			}
 		}
-		return null;
+		return -1;
 	}
 	
 	/**

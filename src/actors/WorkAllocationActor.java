@@ -89,19 +89,19 @@ public class WorkAllocationActor implements Observer{
 	 * Evaluate all paths that have been previously processed against
 	 * {@link Path new path}
 	 * @param newPath
-	 * @return The path that is the parent
+	 * @return 
 	 */	
-	private Path checkPathsForRelation(Path newPath){
-		for(Path path : processedPaths){
-			int parentPath = evaluatePaths(path, newPath);
+	private int checkPathsForRelation(Path newPath){
+		for(int i =0; i < processedPaths.size(); i++){
+			int parentPath = evaluatePaths(processedPaths.get(i), newPath);
 			if(parentPath == 0 ){
-				return path;
+				return i;
 			}
 			else if(parentPath == 1){
-				return newPath;
+				return -1;
 			}
 		}
-		return null;	
+		return -1;	
 	}
 	
 	/**

@@ -120,6 +120,9 @@ public class WorkAllocationActor implements Observer{
 	private int evaluatePaths(Path path1, Path path2) throws NullPointerException{
 		int path1Idx = getFurthestPageIndex(path1);
 		int path2Idx = getFurthestPageIndex(path2);
+		if(path1Idx == 0 || path2Idx == 0){
+			return -1;
+		}
 		Page path1Page = (Page)((ConcurrentNode<?>)path1.getPath().get(path1Idx)).getData();
 		Page path2Page = (Page)((ConcurrentNode<?>)path2.getPath().get(path2Idx)).getData();
 		
@@ -170,7 +173,7 @@ public class WorkAllocationActor implements Observer{
 		int pathSize = path.getPath().size();
 		for(int i = pathSize-1; i >= 0; i--){
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) path.getPath().get(i);
-			if(pathNode.getClass().getCanonicalName().equals("browsing.Page")){
+			if(pathNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
 				return i;
 			}
 		}

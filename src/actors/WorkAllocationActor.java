@@ -58,8 +58,7 @@ public class WorkAllocationActor implements Observer{
 		if(queue.size() > 0){
 			try{
 				if( resourceManager.areResourcesAvailable()){
-
-					Path path = (Path)queue.poll();
+					Path path = retrieveNextPath();
 					if(path != null){
 						System.out.println("WORK ALLOCATION ACTOR PATH LENGTH :: " + path.getPath().size());
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -82,7 +81,11 @@ public class WorkAllocationActor implements Observer{
 	}
 	
 	public Path retrieveNextPath(){
-		return (Path)queue.poll();
+		Path path = null;
+		do{
+			path = (Path)queue.poll();
+		}while(checkPathsForRelation(path) != -1);
+		return path;
 	}
 	
 	/**

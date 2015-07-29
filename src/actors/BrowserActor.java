@@ -234,6 +234,9 @@ public class BrowserActor extends Thread implements Actor{
 				//if after performing action page is no longer equal do stuff
 				
 				if(pageNode != null && !pageNode.equals(newPage)){
+					//Before adding new page, check if page has been experienced already. If it has load that page
+					//Before
+					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
 					pathNode.addOutput(newPageNode);

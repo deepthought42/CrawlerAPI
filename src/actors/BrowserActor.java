@@ -215,7 +215,7 @@ public class BrowserActor extends Thread implements Actor{
 		//skip first node since we should have already loaded it during initialization
 		int i = 0;
 		while(pathIterator.hasNext()){
-			System.out.println(this.getName() + " -> current path index :: " + i++);
+			System.out.println(this.getName() + " -> current path index :: " + i);
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
 			
 			String className = pathNode.getData().getClass().getCanonicalName();
@@ -241,7 +241,7 @@ public class BrowserActor extends Thread implements Actor{
 					
 					browser.updatePage( DateFormat.getDateInstance(), true);
 					System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
-					System.out.println(this.getName() + " -> current path index :: " + i++);
+					System.out.println(this.getName() + " -> current path index :: " + i);
 					//Before adding new page, check if page has been experienced already. If it has load that page
 					//Before
 					
@@ -256,6 +256,7 @@ public class BrowserActor extends Thread implements Actor{
 				//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
 				//	An element that has changed cannot change again. If it does then the path is marked as dead
 			}
+			i++;
 		}
 		System.out.println(this.getName() + " -> EXISTING PATH LENGTH = "+this.path.getPath().size());
 		System.out.println(this.getName() + " -> EXISTING ADDITIONAL PATH LENGTH = "+additionalNodes.getPath().size());
@@ -319,18 +320,17 @@ public class BrowserActor extends Thread implements Actor{
 				}
 			}
 			
-			//add each elementAction for last seen page excluding elementActions seen while finding page
+			//add each elementAction for last seen page excluding elementActions with elements seen while finding page
 			Iterator elementIterator = page.getElements().iterator();
 			ArrayList<PageElement> elementList = page.getElements();
 			for(int elemIdx=0; elemIdx < page.getElements().size(); elemIdx++){
 				PageElement elem = (PageElement) elementList.get(elemIdx);
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
-					//System.out.println(this.getName() + " TOTAL ELEMENT ACTIONS SEEN..."+elementActionSeenList.size());
 					Iterator seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;
 					while(seenElementIterator.hasNext()){
-						if(((ElementAction)seenElementIterator.next()).equals(elemAction)){
+						if(((ElementAction)seenElementIterator.next()).getPageElement().equals(elemAction.getPageElement())){
 							seen = true;
 						}
 					}

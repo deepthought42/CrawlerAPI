@@ -239,6 +239,7 @@ public class BrowserActor extends Thread implements Actor{
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
+					System.out.println(this.getName() + " PAGE = "+newPageNode.toString());
 					pathNode.addOutput(newPageNode);
 					newPageNode.addInput(pathNode);
 					additionalNodes.add(newPageNode);

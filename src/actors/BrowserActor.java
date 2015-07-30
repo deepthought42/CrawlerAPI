@@ -236,8 +236,13 @@ public class BrowserActor extends Thread implements Actor{
 								
 				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
 				//if after performing action page is no longer equal do stuff
-				
-				if(pageNode != null && !pageNode.equals(newPage)){
+			
+				//if not at end of path and next node is a Page then don't bother adding new node
+				if(path.getPath().size()-1 < i && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().getCanonicalName().equals("browsing.Page")){
+					i++;
+					continue;
+				}
+				else if(pageNode != null && !pageNode.equals(newPage)){
 					
 					browser.updatePage( DateFormat.getDateInstance(), true);
 					System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());

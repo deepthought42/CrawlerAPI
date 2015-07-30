@@ -155,7 +155,7 @@ public class Page{
 		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
 		String temp_xpath = xpath;
 		for(WebElement elem : pageElements){
-			if(elem.isDisplayed()){
+			if(elem.isDisplayed() && elem.getAttribute("backface-visibility")!=null && !elem.getAttribute("backface-visiblity").equals("hidden")){
 				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash);
 				pageElementList.add(pageElem);
 				//System.out.println("Retrieving visible elements for element with xpath ---- "+pageElem.getXpath());

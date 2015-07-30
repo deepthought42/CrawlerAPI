@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.swing.text.DateFormatter;
+
 import observableStructs.ObservableQueue;
 
 import org.openqa.selenium.Alert;
@@ -66,6 +68,7 @@ public class BrowserActor extends Thread implements Actor{
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
+	private ArrayList<PageElement> currentElements = null;
 	
 	public BrowserActor(String url) {
 		this.url = url;
@@ -164,6 +167,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
 				}
+				currentElements = browser.getPage().getElements();
 				try{
 					crawlPath();
 				}catch(NoSuchElementException e){
@@ -234,12 +238,16 @@ public class BrowserActor extends Thread implements Actor{
 				//if after performing action page is no longer equal do stuff
 				
 				if(pageNode != null && !pageNode.equals(newPage)){
+					
+					browser.updatePage( DateFormat.getDateInstance(), true);
+					System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
+					System.out.println(this.getName() + " -> current path index :: " + i++);
 					//Before adding new page, check if page has been experienced already. If it has load that page
 					//Before
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
-					System.out.println(this.getName() + " PAGE = "+newPageNode.toString());
+					System.out.println(this.getName() + " PAGE = "+newPageNode.getData().toString());
 					pathNode.addOutput(newPageNode);
 					newPageNode.addInput(pathNode);
 					additionalNodes.add(newPageNode);
@@ -249,6 +257,8 @@ public class BrowserActor extends Thread implements Actor{
 				//	An element that has changed cannot change again. If it does then the path is marked as dead
 			}
 		}
+		System.out.println(this.getName() + " -> EXISTING PATH LENGTH = "+this.path.getPath().size());
+		System.out.println(this.getName() + " -> EXISTING ADDITIONAL PATH LENGTH = "+additionalNodes.getPath().size());
 		this.path.append(additionalNodes);
 		System.out.println(this.getName() + " -> DONE CRAWLING PATH");
 	}
@@ -274,12 +284,12 @@ public class BrowserActor extends Thread implements Actor{
 				return;
 			}
 			//get all known possible compinations of PageElement actions and add them as potential expansions
-			Iterator elementIterator = page.getElements().iterator();
-			while(elementIterator.hasNext()){
-				PageElement elem = (PageElement) elementIterator.next();
+			ArrayList<PageElement> elementList = page.getElements();
+			for(int elemIdx=0; elemIdx < page.getElements().size(); elemIdx++){
+				PageElement elem = (PageElement) elementList.get(elemIdx);
 						
 				for(int i = 0; i < actions.length; i++){
-					ElementAction elemAction = new ElementAction(elem, actions[i]);
+					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
 					//System.out.println("ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
@@ -292,7 +302,6 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		else if(className.equals("browsing.ElementAction")){
 			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
-			List<PageElement> elementActionAvailableList;
 			//navigate path back to last seen page
 			//for each ElementAction seen, record elementAction.
 			Iterator descendingIterator = this.path.getPath().descendingIterator();
@@ -303,7 +312,6 @@ public class BrowserActor extends Thread implements Actor{
 				
 				if(descNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
 					page = (Page)descNode.getData();
-					elementActionAvailableList = page.getElements();
 					break;
 				}
 				else{
@@ -313,11 +321,11 @@ public class BrowserActor extends Thread implements Actor{
 			
 			//add each elementAction for last seen page excluding elementActions seen while finding page
 			Iterator elementIterator = page.getElements().iterator();
-			
-			while(elementIterator.hasNext()){
-				PageElement elem = (PageElement) elementIterator.next();
+			ArrayList<PageElement> elementList = page.getElements();
+			for(int elemIdx=0; elemIdx < page.getElements().size(); elemIdx++){
+				PageElement elem = (PageElement) elementList.get(elemIdx);
 				for(int i = 0; i < actions.length; i++){
-					ElementAction elemAction = new ElementAction(elem, actions[i]);
+					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
 					//System.out.println(this.getName() + " TOTAL ELEMENT ACTIONS SEEN..."+elementActionSeenList.size());
 					Iterator seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;

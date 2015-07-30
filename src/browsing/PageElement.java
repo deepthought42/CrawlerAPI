@@ -19,6 +19,7 @@ public class PageElement {
 	private String tagName;
 	private String text;
 	private String xpath;
+	private boolean changed=false;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class"};
 	private ValueDomain positiveDomain = new ValueDomain();
@@ -130,6 +131,24 @@ public class PageElement {
 		}
 
 		return xpath;
+	}
+	
+	/**
+	 * 
+	 * @param changed
+	 * @return
+	 */
+	public boolean isChanged(boolean changed){
+		return this.changed;
+	}
+	
+	/**
+	 * 
+	 * @param changed
+	 * @return
+	 */
+	public void setChanged(boolean changed){
+		this.changed = changed;
 	}
 	
 	/**

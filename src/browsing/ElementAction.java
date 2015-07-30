@@ -9,9 +9,11 @@ package browsing;
 public class ElementAction {
 	private PageElement element;
 	private String action;
+	private int elementIndex;
 	
-	public ElementAction(PageElement elem, String action){
+	public ElementAction(PageElement elem, String action, int elemIdx){
 		this.element = elem;
+		this.elementIndex = elemIdx;
 		this.action = action;
 	}
 	

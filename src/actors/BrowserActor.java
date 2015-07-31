@@ -204,6 +204,15 @@ public class BrowserActor extends Thread implements Actor{
 				System.out.println(this.getName() + " -----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
 				System.out.println(this.getName() + " #######################################################");
 				this.path = workAllocator.retrieveNextPath();
+				
+				//close all windows opened during crawl
+				String baseWindowHdl = driver.getWindowHandle();
+				for(String winHandle : driver.getWindowHandles()){
+				    driver.switchTo().window(winHandle);
+				}
+				driver.close();
+				driver.switchTo().window(winHandleBefore);
+
 			}while(!this.pathQueue.isEmpty());
 		}catch(OutOfMemoryError e){
 			System.err.println(this.getName() + " -> Out of memory error");

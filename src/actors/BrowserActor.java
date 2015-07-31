@@ -210,10 +210,8 @@ public class BrowserActor extends Thread implements Actor{
 				
 				//close all windows opened during crawl
 				try{
-					System.out.println(this.getName() + " -> Getting main window handle.");
 					String baseWindowHdl = browser.getDriver().getWindowHandle();
 					Set<String> handles = browser.getDriver().getWindowHandles();
-					System.out.println(this.getName() + " -> TOTAL WINDOW HANDLES PRESENT = "+handles.size());
 					if(handles.size() > 1){
 						for(String winHandle : handles){
 							browser.getDriver().switchTo().window(winHandle);

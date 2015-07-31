@@ -1,5 +1,6 @@
 package actors;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -76,7 +77,10 @@ public class WorkAllocationActor implements Observer{
 			catch(NoSuchElementException e){
 	    	}
 	    	catch(NullPointerException e){
-	    	}
+	    	} 
+			catch (MalformedURLException e) {
+				System.out.println("MALFORMED URL EXCEPTION");
+			}
 		}
 	}
 	

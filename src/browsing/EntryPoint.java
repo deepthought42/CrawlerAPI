@@ -1,5 +1,6 @@
 package browsing;
 
+import java.net.MalformedURLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,7 +25,13 @@ public class EntryPoint {
 		System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
 		
 		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue, resourceManager);
-		BrowserActor browserActor = new BrowserActor(url, pathQueue, resourceManager, workAllocator);
-		browserActor.start();
+		BrowserActor browserActor;
+		try {
+			browserActor = new BrowserActor(url, pathQueue, resourceManager, workAllocator);
+			browserActor.start();
+		} catch (MalformedURLException e1) {
+			System.out.println("MALFORMED URL EXCEPTION");
+		}
+		
 	}
 }

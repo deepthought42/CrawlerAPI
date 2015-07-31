@@ -71,7 +71,7 @@ public class BrowserActor extends Thread implements Actor{
 	private WorkAllocationActor workAllocator = null;
 	private ArrayList<PageElement> currentElements = null;
 	
-	public BrowserActor(String url) {
+	public BrowserActor(String url) throws MalformedURLException {
 		this.url = url;
 		browser = new Browser(url);
 		this.path = new Path();
@@ -82,11 +82,12 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @param url	url of page to be accessed
 	 * @param queue observable path queue
+	 * @throws MalformedURLException 
 	 * 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(String url, ObservableQueue<Path> queue, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) {
+	public BrowserActor(String url, ObservableQueue<Path> queue, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) throws MalformedURLException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -109,11 +110,12 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @param queue ovservable path queue
 	 * @param path	path to use to navigate to desired page
+	 * @throws MalformedURLException 
 	 * 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(ObservableQueue<Path> queue, Path path, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) {
+	public BrowserActor(ObservableQueue<Path> queue, Path path, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) throws MalformedURLException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		

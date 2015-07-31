@@ -1,4 +1,5 @@
 package browsing;
+import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class Browser {
 	private List<WebElement> elements = null;
 	private Page page = null;
 	
-	public Browser(String url) {
+	public Browser(String url) throws MalformedURLException {
 		System.out.println("CREATING PAGE...");
 		
 		this.driver = openWithFirefox(url);
@@ -53,7 +54,7 @@ public class Browser {
 		return page;
 	}
 
-	public Page updatePage(DateFormat date, boolean valid){
+	public Page updatePage(DateFormat date, boolean valid) throws MalformedURLException{
 		return new Page(driver, date, valid);
 	}
 	

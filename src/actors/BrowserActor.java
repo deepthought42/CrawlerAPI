@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.swing.text.DateFormatter;
@@ -209,13 +210,18 @@ public class BrowserActor extends Thread implements Actor{
 				
 				//close all windows opened during crawl
 				try{
-					String baseWindowHdl = driver.getWindowHandle();
-					for(String winHandle : driver.getWindowHandles()){
-					    driver.switchTo().window(winHandle);
+					System.out.println(this.getName() + " -> Getting main window handle.");
+					String baseWindowHdl = browser.getDriver().getWindowHandle();
+					Set<String> handles = browser.getDriver().getWindowHandles();
+					System.out.println(this.getName() + " -> TOTAL WINDOW HANDLES PRESENT = "+handles.size());
+					if(handles.size() > 1){
+						for(String winHandle : handles){
+							browser.getDriver().switchTo().window(winHandle);
+						}
+						browser.getDriver().close();
+						browser.getDriver().switchTo().window(baseWindowHdl);
+						System.out.println(this.getName() + " -> CLOSED POPUP WINDOW.");
 					}
-					driver.close();
-					driver.switchTo().window(baseWindowHdl);
-					System.out.println(this.getName() + " -> CLOSED POPUP WINDOW.");
 				}
 				catch(NullPointerException e){}
 				

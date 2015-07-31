@@ -124,7 +124,7 @@ public class BrowserActor extends Thread implements Actor{
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
 		assert(((Page)node.getData()).getUrl() != null);
 
-		this.url = ((Page)node.getData()).getUrl().getPath();
+		this.url = ((Page)node.getData()).getUrl().toString();
 		
 		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
 		browser = new Browser(url);
@@ -166,7 +166,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 				}
 				else{
-					this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl().getPath();
+					this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl().toString();
 					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
 				}

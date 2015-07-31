@@ -13,9 +13,11 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-import util.Timing;
-
-
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class Page{
 	
 	private WebDriver driver = null;

@@ -211,7 +211,7 @@ public class BrowserActor extends Thread implements Actor{
 				    driver.switchTo().window(winHandle);
 				}
 				driver.close();
-				driver.switchTo().window(winHandleBefore);
+				driver.switchTo().window(baseWindowHdl);
 
 			}while(!this.pathQueue.isEmpty());
 		}catch(OutOfMemoryError e){

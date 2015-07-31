@@ -208,13 +208,17 @@ public class BrowserActor extends Thread implements Actor{
 				this.path = workAllocator.retrieveNextPath();
 				
 				//close all windows opened during crawl
-				String baseWindowHdl = driver.getWindowHandle();
-				for(String winHandle : driver.getWindowHandles()){
-				    driver.switchTo().window(winHandle);
+				try{
+					String baseWindowHdl = driver.getWindowHandle();
+					for(String winHandle : driver.getWindowHandles()){
+					    driver.switchTo().window(winHandle);
+					}
+					driver.close();
+					driver.switchTo().window(baseWindowHdl);
+					System.out.println(this.getName() + " -> CLOSED POPUP WINDOW.");
 				}
-				driver.close();
-				driver.switchTo().window(baseWindowHdl);
-
+				catch(NullPointerException e){}
+				
 			}while(!this.pathQueue.isEmpty());
 		}catch(OutOfMemoryError e){
 			System.err.println(this.getName() + " -> Out of memory error");

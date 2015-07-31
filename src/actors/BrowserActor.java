@@ -1,4 +1,5 @@
 package actors;
+import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -121,7 +122,7 @@ public class BrowserActor extends Thread implements Actor{
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
 		assert(((Page)node.getData()).getUrl() != null);
 
-		this.url = ((Page)node.getData()).getUrl();
+		this.url = ((Page)node.getData()).getUrl().getPath();
 		
 		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
 		browser = new Browser(url);
@@ -163,7 +164,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 				}
 				else{
-					this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl();
+					this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl().getPath();
 					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
 				}
@@ -184,9 +185,16 @@ public class BrowserActor extends Thread implements Actor{
 						System.err.println(this.getName() + " -> Alert not present");
 					}
 				}
+				catch(MalformedURLException e){
+					System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
+				}
 				
 				//System.out.println(this.getName() + " EXPANDING NODE...");
-				expandNodePath();
+				try {
+					expandNodePath();
+				} catch (MalformedURLException e) {
+					System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
+				}
 				//System.out.println(this.getName() + " NODE EXPANDED..");
 				
 				long tEnd = System.currentTimeMillis();
@@ -206,8 +214,9 @@ public class BrowserActor extends Thread implements Actor{
 	
 	/**
 	 * Crawls the path for the current BrowserActor.
+	 * @throws MalformedURLException 
 	 */
-	private void crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException{
+	private void crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
 		Iterator pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
@@ -238,7 +247,7 @@ public class BrowserActor extends Thread implements Actor{
 				//if after performing action page is no longer equal do stuff
 			
 				//if not at end of path and next node is a Page then don't bother adding new node
-				if(path.getPath().size()-1 < i && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().getCanonicalName().equals("browsing.Page")){
+				if(i < path.getPath().size()-1 && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().getCanonicalName().equals("browsing.Page")){
 					i++;
 					continue;
 				}
@@ -271,8 +280,9 @@ public class BrowserActor extends Thread implements Actor{
 	
 	/**
 	 * Finds all potential expansion nodes from current node
+	 * @throws MalformedURLException 
 	 */
-	private void expandNodePath(){
+	private void expandNodePath() throws MalformedURLException{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
 		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
 		String className = node.getData().getClass().getCanonicalName();

@@ -1,6 +1,9 @@
 package browsing;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +22,7 @@ public class Page{
 	private String src = "";
 	private DateFormat date = null;
 	private boolean isValid = false;
-	private String pageUrl = "";
+	private URL pageUrl = null;
 	private ArrayList<PageElement> elements = new ArrayList<PageElement>();
 	private Page prevPage;
 	
@@ -31,14 +34,16 @@ public class Page{
 	 * @param driver
 	 * @param date
 	 * @param valid
+	 * @throws MalformedURLException 
+	 * @throws URISyntaxException 
 	 */
-	public Page(WebDriver driver, DateFormat date, boolean valid){
+	public Page(WebDriver driver, DateFormat date, boolean valid) throws MalformedURLException{
 		this.driver = driver;
 		this.src = driver.getPageSource();
 
 		this.date = date;
 		this.isValid = valid;
-		this.pageUrl = driver.getCurrentUrl();
+		this.pageUrl = new URL(driver.getCurrentUrl());
 		getVisibleElements(driver, this.elements, "//body");
 	}
 	
@@ -74,7 +79,7 @@ public class Page{
 		this.prevPage = prevPage;
 	}
 	
-	public String getUrl(){
+	public URL getUrl(){
 		return this.pageUrl;
 	}
 	

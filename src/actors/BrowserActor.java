@@ -184,8 +184,9 @@ public class BrowserActor extends Thread implements Actor{
 					browser.getDriver().get(this.url);
 				}
 				currentElements = browser.getPage().getElements();
+				boolean successfulCrawl = false;
 				try{
-					crawlPath();
+					successfulCrawl = crawlPath();
 				}catch(NoSuchElementException e){
 					System.err.println(this.getName() + " NO SUCH ELEMENT FOUND IN PATH. PATH IS EMPTY");
 					e.printStackTrace();
@@ -205,10 +206,13 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				
 				//System.out.println(this.getName() + " EXPANDING NODE...");
-				try {
-					expandNodePath();
-				} catch (MalformedURLException e) {
-					System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
+				
+				if(successfulCrawl){
+					try {
+						expandNodePath();
+					} catch (MalformedURLException e) {
+						System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
+					}
 				}
 				//System.out.println(this.getName() + " NODE EXPANDED..");
 				
@@ -247,7 +251,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * Crawls the path for the current BrowserActor.
 	 * @throws MalformedURLException 
 	 */
-	private void crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
+	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
 		Iterator pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
 		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
@@ -279,7 +283,18 @@ public class BrowserActor extends Thread implements Actor{
 				
 				if(newPage == null){
 					newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
-					pageMonitor.addPage(newPage);
+					if(pageMonitor.addPage(newPage)){
+						System.out.println(this.getName() + " -> Added new page to monitor");
+					}
+					else{
+						System.out.println(this.getName() + " -> Failed to add page to PageMonitor");
+					}
+				}
+				else{
+					System.out.println(this.getName() + " -> Page already existed. Using existing page");
+					
+					//Still need to add in a way to add the current elementAction node to the new pageNode
+					return false;
 				}
 				//if after performing action page is no longer equal do stuff
 			
@@ -313,6 +328,7 @@ public class BrowserActor extends Thread implements Actor{
 		System.out.println(this.getName() + " -> EXISTING ADDITIONAL PATH LENGTH = "+additionalNodes.getPath().size());
 		this.path.append(additionalNodes);
 		System.out.println(this.getName() + " -> DONE CRAWLING PATH");
+		return true;
 	}
 	
 	/**

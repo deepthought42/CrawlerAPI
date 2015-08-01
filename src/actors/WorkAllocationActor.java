@@ -103,13 +103,15 @@ public class WorkAllocationActor implements Observer{
 	 */	
 	private int checkPathsForRelation(Path newPath){
 		for(int i =0; i < processedPaths.size(); i++){
-			int parentPath = evaluatePaths(processedPaths.get(i), newPath);
-			if(parentPath == 0 ){
-				return i;
-			}
-			else if(parentPath == 1){
-				return -1;
-			}
+			try{
+				int parentPath = evaluatePaths(processedPaths.get(i), newPath);
+				if(parentPath == 0 ){
+					return i;
+				}
+				else if(parentPath == 1){
+					return -1;
+				}
+			}catch(NullPointerException e){}
 		}
 		return -1;	
 	}

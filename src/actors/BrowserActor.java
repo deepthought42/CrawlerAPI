@@ -291,10 +291,12 @@ public class BrowserActor extends Thread implements Actor{
 					}
 				}
 				else{
-					System.out.println(this.getName() + " -> Page already existed. Using existing page");
-					
-					//Still need to add in a way to add the current elementAction node to the new pageNode
-					return false;
+					if(i >= this.path.getPath().size()){
+						System.out.println(this.getName() + " -> Page already existed. Using existing page");
+						
+						//Still need to add in a way to add the current elementAction node to the new pageNode
+						return false;
+					}
 				}
 				//if after performing action page is no longer equal do stuff
 			
@@ -464,7 +466,7 @@ public class BrowserActor extends Thread implements Actor{
 			System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
 		}
 		catch(NoSuchElementException e){
-			System.err.println("NO SUCH ELEMENT EXCEPTION");
+			System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION");
 			wasPerformedSuccessfully = false;
 		}
 		

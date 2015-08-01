@@ -291,7 +291,7 @@ public class BrowserActor extends Thread implements Actor{
 					}
 				}
 				else{
-					if(i >= this.path.getPath().size()){
+					if(i >= this.path.getPath().size()-1){
 						System.out.println(this.getName() + " -> Page already existed. Using existing page");
 						
 						//Still need to add in a way to add the current elementAction node to the new pageNode

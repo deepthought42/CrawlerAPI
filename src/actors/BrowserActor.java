@@ -279,6 +279,7 @@ public class BrowserActor extends Thread implements Actor{
 				
 				if(newPage == null){
 					newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
+					pageMonitor.addPage(newPage);
 				}
 				//if after performing action page is no longer equal do stuff
 			

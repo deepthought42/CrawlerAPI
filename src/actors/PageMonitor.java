@@ -1,5 +1,6 @@
 package actors;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,10 +25,15 @@ public class PageMonitor{
 	public Page findPage(String pageSrc, String host){		
 		List<Page> pagesForHost = hostPageMap.get(host);
 		
-		for(Page hostPage: pagesForHost){
-			if(hostPage.getSrc().equals(pageSrc)){
-				return hostPage;
+		if(pagesForHost != null){
+			for(Page hostPage: pagesForHost){
+				if(hostPage.getSrc().equals(pageSrc)){
+					return hostPage;
+				}
 			}
+		}
+		else{
+			hostPageMap.put(host, new ArrayList<Page>());
 		}
 		return null;		
 	}

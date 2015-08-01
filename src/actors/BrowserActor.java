@@ -70,6 +70,7 @@ public class BrowserActor extends Thread implements Actor{
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
+	private PageMonitor pageMonitor = null;
 	private ArrayList<PageElement> currentElements = null;
 	
 	public BrowserActor(String url) throws MalformedURLException {
@@ -88,7 +89,11 @@ public class BrowserActor extends Thread implements Actor{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(String url, ObservableQueue<Path> queue, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) throws MalformedURLException {
+	public BrowserActor(String url, 
+						ObservableQueue<Path> queue, 
+						ResourceManagementActor resourceManager, 
+						WorkAllocationActor workAllocator,
+						PageMonitor pageMonitor) throws MalformedURLException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -99,6 +104,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.path = new Path();
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
+		this.pageMonitor = pageMonitor;
 		
 		if(this.path.getPath().isEmpty()){
 			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
@@ -116,7 +122,11 @@ public class BrowserActor extends Thread implements Actor{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(ObservableQueue<Path> queue, Path path, ResourceManagementActor resourceManager, WorkAllocationActor workAllocator) throws MalformedURLException {
+	public BrowserActor(ObservableQueue<Path> queue, 
+						Path path, 
+						ResourceManagementActor resourceManager, 
+						WorkAllocationActor workAllocator,
+						PageMonitor pageMonitor) throws MalformedURLException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -133,6 +143,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.pathQueue = queue;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
+		this.pageMonitor = pageMonitor;
 	}
 	
 	/**

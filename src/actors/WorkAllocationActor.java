@@ -29,15 +29,18 @@ public class WorkAllocationActor implements Observer{
 	ObservableQueue<Path> queue = null;
 	ResourceManagementActor resourceManager = null;
 	ArrayList<Path> processedPaths = new ArrayList<Path>();
+	PageMonitor pageMonitor = null;
+	
 	/**
 	 * 
 	 * @param queue
 	 * @param resourceManager
 	 */
-	public WorkAllocationActor(ObservableQueue<Path> queue, ResourceManagementActor resourceManager){
+	public WorkAllocationActor(ObservableQueue<Path> queue, ResourceManagementActor resourceManager, PageMonitor pageMonitor){
 		this.queue = queue;
 		this.queue.addObserver(this);
 		this.resourceManager = resourceManager;
+		this.pageMonitor = pageMonitor;
 	}
 
 	//Whenever an update is observed the current queue is updated
@@ -64,7 +67,7 @@ public class WorkAllocationActor implements Observer{
 						System.out.println("WORK ALLOCATION ACTOR PATH LENGTH :: " + path.getPath().size());
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 				        
-				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager, this);
+				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager, this, this.pageMonitor);
 						browserActor.start();
 						processedPaths.add(path);
 				        System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");

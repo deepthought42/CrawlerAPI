@@ -1,5 +1,6 @@
 package actors;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -272,8 +273,13 @@ public class BrowserActor extends Thread implements Actor{
 				do{
 					actionPerformedSuccessfully = performAction(elemAction);	
 				}while(!actionPerformedSuccessfully);
-								
-				Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
+					
+				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
+				Page newPage = pageMonitor.findPage(browser.getDriver().getPageSource(), currentUrl.getHost());
+				
+				if(newPage == null){
+					newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
+				}
 				//if after performing action page is no longer equal do stuff
 			
 				//if not at end of path and next node is a Page then don't bother adding new node

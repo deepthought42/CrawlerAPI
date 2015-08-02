@@ -22,20 +22,13 @@ public class Browser {
 	private Page page = null;
 	
 	public Browser(String url) throws MalformedURLException {
-		System.out.println("CREATING PAGE...");
-		
 		this.driver = openWithFirefox(url);
 		page = new Page(this.driver, DateFormat.getDateInstance());
-
-		System.out.println("PAGE CREATED.");
 	}
 	
 	public Browser(String url, Page browserPage) {
 		driver = openWithFirefox(url);
-		System.out.print("CREATING PAGE...");
-		
 		page = browserPage;
-		System.out.println("PAGE CREATED.");
 	}
 	
 	public WebDriver getDriver(){

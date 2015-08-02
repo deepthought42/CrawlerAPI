@@ -45,18 +45,9 @@ public class Page{
 
 		this.date = date;
 		this.pageUrl = new URL(driver.getCurrentUrl());
-			long tStart1 = System.currentTimeMillis();
-			getVisibleElements(driver, this.elements, "//body");
+
+		getVisibleElements(driver, this.elements, "//body");
 	
-			//calculate time ran
-			long tEnd1 = System.currentTimeMillis();
-			long tDelta1 = tEnd1 - tStart1;
-			double elapsedSeconds1 = tDelta1 / 1000.0;
-			
-			System.out.println(" -----ELAPSED TIME TO FIND VISIBLE ELEMENTS AND CONSTRUCT XPATH :: "+elapsedSeconds1 + "-----");
-			System.out.println(" #######################################################");
-			//End calculation of time ran
-		
 		//calculate time ran
 		long tEnd = System.currentTimeMillis();
 		long tDelta = tEnd - tStart;
@@ -166,7 +157,12 @@ public class Page{
 	 * @return list of webelements that are currently visible on the page
 	 */
 	public void getVisibleElements(WebDriver driver, List<PageElement> pageElementList, String xpath){
-		List<WebElement> childElements = getChildElements(xpath);
+		//calculate time ran
+		long tEnd1 = System.currentTimeMillis();
+		long tDelta1 = tEnd1 - tStart1;
+		double elapsedSeconds1 = tDelta1 / 1000.0;
+		
+		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
 		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
 		String temp_xpath = xpath;
 		for(WebElement elem : childElements){
@@ -184,7 +180,7 @@ public class Page{
 	 * @return list of WebElements
 	 */
 	public List<WebElement> getChildElements(WebElement elem){
-		return elem.findElements(By.xpath("*"));
+		return elem.findElements(By.xpath("./*"));
 	}
 	
 	/**
@@ -193,7 +189,7 @@ public class Page{
 	 * @return list of WebElements
 	 */
 	public List<WebElement> getChildElements(String xpath){
-		return driver.findElement(By.xpath(xpath)).findElements(By.xpath("*"));
+		return driver.findElements(By.xpath(xpath+"/*"));
 	}
 	
 	/**

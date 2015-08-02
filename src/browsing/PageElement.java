@@ -274,7 +274,7 @@ public class PageElement {
 			areElementsEqual = true;
 		}
 		
-		if(oldPageElementAttributes.size() == newPageElementAttributes.size())
+		if(oldPageElementAttributes.size() == newPageElementAttributes.size() && areElementsEqual)
 		{
 			for(int attrIdx = 0; attrIdx < oldPageElementAttributes.size(); attrIdx++)
 			{

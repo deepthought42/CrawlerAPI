@@ -38,7 +38,6 @@ public class Page{
 	 * @throws URISyntaxException 
 	 */
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException{
-		long tStart = System.currentTimeMillis();
 		this.uuid = UUID.randomUUID();
 		this.driver = driver;
 		this.src = driver.getPageSource();
@@ -47,15 +46,6 @@ public class Page{
 		this.pageUrl = new URL(driver.getCurrentUrl());
 
 		getVisibleElements(driver, this.elements, "//body");
-	
-		//calculate time ran
-		long tEnd = System.currentTimeMillis();
-		long tDelta = tEnd - tStart;
-		double elapsedSeconds = tDelta / 1000.0;
-		
-		System.out.println(" -----ELAPSED TIME FOR PAGE CONSTRUCTION :: "+elapsedSeconds + "-----");
-		System.out.println(" #######################################################");
-		//End calculation of time ran
 	}
 	
 	public String getSrc() {

@@ -384,7 +384,7 @@ public class BrowserActor extends Thread implements Actor{
 			
 			//add each elementAction for last seen page excluding elementActions with elements seen while finding page
 			ArrayList<PageElement> elementList = page.getElements();
-			for(int elemIdx=0; elemIdx < page.getElements().size(); elemIdx++){
+			for(int elemIdx=0; elemIdx < elementList.size(); elemIdx++){
 				PageElement elem = (PageElement) elementList.get(elemIdx);
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
@@ -396,7 +396,7 @@ public class BrowserActor extends Thread implements Actor{
 						}
 					}
 					if(!seen){
-						//Clone path then add ElementAciton to path and push path onto path queue					
+						//Clone path then add ElementAction to path and push path onto path queue					
 						ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
 						elementAction.addInput(node);
 						node.addOutput(elementAction);

@@ -13,6 +13,17 @@ import org.openqa.selenium.WebElement;
 
 import util.ArrayUtility;
 
+
+/**
+ * Contains all the pertinent information for an element on a page. A PageElement
+ *  may be a Parent and/or child of another PageElement. This heirarchy is not
+ *  maintained by PageElement though. 
+ *  
+ *  //TODO Maintain heirarchy between pageElements
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class PageElement {
 	private UUID uuid = null;
 	private String tagName;
@@ -36,24 +47,12 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem){
-		long tStart = System.currentTimeMillis();
-
 		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver);
-		
-		//calculate time ran
-		long tEnd = System.currentTimeMillis();
-		long tDelta = tEnd - tStart;
-		double elapsedSeconds = tDelta / 1000.0;
-		
-		System.out.println(" -----ELAPSED TIME FOR PAGE ELEMENT :: "+elapsedSeconds + "-----");
-		System.out.println(" #######################################################");
-		//End calculation of time ran
-		
 	}
 	
 	/**

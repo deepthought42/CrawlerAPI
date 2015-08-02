@@ -206,13 +206,12 @@ public class BrowserActor extends Thread implements Actor{
 						System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
 					}
 				}
-				//System.out.println(this.getName() + " NODE EXPANDED..");
-				
+			
 				long tEnd = System.currentTimeMillis();
 				long tDelta = tEnd - tStart;
 				double elapsedSeconds = tDelta / 1000.0;
 				
-				System.out.println(this.getName() + " -----ELAPSED TIME FOR CRAWL :: "+elapsedSeconds + "-----");
+				System.out.println(this.getName() + " -----ELAPSED TIME PATH NODE EXPANSION :: "+elapsedSeconds + "-----");
 				System.out.println(this.getName() + " #######################################################");
 				this.path = workAllocator.retrieveNextPath();
 				

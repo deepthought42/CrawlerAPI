@@ -38,13 +38,33 @@ public class Page{
 	 * @throws URISyntaxException 
 	 */
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException{
+		long tStart = System.currentTimeMillis();
 		this.uuid = UUID.randomUUID();
 		this.driver = driver;
 		this.src = driver.getPageSource();
 
 		this.date = date;
 		this.pageUrl = new URL(driver.getCurrentUrl());
-		getVisibleElements(driver, this.elements, "//body");
+			long tStart1 = System.currentTimeMillis();
+			getVisibleElements(driver, this.elements, "//body");
+	
+			//calculate time ran
+			long tEnd1 = System.currentTimeMillis();
+			long tDelta1 = tEnd1 - tStart1;
+			double elapsedSeconds1 = tDelta1 / 1000.0;
+			
+			System.out.println(" -----ELAPSED TIME TO FIND VISIBLE ELEMENTS AND CONSTRUCT XPATH :: "+elapsedSeconds1 + "-----");
+			System.out.println(" #######################################################");
+			//End calculation of time ran
+		
+		//calculate time ran
+		long tEnd = System.currentTimeMillis();
+		long tDelta = tEnd - tStart;
+		double elapsedSeconds = tDelta / 1000.0;
+		
+		System.out.println(" -----ELAPSED TIME FOR PAGE CONSTRUCTION :: "+elapsedSeconds + "-----");
+		System.out.println(" #######################################################");
+		//End calculation of time ran
 	}
 	
 	public String getSrc() {
@@ -146,16 +166,13 @@ public class Page{
 	 * @return list of webelements that are currently visible on the page
 	 */
 	public void getVisibleElements(WebDriver driver, List<PageElement> pageElementList, String xpath){
-		//System.out.println("CURRENT XPATH AT START OF VISIBLE ELEMENT OP :::: "+xpath);
-		List<WebElement> pageElements = getChildElements(xpath);
-		//System.out.println("THERE ARE "+pageElements.size() + " CHILD ELEMENTS FOUND");
+		List<WebElement> childElements = getChildElements(xpath);
 		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
 		String temp_xpath = xpath;
-		for(WebElement elem : pageElements){
+		for(WebElement elem : childElements){
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
 				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash);
 				pageElementList.add(pageElem);
-				//System.out.println("Retrieving visible elements for element with xpath ---- "+pageElem.getXpath());
 				getVisibleElements(driver, pageElementList, pageElem.getXpath());
 			}
 		}

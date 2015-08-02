@@ -55,8 +55,15 @@ public class Browser {
 		return page;
 	}
 
+	/**
+	 * 
+	 * @param date
+	 * @param valid
+	 * @return
+	 * @throws MalformedURLException
+	 */
 	public Page updatePage(DateFormat date, boolean valid) throws MalformedURLException{
-		return new Page(driver, date, valid);
+		return new Page(driver, date);
 	}
 	
 	/**

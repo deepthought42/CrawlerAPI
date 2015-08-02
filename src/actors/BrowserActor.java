@@ -4,7 +4,6 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,7 +63,6 @@ public class BrowserActor extends Thread implements Actor{
 	private ObservableQueue<Path> pathQueue = null;
 	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
-	private Path clonePath = null;
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
@@ -102,7 +100,6 @@ public class BrowserActor extends Thread implements Actor{
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.pageMonitor = pageMonitor;
-		
 		if(this.path.getPath().isEmpty()){
 			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
 			System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
@@ -179,7 +176,6 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
 				}
-				currentElements = browser.getPage().getElements();
 				boolean successfulCrawl = false;
 				try{
 					successfulCrawl = crawlPath();
@@ -248,9 +244,8 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws MalformedURLException 
 	 */
 	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
-		Iterator pathIterator = this.path.getPath().iterator();
+		Iterator<?> pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
-		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
 		Page pageNode = null;
 		//skip first node since we should have already loaded it during initialization
 		int i = 0;
@@ -275,11 +270,11 @@ public class BrowserActor extends Thread implements Actor{
 				}while(!actionPerformedSuccessfully);
 					
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
-				Page newPage = pageMonitor.findPage(browser.getDriver().getPageSource(), currentUrl.getHost());
+				Page existingPage = pageMonitor.findPage(browser.getDriver().getPageSource(), currentUrl.getHost());
 				
-				if(newPage == null){
-					newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), true);
-					if(pageMonitor.addPage(newPage)){
+				if(existingPage == null){
+					existingPage = new Page(browser.getDriver(), DateFormat.getDateInstance());
+					if(pageMonitor.addPage(existingPage)){
 						System.out.println(this.getName() + " -> Added new page to monitor");
 					}
 					else{
@@ -300,8 +295,10 @@ public class BrowserActor extends Thread implements Actor{
 				if(i < path.getPath().size()-1 && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().getCanonicalName().equals("browsing.Page")){
 					i++;
 					continue;
+
 				}
-				else if(pageNode != null && !pageNode.equals(newPage)){
+				//need to check if page is equal as well as if page state has changed
+				else if(pageNode != null && !pageNode.equals(existingPage)){
 					
 					browser.updatePage( DateFormat.getDateInstance(), true);
 					System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
@@ -310,7 +307,7 @@ public class BrowserActor extends Thread implements Actor{
 					//Before
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
-					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(newPage);
+					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(existingPage);
 					System.out.println(this.getName() + " PAGE = "+newPageNode.getData().toString());
 					pathNode.addOutput(newPageNode);
 					newPageNode.addInput(pathNode);
@@ -346,7 +343,7 @@ public class BrowserActor extends Thread implements Actor{
 			//verify current page matches current node data
 			//if not mark as different
 			Page page = (Page)node.getData();
-			Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance(), false);
+			Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance());
 			if(!page.equals(newPage)){
 				return;
 			}
@@ -371,7 +368,7 @@ public class BrowserActor extends Thread implements Actor{
 			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
 			//navigate path back to last seen page
 			//for each ElementAction seen, record elementAction.
-			Iterator descendingIterator = this.path.getPath().descendingIterator();
+			Iterator<?> descendingIterator = this.path.getPath().descendingIterator();
 			Page page = null;
 			
 			while(descendingIterator.hasNext()){
@@ -387,13 +384,12 @@ public class BrowserActor extends Thread implements Actor{
 			}
 			
 			//add each elementAction for last seen page excluding elementActions with elements seen while finding page
-			Iterator elementIterator = page.getElements().iterator();
 			ArrayList<PageElement> elementList = page.getElements();
 			for(int elemIdx=0; elemIdx < page.getElements().size(); elemIdx++){
 				PageElement elem = (PageElement) elementList.get(elemIdx);
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
-					Iterator seenElementIterator = elementActionSeenList.iterator();
+					Iterator<?> seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;
 					while(seenElementIterator.hasNext()){
 						if(((ElementAction)seenElementIterator.next()).getPageElement().equals(elemAction.getPageElement())){

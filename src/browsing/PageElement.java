@@ -1,8 +1,6 @@
 package browsing;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -38,12 +36,24 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem){
+		long tStart = System.currentTimeMillis();
+
 		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);
-		//loadCssProperties(elem);
+		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver);
+		
+		//calculate time ran
+		long tEnd = System.currentTimeMillis();
+		long tDelta = tEnd - tStart;
+		double elapsedSeconds = tDelta / 1000.0;
+		
+		System.out.println(" -----ELAPSED TIME FOR PAGE ELEMENT :: "+elapsedSeconds + "-----");
+		System.out.println(" #######################################################");
+		//End calculation of time ran
+		
 	}
 	
 	/**
@@ -160,9 +170,7 @@ public class PageElement {
 	 * @param driver
 	 */
 	public void loadAttributes(WebDriver driver, WebElement element){
-		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
-
-		ArrayList<String> attributeList = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
+		ArrayList<String> attributeList = extractedAttributes(element, driver);
 		for(int i = 0; i < attributeList.size(); i++){
 			//System.out.println("ATTRIBUTE ITEM :: "+attributeList.get(i));
 			String[] attributes = attributeList.get(i).split("::");
@@ -176,6 +184,17 @@ public class PageElement {
 			
 			this.attributes.add(new Attribute(attributes[0].trim().replace("\'", "'"), attributeVals));
 		}
+	}
+
+	/**
+	 * Extract all attributes from a given {@link WebElement}
+	 * @param element {@link WebElement} to have attributes loaded for
+	 * @param javascriptDriver - 
+	 * @return
+	 */
+	private ArrayList<String> extractedAttributes(WebElement element, WebDriver driver) {
+		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
+		return (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 	}
 	
 	/**

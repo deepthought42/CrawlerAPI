@@ -24,7 +24,6 @@ public class Page{
 	private WebDriver driver = null;
 	private String src = "";
 	private DateFormat date = null;
-	private boolean isValid = false;
 	private URL pageUrl = null;
 	private ArrayList<PageElement> elements = new ArrayList<PageElement>();
 	private Page prevPage;
@@ -40,13 +39,12 @@ public class Page{
 	 * @throws MalformedURLException 
 	 * @throws URISyntaxException 
 	 */
-	public Page(WebDriver driver, DateFormat date, boolean valid) throws MalformedURLException{
+	public Page(WebDriver driver, DateFormat date) throws MalformedURLException{
 		this.uuid = UUID.randomUUID();
 		this.driver = driver;
 		this.src = driver.getPageSource();
 
 		this.date = date;
-		this.isValid = valid;
 		this.pageUrl = new URL(driver.getCurrentUrl());
 		getVisibleElements(driver, this.elements, "//body");
 	}
@@ -66,15 +64,7 @@ public class Page{
 	public void setDate(DateFormat date) {
 		this.date = date;
 	}
-	
-	public boolean isValid() {
-		return isValid;
-	}
-	
-	public void setValid(boolean valid) {
-		this.isValid = valid;
-	}
-	
+		
 	public Page getPrevPage() {
 		return prevPage;
 	}

@@ -211,4 +211,8 @@ public class Page{
 		
 		return pageString;
 	}
+	
+	public UUID getUuid(){
+		return this.uuid;
+	}
 }

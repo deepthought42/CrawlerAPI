@@ -33,6 +33,7 @@ public class PageElement {
 
 	/**
 	 * Constructs a PageElement.
+	 * 
 	 * @param driver
 	 * @param elem
 	 */
@@ -269,15 +270,33 @@ public class PageElement {
 		areElementsEqual = this.cssMatches(elem);
 		return areElementsEqual;
 	}
+
 	
 	/**
+	 * checks if the current element is a child of the element passed
+	 * 
+	 * @param elem
+	 * @return
+	 */
+	public boolean isChildElement(PageElement elem){
+		if(elem.getXpath().contains(this.getXpath())){
+			return true;
+		}
+		return false;
+	}
+
+	
+	/**
+	 * Converts to string with following format:
+	 * Tag Name: {tagName}
+	 * text:	{innertext of tag}
 	 * 
 	 */
 	public String toString(){
 		String pageElementString = "";
 		
-		pageElementString += this.tagName + "\n";
-		pageElementString += this.text + "\n";
+		pageElementString += "Tag Name: " + this.tagName + "\n";
+		pageElementString += "text: " + this.text + "\n";
 		
 		return pageElementString;
 	}
@@ -313,16 +332,7 @@ public class PageElement {
 		return this.tagName;
 	}
 	
-	/**
-	 * checks if the current element is a child of the element passed
-	 * 
-	 * @param elem
-	 * @return
-	 */
-	public boolean isChildElement(PageElement elem){
-		if(elem.getXpath().contains(this.getXpath())){
-			return true;
-		}
-		return false;
+	public UUID getUuid(){
+		return this.uuid;
 	}
 }

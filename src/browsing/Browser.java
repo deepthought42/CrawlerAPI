@@ -11,6 +11,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -94,6 +95,7 @@ public class Browser {
 	public static WebDriver openWithFirefox(String url){
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
 		System.out.println("FIREFOX PROFILE LOADED!");
+		
 		WebDriver driver = new FirefoxDriver(firefoxProfile);
 		System.out.println("DRIVER LOADED.");
 		driver.get(url);

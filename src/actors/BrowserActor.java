@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.swing.text.DateFormatter;
-
 import observableStructs.ObservableQueue;
 
 import org.openqa.selenium.Alert;
@@ -67,12 +65,10 @@ public class BrowserActor extends Thread implements Actor{
 	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
 	private Path clonePath = null;
-	private List<Page> pagesSeen = new ArrayList<Page>();
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
 	private PageMonitor pageMonitor = null;
-	private ArrayList<PageElement> currentElements = null;
 	
 	public BrowserActor(String url) throws MalformedURLException {
 		this.url = url;

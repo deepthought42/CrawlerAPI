@@ -6,6 +6,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
+import java.util.UUID;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -15,7 +16,7 @@ import org.openqa.selenium.WebElement;
 import util.ArrayUtility;
 
 public class PageElement {
-
+	private UUID uuid = null;
 	private String tagName;
 	private String text;
 	private String xpath;
@@ -36,6 +37,7 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem){
+		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);
@@ -49,6 +51,7 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash){
+		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);

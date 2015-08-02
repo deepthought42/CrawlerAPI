@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -19,7 +20,7 @@ import org.openqa.selenium.WebElement;
  *
  */
 public class Page{
-	
+	private UUID uuid = null;	
 	private WebDriver driver = null;
 	private String src = "";
 	private DateFormat date = null;
@@ -40,6 +41,7 @@ public class Page{
 	 * @throws URISyntaxException 
 	 */
 	public Page(WebDriver driver, DateFormat date, boolean valid) throws MalformedURLException{
+		this.uuid = UUID.randomUUID();
 		this.driver = driver;
 		this.src = driver.getPageSource();
 
@@ -197,7 +199,7 @@ public class Page{
 	 * @return boolean value
 	 */
 	public boolean equals(Page page){
-		return this.elements.size()==page.getElements().size() && this.src.equals(page.src);
+		return this.src.equals(page.src);
 	}
 	
 

@@ -4,6 +4,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -67,7 +68,7 @@ public class BrowserActor extends Thread implements Actor{
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
 	private PageMonitor pageMonitor = null;
-	
+	private List<Integer> elementIdxChanges = null;
 	public BrowserActor(String url) throws MalformedURLException {
 		this.url = url;
 		browser = new Browser(url);
@@ -100,9 +101,10 @@ public class BrowserActor extends Thread implements Actor{
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.pageMonitor = pageMonitor;
+		elementIdxChanges = new ArrayList<Integer>();
+		
 		if(this.path.getPath().isEmpty()){
 			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
-			System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 		}
 	}
 	

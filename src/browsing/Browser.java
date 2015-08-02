@@ -11,7 +11,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -26,7 +25,7 @@ public class Browser {
 		System.out.println("CREATING PAGE...");
 		
 		this.driver = openWithFirefox(url);
-		page = new Page(this.driver, DateFormat.getDateInstance(), false);
+		page = new Page(this.driver, DateFormat.getDateInstance());
 
 		System.out.println("PAGE CREATED.");
 	}
@@ -89,7 +88,7 @@ public class Browser {
 			this.driver.get(url);
 		}
 		catch(UnhandledAlertException exc){
-			HandleAlert(driver, new WebDriverWait(driver, 5));
+			AcceptAlert(driver, new WebDriverWait(driver, 5));
 		}
 	}
 	
@@ -110,11 +109,12 @@ public class Browser {
 	}
 
 	/**
+	 * Accepts alert
 	 * 
 	 * @param driver
 	 * @param wait
 	 */
-	public static void HandleAlert(WebDriver driver, WebDriverWait wait) {
+	public static void AcceptAlert(WebDriver driver, WebDriverWait wait) {
 	    if (wait == null) {
 	        wait = new WebDriverWait(driver, 5);
 	    }

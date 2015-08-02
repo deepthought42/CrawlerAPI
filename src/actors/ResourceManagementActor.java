@@ -7,14 +7,29 @@ public class ResourceManagementActor {
 	private int allowedActors = 0;
 	private ArrayList<UUID> presentActors = new ArrayList<UUID>();
 	
+	/**
+	 * Create ResourceManagementActor with a given number of allowed actor
+	 *   threads to allow
+	 * @param allowedActors number of threads allowed
+	 */
 	public ResourceManagementActor(int allowedActors){
 		this.allowedActors = allowedActors;
 	}
 	
+	/**
+	 * Accounts for presence of actor thread running
+	 * @param actor
+	 * @return
+	 */
 	public boolean punchIn(Actor actor){
 		return presentActors.add(actor.getActorId());
 	}
 	
+	/**
+	 * Accounts for presence of actor thread shutting down
+	 * @param actor
+	 * @return
+	 */
 	public UUID punchOut(Actor actor){
 		int index = 0;
 		for(UUID actorId : presentActors){

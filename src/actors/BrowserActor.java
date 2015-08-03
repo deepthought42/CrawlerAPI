@@ -324,6 +324,9 @@ public class BrowserActor extends Thread implements Actor{
 					PageElement newElem = new PageElement(browser.getDriver(), elem);
 					if(!newElem.equals(pageElements.get(idx))){
 						System.out.println("Node differs from initial page node. Adding index to list of changed elements");
+						if(elementIdxChanges.contains(idx)){
+							return false;
+						}
 						elementIdxChanges.add(idx);
 						
 						//remove element from page list and replace with new element

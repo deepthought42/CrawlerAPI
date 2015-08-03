@@ -69,6 +69,7 @@ public class BrowserActor extends Thread implements Actor{
 	private WorkAllocationActor workAllocator = null;
 	private PageMonitor pageMonitor = null;
 	private List<Integer> elementIdxChanges = null;
+	
 	public BrowserActor(String url) throws MalformedURLException {
 		this.url = url;
 		browser = new Browser(url);
@@ -317,6 +318,19 @@ public class BrowserActor extends Thread implements Actor{
 				
 				//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
 				//	An element that has changed cannot change again. If it does then the path is marked as dead
+				List<PageElement> pageElements = this.pageNode.getData().getElements();
+				for(int idx=0; idx < pageElements.size(); idx++){
+					WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
+					PageElement newElem = new PageElement(browser.getDriver(), elem);
+					if(!newElem.equals(pageElements.get(idx))){
+						System.out.println("Node differs from initial page node. Adding index to list of changed elements");
+						elementIdxChanges.add(idx);
+						
+						//remove element from page list and replace with new element
+						pageElements.remove(idx);
+						pageElements.add(idx, newElem);
+					}
+				}
 			}
 			i++;
 		}

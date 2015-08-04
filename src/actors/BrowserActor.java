@@ -328,6 +328,7 @@ public class BrowserActor extends Thread implements Actor{
 					additionalNodes.add(newPageNode);
 				}
 				else{
+					PageState pageState = null;
 					//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
 					//	An element that has changed cannot change again. If it does then the path is marked as dead
 					List<PageElement> pageElements = pageNode.getElements();
@@ -347,13 +348,19 @@ public class BrowserActor extends Thread implements Actor{
 							pageElements.remove(idx);
 							pageElements.add(idx, newElem);
 							
-							PageState pageState = new PageState(pageNode.getUuid());
-							ConcurrentNode<PageState> pageStateNode = new ConcurrentNode<PageState>();
-							pathNode.addOutput(pageStateNode);
-							pageStateNode.addInput(pathNode);
-							additionalNodes.add(pageStateNode);
-
+							pageState = new PageState(pageNode.getUuid());
+							pageState.addChangedPageElement(newElem);
 						}
+					}
+					
+					if(pageState == null){
+						return false;
+					}
+					else{
+						ConcurrentNode<PageState> pageStateNode = new ConcurrentNode<PageState>();
+						pageStateNode.addInput(pathNode);
+						pathNode.addOutput(pageStateNode);
+						additionalNodes.add(pageStateNode);
 					}
 				}
 			}

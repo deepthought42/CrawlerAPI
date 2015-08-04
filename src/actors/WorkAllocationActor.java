@@ -2,20 +2,17 @@ package actors;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
 import org.openqa.selenium.NoSuchElementException;
 
-import browsing.ConcurrentNode;
 import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageElement;
 import observableStructs.ObservableQueue;
 import structs.Path;
+import structs.ConcurrentNode;
 
 /**
  * Graph Condensing Agent iterates over a graph of nodes and condenses

@@ -3,7 +3,7 @@ package structs;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import browsing.ConcurrentNode;
+import structs.ConcurrentNode;
 
 /**
  * 
@@ -97,7 +97,7 @@ public class Path {
 	public static Path clone(Path path){
 		Path clonePath = new Path();
 		
-		Iterator pathIterator = path.getPath().iterator();
+		Iterator<?> pathIterator = path.getPath().iterator();
 		while(pathIterator.hasNext()){
 			clonePath.add((ConcurrentNode<?>) pathIterator.next());
 		}

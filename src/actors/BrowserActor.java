@@ -373,7 +373,7 @@ public class BrowserActor extends Thread implements Actor{
 	private void expandNodePath() throws MalformedURLException{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
 		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
-		String className = node.getData().getClass().getCanonicalName();
+		String className = node.getType().getCanonicalName();
 		String[] actions = ActionFactory.getActions();
 
 		//if node is a page then find all potential elementActions that can be taken including different values

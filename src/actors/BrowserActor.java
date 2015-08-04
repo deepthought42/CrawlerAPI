@@ -102,11 +102,12 @@ public class BrowserActor extends Thread implements Actor{
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.pageMonitor = pageMonitor;
-		elementIdxChanges = new ArrayList<Integer>();
+		elementIdxChanges = null;
 		
 		if(this.path.getPath().isEmpty()){
 			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
 		}
+		elementIdxChanges = new ArrayList<Integer>();
 	}
 	
 	/**
@@ -141,6 +142,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.pageMonitor = pageMonitor;
+		elementIdxChanges = new ArrayList<Integer>();
 	}
 	
 	/**
@@ -262,6 +264,9 @@ public class BrowserActor extends Thread implements Actor{
 				System.out.println(this.getName() + " -> PAGE NODE SEEN");
 				//verify current page matches current node data
 				//if not mark as different
+				
+				//If new page is assign elementIdxChanges to empty list
+				elementIdxChanges = new ArrayList<Integer>();
 			}
 			else if(className.equals("browsing.ElementAction")){
 				ElementAction elemAction = (ElementAction)pathNode.getData();
@@ -294,7 +299,12 @@ public class BrowserActor extends Thread implements Actor{
 				//if after performing action page is no longer equal do stuff
 			
 				//if not at end of path and next node is a Page then don't bother adding new node
-				if(i < path.getPath().size()-1 && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().getCanonicalName().equals("browsing.Page")){
+				if(i < path.getPath().size()-1 && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().equals(Page.class)){
+					i++;
+					continue;
+
+				}
+				if(i < path.getPath().size()-1 && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().equals(PageState.class)){
 					i++;
 					continue;
 
@@ -315,23 +325,26 @@ public class BrowserActor extends Thread implements Actor{
 					newPageNode.addInput(pathNode);
 					additionalNodes.add(newPageNode);
 				}
-				
-				//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
-				//	An element that has changed cannot change again. If it does then the path is marked as dead
-				List<PageElement> pageElements = this.pageNode.getData().getElements();
-				for(int idx=0; idx < pageElements.size(); idx++){
-					WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
-					PageElement newElem = new PageElement(browser.getDriver(), elem);
-					if(!newElem.equals(pageElements.get(idx))){
-						System.out.println("Node differs from initial page node. Adding index to list of changed elements");
-						if(elementIdxChanges.contains(idx)){
-							return false;
+				else{
+					//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
+					//	An element that has changed cannot change again. If it does then the path is marked as dead
+					List<PageElement> pageElements = pageNode.getElements();
+					for(int idx=0; idx < pageElements.size(); idx++){
+						WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
+						PageElement newElem = new PageElement(browser.getDriver(), elem);
+						if(!newElem.equals(pageElements.get(idx))){
+							System.out.println(this.getName() + " -> Node differs from initial page node. Adding index to list of changed elements");
+							if(elementIdxChanges.contains(idx)){
+								System.out.println(this.getName() + " -> Node has changed previously. Exiting crawl.");
+								
+								return false;
+							}
+							elementIdxChanges.add(idx);
+							
+							//remove element from page list and replace with new element
+							pageElements.remove(idx);
+							pageElements.add(idx, newElem);
 						}
-						elementIdxChanges.add(idx);
-						
-						//remove element from page list and replace with new element
-						pageElements.remove(idx);
-						pageElements.add(idx, newElem);
 					}
 				}
 			}

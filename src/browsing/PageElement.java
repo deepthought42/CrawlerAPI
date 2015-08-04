@@ -221,7 +221,7 @@ public class PageElement {
 				this.cssValues.put(propertyName, element.getCssValue(propertyName));	
 			}			
 		}
-		System.out.println(Thread.currentThread().getName()+" :: style Properties loaded");
+		//System.out.println(Thread.currentThread().getName()+" :: style Properties loaded");
 	}
 	
 	/**
@@ -233,8 +233,7 @@ public class PageElement {
 	public boolean cssMatches(PageElement elem){
 		for(String propertyName : cssValues.keySet()){
 			if(!cssValues.get(propertyName).equals(elem.cssValues.get(propertyName))){
-				System.err.println("CSS PROPERTIES DO NOT MATCH");
-
+				//System.err.println("CSS PROPERTIES DO NOT MATCH");
 				return false;
 			}
 		}

@@ -23,11 +23,12 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import browsing.ActionFactory;
 import browsing.Browser;
-import browsing.ConcurrentNode;
 import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageElement;
+import browsing.PageState;
 import structs.Path;
+import structs.ConcurrentNode;
 
 /*
  * NEEDED:
@@ -70,6 +71,11 @@ public class BrowserActor extends Thread implements Actor{
 	private PageMonitor pageMonitor = null;
 	private List<Integer> elementIdxChanges = null;
 	
+	/**
+	 * 
+	 * @param url
+	 * @throws MalformedURLException
+	 */
 	public BrowserActor(String url) throws MalformedURLException {
 		this.url = url;
 		browser = new Browser(url);
@@ -299,12 +305,8 @@ public class BrowserActor extends Thread implements Actor{
 				//if after performing action page is no longer equal do stuff
 			
 				//if not at end of path and next node is a Page then don't bother adding new node
-				if(i < path.getPath().size()-1 && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().equals(Page.class)){
-					i++;
-					continue;
-
-				}
-				if(i < path.getPath().size()-1 && ((ConcurrentNode<?>)path.getPath().get(i+1)).getData().getClass().equals(PageState.class)){
+				if(i < path.getPath().size()-1 && (((ConcurrentNode<?>)path.getPath().get(i+1)).getType().equals(Page.class) 
+						|| ((ConcurrentNode<?>)path.getPath().get(i+1)).getType().equals(PageState.class))){
 					i++;
 					continue;
 
@@ -344,6 +346,13 @@ public class BrowserActor extends Thread implements Actor{
 							//remove element from page list and replace with new element
 							pageElements.remove(idx);
 							pageElements.add(idx, newElem);
+							
+							PageState pageState = new PageState(pageNode.getUuid());
+							ConcurrentNode<PageState> pageStateNode = new ConcurrentNode<PageState>();
+							pathNode.addOutput(pageStateNode);
+							pageStateNode.addInput(pathNode);
+							additionalNodes.add(pageStateNode);
+
 						}
 					}
 				}
@@ -432,7 +441,7 @@ public class BrowserActor extends Thread implements Actor{
 						ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
 						elementAction.addInput(node);
 						node.addOutput(elementAction);
-					
+						
 						putPathOnQueue(elementAction);
 					}
 				}				

@@ -2,7 +2,6 @@ package structs;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -15,7 +14,7 @@ public class ConcurrentNode<T> extends Observable {
 	private ConcurrentHashMap<ConcurrentNode<?>, Double> inputs;
 	private ConcurrentHashMap<ConcurrentNode<?>, Double> outputs;
 	public T data;
-	public Class type;
+	public Class<?> type;
 	volatile AtomicBoolean isEntryNode = new AtomicBoolean(false);
 	
 	public ConcurrentNode(T data){
@@ -73,5 +72,9 @@ public class ConcurrentNode<T> extends Observable {
 	
 	public T getData(){
 		return this.data;
+	}
+	
+	public Class<? extends Object> getType(){
+		return this.type;
 	}
 }

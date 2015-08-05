@@ -216,6 +216,9 @@ public class BrowserActor extends Thread implements Actor{
 					} catch (MalformedURLException e) {
 						System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
 					}
+					catch(NullPointerException e){
+						e.printStackTrace();
+					}
 				}
 			
 				long tEnd = System.currentTimeMillis();
@@ -334,7 +337,7 @@ public class BrowserActor extends Thread implements Actor{
 					List<PageElement> pageElements = pageNode.getElements();
 					for(int idx=0; idx < pageElements.size(); idx++){
 						WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
-						PageElement newElem = new PageElement(browser.getDriver(), elem);
+						PageElement newElem = new PageElement(browser.getDriver(), elem, pageNode);
 						if(!newElem.equals(pageElements.get(idx))){
 							System.out.println(this.getName() + " -> Node differs from initial page node. Adding index to list of changed elements");
 							if(elementIdxChanges.contains(idx)){

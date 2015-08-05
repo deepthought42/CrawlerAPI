@@ -26,6 +26,7 @@ import util.ArrayUtility;
  */
 public class PageElement {
 	private UUID uuid = null;
+	private Page page = null;
 	private String tagName;
 	private String text;
 	private String xpath;
@@ -74,6 +75,41 @@ public class PageElement {
 		this.xpath = uniqifyXpath(driver, xpathHash);
 	}
 	
+	/**
+	 * Constructs a PageElement.
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, Page page){
+		this.uuid = UUID.randomUUID();
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		this.page = page;
+		loadAttributes(driver, elem);
+		
+		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
+		positiveDomain.generateAllValueTypes();
+		
+		//loadCssProperties(elem);
+		this.xpath = parentXpath + this.generateXpath(driver);
+		this.xpath = uniqifyXpath(driver, xpathHash);
+	}
+	
+	/**
+	 * Constructs a PageElement.
+	 * 
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement(WebDriver driver, WebElement elem, Page page){
+		this.uuid = UUID.randomUUID();
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		this.page = page;
+		loadAttributes(driver, elem);
+		loadCssProperties(elem);
+		this.xpath = this.generateXpath(driver);
+	}
 	
 	public String uniqifyXpath(WebDriver driver, HashMap<String, Integer> xpathHash){
 		
@@ -347,6 +383,10 @@ public class PageElement {
 	
 	public String getTagName(){
 		return this.tagName;
+	}
+	
+	public Page getPage(){
+		return this.page;
 	}
 	
 	public UUID getUuid(){

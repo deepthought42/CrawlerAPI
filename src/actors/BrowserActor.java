@@ -285,7 +285,14 @@ public class BrowserActor extends Thread implements Actor{
 				do{
 					actionPerformedSuccessfully = performAction(elemAction);	
 				}while(!actionPerformedSuccessfully);
-					
+				
+				if(PageAlert.isAlertPresent(browser.getDriver())){
+					PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
+					ConcurrentNode<PageAlert> alertNode = new ConcurrentNode<PageAlert>(pageAlert);
+					alertNode.addInput(pathNode);
+					pathNode.addOutput(alertNode);
+				}
+				
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
 				Page existingPage = pageMonitor.findPage(browser.getDriver().getPageSource(), currentUrl.getHost());
 				
@@ -387,13 +394,13 @@ public class BrowserActor extends Thread implements Actor{
 	private void expandNodePath() throws MalformedURLException{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
 		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
-		String className = node.getType().getCanonicalName();
+		Class className = node.getType();
 		String[] actions = ActionFactory.getActions();
 
 		//if node is a page then find all potential elementActions that can be taken including different values
 		//if node is an elementAction find all elementActions for the last seen page node that have not been seen
 		//   since the page node was encountered and add them.
-		if(className.equals("browsing.Page")){
+		if(className.equals(Page.class)){
 			//verify current page matches current node data
 			//if not mark as different
 			Page page = (Page)node.getData();
@@ -418,7 +425,7 @@ public class BrowserActor extends Thread implements Actor{
 				}				
 			}
 		}
-		else if(className.equals("browsing.ElementAction")){
+		else if(className.equals(ElementAction.class)){
 			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
 			//navigate path back to last seen page
 			//for each ElementAction seen, record elementAction.
@@ -460,6 +467,8 @@ public class BrowserActor extends Thread implements Actor{
 					}
 				}				
 			}
+		}
+		else if(className.equals(PageAlert.class)){
 		}
 	}
 	

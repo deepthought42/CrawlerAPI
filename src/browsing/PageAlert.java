@@ -2,6 +2,7 @@ package browsing;
 
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 
 /**
@@ -54,5 +55,39 @@ public class PageAlert {
 	
 	public String getChoice(){
 		return this.choice;
+	}
+	
+	public static boolean isAlertPresent(WebDriver driver) 
+	{ 
+	    try 
+	    { 
+	        driver.switchTo().alert(); 
+	        return true; 
+	    }   // try 
+	    catch (NoAlertPresentException Ex) 
+	    { 
+	        return false; 
+	    }   // catch 
+	} 
+	
+	/**
+	 * 
+	 * @param driver
+	 * @return
+	 */
+	public static Alert getAlert(WebDriver driver){
+
+	    try 
+	    { 
+	        return driver.switchTo().alert(); 
+	    }   // try 
+	    catch (NoAlertPresentException Ex) 
+	    { 
+	        return null; 
+	    }   // catch 
+	}
+	
+	public static String getMessage(Alert alert) throws UnhandledAlertException{
+		return alert.getText(); 
 	}
 }

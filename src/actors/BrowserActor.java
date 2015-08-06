@@ -287,10 +287,13 @@ public class BrowserActor extends Thread implements Actor{
 				}while(!actionPerformedSuccessfully);
 				
 				if(PageAlert.isAlertPresent(browser.getDriver())){
-					PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
-					ConcurrentNode<PageAlert> alertNode = new ConcurrentNode<PageAlert>(pageAlert);
-					alertNode.addInput(pathNode);
-					pathNode.addOutput(alertNode);
+					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !((ConcurrentNode<?>)this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
+						PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
+						ConcurrentNode<PageAlert> alertNode = new ConcurrentNode<PageAlert>(pageAlert);
+						alertNode.addInput(pathNode);
+						pathNode.addOutput(alertNode);
+					}
+					continue;
 				}
 				
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());

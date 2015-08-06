@@ -301,6 +301,11 @@ public class PageElement {
 	public boolean equals(PageElement elem){
 		ArrayList<Attribute> oldPageElementAttributes = this.getAttributes();
 		ArrayList<Attribute> newPageElementAttributes = elem.getAttributes();
+		
+		if(this.getPage().equals(elem.getPage())){
+			return false;
+		}
+		
 		boolean areElementsEqual =  false;
 		
 		if(this.getTagName().equals(elem.getTagName())

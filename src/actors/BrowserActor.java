@@ -368,13 +368,8 @@ public class BrowserActor extends Thread implements Actor{
 			}
 			else if(className.equals(PageAlert.class)){
 				System.err.println(this.getName() + " -> Handling Alert");
-				try{
-					Alert alert = browser.getDriver().switchTo().alert();
-			        alert.accept();
-				}
-				catch(NoAlertPresentException nae){
-					System.err.println(this.getName() + " -> Alert not present");
-				}
+				PageAlert alert = (PageAlert)pathNode.getData();
+				alert.performChoice(browser.getDriver());
 			}
 			i++;
 		}

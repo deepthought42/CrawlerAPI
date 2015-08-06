@@ -25,6 +25,7 @@ import browsing.ActionFactory;
 import browsing.Browser;
 import browsing.ElementAction;
 import browsing.Page;
+import browsing.PageAlert;
 import browsing.PageElement;
 import browsing.PageState;
 import structs.Path;
@@ -266,9 +267,9 @@ public class BrowserActor extends Thread implements Actor{
 			System.out.println(this.getName() + " -> current path index :: " + i);
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
 			
-			String className = pathNode.getData().getClass().getCanonicalName();
+			Class<?> className = pathNode.getData().getClass();
 			
-			if(className.equals("browsing.Page")){
+			if(className.equals(Page.class)){
 				pageNode = (Page)pathNode.getData();
 				System.out.println(this.getName() + " -> PAGE NODE SEEN");
 				//verify current page matches current node data
@@ -277,7 +278,7 @@ public class BrowserActor extends Thread implements Actor{
 				//If new page is assign elementIdxChanges to empty list
 				elementIdxChanges = new ArrayList<Integer>();
 			}
-			else if(className.equals("browsing.ElementAction")){
+			else if(className.equals(ElementAction.class)){
 				ElementAction elemAction = (ElementAction)pathNode.getData();
 				//execute element action
 				boolean actionPerformedSuccessfully;
@@ -305,9 +306,8 @@ public class BrowserActor extends Thread implements Actor{
 						return false;
 					}
 				}
-				//if after performing action page is no longer equal do stuff
 			
-				//if not at end of path and next node is a Page then don't bother adding new node
+				//if not at end of path and next node is a Page or pageState then don't bother adding new node
 				if(i < path.getPath().size()-1 && (((ConcurrentNode<?>)path.getPath().get(i+1)).getType().equals(Page.class) 
 						|| ((ConcurrentNode<?>)path.getPath().get(i+1)).getType().equals(PageState.class))){
 					i++;
@@ -321,7 +321,6 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
 					System.out.println(this.getName() + " -> current path index :: " + i);
 					//Before adding new page, check if page has been experienced already. If it has load that page
-					//Before
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(existingPage);
@@ -365,6 +364,16 @@ public class BrowserActor extends Thread implements Actor{
 						pathNode.addOutput(pageStateNode);
 						additionalNodes.add(pageStateNode);
 					}
+				}
+			}
+			else if(className.equals(PageAlert.class)){
+				System.err.println(this.getName() + " -> Handling Alert");
+				try{
+					Alert alert = browser.getDriver().switchTo().alert();
+			        alert.accept();
+				}
+				catch(NoAlertPresentException nae){
+					System.err.println(this.getName() + " -> Alert not present");
 				}
 			}
 			i++;

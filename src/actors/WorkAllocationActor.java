@@ -43,7 +43,7 @@ public class WorkAllocationActor implements Observer{
 	//Whenever an update is observed the current queue is updated
 	public void update(Observable o, Object arg)
 	{
-	    if (o instanceof ObservableQueue){
+	    if (o instanceof ObservableQueue<?>){
 	    	queue = (ObservableQueue) o;
 	        //System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
 	        allocatePathProcessing();

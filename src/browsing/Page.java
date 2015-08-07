@@ -153,7 +153,7 @@ public class Page{
 		String temp_xpath = xpath;
 		for(WebElement elem : childElements){
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash);
+				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash, this);
 				pageElementList.add(pageElem);
 				getVisibleElements(driver, pageElementList, pageElem.getXpath());
 			}

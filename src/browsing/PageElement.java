@@ -77,28 +77,6 @@ public class PageElement {
 		
 	/**
 	 * Constructs a PageElement.
-	 *
-	 * @param driver
-	 * @param elem
-	 * @param actions
-	 */
-	@deprecated
-	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash){
-		this.uuid = UUID.randomUUID();
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		loadAttributes(driver, elem);
-		
-		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
-		positiveDomain.generateAllValueTypes();
-		
-		//loadCssProperties(elem);
-		this.xpath = parentXpath + this.generateXpath(driver);
-		this.xpath = uniqifyXpath(driver, xpathHash);
-	}
-	
-	/**
-	 * Constructs a PageElement.
 	 * @param driver
 	 * @param elem
 	 */
@@ -137,12 +115,35 @@ public class PageElement {
 		this.xpath = uniqifyXpath(driver, xpathHash);
 	}
 	
+
+	/**
+	 * Constructs a PageElement.
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, Page page, String[] actions){
+		this.uuid = UUID.randomUUID();
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		this.actions = actions;
+		this.page = page;
+		loadAttributes(driver, elem);
+		
+		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
+		positiveDomain.generateAllValueTypes();
+		
+		//loadCssProperties(elem);
+		this.xpath = parentXpath + this.generateXpath(driver);
+		this.xpath = uniqifyXpath(driver, xpathHash);
+	}
+	
 	/**
 	 * Constructs a PageElement.
 	 * 
 	 * @param driver
 	 * @param elem
 	 */
+	@Deprecated
 	public PageElement(WebDriver driver, WebElement elem, Page page){
 		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
@@ -152,6 +153,24 @@ public class PageElement {
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver);
 	}
+
+	/**
+	 * Constructs a PageElement.
+	 * 
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement(WebDriver driver, WebElement elem, Page page, String[] actions){
+		this.uuid = UUID.randomUUID();
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		this.actions = actions;
+		this.page = page;
+		loadAttributes(driver, elem);
+		loadCssProperties(elem);
+		this.xpath = this.generateXpath(driver);
+	}
+	
 	
 	public String uniqifyXpath(WebDriver driver, HashMap<String, Integer> xpathHash){
 		
@@ -328,7 +347,7 @@ public class PageElement {
 		List<WebElement> childElements = elem.findElements(By.xpath("*"));
 		ArrayList<PageElement> childPageElements = new ArrayList<PageElement>();
 		for(WebElement childElement : childElements){
-			childPageElements.add(new PageElement(driver, childElement, this.xpath, xpathHash));
+			childPageElements.add(new PageElement(driver, childElement, this.xpath, xpathHash, this.getPage()));
 		}
 		
 		return childPageElements;

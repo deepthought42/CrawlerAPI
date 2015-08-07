@@ -27,6 +27,7 @@ import util.ArrayUtility;
 public class PageElement {
 	private UUID uuid = null;
 	private Page page = null;
+	private String[] actions = ActionFactory.getActions();
 	private String tagName;
 	private String text;
 	private String xpath;
@@ -47,6 +48,7 @@ public class PageElement {
 	 * @param driver
 	 * @param elem
 	 */
+	@Deprecated
 	public PageElement(WebDriver driver, WebElement elem){
 		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
@@ -58,13 +60,53 @@ public class PageElement {
 	
 	/**
 	 * Constructs a PageElement.
+	 * 
 	 * @param driver
 	 * @param elem
+	 * @param actions
 	 */
+	public PageElement(WebDriver driver, WebElement elem, String[] actions){
+		this.uuid = UUID.randomUUID();
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		this.actions = actions;
+		loadAttributes(driver, elem);
+		loadCssProperties(elem);
+		this.xpath = this.generateXpath(driver);
+	}
+		
+	/**
+	 * Constructs a PageElement.
+	 *
+	 * @param driver
+	 * @param elem
+	 * @param actions
+	 */
+	@deprecated
 	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash){
 		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
+		loadAttributes(driver, elem);
+		
+		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
+		positiveDomain.generateAllValueTypes();
+		
+		//loadCssProperties(elem);
+		this.xpath = parentXpath + this.generateXpath(driver);
+		this.xpath = uniqifyXpath(driver, xpathHash);
+	}
+	
+	/**
+	 * Constructs a PageElement.
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, String[] actions){
+		this.uuid = UUID.randomUUID();
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		this.actions = actions;
 		loadAttributes(driver, elem);
 		
 		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board

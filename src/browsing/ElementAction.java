@@ -25,6 +25,10 @@ public class ElementAction {
 		return this.action;
 	}
 	
+	public int getElementIndex(){
+		return this.elementIndex;
+	}
+	
 	public boolean equals(ElementAction elemAction){
 		if(elemAction.getPageElement().equals(this.element)
 				&& elemAction.getAction().equals(this.action)){

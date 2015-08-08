@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import actors.BrowserActor;
-import actors.PageMonitor;
+import actors.NodeMonitor;
 import actors.ResourceManagementActor;
 import actors.WorkAllocationActor;
 import observableStructs.ObservableQueue;
@@ -26,12 +26,12 @@ public class EntryPoint {
 		System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
 		
 		System.out.print("Initializing page monitor...");
-		PageMonitor pageMonitor = new PageMonitor();
+		NodeMonitor nodeMonitor = new NodeMonitor();
 		System.out.println("PageMonitor Initialized");
-		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue, resourceManager, pageMonitor);
+		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue, resourceManager, nodeMonitor);
 		BrowserActor browserActor;
 		try {
-			browserActor = new BrowserActor(url, pathQueue, resourceManager, workAllocator, pageMonitor);
+			browserActor = new BrowserActor(url, pathQueue, resourceManager, workAllocator, nodeMonitor);
 			browserActor.start();
 		} catch (MalformedURLException e1) {
 			System.out.println("MALFORMED URL EXCEPTION");

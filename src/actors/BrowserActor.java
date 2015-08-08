@@ -69,7 +69,7 @@ public class BrowserActor extends Thread implements Actor{
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
-	private PageMonitor pageMonitor = null;
+	private NodeMonitor nodeMonitor = null;
 	private List<Integer> elementIdxChanges = null;
 	
 	/**
@@ -97,7 +97,7 @@ public class BrowserActor extends Thread implements Actor{
 						ObservableQueue<Path> queue, 
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator,
-						PageMonitor pageMonitor) throws MalformedURLException {
+						NodeMonitor nodeMonitor) throws MalformedURLException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -108,7 +108,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.path = new Path();
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
-		this.pageMonitor = pageMonitor;
+		this.nodeMonitor = nodeMonitor;
 		elementIdxChanges = null;
 		
 		if(this.path.getPath().isEmpty()){
@@ -131,7 +131,7 @@ public class BrowserActor extends Thread implements Actor{
 						Path path, 
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator,
-						PageMonitor pageMonitor) throws MalformedURLException {
+						NodeMonitor pageMonitor) throws MalformedURLException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -148,7 +148,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.pathQueue = queue;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
-		this.pageMonitor = pageMonitor;
+		this.nodeMonitor = pageMonitor;
 		elementIdxChanges = new ArrayList<Integer>();
 	}
 	
@@ -297,11 +297,11 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
-				Page existingPage = pageMonitor.findPage(browser.getDriver().getPageSource(), currentUrl.getHost());
+				ConcurrentNode<?> existingPage = nodeMonitor.findNode(pathNode, currentUrl.getHost());
 				
 				if(existingPage == null){
-					existingPage = new Page(browser.getDriver(), DateFormat.getDateInstance());
-					if(pageMonitor.addPage(existingPage)){
+					existingPage = new ConcurrentNode<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
+					if(nodeMonitor.addPage(existingPage)){
 						System.out.println(this.getName() + " -> Added new page to monitor");
 					}
 					else{
@@ -333,7 +333,7 @@ public class BrowserActor extends Thread implements Actor{
 					//Before adding new page, check if page has been experienced already. If it has load that page
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
-					ConcurrentNode<Page> newPageNode = new ConcurrentNode<Page>(existingPage);
+					ConcurrentNode<?> newPageNode = existingPage;
 					System.out.println(this.getName() + " PAGE = "+newPageNode.getData().toString());
 					pathNode.addOutput(newPageNode);
 					newPageNode.addInput(pathNode);
@@ -346,7 +346,7 @@ public class BrowserActor extends Thread implements Actor{
 					List<PageElement> pageElements = pageNode.getElements();
 					for(int idx=0; idx < pageElements.size(); idx++){
 						WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
-						PageElement newElem = new PageElement(browser.getDriver(), elem, pageNode);
+						PageElement newElem = new PageElement(browser.getDriver(), elem, pageNode, null);
 						if(!newElem.equals(pageElements.get(idx))){
 							System.out.println(this.getName() + " -> Node differs from initial page node. Adding index to list of changed elements");
 							if(elementIdxChanges.contains(idx)){

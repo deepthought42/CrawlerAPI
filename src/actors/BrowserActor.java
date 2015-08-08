@@ -297,11 +297,11 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
-				ConcurrentNode<?> existingPage = nodeMonitor.findNode(pathNode, currentUrl.getHost());
+				ConcurrentNode<?> existingNode = nodeMonitor.findNode(pathNode, currentUrl.getHost());
 				
-				if(existingPage == null){
-					existingPage = new ConcurrentNode<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
-					if(nodeMonitor.addPage(existingPage)){
+				if(existingNode == null){
+					existingNode = new ConcurrentNode<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
+					if(nodeMonitor.addPage(existingNode)){
 						System.out.println(this.getName() + " -> Added new page to monitor");
 					}
 					else{
@@ -310,7 +310,7 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				else{
 					if(i >= this.path.getPath().size()){
-						System.out.println(this.getName() + " -> Page already existed. Using existing page");
+						System.out.println(this.getName() + " -> Node already existed. Using existing node");
 						
 						//Still need to add in a way to add the current elementAction node to the new pageNode
 						return false;
@@ -325,7 +325,7 @@ public class BrowserActor extends Thread implements Actor{
 
 				}
 				//need to check if page is equal as well as if page state has changed
-				else if(pageNode != null && !pageNode.equals(existingPage)){
+				else if(pageNode != null && !pageNode.equals(existingNode)){
 					
 					browser.updatePage( DateFormat.getDateInstance(), true);
 					System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
@@ -333,11 +333,10 @@ public class BrowserActor extends Thread implements Actor{
 					//Before adding new page, check if page has been experienced already. If it has load that page
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
-					ConcurrentNode<?> newPageNode = existingPage;
-					System.out.println(this.getName() + " PAGE = "+newPageNode.getData().toString());
-					pathNode.addOutput(newPageNode);
-					newPageNode.addInput(pathNode);
-					additionalNodes.add(newPageNode);
+					System.out.println(this.getName() + " Node = "+existingNode.getData().toString());
+					pathNode.addOutput(existingNode);
+					existingNode.addInput(pathNode);
+					additionalNodes.add(existingNode);
 				}
 				else{
 					PageState pageState = null;
@@ -397,7 +396,7 @@ public class BrowserActor extends Thread implements Actor{
 	private void expandNodePath() throws MalformedURLException{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
 		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
-		Class className = node.getType();
+		Class<?> className = node.getType();
 		String[] actions = ActionFactory.getActions();
 
 		//if node is a page then find all potential elementActions that can be taken including different values

@@ -131,7 +131,7 @@ public class Page{
 		for(WebElement element: pageElements){
 			List<WebElement> childElements = element.findElements(By.xpath("./*"));
 			if(element.isDisplayed() && childElements.isEmpty() && (!element.getAttribute("id").equals("") || (element.getAttribute("name") != null && !element.getAttribute("name").equals("")))){
-				visiblePageElements.add(new PageElement(driver, element));
+				visiblePageElements.add(new PageElement(driver, element, this, null));
 			}
 		}
 		return visiblePageElements;

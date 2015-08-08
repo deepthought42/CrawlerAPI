@@ -21,7 +21,7 @@ import structs.ConcurrentNode;
  * @author Brandon Kindred
  *
  */
-public class WorkAllocationActor implements Observer{
+public class WorkAllocationActor extends Thread implements Observer {
 	
 	ObservableQueue<Path> queue = null;
 	ResourceManagementActor resourceManager = null;
@@ -40,13 +40,18 @@ public class WorkAllocationActor implements Observer{
 		this.nodeMonitor = pageMonitor;
 	}
 
+	public void run(){
+		allocatePathProcessing();
+	}
+	
 	//Whenever an update is observed the current queue is updated
 	public void update(Observable o, Object arg)
 	{
 	    if (o instanceof ObservableQueue<?>){
 	    	queue = (ObservableQueue) o;
 	        //System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
-	        allocatePathProcessing();
+	        //allocatePathProcessing();
+	    	this.start();
 	    }else{
 	        System.out.println("The observable object was not of the correct type");
 	    }

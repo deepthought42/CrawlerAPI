@@ -51,7 +51,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 	    	queue = (ObservableQueue) o;
 	        //System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
 	        //allocatePathProcessing();
-	    	this.start();
+	    	Thread allocatorThread = new Thread(this);
+	    	allocatorThread.start();
 	    }else{
 	        System.out.println("The observable object was not of the correct type");
 	    }

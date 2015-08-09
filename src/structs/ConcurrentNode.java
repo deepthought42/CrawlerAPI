@@ -1,5 +1,4 @@
 package structs;
-import java.math.BigInteger;
 import java.util.Observable;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,22 +13,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ConcurrentNode<T> extends Observable {
 	private UUID uuid = null;
-	private ConcurrentHashMap<BigInteger, ConcurrentNode<?>> inputs;
-	private ConcurrentHashMap<BigInteger, ConcurrentNode<?>> outputs;
+	private ConcurrentHashMap<UUID, ConcurrentNode<?>> inputs;
+	private ConcurrentHashMap<UUID, ConcurrentNode<?>> outputs;
 	public T data;
 	public Class<?> clazz;
 	volatile AtomicBoolean isEntryNode = new AtomicBoolean(false);
 	
 	public ConcurrentNode(T data){
-		this.inputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
-		this.outputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
+		this.inputs = new ConcurrentHashMap<UUID, ConcurrentNode<?>>();
+		this.outputs = new ConcurrentHashMap<UUID, ConcurrentNode<?>>();
 		this.data = data;
 		this.clazz = data.getClass();
 	}
 	
 	public ConcurrentNode(
-			ConcurrentHashMap<BigInteger, ConcurrentNode<?>> inputMap, 
-			ConcurrentHashMap<BigInteger, ConcurrentNode<?>> outputMap, 
+			ConcurrentHashMap<UUID, ConcurrentNode<?>> inputMap, 
+			ConcurrentHashMap<UUID, ConcurrentNode<?>> outputMap, 
 			T data)
 	{
 		this.uuid = UUID.randomUUID();
@@ -42,8 +41,8 @@ public class ConcurrentNode<T> extends Observable {
 	public ConcurrentNode() {
 		this.uuid = UUID.randomUUID();
 		
-		this.inputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
-		this.outputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
+		this.inputs = new ConcurrentHashMap<UUID, ConcurrentNode<?>>();
+		this.outputs = new ConcurrentHashMap<UUID, ConcurrentNode<?>>();
 		this.data = null;
 	}
 
@@ -51,18 +50,18 @@ public class ConcurrentNode<T> extends Observable {
 		this.data = data;
 	}
 	
-	public void addInput(BigInteger uuid, ConcurrentNode<?> node){
+	public void addInput(UUID uuid, ConcurrentNode<?> node){
 		//.0001 chosen for assumption of behaving as an extremely low weight for initial connection
 		inputs.put(uuid, node);
 		setChanged();
         notifyObservers();                                                                  // makes the observers print null
 	}
 	
-	public ConcurrentNode<?> getInput(BigInteger uuid){
+	public ConcurrentNode<?> getInput(UUID uuid){
 		return inputs.get(uuid);
 	}
 	
-	public void addOutput(BigInteger uuid, ConcurrentNode<?> node){
+	public void addOutput(UUID uuid, ConcurrentNode<?> node){
 		outputs.put(uuid, node);
 		setChanged();
         notifyObservers(this);                                                                  // makes the observers print null
@@ -72,7 +71,7 @@ public class ConcurrentNode<T> extends Observable {
 		return outputs.get(node);
 	}
 	
-	public ConcurrentHashMap<BigInteger, ConcurrentNode<?>> getOutputs(){
+	public ConcurrentHashMap<UUID, ConcurrentNode<?>> getOutputs(){
 		return this.outputs;
 	}
 	
@@ -88,8 +87,7 @@ public class ConcurrentNode<T> extends Observable {
 	 * 
 	 * @return
 	 */
-	public BigInteger getUuid(){
-		String uuidString = this.uuid.getLeastSignificantBits()+""+this.uuid.getMostSignificantBits();
-		return new BigInteger(uuidString);
+	public UUID getUuid(){
+		return uuid;
 	}
 }

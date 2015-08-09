@@ -482,8 +482,11 @@ public class BrowserActor extends Thread implements Actor{
 	private boolean putPathOnQueue(ConcurrentNode<?> node){
 		Path clonePath = Path.clone(path);
 		clonePath.add(node);
+		boolean addSuccess = false;
+		addSuccess = this.pathQueue.add(clonePath);
+
 		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
-		return this.pathQueue.add(clonePath);
+		return addSuccess;
 	}
 
 	/**

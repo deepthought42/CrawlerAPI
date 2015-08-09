@@ -32,6 +32,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 		setChanged();
 		boolean wasAdded = queue.add(o);
 		notifyObservers();
+		notifyAll();
 		return wasAdded;
 	}
 

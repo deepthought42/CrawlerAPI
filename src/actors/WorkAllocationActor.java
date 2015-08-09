@@ -45,17 +45,18 @@ public class WorkAllocationActor extends Thread implements Observer {
 	}
 	
 	//Whenever an update is observed the current queue is updated
-	public void update(Observable o, Object arg)
+	public synchronized void update(Observable o, Object arg)
 	{
 	    if (o instanceof ObservableQueue<?>){
 	    	queue = (ObservableQueue) o;
 	        //System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
-	        //allocatePathProcessing();
-	    	Thread allocatorThread = new Thread(this);
-	    	allocatorThread.start();
+	        allocatePathProcessing();
+	    	//Thread allocatorThread = new Thread(this);
+	    	//allocatorThread.start();
 	    }else{
 	        System.out.println("The observable object was not of the correct type");
 	    }
+	    notifyAll();
 	}
 	
 	/**
@@ -152,7 +153,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 		
 		//get previous node in both paths
 		ConcurrentNode<?> path1PrevNode = (ConcurrentNode<?>) path1.getPath().get(path1Idx - 1);
-		ConcurrentNode<?> path2PrevNode = (ConcurrentNode<?>) path1.getPath().get(path2Idx - 1);
+		ConcurrentNode<?> path2PrevNode = (ConcurrentNode<?>) path2.getPath().get(path2Idx - 1);
 		
 		if(allElementsEqual 
 				&& path1PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction") 

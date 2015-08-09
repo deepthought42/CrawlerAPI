@@ -6,10 +6,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
+ * A Node for a graph structure that is capable of connecting
+ * to any number of input and output nodes.
  * 
  * @author Brandon Kindred
  *
- * @param <T>
+ * @param <T> Generic object
+ * 
+ * @threadsafe
  */
 public class ConcurrentNode<T> extends Observable {
 	private UUID uuid = null;
@@ -20,6 +24,7 @@ public class ConcurrentNode<T> extends Observable {
 	volatile AtomicBoolean isEntryNode = new AtomicBoolean(false);
 	
 	public ConcurrentNode(T data){
+		this.uuid = UUID.randomUUID();
 		this.inputs = new ConcurrentHashMap<UUID, ConcurrentNode<?>>();
 		this.outputs = new ConcurrentHashMap<UUID, ConcurrentNode<?>>();
 		this.data = data;

@@ -19,8 +19,8 @@ public class ConcurrentNode<T> extends Observable {
 	private UUID uuid = null;
 	private ConcurrentHashMap<UUID, ConcurrentNode<?>> inputs;
 	private ConcurrentHashMap<UUID, ConcurrentNode<?>> outputs;
-	public T data;
-	public Class<?> clazz;
+	private T data;
+	private Class<?> clazz;
 	volatile AtomicBoolean isEntryNode = new AtomicBoolean(false);
 	
 	public ConcurrentNode(T data){

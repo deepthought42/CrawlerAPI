@@ -1,8 +1,13 @@
 package actors;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
+import browsing.ElementAction;
+import browsing.Page;
+import browsing.PageState;
 import structs.ConcurrentNode;
+import structs.Path;
 import test.TestDefinition;
 
 /**
@@ -11,12 +16,31 @@ import test.TestDefinition;
  *
  */
 public class TestWriter {
-	private ConcurrentNode<?> rootNode = null;
+	private Path path = null;
 	private TestDefinition test = null;
 	private String filename;
 	
-	public TestWriter(ConcurrentNode<?> startNode){
-		this.rootNode = startNode;
+	public String createTest(){
+		Iterator<?> pathIterator = this.path.getPath().iterator();
+		while(pathIterator.hasNext()){
+			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
+			//Determine nodeType and modify test defintion accordingly
+			if(pathNode.getClass().equals(ElementAction.class)){
+				
+			}
+			else if(pathNode.getClass().equals(PageState.class)){
+				
+			}
+			else if(pathNode.getClass().equals(Page.class)){
+				
+			}
+			
+		}
+		return null;
+	}
+	
+	public TestWriter(Path path){
+		this.path = path;
 		this.test = new TestDefinition();	 
 	}
 	
@@ -32,7 +56,7 @@ public class TestWriter {
 		return this.test;
 	}
 	
-	public ConcurrentNode<?> getRootNode(){
-		return this.rootNode;
+	public Path getRootNode(){
+		return this.path;
 	}
 }

@@ -85,8 +85,7 @@ public class Path {
 		}
 		
 		System.out.println("NODE PATHS ARE EQUAL");
-		return true;
-		
+		return true;		
 	}
 	
 	/**

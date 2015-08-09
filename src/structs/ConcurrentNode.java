@@ -1,5 +1,7 @@
 package structs;
+import java.math.BigInteger;
 import java.util.Observable;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -11,33 +13,37 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T>
  */
 public class ConcurrentNode<T> extends Observable {
-	private ConcurrentHashMap<ConcurrentNode<?>, Double> inputs;
-	private ConcurrentHashMap<ConcurrentNode<?>, Double> outputs;
+	private UUID uuid = null;
+	private ConcurrentHashMap<BigInteger, ConcurrentNode<?>> inputs;
+	private ConcurrentHashMap<BigInteger, ConcurrentNode<?>> outputs;
 	public T data;
-	public Class<?> type;
+	public Class<?> clazz;
 	volatile AtomicBoolean isEntryNode = new AtomicBoolean(false);
 	
 	public ConcurrentNode(T data){
-		this.inputs = new ConcurrentHashMap<ConcurrentNode<?>, Double>();
-		this.outputs = new ConcurrentHashMap<ConcurrentNode<?>, Double>();
+		this.inputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
+		this.outputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
 		this.data = data;
-		this.type = data.getClass();
+		this.clazz = data.getClass();
 	}
 	
 	public ConcurrentNode(
-			ConcurrentHashMap<ConcurrentNode<?>, Double> inputMap, 
-			ConcurrentHashMap<ConcurrentNode<?>, Double> outputMap, 
+			ConcurrentHashMap<BigInteger, ConcurrentNode<?>> inputMap, 
+			ConcurrentHashMap<BigInteger, ConcurrentNode<?>> outputMap, 
 			T data)
 	{
+		this.uuid = UUID.randomUUID();
 		this.inputs = inputMap;
 		this.outputs = outputMap;
 		this.data = data;
-		this.type = data.getClass();
+		this.clazz = data.getClass();
 	}
 	
 	public ConcurrentNode() {
-		this.inputs = new ConcurrentHashMap<ConcurrentNode<?>, Double>();
-		this.outputs = new ConcurrentHashMap<ConcurrentNode<?>, Double>();
+		this.uuid = UUID.randomUUID();
+		
+		this.inputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
+		this.outputs = new ConcurrentHashMap<BigInteger, ConcurrentNode<?>>();
 		this.data = null;
 	}
 
@@ -45,28 +51,28 @@ public class ConcurrentNode<T> extends Observable {
 		this.data = data;
 	}
 	
-	public void addInput(ConcurrentNode<?> node){
+	public void addInput(BigInteger uuid, ConcurrentNode<?> node){
 		//.0001 chosen for assumption of behaving as an extremely low weight for initial connection
-		inputs.put(node, .0001);
+		inputs.put(uuid, node);
 		setChanged();
         notifyObservers();                                                                  // makes the observers print null
 	}
 	
-	public Double getInputWeight(ConcurrentNode<?> node){
-		return inputs.get(node);
+	public ConcurrentNode<?> getInput(BigInteger uuid){
+		return inputs.get(uuid);
 	}
 	
-	public void addOutput(ConcurrentNode<?> node){
-		outputs.put(node,  .9);
+	public void addOutput(BigInteger uuid, ConcurrentNode<?> node){
+		outputs.put(uuid, node);
 		setChanged();
         notifyObservers(this);                                                                  // makes the observers print null
 	}
 	
-	public Double getOutputWeight(ConcurrentNode<?> node){
+	public ConcurrentNode<?> getOutput(ConcurrentNode<?> node){
 		return outputs.get(node);
 	}
 	
-	public ConcurrentHashMap<ConcurrentNode<?>, Double> getOutputs(){
+	public ConcurrentHashMap<BigInteger, ConcurrentNode<?>> getOutputs(){
 		return this.outputs;
 	}
 	
@@ -75,6 +81,6 @@ public class ConcurrentNode<T> extends Observable {
 	}
 	
 	public Class<? extends Object> getType(){
-		return this.type;
+		return this.clazz;
 	}
 }

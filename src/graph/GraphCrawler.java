@@ -1,4 +1,4 @@
-package actors;
+package graph;
 
 public interface GraphCrawler {
 	public boolean putNodesOnFrontier();

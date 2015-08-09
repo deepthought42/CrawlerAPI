@@ -14,5 +14,4 @@ public class TestWriter {
 		this.rootNode = startNode;
 	}
 	
-	
 }

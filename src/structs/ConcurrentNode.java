@@ -83,4 +83,13 @@ public class ConcurrentNode<T> extends Observable {
 	public Class<? extends Object> getType(){
 		return this.clazz;
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public BigInteger getUuid(){
+		String uuidString = this.uuid.getLeastSignificantBits()+""+this.uuid.getMostSignificantBits();
+		return new BigInteger(uuidString);
+	}
 }

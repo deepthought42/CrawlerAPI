@@ -12,6 +12,7 @@ import structs.Path;
 public class PathTracer {
 	
 	public static Path traceToRoot(ConcurrentNode<?> node){
+		node.getInput(node.getUuid());
 		return null;		
 	}
 }

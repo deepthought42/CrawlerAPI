@@ -290,8 +290,8 @@ public class BrowserActor extends Thread implements Actor{
 					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !((ConcurrentNode<?>)this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
 						PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
 						ConcurrentNode<PageAlert> alertNode = new ConcurrentNode<PageAlert>(pageAlert);
-						alertNode.addInput(pathNode);
-						pathNode.addOutput(alertNode);
+						alertNode.addInput(pathNode.getUuid(), pathNode);
+						pathNode.addOutput(alertNode.getUuid(), alertNode);
 					}
 					continue;
 				}
@@ -334,8 +334,8 @@ public class BrowserActor extends Thread implements Actor{
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					System.out.println(this.getName() + " Node = "+existingNode.getData().toString());
-					pathNode.addOutput(existingNode);
-					existingNode.addInput(pathNode);
+					pathNode.addOutput(existingNode.getUuid(), existingNode);
+					existingNode.addInput(pathNode.getUuid(), pathNode);
 					additionalNodes.add(existingNode);
 				}
 				else{
@@ -369,8 +369,8 @@ public class BrowserActor extends Thread implements Actor{
 					}
 					else{
 						ConcurrentNode<PageState> pageStateNode = new ConcurrentNode<PageState>();
-						pageStateNode.addInput(pathNode);
-						pathNode.addOutput(pageStateNode);
+						pageStateNode.addInput(pathNode.getUuid(), pathNode);
+						pathNode.addOutput(pageStateNode.getUuid(), pageStateNode);
 						additionalNodes.add(pageStateNode);
 					}
 				}
@@ -420,8 +420,8 @@ public class BrowserActor extends Thread implements Actor{
 					//System.out.println("ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
-					elementAction.addInput(node);
-					node.addOutput(elementAction);
+					elementAction.addInput(node.getUuid(), node);
+					node.addOutput(elementAction.getUuid(), elementAction);
 					
 					putPathOnQueue(elementAction);
 				}				
@@ -462,8 +462,8 @@ public class BrowserActor extends Thread implements Actor{
 					if(!seen){
 						//Clone path then add ElementAction to path and push path onto path queue					
 						ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
-						elementAction.addInput(node);
-						node.addOutput(elementAction);
+						elementAction.addInput(node.getUuid(), node);
+						node.addOutput(elementAction.getUuid(), elementAction);
 						
 						putPathOnQueue(elementAction);
 					}

@@ -483,7 +483,20 @@ public class BrowserActor extends Thread implements Actor{
 		Path clonePath = Path.clone(path);
 		clonePath.add(node);
 		boolean addSuccess = false;
-		addSuccess = this.pathQueue.add(clonePath);
+		synchronized(pathQueue){
+			while(!addSuccess){
+				try{
+					addSuccess = this.pathQueue.add(clonePath);
+					//System.out.println(this.getName() + " -> waiting in line to add clonePath to pathQueue");
+					pathQueue.wait();
+				}catch(InterruptedException e){
+					System.err.println(this.getName() + " -> Done waiting");
+				}
+				catch(IllegalStateException e){
+					System.err.println(this.getName() + " -> Illegal state exception occurred while adding to pathQueue");
+				}
+			}
+		}
 
 		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
 		return addSuccess;

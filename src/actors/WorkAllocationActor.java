@@ -91,6 +91,10 @@ public class WorkAllocationActor extends Thread implements Observer {
 		}
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public Path retrieveNextPath(){
 		Path path = null;
 		do{

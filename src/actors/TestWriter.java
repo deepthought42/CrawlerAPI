@@ -26,6 +26,7 @@ public class TestWriter {
 			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
 			//Determine nodeType and modify test defintion accordingly
 			if(pathNode.getClass().equals(ElementAction.class)){
+				//if element action
 				
 			}
 			else if(pathNode.getClass().equals(PageState.class)){

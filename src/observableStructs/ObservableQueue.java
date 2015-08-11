@@ -19,16 +19,19 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	 * {@inheritDoc}
 	 */
 	public synchronized E poll(){
+		
 		setChanged();
 		E element = queue.poll();
 		notifyObservers();
+		System.out.println("NOTIFYING ALL THREADS");
+		notifyAll();
 		return element;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean add(E o){
+	public synchronized boolean add(E o) throws IllegalStateException{
 		setChanged();
 		boolean wasAdded = queue.add(o);
 		notifyObservers();

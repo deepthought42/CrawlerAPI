@@ -1,5 +1,12 @@
 package graph;
 
+/**
+ * A Vertex node that contains the data for a given vertex in a {@link Graph}
+ * 
+ * @author Brandon Kindred
+ *
+ * @param <T>
+ */
 public class Vertex<T> {
 	private boolean isRoot = false;
 	private T data = null;

@@ -57,9 +57,16 @@ public class Graph {
 	 * 
 	 * @param from
 	 * @param to
-	 * @return
+	 * 
+	 * @pre edges.size() > from
+	 * @pre edges.size() > to
+	 * 
+	 * @return true if edge added successfully, false otherwise
 	 */
 	public boolean addEdge(int from, int to){
+		assert edges.size() > from; 
+		assert edges.size() > to;
+		
 		int[] edge = {from, to};
 		return edges.add(edge);
 	}

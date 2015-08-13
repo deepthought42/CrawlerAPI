@@ -8,8 +8,8 @@ import java.util.ArrayList;
  *
  */
 public class Graph {
-	ArrayList<Vertex> vertices = new ArrayList<Vertex>();
-	ArrayList<int[]> edges = new ArrayList<int[]>();
+	ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
+	ArrayList<Edge> edges = new ArrayList<Edge>();
 	
 	public Graph(Vertex<?> vertex){
 		vertex.setRoot(true);
@@ -21,7 +21,7 @@ public class Graph {
 	 * @param vertex
 	 * @return
 	 */
-	public boolean addVertex(Vertex vertex){
+	public boolean addVertex(Vertex<?> vertex){
 		return this.vertices.add(vertex);
 	}
 	
@@ -46,8 +46,7 @@ public class Graph {
 		}
 		
 		if(idx1 > -1 && idx2 > -1){
-			int[] edge = {idx1, idx2};
-			return edges.add(edge);
+			return edges.add(new Edge(idx1, idx2));
 		}
 		return false;
 	}
@@ -67,7 +66,6 @@ public class Graph {
 		assert edges.size() > from; 
 		assert edges.size() > to;
 		
-		int[] edge = {from, to};
-		return edges.add(edge);
+		return edges.add(new Edge(from, to));
 	}
 }

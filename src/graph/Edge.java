@@ -9,25 +9,25 @@ package graph;
  */
 public class Edge {
 	String label = "";
-	long from = -1;
-	long to = -1;
+	int from = -1;
+	int to = -1;
 	
-	public Edge(long from,long to){
+	public Edge(int from,int to){
 		this.from = from;
 		this.to = to;
 	}
 	
-	public Edge(String label, long from, long to){
+	public Edge(String label, int from, int to){
 		this.label = label;
 		this.from = from;
 		this.to = to;
 	}
 	
-	public long getFrom(){
+	public int getFrom(){
 		return this.from;
 	}
 	
-	public long getTo(){
+	public int getTo(){
 		return this.to;
 	}
 	

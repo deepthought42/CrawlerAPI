@@ -1,5 +1,7 @@
 package graph;
 
+import java.util.ArrayList;
+
 /**
  * A Vertex node that contains the data for a given vertex in a {@link Graph}
  * 

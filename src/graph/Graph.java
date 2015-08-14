@@ -68,4 +68,26 @@ public class Graph {
 		
 		return edges.add(new Edge(from, to));
 	}
+	
+	/**
+	 * Finds a root vertex
+	 * 
+	 * @param vertexIdx
+	 * @return
+	 */
+	public Vertex<?> findRoot(int vertexIdx){
+		int fromIdx = -1;
+		
+		do{
+			for(Edge edge: edges){
+	
+				if(edge.to == vertexIdx){
+					fromIdx = edge.to;
+				}
+			}
+		}while(fromIdx != -1 && !vertices.get(fromIdx).isRoot());
+			
+		
+		return vertices.get(fromIdx);
+	}
 }

@@ -10,10 +10,9 @@ import java.util.HashMap;
  */
 public class Graph {
 	private ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
-	//In edgeHash, the key is the index in vertices for the from vertex 
+	//In edges, the key is the index in vertices for the from vertex 
 	//	and the value for the to is stored in the ArrayList
-	private HashMap<Integer, ArrayList<Integer>> edgeHash = new HashMap<Integer, ArrayList<Integer>>();
-	private ArrayList<Edge> edges = new ArrayList<Edge>();
+	private HashMap<Integer, ArrayList<Integer>> edges = new HashMap<Integer, ArrayList<Integer>>();
 	
 	public Graph(Vertex<?> vertex){
 		vertex.setRoot(true);
@@ -36,7 +35,7 @@ public class Graph {
 	 * 
 	 * @return true if successfully created, false otherwise
 	 */
-	public boolean addEdge(Vertex<?> fromVertex, Vertex<?> toVertex){
+	public void addEdge(Vertex<?> fromVertex, Vertex<?> toVertex){
 		int idx1 = -1;
 		int idx2 = -1;
 		int curr_idx = 0;
@@ -50,40 +49,23 @@ public class Graph {
 		}
 		
 		if(idx1 > -1 && idx2 > -1){
-			return edges.add(new Edge(idx1, idx2));
+			ArrayList<Integer> toList = edges.get(idx1);
+			toList.add(idx2);
+			edges.put(idx1, toList);
 		}
-		return false;
 	}
 	
 	/**
-	 * Adds an edge using integer indices for from and to vertices
-	 * 
-	 * @param from
-	 * @param to
-	 * 
-	 * @pre edges.size() > from
-	 * @pre edges.size() > to
-	 * 
-	 * @return true if edge added successfully, false otherwise
-	 */
-	public boolean addEdge(int from, int to){
-		assert edges.size() > from; 
-		assert edges.size() > to;
-		
-		return edges.add(new Edge(from, to));
-	}
-	
-	/**
-	 * Adds both indices to edgeHash
+	 * Adds both indices to edges
 	 * 
 	 * @param from
 	 * @param to
 	 * @return
 	 */
-	public void addEdgeToHash(int from, int to){
-		ArrayList<Integer> toIndices =  edgeHash.get(from);
+	public void addEdge(int from, int to){
+		ArrayList<Integer> toIndices =  edges.get(from);
 		toIndices.add(to);
-		edgeHash.put(from, toIndices);
+		edges.put(from, toIndices);
 	}
 	
 	/**
@@ -92,7 +74,7 @@ public class Graph {
 	 * @return
 	 */
 	public ArrayList<Integer> getToIndices(int from){
-		return edgeHash.get(from);
+		return edges.get(from);
 	}
 	
 	/**
@@ -102,8 +84,8 @@ public class Graph {
 	 */
 	public ArrayList<Integer> getFromIndices(int to){
 		ArrayList<Integer> fromIndices = new ArrayList<Integer>();
-		for(Integer key : edgeHash.keySet()){
-			for(Integer idx : edgeHash.get(key)){
+		for(Integer key : edges.keySet()){
+			for(Integer idx : edges.get(key)){
 				if(idx == to){
 					fromIndices.add(idx);
 				}
@@ -119,18 +101,8 @@ public class Graph {
 	 * @return
 	 */
 	public Vertex<?> findRoot(int vertexIdx){
-		int fromIdx = -1;
+		ArrayList<Integer> fromVertices = getFromIndices(vertexIdx);
 		
-		do{
-			for(Edge edge: edges){
-	
-				if(edge.to == vertexIdx){
-					fromIdx = edge.to;
-				}
-			}
-		}while(fromIdx != -1 && !vertices.get(fromIdx).isRoot());
-			
-		
-		return vertices.get(fromIdx);
+		return vertices.get(fromVertices.get(0));
 	}
 }

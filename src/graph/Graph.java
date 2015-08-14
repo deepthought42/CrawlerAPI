@@ -1,6 +1,7 @@
 package graph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * 
@@ -8,8 +9,11 @@ import java.util.ArrayList;
  *
  */
 public class Graph {
-	ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
-	ArrayList<Edge> edges = new ArrayList<Edge>();
+	private ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
+	//In edgeHash, the key is the index in vertices for the from vertex 
+	//	and the value for the to is stored in the ArrayList
+	private HashMap<Integer, ArrayList<Integer>> edgeHash = new HashMap<Integer, ArrayList<Integer>>();
+	private ArrayList<Edge> edges = new ArrayList<Edge>();
 	
 	public Graph(Vertex<?> vertex){
 		vertex.setRoot(true);
@@ -67,6 +71,45 @@ public class Graph {
 		assert edges.size() > to;
 		
 		return edges.add(new Edge(from, to));
+	}
+	
+	/**
+	 * Adds both indices to edgeHash
+	 * 
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public void addEdgeToHash(int from, int to){
+		ArrayList<Integer> toIndices =  edgeHash.get(from);
+		toIndices.add(to);
+		edgeHash.put(from, toIndices);
+	}
+	
+	/**
+	 * 
+	 * @param from
+	 * @return
+	 */
+	public ArrayList<Integer> getToIndices(int from){
+		return edgeHash.get(from);
+	}
+	
+	/**
+	 * 
+	 * @param to
+	 * @return
+	 */
+	public ArrayList<Integer> getFromIndices(int to){
+		ArrayList<Integer> fromIndices = new ArrayList<Integer>();
+		for(Integer key : edgeHash.keySet()){
+			for(Integer idx : edgeHash.get(key)){
+				if(idx == to){
+					fromIndices.add(idx);
+				}
+			}
+		}
+		return fromIndices;
 	}
 	
 	/**

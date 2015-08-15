@@ -1,5 +1,7 @@
 package actors;
 
+import graph.Vertex;
+
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Observable;
@@ -24,6 +26,7 @@ import structs.ConcurrentNode;
 public class WorkAllocationActor extends Thread implements Observer {
 	
 	ObservableQueue<Path> queue = null;
+	ObservableQueue<Vertex<?>> vertex_queue = null;
 	ResourceManagementActor resourceManager = null;
 	ArrayList<Path> processedPaths = new ArrayList<Path>();
 	NodeMonitor nodeMonitor = null;
@@ -32,6 +35,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * 
 	 * @param queue
 	 * @param resourceManager
+	 * @deprecated
 	 */
 	public WorkAllocationActor(ObservableQueue<Path> queue, ResourceManagementActor resourceManager, NodeMonitor pageMonitor){
 		this.queue = queue;
@@ -40,6 +44,19 @@ public class WorkAllocationActor extends Thread implements Observer {
 		this.nodeMonitor = pageMonitor;
 	}
 
+
+	/**
+	 * 
+	 * @param queue
+	 * @param resourceManager
+	 */
+	public WorkAllocationActor(ObservableQueue<Path> pathQueue, ObservableQueue<Vertex<?>> queue, ResourceManagementActor resourceManager, NodeMonitor pageMonitor){
+		this.vertex_queue = queue;
+		this.queue.addObserver(this);
+		this.resourceManager = resourceManager;
+		this.nodeMonitor = pageMonitor;
+	}
+	
 	public void run(){
 		allocatePathProcessing();
 	}
@@ -93,6 +110,39 @@ public class WorkAllocationActor extends Thread implements Observer {
 	
 	/**
 	 * 
+	 */
+	public void allocateVertexProcessing(){
+		if(queue.size() > 0){
+			try{
+				if( resourceManager.areResourcesAvailable()){
+					Vertex<?> vertex = retrieveNextVertex();
+					
+					if(vertex != null){
+						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTES.");
+				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+				        
+				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager, this, this.nodeMonitor);
+						browserActor.start();
+						processedPaths.add(path);
+				        System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
+					}
+					else{
+						System.out.println("WORK ALLOCATOR :: PATH is null.");
+					}
+				}
+	    	}
+			catch(NoSuchElementException e){
+	    	}
+	    	catch(NullPointerException e){
+	    	} 
+			catch (MalformedURLException e) {
+				System.out.println("MALFORMED URL EXCEPTION");
+			}
+		}
+	}
+	
+	/**
+	 * 
 	 * @return
 	 */
 	public Path retrieveNextPath(){
@@ -102,6 +152,16 @@ public class WorkAllocationActor extends Thread implements Observer {
 		}while(checkPathsForRelation(path) != -1);
 		return path;
 	}
+	
+	/**
+	 * Gets the next available vertex in the queue
+	 * 
+	 * @return
+	 */
+	public Vertex<?> retrieveNextVertex(){
+		return (Vertex<?>)vertex_queue.poll();
+	}
+	
 	
 	/**
 	 * Evaluate all paths that have been previously processed against

@@ -1,4 +1,6 @@
 package actors;
+import graph.Vertex;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
@@ -64,6 +66,8 @@ public class BrowserActor extends Thread implements Actor{
 	private static WebDriver driver;
 	private String url = null;
 	private ObservableQueue<Path> pathQueue = null;
+	private ObservableQueue<Vertex<?>> vertexQueue = null;
+
 	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
 	private Browser browser = null;
@@ -92,6 +96,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
+	 * @deprecated
 	 */
 	public BrowserActor(String url, 
 						ObservableQueue<Path> queue, 
@@ -105,6 +110,41 @@ public class BrowserActor extends Thread implements Actor{
 		this.url = url;
 		browser = new Browser(url);
 		this.pathQueue = queue;
+		this.path = new Path();
+		this.resourceManager = resourceManager;
+		this.workAllocator = workAllocator;
+		this.nodeMonitor = nodeMonitor;
+		elementIdxChanges = null;
+		
+		if(this.path.getPath().isEmpty()){
+			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
+		}
+		elementIdxChanges = new ArrayList<Integer>();
+	}
+	
+	/**
+	 * Creates instance of BrowserActor with given url for entry into website
+	 * 
+	 * @param url	url of page to be accessed
+	 * @param queue observable path queue
+	 * @throws MalformedURLException 
+	 * 
+	 * @pre queue != null
+	 * @pre !queue.isEmpty()
+	 */
+	public BrowserActor(String url, 
+						ObservableQueue<Path> queue,
+						ObservableQueue<Vertex<?>> vertex_queue,
+						ResourceManagementActor resourceManager, 
+						WorkAllocationActor workAllocator,
+						NodeMonitor nodeMonitor) throws MalformedURLException {
+		assert(queue != null);
+		assert(queue.isEmpty());
+		
+		this.uuid = UUID.randomUUID();
+		this.url = url;
+		browser = new Browser(url);
+		this.vertexQueue = vertex_queue;
 		this.path = new Path();
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;

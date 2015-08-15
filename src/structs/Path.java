@@ -1,9 +1,11 @@
 package structs;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import structs.ConcurrentNode;
+import graph.Vertex;
 
 /**
  * 
@@ -12,14 +14,23 @@ import structs.ConcurrentNode;
  */
 public class Path {
 	private LinkedList<ConcurrentNode<?>> path = null;
+	ArrayList<Integer> vertexPath = null;
 	
 	/**
 	 * 
 	 */
 	public Path(){
 		this.path = new LinkedList<ConcurrentNode<?>>();
+		this.vertexPath = new ArrayList<Integer>();
 	}
 	
+	/**
+	 * 
+	 */
+	public Path(Integer vertex_idx){
+		this.vertexPath = new ArrayList<Integer>();
+	}
+
 	/**
 	 * 
 	 * @param current_path
@@ -54,6 +65,10 @@ public class Path {
 		return this.path.offer(node);
 	}
 	
+	
+	public boolean add(Integer node_idx){
+		return this.vertexPath.add(node_idx);
+	}
 	/**
 	 * 
 	 * @return

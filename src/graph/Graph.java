@@ -28,6 +28,10 @@ public class Graph {
 		return this.vertices.add(vertex);
 	}
 	
+	public ArrayList<Vertex<?>> getVertices(){
+		return this.getVertices();
+	}
+	
 	/**
 	 * Adds an edge by finding both vertices indices and creating a from-to edge
 	 * @param vertex1
@@ -68,6 +72,10 @@ public class Graph {
 		edges.put(from, toIndices);
 	}
 	
+	public HashMap<Integer, ArrayList<Integer>> getEdges(){
+		return this.edges;
+	}
+	
 	/**
 	 * 
 	 * @param from
@@ -78,8 +86,9 @@ public class Graph {
 	}
 	
 	/**
+	 * Gets all indices for vertices that could have come from in {@link Graph)
 	 * 
-	 * @param to
+	 * @param to index of node 
 	 * @return
 	 */
 	public ArrayList<Integer> getFromIndices(int to){
@@ -102,7 +111,6 @@ public class Graph {
 	 */
 	public Vertex<?> findRoot(int vertexIdx){
 		ArrayList<Integer> fromVertices = getFromIndices(vertexIdx);
-		
 		return vertices.get(fromVertices.get(0));
 	}
 }

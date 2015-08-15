@@ -83,9 +83,12 @@ public abstract class GraphSearch {
 	
 	/**
 	 * Returns the best {@link Path} to goal vertex index 
+	 *
+	 * @param start_idx
+	 * @param goal_idx
 	 * @return
 	 */
-	public abstract Path findBestPath(int index);
+	public abstract Path findBestPath(int start_idx, int goal_idx);
 	
 	/**
 	 * Searches graph starting at the current vertex and working backward in a breadth first
@@ -94,5 +97,5 @@ public abstract class GraphSearch {
 	 * @param startVertex {@link Vertex} to start with
 	 * @return
 	 */
-	public abstract Path findPathToClosestRoot(Vertex<?> startVertex);
+	public abstract Path findPathToClosestRoot(int start_idx);
 }

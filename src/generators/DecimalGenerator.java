@@ -19,5 +19,4 @@ public class DecimalGenerator implements IFieldGenerator<Double> {
 		Random random = new Random();
 		return Double.parseDouble(random.nextInt() + "." + random.nextInt());
 	}
-
 }

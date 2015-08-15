@@ -1,7 +1,7 @@
 package graph;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 
@@ -12,7 +12,7 @@ public class Graph {
 	private ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
 	//In edges, the key is the index in vertices for the from vertex 
 	//	and the value for the to is stored in the ArrayList
-	private HashMap<Integer, ArrayList<Integer>> edges = new HashMap<Integer, ArrayList<Integer>>();
+	private ConcurrentHashMap<Integer, ArrayList<Integer>> edges = new ConcurrentHashMap<Integer, ArrayList<Integer>>();
 	
 	public Graph(Vertex<?> vertex){
 		vertex.setRoot(true);
@@ -24,7 +24,7 @@ public class Graph {
 	 * @param vertex
 	 * @return
 	 */
-	public boolean addVertex(Vertex<?> vertex){
+	public synchronized boolean addVertex(Vertex<?> vertex){
 		return this.vertices.add(vertex);
 	}
 	
@@ -72,7 +72,7 @@ public class Graph {
 		edges.put(from, toIndices);
 	}
 	
-	public HashMap<Integer, ArrayList<Integer>> getEdges(){
+	public ConcurrentHashMap<Integer, ArrayList<Integer>> getEdges(){
 		return this.edges;
 	}
 	

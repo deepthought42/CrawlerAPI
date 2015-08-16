@@ -1,14 +1,18 @@
 package graph;
 
 import java.util.ArrayList;
+import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Defines a Graph utilizing vertices and a hash map where every key is the 
+ * 	index for a from vertex and every value in the corresponding ArrayList
+ * 	is the to vertex
  * 
  * @author Brandon Kindred
  *
  */
-public class Graph {
+public class Graph extends Observable{
 	private ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
 	//In edges, the key is the index in vertices for the from vertex 
 	//	and the value for the to is stored in the ArrayList

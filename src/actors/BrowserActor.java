@@ -68,7 +68,7 @@ public class BrowserActor extends Thread implements Actor{
 	private String url = null;
 	private ObservableQueue<Path> pathQueue = null;
 	private ObservableQueue<Vertex<?>> vertexQueue = null;
-
+	private Graph graph = null;
 	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
 	private Browser browser = null;
@@ -147,7 +147,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.url = url;
 		browser = new Browser(url);
 		this.vertexQueue = vertex_queue;
-		this.path = new Path();
+		this.graph = graph;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.nodeMonitor = nodeMonitor;
@@ -168,8 +168,9 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
+	 * @deprecated
 	 */
-	public BrowserActor(ObservableQueue<Path> queue, 
+	public BrowserActor(ObservableQueue<Vertex<?>> queue, 
 						Path path, 
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator,
@@ -187,13 +188,48 @@ public class BrowserActor extends Thread implements Actor{
 		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
 		browser = new Browser(url);
 
-		this.pathQueue = queue;
+		this.vertexQueue = queue;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.nodeMonitor = pageMonitor;
 		elementIdxChanges = new ArrayList<Integer>();
 	}
-	
+
+	/**
+	 * Creates instance of browserActor with existing path to crawl.
+	 * 
+	 * @param queue ovservable path queue
+	 * @param path	path to use to navigate to desired page
+	 * @throws MalformedURLException 
+	 * 
+	 * @pre queue != null
+	 * @pre !queue.isEmpty()
+	 */
+	public BrowserActor(ObservableQueue<Vertex<?>> queue, 
+						Graph graph, 
+						ResourceManagementActor resourceManager, 
+						WorkAllocationActor workAllocator,
+						NodeMonitor pageMonitor) throws MalformedURLException {
+		assert(queue != null);
+		assert(queue.isEmpty());
+		
+		this.uuid = UUID.randomUUID();
+		this.graph = graph;
+		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
+		assert(((Page)node.getData()).getUrl() != null);
+
+		this.url = ((Page)node.getData()).getUrl().toString();
+		
+		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
+		browser = new Browser(url);
+
+		this.vertexQueue = queue;
+		this.resourceManager = resourceManager;
+		this.workAllocator = workAllocator;
+		this.nodeMonitor = pageMonitor;
+		elementIdxChanges = new ArrayList<Integer>();
+	}
+
 	/**
 	 * 
 	 * @return PageNode
@@ -461,14 +497,16 @@ public class BrowserActor extends Thread implements Actor{
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
 					//System.out.println("ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
-					ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
+					//ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
 					Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 					
-					elementAction.addInput(node.getUuid(), node);
-					node.addOutput(elementAction.getUuid(), elementAction);
+					//elementAction.addInput(node.getUuid(), node);
+					//node.addOutput(elementAction.getUuid(), elementAction);
 					
+					graph.addVertex(elementActionVertex);
+					//Add edge to graph for vertex
 					putVertexOnQueue(elementActionVertex);
-					putPathOnQueue(elementAction);
+					//putPathOnQueue(elementAction);
 				}				
 			}
 		}
@@ -506,14 +544,16 @@ public class BrowserActor extends Thread implements Actor{
 					}
 					if(!seen){
 						//Clone path then add ElementAction to path and push path onto path queue					
-						ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
+						//ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
 						Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 						
-						elementAction.addInput(node.getUuid(), node);
-						node.addOutput(elementAction.getUuid(), elementAction);
+						//elementAction.addInput(node.getUuid(), node);
+						//node.addOutput(elementAction.getUuid(), elementAction);
 						
+						graph.addVertex(elementActionVertex);
+						//need to add edge to graph
 						putVertexOnQueue(elementActionVertex);
-						putPathOnQueue(elementAction);
+						//putPathOnQueue(elementAction);
 					}
 				}				
 			}

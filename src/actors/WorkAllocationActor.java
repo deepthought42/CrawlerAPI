@@ -28,8 +28,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 	
 	ObservableQueue<Path> queue = null;
 	ObservableQueue<Vertex<?>> vertex_queue = null;
+	Graph graph = null;
 	ResourceManagementActor resourceManager = null;
-	ArrayList<Path> processedPaths = new ArrayList<Path>();
 	NodeMonitor nodeMonitor = null;
 	
 	/**
@@ -58,6 +58,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 							   NodeMonitor pageMonitor){
 		this.vertex_queue = queue;
 		this.queue.addObserver(this);
+		this.graph = graph;
 		this.resourceManager = resourceManager;
 		this.nodeMonitor = pageMonitor;
 	}
@@ -99,10 +100,10 @@ public class WorkAllocationActor extends Thread implements Observer {
 						System.out.println("WORK ALLOCATION ACTOR PATH LENGTH :: " + path.getPath().size());
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 				        
-				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager, this, this.nodeMonitor);
+				        BrowserActor browserActor = new BrowserActor(vertex_queue, path, this.resourceManager, this, this.nodeMonitor);
 						browserActor.start();
-						processedPaths.add(path);
-				        System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
+
+						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
 					}
 					else{
 						System.out.println("WORK ALLOCATOR :: PATH is null.");
@@ -132,10 +133,10 @@ public class WorkAllocationActor extends Thread implements Observer {
 						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTES.");
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 				        
-				        BrowserActor browserActor = new BrowserActor(queue, path, this.resourceManager, this, this.nodeMonitor);
+				        BrowserActor browserActor = new BrowserActor(vertex_queue, graph, this.resourceManager, this, this.nodeMonitor);
 						browserActor.start();
-						processedPaths.add(path);
-				        System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
+
+						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
 					}
 					else{
 						System.out.println("WORK ALLOCATOR :: PATH is null.");
@@ -174,26 +175,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 	}
 	
 	
-	/**
-	 * Evaluate all paths that have been previously processed against
-	 * {@link Path new path}
-	 * @param newPath
-	 * @return 
-	 */	
-	private int checkPathsForRelation(Path newPath){
-		for(int i =0; i < processedPaths.size(); i++){
-			try{
-				int parentPath = evaluatePaths(processedPaths.get(i), newPath);
-				if(parentPath == 0 ){
-					return i;
-				}
-				else if(parentPath == 1){
-					return -1;
-				}
-			}catch(NullPointerException e){}
-		}
-		return -1;	
-	}
 	
 	/**
 	 * Evaluate 2 paths to determine if either of them end in pages that have 

@@ -12,11 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Brandon Kindred
  *
  */
-public class Graph extends Observable{
+public class Graph {
 	private ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
 	//In edges, the key is the index in vertices for the from vertex 
 	//	and the value for the to is stored in the ArrayList
 	private ConcurrentHashMap<Integer, ArrayList<Integer>> edges = new ConcurrentHashMap<Integer, ArrayList<Integer>>();
+	
+	public Graph(){}
 	
 	public Graph(Vertex<?> vertex){
 		vertex.setRoot(true);

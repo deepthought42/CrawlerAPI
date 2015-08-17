@@ -1,4 +1,5 @@
 package actors;
+import graph.Graph;
 import graph.Vertex;
 
 import java.net.MalformedURLException;
@@ -135,6 +136,7 @@ public class BrowserActor extends Thread implements Actor{
 	public BrowserActor(String url, 
 						ObservableQueue<Path> queue,
 						ObservableQueue<Vertex<?>> vertex_queue,
+						Graph graph,
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator,
 						NodeMonitor nodeMonitor) throws MalformedURLException {

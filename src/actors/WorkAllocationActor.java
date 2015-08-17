@@ -51,7 +51,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @param queue
 	 * @param resourceManager
 	 */
-	public WorkAllocationActor(ObservableQueue<Path> pathQueue, ObservableQueue<Vertex<?>> queue, ResourceManagementActor resourceManager, NodeMonitor pageMonitor){
+	public WorkAllocationActor(ObservableQueue<Path> pathQueue, 
+							   ObservableQueue<Vertex<?>> queue, 
+							   Graph graph, 
+							   ResourceManagementActor resourceManager, 
+							   NodeMonitor pageMonitor){
 		this.vertex_queue = queue;
 		this.queue.addObserver(this);
 		this.resourceManager = resourceManager;

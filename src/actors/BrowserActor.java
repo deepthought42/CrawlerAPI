@@ -460,9 +460,12 @@ public class BrowserActor extends Thread implements Actor{
 					//System.out.println("ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
+					Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
+					
 					elementAction.addInput(node.getUuid(), node);
 					node.addOutput(elementAction.getUuid(), elementAction);
 					
+					putVertexOnQueue(elementActionVertex);
 					putPathOnQueue(elementAction);
 				}				
 			}

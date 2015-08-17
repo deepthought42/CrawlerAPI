@@ -1,5 +1,6 @@
 package actors;
 
+import graph.Graph;
 import graph.Vertex;
 
 import java.net.MalformedURLException;
@@ -61,7 +62,12 @@ public class WorkAllocationActor extends Thread implements Observer {
 		allocatePathProcessing();
 	}
 	
-	//Whenever an update is observed the current queue is updated
+	/**
+	 * Whenever an update is observed the current queue is updated
+	 * 
+	 * @param o
+	 * @param arg
+	 */
 	public synchronized void update(Observable o, Object arg)
 	{
 	    if (o instanceof ObservableQueue<?>){
@@ -70,7 +76,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 	        allocatePathProcessing();
 	    	//Thread allocatorThread = new Thread(this);
 	    	//allocatorThread.start();
-	    }else{
+	    }  
+	    else{
 	        System.out.println("The observable object was not of the correct type");
 	    }
 	    notifyAll();

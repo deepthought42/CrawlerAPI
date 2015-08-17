@@ -502,9 +502,12 @@ public class BrowserActor extends Thread implements Actor{
 					if(!seen){
 						//Clone path then add ElementAction to path and push path onto path queue					
 						ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
+						Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
+						
 						elementAction.addInput(node.getUuid(), node);
 						node.addOutput(elementAction.getUuid(), elementAction);
 						
+						putVertexOnQueue(elementActionVertex);
 						putPathOnQueue(elementAction);
 					}
 				}				
@@ -542,6 +545,32 @@ public class BrowserActor extends Thread implements Actor{
 		return addSuccess;
 	}
 
+	/**
+	 * Adds the given {@link Vertex vertex} to the queue
+	 * 
+	 * @param path path to be added
+	 */
+	private boolean putVertexOnQueue(Vertex<?> vertex){
+		boolean addSuccess = false;
+		synchronized(vertexQueue){
+			while(!addSuccess){
+				try{
+					addSuccess = this.vertexQueue.add(vertex);
+					//System.out.println(this.getName() + " -> waiting in line to add clonePath to pathQueue");
+					vertexQueue.wait();
+				}catch(InterruptedException e){
+					System.err.println(this.getName() + " -> Done waiting");
+				}
+				catch(IllegalStateException e){
+					System.err.println(this.getName() + " -> Illegal state exception occurred while adding to pathQueue");
+				}
+			}
+		}
+		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
+		return addSuccess;
+	}
+
+	
 	/**
 	 * Get the UUID for this Agent
 	 */

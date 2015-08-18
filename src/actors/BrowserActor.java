@@ -1,8 +1,6 @@
 package actors;
 import graph.Graph;
 import graph.Vertex;
-import graph.searchAlgorithms.A_Star;
-import graph.searchAlgorithms.GraphSearch;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -71,7 +69,6 @@ public class BrowserActor extends Thread implements Actor{
 	private ObservableQueue<Path> pathQueue = null;
 	private ObservableQueue<Vertex<?>> vertexQueue = null;
 	private Graph graph = null;
-	private GraphSearch graphSearch = null;
 	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
 	private Browser browser = null;
@@ -151,7 +148,6 @@ public class BrowserActor extends Thread implements Actor{
 		browser = new Browser(url);
 		this.vertexQueue = vertex_queue;
 		this.graph = graph;
-		this.graphSearch = new A_Star(this.graph);
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.nodeMonitor = nodeMonitor;
@@ -219,8 +215,6 @@ public class BrowserActor extends Thread implements Actor{
 		
 		this.uuid = UUID.randomUUID();
 		this.graph = graph;
-		this.graphSearch = new A_Star(this.graph);
-
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
 		assert(((Page)node.getData()).getUrl() != null);
 

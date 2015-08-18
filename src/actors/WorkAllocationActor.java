@@ -2,6 +2,8 @@ package actors;
 
 import graph.Graph;
 import graph.Vertex;
+import graph.searchAlgorithms.A_Star;
+import graph.searchAlgorithms.GraphSearch;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	ObservableQueue<Path> queue = null;
 	ObservableQueue<Vertex<?>> vertex_queue = null;
 	Graph graph = null;
+	GraphSearch graphSearch = null;
 	ResourceManagementActor resourceManager = null;
 	NodeMonitor nodeMonitor = null;
 	
@@ -59,6 +62,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 		this.vertex_queue = queue;
 		this.queue.addObserver(this);
 		this.graph = graph;
+		this.graphSearch = new A_Star(graph);
 		this.resourceManager = resourceManager;
 		this.nodeMonitor = pageMonitor;
 	}

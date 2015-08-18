@@ -146,8 +146,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 		if(path1Idx == 0 || path2Idx == 0){
 			return -1;
 		}
-		Page path1Page = (Page)((ConcurrentNode<?>)path1.getPath().get(path1Idx)).getData();
-		Page path2Page = (Page)((ConcurrentNode<?>)path2.getPath().get(path2Idx)).getData();
+		Page path1Page = (Page)(graph.getVertices().get(path1.getPath().get(path1Idx))).getData();
+		Page path2Page = (Page)(graph.getVertices().get(path2.getPath().get(path2Idx))).getData();
 		
 		ArrayList<PageElement> path1Elements = path1Page.getElements();
 		ArrayList<PageElement> path2Elements = path2Page.getElements();
@@ -162,8 +162,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 		}
 		
 		//get previous node in both paths
-		ConcurrentNode<?> path1PrevNode = (ConcurrentNode<?>) path1.getPath().get(path1Idx - 1);
-		ConcurrentNode<?> path2PrevNode = (ConcurrentNode<?>) path2.getPath().get(path2Idx - 1);
+		Vertex<?> path1PrevNode = graph.getVertices().get(path1.getPath().get(path1Idx - 1));
+		Vertex<?> path2PrevNode = graph.getVertices().get(path2.getPath().get(path2Idx - 1));
 		
 		if(allElementsEqual 
 				&& path1PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction") 
@@ -195,7 +195,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	public int getFurthestPageIndex(Path path){
 		int pathSize = path.getPath().size();
 		for(int i = pathSize-1; i >= 0; i--){
-			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) path.getPath().get(i);
+			Vertex<?> pathNode = graph.getVertices().get(path.getPath().get(i));
 			if(pathNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
 				return i;
 			}

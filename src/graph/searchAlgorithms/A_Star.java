@@ -53,7 +53,8 @@ public class A_Star extends GraphSearch {
 
 	@Override
 	public Path findPathToClosestRoot(Vertex<?> startVertex) {
-		// TODO Auto-generated method stub
-		return null;
+		int vertex_idx = graph.findVertexIndex(startVertex);
+		
+		return findPathToClosestRoot(vertex_idx);
 	}
 }

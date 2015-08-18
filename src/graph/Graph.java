@@ -119,4 +119,18 @@ public class Graph {
 		ArrayList<Integer> fromVertices = getFromIndices(vertexIdx);
 		return vertices.get(fromVertices.get(0));
 	}
+	
+	public int findVertexIndex(Vertex<?> vertex){
+		int i = 0;
+		for(Vertex<?> curr_vertex : this.vertices){
+			if(curr_vertex.equals(vertex)){
+				System.out.println("Vertex classes match...");
+				System.out.println("CURRENT VERTEX CLASS = " + curr_vertex.getData().getClass());
+				System.out.println("PASSED VERTEX CLASS = " + vertex.getData().getClass());
+				return i;
+			}
+			i++;
+		}
+		return -1;
+	}
 }

@@ -124,46 +124,11 @@ public class BrowserActor extends Thread implements Actor{
 			graph.addVertex(vertex);
 			
 			this.path.add(graph.findVertexIndex(vertex));
+			System.out.println(this.getName() + " -> Added Vertex Index to path while constructing BrowserActor");
 		}
 		elementIdxChanges = new ArrayList<Integer>();
 	}
 	
-	/**
-	 * Creates instance of browserActor with existing path to crawl.
-	 * 
-	 * @param queue ovservable path queue
-	 * @param path	path to use to navigate to desired page
-	 * @throws MalformedURLException 
-	 * 
-	 * @pre queue != null
-	 * @pre !queue.isEmpty()
-	 * @deprecated
-	 */
-	public BrowserActor(ObservableQueue<Vertex<?>> queue, 
-						Path path, 
-						ResourceManagementActor resourceManager, 
-						WorkAllocationActor workAllocator,
-						NodeMonitor pageMonitor) throws MalformedURLException {
-		assert(queue != null);
-		assert(queue.isEmpty());
-		
-		this.uuid = UUID.randomUUID();
-		this.path = path;
-		Vertex<?> node = graph.getVertices().get(path.getPath().get(0)); 
-		assert(((Page)node.getData()).getUrl() != null);
-
-		this.url = ((Page)node.getData()).getUrl().toString();
-		
-		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
-		browser = new Browser(url);
-
-		this.vertexQueue = queue;
-		this.resourceManager = resourceManager;
-		this.workAllocator = workAllocator;
-		this.nodeMonitor = pageMonitor;
-		elementIdxChanges = new ArrayList<Integer>();
-	}
-
 	/**
 	 * Creates instance of browserActor with existing path to crawl.
 	 * 
@@ -227,6 +192,7 @@ public class BrowserActor extends Thread implements Actor{
 				long tStart = System.currentTimeMillis();
 				
 				if(this.path.getPath().isEmpty()){
+					System.out.println(this.getName() + " -> Path is empty. Adding to path");
 					Vertex<Page> vertex = new Vertex<Page>(browser.getPage());
 					graph.addVertex(vertex);
 					//need to add edge to vertex
@@ -234,6 +200,9 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 				}
 				else{
+					System.out.println(this.getName() + " -> PATH IS NOT EMPTY. Working on path.");
+					System.out.println(this.getName() + " -> VERTEX INDEX : "+ this.path.getPath().get(0));
+					System.out.println(this.getName() + " -> VERTEX DATA TYPE :: " + graph.getVertices().get(this.path.getPath().get(0)).getData());
 					this.url = ((Page)(graph.getVertices().get(this.path.getPath().get(0))).getData()).getUrl().toString();
 					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
@@ -315,7 +284,7 @@ public class BrowserActor extends Thread implements Actor{
 		int i = 0;
 		while(pathIterator.hasNext()){
 			System.out.println(this.getName() + " -> current path index :: " + i);
-			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
+			Vertex<?> pathNode = (Vertex<?>) pathIterator.next();
 			
 			Class<?> className = pathNode.getData().getClass();
 			

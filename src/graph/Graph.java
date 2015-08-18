@@ -1,7 +1,6 @@
 package graph;
 
 import java.util.ArrayList;
-import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -13,15 +12,18 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 public class Graph {
-	private ArrayList<Vertex<?>> vertices = new ArrayList<Vertex<?>>();
+	private ArrayList<Vertex<?>> vertices = null;
 	//In edges, the key is the index in vertices for the from vertex 
 	//	and the value for the to is stored in the ArrayList
 	private ConcurrentHashMap<Integer, ArrayList<Integer>> edges = new ConcurrentHashMap<Integer, ArrayList<Integer>>();
 	
-	public Graph(){}
+	public Graph(){
+		vertices = new ArrayList<Vertex<?>>();
+	}
 	
 	public Graph(Vertex<?> vertex){
 		vertex.setRoot(true);
+		vertices = new ArrayList<Vertex<?>>();
 		vertices.add(vertex);
 	}
 	
@@ -35,7 +37,7 @@ public class Graph {
 	}
 	
 	public ArrayList<Vertex<?>> getVertices(){
-		return this.getVertices();
+		return this.vertices;
 	}
 	
 	/**

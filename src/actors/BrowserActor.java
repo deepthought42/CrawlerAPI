@@ -492,11 +492,10 @@ public class BrowserActor extends Thread implements Actor{
 			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
 			//navigate path back to last seen page
 			//for each ElementAction seen, record elementAction.
-			Iterator<?> descendingIterator = this.path.getPath().descendingIterator();
 			Page page = null;
 			
-			while(descendingIterator.hasNext()){
-				ConcurrentNode<?> descNode = (ConcurrentNode<?>) descendingIterator.next();
+			for(int i = this.path.getPath().size(); i > -1; i--){
+				Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
 				
 				if(descNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
 					page = (Page)descNode.getData();

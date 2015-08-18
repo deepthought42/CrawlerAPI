@@ -337,7 +337,7 @@ public class BrowserActor extends Thread implements Actor{
 				}while(!actionPerformedSuccessfully);
 				
 				if(PageAlert.isAlertPresent(browser.getDriver())){
-					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !((ConcurrentNode<?>)this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
+					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !graph.getVertices().get(this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
 						PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
 						ConcurrentNode<PageAlert> alertNode = new ConcurrentNode<PageAlert>(pageAlert);
 						alertNode.addInput(pathNode.getUuid(), pathNode);
@@ -373,8 +373,8 @@ public class BrowserActor extends Thread implements Actor{
 				}
 			
 				//if not at end of path and next node is a Page or pageState then don't bother adding new node
-				if(i < path.getPath().size()-1 && (((ConcurrentNode<?>)path.getPath().get(i+1)).getType().equals(Page.class) 
-						|| ((ConcurrentNode<?>)path.getPath().get(i+1)).getType().equals(PageState.class))){
+				if(i < path.getPath().size()-1 && (graph.getVertices().get(path.getPath().get(i+1)).getClass().equals(Page.class) 
+						|| graph.getVertices().get(path.getPath().get(i+1)).getClass().equals(PageState.class))){
 					i++;
 					continue;
 

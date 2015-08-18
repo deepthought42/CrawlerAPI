@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import browsing.Page;
 import structs.ConcurrentNode;
 import graph.Vertex;
 
@@ -14,7 +15,7 @@ import graph.Vertex;
  */
 public class Path {
 	private LinkedList<ConcurrentNode<?>> path = null;
-	ArrayList<Integer> vertexPath = null;
+	private ArrayList<Integer> vertexPath = null;
 	
 	/**
 	 * 
@@ -60,11 +61,11 @@ public class Path {
 		}				
 	}
 	
-	
-	public boolean add(ConcurrentNode<?> node){
-		return this.path.offer(node);
+	/*
+	public boolean add(Vertex<Page> vertex){
+		return this.vertexPath.offer(vertex);
 	}
-	
+	*/
 	
 	public boolean add(Integer node_idx){
 		return this.vertexPath.add(node_idx);

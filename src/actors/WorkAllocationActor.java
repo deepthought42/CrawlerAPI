@@ -28,7 +28,7 @@ import structs.ConcurrentNode;
  */
 public class WorkAllocationActor extends Thread implements Observer {
 	
-	ObservableQueue<Path> queue = null;
+	//ObservableQueue<Path> queue = null;
 	ObservableQueue<Vertex<?>> vertex_queue = null;
 	Graph graph = null;
 	GraphSearch graphSearch = null;
@@ -39,28 +39,13 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * 
 	 * @param queue
 	 * @param resourceManager
-	 * @deprecated
 	 */
-	public WorkAllocationActor(ObservableQueue<Path> queue, ResourceManagementActor resourceManager, NodeMonitor pageMonitor){
-		this.queue = queue;
-		this.queue.addObserver(this);
-		this.resourceManager = resourceManager;
-		this.nodeMonitor = pageMonitor;
-	}
-
-
-	/**
-	 * 
-	 * @param queue
-	 * @param resourceManager
-	 */
-	public WorkAllocationActor(ObservableQueue<Path> pathQueue, 
-							   ObservableQueue<Vertex<?>> queue, 
+	public WorkAllocationActor(ObservableQueue<Vertex<?>> queue, 
 							   Graph graph, 
 							   ResourceManagementActor resourceManager, 
 							   NodeMonitor pageMonitor){
 		this.vertex_queue = queue;
-		this.queue.addObserver(this);
+		this.vertex_queue.addObserver(this);
 		this.graph = graph;
 		this.graphSearch = new A_Star(graph);
 		this.resourceManager = resourceManager;
@@ -68,7 +53,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	}
 	
 	public void run(){
-		allocatePathProcessing();
+		allocateVertexProcessing();
 	}
 	
 	/**
@@ -80,9 +65,9 @@ public class WorkAllocationActor extends Thread implements Observer {
 	public synchronized void update(Observable o, Object arg)
 	{
 	    if (o instanceof ObservableQueue<?>){
-	    	queue = (ObservableQueue) o;
+	    	vertex_queue = (ObservableQueue) o;
 	        //System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
-	        allocatePathProcessing();
+	        allocateVertexProcessing();
 	    	//Thread allocatorThread = new Thread(this);
 	    	//allocatorThread.start();
 	    }  
@@ -95,40 +80,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 	/**
 	 * 
 	 */
-	public void allocatePathProcessing(){
-		if(queue.size() > 0){
-			try{
-				if( resourceManager.areResourcesAvailable()){
-					Path path = retrieveNextPath();
-					if(path != null){
-						System.out.println("WORK ALLOCATION ACTOR PATH LENGTH :: " + path.getPath().size());
-				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-				        
-				        BrowserActor browserActor = new BrowserActor(vertex_queue, path, this.resourceManager, this, this.nodeMonitor);
-						browserActor.start();
-
-						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
-					}
-					else{
-						System.out.println("WORK ALLOCATOR :: PATH is null.");
-					}
-				}
-	    	}
-			catch(NoSuchElementException e){
-	    	}
-	    	catch(NullPointerException e){
-	    	} 
-			catch (MalformedURLException e) {
-				System.out.println("MALFORMED URL EXCEPTION");
-			}
-		}
-	}
-	
-	/**
-	 * 
-	 */
 	public void allocateVertexProcessing(){
-		if(queue.size() > 0){
+		if(vertex_queue.size() > 0){
 			try{
 				if( resourceManager.areResourcesAvailable()){
 					Vertex<?> vertex = retrieveNextVertex();

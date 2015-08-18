@@ -22,7 +22,6 @@ import structs.Path;
 public class EntryPoint {
 	public static void main(String[] args){
 		ResourceManagementActor resourceManager = new ResourceManagementActor(5);
-		ObservableQueue<Path> pathQueue = new ObservableQueue<Path>();
 		ObservableQueue<Vertex<?>> vertexQueue = new ObservableQueue<Vertex<?>>();
 		Graph graph = new Graph();
 		
@@ -34,10 +33,10 @@ public class EntryPoint {
 		System.out.print("Initializing page monitor...");
 		NodeMonitor nodeMonitor = new NodeMonitor();
 		System.out.println("PageMonitor Initialized");
-		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue, vertexQueue, graph, resourceManager, nodeMonitor);
+		WorkAllocationActor workAllocator = new WorkAllocationActor(vertexQueue, graph, resourceManager, nodeMonitor);
 		BrowserActor browserActor;
 		try {
-			browserActor = new BrowserActor(url, pathQueue, vertexQueue, graph, resourceManager, workAllocator, nodeMonitor);
+			browserActor = new BrowserActor(url, path, vertexQueue, graph, resourceManager, workAllocator, nodeMonitor);
 			browserActor.start();
 		} catch (MalformedURLException e1) {
 			System.out.println("MALFORMED URL EXCEPTION");

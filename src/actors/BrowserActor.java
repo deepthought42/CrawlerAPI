@@ -97,54 +97,20 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
-	 * @deprecated
 	 */
 	public BrowserActor(String url, 
-						ObservableQueue<Path> queue, 
-						ResourceManagementActor resourceManager, 
-						WorkAllocationActor workAllocator,
-						NodeMonitor nodeMonitor) throws MalformedURLException {
-		assert(queue != null);
-		assert(queue.isEmpty());
-		
-		this.uuid = UUID.randomUUID();
-		this.url = url;
-		browser = new Browser(url);
-		this.pathQueue = queue;
-		this.path = new Path();
-		this.resourceManager = resourceManager;
-		this.workAllocator = workAllocator;
-		this.nodeMonitor = nodeMonitor;
-		elementIdxChanges = null;
-		
-		if(this.path.getPath().isEmpty()){
-			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
-		}
-		elementIdxChanges = new ArrayList<Integer>();
-	}
-	
-	/**
-	 * Creates instance of BrowserActor with given url for entry into website
-	 * 
-	 * @param url	url of page to be accessed
-	 * @param queue observable path queue
-	 * @throws MalformedURLException 
-	 * 
-	 * @pre queue != null
-	 * @pre !queue.isEmpty()
-	 */
-	public BrowserActor(String url, 
-						ObservableQueue<Path> queue,
+						Path path,
 						ObservableQueue<Vertex<?>> vertex_queue,
 						Graph graph,
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator,
 						NodeMonitor nodeMonitor) throws MalformedURLException {
-		assert(queue != null);
-		assert(queue.isEmpty());
+		assert(vertex_queue != null);
+		assert(vertex_queue.isEmpty());
 		
 		this.uuid = UUID.randomUUID();
 		this.url = url;
+		this.path = path;
 		browser = new Browser(url);
 		this.vertexQueue = vertex_queue;
 		this.graph = graph;
@@ -154,7 +120,10 @@ public class BrowserActor extends Thread implements Actor{
 		elementIdxChanges = null;
 		
 		if(this.path.getPath().isEmpty()){
-			this.path.add( new ConcurrentNode<Page>(browser.getPage()));
+			Vertex<Page> vertex = new Vertex<Page>(browser.getPage());
+			graph.addVertex(vertex);
+			
+			this.path.add(graph.findVertexIndex(vertex));
 		}
 		elementIdxChanges = new ArrayList<Integer>();
 	}
@@ -258,7 +227,10 @@ public class BrowserActor extends Thread implements Actor{
 				long tStart = System.currentTimeMillis();
 				
 				if(this.path.getPath().isEmpty()){
-					this.path.add(new ConcurrentNode<Page>(browser.getPage()));
+					Vertex<Page> vertex = new Vertex<Page>(browser.getPage());
+					graph.addVertex(vertex);
+					//need to add edge to vertex
+					this.path.add(graph.findVertexIndex(vertex));
 					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 				}
 				else{
@@ -375,6 +347,11 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
+				
+				
+				//handle vertex instead of concurrentNode
+				
+				
 				ConcurrentNode<?> existingNode = nodeMonitor.findNode(pathNode, currentUrl.getHost());
 				
 				if(existingNode == null){
@@ -446,10 +423,9 @@ public class BrowserActor extends Thread implements Actor{
 						return false;
 					}
 					else{
-						ConcurrentNode<PageState> pageStateNode = new ConcurrentNode<PageState>();
-						pageStateNode.addInput(pathNode.getUuid(), pathNode);
-						pathNode.addOutput(pageStateNode.getUuid(), pageStateNode);
-						additionalNodes.add(pageStateNode);
+						Vertex<PageState> pageStateVertex = new Vertex<PageState>(pageState);
+						graph.addVertex(pageStateVertex);
+						additionalNodes.add(graph.findVertexIndex(pageStateVertex));
 					}
 				}
 			}
@@ -564,34 +540,6 @@ public class BrowserActor extends Thread implements Actor{
 		}
 	}
 	
-	/**
-	 * Adds the given {@link Path path} to the queue
-	 * 
-	 * @param path path to be added
-	 */
-	private boolean putPathOnQueue(ConcurrentNode<?> node){
-		Path clonePath = Path.clone(path);
-		clonePath.add(node);
-		boolean addSuccess = false;
-		synchronized(pathQueue){
-			while(!addSuccess){
-				try{
-					addSuccess = this.pathQueue.add(clonePath);
-					//System.out.println(this.getName() + " -> waiting in line to add clonePath to pathQueue");
-					pathQueue.wait();
-				}catch(InterruptedException e){
-					System.err.println(this.getName() + " -> Done waiting");
-				}
-				catch(IllegalStateException e){
-					System.err.println(this.getName() + " -> Illegal state exception occurred while adding to pathQueue");
-				}
-			}
-		}
-
-		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
-		return addSuccess;
-	}
-
 	/**
 	 * Adds the given {@link Vertex vertex} to the queue
 	 * 

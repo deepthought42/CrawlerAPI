@@ -1,6 +1,8 @@
 package actors;
 import graph.Graph;
 import graph.Vertex;
+import graph.searchAlgorithms.A_Star;
+import graph.searchAlgorithms.GraphSearch;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -69,6 +71,7 @@ public class BrowserActor extends Thread implements Actor{
 	private ObservableQueue<Path> pathQueue = null;
 	private ObservableQueue<Vertex<?>> vertexQueue = null;
 	private Graph graph = null;
+	private GraphSearch graphSearch = null;
 	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
 	private Browser browser = null;
@@ -148,6 +151,7 @@ public class BrowserActor extends Thread implements Actor{
 		browser = new Browser(url);
 		this.vertexQueue = vertex_queue;
 		this.graph = graph;
+		this.graphSearch = new A_Star(this.graph);
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		this.nodeMonitor = nodeMonitor;
@@ -215,6 +219,8 @@ public class BrowserActor extends Thread implements Actor{
 		
 		this.uuid = UUID.randomUUID();
 		this.graph = graph;
+		this.graphSearch = new A_Star(this.graph);
+
 		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
 		assert(((Page)node.getData()).getUrl() != null);
 
@@ -256,7 +262,7 @@ public class BrowserActor extends Thread implements Actor{
 		try{
 			do{
 				long tStart = System.currentTimeMillis();
-	
+				
 				if(this.path.getPath().isEmpty()){
 					this.path.add(new ConcurrentNode<Page>(browser.getPage()));
 					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
@@ -473,8 +479,10 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	private void expandNodePath() throws MalformedURLException{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
-		ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
-		Class<?> className = node.getType();
+		//ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
+		Vertex<?> node_vertex = null;
+		
+		Class<?> className = node_vertex.getData().getClass();
 		String[] actions = ActionFactory.getActions();
 
 		//if node is a page then find all potential elementActions that can be taken including different values
@@ -483,7 +491,7 @@ public class BrowserActor extends Thread implements Actor{
 		if(className.equals(Page.class)){
 			//verify current page matches current node data
 			//if not mark as different
-			Page page = (Page)node.getData();
+			Page page = (Page)node_vertex.getData();
 			Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance());
 			if(!page.equals(newPage)){
 				return;

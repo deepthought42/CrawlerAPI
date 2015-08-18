@@ -6,8 +6,8 @@ import structs.Path;
 
 public class Djikstra extends GraphSearch {
 
-	public Djikstra(Graph graph, Path path) {
-		super(graph, path);
+	public Djikstra(Graph graph) {
+		super(graph);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -25,6 +25,12 @@ public class Djikstra extends GraphSearch {
 
 	@Override
 	public Path findPathToClosestRoot(Vertex<?> startVertex) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Path findPathToClosestRoot(int start_idx) {
 		// TODO Auto-generated method stub
 		return null;
 	}

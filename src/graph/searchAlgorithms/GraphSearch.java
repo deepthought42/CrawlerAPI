@@ -25,9 +25,9 @@ public abstract class GraphSearch {
 	 * @param graph graph to be crawled
 	 * @param path current path
 	 */
-	public GraphSearch(Graph graph, Path path){
+	public GraphSearch(Graph graph){
 		this.graph = graph;
-		this.path = path;
+		this.path = new Path();
 		this.frontier = new HashMap<Integer, Integer>();
 		this.visited = new HashMap<Integer, Integer>();
 	}
@@ -98,4 +98,6 @@ public abstract class GraphSearch {
 	 * @return
 	 */
 	public abstract Path findPathToClosestRoot(int start_idx);
+
+	public abstract Path findPathToClosestRoot(Vertex<?> startVertex);
 }

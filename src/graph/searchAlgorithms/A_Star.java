@@ -6,8 +6,8 @@ import structs.Path;
 
 public class A_Star extends GraphSearch {
 
-	public A_Star(Graph graph, Path path) {
-		super(graph, path);
+	public A_Star(Graph graph) {
+		super(graph);
 	}
 
 	@Override
@@ -49,5 +49,11 @@ public class A_Star extends GraphSearch {
 		}while(!isRootFound);
 		
 		return path;
+	}
+
+	@Override
+	public Path findPathToClosestRoot(Vertex<?> startVertex) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

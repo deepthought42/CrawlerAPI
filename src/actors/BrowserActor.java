@@ -149,7 +149,7 @@ public class BrowserActor extends Thread implements Actor{
 		
 		this.uuid = UUID.randomUUID();
 		this.path = path;
-		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
+		Vertex<?> node = graph.getVertices().get(path.getPath().get(0)); 
 		assert(((Page)node.getData()).getUrl() != null);
 
 		this.url = ((Page)node.getData()).getUrl().toString();
@@ -184,7 +184,7 @@ public class BrowserActor extends Thread implements Actor{
 		
 		this.uuid = UUID.randomUUID();
 		this.graph = graph;
-		ConcurrentNode<?> node = (ConcurrentNode<?>) path.getPath().getFirst(); 
+		Vertex<?> node = graph.getVertices().get(path.getPath().get(0)); 
 		assert(((Page)node.getData()).getUrl() != null);
 
 		this.url = ((Page)node.getData()).getUrl().toString();
@@ -234,7 +234,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 				}
 				else{
-					this.url = ((Page)((ConcurrentNode<?>)path.getPath().getFirst()).getData()).getUrl().toString();
+					this.url = ((Page)(graph.getVertices().get(this.path.getPath().get(0))).getData()).getUrl().toString();
 					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
 				}
@@ -391,7 +391,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " Node = "+existingNode.getData().toString());
 					pathNode.addOutput(existingNode.getUuid(), existingNode);
 					existingNode.addInput(pathNode.getUuid(), pathNode);
-					additionalNodes.add(existingNode);
+					additionalNodes.add(1);
 				}
 				else{
 					PageState pageState = null;

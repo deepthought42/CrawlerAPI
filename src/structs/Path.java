@@ -14,14 +14,12 @@ import graph.Vertex;
  *
  */
 public class Path {
-	private LinkedList<ConcurrentNode<?>> path = null;
 	private ArrayList<Integer> vertexPath = null;
 	
 	/**
 	 * 
 	 */
 	public Path(){
-		this.path = new LinkedList<ConcurrentNode<?>>();
 		this.vertexPath = new ArrayList<Integer>();
 	}
 	
@@ -36,17 +34,8 @@ public class Path {
 	 * 
 	 * @param current_path
 	 */
-	public Path(ConcurrentNode<?> current_node){
-		this.path = new LinkedList<ConcurrentNode<?>>();
-		this.path.offer(current_node);
-	}
-	
-	/**
-	 * 
-	 * @param current_path
-	 */
 	public Path(Path current_path){
-		this.path = new LinkedList<ConcurrentNode<?>>();
+		this.vertexPath = new ArrayList<Integer>();
 		this.append(current_path);
 	}
 	
@@ -55,9 +44,9 @@ public class Path {
 	 * @return
 	 */
 	public void append(Path appendablePath){
-		Iterator<?> iter = appendablePath.getPath().iterator();
+		Iterator<Integer> iter = appendablePath.getPath().iterator();
 		while(iter.hasNext()){
-			this.path.add((ConcurrentNode<?>) iter.next());
+			this.vertexPath.add(iter.next());
 		}				
 	}
 	
@@ -74,12 +63,12 @@ public class Path {
 	 * 
 	 * @return
 	 */
-	public LinkedList<?> getPath(){
-		return this.path;
+	public ArrayList<Integer> getPath(){
+		return this.vertexPath;
 	}
 	
 	public boolean equals(Path path){
-		int thisPathLength = this.path.size();
+		int thisPathLength = this.vertexPath.size();
 		int comparatorPathLength = path.getPath().size();
 				
 		if(thisPathLength != comparatorPathLength){
@@ -87,14 +76,14 @@ public class Path {
 			return false;
 		}
 		for(int i = 0; i < thisPathLength; i++){
-			ConcurrentNode<?> thisPathNode = this.path.get(i);
-			ConcurrentNode<?> comparatorPathNode = (ConcurrentNode<?>)path.getPath().get(i);
+			Integer thisPathNode = this.vertexPath.get(i);
+			Integer comparatorPathNode = this.vertexPath.get(i);
 			
 			if(!thisPathNode.getClass().getCanonicalName().equals(comparatorPathNode.getClass().getCanonicalName())){
 				System.out.println("NODE CLASS NAMES ARE NOT EQUAL");
 				return false;
 			}
-			if(!thisPathNode.getData().equals(comparatorPathNode.getData())){
+			if(thisPathNode != comparatorPathNode){
 				System.out.println("NODE DATA NOT EQUAL.");
 				return false;
 			}
@@ -112,9 +101,9 @@ public class Path {
 	public static Path clone(Path path){
 		Path clonePath = new Path();
 		
-		Iterator<?> pathIterator = path.getPath().iterator();
+		Iterator<Integer> pathIterator = path.getPath().iterator();
 		while(pathIterator.hasNext()){
-			clonePath.add((ConcurrentNode<?>) pathIterator.next());
+			clonePath.add(pathIterator.next());
 		}
 		
 		return clonePath;

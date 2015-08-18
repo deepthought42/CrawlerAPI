@@ -36,7 +36,7 @@ public class EntryPoint {
 		WorkAllocationActor workAllocator = new WorkAllocationActor(vertexQueue, graph, resourceManager, nodeMonitor);
 		BrowserActor browserActor;
 		try {
-			browserActor = new BrowserActor(url, path, vertexQueue, graph, resourceManager, workAllocator, nodeMonitor);
+			browserActor = new BrowserActor(url, new Path(), vertexQueue, graph, resourceManager, workAllocator, nodeMonitor);
 			browserActor.start();
 		} catch (MalformedURLException e1) {
 			System.out.println("MALFORMED URL EXCEPTION");

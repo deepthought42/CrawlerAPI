@@ -122,6 +122,11 @@ public class Graph {
 		return vertices.get(fromVertices.get(0));
 	}
 	
+	/**
+	 * Finds the given vertex in the graph
+	 * @param vertex
+	 * @return >-1 if exists else -1
+	 */
 	public int findVertexIndex(Vertex<?> vertex){
 		int i = 0;
 		for(Vertex<?> curr_vertex : this.vertices){

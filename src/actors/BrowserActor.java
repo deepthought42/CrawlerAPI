@@ -277,14 +277,14 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws MalformedURLException 
 	 */
 	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
-		Iterator<?> pathIterator = this.path.getPath().iterator();
+		Iterator<Integer> pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
 		Page pageNode = null;
 		//skip first node since we should have already loaded it during initialization
 		int i = 0;
 		while(pathIterator.hasNext()){
 			System.out.println(this.getName() + " -> current path index :: " + i);
-			Vertex<?> pathNode = (Vertex<?>) pathIterator.next();
+			Vertex<?> pathNode = graph.getVertices().get(pathIterator.next());
 			
 			Class<?> className = pathNode.getData().getClass();
 			
@@ -321,18 +321,22 @@ public class BrowserActor extends Thread implements Actor{
 				//handle vertex instead of concurrentNode
 				
 				
-				ConcurrentNode<?> existingNode = nodeMonitor.findNode(pathNode, currentUrl.getHost());
+				//ConcurrentNode<?> existingNode = nodeMonitor.findNode(pathNode, currentUrl.getHost());
+				Integer existingNodeIndex = graph.findVertexIndex(pathNode);
+				Vertex<?> existingNode = null;
 				
-				if(existingNode == null){
-					existingNode = new ConcurrentNode<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
-					if(nodeMonitor.addPage(existingNode)){
-						System.out.println(this.getName() + " -> Added new page to monitor");
+				if(existingNodeIndex == -1){
+					Vertex<?> newNode = new Vertex<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
+					if(graph.addVertex(newNode)){
+						System.out.println(this.getName() + " -> Added new page to Graph");
 					}
 					else{
 						System.out.println(this.getName() + " -> Failed to add page to PageMonitor");
 					}
 				}
 				else{
+					existingNode = graph.getVertices().get(existingNodeIndex);
+
 					if(i >= this.path.getPath().size()){
 						System.out.println(this.getName() + " -> Node already existed. Using existing node");
 						
@@ -358,9 +362,10 @@ public class BrowserActor extends Thread implements Actor{
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					System.out.println(this.getName() + " Node = "+existingNode.getData().toString());
-					pathNode.addOutput(existingNode.getUuid(), existingNode);
-					existingNode.addInput(pathNode.getUuid(), pathNode);
-					additionalNodes.add(1);
+					
+					//pathNode.addOutput(existingNode.getUuid(), existingNode);
+					//existingNode.addInput(pathNode.getUuid(), pathNode);
+					additionalNodes.add(existingNodeIndex);
 				}
 				else{
 					PageState pageState = null;

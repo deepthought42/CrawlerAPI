@@ -30,10 +30,13 @@ public class ElementAction {
 	}
 	
 	public boolean equals(ElementAction elemAction){
+		System.out.print("Testing if ElementActions are equal..");
 		if(elemAction.getPageElement().equals(this.element)
 				&& elemAction.getAction().equals(this.action)){
+			System.out.println("TRUE");
 			return true;
 		}
+		System.out.println("FALSE");
 		return false;
 	}
 }

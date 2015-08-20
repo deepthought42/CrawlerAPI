@@ -424,7 +424,6 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	private void expandNodePath() throws MalformedURLException{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
-		//ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
 		Vertex<?> node_vertex = graph.getVertices().get(this.path.getPath().get(this.path.getPath().size()-1));
 		
 		Class<?> className = node_vertex.getData().getClass();
@@ -448,18 +447,22 @@ public class BrowserActor extends Thread implements Actor{
 						
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
-					//System.out.println("ADDING ACTION TO ELEMENT :: " + actions[i]);
+					System.out.println(this.getName() + " -> ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 										
-					graph.addVertex(elementActionVertex);
-					int fromIdx = graph.findVertexIndex(node_vertex);
-					int toIdx = graph.findVertexIndex(elementActionVertex);
-
+					boolean addedVertex = graph.addVertex(elementActionVertex);
+					System.out.println(this.getName() + " -> Vertex was added : "+addedVertex);
+					//int fromIdx = graph.findVertexIndex(node_vertex);
+					//int toIdx = graph.findVertexIndex(elementActionVertex);
+					
+					//System.out.println(this.getName() + " -> Page vertex. From : "+fromIdx+ "; To : "+toIdx);
 					//Add edge to graph for vertex
 					graph.addEdge(node_vertex, elementActionVertex);
+					System.out.println("Added edge to graph");
 					
 					putVertexOnQueue(elementActionVertex);
+					System.out.println("Added Vertex to queue");
 				}				
 			}
 		}
@@ -521,20 +524,20 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	private boolean putVertexOnQueue(Vertex<?> vertex){
 		boolean addSuccess = false;
-		synchronized(vertexQueue){
-			while(!addSuccess){
-				try{
+		//synchronized(vertexQueue){
+			//while(!addSuccess){
+				//try{
 					addSuccess = this.vertexQueue.add(vertex);
 					//System.out.println(this.getName() + " -> waiting in line to add clonePath to pathQueue");
-					vertexQueue.wait();
-				}catch(InterruptedException e){
-					System.err.println(this.getName() + " -> Done waiting");
-				}
-				catch(IllegalStateException e){
-					System.err.println(this.getName() + " -> Illegal state exception occurred while adding to pathQueue");
-				}
-			}
-		}
+					//vertexQueue.wait();
+				//}catch(InterruptedException e){
+				//	System.err.println(this.getName() + " -> Done waiting");
+				//}
+				//catch(IllegalStateException e){
+				//	System.err.println(this.getName() + " -> Illegal state exception occurred while adding to pathQueue");
+				//}
+			//}
+		//}
 		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
 		return addSuccess;
 	}

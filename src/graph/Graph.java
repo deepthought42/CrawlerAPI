@@ -75,6 +75,9 @@ public class Graph {
 	 */
 	public void addEdge(int from, int to){
 		ArrayList<Integer> toIndices =  edges.get(from);
+		if(toIndices == null){
+			toIndices = new ArrayList<Integer>();
+		}
 		toIndices.add(to);
 		edges.put(from, toIndices);
 	}
@@ -130,9 +133,6 @@ public class Graph {
 		int i = 0;
 		for(Vertex<?> curr_vertex : this.vertices){
 			if(curr_vertex.equals(vertex)){
-				System.out.println("Vertex classes match...");
-				System.out.println("CURRENT VERTEX CLASS = " + curr_vertex.getData().getClass());
-				System.out.println("PASSED VERTEX CLASS = " + vertex.getData().getClass());
 				return i;
 			}
 			i++;

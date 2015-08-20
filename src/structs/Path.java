@@ -2,11 +2,6 @@ package structs;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
-
-import browsing.Page;
-import structs.ConcurrentNode;
-import graph.Vertex;
 
 /**
  * 
@@ -49,13 +44,7 @@ public class Path {
 			this.vertexPath.add(iter.next());
 		}				
 	}
-	
-	/*
-	public boolean add(Vertex<Page> vertex){
-		return this.vertexPath.offer(vertex);
-	}
-	*/
-	
+		
 	public boolean add(Integer node_idx){
 		return this.vertexPath.add(node_idx);
 	}

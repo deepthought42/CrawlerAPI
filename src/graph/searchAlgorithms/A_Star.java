@@ -39,9 +39,10 @@ public class A_Star extends GraphSearch {
 		do{
 			for(Integer vertex_idx : graph.getFromIndices(start_idx)){
 				super.frontier.put(vertex_idx, ++weight);
-				Vertex<?> vertex = super.graph.getVertices().get(vertex_idx);
+				Vertex<?> vertex = graph.getVertices().get(vertex_idx);
 				path.add(vertex_idx);
-				if(vertex.isRoot()){
+				System.err.println("VERTEX ADDED TO PATH with idx : "+vertex_idx);
+				if(vertex.isRoot() || vertex_idx == 0){
 					isRootFound = true;
 					break;
 				}				
@@ -53,6 +54,7 @@ public class A_Star extends GraphSearch {
 
 	@Override
 	public Path findPathToClosestRoot(Vertex<?> startVertex) {
+		System.out.println("FINDING CLOSEST PATH TO ROOT FOR VERTEX : "+startVertex);
 		int vertex_idx = graph.findVertexIndex(startVertex);
 		
 		return findPathToClosestRoot(vertex_idx);

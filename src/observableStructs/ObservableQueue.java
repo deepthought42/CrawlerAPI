@@ -31,11 +31,12 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean add(E o) throws IllegalStateException{
+	public boolean add(E o) throws IllegalStateException{
 		setChanged();
-		boolean wasAdded = queue.add(o);
+		boolean wasAdded = this.queue.add(o);
 		notifyObservers();
-		notifyAll();
+		//notifyAll();
+		System.out.println("OBSERVERS NOTIFIED and ITEM ADDED TO QUEUE");
 		return wasAdded;
 	}
 

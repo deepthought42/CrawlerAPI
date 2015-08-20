@@ -106,7 +106,7 @@ public class Graph {
 		for(Integer key : edges.keySet()){
 			for(Integer idx : edges.get(key)){
 				if(idx == to){
-					fromIndices.add(idx);
+					fromIndices.add(key);
 				}
 			}
 		}

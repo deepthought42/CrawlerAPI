@@ -268,6 +268,7 @@ public class BrowserActor extends Thread implements Actor{
 			}while(!this.pathQueue.isEmpty());
 		}catch(OutOfMemoryError e){
 			System.err.println(this.getName() + " -> Out of memory error");
+			e.printStackTrace();
 		}
 		this.browser.getDriver().quit();
 		resourceManager.punchOut(this);
@@ -453,10 +454,7 @@ public class BrowserActor extends Thread implements Actor{
 										
 					boolean addedVertex = graph.addVertex(elementActionVertex);
 					System.out.println(this.getName() + " -> Vertex was added : "+addedVertex);
-					//int fromIdx = graph.findVertexIndex(node_vertex);
-					//int toIdx = graph.findVertexIndex(elementActionVertex);
 					
-					//System.out.println(this.getName() + " -> Page vertex. From : "+fromIdx+ "; To : "+toIdx);
 					//Add edge to graph for vertex
 					graph.addEdge(node_vertex, elementActionVertex);
 					System.out.println("Added edge to graph");
@@ -527,7 +525,9 @@ public class BrowserActor extends Thread implements Actor{
 		//synchronized(vertexQueue){
 			//while(!addSuccess){
 				//try{
+		System.out.println("Adding Vertex to queue");
 					addSuccess = this.vertexQueue.add(vertex);
+					
 					//System.out.println(this.getName() + " -> waiting in line to add clonePath to pathQueue");
 					//vertexQueue.wait();
 				//}catch(InterruptedException e){

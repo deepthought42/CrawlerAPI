@@ -308,20 +308,19 @@ public class BrowserActor extends Thread implements Actor{
 				if(PageAlert.isAlertPresent(browser.getDriver())){
 					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !graph.getVertices().get(this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
 						PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
-						ConcurrentNode<PageAlert> alertNode = new ConcurrentNode<PageAlert>(pageAlert);
-						alertNode.addInput(pathNode.getUuid(), pathNode);
-						pathNode.addOutput(alertNode.getUuid(), alertNode);
+						
+						Vertex<PageAlert> alertVertex = new Vertex<PageAlert>(pageAlert);
+						//add edge from last path vertex to alertVertex
+						graph.addVertex(alertVertex);
+						int fromVertex = graph.findVertexIndex(pathNode);
+						int toVertex = graph.findVertexIndex(alertVertex);
+						graph.addEdge(fromVertex, toVertex);
 					}
 					continue;
 				}
 				
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
-				
-				
-				//handle vertex instead of concurrentNode
-				
-				
-				//ConcurrentNode<?> existingNode = nodeMonitor.findNode(pathNode, currentUrl.getHost());
+								
 				Integer existingNodeIndex = graph.findVertexIndex(pathNode);
 				Vertex<?> existingNode = null;
 				
@@ -336,7 +335,7 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				else{
 					existingNode = graph.getVertices().get(existingNodeIndex);
-
+					
 					if(i >= this.path.getPath().size()){
 						System.out.println(this.getName() + " -> Node already existed. Using existing node");
 						
@@ -399,6 +398,7 @@ public class BrowserActor extends Thread implements Actor{
 					else{
 						Vertex<PageState> pageStateVertex = new Vertex<PageState>(pageState);
 						graph.addVertex(pageStateVertex);
+						
 						additionalNodes.add(graph.findVertexIndex(pageStateVertex));
 					}
 				}
@@ -424,7 +424,7 @@ public class BrowserActor extends Thread implements Actor{
 	private void expandNodePath() throws MalformedURLException{
 		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
 		//ConcurrentNode<?> node = (ConcurrentNode<?>) this.path.getPath().getLast();
-		Vertex<?> node_vertex = null;
+		Vertex<?> node_vertex = graph.getVertices().get(this.path.getPath().get(this.path.getPath().size()-1));
 		
 		Class<?> className = node_vertex.getData().getClass();
 		String[] actions = ActionFactory.getActions();
@@ -449,16 +449,16 @@ public class BrowserActor extends Thread implements Actor{
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
 					//System.out.println("ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
-					//ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
 					Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
-					
-					//elementAction.addInput(node.getUuid(), node);
-					//node.addOutput(elementAction.getUuid(), elementAction);
-					
+										
 					graph.addVertex(elementActionVertex);
+					int fromIdx = graph.findVertexIndex(node_vertex);
+					int toIdx = graph.findVertexIndex(elementActionVertex);
+
 					//Add edge to graph for vertex
+					graph.addEdge(node_vertex, elementActionVertex);
+					
 					putVertexOnQueue(elementActionVertex);
-					//putPathOnQueue(elementAction);
 				}				
 			}
 		}

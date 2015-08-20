@@ -61,9 +61,7 @@ public class Graph {
 		}
 		
 		if(idx1 > -1 && idx2 > -1){
-			ArrayList<Integer> toList = edges.get(idx1);
-			toList.add(idx2);
-			edges.put(idx1, toList);
+			addEdge(idx1, idx2);
 		}
 	}
 	

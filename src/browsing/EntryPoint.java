@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import actors.BrowserActor;
-import actors.NodeMonitor;
 import actors.ResourceManagementActor;
 import actors.WorkAllocationActor;
 import observableStructs.ObservableQueue;

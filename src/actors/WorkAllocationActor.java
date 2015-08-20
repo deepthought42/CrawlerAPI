@@ -17,7 +17,6 @@ import browsing.Page;
 import browsing.PageElement;
 import observableStructs.ObservableQueue;
 import structs.Path;
-import structs.ConcurrentNode;
 
 /**
  * Graph Condensing Agent iterates over a graph of nodes and condenses

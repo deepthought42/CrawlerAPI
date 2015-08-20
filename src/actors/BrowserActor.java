@@ -65,7 +65,6 @@ public class BrowserActor extends Thread implements Actor{
 	private UUID uuid = null;
 	private static WebDriver driver;
 	private String url = null;
-	private ObservableQueue<Path> pathQueue = null;
 	private ObservableQueue<Vertex<?>> vertexQueue = null;
 	private Graph graph = null;
 	private Path path = null;
@@ -250,7 +249,7 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				catch(NullPointerException e){}
 				
-			}while(!this.pathQueue.isEmpty());
+			}while(!this.vertexQueue.isEmpty());
 		}catch(OutOfMemoryError e){
 			System.err.println(this.getName() + " -> Out of memory error");
 			e.printStackTrace();

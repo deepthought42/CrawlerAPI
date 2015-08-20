@@ -32,7 +32,6 @@ import browsing.PageAlert;
 import browsing.PageElement;
 import browsing.PageState;
 import structs.Path;
-import structs.ConcurrentNode;
 
 /*
  * NEEDED:
@@ -69,12 +68,10 @@ public class BrowserActor extends Thread implements Actor{
 	private ObservableQueue<Path> pathQueue = null;
 	private ObservableQueue<Vertex<?>> vertexQueue = null;
 	private Graph graph = null;
-	private ConcurrentNode<Page> pageNode = null;
 	private Path path = null;
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
-	private NodeMonitor nodeMonitor = null;
 	private List<Integer> elementIdxChanges = null;
 	
 	/**
@@ -103,8 +100,7 @@ public class BrowserActor extends Thread implements Actor{
 						ObservableQueue<Vertex<?>> vertex_queue,
 						Graph graph,
 						ResourceManagementActor resourceManager, 
-						WorkAllocationActor workAllocator,
-						NodeMonitor nodeMonitor) throws MalformedURLException {
+						WorkAllocationActor workAllocator) throws MalformedURLException {
 		assert(vertex_queue != null);
 		assert(vertex_queue.isEmpty());
 		
@@ -116,7 +112,6 @@ public class BrowserActor extends Thread implements Actor{
 		this.graph = graph;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
-		this.nodeMonitor = nodeMonitor;
 		elementIdxChanges = null;
 		
 		if(this.path.getPath().isEmpty()){
@@ -143,8 +138,7 @@ public class BrowserActor extends Thread implements Actor{
 						Graph graph, 
 						Path path, 
 						ResourceManagementActor resourceManager, 
-						WorkAllocationActor workAllocator,
-						NodeMonitor pageMonitor) throws MalformedURLException {
+						WorkAllocationActor workAllocator) throws MalformedURLException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -152,7 +146,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.graph = graph;
 		Vertex<?> node = graph.getVertices().get(path.getPath().get(0)); 
 		assert(((Page)node.getData()).getUrl() != null);
-
+		this.path = path;
 		this.url = ((Page)node.getData()).getUrl().toString();
 		
 		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
@@ -161,18 +155,9 @@ public class BrowserActor extends Thread implements Actor{
 		this.vertexQueue = queue;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
-		this.nodeMonitor = pageMonitor;
 		elementIdxChanges = new ArrayList<Integer>();
 	}
 
-	/**
-	 * 
-	 * @return PageNode
-	 */
-	public ConcurrentNode<Page> getPageNode(){
-		return this.pageNode;
-	}
-	
 	public void signIn(String username, String pass){
 		driver.findElement(By.xpath("//a[@id='signInLink']")).click();
 		WebElement user = driver.findElement(By.xpath("//input[@id='userFormEmailField']"));

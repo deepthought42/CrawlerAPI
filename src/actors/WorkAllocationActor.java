@@ -33,7 +33,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 	Graph graph = null;
 	GraphSearch graphSearch = null;
 	ResourceManagementActor resourceManager = null;
-	NodeMonitor nodeMonitor = null;
 	
 	/**
 	 * 
@@ -42,14 +41,12 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 */
 	public WorkAllocationActor(ObservableQueue<Vertex<?>> queue, 
 							   Graph graph, 
-							   ResourceManagementActor resourceManager, 
-							   NodeMonitor pageMonitor){
+							   ResourceManagementActor resourceManager){
 		this.vertex_queue = queue;
 		this.vertex_queue.addObserver(this);
 		this.graph = graph;
 		this.graphSearch = new A_Star(graph);
 		this.resourceManager = resourceManager;
-		this.nodeMonitor = pageMonitor;
 	}
 	
 	public void run(){
@@ -92,7 +89,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 				        int start_idx = graph.findVertexIndex(vertex);
 					    Path path = graphSearch.findPathToClosestRoot(start_idx);
 				        
-				        BrowserActor browserActor = new BrowserActor(vertex_queue, graph, path, this.resourceManager, this, this.nodeMonitor);
+				        BrowserActor browserActor = new BrowserActor(vertex_queue, graph, path, this.resourceManager, this);
 						browserActor.start();
 
 						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");

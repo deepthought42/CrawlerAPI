@@ -48,20 +48,21 @@ public class Graph {
 	 * @return true if successfully created, false otherwise
 	 */
 	public void addEdge(Vertex<?> fromVertex, Vertex<?> toVertex){
-		int idx1 = -1;
-		int idx2 = -1;
+		int from_idx = -1;
+		int to_idx = -1;
 		int curr_idx = 0;
 		for(Vertex<?> v : vertices){
 			if(v.equals(fromVertex)){
-				idx1 = curr_idx;
+				from_idx = curr_idx;
 			}
 			else if(v.equals(toVertex)){
-				idx2 = curr_idx;
+				to_idx = curr_idx;
 			}
+			curr_idx++;
 		}
 		
-		if(idx1 > -1 && idx2 > -1){
-			addEdge(idx1, idx2);
+		if(from_idx > -1 && to_idx > -1){
+			addEdge(from_idx, to_idx);
 		}
 	}
 	

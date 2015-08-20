@@ -89,8 +89,10 @@ public class WorkAllocationActor extends Thread implements Observer {
 					if(vertex != null){
 						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTES.");
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+				        int start_idx = graph.findVertexIndex(vertex);
+					    Path path = graphSearch.findPathToClosestRoot(start_idx);
 				        
-				        BrowserActor browserActor = new BrowserActor(vertex_queue, graph, this.resourceManager, this, this.nodeMonitor);
+				        BrowserActor browserActor = new BrowserActor(vertex_queue, graph, path, this.resourceManager, this, this.nodeMonitor);
 						browserActor.start();
 
 						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");

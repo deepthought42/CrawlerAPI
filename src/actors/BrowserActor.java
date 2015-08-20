@@ -141,6 +141,7 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public BrowserActor(ObservableQueue<Vertex<?>> queue, 
 						Graph graph, 
+						Path path, 
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator,
 						NodeMonitor pageMonitor) throws MalformedURLException {

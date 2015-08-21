@@ -1,4 +1,4 @@
-package browsing;
+
 
 import graph.Graph;
 import graph.Vertex;

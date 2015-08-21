@@ -102,10 +102,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	}
 	
 	/**
+	 * Returns next path to be explored.
 	 * 
-	 * @return
+	 * @return {@link Path} to be explored
 	 */
-	public synchronized Path retrieveNextPath() throws NullPointerException{
+	public Path retrieveNextPath() throws NullPointerException{
 		Vertex<?> vertex = (Vertex<?>)vertex_queue.poll();
 		Path path = null;
 		if(vertex!=null){

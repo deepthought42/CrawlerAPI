@@ -54,7 +54,7 @@ public class A_Star extends GraphSearch {
 			}
 			Vertex<?> vertex = graph.getVertices().get(closest_index);
 			path.add(closest_index);
-			System.err.println("VERTEX ADDED TO PATH with idx : "+closest_index);
+			System.out.println(Thread.currentThread().getName() + " -> VERTEX ADDED TO PATH with idx : "+closest_index);
 			if(vertex.isRoot() || closest_index == 0){
 				isRootFound = true;
 				break;

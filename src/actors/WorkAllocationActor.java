@@ -59,17 +59,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 */
 	public synchronized void update(Observable o, Object arg)
 	{
-	    if (o instanceof ObservableQueue<?>){
-	    	vertex_queue = (ObservableQueue) o;
-	        //System.out.println("MyObserver1 says: path left is now : [" + queue.size() + "]");
-	        allocateVertexProcessing();
-	    	//Thread allocatorThread = new Thread(this);
-	    	//allocatorThread.start();
-	    }  
-	    else{
-	        System.out.println("The observable object was not of the correct type");
-	    }
-	    notifyAll();
+    	vertex_queue = (ObservableQueue) o;
+		allocateVertexProcessing();
 	}
 	
 	/**
@@ -78,11 +69,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	public void allocateVertexProcessing(){
 		if(vertex_queue.size() > 0){
 			try{
-				if( resourceManager.areResourcesAvailable()){
+				while( resourceManager.areResourcesAvailable() && !vertex_queue.isEmpty()){
 					Vertex<?> vertex = retrieveNextVertex();
 					
 					if(vertex != null){
-						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTES.");
+						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTEX.");
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 				        int start_idx = graph.findVertexIndex(vertex);
 						this.graphSearch = new A_Star(graph);
@@ -114,7 +105,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * 
 	 * @return
 	 */
-	public Path retrieveNextPath() throws NullPointerException{
+	public synchronized Path retrieveNextPath() throws NullPointerException{
 		Vertex<?> vertex = (Vertex<?>)vertex_queue.poll();
 		Path path = null;
 		if(vertex!=null){

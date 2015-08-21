@@ -55,6 +55,7 @@ public abstract class GraphSearch {
 	 * @return
 	 */
 	public int removeNodeFromFrontier(int index) throws NullPointerException{
+		System.out.println(Thread.currentThread().getName() + " -> FRONTIER INDEX : "+ index);
 		return frontier.remove(index);
 		
 	}

@@ -27,11 +27,9 @@ import structs.Path;
  */
 public class WorkAllocationActor extends Thread implements Observer {
 	
-	//ObservableQueue<Path> queue = null;
 	ObservableQueue<Vertex<?>> vertex_queue = null;
-	Graph graph = null;
-	GraphSearch graphSearch = null;
 	ResourceManagementActor resourceManager = null;
+	GraphObserver graphObserver = null;
 	
 	/**
 	 * 
@@ -39,11 +37,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @param resourceManager
 	 */
 	public WorkAllocationActor(ObservableQueue<Vertex<?>> queue, 
-							   Graph graph, 
-							   ResourceManagementActor resourceManager){
+							   ResourceManagementActor resourceManager,
+							   GraphObserver graphObserver){
 		this.vertex_queue = queue;
 		this.vertex_queue.addObserver(this);
-		this.graph = graph;
+		this.graphObserver = graphObserver;
 		this.resourceManager = resourceManager;
 	}
 	
@@ -59,8 +57,10 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 */
 	public synchronized void update(Observable o, Object arg)
 	{
-    	vertex_queue = (ObservableQueue) o;
-		allocateVertexProcessing();
+		if(o instanceof ObservableQueue){
+	    	vertex_queue = (ObservableQueue) o;
+			allocateVertexProcessing();
+		}
 	}
 	
 	/**
@@ -75,13 +75,13 @@ public class WorkAllocationActor extends Thread implements Observer {
 					if(vertex != null){
 						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTEX.");
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-				        int start_idx = graph.findVertexIndex(vertex);
-						this.graphSearch = new A_Star(graph);
+				        int start_idx = graphObserver.getGraph().findVertexIndex(vertex);
+						GraphSearch graphSearch = new A_Star(graphObserver.getGraph());
 
 					    Path path = graphSearch.findPathToClosestRoot(start_idx);
 					    
 				        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
-				        BrowserActor browserActor = new BrowserActor(vertex_queue, graph, path, this.resourceManager, this);
+				        BrowserActor browserActor = new BrowserActor(vertex_queue, graphObserver.getGraph(), path, this.resourceManager, this);
 						browserActor.start();
 
 						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
@@ -110,7 +110,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 		Vertex<?> vertex = (Vertex<?>)vertex_queue.poll();
 		Path path = null;
 		if(vertex!=null){
-			this.graphSearch = new A_Star(graph);
+			GraphSearch graphSearch = new A_Star(graphObserver.getGraph());
 			path = graphSearch.findPathToClosestRoot(vertex);
 		}
 		return path;
@@ -143,8 +143,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 		if(path1Idx == 0 || path2Idx == 0){
 			return -1;
 		}
-		Page path1Page = (Page)(graph.getVertices().get(path1.getPath().get(path1Idx))).getData();
-		Page path2Page = (Page)(graph.getVertices().get(path2.getPath().get(path2Idx))).getData();
+		Page path1Page = (Page)(graphObserver.getGraph().getVertices().get(path1.getPath().get(path1Idx))).getData();
+		Page path2Page = (Page)(graphObserver.getGraph().getVertices().get(path2.getPath().get(path2Idx))).getData();
 		
 		ArrayList<PageElement> path1Elements = path1Page.getElements();
 		ArrayList<PageElement> path2Elements = path2Page.getElements();
@@ -159,8 +159,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 		}
 		
 		//get previous node in both paths
-		Vertex<?> path1PrevNode = graph.getVertices().get(path1.getPath().get(path1Idx - 1));
-		Vertex<?> path2PrevNode = graph.getVertices().get(path2.getPath().get(path2Idx - 1));
+		Vertex<?> path1PrevNode = graphObserver.getGraph().getVertices().get(path1.getPath().get(path1Idx - 1));
+		Vertex<?> path2PrevNode = graphObserver.getGraph().getVertices().get(path2.getPath().get(path2Idx - 1));
 		
 		if(allElementsEqual 
 				&& path1PrevNode.getData().getClass().getCanonicalName().equals("browsing.ElementAction") 
@@ -192,7 +192,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	public int getFurthestPageIndex(Path path){
 		int pathSize = path.getPath().size();
 		for(int i = pathSize-1; i >= 0; i--){
-			Vertex<?> pathNode = graph.getVertices().get(path.getPath().get(i));
+			Vertex<?> pathNode = graphObserver.getGraph().getVertices().get(path.getPath().get(i));
 			if(pathNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
 				return i;
 			}

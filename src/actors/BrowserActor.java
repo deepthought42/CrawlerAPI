@@ -180,6 +180,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " -> Path is empty. Adding to path");
 					Vertex<Page> vertex = new Vertex<Page>(browser.getPage());
 					graph.addVertex(vertex);
+					
 					//System.out.println(this.getName() + " -> Vertex added to path. Method has returned.");
 					//need to add edge to vertex
 					this.path.add(graph.findVertexIndex(vertex));
@@ -303,9 +304,7 @@ public class BrowserActor extends Thread implements Actor{
 						//add edge from last path vertex to alertVertex
 						graph.addVertex(alertVertex);
 						//System.out.println(this.getName()  + " -> Vertex added");
-						int fromVertex = graph.findVertexIndex(pathNode);
-						int toVertex = graph.findVertexIndex(alertVertex);
-						graph.addEdge(fromVertex, toVertex);
+						graph.addEdge(pathNode, alertVertex);
 					}
 					continue;
 				}
@@ -316,8 +315,9 @@ public class BrowserActor extends Thread implements Actor{
 				Vertex<?> existingNode = null;
 				
 				if(existingNodeIndex == -1){
-					Vertex<?> newNode = new Vertex<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
-					if(graph.addVertex(newNode)){
+					existingNode = new Vertex<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
+					if(graph.addVertex(existingNode)){
+						graph.addEdge(pathNode, existingNode);
 						System.out.println(this.getName() + " -> Added new page to Graph");
 					}
 					else{
@@ -386,7 +386,7 @@ public class BrowserActor extends Thread implements Actor{
 					else{
 						Vertex<PageState> pageStateVertex = new Vertex<PageState>(pageState);
 						graph.addVertex(pageStateVertex);
-						
+						graph.addEdge(existingNode, pageStateVertex);
 						additionalNodes.add(graph.findVertexIndex(pageStateVertex));
 					}
 				}
@@ -452,9 +452,9 @@ public class BrowserActor extends Thread implements Actor{
 			//navigate path back to last seen page
 			//for each ElementAction seen, record elementAction.
 			Page page = null;
-			
+			Vertex<?> descNode = null;
 			for(int i = 0; i < this.path.getPath().size(); i--){
-				Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
+				 descNode = graph.getVertices().get(this.path.getPath().get(i));
 				
 				if(descNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
 					page = (Page)descNode.getData();
@@ -480,16 +480,12 @@ public class BrowserActor extends Thread implements Actor{
 					}
 					if(!seen){
 						//Clone path then add ElementAction to path and push path onto path queue					
-						//ConcurrentNode<ElementAction> elementAction = new ConcurrentNode<ElementAction>(elemAction);
 						Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 						
-						//elementAction.addInput(node.getUuid(), node);
-						//node.addOutput(elementAction.getUuid(), elementAction);
-						
 						graph.addVertex(elementActionVertex);
+						graph.addEdge(node_vertex, elementActionVertex);
 						//need to add edge to graph
 						putVertexOnQueue(elementActionVertex);
-						//putPathOnQueue(elementAction);
 					}
 				}				
 			}

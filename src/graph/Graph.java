@@ -1,7 +1,9 @@
 package graph;
 
 import java.util.ArrayList;
+import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * Defines a Graph utilizing vertices and a hash map where every key is the 
@@ -11,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Brandon Kindred
  *
  */
-public class Graph {
+public class Graph extends Observable{
 	private ArrayList<Vertex<?>> vertices = null;
 	
 	//In edges, the key is the index in vertices for the from vertex 
@@ -30,11 +32,27 @@ public class Graph {
 	
 	/**
 	 * 
+	 * 
 	 * @param vertex
 	 * @return
 	 */
 	public synchronized boolean addVertex(Vertex<?> vertex){
-		return this.vertices.add(vertex);
+		boolean wasAdded = false;
+		//System.out.print("Adding vertex...");
+		if(findVertexIndex(vertex) == -1){
+			setChanged();
+			wasAdded = this.vertices.add(vertex);
+			notifyObservers();
+		}
+		
+		/*if(wasAdded){
+			System.out.println("Vertex added.");
+		}
+		else{
+			System.out.println("Vertex addition FAILED");
+		}
+		*/
+		return wasAdded;
 	}
 	
 	public synchronized ArrayList<Vertex<?>> getVertices(){
@@ -49,6 +67,8 @@ public class Graph {
 	 * @return true if successfully created, false otherwise
 	 */
 	public synchronized void addEdge(Vertex<?> fromVertex, Vertex<?> toVertex){
+		setChanged();
+		
 		int from_idx = -1;
 		int to_idx = -1;
 		int curr_idx = 0;
@@ -65,6 +85,8 @@ public class Graph {
 		if(from_idx > -1 && to_idx > -1){
 			addEdge(from_idx, to_idx);
 		}
+		
+		notifyObservers();
 	}
 	
 	/**
@@ -75,12 +97,16 @@ public class Graph {
 	 * @return
 	 */
 	public void addEdge(int from, int to){
+		//System.out.println(Thread.currentThread().getName() + " -> Adding Edge FROM : TO = "+from+":"+to );
+		setChanged();
 		ArrayList<Integer> toIndices =  edges.get(from);
 		if(toIndices == null){
 			toIndices = new ArrayList<Integer>();
 		}
 		toIndices.add(to);
 		edges.put(from, toIndices);
+		//System.out.println("---ADDED EDGE!");
+		notifyObservers();
 	}
 	
 	public ConcurrentHashMap<Integer, ArrayList<Integer>> getEdges(){
@@ -105,12 +131,16 @@ public class Graph {
 	public synchronized ArrayList<Integer> getFromIndices(int to){
 		ArrayList<Integer> fromIndices = new ArrayList<Integer>();
 		for(Integer key : edges.keySet()){
+			System.out.print(Thread.currentThread().getName() + " -> Key set FOR " + key + " :: ");
 			for(Integer idx : edges.get(key)){
+				System.out.print(idx + ", ");
 				if(idx == to){
 					fromIndices.add(key);
 				}
 			}
+			System.out.println();
 		}
+		System.out.println(Thread.currentThread().getName() + " -> Total from indices for index "+to+" = "+fromIndices.size());
 		return fromIndices;
 	}
 	

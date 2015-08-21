@@ -4,10 +4,9 @@ import graph.Graph;
 import graph.Vertex;
 
 import java.net.MalformedURLException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import actors.BrowserActor;
+import actors.GraphObserver;
 import actors.ResourceManagementActor;
 import actors.WorkAllocationActor;
 import observableStructs.ObservableQueue;
@@ -23,14 +22,13 @@ public class EntryPoint {
 		ResourceManagementActor resourceManager = new ResourceManagementActor(5);
 		ObservableQueue<Vertex<?>> vertexQueue = new ObservableQueue<Vertex<?>>();
 		Graph graph = new Graph();
-		
+		GraphObserver graphObserver = new GraphObserver(graph);
 		String url = "localhost:3000";
 		System.out.print("INITIALIZING ACTOR...");
-		ExecutorService e = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 		System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
 		
 		System.out.print("Initializing page monitor...");
-		WorkAllocationActor workAllocator = new WorkAllocationActor(vertexQueue, graph, resourceManager);
+		WorkAllocationActor workAllocator = new WorkAllocationActor(vertexQueue, resourceManager, graphObserver);
 		BrowserActor browserActor;
 		try {
 			browserActor = new BrowserActor(url, new Path(), vertexQueue, graph, resourceManager, workAllocator);

@@ -23,7 +23,6 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 		E element = queue.poll();
 		notifyObservers();
 		System.out.println("NOTIFYING ALL THREADS");
-		notifyAll();
 		return element;
 	}
 	
@@ -34,7 +33,6 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 		setChanged();
 		boolean wasAdded = this.queue.add(o);
 		notifyObservers();
-		//notifyAll();
 		//System.out.println("OBSERVERS NOTIFIED and ITEM ADDED TO QUEUE");
 		return wasAdded;
 	}

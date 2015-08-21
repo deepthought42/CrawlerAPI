@@ -37,7 +37,7 @@ public class Graph {
 		return this.vertices.add(vertex);
 	}
 	
-	public ArrayList<Vertex<?>> getVertices(){
+	public synchronized ArrayList<Vertex<?>> getVertices(){
 		return this.vertices;
 	}
 	

@@ -44,7 +44,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 		this.vertex_queue = queue;
 		this.vertex_queue.addObserver(this);
 		this.graph = graph;
-		this.graphSearch = new A_Star(graph);
 		this.resourceManager = resourceManager;
 	}
 	
@@ -86,8 +85,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTES.");
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 				        int start_idx = graph.findVertexIndex(vertex);
+						this.graphSearch = new A_Star(graph);
+
 					    Path path = graphSearch.findPathToClosestRoot(start_idx);
-				        
+					    
+				        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
 				        BrowserActor browserActor = new BrowserActor(vertex_queue, graph, path, this.resourceManager, this);
 						browserActor.start();
 
@@ -112,10 +114,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * 
 	 * @return
 	 */
-	public Path retrieveNextPath(){
+	public Path retrieveNextPath() throws NullPointerException{
 		Vertex<?> vertex = (Vertex<?>)vertex_queue.poll();
 		Path path = null;
 		if(vertex!=null){
+			this.graphSearch = new A_Star(graph);
 			path = graphSearch.findPathToClosestRoot(vertex);
 		}
 		return path;
@@ -126,7 +129,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * 
 	 * @return
 	 */
-	public Vertex<?> retrieveNextVertex(){
+	public synchronized Vertex<?> retrieveNextVertex(){
 		return (Vertex<?>)vertex_queue.poll();
 	}
 	

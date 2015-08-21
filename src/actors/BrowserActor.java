@@ -254,6 +254,10 @@ public class BrowserActor extends Thread implements Actor{
 			System.err.println(this.getName() + " -> Out of memory error");
 			e.printStackTrace();
 		}
+		catch(NullPointerException e){
+			System.err.println(this.getName() + " -> NULL POINTER EXCEPTION OCCURRED. --EXITING BROWSER ACTOR--");
+			e.printStackTrace();
+		}
 		this.browser.getDriver().quit();
 		resourceManager.punchOut(this);
 	}
@@ -449,7 +453,7 @@ public class BrowserActor extends Thread implements Actor{
 			//for each ElementAction seen, record elementAction.
 			Page page = null;
 			
-			for(int i = this.path.getPath().size(); i > -1; i--){
+			for(int i = 0; i < this.path.getPath().size(); i--){
 				Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
 				
 				if(descNode.getData().getClass().getCanonicalName().equals("browsing.Page")){

@@ -31,29 +31,46 @@ public class A_Star extends GraphSearch {
 	}
 
 	@Override
-	public Path findPathToClosestRoot(int start_idx) {
+	public Path findPathToClosestRoot(int start_idx) throws NullPointerException{
 		Path path = new Path();
 		int weight = 0;
 		boolean isRootFound = false;
-		
+		//this implementation is wrong. Needs to be fixed.
+		super.frontier.put(start_idx, 0);
 		do{
-			for(Integer vertex_idx : graph.getFromIndices(start_idx)){
-				super.frontier.put(vertex_idx, ++weight);
-				Vertex<?> vertex = graph.getVertices().get(vertex_idx);
-				path.add(vertex_idx);
-				System.err.println("VERTEX ADDED TO PATH with idx : "+vertex_idx);
-				if(vertex.isRoot() || vertex_idx == 0){
-					isRootFound = true;
-					break;
-				}				
+			int lowest_weight = 999999;
+			int closest_index = -1;
+			for(Integer index: super.frontier.keySet()){
+				if(super.frontier.get(index) < lowest_weight){
+					lowest_weight = super.frontier.get(index);
+					closest_index = index;
+				}
 			}
+			
+			super.removeNodeFromFrontier(closest_index);
+			super.visited.put(closest_index, super.frontier.get(closest_index));
+			for(Integer vertex_idx : graph.getFromIndices(closest_index)){
+				super.frontier.put(vertex_idx, ++weight);
+			}
+			Vertex<?> vertex = graph.getVertices().get(closest_index);
+			path.add(closest_index);
+			System.err.println("VERTEX ADDED TO PATH with idx : "+closest_index);
+			if(vertex.isRoot() || closest_index == 0){
+				isRootFound = true;
+				break;
+			}	
 		}while(!isRootFound);
 		
-		return path;
+		//invert path
+		Path corrected_path = new Path();
+		for(int i = path.getPath().size()-1; i > -1; i--){
+			corrected_path.add(path.getPath().get(i));
+		}
+		return corrected_path;
 	}
 
 	@Override
-	public Path findPathToClosestRoot(Vertex<?> startVertex) {
+	public Path findPathToClosestRoot(Vertex<?> startVertex) throws NullPointerException{
 		System.out.println("FINDING CLOSEST PATH TO ROOT FOR VERTEX : "+startVertex);
 		int vertex_idx = graph.findVertexIndex(startVertex);
 		

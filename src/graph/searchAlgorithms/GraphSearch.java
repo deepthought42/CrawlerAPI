@@ -54,7 +54,7 @@ public abstract class GraphSearch {
 	 * 
 	 * @return
 	 */
-	public int removeNodeFromFrontier(int index){
+	public int removeNodeFromFrontier(int index) throws NullPointerException{
 		return frontier.remove(index);
 		
 	}

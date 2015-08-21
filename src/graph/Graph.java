@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Graph {
 	private ArrayList<Vertex<?>> vertices = null;
+	
 	//In edges, the key is the index in vertices for the from vertex 
 	//	and the value for the to is stored in the ArrayList
 	private ConcurrentHashMap<Integer, ArrayList<Integer>> edges = new ConcurrentHashMap<Integer, ArrayList<Integer>>();
@@ -47,7 +48,7 @@ public class Graph {
 	 * 
 	 * @return true if successfully created, false otherwise
 	 */
-	public void addEdge(Vertex<?> fromVertex, Vertex<?> toVertex){
+	public synchronized void addEdge(Vertex<?> fromVertex, Vertex<?> toVertex){
 		int from_idx = -1;
 		int to_idx = -1;
 		int curr_idx = 0;
@@ -101,7 +102,7 @@ public class Graph {
 	 * @param to index of node 
 	 * @return
 	 */
-	public ArrayList<Integer> getFromIndices(int to){
+	public synchronized ArrayList<Integer> getFromIndices(int to){
 		ArrayList<Integer> fromIndices = new ArrayList<Integer>();
 		for(Integer key : edges.keySet()){
 			for(Integer idx : edges.get(key)){
@@ -129,7 +130,7 @@ public class Graph {
 	 * @param vertex
 	 * @return >-1 if exists else -1
 	 */
-	public int findVertexIndex(Vertex<?> vertex){
+	public synchronized int findVertexIndex(Vertex<?> vertex){
 		int i = 0;
 		for(Vertex<?> curr_vertex : this.vertices){
 			if(curr_vertex.equals(vertex)){

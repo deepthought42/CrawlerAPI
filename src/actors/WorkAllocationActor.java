@@ -114,7 +114,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 */
 	public Path retrieveNextPath(){
 		Vertex<?> vertex = (Vertex<?>)vertex_queue.poll();
-		return graphSearch.findPathToClosestRoot(vertex);
+		Path path = null;
+		if(vertex!=null){
+			path = graphSearch.findPathToClosestRoot(vertex);
+		}
+		return path;
 	}
 	
 	/**

@@ -19,7 +19,6 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	 * {@inheritDoc}
 	 */
 	public synchronized E poll(){
-		
 		setChanged();
 		E element = queue.poll();
 		notifyObservers();
@@ -36,7 +35,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 		boolean wasAdded = this.queue.add(o);
 		notifyObservers();
 		//notifyAll();
-		System.out.println("OBSERVERS NOTIFIED and ITEM ADDED TO QUEUE");
+		//System.out.println("OBSERVERS NOTIFIED and ITEM ADDED TO QUEUE");
 		return wasAdded;
 	}
 

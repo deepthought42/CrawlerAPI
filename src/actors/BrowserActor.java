@@ -148,7 +148,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.path = path;
 		this.url = ((Page)node.getData()).getUrl().toString();
 		
-		System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
+		//System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
 		browser = new Browser(url);
 
 		this.vertexQueue = queue;
@@ -180,16 +180,16 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " -> Path is empty. Adding to path");
 					Vertex<Page> vertex = new Vertex<Page>(browser.getPage());
 					graph.addVertex(vertex);
+					//System.out.println(this.getName() + " -> Vertex added to path. Method has returned.");
 					//need to add edge to vertex
 					this.path.add(graph.findVertexIndex(vertex));
-					System.out.println(this.getName() + " PATH LENGTH :: "+this.path.getPath().size());
 				}
 				else{
 					System.out.println(this.getName() + " -> PATH IS NOT EMPTY. Working on path.");
-					System.out.println(this.getName() + " -> VERTEX INDEX : "+ this.path.getPath().get(0));
-					System.out.println(this.getName() + " -> VERTEX DATA TYPE :: " + graph.getVertices().get(this.path.getPath().get(0)).getData());
+					//System.out.println(this.getName() + " -> VERTEX INDEX : "+ this.path.getPath().get(0));
+					//System.out.println(this.getName() + " -> VERTEX DATA TYPE :: " + graph.getVertices().get(this.path.getPath().get(0)).getData());
 					this.url = ((Page)(graph.getVertices().get(this.path.getPath().get(0))).getData()).getUrl().toString();
-					System.out.println(Thread.currentThread().getName() + " -> NEW URL :: " + this.url);
+					System.out.println(this.getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
 				}
 				boolean successfulCrawl = false;
@@ -233,7 +233,7 @@ public class BrowserActor extends Thread implements Actor{
 				System.out.println(this.getName() + " -----ELAPSED TIME PATH NODE EXPANSION :: "+elapsedSeconds + "-----");
 				System.out.println(this.getName() + " #######################################################");
 				this.path = workAllocator.retrieveNextPath();
-				
+				System.out.println(this.getName() + " -> PATH RETRIEVED.");
 				//close all windows opened during crawl
 				try{
 					String baseWindowHdl = browser.getDriver().getWindowHandle();
@@ -298,6 +298,7 @@ public class BrowserActor extends Thread implements Actor{
 						Vertex<PageAlert> alertVertex = new Vertex<PageAlert>(pageAlert);
 						//add edge from last path vertex to alertVertex
 						graph.addVertex(alertVertex);
+						//System.out.println(this.getName()  + " -> Vertex added");
 						int fromVertex = graph.findVertexIndex(pathNode);
 						int toVertex = graph.findVertexIndex(alertVertex);
 						graph.addEdge(fromVertex, toVertex);
@@ -341,15 +342,12 @@ public class BrowserActor extends Thread implements Actor{
 				else if(pageNode != null && !pageNode.equals(existingNode)){
 					
 					browser.updatePage( DateFormat.getDateInstance(), true);
-					System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
-					System.out.println(this.getName() + " -> current path index :: " + i);
+					//System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
+					//System.out.println(this.getName() + " -> current path index :: " + i);
 					//Before adding new page, check if page has been experienced already. If it has load that page
 					
 					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
-					System.out.println(this.getName() + " Node = "+existingNode.getData().toString());
 					
-					//pathNode.addOutput(existingNode.getUuid(), existingNode);
-					//existingNode.addInput(pathNode.getUuid(), pathNode);
 					additionalNodes.add(existingNodeIndex);
 				}
 				else{
@@ -396,10 +394,10 @@ public class BrowserActor extends Thread implements Actor{
 			}
 			i++;
 		}
-		System.out.println(this.getName() + " -> EXISTING PATH LENGTH = "+this.path.getPath().size());
-		System.out.println(this.getName() + " -> EXISTING ADDITIONAL PATH LENGTH = "+additionalNodes.getPath().size());
+		//System.out.println(this.getName() + " -> EXISTING PATH LENGTH = "+this.path.getPath().size());
+		//System.out.println(this.getName() + " -> EXISTING ADDITIONAL PATH LENGTH = "+additionalNodes.getPath().size());
 		this.path.append(additionalNodes);
-		System.out.println(this.getName() + " -> DONE CRAWLING PATH");
+		//System.out.println(this.getName() + " -> DONE CRAWLING PATH");
 		return true;
 	}
 	
@@ -432,19 +430,16 @@ public class BrowserActor extends Thread implements Actor{
 						
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
-					System.out.println(this.getName() + " -> ADDING ACTION TO ELEMENT :: " + actions[i]);
+					//System.out.println(this.getName() + " -> ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 										
 					boolean addedVertex = graph.addVertex(elementActionVertex);
-					System.out.println(this.getName() + " -> Vertex was added : "+addedVertex);
+					//System.out.println(this.getName() + " -> Vertex was added : "+addedVertex);
 					
 					//Add edge to graph for vertex
-					graph.addEdge(node_vertex, elementActionVertex);
-					System.out.println("Added edge to graph");
-					
+					graph.addEdge(node_vertex, elementActionVertex);					
 					putVertexOnQueue(elementActionVertex);
-					System.out.println("Added Vertex to queue");
 				}				
 			}
 		}
@@ -509,7 +504,7 @@ public class BrowserActor extends Thread implements Actor{
 		//synchronized(vertexQueue){
 			//while(!addSuccess){
 				//try{
-		System.out.println("Adding Vertex to queue");
+		//System.out.println("Adding Vertex to queue");
 					addSuccess = this.vertexQueue.add(vertex);
 					
 					//System.out.println(this.getName() + " -> waiting in line to add clonePath to pathQueue");

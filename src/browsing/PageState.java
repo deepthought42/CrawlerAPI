@@ -40,4 +40,22 @@ public class PageState {
 	public UUID getPageUuid(){
 		return this.pageUuid;
 	}
+	
+	public boolean equals(PageState pageState){
+		boolean isEqual = true;
+		for(PageElement elem : this.elementsChanged){
+			boolean hasMatch = false;
+			for(PageElement elem2: pageState.getElementsChanged()){
+				if(elem.equals(elem2)){
+					hasMatch = true;
+					break;
+				}
+			}
+			if(!hasMatch){
+				isEqual = false;
+				break;
+			}
+		}
+		return isEqual;
+	}
 }

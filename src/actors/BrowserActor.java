@@ -326,13 +326,19 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				else{
 					existingNode = graph.getVertices().get(existingNodeIndex);
+					System.out.println(this.getName() + " -> Node already existed. Using existing node");
+
+					
 					
 					if(i >= this.path.getPath().size()){
-						System.out.println(this.getName() + " -> Node already existed. Using existing node");
-						
+						System.out.println(this.getName()+" -> Reached end of path.");
 						//Still need to add in a way to add the current elementAction node to the new pageNode
 						return false;
 					}
+					
+					
+					
+					
 				}
 			
 				//if not at end of path and next node is a Page or pageState then don't bother adding new node
@@ -500,25 +506,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @param path path to be added
 	 */
 	private boolean putVertexOnQueue(Vertex<?> vertex){
-		boolean addSuccess = false;
-		//synchronized(vertexQueue){
-			//while(!addSuccess){
-				//try{
-		//System.out.println("Adding Vertex to queue");
-					addSuccess = this.vertexQueue.add(vertex);
-					
-					//System.out.println(this.getName() + " -> waiting in line to add clonePath to pathQueue");
-					//vertexQueue.wait();
-				//}catch(InterruptedException e){
-				//	System.err.println(this.getName() + " -> Done waiting");
-				//}
-				//catch(IllegalStateException e){
-				//	System.err.println(this.getName() + " -> Illegal state exception occurred while adding to pathQueue");
-				//}
-			//}
-		//}
-		//System.out.println("CLONE PATH LENGTH :: "+clonePath.getPath().size());
-		return addSuccess;
+		return this.vertexQueue.add(vertex);
 	}
 
 	

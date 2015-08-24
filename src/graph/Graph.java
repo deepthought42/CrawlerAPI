@@ -38,20 +38,12 @@ public class Graph extends Observable{
 	 */
 	public synchronized boolean addVertex(Vertex<?> vertex){
 		boolean wasAdded = false;
-		//System.out.print("Adding vertex...");
 		if(findVertexIndex(vertex) == -1){
 			setChanged();
 			wasAdded = this.vertices.add(vertex);
 			notifyObservers();
 		}
-		
-		/*if(wasAdded){
-			System.out.println("Vertex added.");
-		}
-		else{
-			System.out.println("Vertex addition FAILED");
-		}
-		*/
+
 		return wasAdded;
 	}
 	
@@ -97,7 +89,6 @@ public class Graph extends Observable{
 	 * @return
 	 */
 	public void addEdge(int from, int to){
-		//System.out.println(Thread.currentThread().getName() + " -> Adding Edge FROM : TO = "+from+":"+to );
 		setChanged();
 		ArrayList<Integer> toIndices =  edges.get(from);
 		if(toIndices == null){
@@ -105,7 +96,6 @@ public class Graph extends Observable{
 		}
 		toIndices.add(to);
 		edges.put(from, toIndices);
-		//System.out.println("---ADDED EDGE!");
 		notifyObservers();
 	}
 	
@@ -131,16 +121,15 @@ public class Graph extends Observable{
 	public synchronized ArrayList<Integer> getFromIndices(int to){
 		ArrayList<Integer> fromIndices = new ArrayList<Integer>();
 		for(Integer key : edges.keySet()){
-			System.out.print(Thread.currentThread().getName() + " -> Key set FOR " + key + " :: ");
+			//System.out.print(Thread.currentThread().getName() + " -> Key set FOR " + key + " :: ");
 			for(Integer idx : edges.get(key)){
-				System.out.print(idx + ", ");
+				//System.out.print(idx + ", ");
 				if(idx == to){
 					fromIndices.add(key);
 				}
 			}
-			System.out.println();
 		}
-		System.out.println(Thread.currentThread().getName() + " -> Total from indices for index "+to+" = "+fromIndices.size());
+		//System.out.println(Thread.currentThread().getName() + " -> Total from indices for index "+to+" = "+fromIndices.size());
 		return fromIndices;
 	}
 	

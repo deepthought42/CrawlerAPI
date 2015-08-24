@@ -360,7 +360,6 @@ public class PageElement {
 	 * @return whether or not elements are equal
 	 */
 	public boolean equals(PageElement elem){
-		ArrayList<Attribute> oldPageElementAttributes = this.getAttributes();
 		ArrayList<Attribute> newPageElementAttributes = elem.getAttributes();
 		
 		if(this.getPage().equals(elem.getPage())){
@@ -375,11 +374,11 @@ public class PageElement {
 			areElementsEqual = true;
 		}
 		
-		if(oldPageElementAttributes.size() == newPageElementAttributes.size() && areElementsEqual)
+		if(this.getAttributes().size() == newPageElementAttributes.size() && areElementsEqual)
 		{
-			for(int attrIdx = 0; attrIdx < oldPageElementAttributes.size(); attrIdx++)
+			for(int attrIdx = 0; attrIdx < this.getAttributes().size(); attrIdx++)
 			{
-				areElementsEqual = oldPageElementAttributes.get(attrIdx).equals(newPageElementAttributes.get(attrIdx));
+				areElementsEqual = this.getAttributes().get(attrIdx).equals(newPageElementAttributes.get(attrIdx));
 				if(!areElementsEqual){
 					return false;
 				}

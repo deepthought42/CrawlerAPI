@@ -19,9 +19,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	 * {@inheritDoc}
 	 */
 	public synchronized E poll(){
-		//setChanged();
 		E element = queue.poll();
-		//notifyObservers();
 		System.out.println("NOTIFYING ALL THREADS");
 		return element;
 	}

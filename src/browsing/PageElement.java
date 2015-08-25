@@ -359,17 +359,23 @@ public class PageElement {
 	 * @param elem
 	 * @return whether or not elements are equal
 	 */
-	public boolean equals(PageElement elem){
-		ArrayList<Attribute> newPageElementAttributes = elem.getAttributes();
+	@Override
+	public boolean equals(Object o){
+		if (this == o) return true;
+        if (!(o instanceof PageElement)) return false;
+        
+        PageElement that = (PageElement)o;
 		
-		if(this.getPage().equals(elem.getPage())){
+		ArrayList<Attribute> newPageElementAttributes = that.getAttributes();
+		
+		if(this.getPage().equals(that.getPage())){
 			return false;
 		}
 		
 		boolean areElementsEqual =  false;
 		
-		if(this.getTagName().equals(elem.getTagName())
-				|| this.getText().equals(elem.getText()))
+		if(this.getTagName().equals(that.getTagName())
+				|| this.getText().equals(that.getText()))
 		{
 			areElementsEqual = true;
 		}
@@ -385,7 +391,9 @@ public class PageElement {
 			}
 		}
 		
-		areElementsEqual = this.cssMatches(elem);
+		areElementsEqual = this.cssMatches(that);
+		
+		System.out.println(Thread.currentThread().getName() + "Page Elements are equal!");
 		return areElementsEqual;
 	}
 

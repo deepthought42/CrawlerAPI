@@ -274,14 +274,14 @@ public class BrowserActor extends Thread implements Actor{
 		//skip first node since we should have already loaded it during initialization
 		int i = 0;
 		while(pathIterator.hasNext()){
-			System.out.println(this.getName() + " -> current path index :: " + i);
+			//System.out.println(this.getName() + " -> current path index :: " + i);
 			Vertex<?> pathNode = graph.getVertices().get(pathIterator.next());
 			
 			Class<?> className = pathNode.getData().getClass();
 			
 			if(className.equals(Page.class)){
 				pageNode = (Page)pathNode.getData();
-				System.out.println(this.getName() + " -> PAGE NODE SEEN");
+				//System.out.println(this.getName() + " -> PAGE NODE SEEN");
 				//verify current page matches current node data
 				//if not mark as different
 				

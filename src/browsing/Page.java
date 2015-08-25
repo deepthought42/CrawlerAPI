@@ -185,8 +185,13 @@ public class Page{
 	 * @pre page != null
 	 * @return boolean value
 	 */
-	public boolean equals(Page page){
-		return this.src.equals(page.src);
+	@Override
+	public boolean equals(Object o){
+		if (this == o) return true;
+        if (!(o instanceof Page)) return false;
+        
+        Page that = (Page)o;
+		return this.src.equals(that.src);
 	}
 	
 

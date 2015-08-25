@@ -41,11 +41,22 @@ public class PageState {
 		return this.pageUuid;
 	}
 	
-	public boolean equals(PageState pageState){
+	/**
+	 * 
+	 * @param Object
+	 * @return
+	 */
+	@Override
+	public boolean equals(Object o){
+		if (this == o) return true;
+        if (!(o instanceof PageState)) return false;
+        
+        PageState that = (PageState)o;
+        
 		boolean isEqual = true;
 		for(PageElement elem : this.elementsChanged){
 			boolean hasMatch = false;
-			for(PageElement elem2: pageState.getElementsChanged()){
+			for(PageElement elem2: that.getElementsChanged()){
 				if(elem.equals(elem2)){
 					hasMatch = true;
 					break;
@@ -56,6 +67,7 @@ public class PageState {
 				break;
 			}
 		}
+		System.out.println(Thread.currentThread().getName() + "----Page States are equal!");
 		return isEqual;
 	}
 }

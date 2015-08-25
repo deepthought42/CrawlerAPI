@@ -33,9 +33,10 @@ public class Vertex<T> {
 	 * @return
 	 */
 	public boolean equals(Vertex<?> vertex){
+		boolean isEqual = false;
 		if(vertex.getData().getClass().equals(this.getData().getClass())){
-			return ((T)vertex.getData()).equals(this.getData());
+			isEqual = vertex.getData().equals(this.getData());
 		}
-		return false;		
+		return isEqual;		
 	}
 }

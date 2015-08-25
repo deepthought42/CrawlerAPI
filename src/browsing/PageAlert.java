@@ -76,7 +76,6 @@ public class PageAlert {
 	 * @return
 	 */
 	public static Alert getAlert(WebDriver driver){
-
 	    try 
 	    { 
 	        return driver.switchTo().alert(); 
@@ -87,7 +86,25 @@ public class PageAlert {
 	    }   // catch 
 	}
 	
+	public String getMessage() throws UnhandledAlertException{
+		return this.message; 
+	}
+	
 	public static String getMessage(Alert alert) throws UnhandledAlertException{
 		return alert.getText(); 
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if (this == o) return true;
+        if (!(o instanceof PageAlert)) return false;
+        
+        PageAlert that = (PageAlert)o;
+        
+        boolean isEqual = false;
+        isEqual = this.message.equals(that.getMessage());
+        isEqual = this.page.equals(that.getPage());
+        
+        return isEqual;        
 	}
 }

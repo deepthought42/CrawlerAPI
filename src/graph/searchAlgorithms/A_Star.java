@@ -47,6 +47,8 @@ public class A_Star extends GraphSearch {
 				}
 			}
 			super.removeNodeFromFrontier(closest_index);
+			
+			System.out.println(Thread.currentThread().getName() + " -> Visiting Graph Index : "+closest_index);
 			super.visited.put(closest_index, super.frontier.get(closest_index));
 			path.add(closest_index);
 			for(Integer vertex_idx : graph.getFromIndices(closest_index)){

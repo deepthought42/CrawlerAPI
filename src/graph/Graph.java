@@ -41,7 +41,9 @@ public class Graph extends Observable{
 		if(findVertexIndex(vertex) == -1){
 			setChanged();
 			wasAdded = this.vertices.add(vertex);
-			notifyObservers();
+			if(wasAdded){
+				notifyObservers();
+			}
 		}
 
 		return wasAdded;

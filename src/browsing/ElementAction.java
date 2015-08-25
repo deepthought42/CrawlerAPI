@@ -29,14 +29,19 @@ public class ElementAction {
 		return this.elementIndex;
 	}
 	
-	public boolean equals(ElementAction elemAction){
-		System.out.print("Testing if ElementActions are equal..");
-		if(elemAction.getPageElement().equals(this.element)
-				&& elemAction.getAction().equals(this.action)){
-			System.out.println("TRUE");
+	@Override
+	public boolean equals(Object o){
+		if (this == o) return true;
+        if (!(o instanceof ElementAction)) return false;
+        
+        ElementAction that = (ElementAction)o;
+        
+		if(that.getPageElement().equals(this.element)
+				&& that.getAction().equals(this.action)){
+			//System.out.print("Testing if ElementActions are equal..");
+			//System.out.println("TRUE");
 			return true;
 		}
-		System.out.println("FALSE");
 		return false;
 	}
 }

@@ -15,6 +15,7 @@ public class GraphObserver implements Observer{
 
 	public void update(Observable o, Object arg) {
 		this.graph = (Graph)o;
+		//System.err.println("+++++++++++THERE ARE NOW " + this.graph.getVertices().size() + " VERTICES EDGES IN GRAPH+++++++++++");
 	}
 	
 	/**

@@ -32,6 +32,8 @@ public class A_Star extends GraphSearch {
 
 	@Override
 	public Path findPathToClosestRoot(int start_idx) throws NullPointerException{
+		System.out.println("Start Vertex Index  :  "+start_idx);
+
 		Path path = new Path();
 		int weight = 0;
 		boolean isRootFound = false;
@@ -74,7 +76,6 @@ public class A_Star extends GraphSearch {
 	public Path findPathToClosestRoot(Vertex<?> startVertex) throws NullPointerException{
 		System.out.println("FINDING CLOSEST PATH TO ROOT FOR VERTEX : "+startVertex);
 		int vertex_idx = graph.findVertexIndex(startVertex);
-		
 		return findPathToClosestRoot(vertex_idx);
 	}
 }

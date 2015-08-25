@@ -20,7 +20,7 @@ import structs.Path;
 public class EntryPoint {
 	public static void main(String[] args){
 		ResourceManagementActor resourceManager = new ResourceManagementActor(5);
-		ObservableQueue<Vertex<?>> vertexQueue = new ObservableQueue<Vertex<?>>();
+		ObservableQueue<Path> pathQueue = new ObservableQueue<Path>();
 		Graph graph = new Graph();
 		GraphObserver graphObserver = new GraphObserver(graph);
 		String url = "localhost:3000";
@@ -28,10 +28,10 @@ public class EntryPoint {
 		System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
 		
 		System.out.print("Initializing page monitor...");
-		WorkAllocationActor workAllocator = new WorkAllocationActor(vertexQueue, resourceManager, graphObserver);
+		WorkAllocationActor workAllocator = new WorkAllocationActor(pathQueue, resourceManager, graphObserver);
 		BrowserActor browserActor;
 		try {
-			browserActor = new BrowserActor(url, new Path(), vertexQueue, graph, resourceManager, workAllocator);
+			browserActor = new BrowserActor(url, new Path(), pathQueue, graph, resourceManager, workAllocator);
 			browserActor.start();
 		} catch (MalformedURLException e1) {
 			System.out.println("MALFORMED URL EXCEPTION");

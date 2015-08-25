@@ -65,7 +65,7 @@ public class BrowserActor extends Thread implements Actor{
 	private UUID uuid = null;
 	private static WebDriver driver;
 	private String url = null;
-	private ObservableQueue<Vertex<?>> vertexQueue = null;
+	private ObservableQueue<Path> pathQueue = null;
 	private Graph graph = null;
 	private Path path = null;
 	private Browser browser = null;
@@ -96,18 +96,18 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public BrowserActor(String url, 
 						Path path,
-						ObservableQueue<Vertex<?>> vertex_queue,
+						ObservableQueue<Path> path_queue,
 						Graph graph,
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator) throws MalformedURLException {
-		assert(vertex_queue != null);
-		assert(vertex_queue.isEmpty());
+		assert(path_queue != null);
+		assert(path_queue.isEmpty());
 		
 		this.uuid = UUID.randomUUID();
 		this.url = url;
 		this.path = path;
 		browser = new Browser(url);
-		this.vertexQueue = vertex_queue;
+		this.pathQueue = path_queue;
 		this.graph = graph;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
@@ -133,7 +133,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(ObservableQueue<Vertex<?>> queue, 
+	public BrowserActor(ObservableQueue<Path> queue, 
 						Graph graph, 
 						Path path, 
 						ResourceManagementActor resourceManager, 
@@ -151,7 +151,7 @@ public class BrowserActor extends Thread implements Actor{
 		//System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
 		browser = new Browser(url);
 
-		this.vertexQueue = queue;
+		this.pathQueue = queue;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		elementIdxChanges = new ArrayList<Integer>();
@@ -250,7 +250,7 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				catch(NullPointerException e){}
 				
-			}while(!this.vertexQueue.isEmpty());
+			}while(!this.pathQueue.isEmpty());
 		}catch(OutOfMemoryError e){
 			System.err.println(this.getName() + " -> Out of memory error");
 			e.printStackTrace();
@@ -448,8 +448,10 @@ public class BrowserActor extends Thread implements Actor{
 					//System.out.println(this.getName() + " -> Vertex was added : "+addedVertex);
 					
 					//Add edge to graph for vertex
-					graph.addEdge(node_vertex, elementActionVertex);					
-					putVertexOnQueue(elementActionVertex);
+					graph.addEdge(node_vertex, elementActionVertex);
+					int vertex_idx = graph.findVertexIndex(elementActionVertex);
+					path.add(vertex_idx);
+					//putVertexOnQueue(elementActionVertex);
 				}				
 			}
 		}
@@ -491,7 +493,9 @@ public class BrowserActor extends Thread implements Actor{
 						graph.addVertex(elementActionVertex);
 						graph.addEdge(node_vertex, elementActionVertex);
 						//need to add edge to graph
-						putVertexOnQueue(elementActionVertex);
+						int vertex_idx = graph.findVertexIndex(elementActionVertex);
+						path.add(vertex_idx);
+						//putVertexOnQueue(elementActionVertex);
 					}
 				}				
 			}
@@ -505,8 +509,8 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @param path path to be added
 	 */
-	private boolean putVertexOnQueue(Vertex<?> vertex){
-		return this.vertexQueue.add(vertex);
+	private boolean putPathOnQueue(Path path){
+		return this.pathQueue.add(path);
 	}
 
 	

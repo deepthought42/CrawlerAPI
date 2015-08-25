@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class ObservableQueue<E> extends Observable implements Queue<E>{
 
-	private final Queue<E> queue;
+	private Queue<E> queue;
 
 	
 	public ObservableQueue() {
@@ -19,15 +19,18 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	 * {@inheritDoc}
 	 */
 	public synchronized E poll(){
+		setChanged();
 		E element = queue.poll();
-		System.out.println("NOTIFYING ALL THREADS");
+		if(element!= null){
+			notifyObservers();
+		}
 		return element;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean add(E o) throws IllegalStateException{
+	public synchronized boolean add(E o) throws IllegalStateException{
 		setChanged();
 		boolean wasAdded = this.queue.add(o);
 		notifyObservers();
@@ -126,7 +129,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public void clear() {
+	public synchronized void clear() {
 		setChanged();
 		queue.clear();
 		notifyObservers();
@@ -167,4 +170,6 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	public E peek() {
 		return queue.peek();
 	}
+	
+
 }

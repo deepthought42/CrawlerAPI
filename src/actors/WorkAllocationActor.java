@@ -27,7 +27,7 @@ import structs.Path;
  */
 public class WorkAllocationActor extends Thread implements Observer {
 	
-	ObservableQueue<Vertex<?>> vertex_queue = null;
+	ObservableQueue<Path> path_queue = null;
 	ResourceManagementActor resourceManager = null;
 	GraphObserver graphObserver = null;
 	
@@ -36,11 +36,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @param queue
 	 * @param resourceManager
 	 */
-	public WorkAllocationActor(ObservableQueue<Vertex<?>> queue, 
+	public WorkAllocationActor(ObservableQueue<Path> queue, 
 							   ResourceManagementActor resourceManager,
 							   GraphObserver graphObserver){
-		this.vertex_queue = queue;
-		this.vertex_queue.addObserver(this);
+		this.path_queue = queue;
+		this.path_queue.addObserver(this);
 		this.graphObserver = graphObserver;
 		this.resourceManager = resourceManager;
 	}
@@ -55,10 +55,10 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @param o
 	 * @param arg
 	 */
-	public synchronized void update(Observable o, Object arg)
+	public void update(Observable o, Object arg)
 	{
 		if(o instanceof ObservableQueue){
-	    	vertex_queue = (ObservableQueue) o;
+	    	path_queue = (ObservableQueue) o;
 			allocateVertexProcessing();
 		}
 	}
@@ -67,21 +67,21 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * 
 	 */
 	public void allocateVertexProcessing(){
-		if(vertex_queue.size() > 0){
+		if(path_queue.size() > 0){
 			try{
-				while( resourceManager.areResourcesAvailable() && !vertex_queue.isEmpty()){
-					Vertex<?> vertex = retrieveNextVertex();
+				while( resourceManager.areResourcesAvailable() && !path_queue.isEmpty()){
+					Path path = retrieveNextPath();
 					
-					if(vertex != null){
+					if(path != null){
 						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTEX.");
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-				        int start_idx = graphObserver.getGraph().findVertexIndex(vertex);
-						GraphSearch graphSearch = new A_Star(graphObserver.getGraph());
+				        //int start_idx = graphObserver.getGraph().findVertexIndex(vertex);
+						//GraphSearch graphSearch = new A_Star(graphObserver.getGraph());
 
-					    Path path = graphSearch.findPathToClosestRoot(start_idx);
+					    //Path path = graphSearch.findPathToClosestRoot(start_idx);
 					    
 				        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
-				        BrowserActor browserActor = new BrowserActor(vertex_queue, graphObserver.getGraph(), path, this.resourceManager, this);
+				        BrowserActor browserActor = new BrowserActor(path_queue, graphObserver.getGraph(), path, this.resourceManager, this);
 						browserActor.start();
 
 						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
@@ -107,25 +107,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return {@link Path} to be explored
 	 */
 	public Path retrieveNextPath() throws NullPointerException{
-		Vertex<?> vertex = (Vertex<?>)vertex_queue.poll();
-		Path path = null;
-		if(vertex!=null){
-			GraphSearch graphSearch = new A_Star(graphObserver.getGraph());
-			path = graphSearch.findPathToClosestRoot(vertex);
-		}
-		return path;
+		return path_queue.poll();
 	}
-	
-	/**
-	 * Gets the next available vertex in the queue
-	 * 
-	 * @return
-	 */
-	public synchronized Vertex<?> retrieveNextVertex(){
-		return (Vertex<?>)vertex_queue.poll();
-	}
-	
-	
 	
 	/**
 	 * Evaluate 2 paths to determine if either of them end in pages that have 

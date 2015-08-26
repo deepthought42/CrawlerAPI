@@ -326,19 +326,12 @@ public class BrowserActor extends Thread implements Actor{
 				}
 				else{
 					existingNode = graph.getVertices().get(existingNodeIndex);
-					System.out.println(this.getName() + " -> Node already existed. Using existing node");
-
-					
-					
+					//System.out.println(this.getName() + " -> Node already existed. Using existing node");
 					if(i >= this.path.getPath().size()){
 						System.out.println(this.getName()+" -> Reached end of path.");
 						//Still need to add in a way to add the current elementAction node to the new pageNode
 						return false;
 					}
-					
-					
-					
-					
 				}
 			
 				//if not at end of path and next node is a Page or pageState then don't bother adding new node
@@ -346,18 +339,12 @@ public class BrowserActor extends Thread implements Actor{
 						|| graph.getVertices().get(path.getPath().get(i+1)).getClass().equals(PageState.class))){
 					i++;
 					continue;
-
 				}
 				//need to check if page is equal as well as if page state has changed
 				else if(pageNode != null && !pageNode.equals(existingNode)){
-					
 					browser.updatePage( DateFormat.getDateInstance(), true);
-					//System.out.println(this.getName() + " -> CURRENT PATH SIZE = "+this.path.getPath().size());
-					//System.out.println(this.getName() + " -> current path index :: " + i);
 					//Before adding new page, check if page has been experienced already. If it has load that page
-					
-					System.out.println(this.getName() + " -> Page has changed...adding new page to path");
-					
+					//System.out.println(this.getName() + " -> Page has changed...adding new page to path");
 					additionalNodes.add(existingNodeIndex);
 				}
 				else{
@@ -372,7 +359,6 @@ public class BrowserActor extends Thread implements Actor{
 							System.out.println(this.getName() + " -> Node differs from initial page node. Adding index to list of changed elements");
 							if(elementIdxChanges.contains(idx)){
 								System.out.println(this.getName() + " -> Node has changed previously. Exiting crawl.");
-								
 								return false;
 							}
 							elementIdxChanges.add(idx);
@@ -404,15 +390,12 @@ public class BrowserActor extends Thread implements Actor{
 			}
 			i++;
 		}
-		//System.out.println(this.getName() + " -> EXISTING PATH LENGTH = "+this.path.getPath().size());
-		//System.out.println(this.getName() + " -> EXISTING ADDITIONAL PATH LENGTH = "+additionalNodes.getPath().size());
 		this.path.append(additionalNodes);
-		//System.out.println(this.getName() + " -> DONE CRAWLING PATH");
 		return true;
 	}
 	
 	/**
-	 * Finds all potential expansion nodes from current node
+	 * Finds all potential expansion nodes from current node for {@link Elements}, {@link ElementActions}, {@link PageStates} and {@link Page}
 	 * @throws MalformedURLException 
 	 */
 	private void expandNodePath() throws MalformedURLException{
@@ -446,11 +429,12 @@ public class BrowserActor extends Thread implements Actor{
 										
 					boolean addedVertex = graph.addVertex(elementActionVertex);
 					//System.out.println(this.getName() + " -> Vertex was added : "+addedVertex);
-					
 					//Add edge to graph for vertex
 					graph.addEdge(node_vertex, elementActionVertex);
 					int vertex_idx = graph.findVertexIndex(elementActionVertex);
-					path.add(vertex_idx);
+					Path new_path = Path.clone(path);
+					new_path.add(vertex_idx);
+					putPathOnQueue(new_path);
 					//putVertexOnQueue(elementActionVertex);
 				}				
 			}
@@ -494,13 +478,15 @@ public class BrowserActor extends Thread implements Actor{
 						graph.addEdge(node_vertex, elementActionVertex);
 						//need to add edge to graph
 						int vertex_idx = graph.findVertexIndex(elementActionVertex);
-						path.add(vertex_idx);
-						//putVertexOnQueue(elementActionVertex);
+						Path new_path = Path.clone(path);
+						new_path.add(vertex_idx);
+						putPathOnQueue(new_path);
 					}
 				}				
 			}
 		}
 		else if(className.equals(PageAlert.class)){
+			//Handle Page Alert node
 		}
 	}
 	

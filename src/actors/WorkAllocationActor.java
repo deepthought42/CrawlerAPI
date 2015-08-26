@@ -64,7 +64,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	}
 	
 	/**
-	 * 
+	 * Allocate path processing to {@link BrowserActor}s to crawl if resources are available.
 	 */
 	public void allocateVertexProcessing(){
 		if(path_queue.size() > 0){
@@ -77,7 +77,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 				        //int start_idx = graphObserver.getGraph().findVertexIndex(vertex);
 						//GraphSearch graphSearch = new A_Star(graphObserver.getGraph());
-
 					    //Path path = graphSearch.findPathToClosestRoot(start_idx);
 					    
 				        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
@@ -107,7 +106,12 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return {@link Path} to be explored
 	 */
 	public Path retrieveNextPath() throws NullPointerException{
-		return path_queue.poll();
+		Path path = path_queue.poll();
+		for(int idx : path.getPath()){
+			System.out.print(idx+",");
+		}
+		System.out.println();
+		return path;
 	}
 	
 	/**

@@ -345,7 +345,7 @@ public class BrowserActor extends Thread implements Actor{
 					browser.updatePage( DateFormat.getDateInstance(), true);
 					//Before adding new page, check if page has been experienced already. If it has load that page
 					//System.out.println(this.getName() + " -> Page has changed...adding new page to path");
-					additionalNodes.add(existingNodeIndex);
+					//additionalNodes.add(existingNodeIndex);
 				}
 				else{
 					PageState pageState = null;
@@ -423,19 +423,18 @@ public class BrowserActor extends Thread implements Actor{
 						
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
-					//System.out.println(this.getName() + " -> ADDING ACTION TO ELEMENT :: " + actions[i]);
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 										
 					boolean addedVertex = graph.addVertex(elementActionVertex);
-					//System.out.println(this.getName() + " -> Vertex was added : "+addedVertex);
 					//Add edge to graph for vertex
 					graph.addEdge(node_vertex, elementActionVertex);
 					int vertex_idx = graph.findVertexIndex(elementActionVertex);
-					Path new_path = Path.clone(path);
-					new_path.add(vertex_idx);
-					putPathOnQueue(new_path);
-					//putVertexOnQueue(elementActionVertex);
+					if(!path.getPath().contains(vertex_idx)){
+						Path new_path = Path.clone(path);
+						new_path.add(vertex_idx);
+						putPathOnQueue(new_path);
+					}
 				}				
 			}
 		}
@@ -476,17 +475,22 @@ public class BrowserActor extends Thread implements Actor{
 						
 						graph.addVertex(elementActionVertex);
 						graph.addEdge(node_vertex, elementActionVertex);
+						
 						//need to add edge to graph
 						int vertex_idx = graph.findVertexIndex(elementActionVertex);
-						Path new_path = Path.clone(path);
-						new_path.add(vertex_idx);
-						putPathOnQueue(new_path);
+						if(!path.getPath().contains(vertex_idx)){
+							Path new_path = Path.clone(path);
+							new_path.add(vertex_idx);
+							putPathOnQueue(new_path);
+						}
 					}
 				}				
 			}
 		}
 		else if(className.equals(PageAlert.class)){
-			//Handle Page Alert node
+			System.err.println(this.getName() + " -> Handling Alert from expanding Node.");
+			PageAlert alert = (PageAlert)node_vertex.getData();
+			alert.performChoice(browser.getDriver());
 		}
 	}
 	

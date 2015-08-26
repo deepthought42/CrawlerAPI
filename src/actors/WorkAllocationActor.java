@@ -107,6 +107,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 */
 	public Path retrieveNextPath() throws NullPointerException{
 		Path path = path_queue.poll();
+		System.out.print(Thread.currentThread().getName() + " -> ");
 		for(int idx : path.getPath()){
 			System.out.print(idx+",");
 		}

@@ -1,12 +1,14 @@
 package test;
 
+import java.util.ArrayList;
+
 /**
  * Interface for generating programming statements
  *  
  * @author Brandon Kindred
  *
  */
-public interface IStatementGenerator {
+public interface IStatementFactory {
 	/**
 	 * Generates a programming statement based input
 	 * 

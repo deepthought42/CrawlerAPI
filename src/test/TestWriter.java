@@ -1,5 +1,9 @@
 package test;
 
+import graph.Graph;
+import graph.Vertex;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import browsing.ElementAction;
@@ -7,55 +11,65 @@ import browsing.Page;
 import browsing.PageState;
 import structs.ConcurrentNode;
 import structs.Path;
-import test.TestDefinition;
 
 /**
  * Writes contents of testDefinition to a file.
+ * 
  * @author Brandon Kindred
- *
  */
 public class TestWriter {
 	private Path path = null;
-	private TestDefinition test = null;
 	private String filename;
+	private Graph graph;
 	
-	public String createTest(){
-		Iterator<?> pathIterator = this.path.getPath().iterator();
-		while(pathIterator.hasNext()){
-			ConcurrentNode<?> pathNode = (ConcurrentNode<?>) pathIterator.next();
-			//Determine nodeType and modify test defintion accordingly
-			if(pathNode.getClass().equals(ElementAction.class)){
-				//if element action
-				
-			}
-			else if(pathNode.getClass().equals(PageState.class)){
-				
-			}
-			else if(pathNode.getClass().equals(Page.class)){
-				
-			}
-			
-		}
-		return null;
-	}
-	
-	public TestWriter(Path path){
+	public TestWriter(Path path, Graph graph){
 		this.path = path;
-		this.test = new TestDefinition();	 
+		this.graph = graph;
+	}
+
+	/**
+	 * Create a function that contains test statements for Quality Assurance
+	 * @return
+	 */
+	public String createTest(){
+		Iterator<Integer> pathIterator = this.path.getPath().iterator();
+		ArrayList<String> testStatements = new ArrayList<String>();
+		while(pathIterator.hasNext()){
+			Integer graph_idx = (Integer) pathIterator.next();
+			Vertex<?> vertex = graph.getVertices().get(graph_idx);
+			IStatementFactory statement = new ElementStatement();
+			testStatements.add(statement.generateStatement(vertex.getData()));
+			
+		}	
+		
+		//THIS IS NOT AN ACTUAL IMPLEMENTATION. JUST A PLACEHOLDER. DELETE COMMENT WHEN ACTUALLY REPLACED.
+		String test = "";
+		for(String statement: testStatements){
+			test += statement+"\n";
+		}
+		return test;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public String getFileName(){
 		return this.filename;
 	}
 	
+	/**
+	 * 
+	 * @param filename
+	 */
 	public void setFileName(String filename){
 		this.filename = filename;
 	}
 	
-	public TestDefinition getTest(){
-		return this.test;
-	}
-	
+	/**
+	 * 
+	 * @return
+	 */
 	public Path getRootNode(){
 		return this.path;
 	}

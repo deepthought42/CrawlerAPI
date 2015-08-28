@@ -11,6 +11,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -22,14 +24,21 @@ public class Browser {
 	private Page page = null;
 	
 	public Browser(String url) throws MalformedURLException {
-		this.driver = openWithFirefox(url);
+		System.err.println(Thread.currentThread().getName() + " -> URL :: "+url);
+		this.driver = openWithPhantomjs(url);
 		page = new Page(this.driver, DateFormat.getDateInstance());
 	}
 	
 	public Browser(String url, Page browserPage) {
+		driver = openWithPhantomjs(url);
+		page = browserPage;
+	}
+	
+	/*public Browser(String url, Page browserPage) {
 		driver = openWithFirefox(url);
 		page = browserPage;
 	}
+	*/
 	
 	public WebDriver getDriver(){
 		return driver;
@@ -93,14 +102,28 @@ public class Browser {
 	 */
 	public static WebDriver openWithFirefox(String url){
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
-		System.out.println("FIREFOX PROFILE LOADED!");
-		
 		WebDriver driver = new FirefoxDriver(firefoxProfile);
-		System.out.println("DRIVER LOADED.");
 		driver.get(url);
 		return driver;
 	}
-
+	
+	/**
+	 * open new firefox browser
+	 * 
+	 * @param url
+	 * @return
+	 */
+	public static WebDriver openWithPhantomjs(String url){
+		
+	    //Create instance of PhantomJS driver
+	    DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
+	    PhantomJSDriver driver = new PhantomJSDriver(capabilities);
+		
+		driver.get(url);
+		System.out.println(Thread.currentThread().getName() + " -> PHANTOMJS DRIVER LOADED.");
+		return driver;
+	}
+	
 	/**
 	 * Accepts alert
 	 * 

@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 /**
@@ -147,16 +148,21 @@ public class Page{
 	 * @return list of webelements that are currently visible on the page
 	 */
 	public void getVisibleElements(WebDriver driver, List<PageElement> pageElementList, String xpath){
-		List<WebElement> childElements = getChildElements(xpath);
-		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
-		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
-		String temp_xpath = xpath;
-		for(WebElement elem : childElements){
-			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash, this);
-				pageElementList.add(pageElem);
-				getVisibleElements(driver, pageElementList, pageElem.getXpath());
+		try{
+			List<WebElement> childElements = getChildElements(xpath);
+			//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
+			HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
+			String temp_xpath = xpath;
+			for(WebElement elem : childElements){
+				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+					PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash, this);
+					pageElementList.add(pageElem);
+					getVisibleElements(driver, pageElementList, pageElem.getXpath());
+				}
 			}
+		}
+		catch(WebDriverException e){
+			e.printStackTrace();
 		}
 	}
 	
@@ -174,7 +180,7 @@ public class Page{
 	 * @param elem	WebElement to get children for
 	 * @return list of WebElements
 	 */
-	public List<WebElement> getChildElements(String xpath){
+	public List<WebElement> getChildElements(String xpath) throws WebDriverException{
 		return driver.findElements(By.xpath(xpath+"/*"));
 	}
 	

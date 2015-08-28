@@ -3,6 +3,7 @@ package browsing;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.UnhandledAlertException;
+import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
 /**
@@ -57,7 +58,7 @@ public class PageAlert {
 		return this.choice;
 	}
 	
-	public static boolean isAlertPresent(WebDriver driver) 
+	public static boolean isAlertPresent(WebDriver driver) throws UnsupportedCommandException 
 	{ 
 	    try 
 	    { 

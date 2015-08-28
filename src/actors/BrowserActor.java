@@ -214,10 +214,10 @@ public class BrowserActor extends Thread implements Actor{
 					System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
 				}
 				
-				//System.out.println(this.getName() + " EXPANDING NODE...");
 				
 				if(successfulCrawl){
 					try {
+						System.out.println(this.getName() + " EXPANDING NODE...");
 						expandNodePath();
 					} catch (MalformedURLException e) {
 						System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
@@ -249,6 +249,9 @@ public class BrowserActor extends Thread implements Actor{
 					}
 				}
 				catch(NullPointerException e){}
+				catch(UnhandledAlertException e){
+					e.printStackTrace();
+				}
 				
 			}while(!this.pathQueue.isEmpty());
 		}catch(OutOfMemoryError e){
@@ -268,6 +271,9 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws MalformedURLException 
 	 */
 	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
+		long tStart = System.currentTimeMillis();
+
+		
 		Iterator<Integer> pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
 		Page pageNode = null;
@@ -275,28 +281,67 @@ public class BrowserActor extends Thread implements Actor{
 		int i = 0;
 		while(pathIterator.hasNext()){
 			//System.out.println(this.getName() + " -> current path index :: " + i);
-			Vertex<?> pathNode = graph.getVertices().get(pathIterator.next());
-			
-			Class<?> className = pathNode.getData().getClass();
-			
-			if(className.equals(Page.class)){
+			int path_node_index = pathIterator.next();
+			Vertex<?> pathNode = graph.getVertices().get(path_node_index);
+						
+			if(pathNode.getData() instanceof Page){
 				pageNode = (Page)pathNode.getData();
-				//System.out.println(this.getName() + " -> PAGE NODE SEEN");
 				//verify current page matches current node data
 				//if not mark as different
-				
+				if(!browser.getDriver().getPageSource().equals(pageNode.getSrc())){
+					System.out.println(this.getName() + " -> page node source does not match expected Page source");
+				}
 				//If new page is assign elementIdxChanges to empty list
 				elementIdxChanges = new ArrayList<Integer>();
 			}
-			else if(className.equals(ElementAction.class)){
+			else if(pathNode.getData() instanceof ElementAction){
+				long tStart_pageState = System.currentTimeMillis();
+
 				ElementAction elemAction = (ElementAction)pathNode.getData();
+				
+				//determine if elementAction is a child/descendent element action of another elementAction. 
+				//If it is do not execute it
+				for(Vertex<?> vertex : graph.getVertices()){
+					if(vertex.getData() instanceof ElementAction){
+						ElementAction elementActionVertex = (ElementAction)vertex.getData();
+						if(elementActionVertex.getAction().equals(elemAction.getAction())
+							&& elemAction.getPageElement().isChildElement(elementActionVertex.getPageElement())){
+							
+							ArrayList<Integer> toIndices = graph.getToIndices(graph.findVertexIndex(vertex));
+							
+							int element_action_count = 0;
+							int impactful_vertex_count = 0;
+							if(toIndices != null && !toIndices.isEmpty()){
+								for(Integer index : toIndices){
+									if(graph.getVertices().get(index).getData() instanceof ElementAction){
+										element_action_count++;
+									}
+									else if(graph.getVertices().get(index).getData() instanceof PageState
+											|| graph.getVertices().get(index).getData() instanceof Page
+											|| graph.getVertices().get(index).getData() instanceof PageAlert){
+										impactful_vertex_count++;
+									}
+								}
+								if(impactful_vertex_count > 0){
+									System.err.println(this.getName() + " ->  ||||  Parent vertex exists and has edges that do not lead to an element action");
+									return false;
+								}
+							}
+						}
+					}
+				}
+				
+				
 				//execute element action
 				boolean actionPerformedSuccessfully;
 				do{
 					actionPerformedSuccessfully = performAction(elemAction);	
 				}while(!actionPerformedSuccessfully);
 				
-				if(PageAlert.isAlertPresent(browser.getDriver())){
+				/*
+				 *Only use following for non phantomjs browsers
+				 *
+				 if(PageAlert.isAlertPresent(browser.getDriver())){
 					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !graph.getVertices().get(this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
 						PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
 						
@@ -307,7 +352,7 @@ public class BrowserActor extends Thread implements Actor{
 						graph.addEdge(pathNode, alertVertex);
 					}
 					continue;
-				}
+				}*/
 				
 				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
 								
@@ -317,7 +362,7 @@ public class BrowserActor extends Thread implements Actor{
 				if(existingNodeIndex == -1){
 					existingNode = new Vertex<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
 					if(graph.addVertex(existingNode)){
-						graph.addEdge(pathNode, existingNode);
+						graph.addEdge(path_node_index, existingNodeIndex);
 						System.out.println(this.getName() + " -> Added new page to Graph");
 					}
 					else{
@@ -348,9 +393,13 @@ public class BrowserActor extends Thread implements Actor{
 					//additionalNodes.add(existingNodeIndex);
 				}
 				else{
+					long tStart_elementCheck = System.currentTimeMillis();
+
+					
+					
+					
 					PageState pageState = null;
 					//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
-					//	An element that has changed cannot change again. If it does then the path is marked as dead
 					List<PageElement> pageElements = pageNode.getElements();
 					for(int idx=0; idx < pageElements.size(); idx++){
 						WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
@@ -372,6 +421,13 @@ public class BrowserActor extends Thread implements Actor{
 						}
 					}
 					
+					
+					long tEnd_pageState = System.currentTimeMillis();
+					long tDelta = tEnd_pageState - tStart_elementCheck;
+					double elapsedSeconds = tDelta / 1000.0;
+					System.out.println(this.getName() + " -----ELAPSED TIME TO CHECK FOR ALL ELEMENTS EQUAL IN BOTH LISTS :: "+elapsedSeconds + "-----");
+					System.out.println(this.getName() + " #######################################################");
+					
 					if(pageState == null){
 						return false;
 					}
@@ -382,8 +438,20 @@ public class BrowserActor extends Thread implements Actor{
 						additionalNodes.add(graph.findVertexIndex(pageStateVertex));
 					}
 				}
+				
+				
+				
+				
+				
+				
+				long tEnd_pageState = System.currentTimeMillis();
+				long tDelta = tEnd_pageState - tStart_pageState;
+				double elapsedSeconds = tDelta / 1000.0;
+				System.out.println(this.getName() + " -----ELAPSED TIME TO PERFORM ELEMENT ACTION SUCCESSFULLY :: "+elapsedSeconds + "-----");
+				System.out.println(this.getName() + " #######################################################");
+
 			}
-			else if(className.equals(PageAlert.class)){
+			else if(pathNode.getData() instanceof PageAlert){
 				System.err.println(this.getName() + " -> Handling Alert");
 				PageAlert alert = (PageAlert)pathNode.getData();
 				alert.performChoice(browser.getDriver());
@@ -391,6 +459,14 @@ public class BrowserActor extends Thread implements Actor{
 			i++;
 		}
 		this.path.append(additionalNodes);
+		
+		long tEnd = System.currentTimeMillis();
+		long tDelta = tEnd - tStart;
+		double elapsedSeconds = tDelta / 1000.0;
+		
+		System.out.println(this.getName() + " -----ELAPSED crawl TIME :: "+elapsedSeconds + "-----");
+		System.out.println(this.getName() + " #######################################################");
+		
 		return true;
 	}
 	
@@ -399,7 +475,8 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws MalformedURLException 
 	 */
 	private void expandNodePath() throws MalformedURLException{
-		System.out.println(this.getName() + " SETTING UP EXPANSION VARIABLES..");
+		long tStart = System.currentTimeMillis();
+
 		Vertex<?> node_vertex = graph.getVertices().get(this.path.getPath().get(this.path.getPath().size()-1));
 		
 		Class<?> className = node_vertex.getData().getClass();
@@ -447,7 +524,7 @@ public class BrowserActor extends Thread implements Actor{
 			for(int i = 0; i < this.path.getPath().size(); i--){
 				 descNode = graph.getVertices().get(this.path.getPath().get(i));
 				
-				if(descNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
+				if(descNode.getData() instanceof Page){
 					page = (Page)descNode.getData();
 					break;
 				}
@@ -478,11 +555,11 @@ public class BrowserActor extends Thread implements Actor{
 						
 						//need to add edge to graph
 						int vertex_idx = graph.findVertexIndex(elementActionVertex);
-						if(!path.getPath().contains(vertex_idx)){
-							Path new_path = Path.clone(path);
-							new_path.add(vertex_idx);
-							putPathOnQueue(new_path);
-						}
+						//if(!path.getPath().contains(vertex_idx)){
+						Path new_path = Path.clone(path);
+						new_path.add(vertex_idx);
+						putPathOnQueue(new_path);
+						//}
 					}
 				}				
 			}
@@ -492,6 +569,12 @@ public class BrowserActor extends Thread implements Actor{
 			PageAlert alert = (PageAlert)node_vertex.getData();
 			alert.performChoice(browser.getDriver());
 		}
+		long tEnd = System.currentTimeMillis();
+		long tDelta = tEnd - tStart;
+		double elapsedSeconds = tDelta / 1000.0;
+		
+		System.out.println(this.getName() + " -----ELAPSED TIME EXPANDING PATH NODE :: "+elapsedSeconds + "-----");
+		System.out.println(this.getName() + " #######################################################");
 	}
 	
 	/**

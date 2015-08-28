@@ -24,7 +24,7 @@ public class ResourceManagementActor {
 	 * @return
 	 */
 	public boolean punchIn(Actor actor){
-		System.out.print("Punching In...");
+		System.out.print(Thread.currentThread().getName() + "Punching In...");
 		return presentActors.add(actor.getActorId());
 	}
 	

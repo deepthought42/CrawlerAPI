@@ -375,8 +375,7 @@ public class PageElement {
 		boolean areElementsEqual =  false;
 		
 		if(this.getTagName().equals(that.getTagName())
-				|| this.getText().equals(that.getText()))
-		{
+				|| this.getText().equals(that.getText())){
 			areElementsEqual = true;
 		}
 		
@@ -405,7 +404,7 @@ public class PageElement {
 	 * @return
 	 */
 	public boolean isChildElement(PageElement elem){
-		if(elem.getXpath().contains(this.getXpath())){
+		if(elem.getXpath().equals(this.getXpath()) && elem.getXpath().contains(this.getXpath())){
 			return true;
 		}
 		return false;

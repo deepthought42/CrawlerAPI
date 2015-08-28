@@ -73,7 +73,13 @@
 	  	<artifactId>pipes</artifactId>
 	  	<version>2.6.0</version>
 	</dependency>
+  	<dependency>
+		<groupId>com.github.detro.ghostdriver</groupId>
+  		<artifactId>phantomjsdriver</artifactId>
+	  	<version>1.0.4</version>
+  	</dependency>
   </dependencies>
+
   <groupId>com.QA.testSuite</groupId>
   <version>0.0.1</version>
 </project>

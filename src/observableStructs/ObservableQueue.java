@@ -18,7 +18,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized E poll(){
+	public E poll(){
 		setChanged();
 		E element = queue.poll();
 		if(element!= null){
@@ -30,7 +30,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean add(E o) throws IllegalStateException{
+	public boolean add(E o) throws IllegalStateException{
 		setChanged();
 		boolean wasAdded = this.queue.add(o);
 		notifyObservers();
@@ -82,7 +82,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean remove(Object o) {
+	public boolean remove(Object o) {
 		setChanged();
 		boolean removed =  queue.remove(o);
 		notifyObservers();
@@ -99,7 +99,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean addAll(Collection<? extends E> c) {
+	public boolean addAll(Collection<? extends E> c) {
 		setChanged();
 		boolean allAdded = queue.addAll(c);
 		notifyObservers();
@@ -109,7 +109,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean removeAll(Collection<?> c) {
+	public boolean removeAll(Collection<?> c) {
 		setChanged();
 		boolean removed = queue.removeAll(c);
         notifyObservers(this);
@@ -119,7 +119,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean retainAll(Collection<?> c) {
+	public boolean retainAll(Collection<?> c) {
 		setChanged();
 		boolean retained = queue.retainAll(c);
         notifyObservers(this);
@@ -129,7 +129,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized void clear() {
+	public void clear() {
 		setChanged();
 		queue.clear();
 		notifyObservers();
@@ -138,7 +138,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized boolean offer(E e) {
+	public boolean offer(E e) {
 		setChanged();
 		boolean offerAccepted = queue.offer(e);
 		System.out.println("OFFERING ELEMENT...");
@@ -150,7 +150,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public synchronized E remove() {
+	public E remove() {
 		setChanged();
 		E element = queue.remove();
 		notifyObservers();

@@ -25,12 +25,14 @@ public class Browser {
 	
 	public Browser(String url) throws MalformedURLException {
 		System.err.println(Thread.currentThread().getName() + " -> URL :: "+url);
-		this.driver = openWithPhantomjs(url);
+		this.driver = openWithFirefox(url);
+		this.driver.get(url);
 		page = new Page(this.driver, DateFormat.getDateInstance());
 	}
 	
 	public Browser(String url, Page browserPage) {
-		driver = openWithPhantomjs(url);
+		driver = openWithFirefox(url);
+		driver.get(url);
 		page = browserPage;
 	}
 	
@@ -103,7 +105,6 @@ public class Browser {
 	public static WebDriver openWithFirefox(String url){
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
 		WebDriver driver = new FirefoxDriver(firefoxProfile);
-		driver.get(url);
 		return driver;
 	}
 	
@@ -118,9 +119,6 @@ public class Browser {
 	    //Create instance of PhantomJS driver
 	    DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
 	    PhantomJSDriver driver = new PhantomJSDriver(capabilities);
-		
-		driver.get(url);
-		System.out.println(Thread.currentThread().getName() + " -> PHANTOMJS DRIVER LOADED.");
 		return driver;
 	}
 	

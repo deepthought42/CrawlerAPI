@@ -9,7 +9,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ObservableQueue<E> extends Observable implements Queue<E>{
 
 	private Queue<E> queue;
-
 	
 	public ObservableQueue() {
 		queue = new LinkedBlockingQueue<E>();
@@ -33,7 +32,7 @@ public class ObservableQueue<E> extends Observable implements Queue<E>{
 	public boolean add(E o) throws IllegalStateException{
 		setChanged();
 		boolean wasAdded = this.queue.add(o);
-		notifyObservers();
+		notifyObservers(o);
 		return wasAdded;
 	}
 

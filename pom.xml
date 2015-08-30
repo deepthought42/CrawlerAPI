@@ -12,7 +12,7 @@
 	
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <selenium-version>2.46.0</selenium-version>
+    <selenium-version>2.47.1</selenium-version>
     <spring.version>3.2.2.RELEASE</spring.version>
   </properties>
 
@@ -38,6 +38,16 @@
         <artifactId>selenium-java</artifactId>
         <version>${selenium-version}</version>
     </dependency>
+    <dependency>
+		<groupId>org.seleniumhq.selenium</groupId>
+		<artifactId>selenium-firefox-driver</artifactId>
+		<version>${selenium-version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.seleniumhq.selenium</groupId>
+		<artifactId>selenium-chrome-driver</artifactId>
+		<version>${selenium-version}</version>
+	</dependency>
     <dependency>
 		<groupId>jtidy</groupId>
 		<artifactId>jtidy</artifactId>

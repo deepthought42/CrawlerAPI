@@ -1,5 +1,7 @@
 package structs;
 
+import graph.Graph;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -9,6 +11,7 @@ import java.util.Iterator;
  *
  */
 public class Path {
+	private Integer cost = null;
 	private ArrayList<Integer> vertexPath = null;
 	
 	/**
@@ -81,7 +84,18 @@ public class Path {
 		System.out.println("NODE PATHS ARE EQUAL");
 		return true;		
 	}
+
+	public Integer getCost(){
+		return this.cost;
+	}
 	
+	public int getCost(Graph graph){
+		this.cost=0;
+		for(Integer vertex_idx : this.getPath()){
+			this.cost += graph.getVertices().get(vertex_idx).getCost();
+		}
+		return this.cost;
+	}
 	/**
 	 * 
 	 * @param path

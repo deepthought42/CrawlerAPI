@@ -3,15 +3,16 @@ import graph.Graph;
 import graph.Vertex;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import observableStructs.ObservableQueue;
+import observableStructs.ObservableHash;
 
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -65,7 +66,7 @@ public class BrowserActor extends Thread implements Actor{
 	private UUID uuid = null;
 	private static WebDriver driver;
 	private String url = null;
-	private ObservableQueue<Path> pathQueue = null;
+	private ObservableHash<Integer, Path> queueHash = null;
 	private Graph graph = null;
 	private Path path = null;
 	private Browser browser = null;
@@ -96,7 +97,7 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public BrowserActor(String url, 
 						Path path,
-						ObservableQueue<Path> path_queue,
+						ObservableHash<Integer, Path> path_queue,
 						Graph graph,
 						ResourceManagementActor resourceManager, 
 						WorkAllocationActor workAllocator) throws MalformedURLException {
@@ -107,7 +108,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.url = url;
 		this.path = path;
 		browser = new Browser(url);
-		this.pathQueue = path_queue;
+		this.queueHash = path_queue;
 		this.graph = graph;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
@@ -133,7 +134,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(ObservableQueue<Path> queue, 
+	public BrowserActor(ObservableHash<Integer, Path> queue, 
 						Graph graph, 
 						Path path, 
 						ResourceManagementActor resourceManager, 
@@ -151,7 +152,7 @@ public class BrowserActor extends Thread implements Actor{
 		//System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
 		browser = new Browser(url);
 
-		this.pathQueue = queue;
+		this.queueHash = queue;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
 		elementIdxChanges = new ArrayList<Integer>();
@@ -253,7 +254,16 @@ public class BrowserActor extends Thread implements Actor{
 					e.printStackTrace();
 				}
 				
-			}while(!this.pathQueue.isEmpty());
+				//Trying to close browser and open new one between runs because of sessions issue with phantomjs
+				this.browser.getDriver().quit();
+				
+				try{
+					this.browser = new Browser(url);
+				}catch(MalformedURLException e){
+					e.printStackTrace();
+					break;
+				}
+			}while(!this.queueHash.isEmpty());
 		}catch(OutOfMemoryError e){
 			System.err.println(this.getName() + " -> Out of memory error");
 			e.printStackTrace();
@@ -309,14 +319,10 @@ public class BrowserActor extends Thread implements Actor{
 							
 							ArrayList<Integer> toIndices = graph.getToIndices(graph.findVertexIndex(vertex));
 							
-							int element_action_count = 0;
 							int impactful_vertex_count = 0;
 							if(toIndices != null && !toIndices.isEmpty()){
 								for(Integer index : toIndices){
-									if(graph.getVertices().get(index).getData() instanceof ElementAction){
-										element_action_count++;
-									}
-									else if(graph.getVertices().get(index).getData() instanceof PageState
+									if(graph.getVertices().get(index).getData() instanceof PageState
 											|| graph.getVertices().get(index).getData() instanceof Page
 											|| graph.getVertices().get(index).getData() instanceof PageAlert){
 										impactful_vertex_count++;
@@ -340,7 +346,7 @@ public class BrowserActor extends Thread implements Actor{
 				
 				/*
 				 *Only use following for non phantomjs browsers
-				 *
+				 */
 				 if(PageAlert.isAlertPresent(browser.getDriver())){
 					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !graph.getVertices().get(this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
 						PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
@@ -352,10 +358,8 @@ public class BrowserActor extends Thread implements Actor{
 						graph.addEdge(pathNode, alertVertex);
 					}
 					continue;
-				}*/
+				}
 				
-				URL currentUrl = new URL(browser.getDriver().getCurrentUrl());
-								
 				Integer existingNodeIndex = graph.findVertexIndex(pathNode);
 				Vertex<?> existingNode = null;
 				
@@ -398,9 +402,10 @@ public class BrowserActor extends Thread implements Actor{
 					
 					
 					
-					PageState pageState = null;
+					PageState pageState = new PageState(pageNode.getUuid());;
 					//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
 					List<PageElement> pageElements = pageNode.getElements();
+					boolean isValidPageState = false;
 					for(int idx=0; idx < pageElements.size(); idx++){
 						WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
 						PageElement newElem = new PageElement(browser.getDriver(), elem, pageNode, null);
@@ -416,10 +421,11 @@ public class BrowserActor extends Thread implements Actor{
 							pageElements.remove(idx);
 							pageElements.add(idx, newElem);
 							
-							pageState = new PageState(pageNode.getUuid());
 							pageState.addChangedPageElement(newElem);
+							isValidPageState = true;
 						}
 					}
+					
 					
 					
 					long tEnd_pageState = System.currentTimeMillis();
@@ -428,10 +434,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " -----ELAPSED TIME TO CHECK FOR ALL ELEMENTS EQUAL IN BOTH LISTS :: "+elapsedSeconds + "-----");
 					System.out.println(this.getName() + " #######################################################");
 					
-					if(pageState == null){
-						return false;
-					}
-					else{
+					if(isValidPageState){
 						Vertex<PageState> pageStateVertex = new Vertex<PageState>(pageState);
 						graph.addVertex(pageStateVertex);
 						graph.addEdge(existingNode, pageStateVertex);
@@ -486,13 +489,12 @@ public class BrowserActor extends Thread implements Actor{
 		//if node is an elementAction find all elementActions for the last seen page node that have not been seen
 		//   since the page node was encountered and add them.
 		if(className.equals(Page.class)){
+			System.out.println("STARTING CHECK AGAINST PAGE...");
 			//verify current page matches current node data
 			//if not mark as different
 			Page page = (Page)node_vertex.getData();
-			Page newPage = new Page(browser.getDriver(), DateFormat.getDateInstance());
-			if(!page.equals(newPage)){
-				return;
-			}
+			long tStart_page_diff = System.currentTimeMillis();
+
 			//get all known possible compinations of PageElement actions and add them as potential expansions
 			ArrayList<PageElement> elementList = page.getElements();
 			for(int elemIdx=0; elemIdx < page.getElements().size(); elemIdx++){
@@ -503,9 +505,9 @@ public class BrowserActor extends Thread implements Actor{
 					//Clone path then add ElementAciton to path and push path onto path queue					
 					Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 										
-					boolean addedVertex = graph.addVertex(elementActionVertex);
-					//Add edge to graph for vertex
+					graph.addVertex(elementActionVertex);
 					graph.addEdge(node_vertex, elementActionVertex);
+						
 					int vertex_idx = graph.findVertexIndex(elementActionVertex);
 					if(!path.getPath().contains(vertex_idx)){
 						Path new_path = Path.clone(path);
@@ -514,55 +516,69 @@ public class BrowserActor extends Thread implements Actor{
 					}
 				}				
 			}
+			long tEnd_page_diff = System.currentTimeMillis();
+			long tDelta_page_diff = tEnd_page_diff - tStart_page_diff;
+			double elapsedSecondsPageDiff = tDelta_page_diff / 1000.0;
+			
+			System.out.println(this.getName() + " -----ELAPSED TIME TO CHECK FOR PAGE DIFFERENCES :: "+elapsedSecondsPageDiff + "-----");
+			System.out.println(this.getName() + " #######################################################");
 		}
 		else if(className.equals(ElementAction.class)){
-			ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
-			//navigate path back to last seen page
-			//for each ElementAction seen, record elementAction.
-			Page page = null;
-			Vertex<?> descNode = null;
-			for(int i = 0; i < this.path.getPath().size(); i--){
-				 descNode = graph.getVertices().get(this.path.getPath().get(i));
-				
-				if(descNode.getData() instanceof Page){
-					page = (Page)descNode.getData();
-					break;
-				}
-				else{
-					elementActionSeenList.add((ElementAction)descNode.getData());
-				}
-			}
-			
+			System.out.println("STARTING CHECK AGAINST ELEMENT ACTION ...");
+			long tStart_page_diff = System.currentTimeMillis();
+
+			ArrayList<ElementAction> elementActionSeenList = getElementActionsSeen();
+			System.out.println("GETTING LAST PAGE");
+			Page page = getLastPage();
 			//add each elementAction for last seen page excluding elementActions with elements seen while finding page
+			System.out.println("RETRIEVING ELEMENTS");
 			ArrayList<PageElement> elementList = page.getElements();
 			for(int elemIdx=0; elemIdx < elementList.size(); elemIdx++){
+				System.out.println("ITERATING OVER ELEMENT LIST.");
+
 				PageElement elem = (PageElement) elementList.get(elemIdx);
 				for(int i = 0; i < actions.length; i++){
+					System.out.println("LOADING ELEMENT ACTION ELEMENTS");
+
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
 					Iterator<?> seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;
+					System.out.println("CHECKING IF ELEMENT ACTION HASS BEEN SEEN");
+
 					while(seenElementIterator.hasNext()){
 						if(((ElementAction)seenElementIterator.next()).getPageElement().equals(elemAction.getPageElement())){
 							seen = true;
 						}
 					}
 					if(!seen){
+						System.out.println("ELEMENT ACTION HAS NOT BEEN SEEN...");
+
 						//Clone path then add ElementAction to path and push path onto path queue					
 						Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
 						
+						System.out.println("ADDING VERTEX AND EDGE");
+
 						graph.addVertex(elementActionVertex);
 						graph.addEdge(node_vertex, elementActionVertex);
 						
+						System.out.println("GROWING PATH");
+
 						//need to add edge to graph
 						int vertex_idx = graph.findVertexIndex(elementActionVertex);
-						//if(!path.getPath().contains(vertex_idx)){
 						Path new_path = Path.clone(path);
 						new_path.add(vertex_idx);
+						System.out.println("PUTTING PATH ON QUEUE");
+
 						putPathOnQueue(new_path);
-						//}
 					}
 				}				
 			}
+			long tEnd_page_diff = System.currentTimeMillis();
+			long tDelta_page_diff = tEnd_page_diff - tStart_page_diff;
+			double elapsedSecondsPageDiff = tDelta_page_diff / 1000.0;
+			
+			System.out.println(this.getName() + " -----ELAPSED TIME TO CHECK FOR ELEMENT ACTION DIFFERENCES :: "+elapsedSecondsPageDiff + "-----");
+			System.out.println(this.getName() + " #######################################################");
 		}
 		else if(className.equals(PageAlert.class)){
 			System.err.println(this.getName() + " -> Handling Alert from expanding Node.");
@@ -581,9 +597,17 @@ public class BrowserActor extends Thread implements Actor{
 	 * Adds the given {@link Vertex vertex} to the queue
 	 * 
 	 * @param path path to be added
+	 * @pre path != null
 	 */
-	private boolean putPathOnQueue(Path path){
-		return this.pathQueue.add(path);
+	private Queue<Path> putPathOnQueue(Path path){
+		assert path != null;
+		Queue<Path> queue = this.queueHash.getQueueHash().get(path.getCost(this.graph));
+		if(queue == null){
+			queue = new ConcurrentLinkedQueue<Path>();
+		} 
+		System.out.println("ADD PATH TO QUEUE");
+		queue.add(path);
+		return queueHash.put(path.getCost(this.graph), path);
 	}
 
 	
@@ -629,5 +653,39 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		
 		return wasPerformedSuccessfully;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	private ArrayList<ElementAction> getElementActionsSeen(){
+		ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
+
+		//navigate path back to last seen page
+		//for each ElementAction seen, record elementAction.
+		Vertex<?> descNode = null;
+		for(int i = 0; i < this.path.getPath().size(); i--){
+			 descNode = graph.getVertices().get(this.path.getPath().get(i));
+			
+			if(descNode.getData() instanceof Page){
+				break;
+			}
+			else{
+				elementActionSeenList.add((ElementAction)descNode.getData());
+			}
+		}
+		return elementActionSeenList;
+	}
+	
+	private Page getLastPage(){
+		for(int i = 0; i < this.path.getPath().size(); i--){
+			 Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
+			
+			if(descNode.getData() instanceof Page){
+				return (Page)descNode.getData();
+			}
+		}
+		return null;
 	}
 }

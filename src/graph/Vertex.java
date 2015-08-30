@@ -44,15 +44,15 @@ public class Vertex<T> {
 			return 0;
 		}
 		else if(data instanceof PageElement){
-			return 1;
+			return 3;
 		}
 		else if(data instanceof PageState){
-			return 10;
+			return 1;
 		}
 		else if(data instanceof ElementAction){
 			return 5;
 		}
-		return 1000;
+		return 100;
 	}
 	
 	/**

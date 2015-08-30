@@ -1,4 +1,6 @@
 package browsing;
+import java.util.HashMap;
+
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -10,12 +12,20 @@ public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
 								"mouseover"};/*,
-								"sendKeys",
-								"mouseover"};*/
+								"sendKeys"};*/
+	private static HashMap<String, Double> actionWeights = new HashMap<String, Double>();
 	private static Actions builder;
 	
 	public ActionFactory(WebDriver driver){
 		builder = new Actions(driver);
+		loadWeights();
+	}
+	
+	public static void loadWeights(){
+		actionWeights.put("click", new Double(1.0));
+		actionWeights.put("doubleClick", new Double(2.0));
+		actionWeights.put("mouseover", new Double(.5));
+		actionWeights.put("sendKeys", new Double(3));
 	}
 	/**
 	 * 

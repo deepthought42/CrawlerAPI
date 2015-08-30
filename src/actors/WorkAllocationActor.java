@@ -1,21 +1,19 @@
 package actors;
 
-import graph.Graph;
 import graph.Vertex;
-import graph.searchAlgorithms.A_Star;
-import graph.searchAlgorithms.GraphSearch;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Queue;
 
 import org.openqa.selenium.NoSuchElementException;
 
 import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageElement;
-import observableStructs.ObservableQueue;
+import observableStructs.ObservableHash;
 import structs.Path;
 
 /**
@@ -27,7 +25,7 @@ import structs.Path;
  */
 public class WorkAllocationActor extends Thread implements Observer {
 	
-	ObservableQueue<Path> path_queue = null;
+	ObservableHash<Integer, Path> hash_queue = null;
 	ResourceManagementActor resourceManager = null;
 	GraphObserver graphObserver = null;
 	
@@ -36,11 +34,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @param queue
 	 * @param resourceManager
 	 */
-	public WorkAllocationActor(ObservableQueue<Path> queue, 
+	public WorkAllocationActor(ObservableHash<Integer, Path> queue, 
 							   ResourceManagementActor resourceManager,
 							   GraphObserver graphObserver){
-		this.path_queue = queue;
-		this.path_queue.addObserver(this);
+		this.hash_queue = queue;
+		this.hash_queue.addObserver(this);
 		this.graphObserver = graphObserver;
 		this.resourceManager = resourceManager;
 	}
@@ -57,8 +55,9 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 */
 	public void update(Observable o, Object arg)
 	{
-		if(o instanceof ObservableQueue){
-	    	path_queue = (ObservableQueue) o;
+		if(o instanceof ObservableHash){
+			System.out.println("UPdateing hash for Allocation Worker");
+	    	hash_queue = (ObservableHash) o;
 			allocateVertexProcessing();
 		}
 	}
@@ -67,26 +66,23 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * Allocate path processing to {@link BrowserActor}s to crawl if resources are available.
 	 */
 	public void allocateVertexProcessing(){
-		if(path_queue.size() > 0){
+		if(hash_queue.size() > 0){
 			try{
-				while( resourceManager.areResourcesAvailable() && !path_queue.isEmpty()){
+				while( resourceManager.areResourcesAvailable() && !hash_queue.isEmpty()){
 					Path path = retrieveNextPath();
 					
 					if(path != null){
 						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTEX.");
 				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-				        //int start_idx = graphObserver.getGraph().findVertexIndex(vertex);
-						//GraphSearch graphSearch = new A_Star(graphObserver.getGraph());
-					    //Path path = graphSearch.findPathToClosestRoot(start_idx);
-					    
+
 				        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
-				        BrowserActor browserActor = new BrowserActor(path_queue, graphObserver.getGraph(), path, this.resourceManager, this);
+				        BrowserActor browserActor = new BrowserActor(hash_queue, graphObserver.getGraph(), path, this.resourceManager, this);
 						browserActor.start();
 
 						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
 					}
 					else{
-						System.out.println("WORK ALLOCATOR :: PATH is null.");
+						//System.out.println("WORK ALLOCATOR :: PATH is null.");
 					}
 				}
 	    	}
@@ -103,16 +99,40 @@ public class WorkAllocationActor extends Thread implements Observer {
 	/**
 	 * Returns next path to be explored.
 	 * 
-	 * @return {@link Path} to be explored
+	 * @return {@link Path} to be explored or null if none exist.
 	 */
-	public Path retrieveNextPath() throws NullPointerException{
-		Path path = path_queue.poll();
-		System.out.print(Thread.currentThread().getName() + " -> ");
-		for(int idx : path.getPath()){
-			System.out.print(idx+",");
+	public Path retrieveNextPath() {
+		Queue<Path> path_queue = hash_queue.getQueueHash().get(getSmallestKey());
+		Path path = null;
+		if(path_queue != null && !path_queue.isEmpty()){
+			path = path_queue.poll();
+
+			System.out.print(Thread.currentThread().getName() + " -> ");
+			for(int idx : path.getPath()){
+				System.out.print(idx+",");
+			}
+			System.out.println();
+
 		}
-		System.out.println();
 		return path;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public Integer getSmallestKey(){
+		int smallest_key = 99999;
+		for(Integer key : hash_queue.getQueueHash().keySet()){
+			if(key==null){
+				continue;
+			}
+			if(key < smallest_key && hash_queue.getQueueHash().get(key) != null && !hash_queue.getQueueHash().get(key).isEmpty()){
+				smallest_key = key;
+			}
+		}
+		//System.out.println("Smallest COST: "+smallest_key);
+		return smallest_key;
 	}
 	
 	/**

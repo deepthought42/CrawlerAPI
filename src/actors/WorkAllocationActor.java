@@ -110,15 +110,15 @@ public class WorkAllocationActor extends Thread implements Observer {
 			for(int idx : path.getPath()){
 				System.out.print(idx+",");
 			}
-			System.out.println();
+			System.out.println(" ---- COST : " + path.getCost());
 
 		}
 		return path;
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Finds smallest key in hash
+	 * @return <= 99999
 	 */
 	public synchronized Integer getSmallestKey(){
 		int smallest_key = 99999;
@@ -130,7 +130,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 				smallest_key = key;
 			}
 		}
-		//System.out.println("Smallest COST: "+smallest_key);
 		return smallest_key;
 	}
 	

@@ -67,7 +67,6 @@ public class ActionFactory {
 			builder.release(elem);
 		}
 		else if(action.equals("sendKeys")){
-			
 			builder.sendKeys(elem, Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
 			builder.sendKeys(elem, "Some src Val");
 		}

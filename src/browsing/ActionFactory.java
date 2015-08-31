@@ -7,14 +7,25 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
-
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
 								"mouseover"};/*,
 								"sendKeys"};*/
-	private static HashMap<String, Double> actionWeights = new HashMap<String, Double>();
+	private static HashMap<String, Integer> actionWeights = new HashMap<String, Integer>();
 	private static Actions builder;
+
+	static {
+		actionWeights.put("click", new Integer(2));
+		actionWeights.put("doubleClick", new Integer(3));
+		actionWeights.put("mouseover", new Integer(1));
+		actionWeights.put("sendKeys", new Integer(4));
+	}
 	
 	public ActionFactory(WebDriver driver){
 		builder = new Actions(driver);
@@ -22,10 +33,7 @@ public class ActionFactory {
 	}
 	
 	public static void loadWeights(){
-		actionWeights.put("click", new Double(1.0));
-		actionWeights.put("doubleClick", new Double(2.0));
-		actionWeights.put("mouseover", new Double(.5));
-		actionWeights.put("sendKeys", new Double(3));
+		
 	}
 	/**
 	 * 
@@ -75,5 +83,15 @@ public class ActionFactory {
 	 */
 	public static String[] getActions(){
 		return actions;
+	}
+
+	/**
+	 * returns the cost of the action based on static cost value for a given key
+	 * s
+	 * @param action
+	 * @return
+	 */
+	public static Integer getCost(String action) {
+		return actionWeights.get(action);
 	}
 }

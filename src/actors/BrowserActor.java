@@ -5,6 +5,7 @@ import graph.Vertex;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -175,7 +176,7 @@ public class BrowserActor extends Thread implements Actor{
 		resourceManager.punchIn(this);
 		try{
 			do{
-				long tStart = System.currentTimeMillis();
+				
 				
 				if(this.path.getPath().isEmpty()){
 					System.out.println(this.getName() + " -> Path is empty. Adding to path");
@@ -194,6 +195,7 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " -> NEW URL :: " + this.url);
 					browser.getDriver().get(this.url);
 				}
+				long tStart = System.currentTimeMillis();
 				boolean successfulCrawl = false;
 				try{
 					successfulCrawl = crawlPath();
@@ -232,7 +234,7 @@ public class BrowserActor extends Thread implements Actor{
 				long tDelta = tEnd - tStart;
 				double elapsedSeconds = tDelta / 1000.0;
 				
-				System.out.println(this.getName() + " -----ELAPSED TIME PATH NODE EXPANSION :: "+elapsedSeconds + "-----");
+				System.out.println(this.getName() + " -----ELAPSED TIME RUNNING CRAWLER THROUGH CRAWL AND EXPANSION :: "+elapsedSeconds + "-----");
 				System.out.println(this.getName() + " #######################################################");
 				this.path = workAllocator.retrieveNextPath();
 				System.out.println(this.getName() + " -> PATH RETRIEVED.");
@@ -478,6 +480,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws MalformedURLException 
 	 */
 	private void expandNodePath() throws MalformedURLException{
+		HashMap<Integer, ConcurrentLinkedQueue<Path>> localQueueHash = new HashMap<Integer, ConcurrentLinkedQueue<Path>>();
 		long tStart = System.currentTimeMillis();
 
 		Vertex<?> node_vertex = graph.getVertices().get(this.path.getPath().get(this.path.getPath().size()-1));
@@ -499,7 +502,9 @@ public class BrowserActor extends Thread implements Actor{
 			ArrayList<PageElement> elementList = page.getElements();
 			for(int elemIdx=0; elemIdx < page.getElements().size(); elemIdx++){
 				PageElement elem = (PageElement) elementList.get(elemIdx);
-						
+				if(elem.isIgnorable()){
+					continue;
+				}
 				for(int i = 0; i < actions.length; i++){
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
 					//Clone path then add ElementAciton to path and push path onto path queue					
@@ -512,7 +517,9 @@ public class BrowserActor extends Thread implements Actor{
 					if(!path.getPath().contains(vertex_idx)){
 						Path new_path = Path.clone(path);
 						new_path.add(vertex_idx);
-						putPathOnQueue(new_path);
+						//putPathOnQueue(new_path);
+						putPathOnQueue(new_path, localQueueHash);
+
 					}
 				}				
 			}
@@ -524,26 +531,20 @@ public class BrowserActor extends Thread implements Actor{
 			System.out.println(this.getName() + " #######################################################");
 		}
 		else if(className.equals(ElementAction.class)){
-			System.out.println("STARTING CHECK AGAINST ELEMENT ACTION ...");
 			long tStart_page_diff = System.currentTimeMillis();
 
 			ArrayList<ElementAction> elementActionSeenList = getElementActionsSeen();
-			System.out.println("GETTING LAST PAGE");
 			Page page = getLastPage();
 			//add each elementAction for last seen page excluding elementActions with elements seen while finding page
-			System.out.println("RETRIEVING ELEMENTS");
 			ArrayList<PageElement> elementList = page.getElements();
 			for(int elemIdx=0; elemIdx < elementList.size(); elemIdx++){
-				System.out.println("ITERATING OVER ELEMENT LIST.");
 
 				PageElement elem = (PageElement) elementList.get(elemIdx);
 				for(int i = 0; i < actions.length; i++){
-					System.out.println("LOADING ELEMENT ACTION ELEMENTS");
 
 					ElementAction elemAction = new ElementAction(elem, actions[i], elemIdx);
 					Iterator<?> seenElementIterator = elementActionSeenList.iterator();
 					boolean seen = false;
-					System.out.println("CHECKING IF ELEMENT ACTION HASS BEEN SEEN");
 
 					while(seenElementIterator.hasNext()){
 						if(((ElementAction)seenElementIterator.next()).getPageElement().equals(elemAction.getPageElement())){
@@ -551,25 +552,19 @@ public class BrowserActor extends Thread implements Actor{
 						}
 					}
 					if(!seen){
-						System.out.println("ELEMENT ACTION HAS NOT BEEN SEEN...");
-
 						//Clone path then add ElementAction to path and push path onto path queue					
 						Vertex<ElementAction> elementActionVertex = new Vertex<ElementAction>(elemAction);
-						
-						System.out.println("ADDING VERTEX AND EDGE");
 
 						graph.addVertex(elementActionVertex);
 						graph.addEdge(node_vertex, elementActionVertex);
 						
-						System.out.println("GROWING PATH");
-
 						//need to add edge to graph
 						int vertex_idx = graph.findVertexIndex(elementActionVertex);
 						Path new_path = Path.clone(path);
 						new_path.add(vertex_idx);
-						System.out.println("PUTTING PATH ON QUEUE");
+						//putPathOnQueue(new_path);				
+						putPathOnQueue(new_path, localQueueHash);
 
-						putPathOnQueue(new_path);
 					}
 				}				
 			}
@@ -585,6 +580,19 @@ public class BrowserActor extends Thread implements Actor{
 			PageAlert alert = (PageAlert)node_vertex.getData();
 			alert.performChoice(browser.getDriver());
 		}
+		
+		for(Integer key: localQueueHash.keySet()){
+			ConcurrentLinkedQueue<Path> pathQueue = queueHash.getQueueHash().get(key);
+			if(pathQueue != null){
+				pathQueue.addAll(localQueueHash.get(key));
+			}
+			else{
+				pathQueue = localQueueHash.get(key);
+				
+			}
+			queueHash.getQueueHash().put(key, pathQueue);
+		}
+		
 		long tEnd = System.currentTimeMillis();
 		long tDelta = tEnd - tStart;
 		double elapsedSeconds = tDelta / 1000.0;
@@ -597,19 +605,33 @@ public class BrowserActor extends Thread implements Actor{
 	 * Adds the given {@link Vertex vertex} to the queue
 	 * 
 	 * @param path path to be added
+	 * @param queue 
 	 * @pre path != null
 	 */
-	private Queue<Path> putPathOnQueue(Path path){
+	private void putPathOnQueue(Path path, HashMap<Integer, ConcurrentLinkedQueue<Path>> queue){
 		assert path != null;
-		Queue<Path> queue = this.queueHash.getQueueHash().get(path.getCost(this.graph));
-		if(queue == null){
-			queue = new ConcurrentLinkedQueue<Path>();
-		} 
-		System.out.println("ADD PATH TO QUEUE");
-		queue.add(path);
+		ConcurrentLinkedQueue<Path> desiredQueue = null;
+		if(queue.get(path.getCost(this.graph)) != null){
+			desiredQueue = queue.get(path.getCost(this.graph));
+		}
+		else{
+			desiredQueue = new ConcurrentLinkedQueue<Path>();
+		}
+		desiredQueue.add(path);
+		queue.put(path.getCost(), desiredQueue);
+	}
+	
+	/**
+	 * Adds the given {@link Vertex vertex} to the queue
+	 * 
+	 * @param path path to be added
+	 * @pre path != null
+	 */
+	private ConcurrentLinkedQueue<Path> putPathOnQueue(Path path){
+		assert path != null;
 		return queueHash.put(path.getCost(this.graph), path);
 	}
-
+	
 	
 	/**
 	 * Get the UUID for this Agent

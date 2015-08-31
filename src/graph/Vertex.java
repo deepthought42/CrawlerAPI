@@ -1,5 +1,6 @@
 package graph;
 
+import browsing.ActionFactory;
 import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageElement;
@@ -44,13 +45,15 @@ public class Vertex<T> {
 			return 0;
 		}
 		else if(data instanceof PageElement){
-			return 3;
+			return 2;
 		}
 		else if(data instanceof PageState){
 			return 1;
 		}
 		else if(data instanceof ElementAction){
-			return 5;
+			ElementAction ea = (ElementAction)data;
+			Integer cost =  ActionFactory.getCost(ea.getAction());
+			return 3 + cost;
 		}
 		return 100;
 	}

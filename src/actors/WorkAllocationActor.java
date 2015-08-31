@@ -56,7 +56,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 	public void update(Observable o, Object arg)
 	{
 		if(o instanceof ObservableHash){
-			System.out.println("UPdateing hash for Allocation Worker");
 	    	hash_queue = (ObservableHash) o;
 			allocateVertexProcessing();
 		}
@@ -121,7 +120,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * 
 	 * @return
 	 */
-	public Integer getSmallestKey(){
+	public synchronized Integer getSmallestKey(){
 		int smallest_key = 99999;
 		for(Integer key : hash_queue.getQueueHash().keySet()){
 			if(key==null){

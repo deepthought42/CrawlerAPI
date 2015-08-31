@@ -37,7 +37,7 @@ public class ObservableHash<K, E> extends Observable {
 	 *	{@inheritDoc}
 	 */
 	public ConcurrentLinkedQueue<E> put(K key, E value) {
-		System.out.println("Adding queue to hash with key "+key);
+		System.out.println(Thread.currentThread().getName()  + " -> Adding queue to hash with key "+key);
 		ConcurrentLinkedQueue<E> queue = queueHash.get(key);
 		setChanged();
 		if(queue == null){
@@ -45,7 +45,7 @@ public class ObservableHash<K, E> extends Observable {
 			queue.add(value);
 			queueHash.put(key, queue);
 		}
-		else if(!queue.contains(value)){
+		else {
 			queue.add(value);
 			queueHash.put(key, queue);
 		}	

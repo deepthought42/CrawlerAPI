@@ -33,7 +33,8 @@ public class PageElement {
 	private String xpath;
 	private boolean changed=false;
 	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class"};
+	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
+	private String[] ignorableTags = {"b", "i", "script", "link", "p"};
 	private ValueDomain positiveDomain = new ValueDomain();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
@@ -463,5 +464,9 @@ public class PageElement {
 	
 	public UUID getUuid(){
 		return this.uuid;
+	}
+
+	public boolean isIgnorable() {
+		return Arrays.asList().contains(this.tagName);
 	}
 }

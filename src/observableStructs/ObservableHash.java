@@ -52,5 +52,17 @@ public class ObservableHash<K, E> extends Observable {
 		notifyObservers(key);
 		return queue;
 	}
+	
+	/**
+	 *	{@inheritDoc}
+	 */
+	public ConcurrentLinkedQueue<E> put(K key, ConcurrentLinkedQueue<E> queue) {
+		System.out.println(Thread.currentThread().getName()  + " -> Adding queue to hash with key "+key);
+		setChanged();
+		queueHash.put(key, queue);
+
+		notifyObservers(key);
+		return queue;
+	}
 
 }

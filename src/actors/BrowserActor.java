@@ -590,7 +590,7 @@ public class BrowserActor extends Thread implements Actor{
 				pathQueue = localQueueHash.get(key);
 				
 			}
-			queueHash.getQueueHash().put(key, pathQueue);
+			queueHash.put(key, pathQueue);
 		}
 		
 		long tEnd = System.currentTimeMillis();

@@ -45,15 +45,15 @@ public class Vertex<T> {
 			return 0;
 		}
 		else if(data instanceof PageElement){
-			return 2;
+			return 1;
 		}
 		else if(data instanceof PageState){
-			return 1;
+			return 0;
 		}
 		else if(data instanceof ElementAction){
 			ElementAction ea = (ElementAction)data;
 			Integer cost =  ActionFactory.getCost(ea.getAction());
-			return 3 + cost;
+			return 1 + cost;
 		}
 		return 100;
 	}

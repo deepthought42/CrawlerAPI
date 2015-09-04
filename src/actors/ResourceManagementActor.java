@@ -3,8 +3,6 @@ package actors;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import org.eclipse.jetty.util.ConcurrentArrayQueue;
-
 public class ResourceManagementActor {
 	private int allowedActors = 0;
 	private ArrayList<UUID> presentActors = new ArrayList<UUID>();

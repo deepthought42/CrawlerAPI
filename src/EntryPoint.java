@@ -1,7 +1,4 @@
-
-
 import graph.Graph;
-import graph.Vertex;
 
 import java.net.MalformedURLException;
 
@@ -10,7 +7,6 @@ import actors.GraphObserver;
 import actors.ResourceManagementActor;
 import actors.WorkAllocationActor;
 import observableStructs.ObservableHash;
-import observableStructs.ObservableQueue;
 import structs.Path;
 
 /**
@@ -20,7 +16,7 @@ import structs.Path;
  */
 public class EntryPoint {
 	public static void main(String[] args){
-		ResourceManagementActor resourceManager = new ResourceManagementActor(2);
+		ResourceManagementActor resourceManager = new ResourceManagementActor(5);
 		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 		Graph graph = new Graph();
 		GraphObserver graphObserver = new GraphObserver(graph);

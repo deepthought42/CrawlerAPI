@@ -1,19 +1,35 @@
 package learning;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+
 /**
  * Defines objects that are available to the system for learning against
  * 
  * @author Brandon Kindred
  *
  */
+@Entity
+@Table( name = "objectDefinition" )
 public class ObjectDefinition {
 
-	public ObjectDefinition() {
-		// TODO Auto-generated constructor stub
+	public ObjectDefinition(Integer id, String name, String type) {
+		this.id = id;
+		this.name = name;
+		this.type = type;
 	}
 
-	
-	public long getId() {
+	public ObjectDefinition(String name, String type) {
+		this.name = name;
+		this.type = type;
+	}
+
+	public Integer getId() {
 		return id;
 	}
 
@@ -33,7 +49,20 @@ public class ObjectDefinition {
 		this.name = name;
 	}
 
-	private long id;
+	@Override
+	public String toString(){
+		return "ObjectDefinition: "+ this.id + ", " + this.type + ", " + this.name;
+
+	}
+	
+	@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+	private Integer id;
+	
+	@Column(name = "type")
 	private String type;
+	
+	@Column(name = "name")
 	private String name;
 }

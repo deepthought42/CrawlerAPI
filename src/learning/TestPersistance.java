@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.PersistenceException;
 
 
 public class TestPersistance {
@@ -15,15 +16,20 @@ public class TestPersistance {
 				 Persistence.createEntityManagerFactory("minion");
 		 
 		// First unit of work
-		 EntityManager em = emf.createEntityManager();
-		 EntityTransaction tx = em.getTransaction();
-		 tx.begin();
-		 
-		 ObjectDefinition objDef = new ObjectDefinition("td", "tag");
-		 em.persist(objDef);
-		 
-		 tx.commit();
-		 em.close();
+		 try{
+			 EntityManager em = emf.createEntityManager();
+			 EntityTransaction tx = em.getTransaction();
+			 tx.begin();
+			 
+			 ObjectDefinition objDef = new ObjectDefinition("td", "tag");
+			 em.persist(objDef);
+			
+			 tx.commit();
+			 em.clear();
+			 em.close();
+		 }catch(PersistenceException e){
+			 e.printStackTrace();
+		 }
 		 
 		// Second unit of work
 		 EntityManager newEm = emf.createEntityManager();
@@ -39,8 +45,12 @@ public class TestPersistance {
 			 System.out.println(loadedMsg.toString());
 		 }
 		 newTx.commit();
+		 newEm.clear();
 		 newEm.close();
+
+		 
 		 // Shutting down the application
+		 
 		 emf.close();
 	}
 

@@ -2,9 +2,6 @@ package learning;
 
 import javax.persistence.*;
 
-import org.hibernate.annotations.GenericGenerator;
-
-
 /**
  * Defines objects that are available to the system for learning against
  * 
@@ -12,10 +9,10 @@ import org.hibernate.annotations.GenericGenerator;
  *
  */
 @Entity
-@Table( name = "objectDefinition" )
+@Table( name = "ObjectDefinition" )
 public class ObjectDefinition {
 
-	public ObjectDefinition(Long id, String name, String type) {
+	public ObjectDefinition(int id, String name, String type) {
 		this.id = id;
 		this.name = name;
 		this.type = type;
@@ -28,11 +25,11 @@ public class ObjectDefinition {
 	
 	public ObjectDefinition(){}
 
-	public Long getId() {
+	public int getId() {
 		return id;
 	}
 	
-	private void setId(Long id) {
+	private void setId(int id) {
 		this.id = id;
 	}
 
@@ -59,13 +56,13 @@ public class ObjectDefinition {
 	}
 	
 	@Id 
-	@GeneratedValue(strategy=GenerationType.SEQUENCE)
-	@Column(name = "id")
-	private Long id;
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="id")
+	private int id;
 	
-	@Column(name = "type")
+	@Column(name = "object_type")
 	private String type;
 	
-	@Column(name = "name")
+	@Column(name = "object_name")
 	private String name;
 }

@@ -30,13 +30,13 @@ public class TestPersistance {
 		 EntityTransaction newTx = newEm.getTransaction();
 		 newTx.begin();
 		 List objDefs = newEm
-		 .createQuery("select m from ObjectDefinition m order by m.text asc")
+		 .createQuery("select m from ObjectDefinition m order by m.name asc")
 		 .getResultList();
 
 		 System.out.println( objDefs.size() + " Object definition(s) found" );
 		 for (Object m : objDefs) {
-		 ObjectDefinition loadedMsg = (ObjectDefinition) m;
-		 System.out.println(loadedMsg.toString());
+			 ObjectDefinition loadedMsg = (ObjectDefinition) m;
+			 System.out.println(loadedMsg.toString());
 		 }
 		 newTx.commit();
 		 newEm.close();

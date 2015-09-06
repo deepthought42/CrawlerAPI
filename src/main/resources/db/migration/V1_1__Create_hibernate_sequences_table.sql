@@ -1,3 +1,3 @@
-create table hibernate_sequences(   
+create table hibernate_sequence(   
 	id int not null
 );

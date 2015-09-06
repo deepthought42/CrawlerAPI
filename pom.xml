@@ -16,6 +16,23 @@
     <spring.version>3.2.2.RELEASE</spring.version>
   </properties>
 
+  <build>
+  <plugins>
+	<plugin>
+	    <groupId>org.flywaydb</groupId>
+	    <artifactId>flyway-maven-plugin</artifactId>
+	    <version>3.2.1</version>
+	    <configuration>
+	    	<url>jdbc:mysql://localhost:3306</url>
+	        <user>root</user>
+	        <password></password>
+	        <schemas>
+	            <schema>minion</schema>
+	        </schemas>
+	    </configuration>
+	</plugin>
+	</plugins>
+</build>
   <dependencies>
   	<dependency>
 		<groupId>net.sourceforge.openutils</groupId>
@@ -53,7 +70,7 @@
 		<artifactId>jtidy</artifactId>
 		<version>4aug2000r7-dev</version>
 	</dependency>
-	<dependency>
+	<!-- <dependency>
 		<groupId>com.orientechnologies</groupId>
 		<artifactId>orientdb-core</artifactId>
 		<version>2.1-rc5</version>
@@ -83,6 +100,7 @@
 	  	<artifactId>pipes</artifactId>
 	  	<version>2.6.0</version>
 	</dependency>
+	-->
   	<dependency>
 		<groupId>com.github.detro.ghostdriver</groupId>
   		<artifactId>phantomjsdriver</artifactId>
@@ -92,6 +110,11 @@
 	   <groupId>org.hibernate</groupId>
 	   <artifactId>hibernate-core</artifactId>
 	   <version>5.0.1.Final</version>
+	</dependency>
+	<dependency>
+		<groupId>org.hibernate</groupId>
+		<artifactId>hibernate-entitymanager</artifactId>
+		<version>5.0.1.Final</version>
 	</dependency>
     <dependency>
         <groupId>mysql</groupId>
@@ -103,6 +126,7 @@
         <artifactId>javassist</artifactId>
         <version>3.18.0-GA</version>
     </dependency>	
+
   </dependencies>
 
   <groupId>com.QA.testSuite</groupId>

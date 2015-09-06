@@ -1,11 +1,6 @@
 package learning;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -20,7 +15,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Table( name = "objectDefinition" )
 public class ObjectDefinition {
 
-	public ObjectDefinition(Integer id, String name, String type) {
+	public ObjectDefinition(Long id, String name, String type) {
 		this.id = id;
 		this.name = name;
 		this.type = type;
@@ -30,9 +25,15 @@ public class ObjectDefinition {
 		this.name = name;
 		this.type = type;
 	}
+	
+	public ObjectDefinition(){}
 
-	public Integer getId() {
+	public Long getId() {
 		return id;
+	}
+	
+	private void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getType() {
@@ -57,10 +58,10 @@ public class ObjectDefinition {
 
 	}
 	
-	@Id
-	@GeneratedValue(generator="increment")
-	@GenericGenerator(name="increment", strategy = "increment")
-	private Integer id;
+	@Id 
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
+	@Column(name = "id")
+	private Long id;
 	
 	@Column(name = "type")
 	private String type;

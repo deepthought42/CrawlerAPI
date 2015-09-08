@@ -1,5 +1,8 @@
 package learning;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.*;
 
 /**
@@ -65,4 +68,11 @@ public class ObjectDefinition {
 	
 	@Column(name = "object_name")
 	private String name;
+	
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.object1_id", cascade=CascadeType.ALL)
+	private Set<ObjectDefinitionAssociation> object_associations = new HashSet<ObjectDefinitionAssociation>(0);
+	
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.object2_id", cascade=CascadeType.ALL)
+	private Set<ObjectDefinitionAssociation> associated_objects = new HashSet<ObjectDefinitionAssociation>(0);
+
 }

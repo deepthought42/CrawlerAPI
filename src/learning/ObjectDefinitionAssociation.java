@@ -1,5 +1,19 @@
 package learning;
 
+import javax.persistence.AssociationOverride;
+import javax.persistence.AssociationOverrides;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+
+
 /**
  * Associates 2 {@link ObjectDefinition}s with each other and represents their
  * probabilistic association with each other
@@ -7,25 +21,32 @@ package learning;
  * @author Brandon Kindred
  *
  */
+@Entity
+@Table(name="object_definition_associations")
+@AssociationOverrides({
+	@AssociationOverride(name = "pk.object1_id", 
+		joinColumns = @JoinColumn(name = "object1_id")),
+	@AssociationOverride(name = "pk.object2_id", 
+		joinColumns = @JoinColumn(name = "object2_id")) })
 public class ObjectDefinitionAssociation {
 	
 	public ObjectDefinitionAssociation() {
 
 	}
-	
-	public long getObjectDefintion_id() {
-		return ObjectDefintion_id;
+
+	public ObjectDefinition getObjectDefintion_id() {
+		return object1;
 	}
-	public void setObjectDefintion_id(long objectDefintion_id) {
-		ObjectDefintion_id = objectDefintion_id;
+	public void setObjectDefintion_id(ObjectDefinition objectDefintion) {
+		object1 = objectDefintion;
 	}
 
-	public long getObjectDefinition2_id() {
-		return ObjectDefinition2_id;
+	public ObjectDefinition getObjectDefinition2_id() {
+		return object2;
 	}
 
-	public void setObjectDefinition2_id(long objectDefinition2_id) {
-		ObjectDefinition2_id = objectDefinition2_id;
+	public void setObjectDefinition2_id(ObjectDefinition objectDefinition2) {
+		object2 = objectDefinition2;
 	}
 
 	public double getWeight() {
@@ -37,16 +58,28 @@ public class ObjectDefinitionAssociation {
 	}
 
 	public long getCount() {
-		return count;
+		return experience_count;
 	}
 
-	public void setCount(long count) {
-		this.count = count;
+	public void setCount(int count) {
+		this.experience_count = count;
 	}
 
-	private long ObjectDefintion_id;
-	private long ObjectDefinition2_id;
+	//@EmbeddedId
+	//private StockCategoryId pk = new StockCategoryId();
+	
+	@ManyToOne
+	@Column(name="object1_id")
+	private ObjectDefinition object1;
+	
+	@ManyToOne
+	@Column(name="object2_id")
+	private ObjectDefinition object2;
+	
+	@Column(name="weight")
 	private double weight;
-	private long count;
+	
+	@Column(name="experience_count")
+	private int experience_count;
 
 }

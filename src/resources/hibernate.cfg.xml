@@ -17,5 +17,6 @@
  
         <!-- add classes to map from here -->
         <mapping class="learning.ObjectDefinition" />
+        <mapping class="learning.ObjectDefinitionAssociation" />
     </session-factory>
 </hibernate-configuration>

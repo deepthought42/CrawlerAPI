@@ -16,13 +16,14 @@ public class TestPersistance {
 				 Persistence.createEntityManagerFactory("minion");
 		 
 		// First unit of work
+		 ObjectDefinition objDef1 = null;
 		 try{
 			 EntityManager em = emf.createEntityManager();
 			 EntityTransaction tx = em.getTransaction();
 			 tx.begin();
 			 
-			 ObjectDefinition objDef = new ObjectDefinition("td", "tag");
-			 em.persist(objDef);
+			 objDef1 = new ObjectDefinition("p", "tag");
+			 em.persist(objDef1);
 			
 			 tx.commit();
 			 em.clear();
@@ -31,6 +32,46 @@ public class TestPersistance {
 			 e.printStackTrace();
 		 }
 		 
+		// First unit of work
+		 ObjectDefinition objDef2 = null;
+		 try{
+			 EntityManager em = emf.createEntityManager();
+			 EntityTransaction tx = em.getTransaction();
+			 tx.begin();
+			 
+			 objDef2 = new ObjectDefinition("b", "tag");
+			 em.persist(objDef2);
+			
+			 tx.commit();
+			 em.clear();
+			 em.close();
+		 }catch(PersistenceException e){
+			 e.printStackTrace();
+		 }
+		 
+		 try{
+			 EntityManager em = emf.createEntityManager();
+			 EntityTransaction tx = em.getTransaction();
+			 tx.begin();
+			 ObjectDefinition objDef10 = new ObjectDefinition(5, "i", "tag");
+			 ObjectDefinition objDef11 = new ObjectDefinition(6, "head", "tag");
+			 ObjectAssociationId associationId = new ObjectAssociationId(objDef10.getId(), objDef11.getId());
+			 ObjectDefinitionAssociation object_association = new ObjectDefinitionAssociation();
+			 object_association.setId(associationId);
+			 object_association.setObject1Definition(objDef10);
+			 object_association.setObject2Definition(objDef11);
+			 object_association.setWeight(.00001);
+			 object_association.setCount(1);
+		        
+			 objDef1.getObjectAssociations().add(object_association);
+			 em.persist(object_association);
+
+			 tx.commit();
+			 em.clear();
+			 em.close();
+		 }catch(PersistenceException e){
+			 e.printStackTrace();
+		 }
 		// Second unit of work
 		 EntityManager newEm = emf.createEntityManager();
 		 EntityTransaction newTx = newEm.getTransaction();

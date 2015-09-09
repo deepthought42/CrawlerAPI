@@ -1,7 +1,7 @@
 create table object_definition_associations (
     object1_id int unsigned NOT NULL,
     object2_id int unsigned NOT NULL,
-    weight decimal NOT NULL,
+    weight decimal(10,10) NOT NULL,
     experience_count int NOT NULL,
     PRIMARY KEY (`object1_id`,`object2_id`),
   	CONSTRAINT `FK_OBJECT1_ID` FOREIGN KEY (`object1_id`) 

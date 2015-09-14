@@ -70,7 +70,7 @@
 		<artifactId>jtidy</artifactId>
 		<version>4aug2000r7-dev</version>
 	</dependency>
-	<!-- <dependency>
+	<dependency>
 		<groupId>com.orientechnologies</groupId>
 		<artifactId>orientdb-core</artifactId>
 		<version>2.1-rc5</version>
@@ -100,13 +100,13 @@
 	  	<artifactId>pipes</artifactId>
 	  	<version>2.6.0</version>
 	</dependency>
-	-->
+	
   	<dependency>
 		<groupId>com.github.detro.ghostdriver</groupId>
   		<artifactId>phantomjsdriver</artifactId>
 	  	<version>1.0.4</version>
   	</dependency>
-  	<dependency>
+  	<!-- <dependency>
 	   <groupId>org.hibernate</groupId>
 	   <artifactId>hibernate-core</artifactId>
 	   <version>5.0.1.Final</version>
@@ -121,6 +121,7 @@
         <artifactId>mysql-connector-java</artifactId>
         <version>5.1.6</version>
     </dependency>
+    -->
     <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>

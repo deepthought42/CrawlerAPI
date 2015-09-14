@@ -1,4 +1,4 @@
-package learning;
+package rdbms;
 
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;

@@ -1,4 +1,4 @@
-package learning;
+package rdbms;
 
 import org.hibernate.*;
 import org.hibernate.cfg.*;

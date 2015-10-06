@@ -25,17 +25,17 @@ import util.ArrayUtility;
  *
  */
 public class PageElement {
-	private UUID uuid = null;
-	private Page page = null;
-	private String[] actions = ActionFactory.getActions();
-	private String tagName;
-	private String text;
-	private String xpath;
-	private boolean changed=false;
-	private ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
-	private String[] ignorableTags = {"b", "i", "script", "link", "p"};
-	private ValueDomain positiveDomain = new ValueDomain();
+	public UUID uuid = null;
+	public Page page = null;
+	public String[] actions = ActionFactory.getActions();
+	public String tagName;
+	public String text;
+	public String xpath;
+	public boolean changed=false;
+	public ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+	public String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
+	public String[] ignorableTags = {"b", "i", "script", "link", "p"};
+	public ValueDomain positiveDomain = new ValueDomain();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
@@ -414,17 +414,11 @@ public class PageElement {
 	
 	/**
 	 * Converts to string with following format:
-	 * Tag Name: {tagName}
-	 * text:	{innertext of tag}
+	 * {tagName}:{innertext of tag}
 	 * 
 	 */
 	public String toString(){
-		String pageElementString = "";
-		
-		pageElementString += "Tag Name: " + this.tagName + "\n";
-		pageElementString += "text: " + this.text + "\n";
-		
-		return pageElementString;
+		return this.tagName + ":" + this.text;
 	}
 
 	/**

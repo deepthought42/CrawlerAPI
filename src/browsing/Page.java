@@ -13,19 +13,25 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
+import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.Vertex;
+
+import orientdb.IOrientVertex;
+
 /**
+ * A reference to a web page 
  * 
  * @author Brandon Kindred
  *
  */
-public class Page{
-	private UUID uuid = null;	
-	private WebDriver driver = null;
-	private String src = "";
-	private DateFormat date = null;
-	private URL pageUrl = null;
-	private ArrayList<PageElement> elements = new ArrayList<PageElement>();
-	private Page prevPage;
+public class Page implements IOrientVertex{
+	public UUID uuid = null;	
+	public WebDriver driver = null;
+	public String src = "";
+	public DateFormat date = null;
+	public URL pageUrl = null;
+	public ArrayList<PageElement> elements = new ArrayList<PageElement>();
+	public Page prevPage;
 	
 	HashMap<PageElement, HashMap<String, Page>> elementActionMap = new HashMap<PageElement, HashMap<String, Page>>();
 
@@ -211,5 +217,10 @@ public class Page{
 	
 	public UUID getUuid(){
 		return this.uuid;
+	}
+
+	public Vertex save(Graph graph) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

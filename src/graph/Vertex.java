@@ -64,6 +64,8 @@ public class Vertex<T> {
 	 * @return
 	 */
 	public boolean equals(Vertex<?> vertex){
+		assert vertex != null;
+		
 		boolean isEqual = false;
 		if(vertex.getData().getClass().equals(this.getData().getClass())){
 			isEqual = vertex.getData().equals(this.getData());

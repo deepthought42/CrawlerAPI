@@ -1,4 +1,5 @@
 package browsing;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
@@ -8,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -16,15 +20,13 @@ import org.openqa.selenium.WebElement;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 
-import orientdb.IOrientVertex;
-
 /**
  * A reference to a web page 
  * 
  * @author Brandon Kindred
  *
  */
-public class Page implements IOrientVertex{
+public class Page {
 	public UUID uuid = null;	
 	public WebDriver driver = null;
 	public String src = "";
@@ -207,12 +209,22 @@ public class Page implements IOrientVertex{
 	
 
 	public String toString(){
-		String pageString = "\n";
-		
-		pageString += "\tDATE :: "+ this.date + "\n";
-		pageString += "\tELEMENT COUNT :: " +this.elements.size() + "\n";
-		
-		return pageString;
+		ObjectMapper mapper = new ObjectMapper();
+		String pageValue = null;
+		try {
+			pageValue = mapper.defaultPrettyPrintingWriter().writeValueAsString(this);
+		} catch (JsonGenerationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			System.err.println("I'm a Page And I'm experiencing JSON Problems");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return pageValue;
 	}
 	
 	public UUID getUuid(){

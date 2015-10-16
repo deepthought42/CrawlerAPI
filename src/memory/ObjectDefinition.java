@@ -8,15 +8,18 @@ package memory;
  */
 public class ObjectDefinition {
 
+	private String value;
+	private int count;
+	private String type;
+	private double probability;
+	
 	public ObjectDefinition(int count, String name, String type) {
 		this.count = count;
-		this.name = name;
 		this.type = type;
 	}
 
 	public ObjectDefinition(String name, String type) {
 		this.count = 1;
-		this.name = name;
 		this.type = type;
 	}
 	
@@ -37,22 +40,30 @@ public class ObjectDefinition {
 	public void setType(String type) {
 		this.type = type;
 	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@Override
-	public String toString(){
-		return "ObjectDefinition: "+ this.count + ", " + this.type + ", " + this.name;
-
+	
+	public void setValue(String value) {
+		this.value = value;
 	}
 	
-	private int count;
-	private String type;
-	private String name;
+	public String getValue(){
+		return this.value;
+	}
+	
+	@Override
+	public String toString(){
+		return this.value;
+
+	}
+
+	public void incrementCount() {
+		this.count += 1;
+	}
+
+	public void setProbability(double i) {
+		this.probability = i;		
+	}
+	
+	public double getProbability(){
+		return this.probability;
+	}
 }

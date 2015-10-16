@@ -1,11 +1,22 @@
 package browsing;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+
+import learning.Predict;
+import memory.ObjectDefinition;
 
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+
+import memory.Persistor;
+
+import com.tinkerpop.blueprints.Direction;
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Vertex;
 
 /**
  * 
@@ -76,6 +87,8 @@ public class ActionFactory {
 		builder.perform();
 	}
 	
+	
+	
 	/**
 	 * The list of actions possible
 	 * @return
@@ -93,4 +106,76 @@ public class ActionFactory {
 	public static Integer getCost(String action) {
 		return actionWeights.get(action);
 	}
+
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static int predict(ObjectDefinition obj) {
+		double[] action_weight = new double[actions.length];
+		Random rand = new Random();
+
+		//COMPUTE ALL EDGE PROBABILITIES
+		for(int index = 0; index < actions.length; index++){
+			Persistor orientPersistor = new Persistor();
+			if(!orientPersistor.find(obj).iterator().hasNext()){
+				return rand.nextInt(actions.length);
+			}
+			Vertex vertex = orientPersistor.find(obj).iterator().next();
+
+			Iterable<Edge> edges = vertex.getEdges(Direction.OUT, actions[index]);
+			if(edges.iterator().hasNext()){
+				for(Edge edge : edges){
+					if(edge.getLabel().isEmpty()){
+						//guess the label
+					}
+					else{
+						String label = edge.getLabel();
+						int action_count = edge.getProperty("count");
+						int probability = edge.getProperty("probability");
+						System.out.println("Label :: "+label+" ; count :: "+ action_count + " ; P() :: " + probability + "%");	
+					}
+				}
+			}
+			else{
+				System.out.println("+++   No edges found. Setting weight randomly ++");
+				action_weight[index] = rand.nextDouble();
+			}
+		}
+		
+		//Call predict method and get anticipated reward for given action against all datums
+		//	-- method needed for prediction 
+		//START PREDICT METHOD
+			
+		//Flip a coin to determine whether we should exploit/optimize or explore
+		double coin = rand.nextDouble();
+		if(coin > .5){
+			//Get Best action_weight prediction
+			double max = -1.0;
+			int maxIdx = 0;
+		    for(int j = 0; j < action_weight.length; j++){
+		    	if(action_weight[j] > max){
+		    		System.err.println("MAX WEIGHT FOR NOW :: "+max);
+		    		max=action_weight[j];
+		    		maxIdx = j;
+		    	}
+		    }
+		    
+		    System.out.println("-----------    max computed action is ....." + actions[maxIdx]);
+		    return maxIdx;
+		}
+		else{
+			System.err.println("Coin was flipped and exploration was chosen. OH MY GOD I HAVE NO IDEA WHAT TO DO!");
+			return 1;
+		}
+		//END PREDICT METHOD
+	}
+
+	public static String predict(List list) {
+		// TODO Auto-generated method stub
+		return null;
+	}		
+
+	
 }

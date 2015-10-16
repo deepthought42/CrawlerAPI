@@ -65,7 +65,7 @@ public class Browser {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	public Page updatePage(DateFormat date, boolean valid) throws MalformedURLException{
+	public Page updatePage(DateFormat date) throws MalformedURLException{
 		return new Page(driver, date);
 	}
 	

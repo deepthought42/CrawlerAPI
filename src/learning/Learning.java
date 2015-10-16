@@ -1,5 +1,7 @@
 package learning;
 
+import memory.ComplexObject;
+
 public class Learning {
 
 	public Learning() {

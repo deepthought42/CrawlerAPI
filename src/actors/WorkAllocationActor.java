@@ -4,9 +4,12 @@ import graph.Vertex;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
 
 import org.openqa.selenium.NoSuchElementException;
 
@@ -28,7 +31,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 	ObservableHash<Integer, Path> hash_queue = null;
 	ResourceManagementActor resourceManager = null;
 	GraphObserver graphObserver = null;
-	
+	private static Random rand = new Random();
+
 	/**
 	 * 
 	 * @param queue
@@ -101,19 +105,48 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return {@link Path} to be explored or null if none exist.
 	 */
 	public Path retrieveNextPath() {
-		Queue<Path> path_queue = hash_queue.getQueueHash().get(getSmallestKey());
+		Queue<Path> path_queue = hash_queue.getQueueHash().get(getRandomKey());
 		Path path = null;
 		if(path_queue != null && !path_queue.isEmpty()){
-			path = path_queue.poll();
-
-			System.out.print(Thread.currentThread().getName() + " -> ");
-			for(int idx : path.getPath()){
-				System.out.print(idx+",");
+			
+			//get random path
+			int rand_path_idx = rand.nextInt(path_queue.size());
+			int idx = 0;
+			Iterator<Path> path_iter = path_queue.iterator();
+			while(path_iter.hasNext()){
+				path = path_iter.next();
+				if(idx == rand_path_idx){
+					break;
+				}				
 			}
-			System.out.println(" ---- COST : " + path.getCost());
 
+			System.out.println(" ---- COST : " + path.getCost());
 		}
 		return path;
+	}
+	
+	/**
+	 * Finds smallest key in hash
+	 * @return <= 99999
+	 */
+	public synchronized Integer getRandomKey(){
+		Set<Integer> keys = hash_queue.getQueueHash().keySet();
+		int total_keys = keys.size();
+		int rand_key_idx = 0;
+		if(total_keys > 0){
+			rand_key_idx = rand.nextInt(total_keys);
+		}
+	
+		int i = 0;
+		for(Integer key : hash_queue.getQueueHash().keySet()){
+			if(key==null){
+				continue;
+			}
+			if(i == rand_key_idx){
+				return key;
+			}
+		}
+		return null;
 	}
 	
 	/**

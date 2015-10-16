@@ -277,31 +277,26 @@ public class BrowserActor extends Thread implements Actor{
 	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
 		long tStart = System.currentTimeMillis();
 
-		
 		Iterator<Integer> pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
 		Page pageNode = null;
 		//skip first node since we should have already loaded it during initialization
 		int i = 0;
 		while(pathIterator.hasNext()){
-			//System.out.println(this.getName() + " -> current path index :: " + i);
 			int path_node_index = pathIterator.next();
 			Vertex<?> pathNode = graph.getVertices().get(path_node_index);
 						
 			if(pathNode.getData() instanceof Page){
 				pageNode = (Page)pathNode.getData();
-				//verify current page matches current node data
-				//if not mark as different
+				//if current page does not match current node data 
 				if(!browser.getDriver().getPageSource().equals(pageNode.getSrc())){
-					System.out.println(this.getName() + " -> page node source does not match expected Page source");
+					return false;
 				}
-				//If new page is assign elementIdxChanges to empty list
-				elementIdxChanges = new ArrayList<Integer>();
 			}
 			else if(pathNode.getData() instanceof ElementAction){
-				long tStart_pageState = System.currentTimeMillis();
-
 				ElementAction elemAction = (ElementAction)pathNode.getData();
+				String[] actions = ActionFactory.getActions();
+				Persistor orientPersistor = new Persistor();
 				
 				//determine if elementAction is a child/descendent element action of another elementAction. 
 				//If it is do not execute it
@@ -353,8 +348,6 @@ public class BrowserActor extends Thread implements Actor{
 				//		-- a method for looking up the recently identified datums in local memory or 
 				//	graph storage is needed if no record is found in memory for datum, ignore, one 
 				//	will be created later for its
-				String[] actions = ActionFactory.getActions();
-				Persistor orientPersistor = new Persistor();
 				
 				System.out.println("Total object definitions to be examined " + objectDefinitions.size());
 				for(ObjectDefinition obj : objectDefinitions){
@@ -440,8 +433,6 @@ public class BrowserActor extends Thread implements Actor{
 					//additionalNodes.add(existingNodeIndex);
 				}
 				else{
-					long tStart_elementCheck = System.currentTimeMillis();
-
 					PageState pageState = new PageState(pageNode.getUuid());;
 					//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
 					List<PageElement> pageElements = pageNode.getElements();
@@ -466,12 +457,6 @@ public class BrowserActor extends Thread implements Actor{
 						}
 					}
 					
-					long tEnd_pageState = System.currentTimeMillis();
-					long tDelta = tEnd_pageState - tStart_elementCheck;
-					double elapsedSeconds = tDelta / 1000.0;
-					System.out.println(this.getName() + " -----ELAPSED TIME TO CHECK FOR ALL ELEMENTS EQUAL IN BOTH LISTS :: "+elapsedSeconds + "-----");
-					System.out.println(this.getName() + " #######################################################");
-					
 					if(isValidPageState){
 						Vertex<PageState> pageStateVertex = new Vertex<PageState>(pageState);
 						graph.addVertex(pageStateVertex);
@@ -479,12 +464,6 @@ public class BrowserActor extends Thread implements Actor{
 						additionalNodes.add(graph.findVertexIndex(pageStateVertex));
 					}
 				}
-
-				long tEnd_pageState = System.currentTimeMillis();
-				long tDelta = tEnd_pageState - tStart_pageState;
-				double elapsedSeconds = tDelta / 1000.0;
-				System.out.println(this.getName() + " -----ELAPSED TIME TO PERFORM ELEMENT ACTION SUCCESSFULLY :: "+elapsedSeconds + "-----");
-				System.out.println(this.getName() + " #######################################################");
 			}
 			else if(pathNode.getData() instanceof PageAlert){
 				System.err.println(this.getName() + " -> Handling Alert");

@@ -50,12 +50,7 @@ public class Vertex<T> {
 		else if(data instanceof PageState){
 			return 0;
 		}
-		else if(data instanceof ElementAction){
-			ElementAction ea = (ElementAction)data;
-			Integer cost =  ActionFactory.getCost(ea.getAction());
-			return 1 + cost;
-		}
-		return 100;
+		return -1;
 	}
 	
 	/**

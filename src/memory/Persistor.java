@@ -40,7 +40,7 @@ public class Persistor {
 	}
 
 	public Iterable<Vertex> find(ObjectDefinition obj) {
-		System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
+		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		Iterable<Vertex> objVertices = graph.getVertices("value", obj.getValue());
 		
 		return objVertices;

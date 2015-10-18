@@ -1,9 +1,14 @@
 package learning;
 
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class QLearn {
 
-	private double learning_rate = .05;
-	private double discount_factor = .05;
+	private double learning_rate = .001;
+	private double discount_factor = .001;
 	
 	/**
 	 * 

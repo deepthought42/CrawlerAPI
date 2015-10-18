@@ -105,8 +105,9 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return {@link Path} to be explored or null if none exist.
 	 */
 	public Path retrieveNextPath() {
-		Queue<Path> path_queue = hash_queue.getQueueHash().get(getRandomKey());
+		Queue<Path> path_queue = hash_queue.getQueueHash().get(hash_queue.getRandomKey());
 		Path path = null;
+		System.out.println("PATH QUEUE SIZE :: "+path_queue.size());
 		if(path_queue != null && !path_queue.isEmpty()){
 			
 			//get random path
@@ -122,31 +123,12 @@ public class WorkAllocationActor extends Thread implements Observer {
 
 			System.out.println(" ---- COST : " + path.getCost());
 		}
+		
+		System.out.println("PATH IS DEFINED AS :: " + path);
+		System.out.println("PATH ARRAY IS DEFINED AS :: " + path.getPath());
+		
+		System.out.println("RETURN PATH OF LENGTH :: "+path.getPath().size());
 		return path;
-	}
-	
-	/**
-	 * Finds smallest key in hash
-	 * @return <= 99999
-	 */
-	public synchronized Integer getRandomKey(){
-		Set<Integer> keys = hash_queue.getQueueHash().keySet();
-		int total_keys = keys.size();
-		int rand_key_idx = 0;
-		if(total_keys > 0){
-			rand_key_idx = rand.nextInt(total_keys);
-		}
-	
-		int i = 0;
-		for(Integer key : hash_queue.getQueueHash().keySet()){
-			if(key==null){
-				continue;
-			}
-			if(i == rand_key_idx){
-				return key;
-			}
-		}
-		return null;
 	}
 	
 	/**

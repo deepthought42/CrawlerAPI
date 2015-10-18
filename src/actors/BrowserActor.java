@@ -6,13 +6,13 @@ import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
 import learning.QLearn;
 import memory.DataDefinition;
 import memory.ObjectDefinition;
@@ -43,7 +43,8 @@ import browsing.PageState;
 import structs.Path;
 
 /**
- * An this threadable class is implemented to handle the interaction with a browser 
+ * This threadable class is implemented to handle the interaction with a browser 
+ * 
  * @author Brandon Kindred
  *
  */
@@ -272,7 +273,11 @@ public class BrowserActor extends Thread implements Actor{
 	
 	/**
 	 * Crawls the path for the current BrowserActor.
-	 * @throws MalformedURLException 
+	 * 
+	 * @return
+	 * @throws java.util.NoSuchElementException
+	 * @throws UnhandledAlertException
+	 * @throws MalformedURLException
 	 */
 	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
 		long tStart = System.currentTimeMillis();
@@ -280,197 +285,39 @@ public class BrowserActor extends Thread implements Actor{
 		Iterator<Integer> pathIterator = this.path.getPath().iterator();
 		Path additionalNodes = new Path();
 		Page pageNode = null;
+		PageElement last_element = null;
 		//skip first node since we should have already loaded it during initialization
-		int i = 0;
+	
 		while(pathIterator.hasNext()){
 			int path_node_index = pathIterator.next();
 			Vertex<?> pathNode = graph.getVertices().get(path_node_index);
 						
 			if(pathNode.getData() instanceof Page){
+				System.out.println(this.getName() + "PAGE IN SEQUENCE.");
 				pageNode = (Page)pathNode.getData();
 				//if current page does not match current node data 
 				if(!browser.getDriver().getPageSource().equals(pageNode.getSrc())){
 					return false;
 				}
 			}
-			else if(pathNode.getData() instanceof ElementAction){
-				ElementAction elemAction = (ElementAction)pathNode.getData();
-				String[] actions = ActionFactory.getActions();
-				Persistor orientPersistor = new Persistor();
-				
-				//determine if elementAction is a child/descendent element action of another elementAction. 
-				//If it is do not execute it
-				for(Vertex<?> vertex : graph.getVertices()){
-					if(vertex.getData() instanceof ElementAction){
-						ElementAction elementActionVertex = (ElementAction)vertex.getData();
-						if(elementActionVertex.getAction().equals(elemAction.getAction())
-							&& elemAction.getPageElement().isChildElement(elementActionVertex.getPageElement())){
-							
-							ArrayList<Integer> toIndices = graph.getToIndices(graph.findVertexIndex(vertex));
-							
-							int impactful_vertex_count = 0;
-							if(toIndices != null && !toIndices.isEmpty()){
-								for(Integer index : toIndices){
-									if(graph.getVertices().get(index).getData() instanceof PageState
-											|| graph.getVertices().get(index).getData() instanceof Page
-											|| graph.getVertices().get(index).getData() instanceof PageAlert){
-										impactful_vertex_count++;
-									}
-								}
-								if(impactful_vertex_count > 0){
-									System.err.println(this.getName() + " ->  ||||  Parent vertex exists and has edges that do not lead to an element action");
-									return false;
-								}
-							}
-						}
-					}
-				}				
-				
-				//execute element action
+			else if(pathNode.getData() instanceof PageElement){
+				System.out.println(this.getName() + "PAGE ELEMENT IN SEQUENCE.");
+				last_element = (PageElement) pathNode.getData();
+			}
+			else if(pathNode.getData() instanceof String){
+				System.out.println(this.getName() + "ACTION IN SEQUENCE.");
 				boolean actionPerformedSuccessfully;
+				String action = (String) pathNode.getData();
+				browser.updatePage( DateFormat.getDateInstance());
 				do{
-					actionPerformedSuccessfully = performAction(elemAction);	
+					actionPerformedSuccessfully = performAction(last_element, action );	
 				}while(!actionPerformedSuccessfully);
-				
-				//deconstruct Element into datums -- still in orientDB persistance file.
-				DataDefinition dataHandler = new DataDefinition(elemAction.getPageElement());
-				List<ObjectDefinition> objectDefinitions = null;
-
-				try {
-					objectDefinitions = dataHandler.decompose();
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				}
-				
-				//Get stored data for datums from memory graph
-				//		-- a method for looking up the recently identified datums in local memory or 
-				//	graph storage is needed if no record is found in memory for datum, ignore, one 
-				//	will be created later for its
-				
-				System.out.println("Total object definitions to be examined " + objectDefinitions.size());
-				for(ObjectDefinition obj : objectDefinitions){
-					int count = obj.getCount();
-					//get all vertices that match the object
-					Iterator<com.tinkerpop.blueprints.Vertex> vertexIterator = orientPersistor.find(obj).iterator();
-					System.err.println("OBJECT TYPE :: "+obj.getType());
-
-					while(vertexIterator.hasNext()){
-						com.tinkerpop.blueprints.Vertex vertex = vertexIterator.next();
-						System.err.print("VALUE :: "+ vertex.getProperty("value").toString());
-						System.err.print(";  Count :: "+vertex.getProperty(obj.getType()));
-						System.err.println(";  @Class :: " + vertex.getProperty("@class"));
-						int vertex_count  = vertex.getProperty("count");
-						count += vertex_count;
-						obj.incrementCount();
-					}
-					
-					int actionIdx = ActionFactory.predict(obj);
-					System.out.println("::::::::::::::::::::::::::::::::");
-					System.err.println("String suggested action " + actions[actionIdx]);
-					
-					//Persist Object
-					if(obj.getValue() != null){
-						System.out.println("Object value not null!!!!");
-						com.tinkerpop.blueprints.Vertex new_Vertex = orientPersistor.addVertex(obj);
-						new_Vertex.setProperty("value", obj.getValue());
-						new_Vertex.setProperty("count", obj.getCount());
-						orientPersistor.save();
-					}
-				}
-				
-				/*
-				 *Only use following for non phantomjs browsers
-				 */
-				 if(PageAlert.isAlertPresent(browser.getDriver())){
-					if(i == this.path.getPath().size()-1 || (i < this.path.getPath().size() && !graph.getVertices().get(this.path.getPath().get(i+1)).getClass().equals(PageAlert.class))){
-						PageAlert pageAlert = new PageAlert(pageNode, "accept", PageAlert.getMessage(PageAlert.getAlert(browser.getDriver())));
-						
-						Vertex<PageAlert> alertVertex = new Vertex<PageAlert>(pageAlert);
-						//add edge from last path vertex to alertVertex
-						graph.addVertex(alertVertex);
-						graph.addEdge(pathNode, alertVertex);
-					}
-					continue;
-				}
-				
-				Integer existingNodeIndex = graph.findVertexIndex(pathNode);
-				Vertex<?> existingNode = null;
-				
-				if(existingNodeIndex == -1){
-					existingNode = new Vertex<Page>(new Page(browser.getDriver(), DateFormat.getDateInstance()));
-					if(graph.addVertex(existingNode)){
-						graph.addEdge(path_node_index, existingNodeIndex);
-						System.out.println(this.getName() + " -> Added new page to Graph");
-					}
-					else{
-						System.out.println(this.getName() + " -> Failed to add page to PageMonitor");
-					}
-				}
-				else{
-					existingNode = graph.getVertices().get(existingNodeIndex);
-					//System.out.println(this.getName() + " -> Node already existed. Using existing node");
-					if(i >= this.path.getPath().size()){
-						System.out.println(this.getName()+" -> Reached end of path.");
-						
-						//Still need to add in a way to add the current elementAction node to the new pageNode
-						return false;
-					}
-				}
-			
-				//if not at end of path and next node is a Page or pageState then don't bother adding new node
-				if(i < path.getPath().size()-1 && (graph.getVertices().get(path.getPath().get(i+1)).getClass().equals(Page.class) 
-						|| graph.getVertices().get(path.getPath().get(i+1)).getClass().equals(PageState.class))){
-					i++;
-					continue;
-				}
-				//need to check if page is equal as well as if page state has changed
-				else if(pageNode != null && !pageNode.equals(existingNode)){
-					browser.updatePage( DateFormat.getDateInstance());
-					//Before adding new page, check if page has been experienced already. If it has load that page
-					//System.out.println(this.getName() + " -> Page has changed...adding new page to path");
-					//additionalNodes.add(existingNodeIndex);
-				}
-				else{
-					PageState pageState = new PageState(pageNode.getUuid());;
-					//else if after performing action styles on one or more of the elements is no longer equal then mark element as changed.
-					List<PageElement> pageElements = pageNode.getElements();
-					boolean isValidPageState = false;
-					for(int idx=0; idx < pageElements.size(); idx++){
-						WebElement elem = browser.getDriver().findElement(By.xpath(pageElements.get(idx).getXpath()));
-						PageElement newElem = new PageElement(browser.getDriver(), elem, pageNode, null);
-						if(!newElem.equals(pageElements.get(idx))){
-							System.out.println(this.getName() + " -> Node differs from initial page node. Adding index to list of changed elements");
-							if(elementIdxChanges.contains(idx)){
-								System.out.println(this.getName() + " -> Node has changed previously. Exiting crawl.");
-								return false;
-							}
-							elementIdxChanges.add(idx);
-							
-							//remove element from page list and replace with new element
-							pageElements.remove(idx);
-							pageElements.add(idx, newElem);
-							
-							pageState.addChangedPageElement(newElem);
-							isValidPageState = true;
-						}
-					}
-					
-					if(isValidPageState){
-						Vertex<PageState> pageStateVertex = new Vertex<PageState>(pageState);
-						graph.addVertex(pageStateVertex);
-						graph.addEdge(existingNode, pageStateVertex);
-						additionalNodes.add(graph.findVertexIndex(pageStateVertex));
-					}
-				}
 			}
 			else if(pathNode.getData() instanceof PageAlert){
 				System.err.println(this.getName() + " -> Handling Alert");
 				PageAlert alert = (PageAlert)pathNode.getData();
 				alert.performChoice(browser.getDriver());
 			}
-			i++;
 		}
 		this.path.append(additionalNodes);
 		
@@ -484,7 +331,7 @@ public class BrowserActor extends Thread implements Actor{
 	}
 	
 	/**
-	 * 
+	 * Expands path and implements reinforcement learning based on results of expansion
 	 * 
 	 * @throws MalformedURLException
 	 * @throws IllegalArgumentException
@@ -509,7 +356,7 @@ public class BrowserActor extends Thread implements Actor{
 				System.out.println("&&&&&  GETTING BEST ELEMENT ACTION PAIR &&&&&&&&&");
 				double[] element_probabilities = new double[page.getElements().size()];
 				//get index of best estimated element
-				getElementOfBestEstimatedIndex(page, element_probabilities);
+				getElementOfBestEstimatedIndex(page.getElements(), element_probabilities);
 				chosen_pageElement = page.getElements().get(getBestIndex(element_probabilities));
 						
 				//get best known action given best chosen element
@@ -539,12 +386,10 @@ public class BrowserActor extends Thread implements Actor{
 			int page_elem_vertex_idx = graph.findVertexIndex(pageElementVertex);
 			int action_vertex_idx = graph.findVertexIndex(actionVertex);
 
-			if(!path.getPath().contains(page_elem_vertex_idx)){
-				Path new_path = Path.clone(path);
-				new_path.add(page_elem_vertex_idx);
-				new_path.add(action_vertex_idx);
-				putPathOnQueue(new_path);
-			}
+			Path new_path = Path.clone(path);
+			new_path.add(page_elem_vertex_idx);
+			new_path.add(action_vertex_idx);
+			putPathOnQueue(new_path);
 			
 			//REINFORCEMENT LEARNING
 			//get all objects for the chosen page_element
@@ -559,7 +404,7 @@ public class BrowserActor extends Thread implements Actor{
 			
 			//Reinforce probabilities for the component objects of this element if
 			for(ObjectDefinition objDef : best_definitions){
-				System.err.println("learning with object definition");
+				System.err.println(this.getName() + " -> learning with object definition : "+ objDef.getValue());
 				//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 				Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
 				Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
@@ -568,13 +413,15 @@ public class BrowserActor extends Thread implements Actor{
 				com.tinkerpop.blueprints.Vertex v = null;
 				if(memory_iterator.hasNext()){
 					while(memory_iterator.hasNext()){
-						System.err.println(this.getName() + " -> Getting memory vertex");
+						//System.err.println(this.getName() + " -> Getting memory vertex");
 						v = memory_iterator.next();
 						retrieve_learn_update(v, current_page, page, q_learn, estimated_reward);
 					}
 				}
 				else{
 					v = persistor.addVertex(objDef);
+					v.setProperty("value", objDef.getValue());
+					v.setProperty("type", objDef.getType());
 					retrieve_learn_update(v, current_page, page, q_learn, estimated_reward);
 				}
 			}
@@ -598,6 +445,7 @@ public class BrowserActor extends Thread implements Actor{
 	}
 	
 	/**
+	 * Finds the object in memory, reward is determined and learned from and object is put back into memory.
 	 * 
 	 * @param v
 	 * @param current_obj
@@ -621,7 +469,7 @@ public class BrowserActor extends Thread implements Actor{
 			}
 
 			q_learn_val = q_learn.calculate(old_value, reward, estimated_reward);
-			System.err.println(this.getName() + " --> Q Learn value :: " + q_learn_val);
+			//System.err.println(this.getName() + " --> Q Learn value :: " + q_learn_val);
 			v.setProperty("probability", q_learn_val);
 			persistor.graph.commit();
 		}
@@ -639,6 +487,7 @@ public class BrowserActor extends Thread implements Actor{
 	}
 	
 	/**
+	 * Calculates the rewards
 	 * 
 	 * @param action_rewards
 	 * @param pageElement
@@ -689,16 +538,17 @@ public class BrowserActor extends Thread implements Actor{
 	}
 	
 	/**
+	 * Finds index with highest value in given array
 	 * 
 	 * @param page
 	 * @param element_probabilities
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public void getElementOfBestEstimatedIndex(Page page, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
+	public void getElementOfBestEstimatedIndex(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
 
 		int elementIdx = 0;
-		for(PageElement elem : page.getElements()){
+		for(PageElement elem : pageElements){
 			//find vertex for given element
 			DataDefinition mem = new DataDefinition(elem);
 			List<ObjectDefinition> raw_object_definitions = mem.decompose();
@@ -764,26 +614,6 @@ public class BrowserActor extends Thread implements Actor{
 	 * Adds the given {@link Vertex vertex} to the queue
 	 * 
 	 * @param path path to be added
-	 * @param queue 
-	 * @pre path != null
-	 */
-	private void putPathOnQueue(Path path, HashMap<Integer, ConcurrentLinkedQueue<Path>> queue){
-		assert path != null;
-		ConcurrentLinkedQueue<Path> desiredQueue = null;
-		if(queue.get(path.getCost(this.graph)) != null){
-			desiredQueue = queue.get(path.getCost(this.graph));
-		}
-		else{
-			desiredQueue = new ConcurrentLinkedQueue<Path>();
-		}
-		desiredQueue.add(path);
-		queue.put(path.getCost(), desiredQueue);
-	}
-	
-	/**
-	 * Adds the given {@link Vertex vertex} to the queue
-	 * 
-	 * @param path path to be added
 	 * @pre path != null
 	 */
 	private ConcurrentLinkedQueue<Path> putPathOnQueue(Path path){
@@ -797,6 +627,50 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public UUID getActorId(){
 		return uuid;
+	}
+	
+	/**
+	 * Executes the given {@link ElementAction element action} pair such that
+	 * the action is executed against the element 
+	 * 
+	 * @param elemAction ElementAction pair
+	 * @return whether action was able to be performed on element or not
+	 */
+	private boolean performAction(PageElement elem, String action){
+		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
+		boolean wasPerformedSuccessfully = true;
+		
+		try{
+			WebElement element = browser.getDriver().findElement(By.xpath(elem.getXpath()));
+			System.err.println(this.getName() + "PERFORMING ACTION .. ");
+			actionFactory.execAction(element, action);
+			
+			System.err.println(this.getName() + " -> Performed action "+ action
+					+ " On element with xpath :: "+elem.getXpath());
+		}
+		catch(StaleElementReferenceException e){
+			/*
+			 	System.out.println(this.getName()
+					+ " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+					+ action + ". ");
+			//e.printStackTrace();
+			//wasPerformedSuccessfully = false;
+			 
+			 */
+		}
+		catch(UnreachableBrowserException e){
+			System.err.println(this.getName() + " :: Browser is unreachable.");
+			wasPerformedSuccessfully = false;
+		}
+		catch(ElementNotVisibleException e){
+			System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
+		}
+		catch(NoSuchElementException e){
+			//System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION");
+			wasPerformedSuccessfully = false;
+		}
+		
+		return wasPerformedSuccessfully;
 	}
 	
 	
@@ -838,29 +712,6 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		
 		return wasPerformedSuccessfully;
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	private ArrayList<ElementAction> getElementActionsSeen(){
-		ArrayList<ElementAction> elementActionSeenList = new ArrayList<ElementAction>();
-
-		//navigate path back to last seen page
-		//for each ElementAction seen, record elementAction.
-		Vertex<?> descNode = null;
-		for(int i = 0; i < this.path.getPath().size(); i--){
-			 descNode = graph.getVertices().get(this.path.getPath().get(i));
-			
-			if(descNode.getData() instanceof Page){
-				break;
-			}
-			else{
-				elementActionSeenList.add((ElementAction)descNode.getData());
-			}
-		}
-		return elementActionSeenList;
 	}
 	
 	/**

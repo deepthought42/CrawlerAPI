@@ -2,6 +2,8 @@ package observableStructs;
 
 import java.util.HashMap;
 import java.util.Observable;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -65,4 +67,26 @@ public class ObservableHash<K, E> extends Observable {
 		return queue;
 	}
 
+	/**
+	 * Finds random key that exists in hash
+	 * @return <= 99999
+	 */
+	public synchronized Object getRandomKey(){
+		Set<?> keys = queueHash.keySet();
+		int total_keys = keys.size();
+		
+		Object[] key_array = new Object[keys.size()];
+		int key_idx = 0;
+		for(Object key : keys){
+			key_array[key_idx] = key;
+			key_idx++;
+		}
+		
+		Random rand = new Random();
+		int rand_key_idx = rand.nextInt(total_keys);
+		
+				
+		System.out.println("RANDOM KEY IS RETURNING NULL");
+		return key_array[rand_key_idx];
+	}
 }

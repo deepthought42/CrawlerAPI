@@ -16,17 +16,16 @@ public class DataDefinition {
 	}
 	
 	/**
-	 * 
+	 * Decomposes object down into data fragments
 	 * @return
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public List<ObjectDefinition> decompose() throws IllegalArgumentException, IllegalAccessException{
+	public List<ObjectDefinition> decompose() throws IllegalArgumentException, IllegalAccessException, NullPointerException{
 		List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
 		Class<?> objClass = this.object.getClass();
-	    System.out.println("Printing fields...");
 	    Field[] fields = objClass.getFields();
-	    //System.out.println("FIELD COUNT : "+ fields.length);
+	    System.out.println("FIELD COUNT : "+ fields.length);
 	    for(Field field : fields) {
 	        String name = field.getName();
 	        Object value = field.get(this.object);
@@ -36,16 +35,17 @@ public class DataDefinition {
 	        			        
 		        if(value.getClass().equals(ArrayList.class)){
 		        	ArrayList<?> list = ((ArrayList<?>)value);
-		        	List<ObjectDefinition> objList = decomposeArrayList(list);
-		        	if(objList == null){
-		        		continue;
+		        	List<ObjectDefinition> decomposedList = decomposeArrayList(list);
+		        	if(decomposedList != null){
+		        		objDefList.addAll(decomposedList);
 		        	}
-		        	objDefList.addAll(objList);
-		        	
+		        }
+		        else if(value.getClass().equals(String[].class)){
+		        	String[] array = (String[]) value;
+		        	objDefList.addAll(decomposeStringArray(array));
 		        }
 		        else{
 		        	objDef = new ObjectDefinition(1, value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
-		        	objDef.setValue(value.toString());
 		        	objDefList.add(objDef);
 			        //System.out.println("CLASS :: "+value.getClass().getName() + " ;; NAME :: "+field.getName() +"; VALUE :: "+objDef.getValue());
 		        }
@@ -53,9 +53,33 @@ public class DataDefinition {
 
 	        }
 	    }
+	    System.out.println("ELEMENTS DECOMPOSED");
 		return objDefList;
 	}
 	
+	/**
+	 * Decomposes an array into memory blocks
+	 * @param array
+	 * @return
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	private List<ObjectDefinition> decomposeStringArray(String[] array) throws IllegalArgumentException, IllegalAccessException{
+		if(array == null || array.length == 0){
+			return null;
+		}
+		System.out.println("Array seen.");
+    	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
+    	
+    	Class<?> listClass = array[0].getClass();
+        System.out.println("LIST CLASS:: "+ listClass);
+        for(String object : array){
+        	DataDefinition data_def = new DataDefinition(object);
+        	objDefList = data_def.decompose();
+        }
+		return objDefList;
+	}
+
 	/**
 	 * 
 	 * 
@@ -64,25 +88,20 @@ public class DataDefinition {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private List<ObjectDefinition> decomposeArrayList(ArrayList<?> list) throws IllegalArgumentException, IllegalAccessException{
+	private List<ObjectDefinition> decomposeArrayList(ArrayList<?> list) throws IllegalArgumentException, IllegalAccessException, NullPointerException {
 		if(list == null || list.isEmpty()){
 			return null;
 		}
 		System.out.println("ArrayList seen.");
-    	ArrayList<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
+    	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
     	
     	Class<?> listClass = list.get(0).getClass();
-    	Field[] listFields = listClass.getFields();
         System.out.println("LIST CLASS:: "+ listClass);
         for(Object object : list){
-		    for(Field listField : listFields) {
-		    	String fieldName = listField.getName();
-		        Object fieldValue = listField.get(object);
-		       // System.out.println(fieldName + ": " + fieldValue);
-		    }
-		    ObjectDefinition objDef = new ObjectDefinition(1, object.toString(), object.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
-        	objDefList.add(objDef);
+        	System.out.println("DECOMPOSING LIST OBJECT :: " + object);
+        	DataDefinition data_def = new DataDefinition(object);
+        	objDefList = data_def.decompose();
         }
-		return new ArrayList<ObjectDefinition>();
+		return objDefList;
 	}
 }

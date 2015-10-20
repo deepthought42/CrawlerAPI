@@ -4,18 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PageState {
-	private UUID uuid = null;
-	private UUID pageUuid = null;
+import learning.State;
+
+public class PageState extends State{
 	private List<PageElement> elementsChanged = null;
 	
 	/**
 	 * Instantiate a new PageState referencing the associated page via UUID
 	 * @param pageUuid {@link Page} uuid that this page state is associated with
 	 */
-	public PageState(UUID pageUuid){
-		this.uuid = UUID.randomUUID();
-		this.pageUuid = pageUuid;
+	public PageState(Page page){
+		super(page);
 		this.elementsChanged = new ArrayList<PageElement>();
 	}
 	
@@ -31,14 +30,6 @@ public class PageState {
 	
 	public List<PageElement> getElementsChanged(){
 		return this.elementsChanged;
-	}
-	
-	public UUID getUuid(){
-		return this.uuid;
-	}
-	
-	public UUID getPageUuid(){
-		return this.pageUuid;
 	}
 	
 	/**

@@ -1,12 +1,15 @@
 package browsing;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import util.ArrayUtility;
 
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class Attribute {
-	private String name;
-	private String[] val;
+	public String name;
+	public String[] val;
 	
 	public Attribute(String attrName, String[] val){
 		this.name = attrName;
@@ -35,6 +38,7 @@ public class Attribute {
 		attrString += "NAME :: " + this.getName() + "\n";
 		attrString += "VALUE :: " + this.getVal() + "\n";
 		
+		System.out.println("ATTRIBUTE : "+attrString);
 		return attrString;
 	}
 }

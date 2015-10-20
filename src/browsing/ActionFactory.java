@@ -1,9 +1,7 @@
 package browsing;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 
-import learning.Predict;
 import memory.ObjectDefinition;
 
 import org.openqa.selenium.Keys;
@@ -171,11 +169,4 @@ public class ActionFactory {
 		}
 		//END PREDICT METHOD
 	}
-
-	public static String predict(List list) {
-		// TODO Auto-generated method stub
-		return null;
-	}		
-
-	
 }

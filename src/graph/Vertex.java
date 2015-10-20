@@ -1,7 +1,5 @@
 package graph;
 
-import browsing.ActionFactory;
-import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.PageState;
@@ -15,7 +13,6 @@ import browsing.PageState;
  */
 public class Vertex<T> {
 	private boolean isRoot = false;
-	private int cost = 0;
 	private T data = null;
 	
 	public Vertex(T obj){

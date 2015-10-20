@@ -1,10 +1,6 @@
 import graph.Graph;
 
-import java.io.File;
 import java.net.MalformedURLException;
-
-import com.orientechnologies.orient.server.OServer;
-import com.orientechnologies.orient.server.OServerMain;
 
 import actors.BrowserActor;
 import actors.GraphObserver;

@@ -12,9 +12,9 @@ import org.openqa.selenium.WebDriver;
  *
  */
 public class PageAlert {
-	private Page page = null;
-	private String choice;
-	private String message;
+	public Page page = null;
+	public String choice;
+	public String message;
 	
 	/**
 	 * 

@@ -1,5 +1,4 @@
 package browsing;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
@@ -7,18 +6,13 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
+import learning.State;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-
-import com.tinkerpop.blueprints.Graph;
-import com.tinkerpop.blueprints.Vertex;
 
 /**
  * A reference to a web page 
@@ -26,8 +20,7 @@ import com.tinkerpop.blueprints.Vertex;
  * @author Brandon Kindred
  *
  */
-public class Page {
-	public UUID uuid = null;	
+public class Page implements State {
 	public WebDriver driver = null;
 	public String src = "";
 	public DateFormat date = null;
@@ -35,8 +28,6 @@ public class Page {
 	public ArrayList<PageElement> elements = new ArrayList<PageElement>();
 	public Page prevPage;
 	
-	HashMap<PageElement, HashMap<String, Page>> elementActionMap = new HashMap<PageElement, HashMap<String, Page>>();
-
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
 	 * 
@@ -47,7 +38,6 @@ public class Page {
 	 * @throws URISyntaxException 
 	 */
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException{
-		this.uuid = UUID.randomUUID();
 		this.driver = driver;
 		this.src = driver.getPageSource();
 
@@ -204,35 +194,14 @@ public class Page {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-		return this.src.equals(that.src);
+		return this.src.equals(that.src) && (this.elements.size() == that.elements.size());
 	}
 	
-
 	public String toString(){
-		ObjectMapper mapper = new ObjectMapper();
-		String pageValue = null;
-		try {
-			pageValue = mapper.defaultPrettyPrintingWriter().writeValueAsString(this);
-		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			System.err.println("I'm a Page And I'm experiencing JSON Problems");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return pageValue;
-	}
-	
-	public UUID getUuid(){
-		return this.uuid;
+		return this.getSrc()+" [[:;:;:;]] " + this.date + " [[:;:;:;]] " + this.pageUrl;
 	}
 
-	public Vertex save(Graph graph) {
-		// TODO Auto-generated method stub
-		return null;
+	public Object getObject() {
+		return this;
 	}
 }

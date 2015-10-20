@@ -13,8 +13,9 @@ public class ObjectDefinition {
 	private String type;
 	private double probability;
 	
-	public ObjectDefinition(int count, String name, String type) {
+	public ObjectDefinition(int count, String value, String type) {
 		this.count = count;
+		this.value = value;
 		this.type = type;
 	}
 

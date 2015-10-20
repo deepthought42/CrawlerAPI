@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
-import java.util.UUID;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -19,13 +18,10 @@ import util.ArrayUtility;
  *  may be a Parent and/or child of another PageElement. This heirarchy is not
  *  maintained by PageElement though. 
  *  
- *  //TODO Maintain heirarchy between pageElements
- * 
  * @author Brandon Kindred
  *
  */
 public class PageElement {
-	public UUID uuid = null;
 	public Page page = null;
 	public String[] actions = ActionFactory.getActions();
 	public String tagName;
@@ -33,31 +29,14 @@ public class PageElement {
 	public String xpath;
 	public boolean changed=false;
 	public ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	public String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
-	public String[] ignorableTags = {"b", "i", "script", "link", "p"};
-	public ValueDomain positiveDomain = new ValueDomain();
+	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
+	private ValueDomain positiveDomain = new ValueDomain();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
 	
 	//transfer list to enum class
 	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
-
-	/**
-	 * Constructs a PageElement.
-	 * 
-	 * @param driver
-	 * @param elem
-	 */
-	@Deprecated
-	public PageElement(WebDriver driver, WebElement elem){
-		this.uuid = UUID.randomUUID();
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		loadAttributes(driver, elem);
-		loadCssProperties(elem);
-		this.xpath = this.generateXpath(driver);
-	}
 	
 	/**
 	 * Constructs a PageElement.
@@ -67,7 +46,6 @@ public class PageElement {
 	 * @param actions
 	 */
 	public PageElement(WebDriver driver, WebElement elem, String[] actions){
-		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
@@ -82,7 +60,6 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, String[] actions){
-		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
@@ -102,7 +79,6 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, Page page){
-		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.page = page;
@@ -123,7 +99,6 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, Page page, String[] actions){
-		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
@@ -137,23 +112,7 @@ public class PageElement {
 		this.xpath = parentXpath + this.generateXpath(driver);
 		this.xpath = uniqifyXpath(driver, xpathHash);
 	}
-	
-	/**
-	 * Constructs a PageElement.
-	 * 
-	 * @param driver
-	 * @param elem
-	 */
-	@Deprecated
-	public PageElement(WebDriver driver, WebElement elem, Page page){
-		this.uuid = UUID.randomUUID();
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		this.page = page;
-		loadAttributes(driver, elem);
-		loadCssProperties(elem);
-		this.xpath = this.generateXpath(driver);
-	}
+
 
 	/**
 	 * Constructs a PageElement.
@@ -162,7 +121,6 @@ public class PageElement {
 	 * @param elem
 	 */
 	public PageElement(WebDriver driver, WebElement elem, Page page, String[] actions){
-		this.uuid = UUID.randomUUID();
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
@@ -454,10 +412,6 @@ public class PageElement {
 	
 	public Page getPage(){
 		return this.page;
-	}
-	
-	public UUID getUuid(){
-		return this.uuid;
 	}
 
 	public boolean isIgnorable() {

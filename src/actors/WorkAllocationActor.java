@@ -124,10 +124,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 			System.out.println(" ---- COST : " + path.getCost());
 		}
 		
-		System.out.println("PATH IS DEFINED AS :: " + path);
-		System.out.println("PATH ARRAY IS DEFINED AS :: " + path.getPath());
-		
-		System.out.println("RETURN PATH OF LENGTH :: "+path.getPath().size());
+		System.out.println(this.getName() + " -> PATH ARRAY IS DEFINED AS :: " + path.getPath());
 		return path;
 	}
 	

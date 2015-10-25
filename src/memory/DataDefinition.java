@@ -43,11 +43,16 @@ public class DataDefinition {
 		        }
 		        else if(value.getClass().equals(String[].class)){
 		        	String[] array = (String[]) value;
-		        	objDefList.addAll(decomposeStringArray(array));
+		        	List<ObjectDefinition> objList = decomposeStringArray(array);
+		        	if(objList != null){
+		        		objDefList.addAll(objList);
+		        	}
 		        }
 		        else{
-		        	objDef = new ObjectDefinition(1, value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
-		        	objDefList.add(objDef);
+		        	if(value.toString() != null && !value.toString().equals("")){
+		        		objDef = new ObjectDefinition(1, value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		        		objDefList.add(objDef);
+		        	}
 			        //System.out.println("CLASS :: "+value.getClass().getName() + " ;; NAME :: "+field.getName() +"; VALUE :: "+objDef.getValue());
 		        }
 		       // System.out.println("CLASS :: "+value.getClass().getName() + " ;; NAME :: "+field.getName());
@@ -98,8 +103,10 @@ public class DataDefinition {
        // System.out.println("LIST CLASS:: "+ listClass);
         for(Object object : list){
         	//System.out.println("DECOMPOSING LIST OBJECT :: " + object);
-        	DataDefinition data_def = new DataDefinition(object);
-        	objDefList = data_def.decompose();
+        	if(object != null){
+        		DataDefinition data_def = new DataDefinition(object);
+        		objDefList = data_def.decompose();
+        	}
         }
 		return objDefList;
 	}

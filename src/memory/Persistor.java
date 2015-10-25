@@ -144,15 +144,23 @@ public class Persistor {
 	 * If a state for the given page exists then it is loaded, otherwise a new state is created and returned
 	 * @param page
 	 * @return
+	 * @throws NullPointerException 
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
-	public Vertex createAndLoadState(Page page){
+	public Vertex createAndLoadState(Page page) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
 		Vertex state_vertex = null;
-		MemoryState memState = new MemoryState(page.hashCode(), page.screenshot );
+		MemoryState memState = new MemoryState(page.hashCode());
+		System.out.println("FINDING STATE WITH IDENTIFIER :: "+memState.getIdentifier());
 		Iterator<com.tinkerpop.blueprints.Vertex> state_iter = this.findState(memState).iterator();
 		if(!state_iter.hasNext()){
 			state_vertex = createState(page);
+			DataDefinition dataDef = new DataDefinition(page);
+			List<ObjectDefinition> objDefList = dataDef.decompose();
+			saveState(objDefList, state_vertex);
 		}
 		else{
+			System.out.println("STATE HAS BEEN FOUND!");
 			state_vertex = state_iter.next();
 		}
 		return state_vertex;
@@ -166,7 +174,7 @@ public class Persistor {
 	public Vertex createState(Page page){
 		Vertex state_vertex = this.addVertex(Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		state_vertex.setProperty("identifier", page.hashCode());
-		state_vertex.setProperty("screenshot", page.screenshot);
+		//state_vertex.setProperty("screenshot", page.screenshot);
 		try{
 			this.save();
 		}

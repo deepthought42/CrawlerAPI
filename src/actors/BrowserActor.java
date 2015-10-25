@@ -282,9 +282,11 @@ public class BrowserActor extends Thread implements Actor{
 				boolean actionPerformedSuccessfully;
 				String action = (String) pathNode.getData();
 				browser.updatePage( DateFormat.getDateInstance());
+				int attempts = 0;
 				do{
-					actionPerformedSuccessfully = performAction(last_element, action );	
-				}while(!actionPerformedSuccessfully);
+					actionPerformedSuccessfully = performAction(last_element, action );
+					attempts++;
+				}while(!actionPerformedSuccessfully && attempts < 50);
 			}
 			else if(pathNode.getData() instanceof PageAlert){
 				System.err.println(this.getName() + " -> Handling Alert");
@@ -424,10 +426,14 @@ public class BrowserActor extends Thread implements Actor{
 				last_page = (Page)vertex.getData();
 			}
 		}	
-		Page current_page = new Page(browser.getDriver(), DateFormat.getInstance());
+				
+		if(last_page == null){
+			last_page = browser.getPage();
+		}
+		
+		Page current_page = browser.getPage();
 		
 		com.tinkerpop.blueprints.Vertex state_vertex = persistor.createAndLoadState(last_page);
-
 		if(!last_page.equals(current_page)){
 			com.tinkerpop.blueprints.Vertex new_state_vertex = persistor.createAndLoadState(current_page);
 			
@@ -469,14 +475,6 @@ public class BrowserActor extends Thread implements Actor{
 			List<ObjectDefinition> current_page_data = current_page_mem.decompose();
 			persistor.saveState(current_page_data, new_state_vertex);
 			
-			//
-			//DO NOT FORGET ABOUT THIS
-			//
-			//SHOULD GET THE ACTUAL VECTOR AND EDGE ADDRESES IN THE DATABASE ADDRESSES
-			//
-			//THIS IS VITAL FOR MEMORY
-			//
-			//e.setProperty("path", path.toString());
 			try{
 				persistor.save();
 			}
@@ -488,6 +486,11 @@ public class BrowserActor extends Thread implements Actor{
 			last_page = current_page;
 		}
 		else{
+			Edge e = persistor.addEdge(state_vertex, state_vertex, "TRANSITION", "GOES_TO");
+			e.setProperty("action", last_action);
+			e.setProperty("xpath", last_element.xpath);
+			e.setProperty("probability", 0.0);
+			
 			state_vertex.addEdge(last_action, state_vertex);
 		}		
 		

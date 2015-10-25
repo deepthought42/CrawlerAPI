@@ -11,7 +11,7 @@ import memory.ObjectDefinition;
  * 
  * @author Brandon Kindred
  */
-public class MemorySequence {
+public class MemorySequence extends Persistor{
 	public Vertex[] nodes = null;
 	
 	/**
@@ -23,6 +23,7 @@ public class MemorySequence {
 	 * @param toState
 	 */
 	public MemorySequence(Vertex[] nodes) {
+		super();
 		this.nodes = nodes;
 	}
 	

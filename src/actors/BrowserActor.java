@@ -2,6 +2,7 @@ package actors;
 import graph.Graph;
 import graph.Vertex;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import learning.QLearn;
 import memory.DataDefinition;
+import memory.MemoryState;
 import memory.ObjectDefinition;
 import memory.Persistor;
 import observableStructs.ObservableHash;
@@ -30,6 +32,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
+import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 
@@ -64,9 +67,9 @@ public class BrowserActor extends Thread implements Actor{
 	/**
 	 * 
 	 * @param url
-	 * @throws MalformedURLException
+	 * @throws IOException 
 	 */
-	public BrowserActor(String url) throws MalformedURLException {
+	public BrowserActor(String url) throws IOException {
 		this.url = url;
 		browser = new Browser(url);
 		this.path = new Path();
@@ -77,8 +80,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @param url	url of page to be accessed
 	 * @param queue observable path queue
-	 * @throws MalformedURLException 
-	 * 
+	 * @throws IOException 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
@@ -87,13 +89,13 @@ public class BrowserActor extends Thread implements Actor{
 						ObservableHash<Integer, Path> path_queue,
 						Graph graph,
 						ResourceManagementActor resourceManager, 
-						WorkAllocationActor workAllocator) throws MalformedURLException {
+						WorkAllocationActor workAllocator) throws IOException {
 		assert(path_queue != null);
 		assert(path_queue.isEmpty());
 		
 		this.uuid = UUID.randomUUID();
 		this.url = url;
-		this.path = path;
+		this.path = Path.clone(path);
 		browser = new Browser(url);
 		this.queueHash = path_queue;
 		this.graph = graph;
@@ -106,8 +108,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * 
 	 * @param queue ovservable path queue
 	 * @param path	path to use to navigate to desired page
-	 * @throws MalformedURLException 
-	 * 
+	 * @throws IOException 
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
@@ -115,7 +116,7 @@ public class BrowserActor extends Thread implements Actor{
 						Graph graph, 
 						Path path, 
 						ResourceManagementActor resourceManager, 
-						WorkAllocationActor workAllocator) throws MalformedURLException {
+						WorkAllocationActor workAllocator) throws IOException {
 		assert(queue != null);
 		assert(queue.isEmpty());
 		
@@ -123,7 +124,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.graph = graph;
 		Vertex<?> node = graph.getVertices().get(path.getPath().get(0)); 
 		assert(((Page)node.getData()).getUrl() != null);
-		this.path = path;
+		this.path = Path.clone(path);
 		this.url = ((Page)node.getData()).getUrl().toString();
 		
 		//System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
@@ -150,28 +151,30 @@ public class BrowserActor extends Thread implements Actor{
 	public void run() {
 		resourceManager.punchIn(this);
 		try{
-			long tStart = System.currentTimeMillis();
-			if(this.path.getPath().isEmpty()){
-				System.out.println(this.getName() + " -> Path is empty. Adding to path");
-				Vertex<Page> vertex = new Vertex<Page>(browser.getPage());
-				graph.addVertex(vertex);
-				int vertex_idx = graph.findVertexIndex(vertex);
-				//need to add edge to vertex
-				this.path.add(vertex_idx);
-				Path path = Path.clone(this.path);
-				putPathOnQueue(path);
-			}
-			else{
-				System.out.println(this.getName() + " -> PATH IS NOT EMPTY. Working on path.");
-				this.url = ((Page)(graph.getVertices().get(this.path.getPath().get(0))).getData()).getUrl().toString();
-				System.out.println(this.getName() + " -> NEW URL :: " + this.url);
-				browser.getDriver().get(this.url);
-			}
+			do{
+				long tStart = System.currentTimeMillis();
+				if(this.path.getPath().isEmpty()){
+					System.out.println(this.getName() + " -> Path is empty. Adding to path");
+					Vertex<Page> vertex = new Vertex<Page>(browser.getPage());
+					graph.addVertex(vertex);
+					int vertex_idx = graph.findVertexIndex(vertex);
+					//need to add edge to vertex
+					this.path.add(vertex_idx);
+					Path path = Path.clone(this.path);
+					putPathOnQueue(path);
+				}
+				else{
+					System.out.println(this.getName() + " -> PATH IS NOT EMPTY. Working on path.");
+					this.url = ((Page)(graph.getVertices().get(this.path.getPath().get(0))).getData()).getUrl().toString();
+					System.out.println(this.getName() + " -> NEW URL :: " + this.url);
+					browser.getDriver().get(this.url);
+				}
 			
-			boolean successfulCrawl = crawlPath();
-			int length_limit = 0;
-			while(length_limit < 10){				
-				if(successfulCrawl){
+				
+				boolean successfulCrawl = crawlPath();
+				System.out.println("Successful crawl : "+ successfulCrawl);
+				int length_limit = 0;
+				do{
 					System.out.println(this.getName() + " EXPANDING NODE...");
 					try {
 						path = expandNodePath();
@@ -181,19 +184,21 @@ public class BrowserActor extends Thread implements Actor{
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
 					}
-				}
-				
-				long tEnd = System.currentTimeMillis();
-				long tDelta = tEnd - tStart;
-				double elapsedSeconds = tDelta / 1000.0;
-				
-				System.out.println(this.getName() + " -----ELAPSED TIME RUNNING CRAWLER THROUGH CRAWL AND EXPANSION :: "
-						+ elapsedSeconds + "-----");
-				System.out.println(this.getName() + " #######################################################");
-				this.path = workAllocator.retrieveNextPath();
-				System.out.println(this.getName() + " -> PATH RETRIEVED.");
-				//close all windows opened during crawl
-				try{
+					
+					long tEnd = System.currentTimeMillis();
+					long tDelta = tEnd - tStart;
+					double elapsedSeconds = tDelta / 1000.0;
+					
+					System.out.println(this.getName() + " -----ELAPSED TIME RUNNING CRAWLER THROUGH CRAWL AND EXPANSION :: "
+							+ elapsedSeconds + "-----");
+					System.out.println(this.getName() + " #######################################################");
+					this.path = workAllocator.retrieveNextPath();
+					System.out.println(this.getName() + " -> PATH ARRAY IS DEFINED AS :: " + path.getPath());
+					for(int idx : path.getPath()){
+						System.out.print(graph.getVertices().get(idx).getData().getClass().getCanonicalName() + " , ");
+					}
+					System.out.println(this.getName() + " -> PATH RETRIEVED.");
+					//close all windows opened during crawl
 					String baseWindowHdl = browser.getDriver().getWindowHandle();
 					Set<String> handles = browser.getDriver().getWindowHandles();
 					if(handles.size() > 1){
@@ -204,13 +209,12 @@ public class BrowserActor extends Thread implements Actor{
 						browser.getDriver().switchTo().window(baseWindowHdl);
 						System.out.println(this.getName() + " -> CLOSED POPUP WINDOW.");
 					}
-				}
-				catch(NullPointerException e){}
-				catch(UnhandledAlertException e){
-					e.printStackTrace();
-				}
-				length_limit++;
-			}
+					
+					length_limit++;
+				}while(length_limit < 2);
+				
+				path = Path.clone(workAllocator.retrieveNextPath());
+			}while(true);
 		}catch(OutOfMemoryError e){
 			System.err.println(this.getName() + " -> Out of memory error");
 			e.printStackTrace();
@@ -234,6 +238,12 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		catch(MalformedURLException e){
 			System.err.println("URL FOR ONE OF PAGES IS MALFORMED");
+		} catch (java.util.NoSuchElementException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		this.browser.getDriver().quit();
 		resourceManager.punchOut(this);
@@ -245,11 +255,12 @@ public class BrowserActor extends Thread implements Actor{
 	 * @return
 	 * @throws java.util.NoSuchElementException
 	 * @throws UnhandledAlertException
-	 * @throws MalformedURLException
+	 * @throws IOException 
 	 */
-	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, MalformedURLException{
+	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		Iterator<Integer> pathIterator = this.path.getPath().iterator();
-		Page pageNode = null;
+		
+		//Page pageNode = null;
 		PageElement last_element = null;
 		//skip first node since we should have already loaded it during initialization
 	
@@ -259,11 +270,8 @@ public class BrowserActor extends Thread implements Actor{
 						
 			if(pathNode.getData() instanceof Page){
 				System.out.println(this.getName() + " -> PAGE IN SEQUENCE.");
-				pageNode = (Page)pathNode.getData();
+				//pageNode = (Page)pathNode.getData();
 				//if current page does not match current node data 
-				if(!browser.getDriver().getPageSource().equals(pageNode.getSrc())){
-					return false;
-				}
 			}
 			else if(pathNode.getData() instanceof PageElement){
 				System.out.println(this.getName() + " -> PAGE ELEMENT IN SEQUENCE.");
@@ -284,7 +292,6 @@ public class BrowserActor extends Thread implements Actor{
 				alert.performChoice(browser.getDriver());
 			}
 		}
-
 		return true;
 	}
 	
@@ -309,11 +316,11 @@ public class BrowserActor extends Thread implements Actor{
 			double exploration_coef = rand.nextDouble();
 			System.err.println("EXPLORATION COEFFICIENT :: "+ exploration_coef);
 			
-			if(exploration_coef > 0.5){
+			if(exploration_coef > 0.7){
 				System.out.println("&&&&&  GETTING BEST ELEMENT ACTION PAIR &&&&&&&&&");
 				double[] element_probabilities = new double[page.getElements().size()];
 				//get index of best estimated element
-				getElementOfBestEstimatedIndex(page.getElements(), element_probabilities);
+				getEstimatedElementProbabilities(page.getElements(), element_probabilities);
 				chosen_pageElement = page.getElements().get(getBestIndex(element_probabilities));
 						
 				//get best known action given best chosen element
@@ -321,6 +328,30 @@ public class BrowserActor extends Thread implements Actor{
 				calculateActionProbabilities(action_rewards, chosen_pageElement);
 				chosen_action = actions[getBestIndex(action_rewards)];
 			}
+			else if(exploration_coef > .35){
+				double[] element_probabilities = new double[page.getElements().size()];
+				//get index of best estimated element
+				getEstimatedElementProbabilities(page.getElements(), element_probabilities);
+				
+				int random_best_elems_depth = rand.nextInt(10);
+				int iteration = 0;
+				int best_idx = 0;
+				while(iteration < random_best_elems_depth){
+					iteration++;
+					best_idx = getBestIndex(element_probabilities);
+					if(iteration < random_best_elems_depth){
+						element_probabilities[best_idx] = -100;
+					}
+				}
+				
+				chosen_pageElement = page.getElements().get(best_idx);
+						
+				//get best known action given best chosen element
+				double[] action_rewards = new double[actions.length];
+				calculateActionProbabilities(action_rewards, chosen_pageElement);
+				chosen_action = actions[getBestIndex(action_rewards)];
+			}
+			//create another else if that explores the top 10 when confidence is between .4 and .7
 			else{
 				// Choose a random element-action pairing
 				chosen_pageElement = page.elements.get(getRandomElementIndex(page.getElements().size()));
@@ -362,14 +393,13 @@ public class BrowserActor extends Thread implements Actor{
 	 * Reads path and performs learning tasks
 	 * 
 	 * @param path an {@link ArrayList} of graph vertex indices. Order matters
-	 * @throws MalformedURLException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 * @throws NullPointerException
+	 * @throws IOException 
 	 */
-	public void learn(Path path) throws MalformedURLException, IllegalArgumentException, IllegalAccessException, NullPointerException{
+	public void learn(Path path) throws IllegalArgumentException, IllegalAccessException, NullPointerException, IOException{
 		//REINFORCEMENT LEARNING
-		
 		System.out.println(this.getName() + " -> Initiating learning");
 		//get last action
 		//get last element
@@ -377,19 +407,88 @@ public class BrowserActor extends Thread implements Actor{
 		String last_action = null;
 		PageElement last_element = null;
 		Page last_page = null;
-				
-		ArrayList<Integer> current_path = path.getPath();
+		double actual_reward = 0.0;
+		
 		for(int idx = path.getPath().size()-1; idx >= 0; idx--){
+			if(last_action != null && last_element != null && last_page != null){
+				break;
+			}
 			Vertex<?> vertex = graph.getVertices().get(path.getPath().get(idx));
-			if(vertex.getData().getClass().equals(String.class)){
+			if(last_action == null && vertex.getData() instanceof String){
 				last_action = (String) vertex.getData();
 			}
-			else if(vertex.getData().getClass().equals(PageElement.class)){
+			else if(last_element == null && vertex.getData() instanceof PageElement){
 				last_element = (PageElement)vertex.getData();
 			}
-			else if(vertex.getData().getClass().equals(Page.class)){
+			else if(last_page == null && vertex.getData() instanceof Page){
 				last_page = (Page)vertex.getData();
 			}
+		}	
+		Page current_page = new Page(browser.getDriver(), DateFormat.getInstance());
+		
+		com.tinkerpop.blueprints.Vertex state_vertex = persistor.createAndLoadState(last_page);
+
+		if(!last_page.equals(current_page)){
+			com.tinkerpop.blueprints.Vertex new_state_vertex = persistor.createAndLoadState(current_page);
+			
+			Vertex<?> vertex = new Vertex(current_page);
+			graph.addVertex(vertex);
+			int idx = graph.findVertexIndex(vertex);
+			path.add(idx);
+			
+			putPathOnQueue(path);
+						
+			//REWARD FOR LEARNING A NEW STATE
+			int difference_coef = 0;
+			for(int i=0;i < last_page.screenshot.length() && i<current_page.screenshot.length(); i++){
+				if(last_page.screenshot.charAt(i) != current_page.screenshot.charAt(i)){
+					difference_coef++;
+				}
+			}
+
+			if(current_page.screenshot.length() > last_page.screenshot.length()){
+				actual_reward = difference_coef/(double)current_page.screenshot.length();
+			}
+			else{
+				actual_reward = difference_coef/(double)last_page.screenshot.length();
+			}
+			
+			System.out.println(this.getName() + " -> PERCENTAGE OF CHANGE BETWEEN PAGES :: "+actual_reward);
+									
+			//add new edge to memory
+			Edge e = persistor.addEdge(state_vertex, new_state_vertex, "TRANSITION", "GOES_TO");
+			e.setProperty("action", last_action);
+			e.setProperty("xpath", last_element.xpath);
+			e.setProperty("probability", new Double(1/Math.exp(actual_reward)));
+			
+			DataDefinition page_mem = new DataDefinition(last_page);
+			List<ObjectDefinition> page_data = page_mem.decompose();
+			persistor.saveState(page_data, state_vertex);
+			
+			DataDefinition current_page_mem = new DataDefinition(last_page);
+			List<ObjectDefinition> current_page_data = current_page_mem.decompose();
+			persistor.saveState(current_page_data, new_state_vertex);
+			
+			//
+			//DO NOT FORGET ABOUT THIS
+			//
+			//SHOULD GET THE ACTUAL VECTOR AND EDGE ADDRESES IN THE DATABASE ADDRESSES
+			//
+			//THIS IS VITAL FOR MEMORY
+			//
+			//e.setProperty("path", path.toString());
+			try{
+				persistor.save();
+			}
+			catch(OConcurrentModificationException e1){
+				System.err.println("Concurrent Modification Error thrown");
+				//e1.printStackTrace();
+			}
+			
+			last_page = current_page;
+		}
+		else{
+			state_vertex.addEdge(last_action, state_vertex);
 		}		
 		
 		//get all objects for the chosen page_element
@@ -397,31 +496,51 @@ public class BrowserActor extends Thread implements Actor{
 		List<ObjectDefinition> best_definitions = mem.decompose();
 
 		//Q-LEARNING VARIABLES
-		final double learning_rate = .1;
-		final double discount_factor = .1;
+		final double learning_rate = .08;
+		final double discount_factor = .08;
 		double estimated_reward = 1.0;
 		QLearn q_learn = new QLearn(learning_rate, discount_factor);
 		
-		//Reinforce probabilities for the component objects of this element if
+		//Reinforce probabilities for the component objects of this element
 		for(ObjectDefinition objDef : best_definitions){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
 
-			Page current_page = new Page(browser.getDriver(), DateFormat.getDateInstance());
 			com.tinkerpop.blueprints.Vertex v = null;
 			if(memory_iterator.hasNext()){
 				while(memory_iterator.hasNext()){
 					//System.err.println(this.getName() + " -> Getting memory vertex");
 					v = memory_iterator.next();
-					retrieve_learn_update(v, current_page, last_page, q_learn, estimated_reward);
+					retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
+					if(state_vertex!=null){
+						persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
+						try{
+							persistor.save();
+						}
+						catch(OConcurrentModificationException e){
+							System.err.println("Concurrent Modification Error thrown");
+							//e.printStackTrace();
+						}
+					}
 				}
 			}
 			else{
 				v = persistor.addVertex(objDef);
 				v.setProperty("value", objDef.getValue());
 				v.setProperty("type", objDef.getType());
-				retrieve_learn_update(v, current_page, last_page, q_learn, estimated_reward);
+				retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
+				
+				if(state_vertex!=null){
+					persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
+					try{
+						persistor.save();
+					}
+					catch(OConcurrentModificationException e){
+						System.err.println("Concurrent Modification Error thrown");
+						//e.printStackTrace();
+					}					
+				}
 			}
 		}
 	}
@@ -433,27 +552,25 @@ public class BrowserActor extends Thread implements Actor{
 	 * @param current_obj
 	 * @param goal_obj
 	 * @param q_learn
-	 * @return
+	 * @return value after learning(between 0 and 1)
 	 */
-	public double retrieve_learn_update(com.tinkerpop.blueprints.Vertex v, Object current_obj, Object goal_obj, QLearn q_learn, double estimated_reward){
+	public double retrieve_learn_update(com.tinkerpop.blueprints.Vertex v, QLearn q_learn, double estimated_reward, double actual_reward){
 		double old_value = 0.0;
-		double reward = 0.0;
 		double q_learn_val = 0.0;
 		
 		try{
 			old_value = v.getProperty("probability");
 		}catch(NullPointerException e){}
-								
-		if(current_obj.getClass().equals(goal_obj.getClass())){
-			if(!current_obj.equals(goal_obj)){
-				System.out.println(this.getName() + " -> OBJECT CLASSES DO NOT MATCH!!!!!");
-				reward = 1;
-			}
 
-			q_learn_val = q_learn.calculate(old_value, reward, estimated_reward);
-			//System.err.println(this.getName() + " --> Q Learn value :: " + q_learn_val);
-			v.setProperty("probability", q_learn_val);
-			persistor.graph.commit();
+		q_learn_val = q_learn.calculate(old_value, actual_reward, estimated_reward );
+		//System.err.println(this.getName() + " --> Q Learn value :: " + q_learn_val);
+		v.setProperty("probability", q_learn_val);
+		try{
+			persistor.save();
+		}
+		catch(OConcurrentModificationException e){
+			System.err.println("Concurrent Modification Error thrown");
+			//e.printStackTrace();
 		}
 		
 		return q_learn_val;
@@ -527,7 +644,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public void getElementOfBestEstimatedIndex(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
+	public void getEstimatedElementProbabilities(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
 
 		int elementIdx = 0;
 		for(PageElement elem : pageElements){
@@ -551,9 +668,9 @@ public class BrowserActor extends Thread implements Actor{
 					try{
 						value = v.getProperty("probability");
 					}catch(NullPointerException e){
-						v.setProperty("probability", .05);
-						persistor.graph.commit();
-						value = 0.05;
+						value = .001;
+						v.setProperty("probability", value);
+						persistor.save();
 					}
 					cumulative_value += value;
 					total_objects++;
@@ -573,21 +690,9 @@ public class BrowserActor extends Thread implements Actor{
 			if(total_object_definitions > 0){
 				element_probabilities[elementIdx] = cumulative_probability/(double)total_object_definitions;
 			}
-			System.err.println(this.getName() + " -> Object Definition probability :: "+element_probabilities[elementIdx]);
-			//if vertex exists then
-			if(raw_object_definitions.size() >= 0){
-				System.err.println("RAW OBJECTS EXISTED in memory and WERE loaded");
-				// check how likely it is that a vertex leads toward a goal
-				// if it is better, then save new highest valued vertex for later, and continue
-			}else{
-				System.err.println("Raw objects did not exist in memory. OMG I'VE NEVER SEEN THIS BEFORE! WHAT DO I DO!?!");
-				//generate random probability that given element leads toward a goal state
-				//if probability that element is better than best known value then 
-					//set element as best and continue
+			else{
 				element_probabilities[elementIdx] = rand.nextDouble();
-				
 			}
-				
 			elementIdx++;
 		}
 	}
@@ -659,7 +764,7 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	private Vertex<?> getLastPageVertex(){
 		for(int i = this.path.getPath().size()-1; i >= 0; i--){
-			 Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
+			Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
 			System.out.println("VERTEX CLASS  : " + descNode.getData().getClass()  );
 			if(descNode.getData() instanceof Page){
 				return descNode;

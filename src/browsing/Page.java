@@ -1,9 +1,11 @@
 package browsing;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,12 +23,12 @@ import org.openqa.selenium.WebElement;
  *
  */
 public class Page implements State {
+	public String screenshot = null; 
 	public WebDriver driver = null;
 	public String src = "";
-	public DateFormat date = null;
+	public String date = null;
 	public URL pageUrl = null;
 	public ArrayList<PageElement> elements = new ArrayList<PageElement>();
-	public Page prevPage;
 	
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
@@ -35,15 +37,15 @@ public class Page implements State {
 	 * @param date
 	 * @param valid
 	 * @throws MalformedURLException 
+	 * @throws IOException
 	 * @throws URISyntaxException 
 	 */
-	public Page(WebDriver driver, DateFormat date) throws MalformedURLException{
+	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
 		this.driver = driver;
 		this.src = driver.getPageSource();
-
-		this.date = date;
+		this.date = date.format(new Date());
 		this.pageUrl = new URL(driver.getCurrentUrl());
-
+		this.screenshot = Browser.getScreenshot(driver);
 		getVisibleElements(driver, this.elements, "//body");
 	}
 	
@@ -55,20 +57,12 @@ public class Page implements State {
 		this.src = src;
 	}
 
-	public DateFormat getDate() {
+	public String getDate() {
 		return date;
 	}
 	
 	public void setDate(DateFormat date) {
-		this.date = date;
-	}
-		
-	public Page getPrevPage() {
-		return prevPage;
-	}
-	
-	public void setPrevPage(Page prevPage) {
-		this.prevPage = prevPage;
+		this.date = date.format(new Date());
 	}
 	
 	public URL getUrl(){
@@ -152,7 +146,7 @@ public class Page implements State {
 		String temp_xpath = xpath;
 		for(WebElement elem : childElements){
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash, this);
+				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash);
 				pageElementList.add(pageElem);
 				try{
 					getVisibleElements(driver, pageElementList, pageElem.getXpath());
@@ -194,14 +188,24 @@ public class Page implements State {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-		return this.src.equals(that.src) && (this.elements.size() == that.elements.size());
+		return (this.elements.size() == that.elements.size()) && this.pageUrl.equals(that.pageUrl) && this.screenshot.equals(that.screenshot);
 	}
 	
 	public String toString(){
-		return this.getSrc()+" [[:;:;:;]] " + this.date + " [[:;:;:;]] " + this.pageUrl;
+		return this.getSrc();
 	}
 
 	public Object getObject() {
 		return this;
 	}
+	
+	@Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * 5 + pageUrl.hashCode();
+        hash = hash * 17 + src.hashCode();
+        hash = hash * 31 + screenshot.hashCode();
+        hash = hash * 13 + elements.hashCode();
+        return hash;
+    }
 }

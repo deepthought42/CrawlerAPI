@@ -1,5 +1,6 @@
 package browsing;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Random;
 
 import memory.ObjectDefinition;
@@ -108,7 +109,7 @@ public class ActionFactory {
 
 
 	/**
-	 * {@inheritDoc}
+	 * Predicts best action based on disparate action information
 	 */
 	public static int predict(ObjectDefinition obj) {
 		double[] action_weight = new double[actions.length];
@@ -117,10 +118,11 @@ public class ActionFactory {
 		//COMPUTE ALL EDGE PROBABILITIES
 		for(int index = 0; index < actions.length; index++){
 			Persistor orientPersistor = new Persistor();
-			if(!orientPersistor.find(obj).iterator().hasNext()){
+			Iterator<Vertex> vertices = orientPersistor.find(obj).iterator();
+			if(!vertices.hasNext()){
 				return rand.nextInt(actions.length);
 			}
-			Vertex vertex = orientPersistor.find(obj).iterator().next();
+			Vertex vertex = vertices.next();
 
 			Iterable<Edge> edges = vertex.getEdges(Direction.OUT, actions[index]);
 			if(edges.iterator().hasNext()){

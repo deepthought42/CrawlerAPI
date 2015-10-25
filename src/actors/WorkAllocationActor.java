@@ -2,6 +2,7 @@ package actors;
 
 import graph.Vertex;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,7 +49,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	}
 	
 	public void run(){
-		allocateVertexProcessing();
+		try {
+			allocateVertexProcessing();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -61,41 +66,44 @@ public class WorkAllocationActor extends Thread implements Observer {
 	{
 		if(o instanceof ObservableHash){
 	    	hash_queue = (ObservableHash) o;
-			allocateVertexProcessing();
+			try {
+				allocateVertexProcessing();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	/**
 	 * Allocate path processing to {@link BrowserActor}s to crawl if resources are available.
+	 * @throws IOException 
 	 */
-	public void allocateVertexProcessing(){
-		if(hash_queue.size() > 0){
-			try{
-				while( resourceManager.areResourcesAvailable() && !hash_queue.isEmpty()){
-					Path path = retrieveNextPath();
-					
-					if(path != null){
-						System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTEX.");
-				        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+	public void allocateVertexProcessing() throws IOException{
+		try{
+			while( resourceManager.areResourcesAvailable() && !hash_queue.isEmpty()){
+				Path path = retrieveNextPath();
+				
+				if(path != null){
+					System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTEX.");
+			        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 
-				        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
-				        BrowserActor browserActor = new BrowserActor(hash_queue, graphObserver.getGraph(), path, this.resourceManager, this);
-						browserActor.start();
+			        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
+			        BrowserActor browserActor = new BrowserActor(hash_queue, graphObserver.getGraph(), path, this.resourceManager, this);
+					browserActor.start();
 
-						System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
-					}
-					else{
-						//System.out.println("WORK ALLOCATOR :: PATH is null.");
-					}
+					System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
 				}
-	    	}
-			catch(NoSuchElementException e){
-	    	}
-	    	catch(NullPointerException e){
-	    	} 
-			catch (MalformedURLException e) {
-				System.out.println("MALFORMED URL EXCEPTION");
+				else{
+					//System.out.println("WORK ALLOCATOR :: PATH is null.");
+				}
 			}
+    	}
+		catch(NoSuchElementException e){
+    	}
+    	catch(NullPointerException e){
+    	} 
+		catch (MalformedURLException e) {
+			System.out.println("MALFORMED URL EXCEPTION");
 		}
 	}
 	
@@ -123,8 +131,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 
 			System.out.println(" ---- COST : " + path.getCost());
 		}
-		
-		System.out.println(this.getName() + " -> PATH ARRAY IS DEFINED AS :: " + path.getPath());
 		return path;
 	}
 	

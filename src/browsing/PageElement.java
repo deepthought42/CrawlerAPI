@@ -22,7 +22,6 @@ import util.ArrayUtility;
  *
  */
 public class PageElement {
-	public Page page = null;
 	public String[] actions = ActionFactory.getActions();
 	public String tagName;
 	public String text;
@@ -65,9 +64,6 @@ public class PageElement {
 		this.actions = actions;
 		loadAttributes(driver, elem);
 		
-		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
-		positiveDomain.generateAllValueTypes();
-		
 		//loadCssProperties(elem);
 		this.xpath = parentXpath + this.generateXpath(driver);
 		this.xpath = uniqifyXpath(driver, xpathHash);
@@ -78,42 +74,16 @@ public class PageElement {
 	 * @param driver
 	 * @param elem
 	 */
-	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, Page page){
+	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash){
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
-		this.page = page;
 		loadAttributes(driver, elem);
-		
-		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
-		positiveDomain.generateAllValueTypes();
 		
 		//loadCssProperties(elem);
 		this.xpath = parentXpath + this.generateXpath(driver);
 		this.xpath = uniqifyXpath(driver, xpathHash);
 	}
 	
-
-	/**
-	 * Constructs a PageElement.
-	 * @param driver
-	 * @param elem
-	 */
-	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, Page page, String[] actions){
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		this.actions = actions;
-		this.page = page;
-		loadAttributes(driver, elem);
-		
-		//Assuming no previous known domain values, load up positiveDomain with a bunch of random values across the board
-		positiveDomain.generateAllValueTypes();
-		
-		//loadCssProperties(elem);
-		this.xpath = parentXpath + this.generateXpath(driver);
-		this.xpath = uniqifyXpath(driver, xpathHash);
-	}
-
-
 	/**
 	 * Constructs a PageElement.
 	 * 
@@ -124,7 +94,6 @@ public class PageElement {
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
-		this.page = page;
 		loadAttributes(driver, elem);
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver);
@@ -306,7 +275,7 @@ public class PageElement {
 		List<WebElement> childElements = elem.findElements(By.xpath("*"));
 		ArrayList<PageElement> childPageElements = new ArrayList<PageElement>();
 		for(WebElement childElement : childElements){
-			childPageElements.add(new PageElement(driver, childElement, this.xpath, xpathHash, this.getPage()));
+			childPageElements.add(new PageElement(driver, childElement, this.xpath, xpathHash));
 		}
 		
 		return childPageElements;
@@ -327,10 +296,6 @@ public class PageElement {
 		
 		ArrayList<Attribute> newPageElementAttributes = that.getAttributes();
 		
-		if(this.getPage().equals(that.getPage())){
-			return false;
-		}
-		
 		boolean areElementsEqual =  false;
 		
 		if(this.getTagName().equals(that.getTagName())
@@ -338,7 +303,7 @@ public class PageElement {
 			areElementsEqual = true;
 		}
 		
-		if(this.getAttributes().size() == newPageElementAttributes.size() && areElementsEqual)
+		if(areElementsEqual && this.getAttributes().size() == newPageElementAttributes.size())
 		{
 			for(int attrIdx = 0; attrIdx < this.getAttributes().size(); attrIdx++)
 			{
@@ -350,8 +315,6 @@ public class PageElement {
 		}
 		
 		areElementsEqual = this.cssMatches(that);
-		
-		System.out.println(Thread.currentThread().getName() + "Page Elements are equal!");
 		return areElementsEqual;
 	}
 
@@ -376,7 +339,7 @@ public class PageElement {
 	 * 
 	 */
 	public String toString(){
-		return this.tagName + ":" + this.text;
+		return this.tagName;
 	}
 
 	/**
@@ -408,10 +371,6 @@ public class PageElement {
 	
 	public String getTagName(){
 		return this.tagName;
-	}
-	
-	public Page getPage(){
-		return this.page;
 	}
 
 	public boolean isIgnorable() {

@@ -1,6 +1,11 @@
 package memory;
-import memory.ObjectDefinition;
+import java.util.Iterator;
+import java.util.List;
 
+import memory.ObjectDefinition;
+import browsing.Page;
+
+import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
@@ -8,10 +13,18 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 public class Persistor {
 	public OrientGraph graph = null;
 	
+	/**
+	 * 
+	 */
 	public Persistor() {
-		this.graph = new OrientGraph("remote:localhost/Thoth", "admin", "admin");
+		this.graph = new OrientGraph("remote:localhost/Thoth", "deepthought", "oicu812");
 	}
 	
+	/***
+	 * 
+	 * @param obj
+	 * @return
+	 */
 	public Vertex addVertex(ObjectDefinition obj){
 		
 		if (graph.getVertexType(obj.getType()) == null){
@@ -22,28 +35,145 @@ public class Persistor {
 		return this.graph.addVertex("class:"+obj.getType());
 	}
 	
+	/**
+	 * 
+	 * @param clazz
+	 * @return
+	 */
 	public Vertex addVertex(String clazz){
 		if (graph.getVertexType(clazz) == null){
             graph.createVertexType(clazz);
-            System.out.println("Created objectDefinition vertex type");
         }
 
 		return this.graph.addVertex("class:"+clazz);
 	}
 	
-	public void save(){
+	/**
+	 * 
+	 * @throws OConcurrentModificationException
+	 */
+	public void save() throws OConcurrentModificationException{
 		this.graph.commit();
 	}
 	
-	public Edge addEdge(Vertex v1, Vertex v2, String clazz){
-		return graph.addEdge("class:"+clazz, v1, v2, "lives");
+	/**
+	 * 
+	 * @param v1
+	 * @param v2
+	 * @param clazz
+	 * @param label
+	 * @return
+	 */
+	public Edge addEdge(Vertex v1, Vertex v2, String clazz, String label){
+		return graph.addEdge("class:"+clazz, v1, v2, label);
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param obj
+	 * @return
+	 */
 	public Iterable<Vertex> find(ObjectDefinition obj) {
 		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		Iterable<Vertex> objVertices = graph.getVertices("value", obj.getValue());
 		
 		return objVertices;
 	}
+	
+	/**
+	 * 
+	 * 
+	 * @param memState
+	 * @return
+	 */
+	public Iterable<Vertex> findState(MemoryState memState){
+		Iterable<Vertex> objVertices = graph.getVertices("identifier", memState.getIdentifier());
+		return objVertices;
+	}
 
+	/**
+	 * Associates all elements in list of {@link ObjectDefinition}s to a state_vertex via an edge
+	 *  with a label of CONSISTS_OF
+	 * @param vertices
+	 * @param state_vertex
+	 */
+	public void saveState(List<ObjectDefinition> vertices, Vertex state_vertex ){
+		for(ObjectDefinition obj : vertices){
+			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
+			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.find(obj);
+			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
+
+			com.tinkerpop.blueprints.Vertex v = null;
+			if(memory_iterator.hasNext()){
+				while(memory_iterator.hasNext()){
+					//System.err.println(this.getName() + " -> Getting memory vertex");
+					v = memory_iterator.next();
+					if(state_vertex!=null){
+						this.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
+						try{
+							this.save();
+						}
+						catch(OConcurrentModificationException e1){
+							System.err.println("Concurrent Modification Error thrown");
+							//e.printStackTrace();
+						}
+					}
+				}
+			}
+			else{
+				v = this.addVertex(obj);
+				v.setProperty("value", obj.getValue());
+				v.setProperty("type", obj.getType());
+				
+				if(state_vertex!=null){
+					this.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
+					try{
+						this.save();
+					}
+					catch(OConcurrentModificationException e2){
+						System.err.println("Concurrent Modification Error thrown");
+						//e.printStackTrace();
+					}					
+				}
+			}
+		}
+	}
+	
+	/**
+	 * If a state for the given page exists then it is loaded, otherwise a new state is created and returned
+	 * @param page
+	 * @return
+	 */
+	public Vertex createAndLoadState(Page page){
+		Vertex state_vertex = null;
+		MemoryState memState = new MemoryState(page.hashCode(), page.screenshot );
+		Iterator<com.tinkerpop.blueprints.Vertex> state_iter = this.findState(memState).iterator();
+		if(!state_iter.hasNext()){
+			state_vertex = createState(page);
+		}
+		else{
+			state_vertex = state_iter.next();
+		}
+		return state_vertex;
+	}
+	
+	/**
+	 * Creates a state in the database
+	 * @param page
+	 * @return
+	 */
+	public Vertex createState(Page page){
+		Vertex state_vertex = this.addVertex(Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		state_vertex.setProperty("identifier", page.hashCode());
+		state_vertex.setProperty("screenshot", page.screenshot);
+		try{
+			this.save();
+		}
+		catch(OConcurrentModificationException e){
+			System.err.println("Concurrent Modification Error thrown");
+			//e.printStackTrace()
+		}
+		return state_vertex;
+	}
 }

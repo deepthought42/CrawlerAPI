@@ -1,7 +1,6 @@
 import graph.Graph;
 
-import java.net.MalformedURLException;
-
+import java.io.IOException;
 import actors.BrowserActor;
 import actors.GraphObserver;
 import actors.ResourceManagementActor;
@@ -17,7 +16,7 @@ import structs.Path;
 public class EntryPoint {
 	public static void main(String[] args){
 		
-		ResourceManagementActor resourceManager = new ResourceManagementActor(5);
+		ResourceManagementActor resourceManager = new ResourceManagementActor(3);
 		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 		Graph graph = new Graph();
 		GraphObserver graphObserver = new GraphObserver(graph);
@@ -34,9 +33,9 @@ public class EntryPoint {
 		try {
 			browserActor = new BrowserActor(url, new Path(), hashQueue, graph, resourceManager, workAllocator);
 			browserActor.start();
-		} catch (MalformedURLException e1) {
-			System.out.println("MALFORMED URL EXCEPTION");
 		}
-
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

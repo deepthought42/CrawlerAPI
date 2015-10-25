@@ -2,7 +2,6 @@ package graph;
 
 import browsing.Page;
 import browsing.PageElement;
-import browsing.PageState;
 
 /**
  * A Vertex node that contains the data for a given vertex in a {@link Graph}
@@ -43,9 +42,6 @@ public class Vertex<T> {
 		}
 		else if(data instanceof PageElement){
 			return 1;
-		}
-		else if(data instanceof PageState){
-			return 0;
 		}
 		return -1;
 	}

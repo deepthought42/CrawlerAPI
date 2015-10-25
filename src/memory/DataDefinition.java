@@ -16,7 +16,8 @@ public class DataDefinition {
 	}
 	
 	/**
-	 * Decomposes object down into data fragments
+	 * Decomposes object into data fragments
+	 * 
 	 * @return
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
@@ -25,7 +26,7 @@ public class DataDefinition {
 		List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
 		Class<?> objClass = this.object.getClass();
 	    Field[] fields = objClass.getFields();
-	    System.out.println("FIELD COUNT : "+ fields.length);
+	    //System.out.println("FIELD COUNT : "+ fields.length);
 	    for(Field field : fields) {
 	        String name = field.getName();
 	        Object value = field.get(this.object);
@@ -50,10 +51,8 @@ public class DataDefinition {
 			        //System.out.println("CLASS :: "+value.getClass().getName() + " ;; NAME :: "+field.getName() +"; VALUE :: "+objDef.getValue());
 		        }
 		       // System.out.println("CLASS :: "+value.getClass().getName() + " ;; NAME :: "+field.getName());
-
 	        }
 	    }
-	    System.out.println("ELEMENTS DECOMPOSED");
 		return objDefList;
 	}
 	
@@ -68,11 +67,11 @@ public class DataDefinition {
 		if(array == null || array.length == 0){
 			return null;
 		}
-		System.out.println("Array seen.");
+		//System.out.println("Array seen.");
     	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
     	
     	Class<?> listClass = array[0].getClass();
-        System.out.println("LIST CLASS:: "+ listClass);
+        //System.out.println("LIST CLASS:: "+ listClass);
         for(String object : array){
         	DataDefinition data_def = new DataDefinition(object);
         	objDefList = data_def.decompose();
@@ -92,13 +91,13 @@ public class DataDefinition {
 		if(list == null || list.isEmpty()){
 			return null;
 		}
-		System.out.println("ArrayList seen.");
+		//System.out.println("ArrayList seen.");
     	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
     	
     	Class<?> listClass = list.get(0).getClass();
-        System.out.println("LIST CLASS:: "+ listClass);
+       // System.out.println("LIST CLASS:: "+ listClass);
         for(Object object : list){
-        	System.out.println("DECOMPOSING LIST OBJECT :: " + object);
+        	//System.out.println("DECOMPOSING LIST OBJECT :: " + object);
         	DataDefinition data_def = new DataDefinition(object);
         	objDefList = data_def.decompose();
         }

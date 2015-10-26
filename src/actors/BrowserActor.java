@@ -147,8 +147,7 @@ public class BrowserActor extends Thread implements Actor{
 					graph.addVertex(vertex);
 					int vertex_idx = graph.findVertexIndex(vertex);
 					//need to add edge to vertex
-					Path path = Path.clone(this.path);
-					path.add(vertex_idx);
+					this.path.add(vertex_idx);
 					putPathOnQueue(path);
 				}
 				else{
@@ -165,8 +164,9 @@ public class BrowserActor extends Thread implements Actor{
 				do{
 					System.out.println(this.getName() + " EXPANDING NODE...");
 					try {
-						path = expandNodePath();
+						Path path = expandNodePath();
 						if(path != null){
+							this.path = Path.clone(path);
 							learn(path);	
 						}						
 					} catch (IllegalArgumentException e) {
@@ -296,7 +296,7 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public Path expandNodePath() throws MalformedURLException, IllegalArgumentException, IllegalAccessException {
 		System.out.println("EXPANDING NODE");
-
+		Path new_path = null;
 		Vertex<?> page_vertex = getLastPageVertex();
 		if(page_vertex == null){
 			return null;
@@ -350,6 +350,21 @@ public class BrowserActor extends Thread implements Actor{
 			Vertex<PageElement> pageElementVertex = new Vertex<PageElement>(chosen_pageElement);
 			Vertex<String> actionVertex = new Vertex<String>(chosen_action);
 			
+			//ENSURE THAT PAGE_ELEMNT VERTEX AND ACTION HAVEN'T BEEN PERFORMED TOGETHER BEFORE IN SEQUENCE
+			new_path = Path.clone(path);
+			boolean alreadySeen = false;
+			for(int i =0; i < new_path.getPath().size()-1; i++){
+				if(new_path.getPath().get(i)==graph.findVertexIndex(pageElementVertex)
+					&& new_path.getPath().get(i+1)==graph.findVertexIndex(actionVertex)){
+					System.out.println("VERTEX AND ACTION COMBO HAVE ALREADY BEEN DONE.");
+					alreadySeen = true;
+				}
+			}
+			if(alreadySeen){
+				//DECIDE ON IF I SHOULD DO IT ANYWAY. FOR NOW DON'T BOTHER DECIDING, JUST SKIP
+
+				return null;
+			}
 			if(pageElementVertex != null){
 				graph.addVertex(pageElementVertex);
 				graph.addEdge(page_vertex, pageElementVertex);
@@ -360,11 +375,9 @@ public class BrowserActor extends Thread implements Actor{
 			int page_elem_vertex_idx = graph.findVertexIndex(pageElementVertex);
 			int action_vertex_idx = graph.findVertexIndex(actionVertex);
 
-			Path new_path = Path.clone(path);
 			new_path.add(page_elem_vertex_idx);
 			new_path.add(action_vertex_idx);
 			putPathOnQueue(new_path);
-			return new_path;
 		}
 		else if(className.equals(PageAlert.class)){
 			System.err.println(this.getName() + " -> Handling Alert from expanding Node.");
@@ -372,7 +385,7 @@ public class BrowserActor extends Thread implements Actor{
 			alert.performChoice(browser.getDriver());
 		}
 		
-		return path;
+		return new_path;
 	}
 	
 	/**

@@ -112,7 +112,6 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return {@link Path} to be explored or null if none exist.
 	 */
 	public Path retrieveNextPath() {
-		System.out.println(this.getName() + " ->> best known path "+this.getSmallestKey());
 		Queue<Path> path_queue = hash_queue.getQueueHash().get(hash_queue.getRandomKey());
 		Path path = null;
 		System.out.println("PATH QUEUE SIZE :: "+path_queue.size());
@@ -131,10 +130,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 			int value = path.getReward()/path.getCost();
 			System.out.println(" ---- Best Value : " + value);
 			//System.out.println(" ---- Reward : " + path.getReward());
-
 			//System.out.println(" ---- COST : " + path.getCost());
-			
-
 		}
 		return path;
 	}

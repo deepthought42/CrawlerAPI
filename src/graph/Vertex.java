@@ -38,14 +38,29 @@ public class Vertex<T> {
 	 */
 	public int getCost(){
 		if(data instanceof Page){
-			return 0;
+			return 1;
+		}
+		else if(data instanceof PageElement){
+			return 2;
+		}
+		return 0;
+	}
+	
+	/**
+	 * Returns the reward of visiting a vertex based
+	 *  on a constant define per object type
+	 * 
+	 * @return 
+	 */
+	public int getReward(){
+		if(data instanceof Page){
+			return 10;
 		}
 		else if(data instanceof PageElement){
 			return 1;
 		}
-		return -1;
+		return 0;
 	}
-	
 	/**
 	 * 
 	 * @param vertex

@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import learning.QLearn;
 import memory.DataDefinition;
-import memory.MemoryState;
 import memory.ObjectDefinition;
 import memory.Persistor;
 import observableStructs.ObservableHash;
@@ -28,7 +27,6 @@ import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.UnhandledAlertException;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
@@ -54,7 +52,6 @@ public class BrowserActor extends Thread implements Actor{
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
-	private static WebDriver driver;
 	private String url = null;
 	private ObservableHash<Integer, Path> queueHash = null;
 	private Graph graph = null;
@@ -135,15 +132,6 @@ public class BrowserActor extends Thread implements Actor{
 		this.workAllocator = workAllocator;
 	}
 
-	public void signIn(String username, String pass){
-		driver.findElement(By.xpath("//a[@id='signInLink']")).click();
-		WebElement user = driver.findElement(By.xpath("//input[@id='userFormEmailField']"));
-		user.sendKeys(username);
-		WebElement password = driver.findElement(By.xpath("//input[@id='userFormPasswordField']"));
-		password.sendKeys(pass);
-		driver.findElement(By.xpath("//button[@id='userFormSignInButton']")).click();
-	}
-
 	/**
 	 * This method will open a firefox browser and load the url that was given at instantiation.
 	 *  The actor will load the page into memory, access the element it needs, and then perform an action on it.
@@ -159,8 +147,8 @@ public class BrowserActor extends Thread implements Actor{
 					graph.addVertex(vertex);
 					int vertex_idx = graph.findVertexIndex(vertex);
 					//need to add edge to vertex
-					this.path.add(vertex_idx);
 					Path path = Path.clone(this.path);
+					path.add(vertex_idx);
 					putPathOnQueue(path);
 				}
 				else{
@@ -178,7 +166,9 @@ public class BrowserActor extends Thread implements Actor{
 					System.out.println(this.getName() + " EXPANDING NODE...");
 					try {
 						path = expandNodePath();
-						learn(path);
+						if(path != null){
+							learn(path);	
+						}						
 					} catch (IllegalArgumentException e) {
 						e.printStackTrace();
 					} catch (IllegalAccessException e) {
@@ -204,10 +194,10 @@ public class BrowserActor extends Thread implements Actor{
 					if(handles.size() > 1){
 						for(String winHandle : handles){
 							browser.getDriver().switchTo().window(winHandle);
-						}
-						browser.getDriver().close();
-						browser.getDriver().switchTo().window(baseWindowHdl);
-						System.out.println(this.getName() + " -> CLOSED POPUP WINDOW.");
+							browser.getDriver().close();
+							browser.getDriver().switchTo().window(baseWindowHdl);
+							System.out.println(this.getName() + " -> CLOSED POPUP WINDOW.");
+						}						
 					}
 					
 					length_limit++;
@@ -308,6 +298,9 @@ public class BrowserActor extends Thread implements Actor{
 		System.out.println("EXPANDING NODE");
 
 		Vertex<?> page_vertex = getLastPageVertex();
+		if(page_vertex == null){
+			return null;
+		}
 		Class<?> className = page_vertex.getData().getClass();
 		String[] actions = ActionFactory.getActions();
 		
@@ -335,18 +328,9 @@ public class BrowserActor extends Thread implements Actor{
 				//get index of best estimated element
 				getEstimatedElementProbabilities(page.getElements(), element_probabilities);
 				
-				int random_best_elems_depth = rand.nextInt(10);
-				int iteration = 0;
-				int best_idx = 0;
-				while(iteration < random_best_elems_depth){
-					iteration++;
-					best_idx = getBestIndex(element_probabilities);
-					if(iteration < random_best_elems_depth){
-						element_probabilities[best_idx] = -100;
-					}
-				}
-				
-				chosen_pageElement = page.getElements().get(best_idx);
+				int random_index = rand.nextInt(element_probabilities.length/2);
+			
+				chosen_pageElement = page.getElements().get(random_index);
 						
 				//get best known action given best chosen element
 				double[] action_rewards = new double[actions.length];
@@ -467,14 +451,6 @@ public class BrowserActor extends Thread implements Actor{
 			e.setProperty("xpath", last_element.xpath);
 			e.setProperty("probability", new Double(1/Math.exp(actual_reward)));
 			
-			DataDefinition page_mem = new DataDefinition(last_page);
-			List<ObjectDefinition> page_data = page_mem.decompose();
-			persistor.saveState(page_data, state_vertex);
-			
-			DataDefinition current_page_mem = new DataDefinition(last_page);
-			List<ObjectDefinition> current_page_data = current_page_mem.decompose();
-			persistor.saveState(current_page_data, new_state_vertex);
-			
 			try{
 				persistor.save();
 			}
@@ -483,6 +459,15 @@ public class BrowserActor extends Thread implements Actor{
 				//e1.printStackTrace();
 			}
 			
+			DataDefinition page_mem = new DataDefinition(last_page);
+			List<ObjectDefinition> page_data = page_mem.decompose();
+			persistor.saveState(page_data, state_vertex);
+			
+			DataDefinition current_page_mem = new DataDefinition(last_page);
+			List<ObjectDefinition> current_page_data = current_page_mem.decompose();
+			persistor.saveState(current_page_data, new_state_vertex);
+			
+			
 			last_page = current_page;
 		}
 		else{
@@ -490,7 +475,7 @@ public class BrowserActor extends Thread implements Actor{
 			e.setProperty("action", last_action);
 			e.setProperty("xpath", last_element.xpath);
 			e.setProperty("probability", 0.0);
-			
+			persistor.save();
 			state_vertex.addEdge(last_action, state_vertex);
 		}		
 		
@@ -506,44 +491,37 @@ public class BrowserActor extends Thread implements Actor{
 		
 		//Reinforce probabilities for the component objects of this element
 		for(ObjectDefinition objDef : best_definitions){
-			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
-			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-
-			com.tinkerpop.blueprints.Vertex v = null;
-			if(memory_iterator.hasNext()){
-				while(memory_iterator.hasNext()){
-					//System.err.println(this.getName() + " -> Getting memory vertex");
-					v = memory_iterator.next();
-					retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
-					if(state_vertex!=null){
-						persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
-						try{
+			
+			try{
+				//find objDef in memory. If it exists then use value for memory, otherwise choose random value
+				Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
+				Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
+	
+				com.tinkerpop.blueprints.Vertex v = null;
+				if(memory_iterator.hasNext()){
+					while(memory_iterator.hasNext()){
+						//System.err.println(this.getName() + " -> Getting memory vertex");
+						v = memory_iterator.next();
+						retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
+						if(state_vertex!=null){
+							persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
 							persistor.save();
 						}
-						catch(OConcurrentModificationException e){
-							System.err.println("Concurrent Modification Error thrown");
-							//e.printStackTrace();
-						}
 					}
 				}
-			}
-			else{
-				v = persistor.addVertex(objDef);
-				v.setProperty("value", objDef.getValue());
-				v.setProperty("type", objDef.getType());
-				retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
-				
-				if(state_vertex!=null){
-					persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
-					try{
-						persistor.save();
+				else{
+					v = persistor.addVertex(objDef);
+					v.setProperty("value", objDef.getValue());
+					v.setProperty("type", objDef.getType());
+					retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
+					
+					if(state_vertex!=null){
+						persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
+						persistor.save();					
 					}
-					catch(OConcurrentModificationException e){
-						System.err.println("Concurrent Modification Error thrown");
-						//e.printStackTrace();
-					}					
 				}
+			}catch(OConcurrentModificationException e){
+				e.printStackTrace();
 			}
 		}
 	}
@@ -708,7 +686,10 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	private ConcurrentLinkedQueue<Path> putPathOnQueue(Path path){
 		assert path != null;
-		return queueHash.put(path.getCost(this.graph), path);
+		//int value = path.calculateReward(this.graph)/path.calculateCost(this.graph);
+		int value = path.getActualReward(this.graph)/path.calculateCost(this.graph);
+		System.out.println("THE VALUE OF THE PATH IS :: "+value);
+		return queueHash.put(value, path);
 	}
 	
 	
@@ -740,21 +721,17 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		catch(StaleElementReferenceException e){
 			
-			 	System.out.println(this.getName()
+			 	System.err.println(this.getName()
 					+ " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 					+ action + ". ");
 			//e.printStackTrace();
 			wasPerformedSuccessfully = false;			
 		}
-		/*catch(UnreachableBrowserException e){
-			System.err.println(this.getName() + " :: Browser is unreachable.");
-			wasPerformedSuccessfully = false;
-		}*/
 		catch(ElementNotVisibleException e){
-			System.out.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
+			System.err.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
 		}
 		catch(NoSuchElementException e){
-			//System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION");
+			System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION");
 			wasPerformedSuccessfully = false;
 		}
 		
@@ -768,7 +745,7 @@ public class BrowserActor extends Thread implements Actor{
 	private Vertex<?> getLastPageVertex(){
 		for(int i = this.path.getPath().size()-1; i >= 0; i--){
 			Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
-			System.out.println("VERTEX CLASS  : " + descNode.getData().getClass()  );
+			System.out.println(this.getName() + " -> VERTEX CLASS  : " + descNode.getData().getClass()  );
 			if(descNode.getData() instanceof Page){
 				return descNode;
 			}

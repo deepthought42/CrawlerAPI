@@ -5,12 +5,20 @@ import graph.Graph;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import com.tinkerpop.blueprints.Edge;
+
+import browsing.Page;
+import browsing.PageElement;
+import memory.MemoryState;
+import memory.Persistor;
+
 /**
  * 
  * @author Brandon Kindred
  *
  */
 public class Path {
+	public Integer reward = 0;
 	private Integer cost = null;
 	private ArrayList<Integer> vertexPath = null;
 	
@@ -89,13 +97,77 @@ public class Path {
 		return this.cost;
 	}
 	
-	public int getCost(Graph graph){
+	public Integer getReward(){
+		return this.reward;
+	}
+	
+	/**
+	 * 
+	 * @param graph
+	 * @return
+	 */
+	public int calculateCost(Graph graph){
 		this.cost=0;
 		for(Integer vertex_idx : this.getPath()){
 			this.cost += graph.getVertices().get(vertex_idx).getCost();
 		}
 		return this.cost;
 	}
+	
+	/**
+	 * Gets the estimated reward value for this path 
+	 * @param graph
+	 * @return
+	 */
+	public int calculateReward(Graph graph){
+		this.reward = 0;
+		for(Integer vertex_idx : this.getPath()){
+			this.reward += graph.getVertices().get(vertex_idx).getReward();
+		}
+		
+		return reward;
+	}
+	
+	/**
+	 * Gets the estimated reward value for this path 
+	 * @param graph
+	 * @return
+	 */
+	public int getActualReward(Graph graph){
+		int reward = 0;
+		com.tinkerpop.blueprints.Vertex current_state = null;
+		MemoryState mem_state = null;
+		Iterable<Edge> edgeList = null;
+		Persistor persistor = new Persistor();
+		for(Integer vertex_idx : this.getPath()){
+			Object vertex_object = graph.getVertices().get(vertex_idx).getData();
+			if(vertex_object instanceof Page){
+				
+				Iterator<com.tinkerpop.blueprints.Vertex> matching_states = 
+						persistor.findState(new MemoryState(((Page)vertex_object).hashCode())).iterator();
+				if(matching_states.hasNext()){
+					current_state = matching_states.next();
+					mem_state = new MemoryState(current_state.hashCode());
+					edgeList = persistor.getStateEdges(mem_state);
+					reward+=1;
+				}
+			}
+			else if(vertex_object instanceof PageElement){
+				//get all GOES_TO edges originating from current state that match the given pageElement xpath value
+				
+				
+				//get reward of matching vertex;
+				
+				//persistor.findState(memState)
+				//reward = reward * pageElementReward();
+			}
+			
+			this.reward += graph.getVertices().get(vertex_idx).getReward();
+		}
+		
+		return reward;
+	}
+	
 	/**
 	 * 
 	 * @param path

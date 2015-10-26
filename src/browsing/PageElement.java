@@ -376,4 +376,17 @@ public class PageElement {
 	public boolean isIgnorable() {
 		return Arrays.asList().contains(this.tagName);
 	}
+	
+	@Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * 5 + tagName.hashCode();
+        hash = hash * 17 + text.hashCode();
+        hash = hash * 31 + xpath.hashCode();
+        
+        for(Attribute attr : attributes){
+        	hash = hash * 13 + attr.hashCode();
+        }
+        return hash;
+    }
 }

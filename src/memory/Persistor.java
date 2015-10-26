@@ -6,10 +6,16 @@ import memory.ObjectDefinition;
 import browsing.Page;
 
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class Persistor {
 	public OrientGraph graph = null;
 	
@@ -93,6 +99,25 @@ public class Persistor {
 	}
 
 	/**
+	 * Gets all edges for a given memory state
+	 * @param memState
+	 * @return
+	 */
+	public Iterable<Edge> getStateEdges(MemoryState memState){
+		Iterable<Edge> edgeList = null;
+		Iterator<Vertex> states = findState(memState).iterator();
+		
+		if(states.hasNext()){
+			Vertex vertex = states.next();
+			edgeList = vertex.getEdges(Direction.OUT, "GOES_TO");
+			for (Edge e : edgeList) {
+				System.out.println("- Bought: " + e);
+			}
+		}
+		return edgeList;
+	}
+	
+	/**
 	 * Associates all elements in list of {@link ObjectDefinition}s to a state_vertex via an edge
 	 *  with a label of CONSISTS_OF
 	 * @param vertices
@@ -138,6 +163,7 @@ public class Persistor {
 				}
 			}
 		}
+		this.save();
 	}
 	
 	/**

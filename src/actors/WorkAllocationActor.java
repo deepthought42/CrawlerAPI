@@ -10,7 +10,6 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Queue;
 import java.util.Random;
-import java.util.Set;
 
 import org.openqa.selenium.NoSuchElementException;
 
@@ -33,7 +32,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	ResourceManagementActor resourceManager = null;
 	GraphObserver graphObserver = null;
 	private static Random rand = new Random();
-
+	private int best_known_path_value = 0;
 	/**
 	 * 
 	 * @param queue
@@ -113,6 +112,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return {@link Path} to be explored or null if none exist.
 	 */
 	public Path retrieveNextPath() {
+		System.out.println(this.getName() + " ->> best known path "+this.getSmallestKey());
 		Queue<Path> path_queue = hash_queue.getQueueHash().get(hash_queue.getRandomKey());
 		Path path = null;
 		System.out.println("PATH QUEUE SIZE :: "+path_queue.size());
@@ -128,8 +128,13 @@ public class WorkAllocationActor extends Thread implements Observer {
 					break;
 				}				
 			}
+			int value = path.getReward()/path.getCost();
+			System.out.println(" ---- Best Value : " + value);
+			//System.out.println(" ---- Reward : " + path.getReward());
 
-			System.out.println(" ---- COST : " + path.getCost());
+			//System.out.println(" ---- COST : " + path.getCost());
+			
+
 		}
 		return path;
 	}

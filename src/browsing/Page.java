@@ -5,7 +5,6 @@ import java.net.URL;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class Page implements State {
 	public String screenshot = null; 
 	public WebDriver driver = null;
 	public String src = "";
-	public String date = null;
+	//public String date = null;
 	public URL pageUrl = null;
 	public ArrayList<PageElement> elements = new ArrayList<PageElement>();
 	
@@ -43,7 +42,7 @@ public class Page implements State {
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
 		this.driver = driver;
 		this.src = driver.getPageSource();
-		this.date = date.format(new Date());
+		//this.date = date.format(new Date());
 		this.pageUrl = new URL(driver.getCurrentUrl());
 		this.screenshot = Browser.getScreenshot(driver);
 		getVisibleElements(driver, this.elements, "//body");
@@ -57,14 +56,6 @@ public class Page implements State {
 		this.src = src;
 	}
 
-	public String getDate() {
-		return date;
-	}
-	
-	public void setDate(DateFormat date) {
-		this.date = date.format(new Date());
-	}
-	
 	public URL getUrl(){
 		return this.pageUrl;
 	}
@@ -79,25 +70,6 @@ public class Page implements State {
 	
 	public void refreshElements(){
 		this.getVisibleElements(driver, this.elements, "//body");
-	}
-	
-	/**
-	 * 
-	 * @param page
-	 * @return
-	 */
-	private List<diff_match_patch.Diff> getDiffList(Page page){
-		diff_match_patch diff = new diff_match_patch();
-		List<diff_match_patch.Diff> diffList = diff.diff_main(this.getSrc(), page.getSrc());
-		List<diff_match_patch.Diff> actualDiffList = new ArrayList<diff_match_patch.Diff>();
-		for(diff_match_patch.Diff diffItem : diffList){
-			diff_match_patch.Operation diffOp = diffItem.operation;
-			String diffTxt = diffItem.text.trim();
-			if(diffOp.compareTo(diff_match_patch.Operation.EQUAL) != 0 && !(diffOp.compareTo(diff_match_patch.Operation.INSERT) == 0 && (diffTxt.equals("style=\"\"") || diffTxt.equals("\" style=\"") || diffTxt.equals(";") || diffTxt.trim().isEmpty()))){
-				actualDiffList.add(diffItem);
-			}
-		}
-		return actualDiffList;
 	}
 	
 	@SuppressWarnings("unused")
@@ -205,7 +177,9 @@ public class Page implements State {
         hash = hash * 5 + pageUrl.hashCode();
         hash = hash * 17 + src.hashCode();
         hash = hash * 31 + screenshot.hashCode();
-        hash = hash * 13 + elements.hashCode();
+        for(PageElement element : elements){
+        	hash = hash * 13 + element.hashCode();
+        }
         return hash;
     }
 }

@@ -74,19 +74,19 @@ public class ObservableHash<K, E> extends Observable {
 	public synchronized Object getRandomKey(){
 		Set<?> keys = queueHash.keySet();
 		int total_keys = keys.size();
-		
-		Object[] key_array = new Object[keys.size()];
+		Random rand = new Random();
+		int rand_idx = rand.nextInt(total_keys);
+		Object key_object = null;
 		int key_idx = 0;
 		for(Object key : keys){
-			key_array[key_idx] = key;
+			if(key_idx == rand_idx){
+				key_object = key;
+				break;
+			}
+
 			key_idx++;
 		}
 		
-		Random rand = new Random();
-		int rand_key_idx = rand.nextInt(total_keys);
-		
-				
-		System.out.println("RANDOM KEY IS RETURNING NULL");
-		return key_array[rand_key_idx];
+		return key_object;
 	}
 }

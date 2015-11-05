@@ -32,7 +32,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 	ResourceManagementActor resourceManager = null;
 	GraphObserver graphObserver = null;
 	private static Random rand = new Random();
-	private int best_known_path_value = 0;
+	
 	/**
 	 * 
 	 * @param queue
@@ -126,6 +126,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 				if(idx == rand_path_idx){
 					break;
 				}				
+				idx++;
 			}
 			int value = path.getReward()/path.getCost();
 			System.out.println(" ---- Best Value : " + value);

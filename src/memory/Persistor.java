@@ -32,7 +32,6 @@ public class Persistor {
 	 * @return
 	 */
 	public Vertex addVertex(ObjectDefinition obj){
-		
 		if (graph.getVertexType(obj.getType()) == null){
             graph.createVertexType(obj.getType());
             System.out.println("Created objectDefinition vertex type");
@@ -56,9 +55,10 @@ public class Persistor {
 	
 	/**
 	 * 
+	 * @return 
 	 * @throws OConcurrentModificationException
 	 */
-	public void save() throws OConcurrentModificationException{
+	public synchronized Vertex save() throws OConcurrentModificationException{
 		this.graph.commit();
 	}
 	
@@ -70,8 +70,8 @@ public class Persistor {
 	 * @param label
 	 * @return
 	 */
-	public Edge addEdge(Vertex v1, Vertex v2, String clazz, String label){
-		return graph.addEdge("class:"+clazz, v1, v2, label);
+	public synchronized Edge addEdge(Vertex v1, Vertex v2, String clazz, String label){
+		return graph.addEdge(clazz, v1, v2, label);
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class Persistor {
 	 * @param obj
 	 * @return
 	 */
-	public Iterable<Vertex> find(ObjectDefinition obj) {
+	public synchronized Iterable<Vertex> find(ObjectDefinition obj) {
 		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		Iterable<Vertex> objVertices = graph.getVertices("value", obj.getValue());
 		
@@ -93,7 +93,7 @@ public class Persistor {
 	 * @param memState
 	 * @return
 	 */
-	public Iterable<Vertex> findState(MemoryState memState){
+	public synchronized Iterable<Vertex> findState(MemoryState memState){
 		Iterable<Vertex> objVertices = graph.getVertices("identifier", memState.getIdentifier());
 		return objVertices;
 	}
@@ -103,7 +103,7 @@ public class Persistor {
 	 * @param memState
 	 * @return
 	 */
-	public Iterable<Edge> getStateEdges(MemoryState memState){
+	public synchronized Iterable<Edge> getStateEdges(MemoryState memState){
 		Iterable<Edge> edgeList = null;
 		Iterator<Vertex> states = findState(memState).iterator();
 		
@@ -123,47 +123,59 @@ public class Persistor {
 	 * @param vertices
 	 * @param state_vertex
 	 */
-	public void saveState(List<ObjectDefinition> vertices, Vertex state_vertex ){
+	public synchronized void saveState(List<ObjectDefinition> vertices, Vertex state_vertex ){
 		for(ObjectDefinition obj : vertices){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.find(obj);
-			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-
-			com.tinkerpop.blueprints.Vertex v = null;
+			Iterator<Vertex> memory_iterator = this.find(obj).iterator();
+			MemoryState memState = new MemoryState((Integer)state_vertex.getProperty("identifier"));
+			state_vertex = this.findState(memState).iterator().next();
+			Vertex v = null;
 			if(memory_iterator.hasNext()){
-				while(memory_iterator.hasNext()){
+				//while(memory_iterator.hasNext()){
 					//System.err.println(this.getName() + " -> Getting memory vertex");
 					v = memory_iterator.next();
-					if(state_vertex!=null){
-						this.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
-						try{
-							this.save();
+					boolean saveFailed=false;
+					int iterCount = 0;
+					do{
+						if(state_vertex!=null){
+							Edge e = this.addEdge(state_vertex, v, obj.getType(), "CONSISTS_OF");
+							try{
+								this.save();
+								saveFailed=false;
+							}
+							catch(OConcurrentModificationException e1){
+								System.err.println("Concurrent Modification Exception thrown. ITERATION : "+iterCount);
+								
+								saveFailed=true;
+								//e1.printStackTrace();
+							}
+							
+							memState = new MemoryState((Integer)state_vertex.getProperty("identifier"));
+							state_vertex = this.findState(memState).iterator().next();
 						}
-						catch(OConcurrentModificationException e1){
-							System.err.println("Concurrent Modification Error thrown");
-							//e.printStackTrace();
-						}
-					}
-				}
+						iterCount++;
+					}while(saveFailed && iterCount < 10);
+				//}
 			}
 			else{
+				//If vertex is not in memory yet, then create new vertex and save it.
 				v = this.addVertex(obj);
 				v.setProperty("value", obj.getValue());
 				v.setProperty("type", obj.getType());
 				
 				if(state_vertex!=null){
-					this.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
+					
+					this.addEdge(state_vertex, v, obj.getType(), "CONSISTS_OF");
 					try{
 						this.save();
 					}
 					catch(OConcurrentModificationException e2){
 						System.err.println("Concurrent Modification Error thrown");
-						//e.printStackTrace();
+						//e2.printStackTrace();
 					}					
 				}
 			}
 		}
-		this.save();
 	}
 	
 	/**
@@ -174,7 +186,7 @@ public class Persistor {
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
-	public Vertex createAndLoadState(Page page) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
+	public synchronized Vertex createAndLoadState(Page page) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
 		Vertex state_vertex = null;
 		MemoryState memState = new MemoryState(page.hashCode());
 		System.out.println("FINDING STATE WITH IDENTIFIER :: "+memState.getIdentifier());
@@ -186,7 +198,6 @@ public class Persistor {
 			saveState(objDefList, state_vertex);
 		}
 		else{
-			System.out.println("STATE HAS BEEN FOUND!");
 			state_vertex = state_iter.next();
 		}
 		return state_vertex;
@@ -197,15 +208,16 @@ public class Persistor {
 	 * @param page
 	 * @return
 	 */
-	public Vertex createState(Page page){
+	public synchronized Vertex createState(Page page){
 		Vertex state_vertex = this.addVertex(Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		state_vertex.setProperty("identifier", page.hashCode());
 		//state_vertex.setProperty("screenshot", page.screenshot);
 		try{
+			System.out.println("CREATING STATE...");
 			this.save();
 		}
 		catch(OConcurrentModificationException e){
-			System.err.println("Concurrent Modification Error thrown");
+			System.err.println("Concurrent Modification EXCEPTION Error thrown");
 			//e.printStackTrace()
 		}
 		return state_vertex;

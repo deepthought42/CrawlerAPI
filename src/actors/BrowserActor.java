@@ -166,9 +166,10 @@ public class BrowserActor extends Thread implements Actor{
 					try {
 						Path path = expandNodePath();
 						if(path != null){
-							this.path = Path.clone(path);
-							learn(path);	
-						}						
+							System.out.println(this.getName() + " -> EXPANDED PATH IS DEFINED AS :: " + path.getPath());
+							this.path = path;
+							learn(this.path);	
+						}					
 					} catch (IllegalArgumentException e) {
 						e.printStackTrace();
 					} catch (IllegalAccessException e) {
@@ -179,7 +180,7 @@ public class BrowserActor extends Thread implements Actor{
 					long tDelta = tEnd - tStart;
 					double elapsedSeconds = tDelta / 1000.0;
 					
-					System.out.println(this.getName() + " -----ELAPSED TIME RUNNING CRAWLER THROUGH CRAWL AND EXPANSION :: "
+					System.out.println(this.getName() + " ----- ELAPSED TIME RUNNING CRAWLER THROUGH CRAWL AND EXPANSION :: "
 							+ elapsedSeconds + "-----");
 					System.out.println(this.getName() + " #######################################################");
 					this.path = workAllocator.retrieveNextPath();
@@ -259,16 +260,14 @@ public class BrowserActor extends Thread implements Actor{
 			Vertex<?> pathNode = graph.getVertices().get(path_node_index);
 						
 			if(pathNode.getData() instanceof Page){
-				System.out.println(this.getName() + " -> PAGE IN SEQUENCE.");
 				//pageNode = (Page)pathNode.getData();
 				//if current page does not match current node data 
 			}
 			else if(pathNode.getData() instanceof PageElement){
-				System.out.println(this.getName() + " -> PAGE ELEMENT IN SEQUENCE.");
 				last_element = (PageElement) pathNode.getData();
 			}
+			//String is action in this context
 			else if(pathNode.getData() instanceof String){
-				System.out.println(this.getName() + " -> ACTION IN SEQUENCE.");
 				boolean actionPerformedSuccessfully;
 				String action = (String) pathNode.getData();
 				browser.updatePage( DateFormat.getDateInstance());
@@ -423,14 +422,16 @@ public class BrowserActor extends Thread implements Actor{
 				last_page = (Page)vertex.getData();
 			}
 		}	
-				
+		
+
 		if(last_page == null){
 			last_page = browser.getPage();
 		}
 		
+		System.out.println(this.getName() + " -> CREATING AND LOADING STATE");
+		com.tinkerpop.blueprints.Vertex state_vertex = persistor.createAndLoadState(last_page);	
 		Page current_page = browser.getPage();
 		
-		com.tinkerpop.blueprints.Vertex state_vertex = persistor.createAndLoadState(last_page);
 		if(!last_page.equals(current_page)){
 			com.tinkerpop.blueprints.Vertex new_state_vertex = persistor.createAndLoadState(current_page);
 			
@@ -457,38 +458,42 @@ public class BrowserActor extends Thread implements Actor{
 			}
 			
 			System.out.println(this.getName() + " -> PERCENTAGE OF CHANGE BETWEEN PAGES :: "+actual_reward);
-									
-			//add new edge to memory
-			Edge e = persistor.addEdge(state_vertex, new_state_vertex, "TRANSITION", "GOES_TO");
-			e.setProperty("action", last_action);
-			e.setProperty("xpath", last_element.xpath);
-			e.setProperty("probability", new Double(1/Math.exp(actual_reward)));
-			
-			try{
-				persistor.save();
-			}
-			catch(OConcurrentModificationException e1){
-				System.err.println("Concurrent Modification Error thrown");
-				//e1.printStackTrace();
-			}
-			
-			DataDefinition page_mem = new DataDefinition(last_page);
-			List<ObjectDefinition> page_data = page_mem.decompose();
-			persistor.saveState(page_data, state_vertex);
+			boolean saveFailed = false;
+			do{
+				try{
+					//add new edge to memory
+					Edge e = persistor.addEdge(state_vertex, new_state_vertex, "TRANSITION", "GOES_TO");
+					e.setProperty("action", last_action);
+					e.setProperty("xpath", last_element.xpath);
+					e.setProperty("probability", new Double(1/Math.exp(actual_reward)));
+					persistor.save();
+					saveFailed =false;
+				}
+				catch(OConcurrentModificationException e1){
+					System.err.println("Concurrent Modification EXPETION ON EDGE Error thrown");
+					saveFailed=true;
+					//e1.printStackTrace();
+				}
+			}while(saveFailed);
 			
 			DataDefinition current_page_mem = new DataDefinition(last_page);
 			List<ObjectDefinition> current_page_data = current_page_mem.decompose();
+			System.out.println("&&&&&&&&&&   SAVING NEW STATE   &&&&&&&&&&&&&&");
 			persistor.saveState(current_page_data, new_state_vertex);
-			
 			
 			last_page = current_page;
 		}
 		else{
-			Edge e = persistor.addEdge(state_vertex, state_vertex, "TRANSITION", "GOES_TO");
-			e.setProperty("action", last_action);
-			e.setProperty("xpath", last_element.xpath);
-			e.setProperty("probability", 0.0);
-			persistor.save();
+			
+			try{
+				Edge e = persistor.addEdge(state_vertex, state_vertex, "TRANSITION", "GOES_TO");
+				e.setProperty("action", last_action);
+				e.setProperty("xpath", last_element.xpath);
+				e.setProperty("probability", 0.0);
+				persistor.save();
+			}catch(OConcurrentModificationException e1 ){
+				System.out.println("CONCURRENT MODIFICATION EXCEPTION OCCURRED WHILE ADDING ACTION EDGET TO ELEMENT");
+			}
 			state_vertex.addEdge(last_action, state_vertex);
 		}		
 		
@@ -504,70 +509,11 @@ public class BrowserActor extends Thread implements Actor{
 		
 		//Reinforce probabilities for the component objects of this element
 		for(ObjectDefinition objDef : best_definitions){
+			double q_learn_val = q_learn.calculate(objDef.getProbability(), actual_reward, estimated_reward );
 			
-			try{
-				//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-				Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
-				Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-	
-				com.tinkerpop.blueprints.Vertex v = null;
-				if(memory_iterator.hasNext()){
-					while(memory_iterator.hasNext()){
-						//System.err.println(this.getName() + " -> Getting memory vertex");
-						v = memory_iterator.next();
-						retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
-						if(state_vertex!=null){
-							persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
-							persistor.save();
-						}
-					}
-				}
-				else{
-					v = persistor.addVertex(objDef);
-					v.setProperty("value", objDef.getValue());
-					v.setProperty("type", objDef.getType());
-					retrieve_learn_update(v, q_learn, estimated_reward, actual_reward);
-					
-					if(state_vertex!=null){
-						persistor.addEdge(state_vertex, v, Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
-						persistor.save();					
-					}
-				}
-			}catch(OConcurrentModificationException e){
-				e.printStackTrace();
-			}
+			objDef.setProbability(q_learn_val);
+			com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate();
 		}
-	}
-	
-	/**
-	 * Finds the object in memory, reward is determined and learned from and object is put back into memory.
-	 * 
-	 * @param v
-	 * @param current_obj
-	 * @param goal_obj
-	 * @param q_learn
-	 * @return value after learning(between 0 and 1)
-	 */
-	public double retrieve_learn_update(com.tinkerpop.blueprints.Vertex v, QLearn q_learn, double estimated_reward, double actual_reward){
-		double old_value = 0.0;
-		double q_learn_val = 0.0;
-		
-		try{
-			old_value = v.getProperty("probability");
-		}catch(NullPointerException e){}
-
-		q_learn_val = q_learn.calculate(old_value, actual_reward, estimated_reward );
-		//System.err.println(this.getName() + " --> Q Learn value :: " + q_learn_val);
-		v.setProperty("probability", q_learn_val);
-		try{
-			persistor.save();
-		}
-		catch(OConcurrentModificationException e){
-			System.err.println("Concurrent Modification Error thrown");
-			//e.printStackTrace();
-		}
-		
-		return q_learn_val;
 	}
 	
 	/**
@@ -590,6 +536,7 @@ public class BrowserActor extends Thread implements Actor{
 	public void calculateActionProbabilities(double[] action_rewards, PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
 		DataDefinition data = new DataDefinition(pageElement);
 		List<ObjectDefinition> definitions = data.decompose();
+		System.out.println(this.getName() + " -> GETTING BEST ACTION PROBABILITY...");
 		for(ObjectDefinition obj : definitions){
 			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(obj);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
@@ -638,7 +585,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public void getEstimatedElementProbabilities(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
+	public synchronized void getEstimatedElementProbabilities(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
 
 		int elementIdx = 0;
 		for(PageElement elem : pageElements){
@@ -664,7 +611,14 @@ public class BrowserActor extends Thread implements Actor{
 					}catch(NullPointerException e){
 						value = .001;
 						v.setProperty("probability", value);
-						persistor.save();
+						try{
+							persistor.save();
+						}catch(OConcurrentModificationException e1){
+							ObjectDefinition obj = new ObjectDefinition(1, v.getProperty("value").toString(), v.getProperty("type").toString());
+							persistor.find(obj);
+							System.out.println(this.getName() + " -> OBJECT :: "+obj.getValue()+ " : "+obj.getType()+" -> HAS BEEN FOUND");
+							persistor.save();
+						}
 					}
 					cumulative_value += value;
 					total_objects++;
@@ -702,7 +656,26 @@ public class BrowserActor extends Thread implements Actor{
 		//int value = path.calculateReward(this.graph)/path.calculateCost(this.graph);
 		int value = path.getActualReward(this.graph)/path.calculateCost(this.graph);
 		System.out.println("THE VALUE OF THE PATH IS :: "+value);
-		return queueHash.put(value, path);
+		//Ensure that path is not already in queue
+		boolean pathsMatch = true;
+		try{
+			for(Path queue_path : queueHash.getQueueHash().get(value)){
+				if(queue_path.getPath().size() == path.getPath().size()){
+					for(int idx=0; idx < path.getPath().size(); idx++){
+						if(path.getPath().get(idx) != queue_path.getPath().get(idx)){
+							pathsMatch = false;
+						}
+					}
+				}
+			}
+		}catch(NullPointerException e){}
+		
+		if(pathsMatch){
+			return queueHash.put(value, path);
+		}
+		else{
+			return null;
+		}
 	}
 	
 	

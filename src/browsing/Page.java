@@ -23,7 +23,7 @@ import org.openqa.selenium.WebElement;
  */
 public class Page implements State {
 	public String screenshot = null; 
-	public WebDriver driver = null;
+	private WebDriver driver = null;
 	public String src = "";
 	//public String date = null;
 	public URL pageUrl = null;
@@ -45,7 +45,7 @@ public class Page implements State {
 		//this.date = date.format(new Date());
 		this.pageUrl = new URL(driver.getCurrentUrl());
 		this.screenshot = Browser.getScreenshot(driver);
-		getVisibleElements(driver, this.elements, "//body");
+		this.elements = getVisibleElements(driver, "//body");
 	}
 	
 	public String getSrc() {
@@ -69,7 +69,7 @@ public class Page implements State {
 	}
 	
 	public void refreshElements(){
-		this.getVisibleElements(driver, this.elements, "//body");
+		this.getVisibleElements(driver, "//body");
 	}
 	
 	@SuppressWarnings("unused")
@@ -111,22 +111,26 @@ public class Page implements State {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	public void getVisibleElements(WebDriver driver, List<PageElement> pageElementList, String xpath){
+	public ArrayList<PageElement> getVisibleElements(WebDriver driver, String xpath){
 		List<WebElement> childElements = getChildElements(xpath);
 		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
 		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
-		String temp_xpath = xpath;
+		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
+		//System.out.println("TOTAL CHILD ELEMENTS FOUND :: "+childElements.size());
 		for(WebElement elem : childElements){
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, temp_xpath, xpathHash);
-				pageElementList.add(pageElem);
+				//System.out.println("XPATH FOR CURRENT VISIBLE ELEMENT :: "+xpath);
+				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
+				elementList.add(pageElem);
 				try{
-					getVisibleElements(driver, pageElementList, pageElem.getXpath());
+					elementList.addAll(getVisibleElements(driver, pageElem.getXpath()));
 				}catch(WebDriverException e){
-					//e.printStackTrace();
+					e.printStackTrace();
 				}
 			}
 		}
+		
+		return elementList;
 	}
 	
 	/**

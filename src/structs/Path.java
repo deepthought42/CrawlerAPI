@@ -13,6 +13,7 @@ import memory.MemoryState;
 import memory.Persistor;
 
 /**
+ * A set of vertex objects that form a sequential movement through a graph
  * 
  * @author Brandon Kindred
  *
@@ -142,13 +143,13 @@ public class Path {
 		for(Integer vertex_idx : this.getPath()){
 			Object vertex_object = graph.getVertices().get(vertex_idx).getData();
 			if(vertex_object instanceof Page){
-				
+				mem_state = new MemoryState(((Page)vertex_object).hashCode());
 				Iterator<com.tinkerpop.blueprints.Vertex> matching_states = 
-						persistor.findState(new MemoryState(((Page)vertex_object).hashCode())).iterator();
+						mem_state.findState().iterator();
 				if(matching_states.hasNext()){
 					current_state = matching_states.next();
 					mem_state = new MemoryState(current_state.hashCode());
-					edgeList = persistor.getStateEdges(mem_state);
+					edgeList = mem_state.getStateEdges(mem_state);
 					reward+=1;
 				}
 			}

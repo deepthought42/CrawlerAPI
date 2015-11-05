@@ -1,6 +1,8 @@
 package memory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.tinkerpop.blueprints.Vertex;
@@ -11,7 +13,7 @@ import com.tinkerpop.blueprints.Vertex;
  * @author Brandon Kindred
  *
  */
-public class ObjectDefinition extends Persistor{
+public class ObjectDefinition {
 
 	private String value;
 	private int count;
@@ -97,5 +99,31 @@ public class ObjectDefinition extends Persistor{
 		}
 		
 		return v;
+	}
+	
+	/**
+	 * Retrieves all vertices for given object Definitions
+	 * 
+	 * @param objectDefinitions
+	 * 
+	 * @pre persistor != null
+	 * @pre object_definitions != null
+	 * 
+	 * @return A list of all vertices found. 
+	 */
+	public static synchronized List<Vertex> findAll(List<ObjectDefinition> object_definitions, Persistor persistor){
+		List<Vertex> vertices = new ArrayList<Vertex>();
+
+		for(ObjectDefinition objDef : object_definitions){
+			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
+			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
+			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
+						
+			if(memory_iterator != null && memory_iterator.hasNext()){
+				vertices.add(memory_iterator.next());
+			}
+		}
+		return vertices;
+		
 	}
 }

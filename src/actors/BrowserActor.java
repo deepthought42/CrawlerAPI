@@ -15,7 +15,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import learning.QLearn;
-import memory.DataDefinition;
+import memory.DataDecomposer;
+import memory.MemoryState;
 import memory.ObjectDefinition;
 import memory.Persistor;
 import observableStructs.ObservableHash;
@@ -168,9 +169,10 @@ public class BrowserActor extends Thread implements Actor{
 						if(path != null){
 							System.out.println(this.getName() + " -> EXPANDED PATH IS DEFINED AS :: " + path.getPath());
 							this.path = path;
-							learn(this.path);	
+							learn(path);	
 						}					
 					} catch (IllegalArgumentException e) {
+						System.err.println(this.getName() + " -> Error Reading Record");
 						e.printStackTrace();
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
@@ -399,26 +401,25 @@ public class BrowserActor extends Thread implements Actor{
 	public void learn(Path path) throws IllegalArgumentException, IllegalAccessException, NullPointerException, IOException{
 		//REINFORCEMENT LEARNING
 		System.out.println(this.getName() + " -> Initiating learning");
-		//get last action
-		//get last element
-		//get last page
 		String last_action = null;
 		PageElement last_element = null;
 		Page last_page = null;
-		double actual_reward = 0.0;
-		
-		for(int idx = path.getPath().size()-1; idx >= 0; idx--){
-			if(last_action != null && last_element != null && last_page != null){
-				break;
-			}
-			Vertex<?> vertex = graph.getVertices().get(path.getPath().get(idx));
+		Iterator<Integer> pathIterator = path.getPath().iterator();
+		while(pathIterator.hasNext() 
+				&& last_action == null 
+				&& last_element == null 
+				&& last_page == null){
+			Vertex<?> vertex = graph.getVertices().get(pathIterator.next());
 			if(last_action == null && vertex.getData() instanceof String){
+				//get last action
 				last_action = (String) vertex.getData();
 			}
 			else if(last_element == null && vertex.getData() instanceof PageElement){
+				//get last element
 				last_element = (PageElement)vertex.getData();
 			}
 			else if(last_page == null && vertex.getData() instanceof Page){
+				//get last page
 				last_page = (Page)vertex.getData();
 			}
 		}	
@@ -429,11 +430,14 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		
 		System.out.println(this.getName() + " -> CREATING AND LOADING STATE");
-		com.tinkerpop.blueprints.Vertex state_vertex = persistor.createAndLoadState(last_page);	
+		MemoryState memState = new MemoryState(last_page.hashCode());
+		com.tinkerpop.blueprints.Vertex state_vertex = memState.createAndLoadState(last_page);	
 		Page current_page = browser.getPage();
-		
+
+		double actual_reward = 0.0;
+
 		if(!last_page.equals(current_page)){
-			com.tinkerpop.blueprints.Vertex new_state_vertex = persistor.createAndLoadState(current_page);
+			com.tinkerpop.blueprints.Vertex new_state_vertex = memState.createAndLoadState(current_page);
 			
 			Vertex<?> vertex = new Vertex(current_page);
 			graph.addVertex(vertex);
@@ -476,10 +480,10 @@ public class BrowserActor extends Thread implements Actor{
 				}
 			}while(saveFailed);
 			
-			DataDefinition current_page_mem = new DataDefinition(last_page);
+			DataDecomposer current_page_mem = new DataDecomposer(last_page);
 			List<ObjectDefinition> current_page_data = current_page_mem.decompose();
 			System.out.println("&&&&&&&&&&   SAVING NEW STATE   &&&&&&&&&&&&&&");
-			persistor.saveState(current_page_data, new_state_vertex);
+			memState.saveState(current_page_data, new_state_vertex);
 			
 			last_page = current_page;
 		}
@@ -498,7 +502,7 @@ public class BrowserActor extends Thread implements Actor{
 		}		
 		
 		//get all objects for the chosen page_element
-		DataDefinition mem = new DataDefinition(last_element);
+		DataDecomposer mem = new DataDecomposer(last_element);
 		List<ObjectDefinition> best_definitions = mem.decompose();
 
 		//Q-LEARNING VARIABLES
@@ -534,7 +538,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IllegalAccessException
 	 */
 	public void calculateActionProbabilities(double[] action_rewards, PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
-		DataDefinition data = new DataDefinition(pageElement);
+		DataDecomposer data = new DataDecomposer(pageElement);
 		List<ObjectDefinition> definitions = data.decompose();
 		System.out.println(this.getName() + " -> GETTING BEST ACTION PROBABILITY...");
 		for(ObjectDefinition obj : definitions){
@@ -578,33 +582,31 @@ public class BrowserActor extends Thread implements Actor{
 	}
 	
 	/**
-	 * Finds index with highest value in given array
+	 * Calculate all estimated element probabilities
 	 * 
 	 * @param page
 	 * @param element_probabilities
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public synchronized void getEstimatedElementProbabilities(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
-
+	public void getEstimatedElementProbabilities(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
 		int elementIdx = 0;
+		Persistor persistor = new Persistor();
+		
 		for(PageElement elem : pageElements){
 			//find vertex for given element
-			DataDefinition mem = new DataDefinition(elem);
+			DataDecomposer mem = new DataDecomposer(elem);
 			List<ObjectDefinition> raw_object_definitions = mem.decompose();
+		
+			List<com.tinkerpop.blueprints.Vertex> object_definition_list
+				= ObjectDefinition.findAll(raw_object_definitions, persistor);
 			
 			int total_object_definitions = 0;
 			double cumulative_probability = 0.0;
-			for(ObjectDefinition objDef : raw_object_definitions){
-				//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-				Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
-				Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-				
+			for(com.tinkerpop.blueprints.Vertex v : object_definition_list){
 				int total_objects = 0;
 				double cumulative_value = 0.0;
-				while(memory_iterator.hasNext()){
-					com.tinkerpop.blueprints.Vertex v = memory_iterator.next();
-					
+
 					double value = 0.0;
 					try{
 						value = v.getProperty("probability");
@@ -622,18 +624,14 @@ public class BrowserActor extends Thread implements Actor{
 					}
 					cumulative_value += value;
 					total_objects++;
-				}
 				
 				double probability = 0.0;
 				if(total_objects > 0){
 					probability = cumulative_value/(double)total_objects;
 				}
-
-				objDef.setProbability(probability);						
 				
 				total_object_definitions++;
 				cumulative_probability += probability;
-				
 			}
 			if(total_object_definitions > 0){
 				element_probabilities[elementIdx] = cumulative_probability/(double)total_object_definitions;

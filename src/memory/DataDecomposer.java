@@ -4,14 +4,14 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataDefinition {
+public class DataDecomposer {
 	private Object object;
 	
 	/**
 	 * 
 	 * @param obj
 	 */
-	public DataDefinition(Object obj) {
+	public DataDecomposer(Object obj) {
 	   this.object = obj;
 	}
 	
@@ -74,7 +74,7 @@ public class DataDefinition {
 		}
     	
         for(Object object : array){
-        	DataDefinition data_def = new DataDefinition(object);
+        	DataDecomposer data_def = new DataDecomposer(object);
         	objDefList.addAll(data_def.decompose());
         }
 		return objDefList;
@@ -96,7 +96,7 @@ public class DataDefinition {
 		
         for(Object object : list){
         	if(object != null){
-        		DataDefinition data_def = new DataDefinition(object);
+        		DataDecomposer data_def = new DataDecomposer(object);
         		objDefList.addAll(data_def.decompose());
         	}
         }

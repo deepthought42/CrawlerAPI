@@ -173,7 +173,7 @@ public class BrowserActor extends Thread implements Actor{
 						}					
 					} catch (IllegalArgumentException e) {
 						System.err.println(this.getName() + " -> Error Reading Record");
-						e.printStackTrace();
+						//e.printStackTrace();
 					} catch (IllegalAccessException e) {
 						e.printStackTrace();
 					}
@@ -591,7 +591,6 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public void getEstimatedElementProbabilities(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
 		int elementIdx = 0;
-		Persistor persistor = new Persistor();
 		
 		for(PageElement elem : pageElements){
 			//find vertex for given element

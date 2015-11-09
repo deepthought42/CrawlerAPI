@@ -113,7 +113,6 @@ public class ObjectDefinition {
 	 */
 	public static synchronized List<Vertex> findAll(List<ObjectDefinition> object_definitions, Persistor persistor){
 		List<Vertex> vertices = new ArrayList<Vertex>();
-
 		for(ObjectDefinition objDef : object_definitions){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);

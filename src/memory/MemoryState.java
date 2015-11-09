@@ -51,6 +51,7 @@ public class MemoryState {
 	/**
 	 * Associates all elements in list of {@link ObjectDefinition}s to a state_vertex via an edge
 	 *  with a label of CONSISTS_OF
+	 *  
 	 * @param vertices
 	 * @param state_vertex
 	 */
@@ -62,30 +63,30 @@ public class MemoryState {
 			MemoryState memState = new MemoryState((Integer)state_vertex.getProperty("identifier"));
 			state_vertex = this.findState().iterator().next();
 			Vertex v = null;
-			if(memory_iterator.hasNext()){
-					//System.err.println(this.getName() + " -> Getting memory vertex");
-					v = memory_iterator.next();
-					boolean saveFailed=false;
-					int iterCount = 0;
-					do{
-						if(state_vertex!=null){
-							Edge e = persistor.addEdge(state_vertex, v, obj.getType(), "CONSISTS_OF");
-							try{
-								persistor.save();
-								saveFailed=false;
-							}
-							catch(OConcurrentModificationException e1){
-								System.err.println("Concurrent Modification Exception thrown. ITERATION : "+iterCount);
-								
-								saveFailed=true;
-								//e1.printStackTrace();
-							}
-							
-							memState = new MemoryState((Integer)state_vertex.getProperty("identifier"));
-							state_vertex = this.findState().iterator().next();
+			if(memory_iterator != null && memory_iterator.hasNext()){
+				//System.err.println(this.getName() + " -> Getting memory vertex");
+				v = memory_iterator.next();
+				boolean saveFailed=false;
+				int iterCount = 0;
+				do{
+					if(state_vertex!=null){
+						Edge e = persistor.addEdge(state_vertex, v, obj.getType(), "CONSISTS_OF");
+						try{
+							persistor.save();
+							saveFailed=false;
 						}
-						iterCount++;
-					}while(saveFailed && iterCount < 10);
+						catch(OConcurrentModificationException e1){
+							System.err.println("Concurrent Modification Exception thrown. ITERATION : "+iterCount);
+							
+							saveFailed=true;
+							//e1.printStackTrace();
+						}
+						
+						memState = new MemoryState((Integer)state_vertex.getProperty("identifier"));
+						state_vertex = this.findState().iterator().next();
+					}
+					iterCount++;
+				}while(saveFailed && iterCount < 10);
 			}
 			else{
 				//If vertex is not in memory yet, then create new vertex and save it.

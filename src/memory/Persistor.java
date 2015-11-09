@@ -77,9 +77,8 @@ public class Persistor {
 	 * @return
 	 */
 	public synchronized Iterable<Vertex> find(ObjectDefinition obj) {
-		Persistor persistor = new Persistor();
 		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
-		Iterable<Vertex> objVertices = persistor.graph.getVertices("value", obj.getValue());
+		Iterable<Vertex> objVertices = this.graph.getVertices("value", obj.getValue());
 		
 		return objVertices;
 	}

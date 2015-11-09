@@ -22,6 +22,50 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
+	public List<Object> decomposeObject() throws IllegalArgumentException, IllegalAccessException, NullPointerException{
+		List<Object> objList = new ArrayList<Object>();
+		Class<?> objClass = this.object.getClass();
+	    Field[] fields = objClass.getFields();
+	    
+	    for(Field field : fields) {
+	        Object value = field.get(this.object);
+	        if(value!=null){
+	        	ObjectDefinition objDef = null;
+	        			        
+		        if(value.getClass().equals(ArrayList.class)){
+		        	ArrayList<?> list = ((ArrayList<?>)value);
+		        	//return all elements of array
+		        	objList.addAll(list);
+		        }
+		        else if(value.getClass().equals(String[].class)){
+		        	String[] array = (String[]) value;
+		        	for(String stringVal : array){
+		        		objDef = new ObjectDefinition(1, stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		        		objList.add(objDef);
+		            }
+		        }
+		        else if(value.getClass().equals(Object[].class)){
+		        	Object[] array = (Object[]) value;
+		        	for(Object obj : array){
+		        		objList.add(obj);
+		            }
+		        }
+		        else{
+	        		objDef = new ObjectDefinition(1, value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		        	objList.add(objDef);
+		        }
+	        }
+	    }
+		return objList;
+	}
+	
+	/**
+	 * Decomposes object into data fragments
+	 * 
+	 * @return
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
 	public List<ObjectDefinition> decompose() throws IllegalArgumentException, IllegalAccessException, NullPointerException{
 		List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
 		Class<?> objClass = this.object.getClass();
@@ -35,7 +79,7 @@ public class DataDecomposer {
 	        			        
 		        if(value.getClass().equals(ArrayList.class)){
 		        	ArrayList<?> list = ((ArrayList<?>)value);
-
+		        	//return all elements of array
 		        	List<ObjectDefinition> decomposedList = decomposeArrayList(list);
 	        		objDefList.addAll(decomposedList);
 		        }

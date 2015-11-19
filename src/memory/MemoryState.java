@@ -3,8 +3,6 @@ package memory;
 import java.util.Iterator;
 import java.util.List;
 
-import browsing.Page;
-
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
@@ -21,7 +19,6 @@ public class MemoryState {
 	 * Identifier is meant to identify the state
 	 */
 	public int identifier = 0;
-	Persistor persistor = null;
 	
 	/**
 	 * 
@@ -29,7 +26,6 @@ public class MemoryState {
 	 */
 	public MemoryState(int identifier) {
 		this.setIdentifier(identifier);
-		persistor = new Persistor();
 	}
 
 	/**
@@ -49,74 +45,13 @@ public class MemoryState {
 	}
 	
 	/**
-	 * Associates all elements in list of {@link ObjectDefinition}s to a state_vertex via an edge
-	 *  with a label of CONSISTS_OF
-	 *  
-	 * @param vertices
-	 * @param state_vertex
-	 */
-	public synchronized void saveState(List<ObjectDefinition> vertices, Vertex state_vertex ){
-
-		for(ObjectDefinition obj : vertices){
-			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-			Iterator<Vertex> memory_iterator = persistor.find(obj).iterator();
-			MemoryState memState = new MemoryState((Integer)state_vertex.getProperty("identifier"));
-			state_vertex = this.findState().iterator().next();
-			Vertex v = null;
-			if(memory_iterator != null && memory_iterator.hasNext()){
-				//System.err.println(this.getName() + " -> Getting memory vertex");
-				v = memory_iterator.next();
-				boolean saveFailed=false;
-				int iterCount = 0;
-				do{
-					if(state_vertex!=null){
-						Edge e = persistor.addEdge(state_vertex, v, obj.getType(), "CONSISTS_OF");
-						try{
-							persistor.save();
-							saveFailed=false;
-						}
-						catch(OConcurrentModificationException e1){
-							System.err.println("Concurrent Modification Exception thrown. ITERATION : "+iterCount);
-							
-							saveFailed=true;
-							//e1.printStackTrace();
-						}
-						
-						memState = new MemoryState((Integer)state_vertex.getProperty("identifier"));
-						state_vertex = this.findState().iterator().next();
-					}
-					iterCount++;
-				}while(saveFailed && iterCount < 10);
-			}
-			else{
-				//If vertex is not in memory yet, then create new vertex and save it.
-				v = persistor.addVertex(obj);
-				v.setProperty("value", obj.getValue());
-				v.setProperty("type", obj.getType());
-				
-				if(state_vertex!=null){
-					
-					persistor.addEdge(state_vertex, v, obj.getType(), "CONSISTS_OF");
-					try{
-						persistor.save();
-					}
-					catch(OConcurrentModificationException e2){
-						System.err.println("Concurrent Modification Error thrown");
-						//e2.printStackTrace();
-					}					
-				}
-			}
-		}
-	}
-	
-	/**
 	 * 
 	 * 
 	 * @param memState
 	 * @return
 	 */
-	public synchronized Iterable<Vertex> findState(){
-		Iterable<Vertex> objVertices = persistor.graph.getVertices("identifier", this.getIdentifier());
+	public static synchronized Iterable<Vertex> findState(int identifier, Persistor persistor){
+		Iterable<Vertex> objVertices = persistor.graph.getVertices("identifier", identifier);
 		return objVertices;
 	}
 
@@ -125,43 +60,83 @@ public class MemoryState {
 	 * @param memState
 	 * @return
 	 */
-	public synchronized Iterable<Edge> getStateEdges(MemoryState memState){
+	public static synchronized Iterable<Edge> getStateEdges(Vertex state, Persistor persistor){
+		assert state != null;
+				
 		Iterable<Edge> edgeList = null;
-		Iterator<Vertex> states = findState().iterator();
-		
-		if(states.hasNext()){
-			Vertex vertex = states.next();
-			edgeList = vertex.getEdges(Direction.OUT, "GOES_TO");
-			for (Edge e : edgeList) {
-				System.out.println("- Bought: " + e);
-			}
+
+		edgeList = state.getEdges(Direction.OUT, "GOES_TO");
+		for (Edge e : edgeList) {
+			System.out.println("- Bought: " + e);
 		}
+		
 		return edgeList;
 	}
 	
 	/**
 	 * If a state for the given page exists then it is loaded, otherwise a new state is created and returned
+	 * 
 	 * @param page
 	 * @return
 	 * @throws NullPointerException 
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
-	public synchronized Vertex createAndLoadState(Page page) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
-		Vertex state_vertex = null;
+	public synchronized Vertex createAndLoadState(Object obj, Vertex last_state_vertex, Persistor persistor) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
+		
+		DataDecomposer dataDef = new DataDecomposer(obj);
+		List<Object> objList = dataDef.decomposeObject();
+		int state_id = 0;
+		
+		for(Object decomposedObject : objList){
+			Vertex v = null;
+			ObjectDefinition objDef = null;
+			if(decomposedObject.getClass().equals(ObjectDefinition.class)){
+				objDef = (ObjectDefinition)decomposedObject;
+				v = objDef.findAndUpdateOrCreate(persistor);
+				
+				if(last_state_vertex != null){
+					//NEED TO CHECK IF EDGE ALREADY EXISTS
+					persistor.addEdge(last_state_vertex, v, (objDef).getType(), "CONSISTS_OF");
+				}
+				boolean isSaved = false;
+				while(!isSaved){
+					try{
+						persistor.save();
+						isSaved = true;
+					}
+					catch(OConcurrentModificationException e1){
+						System.err.println("Concurrent Modification Exception thrown. ITERATION : 2");
+						//e1.printStackTrace();
+					}
+				}
+			}
+			else{
+				//calculate hash of object and use it as an identifier
+				//System.out.println("OBJECT CLASS :: "+decomposedObject.getClass().getCanonicalName());
 
-		System.out.println("FINDING STATE WITH IDENTIFIER :: "+this.getIdentifier());
-		Iterator<com.tinkerpop.blueprints.Vertex> state_iter = this.findState().iterator();
-		if(!state_iter.hasNext()){
-			state_vertex = this.createState(page);
-			DataDecomposer dataDef = new DataDecomposer(page);
-			List<ObjectDefinition> objDefList = dataDef.decompose();
-			this.saveState(objDefList, state_vertex);
+				Vertex state_vertex = null;
+				if(last_state_vertex != null){
+					state_id = last_state_vertex.getProperty("identifier");
+				}
+				else{
+					last_state_vertex = createOrLoadState(obj, persistor);
+
+				}
+				state_vertex = createOrLoadState(decomposedObject, persistor);
+				
+				if(state_id != decomposedObject.hashCode()){
+					persistor.addEdge(last_state_vertex, state_vertex, decomposedObject.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""), "CONSISTS_OF");
+				}
+				
+				try{
+					createAndLoadState(decomposedObject, state_vertex, persistor);
+				}catch(IllegalArgumentException e){
+					System.err.println("EXCEPTION OCCURED WHILE CREATING AND LOADING STATE");
+				}
+			}
 		}
-		else{
-			state_vertex = state_iter.next();
-		}
-		return state_vertex;
+		return last_state_vertex;
 	}
 	
 	/**
@@ -169,18 +144,36 @@ public class MemoryState {
 	 * @param page
 	 * @return
 	 */
-	public synchronized Vertex createState(Page page){
-		Vertex state_vertex = persistor.addVertex(Page.class.getCanonicalName().replace(".", "").replace("[","").replace("]",""));
-		state_vertex.setProperty("identifier", page.hashCode());
+	public static synchronized Vertex createState(Object obj, Persistor persistor){
+		Vertex state_vertex = persistor.addVertex(obj.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		state_vertex.setProperty("identifier", obj.hashCode());
 		//state_vertex.setProperty("screenshot", page.screenshot);
 		try{
-			System.out.println("CREATING STATE...");
 			persistor.save();
 		}
 		catch(OConcurrentModificationException e){
 			System.err.println("Concurrent Modification EXCEPTION Error thrown");
 			//e.printStackTrace()
 		}
+		return state_vertex;
+	}
+	
+	/**
+	 * Creates a state in the database, or loads a matching existing state from memory
+	 * @param page
+	 * @return
+	 */
+	public static synchronized Vertex createOrLoadState(Object obj, Persistor persistor){
+		Iterator<com.tinkerpop.blueprints.Vertex> state_iter = MemoryState.findState(obj.hashCode(), persistor).iterator();
+		Vertex state_vertex = null;
+		
+		if(!state_iter.hasNext()){
+			state_vertex = MemoryState.createState(obj, persistor);			
+		}
+		else{
+			state_vertex = state_iter.next();
+		}
+		
 		return state_vertex;
 	}
 }

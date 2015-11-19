@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Stack;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -28,8 +27,10 @@ public class PageElement {
 	public String xpath;
 	public boolean changed=false;
 	public ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	private String[] invalidAttributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
-	private ValueDomain positiveDomain = new ValueDomain();
+	public ArrayList<PageElement> child_elements = new ArrayList<PageElement>();
+
+	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
+	private ValueDomain positive_domain = new ValueDomain();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
@@ -39,34 +40,17 @@ public class PageElement {
 	
 	/**
 	 * Constructs a PageElement.
-	 * 
-	 * @param driver
-	 * @param elem
-	 * @param actions
-	 */
-	public PageElement(WebDriver driver, WebElement elem, String[] actions){
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		this.actions = actions;
-		loadAttributes(driver, elem);
-		loadCssProperties(elem);
-		this.xpath = this.generateXpath(driver);
-	}
-		
-	/**
-	 * Constructs a PageElement.
 	 * @param driver
 	 * @param elem
 	 */
-	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash, String[] actions){
+	public PageElement(WebDriver driver, WebElement elem, String parentXpath, String[] actions, HashMap<String, Integer> xpathHash){
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
 		loadAttributes(driver, elem);
 		
 		//loadCssProperties(elem);
-		this.xpath = parentXpath + this.generateXpath(driver);
-		this.xpath = uniqifyXpath(driver, xpathHash);
+		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
 	}
 	
 	/**
@@ -78,10 +62,8 @@ public class PageElement {
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		loadAttributes(driver, elem);
-		
-		//loadCssProperties(elem);
-		this.xpath = parentXpath + this.generateXpath(driver);
-		this.xpath = uniqifyXpath(driver, xpathHash);
+		loadCssProperties(elem);
+		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
 	}
 	
 	/**
@@ -90,56 +72,37 @@ public class PageElement {
 	 * @param driver
 	 * @param elem
 	 */
-	public PageElement(WebDriver driver, WebElement elem, Page page, String[] actions){
+	public PageElement(WebDriver driver, WebElement elem, Page page, String[] actions, HashMap<String, Integer> xpathHash){
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
 		loadAttributes(driver, elem);
 		loadCssProperties(elem);
-		this.xpath = this.generateXpath(driver);
+		this.xpath = this.generateXpath(driver, "", xpathHash);
 	}
 	
-	
-	public String uniqifyXpath(WebDriver driver, HashMap<String, Integer> xpathHash){
-		
-		Stack<String> elementStack = new Stack<String>();
-		String newXpath = this.xpath;
-		
-		if(driver.findElements(By.xpath(newXpath)).size() <= 1){
-			return newXpath;
+	/**
+	 * creates a unique xpath based on a given hash of xpaths
+	 * 
+	 * @param driver
+	 * @param xpathHash
+	 * @return
+	 */
+	public String uniqifyXpath(WebDriver driver, HashMap<String, Integer> xpathHash, String xpath){
+		if(driver.findElements(By.xpath(xpath)).size() <= 1){
+			return xpath;
 		}
-		
-		//System.out.println("PRE PROCESSING newXpath :: "+newXpath);
-
-		
-		while(driver.findElements(By.xpath(newXpath)).size() > 1){
-			elementStack.push(newXpath.substring(newXpath.lastIndexOf("//")));
-			newXpath = newXpath.substring(0, newXpath.lastIndexOf("//"));
-			//System.out.println("SHORETENED newXpath :: "+newXpath);
-		}
-		
-		while(!elementStack.isEmpty()){			
-			if(driver.findElements(By.xpath(newXpath+elementStack.peek())).size() <= 1){
-				newXpath = newXpath+elementStack.pop();
-				//System.out.println("NEW1 UNIQUE XPATH :: "+newXpath +" HAS "+driver.findElements(By.xpath(newXpath)).size() + " ELEMENTS ASSOCIATED WITH IT");
-				continue;
-			}
-			
-			if(xpathHash.containsKey(newXpath+elementStack.peek())){
-				String modified_xpath = newXpath+elementStack.pop();
-				Integer count = xpathHash.get(modified_xpath);
+		else{
+			int count = 1;
+			if(xpathHash.containsKey(xpath)){
+				count = xpathHash.get(xpath);
 				count += 1;
-				xpathHash.put(modified_xpath, count);
-				newXpath = modified_xpath+"[" + count + "]";
 			}
-			else{
-				xpathHash.put(newXpath+elementStack.peek(), 0);
-				//System.out.println("ADDING XPATH STEM TO HASH ++++ " + newXpath+elementStack.peek());
-			}
+		
+			xpathHash.put(xpath, count);
+			xpath = xpath+"[" + count + "]";
 		}
-		//System.out.println("NEW UNIQUE XPATH :: "+newXpath +" HAS "+driver.findElements(By.xpath(newXpath)).size() + " ELEMENTS ASSOCIATED WITH IT");
-		//System.out.println("THERE ARE NOW "+elementStack.size() +" XPATH FRAGMENTS ON THE STACK");
-		return newXpath;
+		return xpath;
 	}
 	
 	/**
@@ -147,12 +110,11 @@ public class PageElement {
 	 * 
 	 * @return an xpath that identifies this element uniquely
 	 */
-	public String generateXpath(WebDriver driver){
-		String xpath = "";
+	public String generateXpath(WebDriver driver, String xpath, HashMap<String, Integer> xpathHash){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
 		xpath += "//"+this.tagName;
 		for(Attribute attr : attributes){
-			if(!Arrays.asList(invalidAttributes).contains(attr.getName())){
+			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
 				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVal()) + "')");
 			}
 		}
@@ -167,6 +129,7 @@ public class PageElement {
 			}
 			xpath += "]";
 		}
+		xpath = uniqifyXpath(driver, xpathHash, xpath);
 
 		return xpath;
 	}
@@ -272,7 +235,7 @@ public class PageElement {
 	 * @return list of WebElements
 	 */
 	public ArrayList<PageElement> getChildElements(WebDriver driver, WebElement elem, HashMap<String, Integer> xpathHash){
-		List<WebElement> childElements = elem.findElements(By.xpath("*"));
+		List<WebElement> childElements = elem.findElements(By.xpath(".//"));
 		ArrayList<PageElement> childPageElements = new ArrayList<PageElement>();
 		for(WebElement childElement : childElements){
 			childPageElements.add(new PageElement(driver, childElement, this.xpath, xpathHash));
@@ -375,6 +338,14 @@ public class PageElement {
 
 	public boolean isIgnorable() {
 		return Arrays.asList().contains(this.tagName);
+	}
+	
+	public ArrayList<PageElement> getChild_elements() {
+		return child_elements;
+	}
+
+	public void setChild_elements(ArrayList<PageElement> child_elements) {
+		this.child_elements = child_elements;
 	}
 	
 	@Override

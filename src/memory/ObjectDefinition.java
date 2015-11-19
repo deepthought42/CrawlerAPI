@@ -16,30 +16,23 @@ import com.tinkerpop.blueprints.Vertex;
 public class ObjectDefinition {
 
 	private String value;
-	private int count;
 	private String type;
 	private double probability;
+	private int uid;
 	
-	public ObjectDefinition(int count, String value, String type) {
-		this.count = count;
+	public ObjectDefinition(int uid, String value, String type) {
 		this.value = value;
 		this.type = type;
+		this.uid = uid;
 	}
 
-	public ObjectDefinition(String name, String type) {
-		this.count = 1;
+	public ObjectDefinition(String value, String type) {
+		this.value = value;
 		this.type = type;
 	}
 	
 	public ObjectDefinition(){}
 
-	public int getCount() {
-		return count;
-	}
-	
-	private void setCount(int count) {
-		this.count = count;
-	}
 
 	public String getType() {
 		return type;
@@ -63,10 +56,6 @@ public class ObjectDefinition {
 
 	}
 
-	public void incrementCount() {
-		this.count += 1;
-	}
-
 	public void setProbability(double i) {
 		this.probability = i;		
 	}
@@ -75,8 +64,12 @@ public class ObjectDefinition {
 		return this.probability;
 	}
 	
-	public synchronized Vertex findAndUpdateOrCreate(){
-		Persistor persistor = new Persistor();
+	/**
+	 * 
+	 * @param persistor
+	 * @return
+	 */
+	public synchronized Vertex findAndUpdateOrCreate(Persistor persistor){
 		//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 		Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(this);
 		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
@@ -90,14 +83,18 @@ public class ObjectDefinition {
 			v = persistor.addVertex(this);
 			v.setProperty("value", this.getValue());
 			v.setProperty("type", this.getType());
+			v.setProperty("identifier", uid);
 		}
 		
-		try{
-			persistor.save();
-		}catch(OConcurrentModificationException e){
-			System.out.println("CONCURRENT MODIFICATION WHILE reinforcing known objectDef");
+		boolean saved = false;
+		while(!saved){
+			try{
+				persistor.save();
+				saved = true;
+			}catch(OConcurrentModificationException e){
+				//System.err.println("CONCURRENT MODIFICATION WHILE reinforcing known objectDef");
+			}
 		}
-		
 		return v;
 	}
 	
@@ -117,7 +114,7 @@ public class ObjectDefinition {
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-						
+			
 			if(memory_iterator != null && memory_iterator.hasNext()){
 				vertices.add(memory_iterator.next());
 			}

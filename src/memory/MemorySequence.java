@@ -2,8 +2,6 @@ package memory;
 
 import com.tinkerpop.blueprints.Vertex;
 
-import memory.ObjectDefinition;
-
 /**
  * Describes the object describing the edge between states, which consists of
  * an action, a direction based on from and to and a set of object definitions that

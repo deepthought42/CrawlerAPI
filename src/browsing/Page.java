@@ -45,7 +45,7 @@ public class Page implements State {
 		//this.date = date.format(new Date());
 		this.pageUrl = new URL(driver.getCurrentUrl());
 		this.screenshot = Browser.getScreenshot(driver);
-		this.elements = getVisibleElements(driver, "//body");
+		this.elements = getVisibleElements(driver, "//body", 0, new HashMap<String, Integer>());
 	}
 	
 	public String getSrc() {
@@ -69,7 +69,7 @@ public class Page implements State {
 	}
 	
 	public void refreshElements(){
-		this.getVisibleElements(driver, "//body");
+		this.elements = this.getVisibleElements(driver, "//body", 0, new HashMap<String, Integer>());
 	}
 	
 	@SuppressWarnings("unused")
@@ -82,25 +82,6 @@ public class Page implements State {
 			System.out.println("-------------------------------------------");
 		}
 	}
-
-	/**
-	 * retreives all leaf elements on a given page
-	 * @param driver
-	 * @return
-	 */
-	public List<PageElement> getVisibleLeafElements(WebDriver driver){
-		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-
-		//reduce element list to only visible elements
-		List<PageElement> visiblePageElements = new ArrayList<PageElement>();
-		for(WebElement element: pageElements){
-			List<WebElement> childElements = element.findElements(By.xpath("./*"));
-			if(element.isDisplayed() && childElements.isEmpty() && (!element.getAttribute("id").equals("") || (element.getAttribute("name") != null && !element.getAttribute("name").equals("")))){
-				visiblePageElements.add(new PageElement(driver, element, this, null));
-			}
-		}
-		return visiblePageElements;
-	}
 	
 	/**
 	 * retreives all elements on a given page that are visible. In this instance we take 
@@ -111,23 +92,30 @@ public class Page implements State {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	public ArrayList<PageElement> getVisibleElements(WebDriver driver, String xpath){
+	public ArrayList<PageElement> getVisibleElements(WebDriver driver,
+													 String xpath, 
+													 int depth, 
+													 HashMap<String, 
+													 Integer> xpathHash) throws WebDriverException {
 		List<WebElement> childElements = getChildElements(xpath);
 		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
-		HashMap<String, Integer> xpathHash = new HashMap<String, Integer>();
 		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
-		//System.out.println("TOTAL CHILD ELEMENTS FOUND :: "+childElements.size());
+		if(childElements.size() <= 0){
+			return elementList;
+		}
+		int cnt = 0;
 		for(WebElement elem : childElements){
+			
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				//System.out.println("XPATH FOR CURRENT VISIBLE ELEMENT :: "+xpath);
 				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
 				elementList.add(pageElem);
-				try{
-					elementList.addAll(getVisibleElements(driver, pageElem.getXpath()));
-				}catch(WebDriverException e){
-					e.printStackTrace();
-				}
 			}
+			
+			cnt++;
+		}
+		
+		for(PageElement pageElem : elementList){
+			pageElem.setChild_elements(getVisibleElements(driver, pageElem.getXpath(), depth+1, xpathHash));
 		}
 		
 		return elementList;
@@ -139,7 +127,7 @@ public class Page implements State {
 	 * @return list of WebElements
 	 */
 	public List<WebElement> getChildElements(WebElement elem){
-		return elem.findElements(By.xpath("./*"));
+		return elem.findElements(By.xpath("/*"));
 	}
 	
 	/**
@@ -164,7 +152,7 @@ public class Page implements State {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-		return (this.elements.size() == that.elements.size()) && this.pageUrl.equals(that.pageUrl) && this.screenshot.equals(that.screenshot);
+		return (this.elements.size() == that.elements.size()) && this.pageUrl.equals(that.pageUrl) && this.src.equals(that.src) && this.screenshot.equals(that.screenshot);
 	}
 	
 	public String toString(){

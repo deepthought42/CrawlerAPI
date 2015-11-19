@@ -40,7 +40,7 @@ public class DataDecomposer {
 		        else if(value.getClass().equals(String[].class)){
 		        	String[] array = (String[]) value;
 		        	for(String stringVal : array){
-		        		objDef = new ObjectDefinition(1, stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		        		objDef = new ObjectDefinition(this.hashCode(), stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        		objList.add(objDef);
 		            }
 		        }
@@ -51,7 +51,7 @@ public class DataDecomposer {
 		            }
 		        }
 		        else{
-	        		objDef = new ObjectDefinition(1, value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+	        		objDef = new ObjectDefinition(this.hashCode(), value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        	objList.add(objDef);
 		        }
 	        }
@@ -68,6 +68,7 @@ public class DataDecomposer {
 	 */
 	public List<ObjectDefinition> decompose() throws IllegalArgumentException, IllegalAccessException, NullPointerException{
 		List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
+		
 		Class<?> objClass = this.object.getClass();
 	    Field[] fields = objClass.getFields();
         //System.out.println("LIST CLASS:: "+ objClass);
@@ -86,7 +87,7 @@ public class DataDecomposer {
 		        else if(value.getClass().equals(String[].class)){
 		        	String[] array = (String[]) value;
 		        	for(String stringVal : array){
-		        		objDef = new ObjectDefinition(1, stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		        		objDef = new ObjectDefinition(this.hashCode(), stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        		objDefList.add(objDef);
 		            }
 		        }
@@ -96,7 +97,7 @@ public class DataDecomposer {
 		        	objDefList.addAll(decomposedList);
 		        }
 		        else{
-	        		objDef = new ObjectDefinition(1, value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+	        		objDef = new ObjectDefinition(this.hashCode(), value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        	objDefList.add(objDef);
 		        }
 	        }

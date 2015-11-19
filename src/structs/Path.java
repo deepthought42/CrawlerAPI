@@ -141,15 +141,14 @@ public class Path {
 		Iterable<Edge> edgeList = null;
 		Persistor persistor = new Persistor();
 		for(Integer vertex_idx : this.getPath()){
+			System.out.println("CALCULATING ACTUAL REWARD");
 			Object vertex_object = graph.getVertices().get(vertex_idx).getData();
 			if(vertex_object instanceof Page){
-				mem_state = new MemoryState(((Page)vertex_object).hashCode());
 				Iterator<com.tinkerpop.blueprints.Vertex> matching_states = 
-						mem_state.findState().iterator();
+						MemoryState.findState(vertex_object.hashCode(), persistor).iterator();
 				if(matching_states.hasNext()){
 					current_state = matching_states.next();
-					mem_state = new MemoryState(current_state.hashCode());
-					edgeList = mem_state.getStateEdges(mem_state);
+					edgeList = MemoryState.getStateEdges(current_state, persistor);
 					reward+=1;
 				}
 			}

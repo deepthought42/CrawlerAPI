@@ -73,6 +73,7 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
+		System.out.println("RETRIEVING PAGE");
 		return new Page(driver, DateFormat.getInstance());
 	}
 

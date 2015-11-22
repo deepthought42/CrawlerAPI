@@ -52,4 +52,21 @@ public class Vocabulary{
 		v.setProperty("label", this.label);		
 		persistor.save();
 	}
+	
+	/**
+	 * Loades vocabulary from a vertex in a graph Database, into a 1 dimensional array;
+	 */
+	public static Vocabulary load(String label){
+		Persistor persistor = new Persistor();
+		Vertex v = persistor.find("label", label).iterator().next();
+		String vocabulary = v.getProperty("vocabulary");
+		
+		String[] vocabArray = vocabulary.split(",");
+		ArrayList<String> vocabList = new ArrayList<String>();
+		for(String word : vocabArray){
+			vocabList.add(word);
+		}
+		
+		return new Vocabulary(vocabList, label);
+	}
 }

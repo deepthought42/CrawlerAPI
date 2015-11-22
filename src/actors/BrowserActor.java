@@ -19,6 +19,7 @@ import memory.DataDecomposer;
 import memory.MemoryState;
 import memory.ObjectDefinition;
 import memory.Persistor;
+import memory.Vocabulary;
 import observableStructs.ObservableHash;
 
 import org.openqa.selenium.Alert;
@@ -60,8 +61,13 @@ public class BrowserActor extends Thread implements Actor{
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
-	Persistor persistor = new Persistor();
-
+	private Persistor persistor = new Persistor();
+	private ArrayList<Vocabulary> vocabularies = null;
+	
+	//temporary list for vocab labels into it can be determined how best to handle them
+		private String[] vocabLabels = {"html"};
+	//SHOULD BE CHANGED!!!
+	
 	/**
 	 * 
 	 * @param url
@@ -94,11 +100,12 @@ public class BrowserActor extends Thread implements Actor{
 		this.uuid = UUID.randomUUID();
 		this.url = url;
 		this.path = Path.clone(path);
-		browser = new Browser(url);
+		this.browser = new Browser(url);
 		this.queueHash = path_queue;
 		this.graph = graph;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
+		this.vocabularies = this.loadVocabularies(vocabLabels);
 	}
 	
 	/**
@@ -120,7 +127,7 @@ public class BrowserActor extends Thread implements Actor{
 		
 		this.uuid = UUID.randomUUID();
 		this.graph = graph;
-		Vertex<?> node = graph.getVertices().get(path.getPath().get(0)); 
+		Vertex<?> node = graph.getVertices().get(path.getPath().get(0));
 		assert(((Page)node.getData()).getUrl() != null);
 		this.path = Path.clone(path);
 		this.url = ((Page)node.getData()).getUrl().toString();
@@ -131,6 +138,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.queueHash = queue;
 		this.resourceManager = resourceManager;
 		this.workAllocator = workAllocator;
+		this.vocabularies = this.loadVocabularies(vocabLabels);
 	}
 
 	/**
@@ -144,7 +152,7 @@ public class BrowserActor extends Thread implements Actor{
 				long tStart = System.currentTimeMillis();
 				if(this.path.getPath().isEmpty()){
 					System.out.println(this.getName() + " -> Path is empty. Adding to path");
-					Vertex<?> vertex = new Vertex(browser.getPage());
+					Vertex<?> vertex = new Vertex<Page>(browser.getPage());
 					graph.addVertex(vertex);
 					int vertex_idx = graph.findVertexIndex(vertex);
 					//need to add edge to vertex
@@ -160,6 +168,7 @@ public class BrowserActor extends Thread implements Actor{
 			
 				boolean successfulCrawl = crawlPath();
 				System.out.println("Successful crawl : "+ successfulCrawl);
+				
 				int length_limit = 0;
 				do{
 					System.out.println(this.getName() + " EXPANDING NODE...");
@@ -721,6 +730,20 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		
 		return wasPerformedSuccessfully;
+	}
+	
+	/**
+	 * Retrieves all {@linkplain Vocabulary vocabularies} that are required by the agent 
+	 * 
+	 * @param vocabLabels
+	 * @return
+	 */
+	public ArrayList<Vocabulary> loadVocabularies(String[] vocabLabels){
+		ArrayList<Vocabulary> vocabularies = new ArrayList<Vocabulary>();
+		for(String label : vocabLabels){			
+			vocabularies.add(Vocabulary.load(label));
+		}
+		return vocabularies;		
 	}
 	
 	/**

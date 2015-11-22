@@ -82,4 +82,16 @@ public class Persistor {
 		
 		return objVertices;
 	}
+	
+	/**
+	 * Finds a given object Definition in graph
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	public synchronized Iterable<Vertex> find(String fieldName, String value) {
+		Iterable<Vertex> objVertices = this.graph.getVertices(fieldName, value);
+		
+		return objVertices;
+	}
 }

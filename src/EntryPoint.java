@@ -9,14 +9,14 @@ import observableStructs.ObservableHash;
 import structs.Path;
 
 /**
- * 
+ * Initializes the system and launches it. 
  * @author Brandon Kindred
  *
  */
 public class EntryPoint {
 	public static void main(String[] args){
 		
-		ResourceManagementActor resourceManager = new ResourceManagementActor(3);
+		ResourceManagementActor resourceManager = new ResourceManagementActor(1);
 		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 		Graph graph = new Graph();
 		GraphObserver graphObserver = new GraphObserver(graph);

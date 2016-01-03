@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -33,7 +33,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
-import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 
 import browsing.ActionFactory;
@@ -146,6 +145,7 @@ public class BrowserActor extends Thread implements Actor{
 	 *  The actor will load the page into memory, access the element it needs, and then perform an action on it.
 	 */
 	public void run() {
+		//inform resource manager that worker is running
 		resourceManager.punchIn(this);
 		try{
 			do{
@@ -219,11 +219,13 @@ public class BrowserActor extends Thread implements Actor{
 							+ elapsedSeconds + "-----");
 					System.out.println(this.getName() + " #######################################################");
 					this.path = workAllocator.retrieveNextPath();
-					System.out.println(this.getName() + " -> PATH ARRAY IS DEFINED AS :: " + path.getPath());
-					for(int idx : path.getPath()){
-						System.out.print(graph.getVertices().get(idx).getData().getClass().getCanonicalName() + " , ");
-					}
-					System.out.println(this.getName() + " -> PATH RETRIEVED.");
+						System.out.println(this.getName() + " -> PATH ARRAY IS DEFINED AS :: " + path.getPath());
+					
+						for(int idx : path.getPath()){
+							System.out.print(graph.getVertices().get(idx).getData().getClass().getCanonicalName() + " , ");
+						}
+						System.out.println(this.getName() + " -> PATH RETRIEVED.");
+					
 					//close all windows opened during crawl
 					String baseWindowHdl = browser.getDriver().getWindowHandle();
 					Set<String> handles = browser.getDriver().getWindowHandles();
@@ -347,33 +349,30 @@ public class BrowserActor extends Thread implements Actor{
 			
 			if(exploration_coef > 0.7){
 				System.out.println("&&&&&  GETTING BEST ELEMENT ACTION PAIR &&&&&&&&&");
-				double[] element_probabilities = new double[page.getElements().size()];
-				//get index of best estimated element
-				getEstimatedElementProbabilities(page.getElements(), element_probabilities);
-				System.out.println("TOTAL ELEMENTS :: "+page.getElements().size());
 				
-				int idx = getBestIndex(element_probabilities);
+				//get index of best estimated element
+				ArrayList<HashMap<String, Double>> estimated_probs = getEstimatedElementProbabilities(page.getElements());
+				System.out.println("TOTAL ELEMENTS :: "+page.getElements().size());
+				System.out.println("TOTAL PROBAILITIES :: " + estimated_probs.size());
+				int idx = getBestIndex(estimated_probs);
 				System.out.println("BEST IDX :: " + idx);
 				chosen_pageElement = page.getElements().get(idx);
 						
 				//get best known action given best chosen element
-				double[] action_rewards = new double[actions.length];
-				calculateActionProbabilities(action_rewards, chosen_pageElement);
-				chosen_action = actions[getBestIndex(action_rewards)];
+				HashMap<String, Double> action_rewards = calculateActionProbabilities(chosen_pageElement);
+				chosen_action = getBestAction(action_rewards);
 			}
 			else if(exploration_coef > .35){
-				double[] element_probabilities = new double[page.getElements().size()];
 				//get index of best estimated element
-				getEstimatedElementProbabilities(page.getElements(), element_probabilities);
+				ArrayList<HashMap<String, Double>> element_probabilities = getEstimatedElementProbabilities(page.getElements());
 				System.out.println(this.getName() + " -> ESTIMATED PROBABILITIES LOADED");
-				int random_index = rand.nextInt(element_probabilities.length/2);
-			
+				int random_index = rand.nextInt(element_probabilities.size()/2);
+				
 				chosen_pageElement = page.getElements().get(random_index);
 						
 				//get best known action given best chosen element
-				double[] action_rewards = new double[actions.length];
-				calculateActionProbabilities(action_rewards, chosen_pageElement);
-				chosen_action = actions[getBestIndex(action_rewards)];
+				HashMap<String, Double> action_rewards = calculateActionProbabilities(chosen_pageElement);
+				chosen_action = getBestAction(action_rewards);
 			}
 			//create another else if that explores the top 10 when confidence is between .4 and .7
 			else{
@@ -398,11 +397,13 @@ public class BrowserActor extends Thread implements Actor{
 					alreadySeen = true;
 				}
 			}
-			if(alreadySeen){
+			/*if(alreadySeen){
 				//DECIDE ON IF I SHOULD DO IT ANYWAY. FOR NOW DON'T BOTHER DECIDING, JUST SKIP
 
 				return null;
-			}
+			}*/
+
+			//Add element and action vertices to path graph
 			if(pageElementVertex != null){
 				graph.addVertex(pageElementVertex);
 				graph.addEdge(page_vertex, pageElementVertex);
@@ -439,10 +440,6 @@ public class BrowserActor extends Thread implements Actor{
 		//REINFORCEMENT LEARNING
 		System.out.println(this.getName() + " -> Initiating learning");
 
-		if(last_page == null){
-			last_page = browser.getPage();
-		}
-		
 		MemoryState memState = new MemoryState(last_page.hashCode());
 		com.tinkerpop.blueprints.Vertex state_vertex = null;
 		try{
@@ -451,82 +448,84 @@ public class BrowserActor extends Thread implements Actor{
 		Page current_page = browser.getPage();
 
 		double actual_reward = 0.0;
-
+	
 		if(!last_page.equals(current_page)){
+			actual_reward = 1.0;
 			
 			com.tinkerpop.blueprints.Vertex new_state_vertex = null;
-			try{
-				MemoryState new_memory_state = new MemoryState(current_page.hashCode());
-
-				new_state_vertex = new_memory_state.createAndLoadState(current_page, state_vertex, persistor);
-			}catch(IllegalArgumentException e){
-				e.printStackTrace();
-			}
+			MemoryState new_memory_state = new MemoryState(current_page.hashCode());
 			
+			new_state_vertex = new_memory_state.createAndLoadState(current_page, state_vertex, persistor);
+
+			//add it to in memory map. This should be changed to use some sort of caching
 			Vertex<?> vertex = new Vertex<Page>(current_page);
 			graph.addVertex(vertex);
 			int idx = graph.findVertexIndex(vertex);
 			path.add(idx);
 			
 			putPathOnQueue(path);
-						
-			//REWARD FOR LEARNING A NEW STATE
-			int difference_coef = 1;
-			for(int i=0;i < last_page.screenshot.length() && i<current_page.screenshot.length(); i++){
-				if(last_page.screenshot.charAt(i) != current_page.screenshot.charAt(i)){
-					difference_coef++;
-				}
-			}
-
-			if(current_page.screenshot.length() > last_page.screenshot.length()){
-				actual_reward = difference_coef/(double)current_page.screenshot.length();
-			}
-			else{
-				actual_reward = difference_coef/(double)last_page.screenshot.length();
-			}
-			
-			System.out.println(this.getName() + " -> PERCENTAGE OF CHANGE BETWEEN PAGES :: "+actual_reward);
-			boolean saveFailed = false;
 			//add new edge to memory
 			
 			if(!state_vertex.equals(new_state_vertex)){
+				System.out.println("Adding GOES_TO transition");
 				Edge e = persistor.addEdge(state_vertex, new_state_vertex, "TRANSITION", "GOES_TO");
 				e.setProperty("action", last_action);
 				e.setProperty("xpath", last_element.xpath);
-				e.setProperty("probability", new Double(1/Math.exp(actual_reward)));
 			}
-			
-			do{
-				try{		
-					persistor.save();
-				}
-				catch(OConcurrentModificationException e1){
-					System.err.println("Concurrent Modification EXPETION ON EDGE Error thrown");
-					saveFailed=true;
-					//e1.printStackTrace();
-				}
-			}while(saveFailed);
-			
-			//memState.createAndLoadState(last_page);
-			
-			last_page = current_page;
+			System.err.println("SAVING NOW...");
+			persistor.save();
+		}
+		else{
+			//nothing changed so there was no reward for that combination. We want to remember this in the future
+			// so we set it to a negative value to simulate regret
+			actual_reward = -1.0;
 		}
 		
 		//get all objects for the chosen page_element
 		DataDecomposer mem = new DataDecomposer(last_element);
 		List<ObjectDefinition> best_definitions = mem.decompose();
-
+		System.err.println("TOTAL BEST DEFINTIONS :: " + best_definitions.size());
 		//Q-LEARNING VARIABLES
 		final double learning_rate = .08;
 		final double discount_factor = .08;
-		double estimated_reward = 1.0;
-		QLearn q_learn = new QLearn(learning_rate, discount_factor);
 		
+		//machine learning algorithm should produce this value
+		double estimated_reward = 1.0;
+		
+		QLearn q_learn = new QLearn(learning_rate, discount_factor);
+		double computed_actual_reward = actual_reward;
 		//Reinforce probabilities for the component objects of this element
 		for(ObjectDefinition objDef : best_definitions){
-			double q_learn_val = q_learn.calculate(objDef.getProbability(), actual_reward, estimated_reward );
+			HashMap<String, Double> action_map = objDef.getActions();
 			
-			objDef.setProbability(q_learn_val);
+			//NEED TO LOOK UP OBJECT DEFINITION IN MEMORY, IF IT EXISTS, THEN IT SHOULD BE LOADED AND USED, 
+			//IF NOT THEN IT SHOULD BE CREATED POPULATED AND SAVED
+			Iterator<com.tinkerpop.blueprints.Vertex> v_mem_iter = persistor.find(objDef).iterator();
+			com.tinkerpop.blueprints.Vertex memory_vertex = null;
+			if(v_mem_iter.hasNext()){
+				memory_vertex = v_mem_iter.next();
+				action_map = memory_vertex.getProperty("actions");
+				if(action_map == null){
+					action_map = objDef.getActions();
+				}
+			}
+			double last_reward = 0.0;
+
+			if(action_map.containsKey(last_action)){
+				System.out.println("Last action : "+last_action + " exists in action_map for object");
+				last_reward = action_map.get(last_action);
+			}
+			
+			System.err.println("last reward : "+last_reward);
+			System.err.println("actual_reward : "+actual_reward);
+			System.err.println("estimated_reward : "+estimated_reward);
+			
+			double q_learn_val = q_learn.calculate(last_reward, actual_reward, estimated_reward );
+			action_map.put(last_action, q_learn_val);
+			System.err.println(this.getName() + " -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
+
+			
+			objDef.setActions(action_map);
 			com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);
 		}
 	}
@@ -548,28 +547,37 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public void calculateActionProbabilities(double[] action_rewards, PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
+	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
 		DataDecomposer data = new DataDecomposer(pageElement);
 		List<ObjectDefinition> definitions = data.decompose();
 		System.out.println(this.getName() + " -> GETTING BEST ACTION PROBABILITY...");
+		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
+		
 		for(ObjectDefinition obj : definitions){
 			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(obj);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
 			
 			while(memory_iterator.hasNext()){
-				Iterator<Edge> edges = memory_iterator.next().getEdges(Direction.OUT).iterator();
-				int action_idx = 0;
-				while(edges.hasNext()){
-					Edge edge = edges.next();
-					
-					String edgeLabel = edge.getLabel();
-					double edgeValue = edge.getProperty("probability");
-					action_idx = Arrays.binarySearch(ActionFactory.getActions(), edgeLabel);
-					
-					action_rewards[action_idx] = (action_rewards[action_idx] + edgeValue)/2.0;
+				com.tinkerpop.blueprints.Vertex mem_vertex = memory_iterator.next();
+				HashMap<String, Double> action_map = mem_vertex.getProperty("actions");
+				double probability = 0.0;
+				if(action_map != null){
+					for(String action: action_map.keySet()){
+						if(cumulative_action_map.containsKey(action)){
+							probability += cumulative_action_map.get(action);
+						}
+						
+						cumulative_action_map.put(action, probability);
+					}
+				}
+				else{
+					for(String action: pageElement.getActions()){						
+						cumulative_action_map.put(action, probability);
+					}
 				}
 			}
 		}
+		return cumulative_action_map;
 	}
 	
 	/**
@@ -588,9 +596,103 @@ public class BrowserActor extends Thread implements Actor{
 			}
 			idx++;
 		}
-		System.out.println("BEST PROBABILITY :: " + p);
+		System.out.println("BEST PROBABILITY :: " + p + " at index "+best_idx);
 		return best_idx;
 	}
+
+	/**
+	 * 
+	 * @param element_probabilities
+	 * @return
+	 */
+	public String getBestAction(HashMap<String, Double> action_probabilities){
+		double p = -1.0;
+		String best_action = "click";
+		for(String action : action_probabilities.keySet()){
+			double action_prob = action_probabilities.get(action);
+			if(action_prob > p){
+				p = action_prob;
+				best_action = action;
+			}
+		}
+		System.out.println("BEST PROBABILITY :: " + p);
+		return best_action;
+	}
+	
+	/**
+	 * Gets the index for the element that has an action probability of state change greater than the rest
+	 * 
+	 * @param element_probabilities
+	 * @return
+	 */
+	public int getBestIndex(ArrayList<HashMap<String, Double>> element_probabilities){
+		double p = -1.0;
+		int idx = 0;
+		int best_idx = 0;
+		
+		for(HashMap<String, Double> action_map : element_probabilities){
+			for(String action: action_map.keySet()){
+				if(action_map.get(action) > p){
+					p = action_map.get(action);
+					best_idx = idx;
+				}
+			}
+			idx++;
+		}
+		System.out.println("BEST PROBABILITY :: " + p + " at index "+best_idx);
+		return best_idx;
+	}
+	
+	/**
+	 * Calculate all estimated element probabilities
+	 * 
+	 * @param page
+	 * @param element_probabilities
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	public ArrayList<HashMap<String, Double>> getEstimatedElementProbabilities(ArrayList<PageElement> pageElements) throws IllegalArgumentException, IllegalAccessException{
+		ArrayList<HashMap<String, Double>> element_action_map_list = new ArrayList<HashMap<String, Double>>(0);
+				
+		for(PageElement elem : pageElements){
+			HashMap<String, Double> full_action_map = new HashMap<String, Double>(0);
+			//find vertex for given element
+			DataDecomposer mem = new DataDecomposer(elem);
+			List<ObjectDefinition> raw_object_definitions = mem.decompose();
+			List<com.tinkerpop.blueprints.Vertex> object_definition_list
+				= ObjectDefinition.findAll(raw_object_definitions, persistor);
+					
+			//iterate over set to get all actions for object definition list
+			for(com.tinkerpop.blueprints.Vertex v : object_definition_list){
+				HashMap<String, Double> action_map = v.getProperty("actions");
+				if(action_map != null && !action_map.isEmpty()){
+					for(String action : action_map.keySet()){
+						if(!full_action_map.containsKey(action)){
+							//If it doesn't yet exist, then seed it with a random variable
+							full_action_map.put(action, rand.nextDouble());
+						}
+						else{
+							
+							double action_sum = full_action_map.get(action) + action_map.get(action);
+							full_action_map.put(action, action_sum);
+						}
+					}
+				}
+			}
+			
+			for(String action : full_action_map.keySet()){
+				double probability = 0.0;
+				probability = full_action_map.get(action)/(double)object_definition_list.size();
+
+				//cumulative_probability[action_idx] += probability;
+				full_action_map.put(action, probability);
+			}
+			element_action_map_list.add(full_action_map);
+		}
+		
+		return element_action_map_list;
+	}
+
 	
 	/**
 	 * Calculate all estimated element probabilities
@@ -618,20 +720,15 @@ public class BrowserActor extends Thread implements Actor{
 				double cumulative_value = 0.0;
 
 					double value = 0.0;
-					try{
-						value = v.getProperty("probability");
-					}catch(NullPointerException e){
-						value = .001;
-						v.setProperty("probability", value);
-						try{
-							persistor.save();
-						}catch(OConcurrentModificationException e1){
-							ObjectDefinition obj = new ObjectDefinition((Integer)v.getProperty("identifier"), v.getProperty("value").toString(), v.getProperty("type").toString());
-							persistor.find(obj);
-							//System.out.println(this.getName() + " -> OBJECT :: "+obj.getValue()+ " : "+obj.getType()+" -> HAS BEEN FOUND");
-							persistor.save();
-						}
-					}
+
+					//try{
+						persistor.save();
+					//}catch(OConcurrentModificationException e1){
+					//	ObjectDefinition obj = new ObjectDefinition((Integer)v.getProperty("identifier"), v.getProperty("value").toString(), v.getProperty("type").toString());
+					//	persistor.find(obj);
+						//System.out.println(this.getName() + " -> OBJECT :: "+obj.getValue()+ " : "+obj.getType()+" -> HAS BEEN FOUND");
+					//	persistor.save();
+					//}
 					cumulative_value += value;
 					total_objects++;
 				
@@ -653,6 +750,7 @@ public class BrowserActor extends Thread implements Actor{
 		}
 	}
 	
+	
 	/**
 	 * Adds the given {@link Vertex vertex} to the queue
 	 * 
@@ -661,9 +759,18 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	private ConcurrentLinkedQueue<Path> putPathOnQueue(Path path){
 		assert path != null;
-		//int value = path.calculateReward(this.graph)/path.calculateCost(this.graph);
-		int value = path.getActualReward(this.graph)/path.calculateCost(this.graph);
-		System.out.println("THE VALUE OF THE PATH IS :: "+value);
+		
+		//Cost is divided by 3 because we only care about an action which is always between a 
+		// page element vertex and page vertex
+		int cost = path.calculateCost(this.graph)/3;
+		int actualReward = path.getActualReward(this.graph);
+
+		int value = actualReward - cost;
+		System.out.println("THE VALUE OF THE PATH IS :: "+value+ " ;       COST : "+cost);
+		if(value <= 0){
+			//put path on queue for bad paths
+			return null;
+		}
 		//Ensure that path is not already in queue
 		boolean pathsMatch = true;
 		try{
@@ -725,7 +832,7 @@ public class BrowserActor extends Thread implements Actor{
 			System.err.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
 		}
 		catch(NoSuchElementException e){
-			System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION");
+			System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
 			wasPerformedSuccessfully = false;
 		}
 		
@@ -747,7 +854,7 @@ public class BrowserActor extends Thread implements Actor{
 	}
 	
 	/**
-	 * 
+	 * Gets the last Vertex in a path that is of type {@link Page}
 	 * @return
 	 */
 	private Vertex<?> getLastPageVertex(){

@@ -32,7 +32,6 @@ public class Persistor {
             graph.createVertexType(obj.getType());
             System.out.println("Created objectDefinition vertex type");
         }
-
 		return this.graph.addVertex("class:"+obj.getType());
 	}
 	
@@ -53,8 +52,18 @@ public class Persistor {
 	 * 
 	 * @throws OConcurrentModificationException
 	 */
-	public synchronized void save() throws OConcurrentModificationException{
-		this.graph.commit();
+	public synchronized void save(){
+		boolean saved = false;
+		while(!saved){
+			try{
+				this.graph.commit();
+				saved = true;
+			}
+			catch(OConcurrentModificationException e){
+				//System.err.println("Concurrent Modification EXCEPTION Error thrown");
+				//e.printStackTrace()
+			}
+		}
 	}
 	
 	/**

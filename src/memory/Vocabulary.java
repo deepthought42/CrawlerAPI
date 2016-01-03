@@ -1,6 +1,8 @@
 package memory;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import com.tinkerpop.blueprints.Vertex;
 
@@ -58,11 +60,15 @@ public class Vocabulary{
 	 */
 	public static Vocabulary load(String label){
 		Persistor persistor = new Persistor();
-		Vertex v = persistor.find("label", label).iterator().next();
-		String vocabulary = v.getProperty("vocabulary");
+		ArrayList<String> vocabList = new ArrayList<String>();
+
+		Iterator<Vertex> vIter = persistor.find("label", label).iterator();
+		if(!vIter.hasNext()){
+			return new Vocabulary(vocabList, label);
+		}
+		String vocabulary = vIter.next().getProperty("vocabulary");
 		
 		String[] vocabArray = vocabulary.split(",");
-		ArrayList<String> vocabList = new ArrayList<String>();
 		for(String word : vocabArray){
 			vocabList.add(word);
 		}

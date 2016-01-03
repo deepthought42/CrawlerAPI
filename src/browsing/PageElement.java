@@ -21,7 +21,7 @@ import util.ArrayUtility;
  *
  */
 public class PageElement {
-	public String[] actions = ActionFactory.getActions();
+	private String[] actions = ActionFactory.getActions();
 	public String tagName;
 	public String text;
 	public String xpath;
@@ -30,7 +30,6 @@ public class PageElement {
 	public ArrayList<PageElement> child_elements = new ArrayList<PageElement>();
 
 	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
-	private ValueDomain positive_domain = new ValueDomain();
 	
 	//map loaded with k,v where k=propertyName, and v=propertyValue
 	private HashMap<String, String> cssValues = new HashMap<String,String>();
@@ -302,7 +301,7 @@ public class PageElement {
 	 * 
 	 */
 	public String toString(){
-		return this.tagName;
+		return this.xpath;
 	}
 
 	/**
@@ -360,4 +359,8 @@ public class PageElement {
         }
         return hash;
     }
+
+	public String[] getActions() {
+		return this.actions;
+	}
 }

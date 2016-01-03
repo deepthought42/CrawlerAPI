@@ -45,11 +45,12 @@ public class Page implements State {
 		//this.date = date.format(new Date());
 		this.pageUrl = new URL(driver.getCurrentUrl());
 		this.screenshot = Browser.getScreenshot(driver);
-		this.elements = getVisibleElements(driver, "//body", 0, new HashMap<String, Integer>());
+		this.elements = getVisibleElements(driver, "//body", new HashMap<String, Integer>());
 	}
 	
 	public String getSrc() {
-		return src;
+		this.src = src.replaceAll("\\s", "");
+		return src.replace("<canvasid=\"fxdriver-screenshot-canvas\"style=\"display:none;\"width=\"1000\"height=\"720\"></canvas>","");
 	}
 	
 	public void setSrc(String src) {
@@ -81,6 +82,39 @@ public class Page implements State {
 			System.out.println("TEXT :: " + diffTxt);
 			System.out.println("-------------------------------------------");
 		}
+	}
+	
+	/**
+	 * Retreives all elements on a given page that are visible. In this instance we take 
+	 *  visible to mean that it is not currently set to {@css display: none} and that it
+	 *  is visible within the confines of the screen. If an element is not hidden but is also 
+	 *  outside of the bounds of the screen it is assumed hidden
+	 *  
+	 * @param driver
+	 * @return list of webelements that are currently visible on the page
+	 */
+	public ArrayList<PageElement> getVisibleElements(WebDriver driver,
+													 String xpath, 
+													 HashMap<String, Integer> xpathHash) 
+															 throws WebDriverException {
+		List<WebElement> pageElements = driver.findElements(By.xpath(xpath + "//*"));
+		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
+		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
+		if(pageElements.size() <= 0){
+			return elementList;
+		}
+		int cnt = 0;
+		for(WebElement elem : pageElements){
+			
+			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
+				elementList.add(pageElem);
+			}
+			
+			cnt++;
+		}
+		
+		return elementList;
 	}
 	
 	/**
@@ -145,6 +179,8 @@ public class Page implements State {
 	 * 
 	 * @pre page != null
 	 * @return boolean value
+	 * 
+	 * @NOTE :: TODO :: add in ability to differentiate screenshots
 	 */
 	@Override
 	public boolean equals(Object o){
@@ -152,7 +188,13 @@ public class Page implements State {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-		return (this.elements.size() == that.elements.size()) && this.pageUrl.equals(that.pageUrl) && this.src.equals(that.src) && this.screenshot.equals(that.screenshot);
+        System.err.println("ELEMENTS EQUAL FOR PAGE  ...."+ (this.elements.size() == that.elements.size()));
+        System.err.println("URL EQUAL FOR PAGE  ...."+ (this.pageUrl.equals(that.pageUrl)));
+        System.err.println("SRC EQUAL FOR PAGE  ....."+this.getSrc().equals(that.getSrc()));
+        System.err.println("SRC 1  ....."+this.getSrc());
+        System.err.println("SRC 2  ....."+that.getSrc());
+
+		return (this.elements.size() == that.elements.size()) && this.pageUrl.equals(that.pageUrl) && this.src.equals(that.src);
 	}
 	
 	public String toString(){

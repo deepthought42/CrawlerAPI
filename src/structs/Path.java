@@ -29,13 +29,6 @@ public class Path {
 	public Path(){
 		this.vertexPath = new ArrayList<Integer>();
 	}
-	
-	/**
-	 * 
-	 */
-	public Path(Integer vertex_idx){
-		this.vertexPath = new ArrayList<Integer>();
-	}
 
 	/**
 	 * 
@@ -103,6 +96,7 @@ public class Path {
 	}
 	
 	/**
+	 * Calculates the cost of traversing the path based on the cost of individual vertices within this path
 	 * 
 	 * @param graph
 	 * @return
@@ -130,7 +124,7 @@ public class Path {
 	}
 	
 	/**
-	 * Gets the estimated reward value for this path 
+	 * Gets the actual reward value for this path 
 	 * @param graph
 	 * @return
 	 */
@@ -140,8 +134,9 @@ public class Path {
 		MemoryState mem_state = null;
 		Iterable<Edge> edgeList = null;
 		Persistor persistor = new Persistor();
+		System.out.println("CALCULATING ACTUAL REWARD");
+
 		for(Integer vertex_idx : this.getPath()){
-			System.out.println("CALCULATING ACTUAL REWARD");
 			Object vertex_object = graph.getVertices().get(vertex_idx).getData();
 			if(vertex_object instanceof Page){
 				Iterator<com.tinkerpop.blueprints.Vertex> matching_states = 
@@ -149,7 +144,7 @@ public class Path {
 				if(matching_states.hasNext()){
 					current_state = matching_states.next();
 					edgeList = MemoryState.getStateEdges(current_state, persistor);
-					reward+=1;
+					reward += 1;
 				}
 			}
 			else if(vertex_object instanceof PageElement){

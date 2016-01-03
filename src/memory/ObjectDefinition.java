@@ -1,6 +1,7 @@
 package memory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,8 +18,15 @@ public class ObjectDefinition {
 
 	private String value;
 	private String type;
-	private double probability;
 	private int uid;
+	private HashMap<String, Double> actions = new HashMap<String, Double>();
+	
+	public ObjectDefinition(int uid, String value, String type, HashMap<String, Double> actions) {
+		this.value = value;
+		this.type = type;
+		this.uid = uid;
+		this.actions = actions;
+	}
 	
 	public ObjectDefinition(int uid, String value, String type) {
 		this.value = value;
@@ -56,16 +64,21 @@ public class ObjectDefinition {
 
 	}
 
-	public void setProbability(double i) {
-		this.probability = i;		
+	/**
+	 * Sets the this object's {@link HashMap} of actions to a predefined set.
+	 * @param actionMap
+	 */
+	public void setActions(HashMap<String, Double> actionMap) {
+		this.actions = actionMap;		
 	}
 	
-	public double getProbability(){
-		return this.probability;
+	public HashMap<String, Double> getActions(){
+		return this.actions;
 	}
+	
 	
 	/**
-	 * 
+	 * Finds {@link ObjectDefinition} and updates its probability if it exists, otherwise creates a new vertex.
 	 * @param persistor
 	 * @return
 	 */
@@ -73,33 +86,31 @@ public class ObjectDefinition {
 		//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 		Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(this);
 		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-
+		
 		com.tinkerpop.blueprints.Vertex v = null;
 		if(memory_iterator.hasNext()){
+			//System.err.println("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
 			v = memory_iterator.next();
-			v.setProperty("probability", this.getProbability());
+			if(this.getActions().size() != 0){
+				System.err.println("......Actions : "+this.getActions().size());
+				v.setProperty("actions", this.getActions());
+			}
 		}
 		else{
+			System.err.println("Creating new vertex in OrientDB...");
 			v = persistor.addVertex(this);
 			v.setProperty("value", this.getValue());
 			v.setProperty("type", this.getType());
 			v.setProperty("identifier", uid);
+			v.setProperty("actions", this.getActions());
 		}
-		
-		boolean saved = false;
-		while(!saved){
-			try{
-				persistor.save();
-				saved = true;
-			}catch(OConcurrentModificationException e){
-				//System.err.println("CONCURRENT MODIFICATION WHILE reinforcing known objectDef");
-			}
-		}
+
+		persistor.save();
 		return v;
 	}
 	
 	/**
-	 * Retrieves all vertices for given object Definitions
+	 * Retrieves all vertices for given {@link ObjectDefinitions}
 	 * 
 	 * @param objectDefinitions
 	 * 

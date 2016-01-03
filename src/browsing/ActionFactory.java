@@ -1,5 +1,4 @@
 package browsing;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -27,15 +26,7 @@ public class ActionFactory {
 								"doubleClick",
 								"mouseover"};/*,
 								"sendKeys"};*/
-	private static HashMap<String, Integer> actionWeights = new HashMap<String, Integer>();
 	private static Actions builder;
-
-	static {
-		actionWeights.put("click", new Integer(2));
-		actionWeights.put("doubleClick", new Integer(3));
-		actionWeights.put("mouseover", new Integer(1));
-		actionWeights.put("sendKeys", new Integer(4));
-	}
 	
 	public ActionFactory(WebDriver driver){
 		builder = new Actions(driver);
@@ -95,18 +86,6 @@ public class ActionFactory {
 	public static String[] getActions(){
 		return actions;
 	}
-
-	/**
-	 * returns the cost of the action based on static cost value for a given key
-	 * s
-	 * @param action
-	 * @return
-	 */
-	public static Integer getCost(String action) {
-		return actionWeights.get(action);
-	}
-
-
 
 	/**
 	 * Predicts best action based on disparate action information

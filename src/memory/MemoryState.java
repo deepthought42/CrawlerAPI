@@ -74,7 +74,7 @@ public class MemoryState {
 	}
 	
 	/**
-	 * If a state for the given page exists then it is loaded, otherwise a new state is created and returned
+	 * Loads a state for a given page. Uses memory if previously experienced
 	 * 
 	 * @param page
 	 * @return
@@ -98,17 +98,7 @@ public class MemoryState {
 				if(last_state_vertex != null){
 					//NEED TO CHECK IF EDGE ALREADY EXISTS
 					persistor.addEdge(last_state_vertex, v, (objDef).getType(), "CONSISTS_OF");
-				}
-				boolean isSaved = false;
-				while(!isSaved){
-					try{
-						persistor.save();
-						isSaved = true;
-					}
-					catch(OConcurrentModificationException e1){
-						System.err.println("Concurrent Modification Exception thrown. ITERATION : 2");
-						//e1.printStackTrace();
-					}
+					persistor.save();
 				}
 			}
 			else{
@@ -121,7 +111,6 @@ public class MemoryState {
 				}
 				else{
 					last_state_vertex = createOrLoadState(obj, persistor);
-
 				}
 				state_vertex = createOrLoadState(decomposedObject, persistor);
 				
@@ -147,14 +136,8 @@ public class MemoryState {
 	public static synchronized Vertex createState(Object obj, Persistor persistor){
 		Vertex state_vertex = persistor.addVertex(obj.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		state_vertex.setProperty("identifier", obj.hashCode());
-		//state_vertex.setProperty("screenshot", page.screenshot);
-		try{
-			persistor.save();
-		}
-		catch(OConcurrentModificationException e){
-			System.err.println("Concurrent Modification EXCEPTION Error thrown");
-			//e.printStackTrace()
-		}
+		state_vertex.setProperty("value", obj.toString());
+		persistor.save();
 		return state_vertex;
 	}
 	

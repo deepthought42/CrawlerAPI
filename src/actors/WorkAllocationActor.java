@@ -112,26 +112,41 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return {@link Path} to be explored or null if none exist.
 	 */
 	public Path retrieveNextPath() {
-		Queue<Path> path_queue = hash_queue.getQueueHash().get(hash_queue.getRandomKey());
 		Path path = null;
-		System.out.println("PATH QUEUE SIZE :: "+path_queue.size());
-		if(path_queue != null && !path_queue.isEmpty()){
-			
-			//get random path
-			int rand_path_idx = rand.nextInt(path_queue.size());
-			int idx = 0;
-			Iterator<Path> path_iter = path_queue.iterator();
-			while(path_iter.hasNext()){
-				path = path_iter.next();
-				if(idx == rand_path_idx){
-					break;
-				}				
-				idx++;
+
+		if(hash_queue.size() == 0){
+			path = new Path();
+			path.add(0);
+			hash_queue.put(0, path);
+		}
+		else{
+			Object random_key = hash_queue.getRandomKey();
+	
+			Queue<Path> path_queue = hash_queue.getQueueHash().get(random_key);
+			System.out.println("PATH QUEUE SIZE :: "+path_queue.size());
+			if(path_queue != null && !path_queue.isEmpty()){
+				
+				//get random path
+				int rand_path_idx = rand.nextInt(path_queue.size());
+				int idx = 0;
+				Iterator<Path> path_iter = path_queue.iterator();
+				int value = 0;
+				while(path_iter.hasNext()){
+					path = path_iter.next();
+					path.calculateCost(graphObserver.getGraph());
+
+					if(idx == rand_path_idx && path != null){
+						System.err.println("RANDOM PATH IS SET :: BREAKING LOOP WHILE RETRIVING PATH");
+						value = path.getReward();
+								value =  value/path.getCost();
+						break;
+					}
+					
+					idx++;
+				}
+				
+				System.out.println(" ---- Best Value : " + value);
 			}
-			int value = path.getReward()/path.getCost();
-			System.out.println(" ---- Best Value : " + value);
-			//System.out.println(" ---- Reward : " + path.getReward());
-			//System.out.println(" ---- COST : " + path.getCost());
 		}
 		return path;
 	}

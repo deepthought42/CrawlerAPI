@@ -57,6 +57,7 @@ public class BrowserActor extends Thread implements Actor{
 	private ObservableHash<Integer, Path> queueHash = null;
 	private Graph graph = null;
 	private Path path = null;
+	private Path originalPath = null;
 	private Browser browser = null;
 	private ResourceManagementActor resourceManager = null;
 	private WorkAllocationActor workAllocator = null;
@@ -99,6 +100,7 @@ public class BrowserActor extends Thread implements Actor{
 		this.uuid = UUID.randomUUID();
 		this.url = url;
 		this.path = Path.clone(path);
+		this.originalPath = Path.clone(path);
 		this.browser = new Browser(url);
 		this.queueHash = path_queue;
 		this.graph = graph;
@@ -129,6 +131,8 @@ public class BrowserActor extends Thread implements Actor{
 		Vertex<?> node = graph.getVertices().get(path.getPath().get(0));
 		assert(((Page)node.getData()).getUrl() != null);
 		this.path = Path.clone(path);
+		this.originalPath = Path.clone(path);
+
 		this.url = ((Page)node.getData()).getUrl().toString();
 		
 		//System.out.println(this.getName() + " BROWSER ACTOR :: PATH HAS "+ path.getPath().size() + " NODES IN PATH");
@@ -173,10 +177,11 @@ public class BrowserActor extends Thread implements Actor{
 				do{
 					System.out.println(this.getName() + " EXPANDING NODE...");
 					try {
-						Path path = expandNodePath();
+						System.err.println("PATH VALUE :: "+this.path);
+						Path path = Path.expandPath(this.path, this.graph);
 						if(path != null){
 							System.out.println(this.getName() + " -> EXPANDED PATH IS DEFINED AS :: " + path.getPath());
-							this.path = path;
+							this.path = Path.clone(path);
 							
 							//Get last page, element, action sequence.
 							String last_action = null;
@@ -330,10 +335,10 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public Path expandNodePath() throws MalformedURLException, IllegalArgumentException, IllegalAccessException {
+	/*public Path expandNodePath() throws MalformedURLException, IllegalArgumentException, IllegalAccessException {
 		System.out.println(this.getName() + " -> EXPANDING NODE");
 		Path new_path = null;
-		Vertex<?> page_vertex = getLastPageVertex();
+		Vertex<?> page_vertex = this.path.getLastPageVertex(this.graph);
 		if(page_vertex == null){
 			return null;
 		}
@@ -397,11 +402,6 @@ public class BrowserActor extends Thread implements Actor{
 					alreadySeen = true;
 				}
 			}
-			/*if(alreadySeen){
-				//DECIDE ON IF I SHOULD DO IT ANYWAY. FOR NOW DON'T BOTHER DECIDING, JUST SKIP
-
-				return null;
-			}*/
 
 			//Add element and action vertices to path graph
 			if(pageElementVertex != null){
@@ -425,7 +425,7 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		
 		return new_path;
-	}
+	}*/
 	
 	/**
 	 * Reads path and performs learning tasks
@@ -463,7 +463,8 @@ public class BrowserActor extends Thread implements Actor{
 			int idx = graph.findVertexIndex(vertex);
 			path.add(idx);
 			
-			putPathOnQueue(path);
+			workAllocator.registerProductivePath(path);
+			//putPathOnQueue(path);
 			//add new edge to memory
 			
 			if(!state_vertex.equals(new_state_vertex)){
@@ -479,6 +480,7 @@ public class BrowserActor extends Thread implements Actor{
 			//nothing changed so there was no reward for that combination. We want to remember this in the future
 			// so we set it to a negative value to simulate regret
 			actual_reward = -1.0;
+			workAllocator.registerUnproductivePath(originalPath);
 		}
 		
 		//get all objects for the chosen page_element
@@ -493,7 +495,6 @@ public class BrowserActor extends Thread implements Actor{
 		double estimated_reward = 1.0;
 		
 		QLearn q_learn = new QLearn(learning_rate, discount_factor);
-		double computed_actual_reward = actual_reward;
 		//Reinforce probabilities for the component objects of this element
 		for(ObjectDefinition objDef : best_definitions){
 			HashMap<String, Double> action_map = objDef.getActions();
@@ -691,65 +692,7 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		
 		return element_action_map_list;
-	}
-
-	
-	/**
-	 * Calculate all estimated element probabilities
-	 * 
-	 * @param page
-	 * @param element_probabilities
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 */
-	public void getEstimatedElementProbabilities(ArrayList<PageElement> pageElements, double[] element_probabilities) throws IllegalArgumentException, IllegalAccessException{
-		int elementIdx = 0;
-		
-		for(PageElement elem : pageElements){
-			//find vertex for given element
-			DataDecomposer mem = new DataDecomposer(elem);
-		
-			List<ObjectDefinition> raw_object_definitions = mem.decompose();
-			List<com.tinkerpop.blueprints.Vertex> object_definition_list
-				= ObjectDefinition.findAll(raw_object_definitions, persistor);
-			
-			int total_object_definitions = 0;
-			double cumulative_probability = 0.0;
-			for(com.tinkerpop.blueprints.Vertex v : object_definition_list){
-				int total_objects = 0;
-				double cumulative_value = 0.0;
-
-					double value = 0.0;
-
-					//try{
-						persistor.save();
-					//}catch(OConcurrentModificationException e1){
-					//	ObjectDefinition obj = new ObjectDefinition((Integer)v.getProperty("identifier"), v.getProperty("value").toString(), v.getProperty("type").toString());
-					//	persistor.find(obj);
-						//System.out.println(this.getName() + " -> OBJECT :: "+obj.getValue()+ " : "+obj.getType()+" -> HAS BEEN FOUND");
-					//	persistor.save();
-					//}
-					cumulative_value += value;
-					total_objects++;
-				
-				double probability = 0.0;
-				if(total_objects > 0){
-					probability = cumulative_value/(double)total_objects;
-				}
-				
-				total_object_definitions++;
-				cumulative_probability += probability;
-			}
-			if(total_object_definitions > 0){
-				element_probabilities[elementIdx] = cumulative_probability/(double)total_object_definitions;
-			}
-			else{
-				element_probabilities[elementIdx] = rand.nextDouble();
-			}
-			elementIdx++;
-		}
-	}
-	
+	}	
 	
 	/**
 	 * Adds the given {@link Vertex vertex} to the queue
@@ -857,6 +800,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * Gets the last Vertex in a path that is of type {@link Page}
 	 * @return
 	 */
+	/*
 	private Vertex<?> getLastPageVertex(){
 		for(int i = this.path.getPath().size()-1; i >= 0; i--){
 			Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
@@ -868,4 +812,5 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		return null;
 	}
+	*/
 }

@@ -16,7 +16,7 @@ import structs.Path;
 public class EntryPoint {
 	public static void main(String[] args){
 		
-		ResourceManagementActor resourceManager = new ResourceManagementActor(1);
+		ResourceManagementActor resourceManager = new ResourceManagementActor(3);
 		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 		Graph graph = new Graph();
 		GraphObserver graphObserver = new GraphObserver(graph);

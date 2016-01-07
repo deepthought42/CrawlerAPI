@@ -188,13 +188,11 @@ public class Page implements State {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-        System.err.println("ELEMENTS EQUAL FOR PAGE  ...."+ (this.elements.size() == that.elements.size()));
-        System.err.println("URL EQUAL FOR PAGE  ...."+ (this.pageUrl.equals(that.pageUrl)));
-        System.err.println("SRC EQUAL FOR PAGE  ....."+this.getSrc().equals(that.getSrc()));
-        System.err.println("SRC 1  ....."+this.getSrc());
-        System.err.println("SRC 2  ....."+that.getSrc());
 
-		return (this.elements.size() == that.elements.size()) && this.pageUrl.equals(that.pageUrl) && this.src.equals(that.src);
+		return (this.elements.size() == that.elements.size()) 
+				&& this.pageUrl.equals(that.pageUrl) 
+				&& this.getSrc().equals(that.getSrc())
+				&& this.screenshot.equals(that.screenshot);
 	}
 	
 	public String toString(){

@@ -5,6 +5,7 @@ import graph.Vertex;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
@@ -20,8 +21,8 @@ import observableStructs.ObservableHash;
 import structs.Path;
 
 /**
- * Graph Condensing Agent iterates over a graph of nodes and condenses
- * matching nodes down into a single node.
+ * Work Allocator has the responsibility of starting new Actors, monitoring
+ * {@link Path}s traversed, and allotting work to Actors as work is requested.
  * 
  * @author Brandon Kindred
  *
@@ -72,6 +73,8 @@ public class WorkAllocationActor extends Thread implements Observer {
 			}
 		}
 	}
+	
+
 	
 	/**
 	 * Allocate path processing to {@link BrowserActor}s to crawl if resources are available.

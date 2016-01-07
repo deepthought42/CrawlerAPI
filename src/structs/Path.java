@@ -1,12 +1,15 @@
 package structs;
 
 import graph.Graph;
+import graph.Vertex;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import com.tinkerpop.blueprints.Edge;
 
+import browsing.ActionFactory;
 import browsing.Page;
 import browsing.PageElement;
 import memory.MemoryState;
@@ -164,7 +167,7 @@ public class Path {
 	}
 	
 	/**
-	 * 
+	 * Clone {@link Path} object
 	 * @param path
 	 * @return
 	 */
@@ -179,5 +182,78 @@ public class Path {
 		return clonePath;
 	}
 	
+	/**
+	 * Gets the last Vertex in a path that is of type {@link Page}
+	 * @return
+	 */
+	public Vertex<?> getLastPageVertex(Graph graph){
+		for(int i = this.vertexPath.size()-1; i >= 0; i--){
+			Vertex<?> descNode = graph.getVertices().get(this.vertexPath.get(i));
+			if(descNode.getData() instanceof Page){
+				System.err.println("PAGE VERTEX FOUND AND RETURNED");
+				return descNode;
+			}
+		}
+		return null;
+	}
 	
+
+	/**
+	 * Expands path and implements reinforcement learning based on results of expansion
+	 * 
+	 * @throws MalformedURLException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 */
+	public static Path expandPath(Path path, Graph graph)  {
+		System.out.println( " EXPANDING PATH...");
+		Path new_path = Path.clone(path);
+		Vertex<?> page_vertex = path.getLastPageVertex(graph);
+		if(page_vertex == null){
+			return null;
+		}
+		//get last page
+		Class<?> className = page_vertex.getData().getClass();
+		String[] actions = ActionFactory.getActions();
+		
+		if(className.equals(Page.class)){
+			Page page = ((Page)page_vertex.getData());
+		
+			//get all elements for this page
+			ArrayList<PageElement> page_elements = page.getElements();
+		
+			//iterate over all elements
+			for(PageElement page_element : page_elements){
+				Vertex<PageElement> pageElementVertex = new Vertex<PageElement>(page_element);
+				//Add element and action vertices to path graph
+				if(pageElementVertex != null){
+					graph.addVertex(pageElementVertex);
+					graph.addEdge(page_vertex, pageElementVertex);
+				}
+				int page_elem_vertex_idx = graph.findVertexIndex(pageElementVertex);
+				System.err.println("Page element index "+page_elem_vertex_idx);
+				new_path.add(page_elem_vertex_idx);
+				
+				//for each element in elements iterate over actions
+				for(String action : ActionFactory.getActions()){
+					Vertex<String> actionVertex = new Vertex<String>(action);
+					graph.addVertex(actionVertex);
+					graph.addEdge(pageElementVertex, actionVertex);
+					int action_vertex_idx = graph.findVertexIndex(actionVertex);
+
+					new_path.add(action_vertex_idx);
+				}
+			
+				//clone path and add in action and element
+				new_path = Path.clone(path);
+
+				//add element and action to current path
+
+			}
+			//register path as an unknown outcome
+			//registerUnknownOutcomePath(new_path);
+		}
+		
+		return new_path;
+	}
 }

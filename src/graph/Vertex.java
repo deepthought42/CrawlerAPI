@@ -15,7 +15,7 @@ public class Vertex<T> {
 	private T data = null;
 	
 	public Vertex(T obj){
-		System.out.println("Initializing vertex");
+		//System.out.println("Initializing vertex");
 		this.data = obj;
 	}
 	

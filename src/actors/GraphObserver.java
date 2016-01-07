@@ -5,6 +5,11 @@ import java.util.Observer;
 
 import graph.Graph;
 
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class GraphObserver implements Observer{
 	private Graph graph = null;
 	

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.tinkerpop.blueprints.Vertex;
 
 /**
@@ -21,6 +20,14 @@ public class ObjectDefinition {
 	private int uid;
 	private HashMap<String, Double> actions = new HashMap<String, Double>();
 	
+	/**
+	 * 
+	 * 
+	 * @param uid
+	 * @param value
+	 * @param type
+	 * @param actions
+	 */
 	public ObjectDefinition(int uid, String value, String type, HashMap<String, Double> actions) {
 		this.value = value;
 		this.type = type;
@@ -28,12 +35,25 @@ public class ObjectDefinition {
 		this.actions = actions;
 	}
 	
+	/**
+	 * 
+	 * 
+	 * @param uid
+	 * @param value
+	 * @param type
+	 */
 	public ObjectDefinition(int uid, String value, String type) {
 		this.value = value;
 		this.type = type;
 		this.uid = uid;
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param value
+	 * @param type
+	 */
 	public ObjectDefinition(String value, String type) {
 		this.value = value;
 		this.type = type;
@@ -58,6 +78,9 @@ public class ObjectDefinition {
 		return this.value;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String toString(){
 		return this.value;
@@ -72,6 +95,10 @@ public class ObjectDefinition {
 		this.actions = actionMap;		
 	}
 	
+	/**
+	 * Gets list of probabilities associated with actions for this object definition
+	 * @return
+	 */
 	public HashMap<String, Double> getActions(){
 		return this.actions;
 	}

@@ -197,17 +197,18 @@ public class Path {
 		return null;
 	}
 	
-
 	/**
-	 * Expands path and implements reinforcement learning based on results of expansion
+	 * Produces all possible element, action combinations that can be produced from the given path
 	 * 
 	 * @throws MalformedURLException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static Path expandPath(Path path, Graph graph)  {
+	public static ArrayList<Path> expandPath(Path path, Graph graph)  {
 		System.out.println( " EXPANDING PATH...");
+		ArrayList<Path> pathList = new ArrayList<Path>();
 		Path new_path = Path.clone(path);
+		
 		Vertex<?> page_vertex = path.getLastPageVertex(graph);
 		if(page_vertex == null){
 			return null;
@@ -231,7 +232,7 @@ public class Path {
 					graph.addEdge(page_vertex, pageElementVertex);
 				}
 				int page_elem_vertex_idx = graph.findVertexIndex(pageElementVertex);
-				System.err.println("Page element index "+page_elem_vertex_idx);
+				//System.err.println("Page element index "+page_elem_vertex_idx);
 				new_path.add(page_elem_vertex_idx);
 				
 				//for each element in elements iterate over actions
@@ -240,20 +241,20 @@ public class Path {
 					graph.addVertex(actionVertex);
 					graph.addEdge(pageElementVertex, actionVertex);
 					int action_vertex_idx = graph.findVertexIndex(actionVertex);
+					Path action_path = Path.clone(new_path);
 
-					new_path.add(action_vertex_idx);
+					action_path.add(action_vertex_idx);
+					pathList.add(action_path);
 				}
-			
+				
 				//clone path and add in action and element
 				new_path = Path.clone(path);
 
 				//add element and action to current path
 
 			}
-			//register path as an unknown outcome
-			//registerUnknownOutcomePath(new_path);
 		}
 		
-		return new_path;
+		return pathList;
 	}
 }

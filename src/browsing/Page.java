@@ -70,7 +70,7 @@ public class Page implements State {
 	}
 	
 	public void refreshElements(){
-		this.elements = this.getVisibleElements(driver, "//body", 0, new HashMap<String, Integer>());
+		this.elements = this.getVisibleElements(driver, "//body", new HashMap<String, Integer>());
 	}
 	
 	@SuppressWarnings("unused")
@@ -103,15 +103,12 @@ public class Page implements State {
 		if(pageElements.size() <= 0){
 			return elementList;
 		}
-		int cnt = 0;
 		for(WebElement elem : pageElements){
 			
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
 				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
 				elementList.add(pageElem);
 			}
-			
-			cnt++;
 		}
 		
 		return elementList;
@@ -126,7 +123,7 @@ public class Page implements State {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	public ArrayList<PageElement> getVisibleElements(WebDriver driver,
+	/*public ArrayList<PageElement> getVisibleElements(WebDriver driver,
 													 String xpath, 
 													 int depth, 
 													 HashMap<String, 
@@ -137,15 +134,11 @@ public class Page implements State {
 		if(childElements.size() <= 0){
 			return elementList;
 		}
-		int cnt = 0;
-		for(WebElement elem : childElements){
-			
+		for(WebElement elem : childElements){			
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
 				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
 				elementList.add(pageElem);
 			}
-			
-			cnt++;
 		}
 		
 		for(PageElement pageElem : elementList){
@@ -154,7 +147,7 @@ public class Page implements State {
 		
 		return elementList;
 	}
-	
+	*/
 	/**
 	 * Get immediate child elements for a given element
 	 * @param elem	WebElement to get children for

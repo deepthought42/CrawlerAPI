@@ -1,23 +1,16 @@
 package actors;
 
+import graph.Graph;
 import graph.Vertex;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Queue;
-import java.util.Random;
-
-import org.openqa.selenium.NoSuchElementException;
 
 import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageElement;
 import observableStructs.ObservableHash;
+import shortTerm.ShortTermMemoryRegistry;
 import structs.Path;
 
 /**
@@ -27,135 +20,38 @@ import structs.Path;
  * @author Brandon Kindred
  *
  */
-public class WorkAllocationActor extends Thread implements Observer {
+public class WorkAllocationActor extends Thread {
 	
 	ObservableHash<Integer, Path> hash_queue = null;
 	ResourceManagementActor resourceManager = null;
 	GraphObserver graphObserver = null;
-	private static Random rand = new Random();
+	private static ShortTermMemoryRegistry shortTermMemory = new ShortTermMemoryRegistry();
 	
 	/**
-	 * 
+	 * Construct new {@link WorkAllocationActor} 
 	 * @param queue
 	 * @param resourceManager
 	 */
-	public WorkAllocationActor(ObservableHash<Integer, Path> queue, 
-							   ResourceManagementActor resourceManager,
-							   GraphObserver graphObserver){
-		this.hash_queue = queue;
-		this.hash_queue.addObserver(this);
-		this.graphObserver = graphObserver;
+	public WorkAllocationActor(ResourceManagementActor resourceManager,
+							   String url){
+		Graph graph = new Graph();
+		this.graphObserver = new GraphObserver(graph);
 		this.resourceManager = resourceManager;
-	}
-	
-	public void run(){
+		
+		BrowserActor browserActor;
+		
 		try {
-			allocateVertexProcessing();
-		} catch (IOException e) {
+			browserActor = new BrowserActor(url, new Path(), graphObserver);
+			browserActor.start();
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	/**
-	 * Whenever an update is observed the current queue is updated
-	 * 
-	 * @param o
-	 * @param arg
-	 */
-	public void update(Observable o, Object arg)
-	{
-		if(o instanceof ObservableHash){
-	    	hash_queue = (ObservableHash) o;
-			try {
-				allocateVertexProcessing();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-
-	
-	/**
-	 * Allocate path processing to {@link BrowserActor}s to crawl if resources are available.
-	 * @throws IOException 
-	 */
-	public void allocateVertexProcessing() throws IOException{
-		try{
-			while( resourceManager.areResourcesAvailable() && !hash_queue.isEmpty()){
-				Path path = retrieveNextPath();
-				
-				if(path != null){
-					System.out.println("WORK ALLOCATION ACTOR HAS RETRIEVED NEXT VERTEX.");
-			        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
-
-			        System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
-			        BrowserActor browserActor = new BrowserActor(hash_queue, graphObserver.getGraph(), path, this.resourceManager, this);
-					browserActor.start();
-
-					System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
-				}
-				else{
-					//System.out.println("WORK ALLOCATOR :: PATH is null.");
-				}
-			}
-    	}
-		catch(NoSuchElementException e){
-    	}
-    	catch(NullPointerException e){
-    	} 
-		catch (MalformedURLException e) {
-			System.out.println("MALFORMED URL EXCEPTION");
-		}
-	}
-	
-	/**
-	 * Returns next path to be explored.
-	 * 
-	 * @return {@link Path} to be explored or null if none exist.
-	 */
-	public Path retrieveNextPath() {
-		Path path = null;
-
-		if(hash_queue.size() == 0){
-			path = new Path();
-			path.add(0);
-			hash_queue.put(0, path);
-		}
-		else{
-			Object random_key = hash_queue.getRandomKey();
-	
-			Queue<Path> path_queue = hash_queue.getQueueHash().get(random_key);
-			System.out.println("PATH QUEUE SIZE :: "+path_queue.size());
-			if(path_queue != null && !path_queue.isEmpty()){
-				
-				//get random path
-				int rand_path_idx = rand.nextInt(path_queue.size());
-				int idx = 0;
-				Iterator<Path> path_iter = path_queue.iterator();
-				int value = 0;
-				while(path_iter.hasNext()){
-					path = path_iter.next();
-					path.calculateCost(graphObserver.getGraph());
-
-					if(idx == rand_path_idx && path != null){
-						System.err.println("RANDOM PATH IS SET :: BREAKING LOOP WHILE RETRIVING PATH");
-						value = path.getReward();
-								value =  value/path.getCost();
-						break;
-					}
-					
-					idx++;
-				}
-				
-				System.out.println(" ---- Best Value : " + value);
-			}
-		}
-		return path;
-	}
-	
-	/**
 	 * Finds smallest key in hash
+	 * 
 	 * @return <= 99999
 	 */
 	public synchronized Integer getSmallestKey(){
@@ -182,13 +78,11 @@ public class WorkAllocationActor extends Thread implements Observer {
 	 * @return 0 if path1 is parent, 1 if path2 is parent. -1 if they are unrelated
 	 */
 	private int evaluatePaths(Path path1, Path path2) throws NullPointerException{
-		int path1Idx = getFurthestPageIndex(path1);
-		int path2Idx = getFurthestPageIndex(path2);
-		if(path1Idx == 0 || path2Idx == 0){
-			return -1;
-		}
-		Page path1Page = (Page)(graphObserver.getGraph().getVertices().get(path1.getPath().get(path1Idx))).getData();
-		Page path2Page = (Page)(graphObserver.getGraph().getVertices().get(path2.getPath().get(path2Idx))).getData();
+		Vertex<Page> path1Vertex = (Vertex<Page>) path1.getLastPageVertex(this.graphObserver.getGraph());
+		Vertex<Page> path2Vertex = (Vertex<Page>) path2.getLastPageVertex(this.graphObserver.getGraph());
+
+		Page path1Page = (Page)path1Vertex.getData();
+		Page path2Page = (Page)path2Vertex.getData();
 		
 		ArrayList<PageElement> path1Elements = path1Page.getElements();
 		ArrayList<PageElement> path2Elements = path2Page.getElements();
@@ -203,7 +97,7 @@ public class WorkAllocationActor extends Thread implements Observer {
 		}
 		
 		//get previous node in both paths
-		Vertex<?> path1PrevNode = graphObserver.getGraph().getVertices().get(path1.getPath().get(path1Idx - 1));
+		/*Vertex<?> path1PrevNode = graphObserver.getGraph().getVertices().get(path1.getPath().get(path1Idx - 1));
 		Vertex<?> path2PrevNode = graphObserver.getGraph().getVertices().get(path2.getPath().get(path2Idx - 1));
 		
 		if(allElementsEqual 
@@ -224,23 +118,35 @@ public class WorkAllocationActor extends Thread implements Observer {
 				System.err.println("NEITHER PATH 1 OR PATH 2 ARE PARENTS OF EACH OTHER");
 			}
 		}
+		*/
 		return -1;
 	}
 	
-	/**
-	 * Retreives the index for the page node closest to the end of the path
-	 * 
-	 * @param path
-	 * @return
-	 */
-	public int getFurthestPageIndex(Path path){
-		int pathSize = path.getPath().size();
-		for(int i = pathSize-1; i >= 0; i--){
-			Vertex<?> pathNode = graphObserver.getGraph().getVertices().get(path.getPath().get(i));
-			if(pathNode.getData().getClass().getCanonicalName().equals("browsing.Page")){
-				return i;
-			}
+	public static void registerCrawlResult(Path path, Page last_page, Page current_page, GraphObserver graphObserver){
+		
+		boolean isValuable = false;
+		//if last page in path is different than the current page then register as valuable
+		
+		if(last_page.equals(current_page)){
+			isValuable = false;
 		}
-		return -1;
+		else{
+			isValuable = true;
+		}
+		
+		shortTermMemory.registerPath(path, isValuable);
+		
+		  System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
+	       BrowserActor browserActor;
+			try {
+				browserActor = new BrowserActor("http://127.0.0.1:3000", path, graphObserver);
+				browserActor.start();
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
 	}
 }

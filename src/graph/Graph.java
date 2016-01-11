@@ -31,10 +31,10 @@ public class Graph extends Observable{
 	}
 	
 	/**
-	 * 
+	 * Adds vertex to list of vertices and notifies all observers
 	 * 
 	 * @param vertex
-	 * @return
+	 * @return true if successful, else false
 	 */
 	public synchronized boolean addVertex(Vertex<?> vertex){
 		boolean wasAdded = false;

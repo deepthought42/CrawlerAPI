@@ -5,6 +5,9 @@ import graph.Vertex;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
+import java.util.Set;
 
 import browsing.ElementAction;
 import browsing.Page;
@@ -23,7 +26,7 @@ import structs.Path;
 public class WorkAllocationActor extends Thread {
 	
 	ObservableHash<Integer, Path> hash_queue = null;
-	ResourceManagementActor resourceManager = null;
+	private static ResourceManagementActor resourceManager = null;
 	GraphObserver graphObserver = null;
 	private static ShortTermMemoryRegistry shortTermMemory = new ShortTermMemoryRegistry();
 	
@@ -32,16 +35,17 @@ public class WorkAllocationActor extends Thread {
 	 * @param queue
 	 * @param resourceManager
 	 */
-	public WorkAllocationActor(ResourceManagementActor resourceManager,
+	public WorkAllocationActor(ResourceManagementActor resourceMgr,
 							   String url){
 		Graph graph = new Graph();
 		this.graphObserver = new GraphObserver(graph);
-		this.resourceManager = resourceManager;
+		resourceManager = resourceMgr;
 		
 		BrowserActor browserActor;
 		
 		try {
 			browserActor = new BrowserActor(url, new Path(), graphObserver);
+			WorkAllocationActor.resourceManager.punchIn(browserActor);
 			browserActor.start();
 		}
 		catch (IOException e) {
@@ -122,31 +126,103 @@ public class WorkAllocationActor extends Thread {
 		return -1;
 	}
 	
-	public static void registerCrawlResult(Path path, Page last_page, Page current_page, GraphObserver graphObserver){
+	public void run(){
 		
+	}
+	
+	/**
+	 * 
+	 * @param path
+	 * @param last_page
+	 * @param current_page
+	 * @param graphObserver
+	 * @param browser_actor
+	 */
+	public static void registerCrawlResult(Path path, 
+										   Page last_page, 
+										   Page current_page, 
+										   GraphObserver graphObserver, 
+										   BrowserActor browser_actor){
+		resourceManager.punchOut(browser_actor);
 		boolean isValuable = false;
 		//if last page in path is different than the current page then register as valuable
-		
-		if(last_page.equals(current_page)){
+		ArrayList<Path> pathExpansions = null;
+		if(last_page.equals(current_page) && path.getPath().size() != 1){
 			isValuable = false;
+		}
+		else if(path.getPath().size() == 0){
+			isValuable = true;
+			Vertex<Page> vertex = new Vertex<Page>(current_page);
+			graphObserver.getGraph().addVertex(vertex);
+			int vertex_idx = graphObserver.getGraph().findVertexIndex(vertex);
+			path.add(vertex_idx);
+			pathExpansions = Path.expandPath(path, graphObserver.getGraph());
 		}
 		else{
 			isValuable = true;
+			pathExpansions = Path.expandPath(path, graphObserver.getGraph());
 		}
 		
 		shortTermMemory.registerPath(path, isValuable);
 		
-		  System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
-	       BrowserActor browserActor;
-			try {
-				browserActor = new BrowserActor("http://127.0.0.1:3000", path, graphObserver);
-				browserActor.start();
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		if(pathExpansions != null){	
+			for(Path expanded_path : pathExpansions){
+				shortTermMemory.registerPath(expanded_path, null);
+			}
+		}
+		while(resourceManager.areResourcesAvailable()){
+			System.out.println(Thread.currentThread().getName() + " -> Path length being passed to browserActor = "+path.getPath().size());
+			if(pathExpansions != null){
+				Path new_path = retrieveNextPath();
+				BrowserActor new_browser_actor;
+				try {
+					new_browser_actor = new BrowserActor("http://127.0.0.1:3000", new_path, graphObserver);
+					WorkAllocationActor.resourceManager.punchIn(new_browser_actor);
+					new_browser_actor.start();
+		
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			
+				System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
+			}		
+		}
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static Path retrieveNextPath(){
+		HashMap<String, Path> paths = shortTermMemory.getUnknownPaths();
+		String key = getRandomKey(paths);
+		Path path = paths.remove(key);
+		
+		return path;
+	}
+	
+	/**
+	 * Finds random key that exists in hash
+	 * 
+	 * @return <= 99999
+	 */
+	public static String getRandomKey(HashMap<String, Path> pathHash){
+		Set<String> keys = pathHash.keySet();
+		int total_keys = keys.size();
+		Random rand = new Random();
+		int rand_idx = rand.nextInt(total_keys);
+		String key_object = null;
+		int key_idx = 0;
+		for(String key : keys){
+			if(key_idx == rand_idx){
+				key_object = key;
+				break;
 			}
 
-			System.out.println("WORK ALLOCATOR :: BROWSER ACTOR STARTED!");
+			key_idx++;
+		}
+		
+		return key_object;
 	}
 }

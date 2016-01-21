@@ -9,21 +9,25 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import shortTerm.ShortTermMemoryRegistry;
 import memory.DataDecomposer;
 import memory.MemoryState;
 import memory.ObjectDefinition;
 import memory.Persistor;
+import actors.WorkAllocationActor;
 import browsing.Page;
 import browsing.PageElement;
 
 import com.tinkerpop.blueprints.Edge;
 
-public class SequenceLearner {
+public class Learner {
 	
 	private Persistor persistor = null;
 	private Graph graph = null;
+	private ShortTermMemoryRegistry short_term_memory = null;
 	
-	public SequenceLearner() {
+	public Learner(ShortTermMemoryRegistry short_term_memory) {
+		this.short_term_memory = short_term_memory;
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -36,10 +40,17 @@ public class SequenceLearner {
 	 * @throws NullPointerException
 	 * @throws IOException 
 	 */
-	public void learn(Page last_page, Page current_page, PageElement last_element, String last_action) throws IllegalArgumentException, IllegalAccessException, NullPointerException, IOException{
+	public void learn(Path path, Page last_page, Page current_page, PageElement last_element, String last_action) throws IllegalArgumentException, IllegalAccessException, NullPointerException, IOException{
 		//REINFORCEMENT LEARNING
 		System.out.println( " Initiating learning");
 
+		
+		
+		
+		
+		
+		
+		
 		MemoryState memState = new MemoryState(last_page.hashCode());
 		com.tinkerpop.blueprints.Vertex state_vertex = null;
 		try{
@@ -63,7 +74,8 @@ public class SequenceLearner {
 			int idx = graph.findVertexIndex(vertex);
 			path.add(idx);
 			
-			workAllocator.registerProductivePath(path);
+			short_term_memory.getProductivePaths();
+			short_term_memory.getUnproductivePaths();
 			//putPathOnQueue(path);
 			//add new edge to memory
 			
@@ -80,7 +92,6 @@ public class SequenceLearner {
 			//nothing changed so there was no reward for that combination. We want to remember this in the future
 			// so we set it to a negative value to simulate regret
 			actual_reward = -1.0;
-			workAllocator.registerUnproductivePath(originalPath);
 		}
 		
 		//get all objects for the chosen page_element

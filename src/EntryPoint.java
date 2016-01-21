@@ -12,7 +12,7 @@ import structs.Path;
 public class EntryPoint {
 	public static void main(String[] args){
 		
-		ResourceManagementActor resourceManager = new ResourceManagementActor(3);
+		ResourceManagementActor resourceManager = new ResourceManagementActor(49);
 		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 
 		String url = "http://127.0.0.1:3000";

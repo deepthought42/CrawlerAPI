@@ -138,14 +138,14 @@ public class BrowserActor extends Thread implements Actor{
 		Page current_page = null;
 		try {
 			current_page = browser.getPage();
-			WorkAllocationActor.registerCrawlResult(this.path, (Page)this.path.getLastPageVertex(graphObserver.getGraph()).getData(), current_page, graphObserver);
+			this.browser.getDriver().quit();
+
+			WorkAllocationActor.registerCrawlResult(this.path, (Page)this.path.getLastPageVertex(graphObserver.getGraph()).getData(), current_page, graphObserver, this);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}		
-		
-		this.browser.getDriver().quit();
 	}
 	
 	/**

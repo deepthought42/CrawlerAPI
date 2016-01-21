@@ -32,6 +32,7 @@ public class ResourceManagementActor {
 	 * @return
 	 */
 	public UUID punchOut(Actor actor){
+
 		int index = 0;
 		for(UUID actorId : presentActors){
 			if(actorId.equals(actor.getActorId())){
@@ -39,6 +40,7 @@ public class ResourceManagementActor {
 			}
 			index++;
 		}
+		
 		return presentActors.remove(index);
 	}
 	

@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 
-import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageElement;
 import observableStructs.ObservableHash;
@@ -82,8 +81,8 @@ public class WorkAllocationActor extends Thread {
 	 * @return 0 if path1 is parent, 1 if path2 is parent. -1 if they are unrelated
 	 */
 	private int evaluatePaths(Path path1, Path path2) throws NullPointerException{
-		Vertex<Page> path1Vertex = (Vertex<Page>) path1.getLastPageVertex(this.graphObserver.getGraph());
-		Vertex<Page> path2Vertex = (Vertex<Page>) path2.getLastPageVertex(this.graphObserver.getGraph());
+		Vertex<Page> path1Vertex = (Vertex<Page>) path1.getLastPageVertex();
+		Vertex<Page> path2Vertex = (Vertex<Page>) path2.getLastPageVertex();
 
 		Page path1Page = (Page)path1Vertex.getData();
 		Page path2Page = (Page)path2Vertex.getData();
@@ -152,15 +151,12 @@ public class WorkAllocationActor extends Thread {
 		}
 		else if(path.getPath().size() == 0){
 			isValuable = true;
-			Vertex<Page> vertex = new Vertex<Page>(current_page);
-			graphObserver.getGraph().addVertex(vertex);
-			int vertex_idx = graphObserver.getGraph().findVertexIndex(vertex);
-			path.add(vertex_idx);
-			pathExpansions = Path.expandPath(path, graphObserver.getGraph());
+			path.add(current_page);
+			pathExpansions = Path.expandPath(path);
 		}
 		else{
 			isValuable = true;
-			pathExpansions = Path.expandPath(path, graphObserver.getGraph());
+			pathExpansions = Path.expandPath(path);
 		}
 		
 		shortTermMemory.registerPath(path, isValuable);

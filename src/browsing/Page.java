@@ -21,7 +21,7 @@ import org.openqa.selenium.WebElement;
  * @author Brandon Kindred
  *
  */
-public class Page implements State {
+public class Page implements State, IBrowserObject {
 	public String screenshot = null; 
 	private WebDriver driver = null;
 	public String src = "";
@@ -71,17 +71,6 @@ public class Page implements State {
 	
 	public void refreshElements(){
 		this.elements = this.getVisibleElements(driver, "//body", new HashMap<String, Integer>());
-	}
-	
-	@SuppressWarnings("unused")
-	private void printDiffList(List<diff_match_patch.Diff> diffList){
-		for(diff_match_patch.Diff item : diffList){
-			diff_match_patch.Operation diffOp = item.operation;
-			String diffTxt = item.text;
-			System.out.println("OPERATION :: " + diffOp);
-			System.out.println("TEXT :: " + diffTxt);
-			System.out.println("-------------------------------------------");
-		}
 	}
 	
 	/**
@@ -208,4 +197,16 @@ public class Page implements State {
         }
         return hash;
     }
+
+	@Override
+	public double getCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getReward() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

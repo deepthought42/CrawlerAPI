@@ -30,12 +30,8 @@ public class ActionFactory {
 	
 	public ActionFactory(WebDriver driver){
 		builder = new Actions(driver);
-		loadWeights();
 	}
-	
-	public static void loadWeights(){
-		
-	}
+
 	/**
 	 * 
 	 * @param driver

@@ -20,7 +20,7 @@ import util.ArrayUtility;
  * @author Brandon Kindred
  *
  */
-public class PageElement {
+public class PageElement implements IBrowserObject {
 	private String[] actions = ActionFactory.getActions();
 	public String tagName;
 	public String text;
@@ -39,6 +39,7 @@ public class PageElement {
 	
 	/**
 	 * Constructs a PageElement.
+	 * 
 	 * @param driver
 	 * @param elem
 	 */
@@ -54,6 +55,7 @@ public class PageElement {
 	
 	/**
 	 * Constructs a PageElement.
+	 * 
 	 * @param driver
 	 * @param elem
 	 */
@@ -174,6 +176,7 @@ public class PageElement {
 
 	/**
 	 * Extract all attributes from a given {@link WebElement}
+	 * 
 	 * @param element {@link WebElement} to have attributes loaded for
 	 * @param javascriptDriver - 
 	 * @return
@@ -279,7 +282,6 @@ public class PageElement {
 		areElementsEqual = this.cssMatches(that);
 		return areElementsEqual;
 	}
-
 	
 	/**
 	 * checks if the current element is a child of the element passed
@@ -293,7 +295,6 @@ public class PageElement {
 		}
 		return false;
 	}
-
 	
 	/**
 	 * Converts to string with following format:
@@ -347,6 +348,9 @@ public class PageElement {
 		this.child_elements = child_elements;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
     public int hashCode() {
         int hash = 1;
@@ -362,5 +366,23 @@ public class PageElement {
 
 	public String[] getActions() {
 		return this.actions;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double getCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double getReward() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

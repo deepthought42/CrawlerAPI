@@ -11,7 +11,7 @@ import org.openqa.selenium.WebDriver;
  * @author Brandon Kindred
  *
  */
-public class PageAlert {
+public class PageAlert implements IBrowserObject {
 	public Page page = null;
 	public String choice;
 	public String message;
@@ -107,5 +107,17 @@ public class PageAlert {
         isEqual = this.page.equals(that.getPage());
         
         return isEqual;        
+	}
+
+	@Override
+	public double getCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getReward() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

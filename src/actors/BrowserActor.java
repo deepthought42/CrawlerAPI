@@ -1,6 +1,4 @@
 package actors;
-import graph.Graph;
-import graph.Vertex;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -16,7 +14,6 @@ import memory.DataDecomposer;
 import memory.ObjectDefinition;
 import memory.Persistor;
 import memory.Vocabulary;
-import observableStructs.ObservableHash;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
@@ -28,10 +25,11 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import browsing.ActionFactory;
 import browsing.Browser;
-import browsing.ElementAction;
+import browsing.IBrowserObject;
 import browsing.Page;
 import browsing.PageAlert;
 import browsing.PageElement;
+import browsing.actions.Action;
 import structs.Path;
 
 /**
@@ -116,22 +114,17 @@ public class BrowserActor extends Thread implements Actor{
 	public void run(){
 		try {
 			if(this.path.getPath().isEmpty()){
-				Vertex<Page> page_vertex = new Vertex<Page>(browser.getPage());
-				this.graphObserver.getGraph().addVertex(page_vertex);
-				int vertex_idx = this.graphObserver.getGraph().findVertexIndex(page_vertex);
-				this.path.add(vertex_idx);
+				IBrowserObject page_obj = browser.getPage();
+				this.path.add(page_obj);
 			}
 			else{
 				boolean successfulCrawl = this.crawlPath();
 			}
 		} catch (UnhandledAlertException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (java.util.NoSuchElementException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -140,7 +133,7 @@ public class BrowserActor extends Thread implements Actor{
 			current_page = browser.getPage();
 			this.browser.getDriver().quit();
 
-			WorkAllocationActor.registerCrawlResult(this.path, (Page)this.path.getLastPageVertex(graphObserver.getGraph()).getData(), current_page, graphObserver, this);
+			WorkAllocationActor.registerCrawlResult(this.path, (Page)this.path.getLastPageVertex(), current_page, graphObserver, this);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -157,37 +150,32 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IOException 
 	 */
 	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
-		Iterator<Integer> pathIterator = this.path.getPath().iterator();
-		
-		//Page pageNode = null;
 		PageElement last_element = null;
 		//skip first node since we should have already loaded it during initialization
 	
-		while(pathIterator.hasNext()){
-			int path_node_index = pathIterator.next();
-			Vertex<?> pathNode = graphObserver.getGraph().getVertices().get(path_node_index);
-						
-			if(pathNode.getData() instanceof Page){
-				//pageNode = (Page)pathNode.getData();
+		for(IBrowserObject browser_obj: this.path.getPath()){
+					
+			if(browser_obj instanceof Page){
+				//pageNode = (Page)browser_obj;
 				//if current page does not match current node data 
 			}
-			else if(pathNode.getData() instanceof PageElement){
-				last_element = (PageElement) pathNode.getData();
+			else if(browser_obj instanceof PageElement){
+				last_element = (PageElement) browser_obj;
 			}
 			//String is action in this context
-			else if(pathNode.getData() instanceof String){
+			else if(browser_obj instanceof Action){
 				boolean actionPerformedSuccessfully;
-				String action = (String) pathNode.getData();
+				Action action = (Action)browser_obj;
 				browser.updatePage( DateFormat.getDateInstance());
 				int attempts = 0;
 				do{
-					actionPerformedSuccessfully = performAction(last_element, action );
+					actionPerformedSuccessfully = performAction(last_element, action.getName() );
 					attempts++;
 				}while(!actionPerformedSuccessfully && attempts < 50);
 			}
-			else if(pathNode.getData() instanceof PageAlert){
+			else if(browser_obj instanceof PageAlert){
 				System.err.println(this.getName() + " -> Handling Alert");
-				PageAlert alert = (PageAlert)pathNode.getData();
+				PageAlert alert = (PageAlert)browser_obj;
 				alert.performChoice(browser.getDriver());
 			}
 		}
@@ -355,50 +343,7 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		
 		return element_action_map_list;
-	}	
-	
-	/**
-	 * Adds the given {@link Vertex vertex} to the queue
-	 * 
-	 * @param path path to be added
-	 * @pre path != null
-	 */
-	/*private ConcurrentLinkedQueue<Path> putPathOnQueue(Path path){
-		assert path != null;
-		
-		//Cost is divided by 3 because we only care about an action which is always between a 
-		// page element vertex and page vertex
-		int cost = path.calculateCost(this.graph)/3;
-		int actualReward = path.getActualReward(this.graph);
-
-		int value = actualReward - cost;
-		System.out.println("THE VALUE OF THE PATH IS :: "+value+ " ;       COST : "+cost);
-		if(value <= 0){
-			//put path on queue for bad paths
-			return null;
-		}
-		//Ensure that path is not already in queue
-		boolean pathsMatch = true;
-		try{
-			for(Path queue_path : queueHash.getQueueHash().get(value)){
-				if(queue_path.getPath().size() == path.getPath().size()){
-					for(int idx=0; idx < path.getPath().size(); idx++){
-						if(path.getPath().get(idx) != queue_path.getPath().get(idx)){
-							pathsMatch = false;
-						}
-					}
-				}
-			}
-		}catch(NullPointerException e){}
-		
-		if(pathsMatch){
-			return queueHash.put(value, path);
-		}
-		else{
-			return null;
-		}
-	}*/
-	
+	}
 	
 	/**
 	 * Get the UUID for this Agent
@@ -458,22 +403,4 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		return vocabularies;		
 	}
-	
-	/**
-	 * Gets the last Vertex in a path that is of type {@link Page}
-	 * @return
-	 */
-	/*
-	private Vertex<?> getLastPageVertex(){
-		for(int i = this.path.getPath().size()-1; i >= 0; i--){
-			Vertex<?> descNode = graph.getVertices().get(this.path.getPath().get(i));
-			System.out.println(this.getName() + " -> VERTEX CLASS  : " + descNode.getData().getClass()  );
-			if(descNode.getData() instanceof Page){
-				System.err.println("PAGE VERTEX FOUND AND RETURNED");
-				return descNode;
-			}
-		}
-		return null;
-	}
-	*/
 }

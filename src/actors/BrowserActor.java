@@ -43,7 +43,6 @@ public class BrowserActor extends Thread implements Actor{
 	private static Random rand = new Random();
 	private UUID uuid = null;
 	private String url = null;
-	private GraphObserver graphObserver = null;
 	private Path path = null;
 	private Browser browser = null;
 	private Persistor persistor = new Persistor();
@@ -100,7 +99,6 @@ public class BrowserActor extends Thread implements Actor{
 		this.url = url;
 		this.path = Path.clone(path);
 		this.browser = new Browser(url);
-		this.graphObserver = graphObserver;
 		this.vocabularies = this.loadVocabularies(vocabLabels);
 	}
 	
@@ -132,8 +130,7 @@ public class BrowserActor extends Thread implements Actor{
 		try {
 			current_page = browser.getPage();
 			this.browser.getDriver().quit();
-
-			WorkAllocationActor.registerCrawlResult(this.path, (Page)this.path.getLastPageVertex(), current_page, graphObserver, this);
+			WorkAllocationActor.registerCrawlResult(this.path, (Page)this.path.getLastPageVertex(), current_page, this);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

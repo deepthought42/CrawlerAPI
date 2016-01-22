@@ -1,8 +1,5 @@
 package actors;
 
-import graph.Graph;
-import graph.Vertex;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +23,6 @@ public class WorkAllocationActor extends Thread {
 	
 	ObservableHash<Integer, Path> hash_queue = null;
 	private static ResourceManagementActor resourceManager = null;
-	GraphObserver graphObserver = null;
 	private static ShortTermMemoryRegistry shortTermMemory = new ShortTermMemoryRegistry();
 	
 	/**
@@ -36,14 +32,12 @@ public class WorkAllocationActor extends Thread {
 	 */
 	public WorkAllocationActor(ResourceManagementActor resourceMgr,
 							   String url){
-		Graph graph = new Graph();
-		this.graphObserver = new GraphObserver(graph);
 		resourceManager = resourceMgr;
 		
 		BrowserActor browserActor;
 		
 		try {
-			browserActor = new BrowserActor(url, new Path(), graphObserver);
+			browserActor = new BrowserActor(url, new Path());
 			WorkAllocationActor.resourceManager.punchIn(browserActor);
 			browserActor.start();
 		}
@@ -81,11 +75,8 @@ public class WorkAllocationActor extends Thread {
 	 * @return 0 if path1 is parent, 1 if path2 is parent. -1 if they are unrelated
 	 */
 	private int evaluatePaths(Path path1, Path path2) throws NullPointerException{
-		Vertex<Page> path1Vertex = (Vertex<Page>) path1.getLastPageVertex();
-		Vertex<Page> path2Vertex = (Vertex<Page>) path2.getLastPageVertex();
-
-		Page path1Page = (Page)path1Vertex.getData();
-		Page path2Page = (Page)path2Vertex.getData();
+		Page path1Page = (Page) path1.getLastPageVertex();
+		Page path2Page = (Page) path2.getLastPageVertex();
 		
 		ArrayList<PageElement> path1Elements = path1Page.getElements();
 		ArrayList<PageElement> path2Elements = path2Page.getElements();
@@ -140,7 +131,6 @@ public class WorkAllocationActor extends Thread {
 	public static void registerCrawlResult(Path path, 
 										   Page last_page, 
 										   Page current_page, 
-										   GraphObserver graphObserver, 
 										   BrowserActor browser_actor){
 		resourceManager.punchOut(browser_actor);
 		boolean isValuable = false;
@@ -172,7 +162,7 @@ public class WorkAllocationActor extends Thread {
 				Path new_path = retrieveNextPath();
 				BrowserActor new_browser_actor;
 				try {
-					new_browser_actor = new BrowserActor("http://127.0.0.1:3000", new_path, graphObserver);
+					new_browser_actor = new BrowserActor("http://127.0.0.1:3000", new_path);
 					WorkAllocationActor.resourceManager.punchIn(new_browser_actor);
 					new_browser_actor.start();
 		

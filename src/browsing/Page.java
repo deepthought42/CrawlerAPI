@@ -21,7 +21,7 @@ import org.openqa.selenium.WebElement;
  * @author Brandon Kindred
  *
  */
-public class Page implements State, IBrowserObject {
+public class Page implements State, IObjectValuationAccessor {
 	public String screenshot = null; 
 	private WebDriver driver = null;
 	public String src = "";
@@ -112,7 +112,7 @@ public class Page implements State, IBrowserObject {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	/*public ArrayList<PageElement> getVisibleElements(WebDriver driver,
+	 public ArrayList<PageElement> getVisibleElements(WebDriver driver,
 													 String xpath, 
 													 int depth, 
 													 HashMap<String, 
@@ -136,7 +136,6 @@ public class Page implements State, IBrowserObject {
 		
 		return elementList;
 	}
-	*/
 	
 	/**
 	 * Get immediate child elements for a given element

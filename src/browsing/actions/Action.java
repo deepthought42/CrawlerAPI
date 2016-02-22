@@ -1,6 +1,6 @@
 package browsing.actions;
 
-import browsing.IBrowserObject;
+import browsing.IObjectValuationAccessor;
 
 /**
  * Defines an action in name only
@@ -8,7 +8,7 @@ import browsing.IBrowserObject;
  * @author Brandon Kindred
  *
  */
-public class Action implements IBrowserObject {
+public class Action implements IObjectValuationAccessor{
 	private final String name;
 	
 	/**
@@ -50,6 +50,11 @@ public class Action implements IBrowserObject {
 	@Override
 	public String toString(){
 		return this.name;
+	}
+	
+	@Override
+	public int hashCode(){
+		return this.name.hashCode();
 	}
 
 }

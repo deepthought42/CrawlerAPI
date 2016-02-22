@@ -1,11 +1,7 @@
 package memory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
-import com.tinkerpop.blueprints.Vertex;
 
 /**
  * Defines objects that are available to the system for learning against
@@ -15,23 +11,27 @@ import com.tinkerpop.blueprints.Vertex;
  */
 public class ObjectDefinition {
 
-	private String value;
-	private String type;
-	private int uid;
-	private HashMap<String, Double> actions = new HashMap<String, Double>();
+	public final String value;
+	public final String type;
+	public final int hash_code;
+	public final HashMap<String, Double> actions;
 	
 	/**
-	 * 
+	 * Instantiates a new object definition
 	 * 
 	 * @param uid
 	 * @param value
 	 * @param type
 	 * @param actions
+	 * 
+	 * @pre actions != null
 	 */
-	public ObjectDefinition(int uid, String value, String type, HashMap<String, Double> actions) {
+	public ObjectDefinition(String value, String type, HashMap<String, Double> actions) {
+		assert actions != null;
+		
 		this.value = value;
 		this.type = type;
-		this.uid = uid;
+		this.hash_code = value.hashCode();
 		this.actions = actions;
 	}
 	
@@ -42,36 +42,16 @@ public class ObjectDefinition {
 	 * @param value
 	 * @param type
 	 */
-	public ObjectDefinition(int uid, String value, String type) {
-		this.value = value;
-		this.type = type;
-		this.uid = uid;
-	}
-
-	/**
-	 * 
-	 * 
-	 * @param value
-	 * @param type
-	 */
 	public ObjectDefinition(String value, String type) {
 		this.value = value;
 		this.type = type;
+		this.hash_code = value.hashCode();
+		this.actions = new HashMap<String, Double>();
 	}
-	
-	public ObjectDefinition(){}
 
 
 	public String getType() {
 		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-	
-	public void setValue(String value) {
-		this.value = value;
 	}
 	
 	public String getValue(){
@@ -84,15 +64,6 @@ public class ObjectDefinition {
 	@Override
 	public String toString(){
 		return this.value;
-
-	}
-
-	/**
-	 * Sets the this object's {@link HashMap} of actions to a predefined set.
-	 * @param actionMap
-	 */
-	public void setActions(HashMap<String, Double> actionMap) {
-		this.actions = actionMap;		
 	}
 	
 	/**
@@ -101,63 +72,5 @@ public class ObjectDefinition {
 	 */
 	public HashMap<String, Double> getActions(){
 		return this.actions;
-	}
-	
-	
-	/**
-	 * Finds {@link ObjectDefinition} and updates its probability if it exists, otherwise creates a new vertex.
-	 * @param persistor
-	 * @return
-	 */
-	public synchronized Vertex findAndUpdateOrCreate(Persistor persistor){
-		//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-		Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(this);
-		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-		
-		com.tinkerpop.blueprints.Vertex v = null;
-		if(memory_iterator.hasNext()){
-			//System.err.println("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
-			v = memory_iterator.next();
-			if(this.getActions().size() != 0){
-				System.err.println("......Actions : "+this.getActions().size());
-				v.setProperty("actions", this.getActions());
-			}
-		}
-		else{
-			System.err.println("Creating new vertex in OrientDB...");
-			v = persistor.addVertex(this);
-			v.setProperty("value", this.getValue());
-			v.setProperty("type", this.getType());
-			v.setProperty("identifier", uid);
-			v.setProperty("actions", this.getActions());
-		}
-
-		persistor.save();
-		return v;
-	}
-	
-	/**
-	 * Retrieves all vertices for given {@link ObjectDefinitions}
-	 * 
-	 * @param objectDefinitions
-	 * 
-	 * @pre persistor != null
-	 * @pre object_definitions != null
-	 * 
-	 * @return A list of all vertices found. 
-	 */
-	public static synchronized List<Vertex> findAll(List<ObjectDefinition> object_definitions, Persistor persistor){
-		List<Vertex> vertices = new ArrayList<Vertex>();
-		for(ObjectDefinition objDef : object_definitions){
-			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(objDef);
-			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-			
-			if(memory_iterator != null && memory_iterator.hasNext()){
-				vertices.add(memory_iterator.next());
-			}
-		}
-		return vertices;
-		
 	}
 }

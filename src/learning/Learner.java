@@ -1,8 +1,5 @@
 package learning;
 
-import graph.Graph;
-import graph.Vertex;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,25 +7,39 @@ import java.util.Iterator;
 import java.util.List;
 
 import shortTerm.ShortTermMemoryRegistry;
+import structs.Path;
+import structs.PathRepresentation;
 import memory.DataDecomposer;
 import memory.MemoryState;
 import memory.ObjectDefinition;
 import memory.Persistor;
-import actors.WorkAllocationActor;
+import memory.Vocabulary;
 import browsing.Page;
 import browsing.PageElement;
+import browsing.PathObject;
+import browsing.actions.Action;
 
 import com.tinkerpop.blueprints.Edge;
 
 public class Learner {
 	
 	private Persistor persistor = null;
-	private Graph graph = null;
-	private ShortTermMemoryRegistry short_term_memory = null;
+	private Vocabulary vocabulary = null;
 	
-	public Learner(ShortTermMemoryRegistry short_term_memory) {
-		this.short_term_memory = short_term_memory;
-		// TODO Auto-generated constructor stub
+	public Learner(Vocabulary vocab) {
+		this.vocabulary = vocab;
+	}
+	
+	public Learner(){
+		this.vocabulary = new Vocabulary(new ArrayList<String>(), "global");
+	}
+
+	public void qLearn(){
+		
+	}
+	
+	public double[] predict(){
+		return new double[0];
 	}
 	
 	/**
@@ -40,11 +51,77 @@ public class Learner {
 	 * @throws NullPointerException
 	 * @throws IOException 
 	 */
-	public void learn(Path path, Page last_page, Page current_page, PageElement last_element, String last_action) throws IllegalArgumentException, IllegalAccessException, NullPointerException, IOException{
+	public void learn(Path path,
+					  boolean isProductive)
+						  throws IllegalArgumentException, IllegalAccessException, 
+							  NullPointerException, IOException{
 		//REINFORCEMENT LEARNING
 		System.out.println( " Initiating learning");
 
+		//DUE TO CHANGES IN ARCHITECTURE THE WAY THAT LEARNING WILL OCCUR WILL BE DIFFERENT THAN THE ORIGINAL LOGIC
 		
+		//Iterate over path objects
+		//if previous pathObject is not an action and the current pathObject is also not an action
+		//	then create a component edge between both pathObjects
+		//else if current pathObject is an action, 
+		//	then 
+		//		extract action
+		//		get next pathObject and previous pathObject 
+		//		create action edge between the current and previous pathObject
+		//		set edge property for action to the action that was extracted from path
+		
+		PathObject<?> prev_obj = null;
+		for(PathObject<?> obj : path.getPath()){
+			DataDecomposer decomposer = new DataDecomposer(obj.getData());
+			
+			List<ObjectDefinition> object_definition_list = decomposer.decompose();
+
+			for(ObjectDefinition objDef : object_definition_list){
+				//if object definition value doesn't exist in vocabulary 
+				// then add value to vocabulary
+				vocabulary.appendToVocabulary(objDef.getValue());
+			}
+			
+			//Save states
+			if(prev_obj != null && !(prev_obj.getData() instanceof Action)){
+				Vertex prev_vertex = persistor.find(prev_obj);
+				Vertex current_vertex = persistor.find(obj);
+				ArrayList<Integer> path_ids = new ArrayList<Integer>();
+				path_ids.add(path.hashCode());
+				System.out.println("Adding GOES_TO transition");
+				Edge e = persistor.addEdge(prev_vertex, current_vertex, "Component", "GOES_TO");
+				e.setProperty("path_ids", path_ids);
+			}
+			else if(prev_obj != null && prev_obj.getData() instanceof Action){
+				Vertex prev_vertex = persistor.find(prev_obj);
+				Vertex current_vertex = persistor.find(obj);
+				ArrayList<Integer> path_ids = new ArrayList<Integer>();
+				path_ids.add(path.hashCode());
+				System.out.println("Adding GOES_TO transition");
+				Edge e = persistor.addEdge(prev_vertex, current_vertex, "Transition", "GOES_TO");
+				e.setProperty("path_ids", path_ids);
+			}
+			
+			
+			
+			System.err.println("SAVING NOW...");
+			persistor.save();
+			//initialize one dimensional boolean array that is the size of the vocabulary
+			int idx = 0;
+			for(String vocabu_value : vocabulary.getValueList()){
+				//if object definition value doesn't exist in vocabulary 
+				// then add value to vocabulary
+				if(object_definition_list.contains(vocabu_value)){
+					//set each value in one dimensional array that exists in object definition list.
+				}
+				
+				//
+				idx++;
+			}
+			
+			
+			prev_obj = obj;
+		}
 		
 		
 		
@@ -61,32 +138,15 @@ public class Learner {
 		double actual_reward = 0.0;
 	
 		if(!last_page.equals(current_page)){
-			actual_reward = 1.0;
+			actual_reward = 10.0;
 			
 			com.tinkerpop.blueprints.Vertex new_state_vertex = null;
 			MemoryState new_memory_state = new MemoryState(current_page.hashCode());
 			
 			new_state_vertex = new_memory_state.createAndLoadState(current_page, state_vertex, persistor);
 
-			//add it to in memory map. This should be changed to use some sort of caching
-			Vertex<?> vertex = new Vertex<Page>(current_page);
-			graph.addVertex(vertex);
-			int idx = graph.findVertexIndex(vertex);
-			path.add(idx);
+			//w edge to memory
 			
-			short_term_memory.getProductivePaths();
-			short_term_memory.getUnproductivePaths();
-			//putPathOnQueue(path);
-			//add new edge to memory
-			
-			if(!state_vertex.equals(new_state_vertex)){
-				System.out.println("Adding GOES_TO transition");
-				Edge e = persistor.addEdge(state_vertex, new_state_vertex, "TRANSITION", "GOES_TO");
-				e.setProperty("action", last_action);
-				e.setProperty("xpath", last_element.xpath);
-			}
-			System.err.println("SAVING NOW...");
-			persistor.save();
 		}
 		else{
 			//nothing changed so there was no reward for that combination. We want to remember this in the future
@@ -95,9 +155,6 @@ public class Learner {
 		}
 		
 		//get all objects for the chosen page_element
-		DataDecomposer mem = new DataDecomposer(last_element);
-		List<ObjectDefinition> best_definitions = mem.decompose();
-		System.err.println("TOTAL BEST DEFINTIONS :: " + best_definitions.size());
 		//Q-LEARNING VARIABLES
 		final double learning_rate = .08;
 		final double discount_factor = .08;
@@ -134,9 +191,8 @@ public class Learner {
 			
 			double q_learn_val = q_learn.calculate(last_reward, actual_reward, estimated_reward );
 			action_map.put(last_action, q_learn_val);
-			System.err.println(this.getName() + " -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
+			System.err.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
 
-			
 			objDef.setActions(action_map);
 			com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);
 		}

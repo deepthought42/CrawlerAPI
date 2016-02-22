@@ -1,23 +1,24 @@
 package browsing;
 
 /**
- * Provides an access point for implementing objects to return cost and reward values
+ * Provides access to the cost and reward of an object
  * 
  * @author Brandon Kindred
  *
  */
-public interface IBrowserObject {
+public interface IObjectValuationAccessor {
+
 	/**
 	 * Computes and returns the cost of the current object
 	 * 
 	 * @return
 	 */
-	public double getCost();
+	public abstract double getCost();
 	
 	/**
 	 * Computes and returns the reward for the current object
 	 * 
 	 * @return
 	 */
-	public double getReward();
+	public abstract double getReward();
 }

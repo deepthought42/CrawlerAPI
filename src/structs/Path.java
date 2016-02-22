@@ -3,7 +3,8 @@ package structs;
 import java.util.ArrayList;
 
 import browsing.ActionFactory;
-import browsing.IBrowserObject;
+import browsing.IObjectValuationAccessor;
+import browsing.PathObject;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.actions.Action;
@@ -17,21 +18,22 @@ import browsing.actions.Action;
 public class Path {
 	public double reward = 0.0;
 	private double cost = 0.0;
-	private ArrayList<IBrowserObject> vertexPath = null;
+	private ArrayList<PathObject<?>> vertexPath = null;
 	
 	/**
-	 * 
+	 * Creates new instance of Path
 	 */
 	public Path(){
-		this.vertexPath = new ArrayList<IBrowserObject>();
+		this.vertexPath = new ArrayList<PathObject<?>>();
 	}
 
 	/**
+	 * Creates new instance of path setting it to the given path
 	 * 
 	 * @param current_path
 	 */
 	public Path(Path current_path){
-		this.vertexPath = new  ArrayList<IBrowserObject>();
+		this.vertexPath = new  ArrayList<PathObject<?>>();
 		this.append(current_path);
 	}
 	
@@ -41,22 +43,26 @@ public class Path {
 	 */
 	public void append(Path appendablePath){
 		
-		for(IBrowserObject obj : appendablePath.getPath()){
+		for(PathObject<?> obj : appendablePath.getPath()){
 			this.vertexPath.add(obj);
 		}				
 	}
 		
-	public boolean add(IBrowserObject obj){
+	public boolean add(PathObject<?> obj){
 		return this.vertexPath.add(obj);
 	}
+	
 	/**
 	 * 
 	 * @return
 	 */
-	public ArrayList<IBrowserObject> getPath(){
+	public ArrayList<PathObject<?>> getPath(){
 		return this.vertexPath;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean equals(Path path){
 		int thisPathLength = this.vertexPath.size();
 		int comparatorPathLength = path.getPath().size();
@@ -99,21 +105,22 @@ public class Path {
 	 */
 	public double calculateCost(){
 		this.cost=0;
-		for(IBrowserObject vertex_obj : this.getPath()){
-			this.cost += vertex_obj.getCost();
+		for(PathObject<?> vertex_obj : this.getPath()){
+			this.cost += ((IObjectValuationAccessor)vertex_obj.getData()).getCost();
 		}
 		return this.cost;
 	}
 	
 	/**
 	 * Gets the estimated reward value for this path 
+	 * 
 	 * @param graph
 	 * @return
 	 */
 	public double calculateReward(){
 		this.reward = 0;
-		for(IBrowserObject vertex_obj : this.getPath()){
-			this.reward += vertex_obj.getReward();
+		for(PathObject<?> vertex_obj : this.getPath()){
+			this.reward += ((IObjectValuationAccessor)vertex_obj.getData()).getReward();
 		}
 		
 		return reward;
@@ -121,13 +128,14 @@ public class Path {
 	
 	/**
 	 * Clone {@link Path} object
+	 * 
 	 * @param path
 	 * @return
 	 */
 	public static Path clone(Path path){
 		Path clonePath = new Path();
 		
-		for(IBrowserObject obj : path.getPath()){
+		for(PathObject<?> obj : path.getPath()){
 			clonePath.add(obj);
 		}
 		
@@ -136,14 +144,14 @@ public class Path {
 	
 	/**
 	 * Gets the last Vertex in a path that is of type {@link Page}
+	 * 
 	 * @return
 	 */
-	public IBrowserObject getLastPageVertex(){
+	public Page getLastPageVertex(){
 		for(int i = this.vertexPath.size()-1; i >= 0; i--){
-			IBrowserObject descNode = this.vertexPath.get(i);
-			if(descNode instanceof Page){
-				System.err.println("PAGE VERTEX FOUND AND RETURNED");
-				return descNode;
+			PathObject<?> descNode = this.vertexPath.get(i);
+			if(descNode.getData() instanceof Page){
+				return (Page)descNode.getData();
 			}
 		}
 		return null;
@@ -161,38 +169,75 @@ public class Path {
 		ArrayList<Path> pathList = new ArrayList<Path>();
 		Path new_path = Path.clone(path);
 		
-		IBrowserObject page_vertex = path.getLastPageVertex();
-		if(page_vertex == null){
+		Page page = path.getLastPageVertex();
+		if(page == null){
 			return null;
 		}
 		//get last page
-		Class<?> className = page_vertex.getClass();
 		String[] actions = ActionFactory.getActions();
 		
-		if(className.equals(Page.class)){
-			Page page = ((Page)page_vertex);
-		
-			//get all elements for this page
-			ArrayList<PageElement> page_elements = page.getElements();
-		
-			//iterate over all elements
-			for(PageElement page_element : page_elements){
-				//System.err.println("Page element index "+page_elem_vertex_idx);
-				new_path.add(page_element);
-				
-				//for each element in elements iterate over actions
-				for(String action : actions){
-					Path action_path = Path.clone(new_path);
-					IBrowserObject action_obj = new Action(action);
-					action_path.add(action_obj);
-					pathList.add(action_path);
-				}
-				
-				//clone path and add in action and element
-				new_path = Path.clone(path);
+		//get all elements for this page
+		ArrayList<PageElement> page_elements = page.getElements();
+	
+		//iterate over all elements
+		for(PageElement page_element : page_elements){
+			//System.err.println("Page element index "+page_elem_vertex_idx);
+			new_path.add(new PathObject<PageElement>(page_element));
+			
+			//for each element in elements iterate over actions
+			for(String action : actions){
+				Path action_path = Path.clone(new_path);
+				Action action_obj = new Action(action);
+				action_path.add(new PathObject<Action>(action_obj));
+				pathList.add(action_path);
 			}
+			
+			//clone path and add in action and element
+			new_path = Path.clone(path);
 		}
 		
 		return pathList;
+	}
+	
+	/**
+	 * Checks if the path has 2 sequential elements that appear in more than 1 location
+	 * 
+	 * @param path
+	 * @return true if sequence appears more than once
+	 */
+	public static boolean hasCycle(Path path){
+		if(path.getPath().size() == 1){
+			return false;
+		}
+		
+		for(int i = path.getPath().size()-1; i > 0; i--){
+			for(int j = i-1; j>= 0; j--){
+				if(path.getPath().get(i).equals(path.getPath().get(j)) 
+					&& path.getPath().get(i-1).equals(path.getPath().get(j-1))){
+					return true;
+				}
+			}			
+		}
+		return false;
+	}
+	
+	/**
+	 * Checks if the path has the same page more than once. 
+	 * 
+	 * @param path
+	 * @return true if sequence appears more than once
+	 */
+	public static boolean hasPageCycle(Path path){
+		for(int i = path.getPath().size()-1; i > 0; i--){
+			for(int j = i-1; j>= 0; j--){
+				if(path.getPath().get(i).getData() instanceof Page 
+						&& path.getPath().get(j).getData() instanceof Page
+						&& path.getPath().get(i).getData().equals(path.getPath().get(j).getData()))
+				{
+					return true;
+				}
+			}			
+		}
+		return false;
 	}
 }

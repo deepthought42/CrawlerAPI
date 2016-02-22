@@ -12,7 +12,7 @@ import java.util.UUID;
 
 import memory.DataDecomposer;
 import memory.ObjectDefinition;
-import memory.Persistor;
+import memory.OrientDbPersistor;
 import memory.Vocabulary;
 
 import org.openqa.selenium.By;
@@ -20,15 +20,16 @@ import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.UnhandledAlertException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import browsing.ActionFactory;
 import browsing.Browser;
-import browsing.IBrowserObject;
 import browsing.Page;
 import browsing.PageAlert;
 import browsing.PageElement;
+import browsing.PathObject;
 import browsing.actions.Action;
 import structs.Path;
 
@@ -45,7 +46,7 @@ public class BrowserActor extends Thread implements Actor{
 	private String url = null;
 	private Path path = null;
 	private Browser browser = null;
-	private Persistor persistor = new Persistor();
+	private OrientDbPersistor<ObjectDefinition> persistor = new OrientDbPersistor<ObjectDefinition>();
 	private ArrayList<Vocabulary> vocabularies = null;
 	
 	//temporary list for vocab labels into it can be determined how best to handle them
@@ -82,41 +83,22 @@ public class BrowserActor extends Thread implements Actor{
 		this.vocabularies = this.loadVocabularies(vocabLabels);
 	}
 	
-	/**
-	 * Creates instance of BrowserActor with given url for entry into website
-	 * 
-	 * @param url	url of page to be accessed
-	 * @param queue observable path queue
-	 * @throws IOException 
-	 * @pre queue != null
-	 * @pre !queue.isEmpty()
-	 */
-	public BrowserActor(String url, 
-						Path path,
-						GraphObserver graphObserver) throws IOException {
-		
-		this.uuid = UUID.randomUUID();
-		this.url = url;
-		this.path = Path.clone(path);
-		this.browser = new Browser(url);
-		this.vocabularies = this.loadVocabularies(vocabLabels);
-	}
-	
 	public BrowserActor(Path path){
 		this.path = Path.clone(path);
 	}
 
 	/**
-	 * Starts thread which either adds a page 
+	 * Starts thread which crawls the path provided in initialization
 	 */
 	public void run(){
+		
 		try {
 			if(this.path.getPath().isEmpty()){
-				IBrowserObject page_obj = browser.getPage();
+				PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
 				this.path.add(page_obj);
 			}
 			else{
-				boolean successfulCrawl = this.crawlPath();
+				this.crawlPath();
 			}
 		} catch (UnhandledAlertException e) {
 			e.printStackTrace();
@@ -130,12 +112,14 @@ public class BrowserActor extends Thread implements Actor{
 		try {
 			current_page = browser.getPage();
 			this.browser.getDriver().quit();
-			WorkAllocationActor.registerCrawlResult(this.path, (Page)this.path.getLastPageVertex(), current_page, this);
+			WorkAllocationActor.registerCrawlResult(this.path, this.path.getLastPageVertex(), current_page, this);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}		
+		
+		
 	}
 	
 	/**
@@ -146,37 +130,36 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws UnhandledAlertException
 	 * @throws IOException 
 	 */
-	private boolean crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+	private void crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		PageElement last_element = null;
 		//skip first node since we should have already loaded it during initialization
 	
-		for(IBrowserObject browser_obj: this.path.getPath()){
+		for(PathObject<?> browser_obj: this.path.getPath()){
 					
-			if(browser_obj instanceof Page){
-				//pageNode = (Page)browser_obj;
+			if(browser_obj.getData() instanceof Page){
+				//pageNode = (Page)browser_obj.getData();
 				//if current page does not match current node data 
 			}
-			else if(browser_obj instanceof PageElement){
-				last_element = (PageElement) browser_obj;
+			else if(browser_obj.getData() instanceof PageElement){
+				last_element = (PageElement) browser_obj.getData();
 			}
 			//String is action in this context
-			else if(browser_obj instanceof Action){
+			else if(browser_obj.getData() instanceof Action){
 				boolean actionPerformedSuccessfully;
-				Action action = (Action)browser_obj;
+				Action action = (Action)browser_obj.getData();
 				browser.updatePage( DateFormat.getDateInstance());
 				int attempts = 0;
 				do{
 					actionPerformedSuccessfully = performAction(last_element, action.getName() );
 					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 50);
+				}while(!actionPerformedSuccessfully && attempts < 20);
 			}
-			else if(browser_obj instanceof PageAlert){
+			else if(browser_obj.getData() instanceof PageAlert){
 				System.err.println(this.getName() + " -> Handling Alert");
-				PageAlert alert = (PageAlert)browser_obj;
+				PageAlert alert = (PageAlert)browser_obj.getData();
 				alert.performChoice(browser.getDriver());
 			}
 		}
-		return true;
 	}
 	
 	/**
@@ -309,7 +292,7 @@ public class BrowserActor extends Thread implements Actor{
 			DataDecomposer mem = new DataDecomposer(elem);
 			List<ObjectDefinition> raw_object_definitions = mem.decompose();
 			List<com.tinkerpop.blueprints.Vertex> object_definition_list
-				= ObjectDefinition.findAll(raw_object_definitions, persistor);
+				= persistor.findAll(raw_object_definitions);
 					
 			//iterate over set to get all actions for object definition list
 			for(com.tinkerpop.blueprints.Vertex v : object_definition_list){
@@ -381,6 +364,10 @@ public class BrowserActor extends Thread implements Actor{
 		}
 		catch(NoSuchElementException e){
 			System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+			wasPerformedSuccessfully = false;
+		}
+		catch(WebDriverException e){
+			System.err.println(this.getName() + " -> Element can not have action performed on it at point performed");
 			wasPerformedSuccessfully = false;
 		}
 		

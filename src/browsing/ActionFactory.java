@@ -3,14 +3,13 @@ import java.util.Iterator;
 import java.util.Random;
 
 import memory.ObjectDefinition;
+import memory.OrientDbPersistor;
 
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
-
-import memory.Persistor;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
@@ -92,7 +91,7 @@ public class ActionFactory {
 
 		//COMPUTE ALL EDGE PROBABILITIES
 		for(int index = 0; index < actions.length; index++){
-			Persistor orientPersistor = new Persistor();
+			OrientDbPersistor<ObjectDefinition> orientPersistor = new OrientDbPersistor<ObjectDefinition>();
 			Iterator<Vertex> vertices = orientPersistor.find(obj).iterator();
 			if(!vertices.hasNext()){
 				return rand.nextInt(actions.length);

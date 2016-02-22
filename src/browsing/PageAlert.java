@@ -11,7 +11,7 @@ import org.openqa.selenium.WebDriver;
  * @author Brandon Kindred
  *
  */
-public class PageAlert implements IBrowserObject {
+public class PageAlert implements IObjectValuationAccessor {
 	public Page page = null;
 	public String choice;
 	public String message;

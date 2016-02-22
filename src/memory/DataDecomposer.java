@@ -40,7 +40,7 @@ public class DataDecomposer {
 		        else if(value.getClass().equals(String[].class)){
 		        	String[] array = (String[]) value;
 		        	for(String stringVal : array){
-		        		objDef = new ObjectDefinition(this.hashCode(), stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		        		objDef = new ObjectDefinition(stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        		objList.add(objDef);
 		            }
 		        }
@@ -51,7 +51,7 @@ public class DataDecomposer {
 		            }
 		        }
 		        else{
-	        		objDef = new ObjectDefinition(this.hashCode(), value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+	        		objDef = new ObjectDefinition(value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        	objList.add(objDef);
 		        }
 	        }
@@ -87,7 +87,7 @@ public class DataDecomposer {
 		        else if(value.getClass().equals(String[].class)){
 		        	String[] array = (String[]) value;
 		        	for(String stringVal : array){
-		        		objDef = new ObjectDefinition(this.hashCode(), stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+		        		objDef = new ObjectDefinition(stringVal.toString(), stringVal.getClass().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        		objDefList.add(objDef);
 		            }
 		        }
@@ -97,7 +97,7 @@ public class DataDecomposer {
 		        	objDefList.addAll(decomposedList);
 		        }
 		        else{
-	        		objDef = new ObjectDefinition(this.hashCode(), value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
+	        		objDef = new ObjectDefinition(value.toString(), field.getType().getCanonicalName().replace(".", "").replace("[","").replace("]",""));
 		        	objDefList.add(objDef);
 		        }
 	        }

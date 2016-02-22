@@ -1,4 +1,4 @@
-package test;
+package tester;
 
 import graph.Graph;
 import graph.Vertex;

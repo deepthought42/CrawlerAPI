@@ -20,7 +20,7 @@ import util.ArrayUtility;
  * @author Brandon Kindred
  *
  */
-public class PageElement implements IBrowserObject {
+public class PageElement implements IObjectValuationAccessor {
 	private String[] actions = ActionFactory.getActions();
 	public String tagName;
 	public String text;
@@ -181,6 +181,7 @@ public class PageElement implements IBrowserObject {
 	 * @param javascriptDriver - 
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private ArrayList<String> extractedAttributes(WebElement element, WebDriver driver) {
 		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
 		return (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);

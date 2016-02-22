@@ -2,7 +2,6 @@ package memory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import com.tinkerpop.blueprints.Vertex;
 
@@ -13,12 +12,25 @@ import com.tinkerpop.blueprints.Vertex;
  * 
  * @author Brandon Kindred
  *
- * @param <E>
  */
 public class Vocabulary{
 
-	private ArrayList<String> valueList = new ArrayList<String>();
+	private ArrayList<String> valueList = null;
+	private ArrayList<Float> weights = null;
+	//private ArrayList<ArrayList<Float>> actions = null; 
+
 	private String label = null;
+	
+	/**
+	 * Generates an empty list with the given label as the list name.
+	 * 
+	 * @param valueList
+	 */
+	public Vocabulary(String listLabel) {
+		this.valueList = new ArrayList<String>();
+		this.label = listLabel;
+		this.weights = new ArrayList<Float>();
+	}
 	
 	/**
 	 * A specifically ordered list of values of a certain type specified as the label
@@ -28,28 +40,29 @@ public class Vocabulary{
 	public Vocabulary(ArrayList<String> valueList, String label) {
 		this.valueList = valueList;
 		this.label = label;
+		this.weights = new ArrayList<Float>(valueList.size());
 	}
 	
 	/**
-	 * Appends an object of the vocabulary type to the end of the current vocabulary list
+	 * Appends an object of the vocabulary type to the end of the current vocabulary list if it 
+	 *  doesn't yet exist in the valueList
 	 * 
 	 * @param obj
 	 * @return
 	 */
 	public boolean appendToVocabulary(String obj){
+		if(this.valueList.contains(obj)){
+			return false;
+		}
 		return valueList.add(obj);
-	}
-	
-	public String getLabel(){
-		return this.label;
 	}
 	
 	/**
 	 * Saves vocabulary to a vertex in a graph Database;
 	 */
 	public void save(){
-		Persistor persistor = new Persistor();
-		Vertex v = persistor.addVertex(Vocabulary.class.getCanonicalName());
+		OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
+		Vertex v = persistor.addVertexType(Vocabulary.class.getCanonicalName());
 		v.setProperty("vocabulary", this.valueList);
 		v.setProperty("label", this.label);		
 		persistor.save();
@@ -59,7 +72,7 @@ public class Vocabulary{
 	 * Loades vocabulary from a vertex in a graph Database, into a 1 dimensional array;
 	 */
 	public static Vocabulary load(String label){
-		Persistor persistor = new Persistor();
+		OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
 		ArrayList<String> vocabList = new ArrayList<String>();
 
 		Iterator<Vertex> vIter = persistor.find("label", label).iterator();
@@ -74,5 +87,25 @@ public class Vocabulary{
 		}
 		
 		return new Vocabulary(vocabList, label);
+	}
+
+	public ArrayList<String> getValueList() {
+		return this.valueList;
+	}
+	
+	public String getLabel(){
+		return this.label;
+	}
+
+	public ArrayList<Float> getWeights(){
+		return this.weights;
+	}
+	
+	/**
+	 * Appends a weight to the end of the weights list
+	 * @param d
+	 */
+	public void appendToWeights(float d) {
+		this.weights.add(d);
 	}
 }

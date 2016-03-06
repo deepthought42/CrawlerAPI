@@ -1,9 +1,6 @@
 package actors;
 
-import java.util.ArrayList;
 import java.util.UUID;
-
-import memory.Vocabulary;
 
 public interface Actor {
 	UUID uuid = null;

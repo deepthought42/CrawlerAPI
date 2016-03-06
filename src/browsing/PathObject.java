@@ -7,7 +7,7 @@ package browsing;
  *
  */
 public class PathObject<T> {
-	T pathObject = null;
+	public T pathObject = null;
 	
 	
 	public PathObject(T object){

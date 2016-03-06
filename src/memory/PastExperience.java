@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONObject;
+
 import browsing.PathObject;
 import structs.Path;
 
@@ -26,23 +28,42 @@ public class PastExperience {
 		this.paths.add(path);
 	}
 	
+	/**
+	 * Appends a path to the end of a path record
+	 * 
+	 * @param path	{@link Path} to append to list
+	 * @param isValuable indicator of if path is seen as valuable, invaluable, or unknown value
+	 */
 	public void appendToPaths(Path path, Boolean isValuable){
 		this.paths.add(path);
-		StringBuilder pathString = new StringBuilder();
-		pathString.append(path.getClass().getCanonicalName().toString());
-	
-		for(PathObject<?> pathObj: path.getPath()){
-			pathString.append(pathObj.getData().getClass().getCanonicalName());
-			pathString.append("::");
-			pathString.append(pathObj.getData().toString());
-			pathString.append("::");
-			pathString.append(pathObj.getData().hashCode());
-			pathString.append(";;");
+		
+		boolean last_id_set=false;
+		int last_id = 0;
+		JSONObject jsonObj = new JSONObject();
+		for(PathObject<?> pathObj : path.getPath()){
+			int objHash =  pathObj.getData().hashCode();
+			JSONObject pathJson = new JSONObject();
+			pathJson.append("id", pathObj.getData().hashCode());
+			//pathJson.append("string", pathObj.getData().toString());
+			pathJson.append("canonicalClassName", pathObj.getData().getClass().getCanonicalName());
+			
+			jsonObj.append("nodes", pathJson);
+			
+			if(last_id_set){
+				JSONObject edgeObject = new JSONObject();
+				edgeObject.append("id", last_id+""+objHash);
+				edgeObject.append("from", last_id);
+				edgeObject.append("to", objHash);
+				jsonObj.append("edges", edgeObject);
+			}
+			last_id = objHash;
+			last_id_set = true;
 		}
+		
+		jsonObj.append("productive", isValuable);
 	
-		String valuability = isValuable.toString();
-		List<String> lines = Arrays.asList(pathString.toString(), valuability);
-		java.nio.file.Path file = Paths.get("/home/deepthought/MinionLogs/PathRecords.txt");
+		List<String> lines = Arrays.asList(jsonObj.toString());
+		java.nio.file.Path file = Paths.get("/home/deepthought/workspace/WebTestVisualizer/MinionLogs/PathRecords.txt");
 		try {
 			Files.write(file, lines, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
 		} catch (NoSuchFileException e) {
@@ -53,7 +74,6 @@ public class PastExperience {
 			}
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

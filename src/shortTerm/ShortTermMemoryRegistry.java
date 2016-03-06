@@ -1,21 +1,12 @@
 package shortTerm;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
 
-import org.apache.commons.math3.analysis.function.Sigmoid;
-
-import memory.DataDecomposer;
-import memory.ObjectDefinition;
 import memory.PastExperience;
 import memory.Vocabulary;
-import browsing.ActionFactory;
+
 import browsing.PathObject;
-import browsing.actions.Action;
+
 import structs.Path;
 import structs.PathRepresentation;
 
@@ -26,9 +17,9 @@ import structs.PathRepresentation;
  *
  */
 public class ShortTermMemoryRegistry {
-	private HashMap<String, PathRepresentation> productive_path_hash_queue = null;
-	private HashMap<String, PathRepresentation> unproductive_path_hash_queue = null;
-	private HashMap<String, PathRepresentation> unknown_outcome_path_hash_queue = null;
+	public final HashMap<String, PathRepresentation> productive_path_hash_queue;
+	public final HashMap<String, PathRepresentation> unproductive_path_hash_queue;
+	public final HashMap<String, PathRepresentation> unknown_outcome_path_hash_queue;
 	
 	private Vocabulary vocab = null;
 	private PastExperience past_experience = null;
@@ -191,13 +182,10 @@ public class ShortTermMemoryRegistry {
 	 * @param path
 	 */
 	private synchronized void registerProductivePath(PathRepresentation path_rep){
-		
-		
 		boolean exists = productive_path_hash_queue.containsKey(path_rep.toString());
 		if(!exists){
 			productive_path_hash_queue.put(path_rep.toString(), path_rep);
 			System.err.println("PRODUCTIVE PATH REGISTERED :: "+path_rep.toString());
-
 		}
 	}
 	
@@ -224,7 +212,6 @@ public class ShortTermMemoryRegistry {
 		if(!exists){
 			unproductive_path_hash_queue.put(path_rep.toString(), path_rep);
 			System.err.println("UNPRODUCTIVE PATH REGISTERED :: "+path_rep.toString());
-
 		}
 	}
 

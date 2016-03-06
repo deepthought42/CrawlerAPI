@@ -4,16 +4,13 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Defines static methods to handle the decomposition of it's data into their constituent pieces.
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class DataDecomposer {
-	private Object object;
-	
-	/**
-	 * 
-	 * @param obj
-	 */
-	public DataDecomposer(Object obj) {
-	   this.object = obj;
-	}
 	
 	/**
 	 * Decomposes object into data fragments
@@ -22,13 +19,13 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public List<Object> decomposeObject() throws IllegalArgumentException, IllegalAccessException, NullPointerException{
+	public static List<Object> decomposeObject(Object obj) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
 		List<Object> objList = new ArrayList<Object>();
-		Class<?> objClass = this.object.getClass();
+		Class<?> objClass = obj.getClass();
 	    Field[] fields = objClass.getFields();
 	    
 	    for(Field field : fields) {
-	        Object value = field.get(this.object);
+	        Object value = field.get(obj);
 	        if(value!=null){
 	        	ObjectDefinition objDef = null;
 	        			        
@@ -46,8 +43,8 @@ public class DataDecomposer {
 		        }
 		        else if(value.getClass().equals(Object[].class)){
 		        	Object[] array = (Object[]) value;
-		        	for(Object obj : array){
-		        		objList.add(obj);
+		        	for(Object object : array){
+		        		objList.add(object);
 		            }
 		        }
 		        else{
@@ -66,15 +63,15 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public List<ObjectDefinition> decompose() throws IllegalArgumentException, IllegalAccessException, NullPointerException{
+	public static List<ObjectDefinition> decompose(Object obj) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
 		List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
 		
-		Class<?> objClass = this.object.getClass();
+		Class<?> objClass = obj.getClass();
 	    Field[] fields = objClass.getFields();
         //System.out.println("LIST CLASS:: "+ objClass);
 	   // System.out.println("FIELD COUNT : "+ fields.length);
 	    for(Field field : fields) {
-	        Object value = field.get(this.object);
+	        Object value = field.get(obj);
 	        if(value!=null){
 	        	ObjectDefinition objDef = null;
 	        			        
@@ -112,15 +109,14 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private List<ObjectDefinition> decomposeObjectArray(Object[] array) throws IllegalArgumentException, IllegalAccessException{
+	private static List<ObjectDefinition> decomposeObjectArray(Object[] array) throws IllegalArgumentException, IllegalAccessException{
     	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
 		if(array == null || array.length == 0){
 			return objDefList;
 		}
     	
         for(Object object : array){
-        	DataDecomposer data_def = new DataDecomposer(object);
-        	objDefList.addAll(data_def.decompose());
+        	objDefList.addAll(DataDecomposer.decompose(object));
         }
 		return objDefList;
 	}
@@ -133,7 +129,7 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private List<ObjectDefinition> decomposeArrayList(ArrayList<?> list) throws IllegalArgumentException, IllegalAccessException, NullPointerException {
+	private static List<ObjectDefinition> decomposeArrayList(ArrayList<?> list) throws IllegalArgumentException, IllegalAccessException, NullPointerException {
     	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
 		if(list == null || list.isEmpty()){
 			return objDefList;
@@ -141,8 +137,7 @@ public class DataDecomposer {
 		
         for(Object object : list){
         	if(object != null){
-        		DataDecomposer data_def = new DataDecomposer(object);
-        		objDefList.addAll(data_def.decompose());
+        		objDefList.addAll(DataDecomposer.decompose(object));
         	}
         }
 		return objDefList;

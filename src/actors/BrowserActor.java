@@ -43,11 +43,10 @@ public class BrowserActor extends Thread implements Actor{
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
-	private String url = null;
 	private Path path = null;
 	private Browser browser = null;
 	private OrientDbPersistor<ObjectDefinition> persistor = new OrientDbPersistor<ObjectDefinition>();
-	private ArrayList<Vocabulary> vocabularies = null;
+	//private ArrayList<Vocabulary> vocabularies = null;
 	
 	//temporary list for vocab labels into it can be determined how best to handle them
 		private String[] vocabLabels = {"html"};
@@ -59,7 +58,6 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IOException 
 	 */
 	public BrowserActor(String url) throws IOException {
-		this.url = url;
 		browser = new Browser(url);
 		this.path = new Path();
 	}
@@ -77,10 +75,9 @@ public class BrowserActor extends Thread implements Actor{
 						Path path) throws IOException {
 		
 		this.uuid = UUID.randomUUID();
-		this.url = url;
 		this.path = Path.clone(path);
 		this.browser = new Browser(url);
-		this.vocabularies = this.loadVocabularies(vocabLabels);
+		//this.vocabularies = this.loadVocabularies(vocabLabels);
 	}
 	
 	public BrowserActor(Path path){
@@ -180,8 +177,7 @@ public class BrowserActor extends Thread implements Actor{
 	 * @throws IllegalAccessException
 	 */
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
-		DataDecomposer data = new DataDecomposer(pageElement);
-		List<ObjectDefinition> definitions = data.decompose();
+		List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
 		System.out.println(this.getName() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
 		
@@ -289,8 +285,7 @@ public class BrowserActor extends Thread implements Actor{
 		for(PageElement elem : pageElements){
 			HashMap<String, Double> full_action_map = new HashMap<String, Double>(0);
 			//find vertex for given element
-			DataDecomposer mem = new DataDecomposer(elem);
-			List<ObjectDefinition> raw_object_definitions = mem.decompose();
+			List<ObjectDefinition> raw_object_definitions = DataDecomposer.decompose(elem);
 			List<com.tinkerpop.blueprints.Vertex> object_definition_list
 				= persistor.findAll(raw_object_definitions);
 					

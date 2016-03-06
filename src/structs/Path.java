@@ -17,8 +17,8 @@ import browsing.actions.Action;
  */
 public class Path {
 	public double reward = 0.0;
-	private double cost = 0.0;
-	private ArrayList<PathObject<?>> vertexPath = null;
+	public double cost = 0.0;
+	public ArrayList<PathObject<?>> vertexPath = null;
 	
 	/**
 	 * Creates new instance of Path

@@ -115,7 +115,6 @@ public class OrientDbPersistor<T>{
 		Field[] fieldArray = obj.getClass().getFields();
 		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		
-		int idx = 0;
 		Object fieldValue = 0;
 		for(Field field : fieldArray){
 			if( field.getName().equals("hash_code") ){

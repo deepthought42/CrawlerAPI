@@ -42,6 +42,11 @@ public class WorkAllocationController {
 @ResponseStatus(HttpStatus.NOT_FOUND)
 class WorkAllocatorNotFoundException extends RuntimeException {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716215L;
+
 	public WorkAllocatorNotFoundException() {
 		super("could not find user .");
 	}

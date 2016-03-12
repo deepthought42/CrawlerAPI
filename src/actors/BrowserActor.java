@@ -182,7 +182,7 @@ public class BrowserActor extends Thread implements Actor{
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
 		
 		for(ObjectDefinition obj : definitions){
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.find(obj);
+			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.findVertices(obj);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
 			
 			while(memory_iterator.hasNext()){

@@ -24,8 +24,8 @@ public class PageElement implements IObjectValuationAccessor {
 	private String[] actions = ActionFactory.getActions();
 	public String tagName;
 	public String text;
-	public String xpath;
-	public boolean changed=false;
+	private String xpath;
+	private boolean changed=false;
 	public ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 	public ArrayList<PageElement> child_elements = new ArrayList<PageElement>();
 

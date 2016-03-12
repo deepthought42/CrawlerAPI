@@ -1,20 +1,22 @@
 package memory;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Date;
 
-import org.json.JSONObject;
+import java.util.UUID;
+
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Vertex;
 
 import browsing.PathObject;
 import structs.Path;
 
+/**
+ * Handles the creation and maintenance of a "ledger" of past experiences saved to disk
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class PastExperience {
 	private ArrayList<Path> paths = null;
 	private int value = 0;
@@ -37,45 +39,54 @@ public class PastExperience {
 	public void appendToPaths(Path path, Boolean isValuable){
 		this.paths.add(path);
 		
+		OrientDbPersistor<PathNode> orient_persistor = new OrientDbPersistor<PathNode>();
+		UUID path_uuid = UUID.randomUUID();
+		Vertex last_vertex = null;
 		boolean last_id_set=false;
-		int last_id = 0;
-		JSONObject jsonObj = new JSONObject();
+		int last_path_node_hash=0;
+		String action = "contains";
+		//orient_persistor.addVertexType(PathObject.class.getName());
 		for(PathObject<?> pathObj : path.getPath()){
 			int objHash =  pathObj.getData().hashCode();
-			JSONObject pathJson = new JSONObject();
-			pathJson.append("id", pathObj.getData().hashCode());
-			//pathJson.append("string", pathObj.getData().toString());
-			pathJson.append("canonicalClassName", pathObj.getData().getClass().getCanonicalName());
 			
-			jsonObj.append("nodes", pathJson);
+			PathNode path_node = new PathNode(objHash, pathObj.getData().getClass().getCanonicalName(), pathObj.getData().toString());
+			Vertex vertex = null;
+			if(!pathObj.getData().getClass().getCanonicalName().equals("browsing.actions.Action")){
+				vertex = orient_persistor.findAndUpdateOrCreate(path_node, new String[0]);
+			}
+			else{
+				action = pathObj.getData().toString();
+				continue;
+			}
 			
 			if(last_id_set){
-				JSONObject edgeObject = new JSONObject();
-				edgeObject.append("id", last_id+""+objHash);
-				edgeObject.append("from", last_id);
-				edgeObject.append("to", objHash);
-				jsonObj.append("edges", edgeObject);
+				Iterable<Edge> edges = orient_persistor.findEdges("hash_code", last_path_node_hash +""+ path_node.hash_code);
+				Edge edge = null;
+				
+				if(edges.iterator().hasNext()){
+					edge = edges.iterator().next();
+				}
+				else{
+					edge = orient_persistor.addEdge(last_vertex, vertex, path_node.getClass().getCanonicalName(), path_uuid.toString());
+					//edge.setProperty("path_uid", path_uuid);
+					edge.setProperty("hash_code", last_path_node_hash + path_node.hash_code);
+					edge.setProperty("action", action);
+					edge.setProperty("date", new Date());
+				}
+				
+				if(isValuable == null){
+					edge.setProperty("value_status", "UNKNOWN");
+				}
+				else{
+					edge.setProperty("value_status", isValuable);
+				}
 			}
-			last_id = objHash;
+			last_vertex = vertex;
+			last_path_node_hash = path_node.hash_code;
 			last_id_set = true;
 		}
 		
-		jsonObj.append("productive", isValuable);
-	
-		List<String> lines = Arrays.asList(jsonObj.toString());
-		java.nio.file.Path file = Paths.get("/home/deepthought/workspace/WebTestVisualizer/MinionLogs/PathRecords.txt");
-		try {
-			Files.write(file, lines, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
-		} catch (NoSuchFileException e) {
-			try {
-				Files.write(file, lines, Charset.forName("UTF-8"));
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		orient_persistor.save();
 	}
 	
 	public ArrayList<Path> getPaths(){
@@ -97,5 +108,4 @@ public class PastExperience {
 	public void setUseful(Boolean useful) {
 		this.useful = useful;
 	}
-
 }

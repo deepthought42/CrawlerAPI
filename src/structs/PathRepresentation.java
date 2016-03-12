@@ -43,4 +43,8 @@ public class PathRepresentation {
 		
 		return str_buf.toString();
 	}
+
+	public float get(int index) {
+		return path_representation.get(index);
+	}
 }

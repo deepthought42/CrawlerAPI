@@ -1,8 +1,8 @@
 package memory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
-
 
 import com.tinkerpop.blueprints.Vertex;
 
@@ -14,10 +14,11 @@ import com.tinkerpop.blueprints.Vertex;
  * @author Brandon Kindred
  *
  */
-public class Vocabulary{
+public class VocabularyWeights{
 
-	private ArrayList<String> valueList = null;
+	//private ArrayList<String> valueList = null;
 	//private ArrayList<Float> weights = null;
+	private HashMap<String, HashMap<String, Float>> vocabulary_weights= null;
 	//private ArrayList<ArrayList<Float>> actions = null; 
 
 	private String label = null;
@@ -27,10 +28,11 @@ public class Vocabulary{
 	 * 
 	 * @param valueList
 	 */
-	public Vocabulary(String listLabel) {
-		this.valueList = new ArrayList<String>();
+	public VocabularyWeights(String listLabel) {
+		//this.valueList = new ArrayList<String>();
 		this.label = listLabel;
 		//this.weights = new ArrayList<Float>();
+		this.setVocabulary_weights(new HashMap<String, HashMap<String, Float>>());
 	}
 	
 	/**
@@ -38,8 +40,8 @@ public class Vocabulary{
 	 * 
 	 * @param valueList
 	 */
-	public Vocabulary(ArrayList<String> valueList, String label) {
-		this.valueList = valueList;
+	public VocabularyWeights(ArrayList<String> valueList, String label) {
+		//this.valueList = valueList;
 		this.label = label;
 		//this.weights = new ArrayList<Float>(valueList.size());
 	}
@@ -51,20 +53,20 @@ public class Vocabulary{
 	 * @param obj
 	 * @return
 	 */
-	public boolean appendToVocabulary(String obj){
-		if(this.valueList.contains(obj)){
-			return false;
+	public void appendToVocabulary(String obj){
+		if(this.vocabulary_weights.containsKey(obj)){
+			return;
 		}
-		return valueList.add(obj);
+		vocabulary_weights.put(obj, new HashMap<String, Float>());
 	}
 	
 	/**
 	 * Saves vocabulary to a vertex in a graph Database;
 	 */
 	public void save(){
-		OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
-		Vertex v = persistor.addVertexType(Vocabulary.class.getCanonicalName());
-		v.setProperty("vocabulary", this.valueList);
+		OrientDbPersistor<VocabularyWeights> persistor = new OrientDbPersistor<VocabularyWeights>();
+		Vertex v = persistor.addVertexType(VocabularyWeights.class.getSimpleName());
+		v.setProperty("vocabulary", this.vocabulary_weights);
 		v.setProperty("label", this.label);		
 		persistor.save();
 	}
@@ -72,13 +74,13 @@ public class Vocabulary{
 	/**
 	 * Loades vocabulary from a vertex in a graph Database, into a 1 dimensional array;
 	 */
-	public static Vocabulary load(String label){
-		OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
+	public static VocabularyWeights load(String label){
+		OrientDbPersistor<VocabularyWeights> persistor = new OrientDbPersistor<VocabularyWeights>();
 		ArrayList<String> vocabList = new ArrayList<String>();
 
 		Iterator<Vertex> vIter = persistor.findVertices("label", label).iterator();
 		if(!vIter.hasNext()){
-			return new Vocabulary(vocabList, label);
+			return new VocabularyWeights(vocabList, label);
 		}
 		String vocabulary = vIter.next().getProperty("vocabulary");
 		
@@ -87,14 +89,30 @@ public class Vocabulary{
 			vocabList.add(word);
 		}
 		
-		return new Vocabulary(vocabList, label);
+		return new VocabularyWeights(vocabList, label);
 	}
 
-	public ArrayList<String> getValueList() {
-		return this.valueList;
-	}
 	
 	public String getLabel(){
 		return this.label;
+	}
+
+	/**
+	 * Appends a weight to the end of the weights list
+	 * @param d
+	 */
+	public void appendToWeights(String key, String action_key, float d) {
+		HashMap<String, Float> action_weights = this.vocabulary_weights.get(key);
+		if(!action_weights.containsKey(action_key)){
+			action_weights.put(action_key, d);
+		}
+	}
+
+	public HashMap<String, HashMap<String, Float>> getVocabulary_weights() {
+		return vocabulary_weights;
+	}
+
+	public void setVocabulary_weights(HashMap<String, HashMap<String, Float>> vocabulary_weights) {
+		this.vocabulary_weights = vocabulary_weights;
 	}
 }

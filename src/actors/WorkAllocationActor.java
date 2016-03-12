@@ -82,14 +82,14 @@ public class WorkAllocationActor extends Thread {
 										   Page last_page, 
 										   Page current_page, 
 										   BrowserActor browser_actor){		
-		resourceManager.punchOut(browser_actor);
+		//resourceManager.punchOut(browser_actor);
 		boolean isValuable = false;
 		
 		//If cycle exists we don't care, dishing it out for work was a mistake
 		if(!Path.hasCycle(path) && !Path.hasPageCycle(path)){
 			//if last page in path is different than the current page then register as valuable
 			ArrayList<Path> pathExpansions = null;
-			if(last_page.equals(current_page) && path.getPath().size() != 1){
+			if(last_page.equals(current_page) && path.getPath().size() > 1){
 				isValuable = false;
 			}
 			else if(path.getPath().size() == 0){
@@ -97,7 +97,11 @@ public class WorkAllocationActor extends Thread {
 				path.add(new PathObject<Page>(current_page));
 				pathExpansions = Path.expandPath(path);
 			}
-			else{
+			else if(last_page.equals(current_page) && path.getPath().size() == 1){
+				isValuable = true;
+				pathExpansions = Path.expandPath(path);
+			}
+			else if(!last_page.equals(current_page)){
 				isValuable = true;
 				pathExpansions = Path.expandPath(path);
 			}

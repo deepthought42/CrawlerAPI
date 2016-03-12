@@ -4,10 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jettison.json.JSONObject;
 
 /**
  * Encapsulates the possible values for a value field as a domain of values.
@@ -101,20 +97,7 @@ public class ValueDomain {
 	 */
 	@Override
 	public String toString(){
-		ObjectMapper mapper = new ObjectMapper();
-		String valueDomain = null;
-		try {
-			valueDomain = mapper.defaultPrettyPrintingWriter().writeValueAsString(this);
-		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return valueDomain;
+
+		return "";
 	}
 }

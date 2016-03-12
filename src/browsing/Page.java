@@ -22,9 +22,9 @@ import org.openqa.selenium.WebElement;
  *
  */
 public class Page implements State, IObjectValuationAccessor {
-	public String screenshot = null; 
+	private String screenshot = null; 
 	private WebDriver driver = null;
-	public String src = "";
+	private String src = "";
 	//public String date = null;
 	public URL pageUrl = null;
 	public ArrayList<PageElement> elements = new ArrayList<PageElement>();

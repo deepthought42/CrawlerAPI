@@ -111,7 +111,7 @@ public class OrientDbPersistor<T>{
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
-	public synchronized Iterable<Vertex> find(T obj){
+	public synchronized Iterable<Vertex> findVertices(T obj){
 		Field[] fieldArray = obj.getClass().getFields();
 		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		
@@ -141,10 +141,22 @@ public class OrientDbPersistor<T>{
 	 * @param obj
 	 * @return
 	 */
-	public synchronized Iterable<Vertex> find(String fieldName, String value) {
-		Iterable<Vertex> objVertices = this.graph.getVertices(fieldName, value);
+	public synchronized Iterable<Vertex> findVertices(String fieldName, String value) {
+		Iterable<Vertex> vertices = this.graph.getVertices(fieldName, value);
 		
-		return objVertices;
+		return vertices;
+	}
+	
+	/**
+	 * Finds a given object Definition in graph
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	public synchronized Iterable<Edge> findEdges(String fieldName, String value) {
+		Iterable<Edge> edges = this.graph.getEdges(fieldName, value);
+		
+		return edges;
 	}
 	
 	/**
@@ -155,7 +167,7 @@ public class OrientDbPersistor<T>{
 	public synchronized Vertex findAndUpdateOrCreate(T obj, String[] actions){
 		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = null;
 		try{
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.find(obj);
+			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(obj);
 			memory_iterator = memory_vertex_iter.iterator();
 		}
 		catch(NullPointerException e){
@@ -211,7 +223,7 @@ public class OrientDbPersistor<T>{
 		List<Vertex> vertices = new ArrayList<Vertex>();
 		for(T objDef : objects){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.find(objDef);
+			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(objDef);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
 			
 			if(memory_iterator != null && memory_iterator.hasNext()){

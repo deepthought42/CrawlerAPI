@@ -1,12 +1,22 @@
 package shortTerm;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 
+import org.apache.commons.math3.analysis.function.Sigmoid;
+
+import memory.DataDecomposer;
+import memory.ObjectDefinition;
 import memory.PastExperience;
 import memory.Vocabulary;
-
+import memory.VocabularyWeights;
+import browsing.ActionFactory;
 import browsing.PathObject;
-
+import browsing.actions.Action;
 import structs.Path;
 import structs.PathRepresentation;
 
@@ -52,34 +62,37 @@ public class ShortTermMemoryRegistry {
 		
 		if(isValuable == null){
 			registerUnknownOutcomePath(path_rep);
+			//System.err.println("Registering path with UNKNOWN value");
 			return;
 		}
 		else if(isValuable.equals(Boolean.TRUE)){
 			registerProductivePath(path_rep);
+			System.err.println("Registering path with PRODUCTIVE value");
 		}
 		else if(isValuable.equals(Boolean.FALSE)){
 			registerUnproductivePath(path_rep);
+			System.err.println("Registering path with UNPRODUCTIVE value");
 		}
 		
 		past_experience.appendToPaths(path, isValuable);
 
 		
 		/**
-		 * THIS NEXT BLOCK IS A WORK IN PROGRESS THAT WILL NOT BE ADDED UNTIL AFTER THE MVP IS COMPLETE
+		 * THIS NEXT BLOCK IS A WORK IN PROGRESS THAT WILL NOT BE ADDED UNTIL AFTER THE PROTOTYPE IS COMPLETE
 		 * 
 		 * 
 		 * !!!!!!!!!!!!!!!     DO NOT DELETE           !!!
 		 * 
 		 */
-		/*
+		
 		for(PathObject<?> pathObj : path.getPath()){
 		// generate vocabulary matrix using pathObject
 			//decompose path obj
-			DataDecomposer decomposer = new DataDecomposer(pathObj.getData());
+			DataDecomposer decomposer = new DataDecomposer();
 			
 			List<ObjectDefinition> objDefinitionList = null;
 			try {
-				objDefinitionList = decomposer.decompose();
+				objDefinitionList = decomposer.decompose(pathObj.getData());
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -91,10 +104,29 @@ public class ShortTermMemoryRegistry {
 				e.printStackTrace();
 			}
 			
-			//List for vocabublary experience record
+			//Load list for vocabublary, initializing all entries to 0
 			ArrayList<Boolean> vocabularyExperienceRecord = new ArrayList<Boolean>(Arrays.asList(new Boolean[this.vocab.getValueList().size()]));
 			Collections.fill(vocabularyExperienceRecord, Boolean.FALSE);
 			ArrayList<ArrayList<Float>> action_weights_list = new ArrayList<ArrayList<Float>>();
+			
+			//Create experience record
+			Boolean[][] experienceRecord = new Boolean[this.vocab.getValueList().size()][ActionFactory.getActions().length];
+			
+			//Find last action
+			String last_action = "";
+
+			//Get last action experienced in path
+			for(int idx = path.getPath().size()-1; idx >= 0 ; idx--){
+				if(path.getPath().get(idx).getData() instanceof Action){
+					last_action = ((Action)path.getPath().get(idx).getData()).getName();
+					break;
+				}
+			}
+			
+			//load vocabulary weights
+			VocabularyWeights vocab_weights = new VocabularyWeights("html_actions");
+			
+			//build vocabularyExperienceRecord
 			Random rand = new Random();
 			for(ObjectDefinition objDef : objDefinitionList){
 				if( !this.vocab.getValueList().contains(objDef.getValue())){
@@ -102,78 +134,75 @@ public class ShortTermMemoryRegistry {
 					this.vocab.appendToVocabulary(objDef.getValue());
 					
 					//add a new 0.0 value weight to end of weights
-					this.vocab.appendToWeights(rand.nextFloat());
+					//this.vocab.appendToWeights(objDef.getValue(), rand.nextFloat());
 					
 					//add new actions entry to match vocab
 					ArrayList<Float> action_weights = new ArrayList<Float>(Arrays.asList(new Float[ActionFactory.getActions().length]));
-
-					for(int weight_idx = 0 ; weight_idx < action_weights.size(); weight_idx++){
+					
+					
+					/*for(int weight_idx = 0 ; weight_idx < action_weights.size(); weight_idx++){
 						//System.out.println("SETTING ACTION WIGHT : "+rand.nextFloat());
 						action_weights.set(weight_idx, rand.nextFloat());
-						
+					}*/
+					//add weights to vocabulary weights;
+					for(String action : ActionFactory.getActions()){
+						vocab_weights.getVocabulary_weights().get(objDef.getValue()).put(action, rand.nextFloat());
 					}
-					action_weights_list.add(action_weights);
+					
+					//action_weights_list.add(action_weights);
 					vocabularyExperienceRecord.add(true);
 
 				}
 				else {
-					int value_idx = this.vocab.getValueList().indexOf(objDef.getValue());
-					vocabularyExperienceRecord.set(value_idx, Boolean.TRUE);
+					int value_idx = this.vocab.getValueList().indexOf(objDef.getValue() );
+					for(int i=0; i < ActionFactory.getActions().length; i++){
+						if(ActionFactory.getActions()[i].equals(last_action)){
+							vocabularyExperienceRecord.set(value_idx, Boolean.TRUE);
+							experienceRecord[value_idx][i] = Boolean.TRUE;
+						}
+						else{
+							experienceRecord[value_idx][i] = Boolean.FALSE;
+						}
+					}
 				}
 			}
 			
-			//build vocabularyExperienceRecord
-				
-			// predict action probabilities
-			// home rolled NN single layer
+			//PERSIST VOCABULARY
+			this.vocab.save();
+			
+			// home rolled NN single layer FOLLOWS
+			
+			//Load vocabulary weights from memory
+			Vocabulary vocabulary = this.vocab.load("html");
+			
+			//unroll vocabulary weights
+			
+			
+			
+			//run vocabularyExperienceRecord with loaded weights through NN
 			Sigmoid sigmoid = new Sigmoid();
-			String last_action = "";
-			if(vocab.getValueList().size() == this.vocab.getWeights().size()){
-				//PREDICTION ARRAY FOR ACTIONS
-				String[] actions = ActionFactory.getActions();
-				//Get last action experienced in path
-				for(int idx = path.getPath().size()-1; idx >= 0 ; idx--){
-					if(path.getPath().get(idx).getData() instanceof Action){
-						last_action = ((Action)path.getPath().get(idx).getData()).getName();
-					}
+
+			
+			
+			//perform reinforcement learning based on last action taken and result against predictions
+
+			
+			// apply reinforcement learning
+			// based on result of crawl and predicted values, updated predicted values
+			String[] actions = ActionFactory.getActions();
+			float[] predictions = new float[actions.length];
+			for(int action_index = 0; action_index < predictions.length; action_index++){
+				if(actions[action_index].equals(last_action) && isValuable.equals(Boolean.TRUE)){
+					predictions[action_index] += 1;
 				}
-						
-				float[] predictions = new float[actions.length];
-				for(int action_index = 0; action_index < predictions.length; action_index++){
-					for(int i = 0; i < this.vocab.getValueList().size(); i++){
-						float product = 0;
-						if(vocabularyExperienceRecord.get(i))
-						{
-							product = this.vocab.getActions().get(i).get(action_index);
-						}
-						predictions[action_index] += product;
-					}
-					
-					// apply reinforcement learning
-					// based on result of crawl and predicted values, updated predicted values
-					if(actions[action_index].equals(last_action) && isValuable.equals(Boolean.TRUE)){
-						predictions[action_index] += 10;
-					}
-					else if(actions[action_index].equals(last_action) && isValuable.equals(Boolean.FALSE)){
-						predictions[action_index] -= 1;
-					}
-					
-					predictions[action_index] = (float)sigmoid.value(predictions[action_index]);
+				else if(actions[action_index].equals(last_action) && isValuable.equals(Boolean.FALSE)){
+					predictions[action_index] -= 1;
 				}
-				System.out.print("Predictions :: ");
-				for(float prediction : predictions){
-					System.out.print(prediction + ", ");
-				}
-				System.out.println();
-	
-			}
-			else{
-				System.out.println("VOCABULARY LENGTH DOES NOT MATCH WEIGHT LENGTH");
 			}
 		
 			// Backpropagate updated results back through layers
 		}
-		*/
+		
 	}
 	
 	/**

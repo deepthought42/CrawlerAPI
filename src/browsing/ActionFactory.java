@@ -92,7 +92,7 @@ public class ActionFactory {
 		//COMPUTE ALL EDGE PROBABILITIES
 		for(int index = 0; index < actions.length; index++){
 			OrientDbPersistor<ObjectDefinition> orientPersistor = new OrientDbPersistor<ObjectDefinition>();
-			Iterator<Vertex> vertices = orientPersistor.find(obj).iterator();
+			Iterator<Vertex> vertices = orientPersistor.findVertices(obj).iterator();
 			if(!vertices.hasNext()){
 				return rand.nextInt(actions.length);
 			}

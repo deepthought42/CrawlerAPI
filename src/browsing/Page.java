@@ -197,12 +197,11 @@ public class Page implements State, IObjectValuationAccessor {
         return hash;
     }
 
-	@Override
 	public double getCost() {
+		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	@Override
 	public double getReward() {
 		// TODO Auto-generated method stub
 		return 0;

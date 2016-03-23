@@ -30,24 +30,6 @@ public class Action implements IObjectValuationAccessor{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public double getCost() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public double getReward() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public String toString(){
 		return this.name;
 	}
@@ -55,6 +37,16 @@ public class Action implements IObjectValuationAccessor{
 	@Override
 	public int hashCode(){
 		return this.name.hashCode();
+	}
+
+	public double getCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public double getReward() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

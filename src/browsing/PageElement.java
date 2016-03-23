@@ -372,7 +372,6 @@ public class PageElement implements IObjectValuationAccessor {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public double getCost() {
 		// TODO Auto-generated method stub
 		return 0;
@@ -381,7 +380,6 @@ public class PageElement implements IObjectValuationAccessor {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public double getReward() {
 		// TODO Auto-generated method stub
 		return 0;

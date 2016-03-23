@@ -5,9 +5,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import browsing.Page;
-import browsing.PageElement;
 import browsing.PathObject;
 import observableStructs.ObservableHash;
 import shortTerm.ShortTermMemoryRegistry;
@@ -35,13 +38,14 @@ public class WorkAllocationActor extends Thread {
 	public WorkAllocationActor(ResourceManagementActor resourceMgr,
 							   String url){
 		resourceManager = resourceMgr;
-		
 		BrowserActor browserActor;
 		
 		try {
+			ExecutorService es = Executors.newSingleThreadExecutor();
 			browserActor = new BrowserActor(url, new Path());
+			es.submit(browserActor);
 			WorkAllocationActor.resourceManager.punchIn(browserActor);
-			browserActor.start();
+			//browserActor.start();
 		}
 		catch (IOException e) {
 			e.printStackTrace();
@@ -66,9 +70,6 @@ public class WorkAllocationActor extends Thread {
 		return smallest_key;
 	}
 	
-	public void run(){
-		
-	}
 	
 	/**
 	 * 
@@ -79,12 +80,11 @@ public class WorkAllocationActor extends Thread {
 	 * @param browser_actor
 	 */
 	public static void registerCrawlResult(Path path, 
-										   Page last_page, 
-										   Page current_page, 
-										   BrowserActor browser_actor){		
+							   Page last_page, 
+							   Page current_page, 
+							   BrowserActor browser_actor){		
 		//resourceManager.punchOut(browser_actor);
 		boolean isValuable = false;
-		
 		//If cycle exists we don't care, dishing it out for work was a mistake
 		if(!Path.hasCycle(path) && !Path.hasPageCycle(path)){
 			//if last page in path is different than the current page then register as valuable
@@ -124,11 +124,19 @@ public class WorkAllocationActor extends Thread {
 			Path new_path = retrieveNextPath();
 			BrowserActor new_browser_actor;
 			try {
+				ExecutorService es = Executors.newSingleThreadExecutor();
+				
 				new_browser_actor = new BrowserActor("http://127.0.0.1:3000", new_path);
+				Future<Boolean> browserActorResult = es.submit(new_browser_actor);
 				WorkAllocationActor.resourceManager.punchIn(new_browser_actor);
-				new_browser_actor.start();
-	
+				boolean didChangeOccur = browserActorResult.get();
 			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

@@ -67,9 +67,9 @@ public class PastExperience {
 					edge = edges.iterator().next();
 				}
 				else{
-					edge = orient_persistor.addEdge(last_vertex, vertex, path_node.getClass().getCanonicalName(), path_uuid.toString());
+					edge = orient_persistor.addEdge(last_vertex, vertex, path_node.getClass().getCanonicalName(), last_path_node_hash +"-"+ path_node.hash_code);
 					//edge.setProperty("path_uid", path_uuid);
-					edge.setProperty("hash_code", last_path_node_hash + path_node.hash_code);
+					edge.setProperty("hash_code", last_path_node_hash +"-"+ path_node.hash_code);
 					edge.setProperty("action", action);
 					edge.setProperty("date", new Date());
 				}

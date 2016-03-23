@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import memory.DataDecomposer;
 import memory.ObjectDefinition;
@@ -39,7 +40,7 @@ import structs.Path;
  * @author Brandon Kindred
  *
  */
-public class BrowserActor extends Thread implements Actor{
+public class BrowserActor implements Actor, Callable<Boolean>{
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -87,7 +88,7 @@ public class BrowserActor extends Thread implements Actor{
 	/**
 	 * Starts thread which crawls the path provided in initialization
 	 */
-	public void run(){
+	public Boolean call() throws Exception{
 		
 		try {
 			if(this.path.getPath().isEmpty()){
@@ -116,7 +117,7 @@ public class BrowserActor extends Thread implements Actor{
 			e.printStackTrace();
 		}		
 		
-		
+		return Boolean.FALSE;
 	}
 	
 	/**
@@ -152,7 +153,7 @@ public class BrowserActor extends Thread implements Actor{
 				}while(!actionPerformedSuccessfully && attempts < 20);
 			}
 			else if(browser_obj.getData() instanceof PageAlert){
-				System.err.println(this.getName() + " -> Handling Alert");
+				System.err.println(this.getClass().getName() + " -> Handling Alert");
 				PageAlert alert = (PageAlert)browser_obj.getData();
 				alert.performChoice(browser.getDriver());
 			}
@@ -178,7 +179,7 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
 		List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
-		System.out.println(this.getName() + " -> GETTING BEST ACTION PROBABILITY...");
+		System.out.println(this.getClass().getName() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
 		
 		for(ObjectDefinition obj : definitions){
@@ -340,29 +341,29 @@ public class BrowserActor extends Thread implements Actor{
 		
 		try{
 			WebElement element = browser.getDriver().findElement(By.xpath(elem.getXpath()));
-			System.err.print(this.getName() + "PERFORMING ACTION .. ");
+			System.err.print(this.getClass().getName() + "PERFORMING ACTION .. ");
 			actionFactory.execAction(element, action);
 			
-			System.err.println(this.getName() + " -> Performed action "+ action
+			System.err.println(this.getClass().getName() + " -> Performed action "+ action
 					+ " On element with xpath :: "+elem.getXpath());
 		}
 		catch(StaleElementReferenceException e){
 			
-			 	System.err.println(this.getName()
+			 	System.err.println(this.getClass().getName()
 					+ " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 					+ action + ". ");
 			//e.printStackTrace();
 			wasPerformedSuccessfully = false;			
 		}
 		catch(ElementNotVisibleException e){
-			System.err.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
+			System.err.println(this.getClass().getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
 		}
 		catch(NoSuchElementException e){
-			System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+			System.err.println(this.getClass().getName() + " -> NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
 			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
-			System.err.println(this.getName() + " -> Element can not have action performed on it at point performed");
+			System.err.println(this.getClass().getName() + " -> Element can not have action performed on it at point performed");
 			wasPerformedSuccessfully = false;
 		}
 		

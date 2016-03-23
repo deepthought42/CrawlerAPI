@@ -41,7 +41,7 @@ public class ResourceManagementActor {
 			index++;
 		}
 		
-		return presentActors.remove(index-1);
+		return presentActors.remove(index);
 	}
 	
 	/**

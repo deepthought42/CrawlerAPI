@@ -82,7 +82,7 @@ public class WorkAllocationActor extends Thread {
 										   Page last_page, 
 										   Page current_page, 
 										   BrowserActor browser_actor){		
-		//resourceManager.punchOut(browser_actor);
+		resourceManager.punchOut(browser_actor);
 		boolean isValuable = false;
 		
 		//If cycle exists we don't care, dishing it out for work was a mistake

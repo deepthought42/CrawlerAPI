@@ -1,17 +1,13 @@
 package actors;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 
-import org.apache.commons.lang.UnhandledException;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Inbox;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import browsing.Browser;
@@ -36,16 +32,6 @@ public class WorkAllocationActor extends UntypedActor {
 	//private final ActorSystem actor_system;
 	
 	/**
-	 * Construct new {@link WorkAllocationActor} 
-	 * @param queue
-	 * @param resourceManager
-	 */
-	/*public WorkAllocationActor(ActorSystem actor_system,
-							   String url){
-		this.actor_system = actor_system;
-	}
-	*/
-	/**
 	 * Finds smallest key in hash
 	 * 
 	 * @return <= 99999
@@ -63,9 +49,6 @@ public class WorkAllocationActor extends UntypedActor {
 		return smallest_key;
 	}
 	
-	public void run(){
-		
-	}
 	
 	/**
 	 * 
@@ -81,7 +64,6 @@ public class WorkAllocationActor extends UntypedActor {
 										   BrowserActor browser_actor){		
 		//resourceManager.punchOut(browser_actor);
 		boolean isValuable = false;
-		
 		//If cycle exists we don't care, dishing it out for work was a mistake
 		if(!Path.hasCycle(path) && !Path.hasPageCycle(path)){
 			//if last page in path is different than the current page then register as valuable

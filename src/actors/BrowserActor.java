@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import memory.DataDecomposer;
 import memory.ObjectDefinition;
@@ -91,7 +92,7 @@ public class BrowserActor extends UntypedActor {
 		this.path = Path.clone(path);
 	}
 	*/
-		
+
 	/**
 	 * Crawls the path for the current BrowserActor.
 	 * 
@@ -126,6 +127,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if(browser_obj.getData() instanceof PageAlert){
 				System.err.println(getSelf() + " -> Handling Alert");
+
 				PageAlert alert = (PageAlert)browser_obj.getData();
 				alert.performChoice(browser.getDriver());
 			}
@@ -151,6 +153,7 @@ public class BrowserActor extends UntypedActor {
 	 */
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
 		List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
+
 		System.out.println(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
 		
@@ -317,6 +320,7 @@ public class BrowserActor extends UntypedActor {
 			actionFactory.execAction(element, action);
 			
 			System.err.println(getSelf().hashCode() + " -> Performed action "+ action
+
 					+ " On element with xpath :: "+elem.getXpath());
 		}
 		catch(StaleElementReferenceException e){

@@ -15,6 +15,7 @@ public class DatabaseAgent extends Thread implements Actor{
 	private OrientGraphFactory factory = null;
 	private OrientGraph graph = null;
 	private String dbUrl = null;
+	private UUID uuid = null;
 	
 	/**
 	 * Configure and start the database.
@@ -23,7 +24,7 @@ public class DatabaseAgent extends Thread implements Actor{
 	 */
 	public DatabaseAgent(String dbUrl){
 		this.dbUrl = dbUrl;
-		
+		this.uuid = UUID.randomUUID();
 	}
 	
 	/**
@@ -41,9 +42,7 @@ public class DatabaseAgent extends Thread implements Actor{
 		this.graph.shutdown();
 	}
 
-	@Override
 	public UUID getActorId() {
-		// TODO Auto-generated method stub
-		return null;
+		return uuid;
 	}
 }

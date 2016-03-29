@@ -1,11 +1,7 @@
 package shortTerm;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+
 
 import org.apache.commons.math3.analysis.function.Sigmoid;
 
@@ -13,10 +9,7 @@ import memory.DataDecomposer;
 import memory.ObjectDefinition;
 import memory.PastExperience;
 import memory.Vocabulary;
-import memory.VocabularyWeights;
-import browsing.ActionFactory;
 import browsing.PathObject;
-import browsing.actions.Action;
 import structs.Path;
 import structs.PathRepresentation;
 
@@ -107,10 +100,6 @@ public class ShortTermMemoryRegistry {
 			//Load list for vocabublary, initializing all entries to 0
 			ArrayList<Boolean> vocabularyExperienceRecord = new ArrayList<Boolean>(Arrays.asList(new Boolean[this.vocab.getValueList().size()]));
 			Collections.fill(vocabularyExperienceRecord, Boolean.FALSE);
-			ArrayList<ArrayList<Float>> action_weights_list = new ArrayList<ArrayList<Float>>();
-			
-			//Create experience record
-			Boolean[][] experienceRecord = new Boolean[this.vocab.getValueList().size()][ActionFactory.getActions().length];
 			
 			//Find last action
 			String last_action = "";
@@ -124,9 +113,9 @@ public class ShortTermMemoryRegistry {
 			}
 			
 			//load vocabulary weights
-			VocabularyWeights vocab_weights = new VocabularyWeights("html_actions");
+			VocabularyWeights vocab_weights = VocabularyWeights.load("html_actions");
 			
-			//build vocabularyExperienceRecord
+			//Run through object definitions and make sure that they are all included in the vocabulary
 			Random rand = new Random();
 			for(ObjectDefinition objDef : objDefinitionList){
 				if( !this.vocab.getValueList().contains(objDef.getValue())){
@@ -134,6 +123,7 @@ public class ShortTermMemoryRegistry {
 					this.vocab.appendToVocabulary(objDef.getValue());
 					
 					//add a new 0.0 value weight to end of weights
+<<<<<<< HEAD
 					//this.vocab.appendToWeights(objDef.getValue(), rand.nextFloat());
 					
 					//add new actions entry to match vocab
@@ -144,36 +134,47 @@ public class ShortTermMemoryRegistry {
 						//System.out.println("SETTING ACTION WIGHT : "+rand.nextFloat());
 					//	action_weights.set(weight_idx, rand.nextFloat());
 					//}
+=======
+					vocab_weights.appendToVocabulary(objDef.getValue());
+
+>>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
 					//add weights to vocabulary weights;
 					for(String action : ActionFactory.getActions()){
-						vocab_weights.getVocabulary_weights().get(objDef.getValue()).put(action, rand.nextFloat());
+						vocab_weights.appendToWeights(objDef.getValue(), action, rand.nextFloat()); 
 					}
 					
 					//action_weights_list.add(action_weights);
 					vocabularyExperienceRecord.add(true);
 
 				}
-				else {
-					int value_idx = this.vocab.getValueList().indexOf(objDef.getValue() );
-					for(int i=0; i < ActionFactory.getActions().length; i++){
-						if(ActionFactory.getActions()[i].equals(last_action)){
-							vocabularyExperienceRecord.set(value_idx, Boolean.TRUE);
-							experienceRecord[value_idx][i] = Boolean.TRUE;
-						}
-						else{
-							experienceRecord[value_idx][i] = Boolean.FALSE;
-						}
+			}
+			
+
+			//PERSIST VOCABULARY
+			this.vocab.save();
+			vocab_weights.save();
+			
+			//Create experience record and weight record
+			Boolean[][] experience_record = new Boolean[this.vocab.getValueList().size()][ActionFactory.getActions().length];
+			double[][] weight_record = new double[this.vocab.getValueList().size()][ActionFactory.getActions().length];
+			
+			for(ObjectDefinition objDef : objDefinitionList){
+				int value_idx = this.vocab.getValueList().indexOf(objDef.getValue() );
+				for(int i=0; i < ActionFactory.getActions().length; i++){
+					if(ActionFactory.getActions()[i].equals(last_action)){
+						vocabularyExperienceRecord.set(value_idx, Boolean.TRUE);
+						experience_record[value_idx][i] = Boolean.TRUE;
 					}
+					else{
+						experience_record[value_idx][i] = Boolean.FALSE;
+					}
+					
+					//place weights into 2 dimensional array for NN computations later
+					weight_record[value_idx][i] = vocab_weights.getVocabulary_weights().get(objDef.getValue()).get(ActionFactory.getActions()[i]);
 				}
 			}
 			
-			//PERSIST VOCABULARY
-			this.vocab.save();
-			
 			// home rolled NN single layer FOLLOWS
-			
-			//Load vocabulary weights from memory
-			Vocabulary vocabulary = this.vocab.load("html");
 			
 			//unroll vocabulary weights
 			

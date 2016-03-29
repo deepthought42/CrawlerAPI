@@ -63,7 +63,7 @@ public class Vocabulary{
 	 */
 	public void save(){
 		OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
-		Vertex v = persistor.addVertexType(Vocabulary.class.getCanonicalName());
+		Vertex v = persistor.addVertexType(Vocabulary.class.getSimpleName());
 		v.setProperty("vocabulary", this.valueList);
 		v.setProperty("label", this.label);		
 		persistor.save();
@@ -74,20 +74,14 @@ public class Vocabulary{
 	 */
 	public static Vocabulary load(String label){
 		OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
-		ArrayList<String> vocabList = new ArrayList<String>();
 
 		Iterator<Vertex> vIter = persistor.findVertices("label", label).iterator();
 		if(!vIter.hasNext()){
-			return new Vocabulary(vocabList, label);
+			return new Vocabulary(new ArrayList<String>(), label);
 		}
-		String vocabulary = vIter.next().getProperty("vocabulary");
+		ArrayList<String> vocabulary = vIter.next().getProperty("vocabulary");
 		
-		String[] vocabArray = vocabulary.split(",");
-		for(String word : vocabArray){
-			vocabList.add(word);
-		}
-		
-		return new Vocabulary(vocabList, label);
+		return new Vocabulary(vocabulary, label);
 	}
 
 	public ArrayList<String> getValueList() {

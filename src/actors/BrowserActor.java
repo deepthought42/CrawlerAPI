@@ -24,6 +24,8 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 
+import akka.actor.ActorSystem;
+import akka.actor.UntypedActor;
 import browsing.ActionFactory;
 import browsing.Browser;
 import browsing.Page;
@@ -39,12 +41,13 @@ import structs.Path;
  * @author Brandon Kindred
  *
  */
-public class BrowserActor extends Thread implements Actor{
+public class BrowserActor extends UntypedActor {
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
 	private Path path = null;
 	private Browser browser = null;
+	//public final ActorSystem actor_system;
 	private OrientDbPersistor<ObjectDefinition> persistor = new OrientDbPersistor<ObjectDefinition>();
 	//private ArrayList<Vocabulary> vocabularies = null;
 	
@@ -57,10 +60,12 @@ public class BrowserActor extends Thread implements Actor{
 	 * @param url
 	 * @throws IOException 
 	 */
-	public BrowserActor(String url) throws IOException {
+	/*public BrowserActor(ActorSystem sys, String url) throws IOException {
+		this.actor_system = sys;
 		browser = new Browser(url);
 		this.path = new Path();
 	}
+	*/
 
 	/**
 	 * Creates instance of BrowserActor with given url for entry into website
@@ -71,54 +76,22 @@ public class BrowserActor extends Thread implements Actor{
 	 * @pre queue != null
 	 * @pre !queue.isEmpty()
 	 */
-	public BrowserActor(String url, 
+	/*public BrowserActor(ActorSystem sys, String url, 
 						Path path) throws IOException {
 		
 		this.uuid = UUID.randomUUID();
 		this.path = Path.clone(path);
+		this.actor_system = sys;
 		this.browser = new Browser(url);
 		//this.vocabularies = this.loadVocabularies(vocabLabels);
 	}
 	
-	public BrowserActor(Path path){
+	public BrowserActor(ActorSystem sys, Path path){
+		this.actor_system = sys;
 		this.path = Path.clone(path);
 	}
-
-	/**
-	 * Starts thread which crawls the path provided in initialization
-	 */
-	public void run(){
+	*/
 		
-		try {
-			if(this.path.getPath().isEmpty()){
-				PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
-				this.path.add(page_obj);
-			}
-			else{
-				this.crawlPath();
-			}
-		} catch (UnhandledAlertException e) {
-			e.printStackTrace();
-		} catch (java.util.NoSuchElementException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		Page current_page = null;
-		try {
-			current_page = browser.getPage();
-			this.browser.getDriver().quit();
-			WorkAllocationActor.registerCrawlResult(this.path, this.path.getLastPageVertex(), current_page, this);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}		
-		
-		
-	}
-	
 	/**
 	 * Crawls the path for the current BrowserActor.
 	 * 
@@ -152,7 +125,7 @@ public class BrowserActor extends Thread implements Actor{
 				}while(!actionPerformedSuccessfully && attempts < 20);
 			}
 			else if(browser_obj.getData() instanceof PageAlert){
-				System.err.println(this.getName() + " -> Handling Alert");
+				System.err.println(getSelf() + " -> Handling Alert");
 				PageAlert alert = (PageAlert)browser_obj.getData();
 				alert.performChoice(browser.getDriver());
 			}
@@ -178,7 +151,7 @@ public class BrowserActor extends Thread implements Actor{
 	 */
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
 		List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
-		System.out.println(this.getName() + " -> GETTING BEST ACTION PROBABILITY...");
+		System.out.println(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
 		
 		for(ObjectDefinition obj : definitions){
@@ -340,29 +313,29 @@ public class BrowserActor extends Thread implements Actor{
 		
 		try{
 			WebElement element = browser.getDriver().findElement(By.xpath(elem.getXpath()));
-			System.err.print(this.getName() + "PERFORMING ACTION .. ");
+			System.err.print(getSelf().hashCode() + "PERFORMING ACTION .. ");
 			actionFactory.execAction(element, action);
 			
-			System.err.println(this.getName() + " -> Performed action "+ action
+			System.err.println(getSelf().hashCode() + " -> Performed action "+ action
 					+ " On element with xpath :: "+elem.getXpath());
 		}
 		catch(StaleElementReferenceException e){
 			
-			 	System.err.println(this.getName()
+			 	System.err.println(getSelf().hashCode()
 					+ " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 					+ action + ". ");
 			//e.printStackTrace();
 			wasPerformedSuccessfully = false;			
 		}
 		catch(ElementNotVisibleException e){
-			System.err.println(this.getName() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
+			System.err.println(getSelf().hashCode() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
 		}
 		catch(NoSuchElementException e){
-			System.err.println(this.getName() + " -> NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+			System.err.println(getSelf().hashCode() + " -> NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
 			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
-			System.err.println(this.getName() + " -> Element can not have action performed on it at point performed");
+			System.err.println(getSelf().hashCode() + " -> Element can not have action performed on it at point performed");
 			wasPerformedSuccessfully = false;
 		}
 		
@@ -381,5 +354,56 @@ public class BrowserActor extends Thread implements Actor{
 			vocabularies.add(Vocabulary.load(label));
 		}
 		return vocabularies;		
+	}
+
+	@Override
+	public void onReceive(Object message) throws Exception {
+		 if (message instanceof Path){
+             
+			 Path path = Path.clone((Path)message);
+             try {
+     			if(!path.getPath().isEmpty()){
+     				this.crawlPath();
+     			}
+     		} catch (UnhandledAlertException e) {
+     			e.printStackTrace();
+     		} catch (java.util.NoSuchElementException e) {
+     			e.printStackTrace();
+     		} catch (IOException e) {
+     			e.printStackTrace();
+     		}
+     		
+             
+            //if a change occurred and current page isn't the same as last page then clone path and set clone to useful
+             
+             path.setIsUseful(true);
+             
+     		Page current_page = null;
+     		
+     		try {
+     			current_page = browser.getPage();
+     			//WorkAllocationActor.registerCrawlResult(this.path, this.path.getLastPageVertex(), current_page, this);
+     			//getSender().tell(path, getSelf());
+     		} catch (MalformedURLException e) {
+     			e.printStackTrace();
+     		} catch (IOException e) {
+     			e.printStackTrace();
+     		}		
+             //crawl path
+             
+		 }
+		 else if(message instanceof Browser){
+				browser = (Browser)message;
+				Path path = new Path();
+				PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
+ 				path.add(page_obj);
+ 				this.crawlPath();
+
+			 getSender().tell(Boolean.FALSE, getSelf());
+		 }
+		 else unhandled(message);
+		 
+		this.browser.getDriver().quit();
+
 	}
 }

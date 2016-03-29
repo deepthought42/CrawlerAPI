@@ -6,14 +6,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.springframework.http.HttpStatus;
 
 import actors.BrowserActor;
 import actors.ResourceManagementActor;
+import actors.TestingCoordinatorActor;
 import actors.WorkAllocationActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -23,43 +20,42 @@ import structs.Path;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
+ * 
  * @author Brandon Kindred
  */
 @Controller
-@RequestMapping("/workAllocation")
-public class WorkAllocationController {
+@RequestMapping("/testingCoordinator")
+public class TestingCoordinatorController {
 
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody WorkAllocationActor startWorkAllocator(@RequestParam(value="url", required=true) String url) throws MalformedURLException {
-		//ResourceManagementActor resourceManager = new ResourceManagementActor(20);
+	public @ResponseBody TestingCoordinatorActor startTestingCoordinator(@RequestParam(value="url", required=true) String url) {
+		ResourceManagementActor resourceManager = new ResourceManagementActor(20);
 //		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 
 		//String url = "http://127.0.0.1:3000";
 		//String url = "http://brandonkindred.ninja/blog";
 		//String url = "http://www.ideabin.io";
-		System.out.print("INITIALIZING ACTOR...");
-		System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
-		ActorSystem actor_system = ActorSystem.create("ActorSystem");
-		System.out.print("Initializing page monitor...");
-		//WorkAllocationActor workAllocator = new WorkAllocationActor(actor_system, resourceManager, url);
+		System.out.print("INITIALIZING TESTING ACTOR...");
+		//System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
+		ActorSystem actor_system = ActorSystem.create("TesterSystem");
+				
+		ActorRef testingCoordinatorActor = actor_system.actorOf(Props.create(TestingCoordinatorActor.class), "browserActor");
+		testingCoordinatorActor.tell(new Path(), ActorRef.noSender());
 		
-		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-		workAllocationActor.tell(new URL(url), ActorRef.noSender());
-
 		return null;
 	}
 
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-class WorkAllocatorNotFoundException extends RuntimeException {
+class TestCoordinatorNotFoundException extends RuntimeException {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7200878662560716215L;
 
-	public WorkAllocatorNotFoundException() {
+	public TestCoordinatorNotFoundException() {
 		super("could not find user .");
 	}
 }

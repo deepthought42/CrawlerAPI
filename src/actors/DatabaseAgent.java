@@ -1,9 +1,6 @@
 package actors;
 
-import java.util.ArrayList;
 import java.util.UUID;
-
-import memory.Vocabulary;
 
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;

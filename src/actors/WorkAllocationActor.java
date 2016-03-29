@@ -1,13 +1,21 @@
 package actors;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.lang.UnhandledException;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Inbox;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import browsing.Browser;
 import browsing.Page;
-import browsing.PageElement;
 import browsing.PathObject;
 import observableStructs.ObservableHash;
 import shortTerm.ShortTermMemoryRegistry;
@@ -21,33 +29,22 @@ import structs.PathRepresentation;
  * @author Brandon Kindred
  *
  */
-public class WorkAllocationActor extends Thread {
+public class WorkAllocationActor extends UntypedActor {
 	
 	ObservableHash<Integer, Path> hash_queue = null;
-	private static ResourceManagementActor resourceManager = null;
 	private static ShortTermMemoryRegistry shortTermMemory = new ShortTermMemoryRegistry();
+	//private final ActorSystem actor_system;
 	
 	/**
 	 * Construct new {@link WorkAllocationActor} 
 	 * @param queue
 	 * @param resourceManager
 	 */
-	public WorkAllocationActor(ResourceManagementActor resourceMgr,
+	/*public WorkAllocationActor(ActorSystem actor_system,
 							   String url){
-		resourceManager = resourceMgr;
-		
-		BrowserActor browserActor;
-		
-		try {
-			browserActor = new BrowserActor(url, new Path());
-			WorkAllocationActor.resourceManager.punchIn(browserActor);
-			browserActor.start();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.actor_system = actor_system;
 	}
-	
+	*/
 	/**
 	 * Finds smallest key in hash
 	 * 
@@ -78,7 +75,7 @@ public class WorkAllocationActor extends Thread {
 	 * @param graphObserver
 	 * @param browser_actor
 	 */
-	public static void registerCrawlResult(Path path, 
+	public void registerCrawlResult(Path path, 
 										   Page last_page, 
 										   Page current_page, 
 										   BrowserActor browser_actor){		
@@ -117,22 +114,26 @@ public class WorkAllocationActor extends Thread {
 			}
 		}
 		
+		//System.err.println("RESOURCE MANAGEMENT :: "+resourceManager);
 		// Allocates work to Browser Actors until available resource ceiling is reached. 
-		while(resourceManager.areResourcesAvailable()){
+		//while(resourceManager.areResourcesAvailable()){
 			System.out.println(Thread.currentThread().getName() + 
 					" -> Path length being passed to browserActor = "+path.getPath().size());
 			Path new_path = retrieveNextPath();
-			BrowserActor new_browser_actor;
+			final ActorRef new_browser_actor;
 			try {
-				new_browser_actor = new BrowserActor("http://127.0.0.1:3000", new_path);
-				WorkAllocationActor.resourceManager.punchIn(new_browser_actor);
-				new_browser_actor.start();
-	
-			} catch (IOException e) {
+				//new_browser_actor = actor_system.actorOf(Props.create(BrowserActor.class), "browserActor");
+				//new_browser_actor.tell(new Path(), getSelf());
+				
+				//new_browser_actor = new BrowserActor(current_page.getUrl().toString(), new_path);
+				
+				//WorkAllocationActor.resourceManager.punchIn(new_browser_actor);
+				//new_browser_actor.start();
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-	}
+	//}
 	
 	/**
 	 * 
@@ -174,5 +175,41 @@ public class WorkAllocationActor extends Thread {
 		}
 		
 		return key_object;
+	}
+
+	@Override
+	public void onReceive(Object message) throws Exception {
+		if(message instanceof Path){
+			Path path = (Path)message;
+			if(path.getPath().isEmpty()){
+				System.err.println("path is empty");
+
+				final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
+		            // Tell the 'workAllocationActor' to run message
+	            		browser_actor.tell(path, ActorRef.noSender());
+			}
+			else{
+				System.err.println("path is useful? :: "+path.isUseful());
+
+				if(path.isUseful() != null){
+					//send message to memory actor to record path and result
+					ArrayList<Path> path_list = Path.expandPath((Path)message);
+		
+			            for(Path expanded_path : path_list){
+			            		//final ActorRef browser_actor = actor_system.actorOf(Props.create(BrowserActor.class), "browserActor");
+				            // Tell the 'workAllocationActor' to run message
+			            		//browser_actor.tell(null/*new BrowserActor(actor_system, expanded_path)*/, ActorRef.noSender());
+		            		}
+				}
+				else{
+					
+				}
+			}
+		}
+		else if(message instanceof URL){
+			final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
+			browser_actor.tell(new Browser(((URL)message).toString()), ActorRef.noSender());
+		}
+		else unhandled(message);	
 	}
 }

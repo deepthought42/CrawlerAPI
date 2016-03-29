@@ -191,9 +191,9 @@ public class Page implements State, IObjectValuationAccessor {
         hash = hash * 5 + pageUrl.hashCode();
         hash = hash * 17 + src.hashCode();
         hash = hash * 31 + screenshot.hashCode();
-        for(PageElement element : elements){
-        	hash = hash * 13 + element.hashCode();
-        }
+       // for(PageElement element : elements){
+       // 	hash = hash * 13 + element.hashCode();
+       // }
         return hash;
     }
 

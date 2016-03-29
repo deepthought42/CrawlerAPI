@@ -18,12 +18,14 @@ import browsing.actions.Action;
 public class Path {
 	public double reward = 0.0;
 	public double cost = 0.0;
+	private Boolean isUseful;
 	public ArrayList<PathObject<?>> vertexPath = null;
 	
 	/**
 	 * Creates new instance of Path
 	 */
 	public Path(){
+		this.isUseful = null;
 		this.vertexPath = new ArrayList<PathObject<?>>();
 	}
 
@@ -33,6 +35,7 @@ public class Path {
 	 * @param current_path
 	 */
 	public Path(Path current_path){
+		this.isUseful = null;
 		this.vertexPath = new  ArrayList<PathObject<?>>();
 		this.append(current_path);
 	}
@@ -58,6 +61,14 @@ public class Path {
 	 */
 	public ArrayList<PathObject<?>> getPath(){
 		return this.vertexPath;
+	}
+	
+	public void setIsUseful(boolean isUseful){
+		this.isUseful = isUseful;
+	}
+	
+	public Boolean isUseful(){
+		return this.isUseful;
 	}
 	
 	/**

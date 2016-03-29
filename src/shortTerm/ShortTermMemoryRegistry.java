@@ -84,7 +84,7 @@ public class ShortTermMemoryRegistry {
 		 * !!!!!!!!!!!!!!!     DO NOT DELETE           !!!
 		 * 
 		 */
-		
+		/*
 		for(PathObject<?> pathObj : path.getPath()){
 		// generate vocabulary matrix using pathObject
 			//decompose path obj
@@ -140,10 +140,10 @@ public class ShortTermMemoryRegistry {
 					ArrayList<Float> action_weights = new ArrayList<Float>(Arrays.asList(new Float[ActionFactory.getActions().length]));
 					
 					
-					/*for(int weight_idx = 0 ; weight_idx < action_weights.size(); weight_idx++){
+					//for(int weight_idx = 0 ; weight_idx < action_weights.size(); weight_idx++){
 						//System.out.println("SETTING ACTION WIGHT : "+rand.nextFloat());
-						action_weights.set(weight_idx, rand.nextFloat());
-					}*/
+					//	action_weights.set(weight_idx, rand.nextFloat());
+					//}
 					//add weights to vocabulary weights;
 					for(String action : ActionFactory.getActions()){
 						vocab_weights.getVocabulary_weights().get(objDef.getValue()).put(action, rand.nextFloat());
@@ -201,7 +201,10 @@ public class ShortTermMemoryRegistry {
 			}
 		
 			// Backpropagate updated results back through layers
+	
 		}
+		
+		 */
 		
 	}
 	

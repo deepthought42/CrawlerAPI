@@ -27,7 +27,7 @@ public class OrientDbPersistor<T>{
 	 * Creates a new connection to the orientDB graph
 	 */
 	public OrientDbPersistor() {
-		this.graph = new OrientGraph("remote:localhost/Thoth", "deepthought", "oicu812");
+		this.graph = new OrientGraph("remote:localhost/Thoth", "root", "oicu812");
 	}
 	
 	

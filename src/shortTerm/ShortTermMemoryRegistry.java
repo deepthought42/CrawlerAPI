@@ -2,11 +2,6 @@ package shortTerm;
 
 import java.util.HashMap;
 
-
-import org.apache.commons.math3.analysis.function.Sigmoid;
-
-import memory.DataDecomposer;
-import memory.ObjectDefinition;
 import memory.PastExperience;
 import memory.Vocabulary;
 import browsing.PathObject;

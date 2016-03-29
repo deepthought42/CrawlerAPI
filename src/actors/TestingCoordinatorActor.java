@@ -1,17 +1,7 @@
 package actors;
 
-<<<<<<< HEAD
 import java.net.URL;
 import java.util.UUID;
-=======
-import java.util.Iterator;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
->>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
 
 import org.openqa.selenium.WebElement;
 
@@ -19,14 +9,11 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 
-<<<<<<< HEAD
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Inbox;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-=======
->>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
 import browsing.PathObject;
 import browsing.actions.Action;
 import memory.OrientDbPersistor;
@@ -40,7 +27,6 @@ import structs.Path;
  * @author brandon kindred
  *
  */
-<<<<<<< HEAD
 public class TestingCoordinatorActor extends UntypedActor {
 	public final UUID uuid;
 	public final ActorSystem actor_system;
@@ -50,19 +36,11 @@ public class TestingCoordinatorActor extends UntypedActor {
 		this.actor_system = sys;
 		this.uuid = UUID.randomUUID();
 		this.url = url;
-=======
-public class TestingCoordinatorActor implements Actor, Callable<Object> {
-	public final UUID uuid;
-	
-	public TestingCoordinatorActor(){
-		this.uuid = UUID.randomUUID();
->>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
 	}
 	
 	/**
 	 * 
 	 */
-<<<<<<< HEAD
 	public void run(){
 		OrientDbPersistor<PathNode> persistor = new OrientDbPersistor<PathNode>();
 		
@@ -75,10 +53,7 @@ public class TestingCoordinatorActor implements Actor, Callable<Object> {
 		}
 		
 		
-=======
-	public Object call() throws Exception{
-		OrientDbPersistor<PathNode> persistor = new OrientDbPersistor<PathNode>();
->>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
+
 		//Initialize new path
 		Path path = new Path();
 		boolean wasChangeExpected = false;
@@ -115,7 +90,6 @@ public class TestingCoordinatorActor implements Actor, Callable<Object> {
 			}
 		
 		//Create BrowserActor and give it the path
-<<<<<<< HEAD
 		//ExecutorService es = Executors.newSingleThreadExecutor();
 		
 		//Start browser actor
@@ -139,13 +113,6 @@ public class TestingCoordinatorActor implements Actor, Callable<Object> {
 		boolean didChangeOccur = false;
 		
 		/*
-=======
-		ExecutorService es = Executors.newSingleThreadExecutor();
-		
-		//Start browser actor
-		Future<Boolean> actorResponse = es.submit(new BrowserActor(path));
-		boolean didChangeOccur = false;
->>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
 		try {
 			//Wait for response from Actor
 			didChangeOccur = actorResponse.get();
@@ -164,19 +131,11 @@ public class TestingCoordinatorActor implements Actor, Callable<Object> {
 		else{
 			//mark as failing
 		}
-<<<<<<< HEAD
 		*/
 		//
 		// record the results in database
 		
 		//return null;
-=======
-
-		//
-		// record the results in database
-		
-		return null;
->>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
 	}
 	
 	/**
@@ -195,7 +154,6 @@ public class TestingCoordinatorActor implements Actor, Callable<Object> {
 		return uuid;
 	}
 
-<<<<<<< HEAD
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof URL){
@@ -209,6 +167,4 @@ public class TestingCoordinatorActor implements Actor, Callable<Object> {
 		}
 	}
 
-=======
->>>>>>> f8550e37a7b03a9e5d435acb6d8ce040379bea09
 }

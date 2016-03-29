@@ -12,13 +12,10 @@ import java.net.URL;
 
 import org.springframework.http.HttpStatus;
 
-import actors.BrowserActor;
-import actors.ResourceManagementActor;
 import actors.WorkAllocationActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import structs.Path;
 
 
 /**

@@ -6,14 +6,14 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import browsing.Browser;
+import akka.pattern.Patterns;
 import browsing.Page;
 import browsing.PathObject;
 import observableStructs.ObservableHash;
+import scala.concurrent.Future;
 import shortTerm.ShortTermMemoryRegistry;
 import structs.Path;
 import structs.PathRepresentation;
@@ -29,7 +29,7 @@ public class WorkAllocationActor extends UntypedActor {
 	
 	ObservableHash<Integer, Path> hash_queue = null;
 	private static ShortTermMemoryRegistry shortTermMemory = new ShortTermMemoryRegistry();
-	//private final ActorSystem actor_system;
+	private static URL url = null;
 	
 	/**
 	 * Finds smallest key in hash
@@ -59,9 +59,9 @@ public class WorkAllocationActor extends UntypedActor {
 	 * @param browser_actor
 	 */
 	public void registerCrawlResult(Path path, 
-										   Page last_page, 
-										   Page current_page, 
-										   BrowserActor browser_actor){		
+								    Page last_page, 
+								    Page current_page, 
+								    BrowserActor browser_actor){		
 		//resourceManager.punchOut(browser_actor);
 		boolean isValuable = false;
 		//If cycle exists we don't care, dishing it out for work was a mistake
@@ -163,34 +163,14 @@ public class WorkAllocationActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Path){
 			Path path = (Path)message;
-			if(path.getPath().isEmpty()){
-				System.err.println("path is empty");
-
-				final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
-		            // Tell the 'workAllocationActor' to run message
-	            		browser_actor.tell(path, ActorRef.noSender());
-			}
-			else{
-				System.err.println("path is useful? :: "+path.isUseful());
-
-				if(path.isUseful() != null){
-					//send message to memory actor to record path and result
-					ArrayList<Path> path_list = Path.expandPath((Path)message);
-		
-			            for(Path expanded_path : path_list){
-			            		//final ActorRef browser_actor = actor_system.actorOf(Props.create(BrowserActor.class), "browserActor");
-				            // Tell the 'workAllocationActor' to run message
-			            		//browser_actor.tell(null/*new BrowserActor(actor_system, expanded_path)*/, ActorRef.noSender());
-		            		}
-				}
-				else{
-					
-				}
-			}
+			
+			final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
+			browser_actor.tell(path, getSelf() );
 		}
 		else if(message instanceof URL){
+			url = (URL)message;
 			final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
-			browser_actor.tell(new Browser(((URL)message).toString()), ActorRef.noSender());
+			browser_actor.tell((URL)message, ActorRef.noSender());
 		}
 		else unhandled(message);	
 	}

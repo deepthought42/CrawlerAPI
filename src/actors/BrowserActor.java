@@ -2,38 +2,24 @@ package actors;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.text.DateFormat;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 
 import memory.DataDecomposer;
 import memory.ObjectDefinition;
 import memory.OrientDbPersistor;
 import memory.Vocabulary;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.UnhandledAlertException;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.UnreachableBrowserException;
-
-import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
-import browsing.ActionFactory;
 import browsing.Browser;
 import browsing.Page;
-import browsing.PageAlert;
 import browsing.PageElement;
 import browsing.PathObject;
-import browsing.actions.Action;
 import structs.Path;
 
 /**
@@ -46,93 +32,13 @@ public class BrowserActor extends UntypedActor {
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
-	private Path path = null;
 	private Browser browser = null;
-	//public final ActorSystem actor_system;
 	private OrientDbPersistor<ObjectDefinition> persistor = new OrientDbPersistor<ObjectDefinition>();
 	//private ArrayList<Vocabulary> vocabularies = null;
 	
 	//temporary list for vocab labels into it can be determined how best to handle them
 		private String[] vocabLabels = {"html"};
 	//SHOULD BE CHANGED!!!
-	
-	/**
-	 * 
-	 * @param url
-	 * @throws IOException 
-	 */
-	/*public BrowserActor(ActorSystem sys, String url) throws IOException {
-		this.actor_system = sys;
-		browser = new Browser(url);
-		this.path = new Path();
-	}
-	*/
-
-	/**
-	 * Creates instance of BrowserActor with given url for entry into website
-	 * 
-	 * @param url	url of page to be accessed
-	 * @param queue observable path queue
-	 * @throws IOException 
-	 * @pre queue != null
-	 * @pre !queue.isEmpty()
-	 */
-	/*public BrowserActor(ActorSystem sys, String url, 
-						Path path) throws IOException {
-		
-		this.uuid = UUID.randomUUID();
-		this.path = Path.clone(path);
-		this.actor_system = sys;
-		this.browser = new Browser(url);
-		//this.vocabularies = this.loadVocabularies(vocabLabels);
-	}
-	
-	public BrowserActor(ActorSystem sys, Path path){
-		this.actor_system = sys;
-		this.path = Path.clone(path);
-	}
-	*/
-
-	/**
-	 * Crawls the path for the current BrowserActor.
-	 * 
-	 * @return
-	 * @throws java.util.NoSuchElementException
-	 * @throws UnhandledAlertException
-	 * @throws IOException 
-	 */
-	private void crawlPath() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
-		PageElement last_element = null;
-		//skip first node since we should have already loaded it during initialization
-	
-		for(PathObject<?> browser_obj: this.path.getPath()){
-					
-			if(browser_obj.getData() instanceof Page){
-				//pageNode = (Page)browser_obj.getData();
-				//if current page does not match current node data 
-			}
-			else if(browser_obj.getData() instanceof PageElement){
-				last_element = (PageElement) browser_obj.getData();
-			}
-			//String is action in this context
-			else if(browser_obj.getData() instanceof Action){
-				boolean actionPerformedSuccessfully;
-				Action action = (Action)browser_obj.getData();
-				browser.updatePage( DateFormat.getDateInstance());
-				int attempts = 0;
-				do{
-					actionPerformedSuccessfully = performAction(last_element, action.getName() );
-					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 20);
-			}
-			else if(browser_obj.getData() instanceof PageAlert){
-				System.err.println(getSelf() + " -> Handling Alert");
-
-				PageAlert alert = (PageAlert)browser_obj.getData();
-				alert.performChoice(browser.getDriver());
-			}
-		}
-	}
 	
 	/**
 	 * 
@@ -304,49 +210,6 @@ public class BrowserActor extends UntypedActor {
 	}
 	
 	/**
-	 * Executes the given {@link ElementAction element action} pair such that
-	 * the action is executed against the element 
-	 * 
-	 * @param elemAction ElementAction pair
-	 * @return whether action was able to be performed on element or not
-	 */
-	private boolean performAction(PageElement elem, String action) throws UnreachableBrowserException {
-		ActionFactory actionFactory = new ActionFactory(this.browser.getDriver());
-		boolean wasPerformedSuccessfully = true;
-		
-		try{
-			WebElement element = browser.getDriver().findElement(By.xpath(elem.getXpath()));
-			System.err.print(getSelf().hashCode() + "PERFORMING ACTION .. ");
-			actionFactory.execAction(element, action);
-			
-			System.err.println(getSelf().hashCode() + " -> Performed action "+ action
-
-					+ " On element with xpath :: "+elem.getXpath());
-		}
-		catch(StaleElementReferenceException e){
-			
-			 	System.err.println(getSelf().hashCode()
-					+ " :: STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
-					+ action + ". ");
-			//e.printStackTrace();
-			wasPerformedSuccessfully = false;			
-		}
-		catch(ElementNotVisibleException e){
-			System.err.println(getSelf().hashCode() + " :: ELEMENT IS NOT CURRENTLY VISIBLE.");
-		}
-		catch(NoSuchElementException e){
-			System.err.println(getSelf().hashCode() + " -> NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
-			wasPerformedSuccessfully = false;
-		}
-		catch(WebDriverException e){
-			System.err.println(getSelf().hashCode() + " -> Element can not have action performed on it at point performed");
-			wasPerformedSuccessfully = false;
-		}
-		
-		return wasPerformedSuccessfully;
-	}
-	
-	/**
 	 * Retrieves all {@linkplain Vocabulary vocabularies} that are required by the agent 
 	 * 
 	 * @param vocabLabels
@@ -360,54 +223,41 @@ public class BrowserActor extends UntypedActor {
 		return vocabularies;		
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
 		 if (message instanceof Path){
-             
+			 
 			 Path path = Path.clone((Path)message);
-             try {
-     			if(!path.getPath().isEmpty()){
-     				this.crawlPath();
-     			}
-     		} catch (UnhandledAlertException e) {
-     			e.printStackTrace();
-     		} catch (java.util.NoSuchElementException e) {
-     			e.printStackTrace();
-     		} catch (IOException e) {
-     			e.printStackTrace();
-     		}
+			 if(!path.getPath().isEmpty()){
+				 Crawler.crawlPath(path, browser);
+			 }
+			 else{
+				 
+			 }
+			 
+			 //determine if path was successful
+			 path.setIsUseful(true);
+             
+             Page current_page = null;
      		
-             
-            //if a change occurred and current page isn't the same as last page then clone path and set clone to useful
-             
-             path.setIsUseful(true);
-             
-     		Page current_page = null;
-     		
-     		try {
-     			current_page = browser.getPage();
-     			//WorkAllocationActor.registerCrawlResult(this.path, this.path.getLastPageVertex(), current_page, this);
-     			//getSender().tell(path, getSelf());
-     		} catch (MalformedURLException e) {
-     			e.printStackTrace();
-     		} catch (IOException e) {
-     			e.printStackTrace();
-     		}		
-             //crawl path
-             
-		 }
-		 else if(message instanceof Browser){
-				browser = (Browser)message;
-				Path path = new Path();
-				PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
- 				path.add(page_obj);
- 				this.crawlPath();
+        	 current_page = browser.getPage();
 
-			 getSender().tell(Boolean.FALSE, getSelf());
-		 }
-		 else unhandled(message);
-		 
-		this.browser.getDriver().quit();
+        	 //tell memory worker of path
+        	 
+     		 this.browser.getDriver().quit();
+             
+		  }
+		  else if(message instanceof URL){
+			  this.browser = new Browser(((URL)message).toString());
+			  Path path = new Path();
+			  PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
+			  path.add(page_obj);
+			  Crawler.crawlPath(path, browser);
+		  }
 
+		  else unhandled(message);
 	}
 }

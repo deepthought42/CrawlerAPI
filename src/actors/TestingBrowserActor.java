@@ -30,7 +30,7 @@ public class TestingBrowserActor extends Thread implements Actor, Callable<Boole
 		ExecutorService es = Executors.newSingleThreadExecutor();
 		
 		//Start browser actor
-		es.submit(new BrowserActor(path));
+		es.submit(new BrowserActor());
 
 		return null;
 	}

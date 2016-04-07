@@ -31,34 +31,14 @@ public class ShortTermMemoryRegistry extends UntypedActor{
 	 * @param path
 	 * @param isValuable
 	 */
+	@Deprecated
 	public static synchronized void registerPath(Path path){
 		
-		PathRepresentation path_rep = new PathRepresentation();
-		for(PathObject<?> obj : path.getPath()){
-			path_rep.addToPath(obj.hashCode());
-			addNode(obj);
-		}
-		
-		if(path.isUseful() == null){
-			registerUnknownOutcomePath(path_rep);
-			//System.err.println("Registering path with UNKNOWN value");
-			return;
-		}
-		else if(path.isUseful().equals(Boolean.TRUE)){
-			registerProductivePath(path_rep);
-			System.err.println("Registering path with PRODUCTIVE value");
-		}
-		else if(path.isUseful().equals(Boolean.FALSE)){
-			registerUnproductivePath(path_rep);
-			System.err.println("Registering path with UNPRODUCTIVE value");
-		}
-		
-		past_experience.appendToPaths(path);
-
 		
 		/**
 		 * THIS NEXT BLOCK IS A WORK IN PROGRESS THAT WILL NOT BE ADDED UNTIL AFTER THE PROTOTYPE IS COMPLETE
 		 * 
+		 * THIS NEEDS TO BE MOVED TO A DIFFERENT ACTOR FOR MACHINE LEARNING. THIS METHOD IS NOT LONGER USED
 		 * 
 		 * !!!!!!!!!!!!!!!     DO NOT DELETE           !!!
 		 * 
@@ -279,9 +259,9 @@ public class ShortTermMemoryRegistry extends UntypedActor{
 	}
 
 	@Override
-	public void onReceive(Object obj) throws Exception {
-		if(obj instanceof Path){
-			Path path = (Path)obj;
+	public void onReceive(Object message) throws Exception {
+		if(message instanceof Path){
+			Path path = (Path)message;
 			PathRepresentation path_rep = new PathRepresentation();
 			for(PathObject<?> pathObj : path.getPath()){
 				path_rep.addToPath(pathObj.hashCode());
@@ -304,6 +284,7 @@ public class ShortTermMemoryRegistry extends UntypedActor{
 			
 			past_experience.appendToPaths(path);
 		}
+		else unhandled(message);
 		
 	}
 }

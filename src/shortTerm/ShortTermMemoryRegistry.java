@@ -30,7 +30,7 @@ public class ShortTermMemoryRegistry {
 	 * @param path
 	 * @param isValuable
 	 */
-	public static synchronized void registerPath(Path path, Boolean isValuable){
+	public static synchronized void registerPath(Path path){
 		
 		PathRepresentation path_rep = new PathRepresentation();
 		for(PathObject<?> obj : path.getPath()){
@@ -38,21 +38,21 @@ public class ShortTermMemoryRegistry {
 			addNode(obj);
 		}
 		
-		if(isValuable == null){
+		if(path.isUseful() == null){
 			registerUnknownOutcomePath(path_rep);
 			//System.err.println("Registering path with UNKNOWN value");
 			return;
 		}
-		else if(isValuable.equals(Boolean.TRUE)){
+		else if(path.isUseful().equals(Boolean.TRUE)){
 			registerProductivePath(path_rep);
 			System.err.println("Registering path with PRODUCTIVE value");
 		}
-		else if(isValuable.equals(Boolean.FALSE)){
+		else if(path.isUseful().equals(Boolean.FALSE)){
 			registerUnproductivePath(path_rep);
 			System.err.println("Registering path with UNPRODUCTIVE value");
 		}
 		
-		past_experience.appendToPaths(path, isValuable);
+		past_experience.appendToPaths(path);
 
 		
 		/**
@@ -238,7 +238,7 @@ public class ShortTermMemoryRegistry {
 	 * @return
 	 */
 	public HashMap<String, PathRepresentation> getUnknownPaths() {
-		return this.unknown_outcome_path_hash_queue;
+		return unknown_outcome_path_hash_queue;
 	}
 
 	/**
@@ -246,7 +246,7 @@ public class ShortTermMemoryRegistry {
 	 * @return
 	 */
 	public HashMap<String, PathRepresentation> getProductivePaths(){
-		return this.productive_path_hash_queue;
+		return productive_path_hash_queue;
 	}
 	
 	/**
@@ -254,7 +254,7 @@ public class ShortTermMemoryRegistry {
 	 * @return
 	 */
 	public HashMap<String, PathRepresentation> getUnproductivePaths(){
-		return this.unproductive_path_hash_queue;
+		return unproductive_path_hash_queue;
 	}
 	
 	public Vocabulary getVocabulary(){

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.http.HttpStatus;
 
-import actors.ResourceManagementActor;
 import actors.TestCoordinatorActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -27,7 +26,6 @@ public class TestingCoordinatorController {
 
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody TestCoordinatorActor startTestingCoordinator(@RequestParam(value="url", required=true) String url) {
-		ResourceManagementActor resourceManager = new ResourceManagementActor(20);
 //		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 
 		//String url = "http://127.0.0.1:3000";

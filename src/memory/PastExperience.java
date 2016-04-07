@@ -3,8 +3,6 @@ package memory;
 import java.util.ArrayList;
 import java.util.Date;
 
-import java.util.UUID;
-
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 
@@ -26,21 +24,16 @@ public class PastExperience {
 		paths = new ArrayList<Path>();
 	}
 	
-	public void appendToPaths(Path path){
-		this.paths.add(path);
-	}
-	
 	/**
 	 * Appends a path to the end of a path record
 	 * 
 	 * @param path	{@link Path} to append to list
 	 * @param isValuable indicator of if path is seen as valuable, invaluable, or unknown value
 	 */
-	public void appendToPaths(Path path, Boolean isValuable){
+	public void appendToPaths(Path path){
 		this.paths.add(path);
 		
 		OrientDbPersistor<PathNode> orient_persistor = new OrientDbPersistor<PathNode>();
-		UUID path_uuid = UUID.randomUUID();
 		Vertex last_vertex = null;
 		boolean last_id_set=false;
 		int last_path_node_hash=0;
@@ -74,11 +67,11 @@ public class PastExperience {
 					edge.setProperty("date", new Date());
 				}
 				
-				if(isValuable == null){
+				if(path.isUseful() == null){
 					edge.setProperty("value_status", "UNKNOWN");
 				}
 				else{
-					edge.setProperty("value_status", isValuable);
+					edge.setProperty("value_status", path.isUseful());
 				}
 			}
 			last_vertex = vertex;

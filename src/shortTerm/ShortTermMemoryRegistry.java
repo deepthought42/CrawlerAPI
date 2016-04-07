@@ -2,6 +2,7 @@ package shortTerm;
 
 import java.util.HashMap;
 
+import akka.actor.UntypedActor;
 import memory.PastExperience;
 import memory.Vocabulary;
 import browsing.PathObject;
@@ -14,7 +15,7 @@ import structs.PathRepresentation;
  * @author Brandon Kindred
  *
  */
-public class ShortTermMemoryRegistry {
+public class ShortTermMemoryRegistry extends UntypedActor{
 	public static HashMap<String, PathRepresentation> productive_path_hash_queue = new HashMap<String, PathRepresentation>();
 	public static HashMap<String, PathRepresentation> unproductive_path_hash_queue = new HashMap<String, PathRepresentation>();
 	public static HashMap<String, PathRepresentation> unknown_outcome_path_hash_queue = new HashMap<String, PathRepresentation>();
@@ -275,5 +276,34 @@ public class ShortTermMemoryRegistry {
 	 */
 	public static HashMap<Integer, PathObject<?>> getPathNodes(){
 		return path_nodes;
+	}
+
+	@Override
+	public void onReceive(Object obj) throws Exception {
+		if(obj instanceof Path){
+			Path path = (Path)obj;
+			PathRepresentation path_rep = new PathRepresentation();
+			for(PathObject<?> pathObj : path.getPath()){
+				path_rep.addToPath(pathObj.hashCode());
+				addNode(pathObj);
+			}
+			
+			if(path.isUseful() == null){
+				registerUnknownOutcomePath(path_rep);
+				//System.err.println("Registering path with UNKNOWN value");
+				return;
+			}
+			else if(path.isUseful().equals(Boolean.TRUE)){
+				registerProductivePath(path_rep);
+				System.err.println("Registering path with PRODUCTIVE value");
+			}
+			else if(path.isUseful().equals(Boolean.FALSE)){
+				registerUnproductivePath(path_rep);
+				System.err.println("Registering path with UNPRODUCTIVE value");
+			}
+			
+			past_experience.appendToPaths(path);
+		}
+		
 	}
 }

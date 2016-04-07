@@ -38,10 +38,10 @@ public class Crawler {
 	 */
 	public static void crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		PageElement last_element = null;
+		
 		//skip first node since we should have already loaded it during initialization
 	
 		for(PathObject<?> browser_obj: path.getPath()){
-					
 			if(browser_obj.getData() instanceof Page){
 				//pageNode = (Page)browser_obj.getData();
 				//if current page does not match current node data 

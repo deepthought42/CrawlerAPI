@@ -169,6 +169,7 @@ public class WorkAllocationActor extends UntypedActor {
 		}
 		else if(message instanceof URL){
 			url = (URL)message;
+			System.err.println("message is URL for workAllocator");
 			final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
 			browser_actor.tell((URL)message, ActorRef.noSender());
 		}

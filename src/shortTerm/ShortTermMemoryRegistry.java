@@ -15,24 +15,14 @@ import structs.PathRepresentation;
  *
  */
 public class ShortTermMemoryRegistry {
-	public final HashMap<String, PathRepresentation> productive_path_hash_queue;
-	public final HashMap<String, PathRepresentation> unproductive_path_hash_queue;
-	public final HashMap<String, PathRepresentation> unknown_outcome_path_hash_queue;
+	public static HashMap<String, PathRepresentation> productive_path_hash_queue = new HashMap<String, PathRepresentation>();
+	public static HashMap<String, PathRepresentation> unproductive_path_hash_queue = new HashMap<String, PathRepresentation>();
+	public static HashMap<String, PathRepresentation> unknown_outcome_path_hash_queue = new HashMap<String, PathRepresentation>();
 	
 	private Vocabulary vocab = null;
-	private PastExperience past_experience = null;
+	private static PastExperience past_experience = null;
 	
-	private HashMap<Integer, PathObject<?>> path_nodes = null;
-	
-	public ShortTermMemoryRegistry() {
-		this.productive_path_hash_queue = new HashMap<String, PathRepresentation>();
-		this.unproductive_path_hash_queue = new HashMap<String, PathRepresentation>();
-		this.unknown_outcome_path_hash_queue = new HashMap<String, PathRepresentation>();
-		this.path_nodes = new HashMap<Integer,PathObject<?>>();
-		this.past_experience = new PastExperience();
-		
-		this.vocab = new Vocabulary("html");
-	}
+	private static HashMap<Integer, PathObject<?>> path_nodes = null;
 	
 	/**
 	 * Saves a path to the appropriate hash based on the 
@@ -40,12 +30,12 @@ public class ShortTermMemoryRegistry {
 	 * @param path
 	 * @param isValuable
 	 */
-	public synchronized void registerPath(Path path, Boolean isValuable){
+	public static synchronized void registerPath(Path path, Boolean isValuable){
 		
 		PathRepresentation path_rep = new PathRepresentation();
 		for(PathObject<?> obj : path.getPath()){
 			path_rep.addToPath(obj.hashCode());
-			this.addNode(obj);
+			addNode(obj);
 		}
 		
 		if(isValuable == null){
@@ -209,7 +199,7 @@ public class ShortTermMemoryRegistry {
 	 * 
 	 * @param path
 	 */
-	private synchronized void registerProductivePath(PathRepresentation path_rep){
+	private static synchronized void registerProductivePath(PathRepresentation path_rep){
 		boolean exists = productive_path_hash_queue.containsKey(path_rep.toString());
 		if(!exists){
 			productive_path_hash_queue.put(path_rep.toString(), path_rep);
@@ -222,7 +212,7 @@ public class ShortTermMemoryRegistry {
 	 * 
 	 * @param path
 	 */
-	private synchronized void registerUnknownOutcomePath(PathRepresentation path_rep){
+	private static synchronized void registerUnknownOutcomePath(PathRepresentation path_rep){
 		boolean exists = unknown_outcome_path_hash_queue.containsKey(path_rep.toString());
 		if(!exists){
 			unknown_outcome_path_hash_queue.put(path_rep.toString(), path_rep);
@@ -235,7 +225,7 @@ public class ShortTermMemoryRegistry {
 	 * 
 	 * @param path
 	 */
-	private synchronized void registerUnproductivePath(PathRepresentation path_rep){
+	private static synchronized void registerUnproductivePath(PathRepresentation path_rep){
 		boolean exists = unproductive_path_hash_queue.containsKey(path_rep.toString());
 		if(!exists){
 			unproductive_path_hash_queue.put(path_rep.toString(), path_rep);
@@ -275,15 +265,15 @@ public class ShortTermMemoryRegistry {
 	 * 	
 	 * @return
 	 */
-	public void addNode(PathObject<?> obj){
-		this.path_nodes.put(obj.hashCode(), obj);
+	public static void addNode(PathObject<?> obj){
+		path_nodes.put(obj.hashCode(), obj);
 	}
 	
 	/**
 	 * 	
 	 * @return
 	 */
-	public HashMap<Integer, PathObject<?>> getPathNodes(){
-		return this.path_nodes;
+	public static HashMap<Integer, PathObject<?>> getPathNodes(){
+		return path_nodes;
 	}
 }

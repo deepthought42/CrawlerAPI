@@ -27,12 +27,12 @@ import structs.Path;
  * @author brandon kindred
  *
  */
-public class TestingCoordinatorActor extends UntypedActor {
+public class PathRetrievalActor extends UntypedActor {
 	public final UUID uuid;
 	public final ActorSystem actor_system;
 	public final String url;
 	
-	public TestingCoordinatorActor(ActorSystem sys, String url){
+	public PathRetrievalActor(ActorSystem sys, String url){
 		this.actor_system = sys;
 		this.uuid = UUID.randomUUID();
 		this.url = url;

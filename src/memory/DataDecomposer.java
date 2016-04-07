@@ -4,13 +4,15 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import akka.actor.UntypedActor;
+
 /**
  * Defines static methods to handle the decomposition of it's data into their constituent pieces.
  * 
  * @author Brandon Kindred
  *
  */
-public class DataDecomposer {
+public class DataDecomposer extends UntypedActor {
 	
 	/**
 	 * Decomposes object into data fragments
@@ -141,5 +143,10 @@ public class DataDecomposer {
         	}
         }
 		return objDefList;
+	}
+
+	@Override
+	public void onReceive(Object arg0) throws Exception {
+				
 	}
 }

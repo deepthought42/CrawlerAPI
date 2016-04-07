@@ -8,10 +8,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.http.HttpStatus;
 
-import actors.BrowserActor;
 import actors.ResourceManagementActor;
-import actors.TestingCoordinatorActor;
-import actors.WorkAllocationActor;
+import actors.TestCoordinatorActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -28,7 +26,7 @@ import structs.Path;
 public class TestingCoordinatorController {
 
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody TestingCoordinatorActor startTestingCoordinator(@RequestParam(value="url", required=true) String url) {
+	public @ResponseBody TestCoordinatorActor startTestingCoordinator(@RequestParam(value="url", required=true) String url) {
 		ResourceManagementActor resourceManager = new ResourceManagementActor(20);
 //		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 
@@ -39,7 +37,7 @@ public class TestingCoordinatorController {
 		//System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
 		ActorSystem actor_system = ActorSystem.create("TesterSystem");
 				
-		ActorRef testingCoordinatorActor = actor_system.actorOf(Props.create(TestingCoordinatorActor.class), "browserActor");
+		ActorRef testingCoordinatorActor = actor_system.actorOf(Props.create(TestCoordinatorActor.class), "browserActor");
 		testingCoordinatorActor.tell(new Path(), ActorRef.noSender());
 		
 		return null;

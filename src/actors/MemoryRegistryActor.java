@@ -1,10 +1,11 @@
-package shortTerm;
+package actors;
 
 import java.util.HashMap;
 
 import akka.actor.UntypedActor;
 import memory.PastExperience;
 import memory.Vocabulary;
+import browsing.Page;
 import browsing.PathObject;
 import structs.Path;
 import structs.PathRepresentation;
@@ -15,7 +16,7 @@ import structs.PathRepresentation;
  * @author Brandon Kindred
  *
  */
-public class ShortTermMemoryRegistry extends UntypedActor{
+public class MemoryRegistryActor extends UntypedActor{
 	public static HashMap<String, PathRepresentation> productive_path_hash_queue = new HashMap<String, PathRepresentation>();
 	public static HashMap<String, PathRepresentation> unproductive_path_hash_queue = new HashMap<String, PathRepresentation>();
 	public static HashMap<String, PathRepresentation> unknown_outcome_path_hash_queue = new HashMap<String, PathRepresentation>();
@@ -176,81 +177,6 @@ public class ShortTermMemoryRegistry extends UntypedActor{
 	}
 	
 	/**
-	 * Used to inform the work allocator that a path was productive and has a positive value
-	 * 
-	 * @param path
-	 */
-	private static synchronized void registerProductivePath(PathRepresentation path_rep){
-		boolean exists = productive_path_hash_queue.containsKey(path_rep.toString());
-		if(!exists){
-			productive_path_hash_queue.put(path_rep.toString(), path_rep);
-			System.err.println("PRODUCTIVE PATH REGISTERED :: "+path_rep.toString());
-		}
-	}
-	
-	/**
-	 * Used to inform the work allocator that a path was productive and has a positive value
-	 * 
-	 * @param path
-	 */
-	private static synchronized void registerUnknownOutcomePath(PathRepresentation path_rep){
-		boolean exists = unknown_outcome_path_hash_queue.containsKey(path_rep.toString());
-		if(!exists){
-			unknown_outcome_path_hash_queue.put(path_rep.toString(), path_rep);
-			//System.err.println("UNKNOWN PATH REGISTERED :: "+path_rep.toString());
-		}
-	}
-	
-	/**
-	 * Used to inform the work allocator that a path was unproductive and has a negative value
-	 * 
-	 * @param path
-	 */
-	private static synchronized void registerUnproductivePath(PathRepresentation path_rep){
-		boolean exists = unproductive_path_hash_queue.containsKey(path_rep.toString());
-		if(!exists){
-			unproductive_path_hash_queue.put(path_rep.toString(), path_rep);
-			System.err.println("UNPRODUCTIVE PATH REGISTERED :: "+path_rep.toString());
-		}
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public HashMap<String, PathRepresentation> getUnknownPaths() {
-		return unknown_outcome_path_hash_queue;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public HashMap<String, PathRepresentation> getProductivePaths(){
-		return productive_path_hash_queue;
-	}
-	
-	/**
-	 * 	
-	 * @return
-	 */
-	public HashMap<String, PathRepresentation> getUnproductivePaths(){
-		return unproductive_path_hash_queue;
-	}
-	
-	public Vocabulary getVocabulary(){
-		return this.vocab;
-	}
-	
-	/**
-	 * 	
-	 * @return
-	 */
-	public static void addNode(PathObject<?> obj){
-		path_nodes.put(obj.hashCode(), obj);
-	}
-	
-	/**
 	 * 	
 	 * @return
 	 */
@@ -262,27 +188,10 @@ public class ShortTermMemoryRegistry extends UntypedActor{
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Path){
 			Path path = (Path)message;
-			PathRepresentation path_rep = new PathRepresentation();
-			for(PathObject<?> pathObj : path.getPath()){
-				path_rep.addToPath(pathObj.hashCode());
-				addNode(pathObj);
-			}
+			//save to memory
+		}
+		if(message instanceof Page){
 			
-			if(path.isUseful() == null){
-				registerUnknownOutcomePath(path_rep);
-				//System.err.println("Registering path with UNKNOWN value");
-				return;
-			}
-			else if(path.isUseful().equals(Boolean.TRUE)){
-				registerProductivePath(path_rep);
-				System.err.println("Registering path with PRODUCTIVE value");
-			}
-			else if(path.isUseful().equals(Boolean.FALSE)){
-				registerUnproductivePath(path_rep);
-				System.err.println("Registering path with UNPRODUCTIVE value");
-			}
-			
-			past_experience.appendToPaths(path);
 		}
 		else unhandled(message);
 		

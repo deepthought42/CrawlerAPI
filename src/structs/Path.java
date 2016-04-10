@@ -176,7 +176,7 @@ public class Path {
 	 * @throws IllegalAccessException
 	 */
 	public static ArrayList<Path> expandPath(Path path)  {
-		System.out.println( " EXPANDING PATH...");
+		System.err.println( " EXPANDING PATH...");
 		ArrayList<Path> pathList = new ArrayList<Path>();
 		Path new_path = Path.clone(path);
 		

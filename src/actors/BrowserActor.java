@@ -8,17 +8,21 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import org.openqa.selenium.remote.server.log.ShortTermMemoryHandler;
+
 import memory.DataDecomposer;
 import memory.ObjectDefinition;
 import memory.OrientDbPersistor;
 import memory.Vocabulary;
-
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 import browsing.Browser;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.PathObject;
 import structs.Path;
+import structs.PathRepresentation;
 
 /**
  * This threadable class is implemented to handle the interaction with a browser 
@@ -226,36 +230,61 @@ public class BrowserActor extends UntypedActor {
 	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
-		 if (message instanceof Path){
+		if (message instanceof Path){
+			System.err.println("PATH PASSED TO BROWSER ACTOR");
+			Path path = Path.clone((Path)message);
+			this.browser = new Browser(((Page)(path.getPath().get(0).pathObject)).pageUrl.toString());
+			if(!path.getPath().isEmpty()){
+				Crawler.crawlPath(path, browser);
+			}
 			 
-			 Path path = Path.clone((Path)message);
-			 if(!path.getPath().isEmpty()){
-				 Crawler.crawlPath(path, browser);
-			 }
-			 else{
-				 
-			 }
-			 
-			 //determine if path was successful
-			 path.setIsUseful(true);
-             
-             Page current_page = null;
-     		
-        	 current_page = browser.getPage();
+			PathRepresentation path_rep = new PathRepresentation();
+			//get current page of browser
+			Page current_page = browser.getPage();
+			Page last_page = path.getLastPageVertex();
+			if(!current_page.equals(last_page) || path.getPath().size() <= 1){
+		  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE when passed path");
+		  		System.err.println("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
+		  		System.err.println("PATH SIZE :: " + path.getPath().size());
 
-        	 //tell memory worker of path
-        	 
-     		 this.browser.getDriver().quit();
-             
-		  }
-		  else if(message instanceof URL){
-			  this.browser = new Browser(((URL)message).toString());
-			  Path path = new Path();
-			  PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
-			  path.add(page_obj);
-			  Crawler.crawlPath(path, browser);
-		  }
+				path.setIsUseful(true);
+				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+				path_expansion_actor.tell(path, getSelf() );
+			}
+			else{
+				path.setIsUseful(false);
+				final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+				memory_actor.tell(path, getSelf() );
+			}
 
-		  else unhandled(message);
+        	//tell memory worker of path
+        	this.browser.getDriver().quit();
+             
+		}
+		else if(message instanceof URL){
+			System.out.println("URL PASSED TO BROWSER ACTOR : " +((URL)message).toString());
+		  	this.browser = new Browser(((URL)message).toString());
+		  	Path path = new Path();
+		  	PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
+		  	path.add(page_obj);
+		  	Crawler.crawlPath(path, browser);
+		  	
+		  	Page current_page = browser.getPage();
+			Page last_page = path.getLastPageVertex();
+			
+		  	if(!current_page.equals(last_page) || path.getPath().size() <= 1){
+		  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE");
+				path.setIsUseful(true);
+				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+				path_expansion_actor.tell(path, getSelf() );
+			}
+			else{
+				path.setIsUseful(false);
+				final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+				memory_actor.tell(path, getSelf() );
+			}
+		  	this.browser.getDriver().quit();
+	   }
+		else unhandled(message);
 	}
 }

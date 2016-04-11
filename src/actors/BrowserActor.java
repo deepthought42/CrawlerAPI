@@ -22,7 +22,6 @@ import browsing.Page;
 import browsing.PageElement;
 import browsing.PathObject;
 import structs.Path;
-import structs.PathRepresentation;
 
 /**
  * This threadable class is implemented to handle the interaction with a browser 
@@ -238,7 +237,6 @@ public class BrowserActor extends UntypedActor {
 				Crawler.crawlPath(path, browser);
 			}
 			 
-			PathRepresentation path_rep = new PathRepresentation();
 			//get current page of browser
 			Page current_page = browser.getPage();
 			Page last_page = path.getLastPageVertex();
@@ -253,9 +251,10 @@ public class BrowserActor extends UntypedActor {
 			}
 			else{
 				path.setIsUseful(false);
-				final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
-				memory_actor.tell(path, getSelf() );
 			}
+			
+			final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+			memory_actor.tell(path, getSelf() );
 
         	//tell memory worker of path
         	this.browser.getDriver().quit();
@@ -280,9 +279,9 @@ public class BrowserActor extends UntypedActor {
 			}
 			else{
 				path.setIsUseful(false);
-				final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
-				memory_actor.tell(path, getSelf() );
 			}
+		  	final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+			memory_actor.tell(path, getSelf() );
 		  	this.browser.getDriver().quit();
 	   }
 		else unhandled(message);

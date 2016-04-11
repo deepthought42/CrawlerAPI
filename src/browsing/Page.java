@@ -5,6 +5,7 @@ import java.net.URL;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class Page implements State, IObjectValuationAccessor {
 	private String screenshot = null; 
 	private WebDriver driver = null;
 	private String src = "";
-	//public String date = null;
+	public String date = null;
 	public URL pageUrl = null;
 	public ArrayList<PageElement> elements = new ArrayList<PageElement>();
 	
@@ -42,12 +43,17 @@ public class Page implements State, IObjectValuationAccessor {
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
 		this.driver = driver;
 		this.src = driver.getPageSource();
-		//this.date = date.format(new Date());
+		this.date = date.format(new Date());
 		this.pageUrl = new URL(driver.getCurrentUrl());
 		this.screenshot = Browser.getScreenshot(driver);
 		this.elements = getVisibleElements(driver, "//body", new HashMap<String, Integer>());
 	}
 	
+	/**
+	 * 
+	 * 
+	 * @return the page of the source
+	 */
 	public String getSrc() {
 		this.src = src.replaceAll("\\s", "");
 		return src.replace("<canvasid=\"fxdriver-screenshot-canvas\"style=\"display:none;\"width=\"1000\"height=\"720\"></canvas>","");

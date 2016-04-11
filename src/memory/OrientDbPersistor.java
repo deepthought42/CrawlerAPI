@@ -160,9 +160,11 @@ public class OrientDbPersistor<T>{
 	}
 	
 	/**
-	 * Finds {@link ObjectDefinition} and updates its probability if it exists, otherwise creates a new vertex.
+	 * Finds and updates the properties or creates a new vertex using the public properties of the Object passed
+	 * 
 	 * @param persistor
-	 * @return
+	 * 
+	 * @return 
 	 */
 	public synchronized Vertex findAndUpdateOrCreate(T obj, String[] actions){
 		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = null;
@@ -254,6 +256,7 @@ public class OrientDbPersistor<T>{
 		return edgeList;
 	}
 
+	//Retrieves all public properties for an object
 	private String[] getProperties(T obj){
 		String[] properties = new String[obj.getClass().getFields().length];
 		int idx = 0;

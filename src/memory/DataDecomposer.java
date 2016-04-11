@@ -12,7 +12,7 @@ import akka.actor.UntypedActor;
  * @author Brandon Kindred
  *
  */
-public class DataDecomposer extends UntypedActor {
+public class DataDecomposer {
 	
 	/**
 	 * Decomposes object into data fragments
@@ -143,10 +143,5 @@ public class DataDecomposer extends UntypedActor {
         	}
         }
 		return objDefList;
-	}
-
-	@Override
-	public void onReceive(Object arg0) throws Exception {
-				
 	}
 }

@@ -6,13 +6,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import shortTerm.ShortTermMemoryRegistry;
 import structs.Path;
 import structs.PathRepresentation;
 import memory.DataDecomposer;
 import memory.MemoryState;
 import memory.ObjectDefinition;
-import memory.Persistor;
+import memory.OrientDbPersistor;
 import memory.Vocabulary;
 import browsing.Page;
 import browsing.PageElement;
@@ -23,7 +22,7 @@ import com.tinkerpop.blueprints.Edge;
 
 public class Learner {
 	
-	private Persistor persistor = null;
+	private OrientDbPersistor<Page> persistor = null;
 	private Vocabulary vocabulary = null;
 	
 	public Learner(Vocabulary vocab) {
@@ -72,9 +71,7 @@ public class Learner {
 		
 		PathObject<?> prev_obj = null;
 		for(PathObject<?> obj : path.getPath()){
-			DataDecomposer decomposer = new DataDecomposer(obj.getData());
-			
-			List<ObjectDefinition> object_definition_list = decomposer.decompose();
+			List<ObjectDefinition> decomposer = DataDecomposer.decompose(obj.getData());
 
 			for(ObjectDefinition objDef : object_definition_list){
 				//if object definition value doesn't exist in vocabulary 
@@ -83,6 +80,8 @@ public class Learner {
 			}
 			
 			//Save states
+			/** Handled already in memory Registry I think...LEAVE THIS UNTIL VERIFIED ITS NOT NEEDED
+
 			if(prev_obj != null && !(prev_obj.getData() instanceof Action)){
 				Vertex prev_vertex = persistor.find(prev_obj);
 				Vertex current_vertex = persistor.find(obj);
@@ -106,19 +105,7 @@ public class Learner {
 			
 			System.err.println("SAVING NOW...");
 			persistor.save();
-			//initialize one dimensional boolean array that is the size of the vocabulary
-			int idx = 0;
-			for(String vocabu_value : vocabulary.getValueList()){
-				//if object definition value doesn't exist in vocabulary 
-				// then add value to vocabulary
-				if(object_definition_list.contains(vocabu_value)){
-					//set each value in one dimensional array that exists in object definition list.
-				}
-				
-				//
-				idx++;
-			}
-			
+			*/
 			
 			prev_obj = obj;
 		}

@@ -1,8 +1,6 @@
 package actors;
 
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import com.tinkerpop.blueprints.Direction;
@@ -22,10 +20,7 @@ import structs.Path;
  *
  */
 public class MemoryRetrievalActor extends UntypedActor{
-	private Vocabulary vocab = null;
-	
-	private static HashMap<Integer, PathObject<?>> path_nodes = null;
-	
+
 	/**
 	 * Saves a path to the appropriate hash based on the 
 	 * 
@@ -175,26 +170,33 @@ public class MemoryRetrievalActor extends UntypedActor{
 		 */
 		
 	}
-	
-	/**
-	 * 	
-	 * @return
-	 */
-	public static void addNode(PathObject<?> obj){
-		path_nodes.put(obj.hashCode(), obj);
-	}
-	
-	/**
-	 * 	
-	 * @return
-	 */
-	public static HashMap<Integer, PathObject<?>> getPathNodes(){
-		return path_nodes;
-	}
 
 	@Override
 	public void onReceive(Object message) throws Exception {
-		if(message instanceof Path){
+		//Get all edges from page and from next level nodes
+		if(message instanceof Page){
+			Path path = new Path();
+			Page page = (Page)message;
+			
+			OrientDbPersistor<Page> persistor = new OrientDbPersistor<Page>();
+			Iterator<Vertex> page_iter = persistor.findVertices(page).iterator();
+			Vertex page_vert = page_iter.next();
+			path.add(new PathObject<Vertex>(page_vert));
+			Iterator<Vertex> page_element_iter = page_vert.getVertices(Direction.OUT, "Page").iterator();
+			while(page_element_iter.hasNext()){
+				Vertex page_element_vertex = page_element_iter.next();
+				path.add(new PathObject<Vertex>(page_element_vertex));
+				
+				Iterator<Vertex> result_vertices = page_element_vertex.getVertices(Direction.OUT, "PageElement").iterator();
+				
+				while(result_vertices.hasNext()){
+					path.add(new PathObject<Vertex>(result_vertices.next()));
+				}
+			}
+			
+			//send path to actor that handles running tests
+		}
+		else if(message instanceof Path){
 			Path path = (Path)message;
 			//Retrieve from memory
 			
@@ -218,7 +220,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 				}
 			}
 			
-			//load all edges from pageElements
+			//send path to actor that handles running tests
 		}
 		else if(message instanceof Vocabulary){
 			//retrieve all vocabulary values from memory

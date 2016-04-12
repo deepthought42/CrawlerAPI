@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import memory.ObjectDefinition;
-
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.tinkerpop.blueprints.Direction;
@@ -107,22 +105,14 @@ public class OrientDbPersistor<T>{
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
-	public synchronized Iterable<Vertex> findVertices(T obj){
+	public synchronized Iterable<Vertex> findVertices(T obj) throws IllegalArgumentException, IllegalAccessException{
 		Field[] fieldArray = obj.getClass().getFields();
 		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		
 		Object fieldValue = 0;
 		for(Field field : fieldArray){
 			if( field.getName().equals("hash_code") ){
-				try {
-					fieldValue = field.get(obj);
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				fieldValue = field.get(obj);
 			}
 		}
 		Iterable<Vertex> objVertices = this.graph.getVertices("hash_code", fieldValue.toString());
@@ -158,20 +148,16 @@ public class OrientDbPersistor<T>{
 	/**
 	 * Finds and updates the properties or creates a new vertex using the public properties of the Object passed
 	 * 
-	 * @param persistor
+	 * @param obj the object to be found or updated
+	 * @param actions array of actions associated with this object
 	 * 
 	 * @return 
 	 */
-	public synchronized Vertex findAndUpdateOrCreate(T obj, String[] actions){
+	public synchronized Vertex findAndUpdateOrCreate(T obj, String[] actions) throws NullPointerException, IllegalAccessException, IllegalArgumentException{
 		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = null;
-		try{
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(obj);
-			memory_iterator = memory_vertex_iter.iterator();
-		}
-		catch(NullPointerException e){
-			e.printStackTrace();
-		}
-		
+		Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(obj);
+		memory_iterator = memory_vertex_iter.iterator();
+
 		com.tinkerpop.blueprints.Vertex v = null;
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
@@ -217,7 +203,7 @@ public class OrientDbPersistor<T>{
 	 * 
 	 * @return A list of all vertices found. 
 	 */
-	public synchronized List<Vertex> findAll(List<T> objects){
+	public synchronized List<Vertex> findAll(List<T> objects) throws NullPointerException, IllegalAccessException, IllegalArgumentException{
 		List<Vertex> vertices = new ArrayList<Vertex>();
 		for(T objDef : objects){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value

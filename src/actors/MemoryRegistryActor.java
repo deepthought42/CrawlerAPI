@@ -2,7 +2,6 @@ package actors;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 import com.tinkerpop.blueprints.Edge;
@@ -12,7 +11,6 @@ import akka.actor.UntypedActor;
 import memory.DataDecomposer;
 import memory.ObjectDefinition;
 import memory.OrientDbPersistor;
-import memory.PastExperience;
 import memory.PathNode;
 import memory.Vocabulary;
 import browsing.ActionFactory;
@@ -27,11 +25,6 @@ import structs.Path;
  *
  */
 public class MemoryRegistryActor extends UntypedActor{
-	
-	private Vocabulary vocab = null;
-	private static PastExperience past_experience = null;
-	
-	private static HashMap<Integer, PathObject<?>> path_nodes = null;
 	
 	/**
 	 * Saves a path to the appropriate hash based on the 
@@ -182,15 +175,10 @@ public class MemoryRegistryActor extends UntypedActor{
 		 */
 		
 	}
-	
-	/**
-	 * 	
-	 * @return
-	 */
-	public static HashMap<Integer, PathObject<?>> getPathNodes(){
-		return path_nodes;
-	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Path){

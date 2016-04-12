@@ -74,17 +74,13 @@ public class OrientDbPersistor<T>{
 	 * @throws OConcurrentModificationException
 	 */
 	public synchronized void save(){
-		boolean saved = false;
-		while(!saved){
-			try{
-				System.out.println("Attempting to save graph");
-				this.graph.commit();
-				saved = true;
-			}
-			catch(OConcurrentModificationException e){
-				//System.err.println("Concurrent Modification EXCEPTION Error thrown");
-				e.printStackTrace();
-			}
+		try{
+			this.graph.commit();
+		}
+		catch(OConcurrentModificationException e){
+			graph.rollback();
+			//System.err.println("Concurrent Modification EXCEPTION Error thrown");
+			e.printStackTrace();
 		}
 	}
 	

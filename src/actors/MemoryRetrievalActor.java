@@ -1,21 +1,19 @@
 package actors;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import com.tinkerpop.blueprints.Direction;
-import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 
 import akka.actor.UntypedActor;
 import memory.OrientDbPersistor;
-import memory.PastExperience;
 import memory.Vocabulary;
 import browsing.Page;
 import browsing.PathObject;
 import structs.Path;
-import structs.PathRepresentation;
 
 /**
  * Retains lists of productive, unproductive, and unknown value {@link Path}s.
@@ -24,12 +22,7 @@ import structs.PathRepresentation;
  *
  */
 public class MemoryRetrievalActor extends UntypedActor{
-	public static HashMap<String, PathRepresentation> productive_path_hash_queue = new HashMap<String, PathRepresentation>();
-	public static HashMap<String, PathRepresentation> unproductive_path_hash_queue = new HashMap<String, PathRepresentation>();
-	public static HashMap<String, PathRepresentation> unknown_outcome_path_hash_queue = new HashMap<String, PathRepresentation>();
-	
 	private Vocabulary vocab = null;
-	private static PastExperience past_experience = null;
 	
 	private static HashMap<Integer, PathObject<?>> path_nodes = null;
 	
@@ -206,7 +199,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 			//Retrieve from memory
 			
 			OrientDbPersistor<Page> persistor = new OrientDbPersistor<Page>();
-			Iterator<Vertex> page_iter = persistor.findVertices(((Page)path.getPath().get(0).getData())).iterator();
+			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)path.getPath().get(0).getData()).getSrc()).iterator();
 			
 			//load all edges that leading to pageElement
 			while(page_iter.hasNext()){
@@ -227,7 +220,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 			
 			//load all edges from pageElements
 		}
-		if(message instanceof Vocabulary){
+		else if(message instanceof Vocabulary){
 			//retrieve all vocabulary values from memory
 			OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
 			Iterable<Vertex> vertex = persistor.findVertices("vocabulary", "page");

@@ -44,7 +44,6 @@ public class Crawler {
 		for(PathObject<?> browser_obj: path.getPath()){
 			if(browser_obj.getData() instanceof Page){
 				//pageNode = (Page)browser_obj.getData();
-				//if current page does not match current node data 
 			}
 			else if(browser_obj.getData() instanceof PageElement){
 				last_element = (PageElement) browser_obj.getData();

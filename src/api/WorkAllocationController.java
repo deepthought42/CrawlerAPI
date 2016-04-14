@@ -1,6 +1,7 @@
 package api;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +24,7 @@ import akka.actor.Props;
  * @author Brandon Kindred
  */
 @Controller
+@CrossOrigin(origins = "http://localhost:8000")
 @RequestMapping("/workAllocation")
 public class WorkAllocationController {
 

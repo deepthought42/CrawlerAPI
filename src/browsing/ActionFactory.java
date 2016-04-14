@@ -84,8 +84,10 @@ public class ActionFactory {
 
 	/**
 	 * Predicts best action based on disparate action information
+	 * @throws IllegalAccessException 
+	 * @throws IllegalArgumentException 
 	 */
-	public static int predict(ObjectDefinition obj) {
+	public static int predict(ObjectDefinition obj) throws IllegalArgumentException, IllegalAccessException {
 		double[] action_weight = new double[actions.length];
 		Random rand = new Random();
 

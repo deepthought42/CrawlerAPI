@@ -17,6 +17,7 @@ import memory.Vocabulary;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import api.PastPathExperienceController;
 import browsing.Browser;
 import browsing.Page;
 import browsing.PageElement;
@@ -253,10 +254,13 @@ public class BrowserActor extends UntypedActor {
 				path.setIsUseful(false);
 			}
 			
-			final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+			//tell memory worker of path
+			final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 			memory_actor.tell(path, getSelf() );
-
-        	//tell memory worker of path
+			
+			//broadcast path
+			PastPathExperienceController.broadcastPathExperience(path);
+        	
         	this.browser.getDriver().quit();
              
 		}
@@ -280,8 +284,9 @@ public class BrowserActor extends UntypedActor {
 			else{
 				path.setIsUseful(false);
 			}
-		  	final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
-			memory_actor.tell(path, getSelf() );
+		  	PastPathExperienceController.broadcastPathExperience(path);
+		  	//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+			//memory_actor.tell(path, getSelf() );
 		  	this.browser.getDriver().quit();
 	   }
 		else unhandled(message);

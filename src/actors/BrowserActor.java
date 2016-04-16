@@ -259,7 +259,8 @@ public class BrowserActor extends UntypedActor {
 			memory_actor.tell(path, getSelf() );
 			
 			//broadcast path
-			PastPathExperienceController.broadcastPathExperience(path);
+			PastPathExperienceController exper = new PastPathExperienceController();
+			exper.broadcastPathExperience(path);
         	
         	this.browser.getDriver().quit();
              
@@ -284,8 +285,11 @@ public class BrowserActor extends UntypedActor {
 			else{
 				path.setIsUseful(false);
 			}
-		  	PastPathExperienceController.broadcastPathExperience(path);
-		  	//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+		  	//broadcast path
+			PastPathExperienceController exper = new PastPathExperienceController();
+			exper.broadcastPathExperience(path);		  	
+			
+			//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
 			//memory_actor.tell(path, getSelf() );
 		  	this.browser.getDriver().quit();
 	   }

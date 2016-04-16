@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import org.openqa.selenium.remote.server.log.ShortTermMemoryHandler;
+import org.apache.log4j.Logger;
 
 import memory.DataDecomposer;
 import memory.ObjectDefinition;
@@ -31,6 +31,7 @@ import structs.Path;
  *
  */
 public class BrowserActor extends UntypedActor {
+    private static final Logger log = Logger.getLogger(BrowserActor.class);
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -231,7 +232,7 @@ public class BrowserActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if (message instanceof Path){
-			System.err.println("PATH PASSED TO BROWSER ACTOR");
+			log.info("PATH PASSED TO BROWSER ACTOR");
 			Path path = Path.clone((Path)message);
 			this.browser = new Browser(((Page)(path.getPath().get(0).pathObject)).pageUrl.toString());
 			if(!path.getPath().isEmpty()){
@@ -242,9 +243,7 @@ public class BrowserActor extends UntypedActor {
 			Page current_page = browser.getPage();
 			Page last_page = path.getLastPageVertex();
 			if(!current_page.equals(last_page) || path.getPath().size() <= 1){
-		  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE when passed path");
 		  		System.err.println("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
-		  		System.err.println("PATH SIZE :: " + path.getPath().size());
 
 				path.setIsUseful(true);
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");

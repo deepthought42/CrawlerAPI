@@ -3,6 +3,7 @@ package actors;
 import java.io.IOException;
 import java.text.DateFormat;
 
+import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
@@ -27,7 +28,8 @@ import structs.Path;
  * @author brandon kindred
  */
 public class Crawler {
-	
+    private static final Logger log = Logger.getLogger(Crawler.class);
+
 	/**
 	 * Crawls the path for the current BrowserActor.
 	 * 
@@ -79,27 +81,26 @@ public class Crawler {
 		
 		try{
 			WebElement element = browser.getDriver().findElement(By.xpath(elem.getXpath()));
-			System.err.print("CRAWLER IS PERFORMING ACTION .. ");
 			actionFactory.execAction(element, action);
 			
-			System.err.println("CRAWLER Performed action "+ action
+			log.info("CRAWLER Performed action "+ action
 					+ " On element with xpath :: "+elem.getXpath());
 		}
 		catch(StaleElementReferenceException e){
 			
-			 	System.err.println("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+			 log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 					+ action + ". ");
 			wasPerformedSuccessfully = false;			
 		}
 		catch(ElementNotVisibleException e){
-			System.err.println("ELEMENT IS NOT CURRENTLY VISIBLE.");
+			log.info("ELEMENT IS NOT CURRENTLY VISIBLE.");
 		}
 		catch(NoSuchElementException e){
-			System.err.println(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+			log.info(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
 			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
-			System.err.println("Element can not have action performed on it at point performed");
+			log.info("Element can not have action performed on it at point performed");
 			wasPerformedSuccessfully = false;
 		}
 		

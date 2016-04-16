@@ -1,14 +1,15 @@
 package learning;
 
 /**
+ * Provides q-learning equation using a constant learning_rate and discount_factor
  * 
  * @author Brandon Kindred
  *
  */
 public class QLearn {
 
-	private double learning_rate = .001;
-	private double discount_factor = .001;
+	private final double learning_rate;
+	private final double discount_factor;
 	
 	/**
 	 * 
@@ -21,10 +22,11 @@ public class QLearn {
 	}
 	
 	/**
+	 * Calculates new value using q-learning equation
 	 * 
-	 * @param old_value
+	 * @param old_value value experienced previously
 	 * @param actual_reward
-	 * @param estimated_future_reward
+	 * @param estimated_future_reward predicted reward
 	 * @return
 	 */
 	public double calculate(double old_value, double actual_reward, double estimated_future_reward){

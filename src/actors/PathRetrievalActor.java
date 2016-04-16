@@ -94,7 +94,6 @@ public class PathRetrievalActor extends UntypedActor {
 		
 		//Start browser actor
 		//Future<Boolean> actorResponse = es.submit();
-		System.err.println("STARTING BROWSER ACTOR");
 		//BrowserActor browserActor;
 		/*try {
 			final ActorRef browserActor = system.actorOf(Props.create(BrowserActor.class), "browserActor");

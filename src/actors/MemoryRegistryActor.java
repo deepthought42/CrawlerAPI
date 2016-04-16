@@ -19,7 +19,7 @@ import browsing.PathObject;
 import structs.Path;
 
 /**
- * Retains lists of productive, unproductive, and unknown value {@link Path}s.
+ * Handles the saving of records into orientDB
  * 
  * @author Brandon Kindred
  *
@@ -31,10 +31,10 @@ public class MemoryRegistryActor extends UntypedActor{
 	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
+		//Retains lists of productive, unproductive, and unknown value {@link Path}s.
 		if(message instanceof Path){
 			Path path = (Path)message;
-			//save to memory
-			
+		
 			OrientDbPersistor<PathNode> orient_persistor = new OrientDbPersistor<PathNode>();
 			Vertex last_vertex = null;
 			boolean last_id_set=false;

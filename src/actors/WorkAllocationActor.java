@@ -1,28 +1,26 @@
 package actors;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
+
+import org.apache.log4j.Logger;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import browsing.Page;
 import observableStructs.ObservableHash;
 import structs.Path;
-import structs.PathRepresentation;
 
 /**
- * Work Allocator has the responsibility of starting new Actors, monitoring
+ * Responsible for starting new Actors, monitoring
  * {@link Path}s traversed, and allotting work to Actors as work is requested.
  * 
  * @author Brandon Kindred
  *
  */
 public class WorkAllocationActor extends UntypedActor {
-	
+    private static final Logger log = Logger.getLogger(WorkAllocationActor.class);
+
 	ObservableHash<Integer, Path> hash_queue = null;
 	
 	/**
@@ -51,7 +49,7 @@ public class WorkAllocationActor extends UntypedActor {
 			browser_actor.tell(path, getSelf() );
 		}
 		else if(message instanceof URL){
-			System.err.println("message is URL for workAllocator");
+			log.info("message is URL for workAllocator");
 			final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
 			browser_actor.tell((URL)message, getSelf());
 		}

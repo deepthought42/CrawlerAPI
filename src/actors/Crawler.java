@@ -43,7 +43,7 @@ public class Crawler {
 		
 		//skip first node since we should have already loaded it during initialization
 	
-		for(PathObject<?> browser_obj: path.getPath()){
+		for(PathObject browser_obj: path.getPath()){
 			if(browser_obj.getData() instanceof Page){
 				//pageNode = (Page)browser_obj.getData();
 			}

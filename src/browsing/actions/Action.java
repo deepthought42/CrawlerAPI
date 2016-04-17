@@ -1,6 +1,7 @@
 package browsing.actions;
 
 import browsing.IObjectValuationAccessor;
+import browsing.PathObject;
 
 /**
  * Defines an action in name only
@@ -8,7 +9,7 @@ import browsing.IObjectValuationAccessor;
  * @author Brandon Kindred
  *
  */
-public class Action implements IObjectValuationAccessor{
+public class Action implements PathObject, IObjectValuationAccessor{
 	private final String name;
 	
 	/**
@@ -47,6 +48,11 @@ public class Action implements IObjectValuationAccessor{
 	public double getReward() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public Action getData() {
+		return this;
 	}
 
 }

@@ -3,7 +3,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.jsoup.nodes.Element;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -20,22 +23,21 @@ import util.ArrayUtility;
  * @author Brandon Kindred
  *
  */
-public class PageElement implements IObjectValuationAccessor {
+public class PageElement implements PathObject {
+    private static final Logger log = Logger.getLogger(PageElement.class);
+
 	private String[] actions = ActionFactory.getActions();
 	public String tagName;
 	public String text;
 	private String xpath;
 	private boolean changed=false;
-	public ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-	public ArrayList<PageElement> child_elements = new ArrayList<PageElement>();
+	public List<Attribute> attributes = new ArrayList<Attribute>();
+	public List<PageElement> child_elements = new ArrayList<PageElement>();
+	Map<String, String> cssValues = new HashMap<String,String>();
 
 	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
-	
-	//map loaded with k,v where k=propertyName, and v=propertyValue
-	private HashMap<String, String> cssValues = new HashMap<String,String>();
-	
+		
 	//transfer list to enum class
-	private String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
 	
 	/**
 	 * Constructs a PageElement.
@@ -43,26 +45,16 @@ public class PageElement implements IObjectValuationAccessor {
 	 * @param driver
 	 * @param elem
 	 */
-	public PageElement(WebDriver driver, WebElement elem, String parentXpath, String[] actions, HashMap<String, Integer> xpathHash){
+	public PageElement( WebDriver driver, 
+						WebElement elem, 
+						String parentXpath, 
+						String[] actions, 
+						Map<String, Integer> xpathHash,
+						List<String>attrib_list){
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
-		loadAttributes(driver, elem);
-		
-		//loadCssProperties(elem);
-		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
-	}
-	
-	/**
-	 * Constructs a PageElement.
-	 * 
-	 * @param driver
-	 * @param elem
-	 */
-	public PageElement(WebDriver driver, WebElement elem, String parentXpath, HashMap<String, Integer> xpathHash){
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		loadAttributes(driver, elem);
+		loadAttributes(attrib_list);		
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
 	}
@@ -73,11 +65,53 @@ public class PageElement implements IObjectValuationAccessor {
 	 * @param driver
 	 * @param elem
 	 */
-	public PageElement(WebDriver driver, WebElement elem, Page page, String[] actions, HashMap<String, Integer> xpathHash){
+	public PageElement(WebElement elem, 
+					   String parentXpath, 
+					   String[] actions, 
+					   Map<String, Integer> xpathHash, 
+					   List<String> attrib_list){
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
-		loadAttributes(driver, elem);
+		loadAttributes(attrib_list);
+		loadCssProperties(elem);
+		this.xpath = this.generateXpath(elem, parentXpath, xpathHash);
+	}
+
+	/**
+	 * Constructs a PageElement.
+	 * 
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement( Element elem, 
+			   		 	String[] actions, 
+						Map<String, Integer> xpathHash,
+						List<String> attrib_list){
+		this.tagName = elem.tagName();
+		this.text    = elem.text(); 
+		loadAttributes(attrib_list);
+		//loadCssProperties(web_elem);
+		this.xpath = this.generateXpath(elem);
+	}
+	
+	/**
+	 * Constructs a PageElement.
+	 * 
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement( WebDriver driver,
+						WebElement elem, 
+						Page page, 
+						String[] actions, 
+						Map<String, Integer> xpathHash,
+						List<String> attrib_list){
+			 
+		this.tagName = elem.getTagName();
+		this.text    = elem.getText();
+		this.actions = actions;
+		loadAttributes(attrib_list);
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver, "", xpathHash);
 	}
@@ -89,7 +123,7 @@ public class PageElement implements IObjectValuationAccessor {
 	 * @param xpathHash
 	 * @return
 	 */
-	public String uniqifyXpath(WebDriver driver, HashMap<String, Integer> xpathHash, String xpath){
+	public String uniqifyXpath(WebDriver driver, Map<String, Integer> xpathHash, String xpath){
 		if(driver.findElements(By.xpath(xpath)).size() <= 1){
 			return xpath;
 		}
@@ -107,11 +141,64 @@ public class PageElement implements IObjectValuationAccessor {
 	}
 	
 	/**
+	 * creates a unique xpath based on a given hash of xpaths
+	 * 
+	 * @param driver
+	 * @param xpathHash
+	 * @return
+	 */
+	public String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath){
+		if(elem.findElements(By.xpath(xpath)).size() <= 1){
+			return xpath;
+		}
+		else{
+			int count = 1;
+			if(xpathHash.containsKey(xpath)){
+				count = xpathHash.get(xpath);
+				count += 1;
+			}
+		
+			xpathHash.put(xpath, count);
+			xpath = xpath+"[" + count + "]";
+		}
+		return xpath;
+	}
+
+	/**
 	 * generates a unique xpath for this element.
 	 * 
 	 * @return an xpath that identifies this element uniquely
 	 */
-	public String generateXpath(WebDriver driver, String xpath, HashMap<String, Integer> xpathHash){
+	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash){
+		ArrayList<String> attributeChecks = new ArrayList<String>();
+		xpath += "//"+this.tagName;
+		for(Attribute attr : attributes){
+			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
+				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVal()) + "')");
+			}
+		}
+
+		if(attributeChecks.size()>0){
+			xpath += "[";
+			for(int i = 0; i < attributeChecks.size(); i++){
+				xpath += attributeChecks.get(i).toString();
+				if(i < attributeChecks.size()-1){
+					xpath += " and ";
+				}
+			}
+			xpath += "]";
+		}
+		xpath = uniqifyXpath(element, xpathHash, xpath);
+
+		return xpath;
+	}
+	
+	/**
+	 * generates a unique xpath for this element.
+	 * 
+	 * @return an xpath that identifies this element uniquely
+	 */
+	public String generateXpath(WebDriver driver, String xpath, Map<String, Integer> xpathHash){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
 		xpath += "//"+this.tagName;
 		for(Attribute attr : attributes){
@@ -136,6 +223,18 @@ public class PageElement implements IObjectValuationAccessor {
 	}
 	
 	/**
+	 * generates a unique xpath for this element.
+	 * 
+	 * @return an xpath that identifies this element uniquely
+	 */
+	public String generateXpath(Element elem){
+		xpath = "//" + this.tagName + "["+elem.siblingIndex()+"]";
+		log.info("constructed xpath = "+xpath);
+		
+		return xpath;
+	}
+	
+	/**
 	 * 
 	 * @param changed
 	 * @return
@@ -156,9 +255,9 @@ public class PageElement implements IObjectValuationAccessor {
 	/**
 	 * Loads attributes for this element into a list of {@link Attribute}s
 	 * @param driver
-	 */
-	public void loadAttributes(WebDriver driver, WebElement element){
-		ArrayList<String> attributeList = extractedAttributes(element, driver);
+	 */ 
+	public void loadAttributes( List<String> attributeList){
+		
 		for(int i = 0; i < attributeList.size(); i++){
 			//System.out.println("ATTRIBUTE ITEM :: "+attributeList.get(i));
 			String[] attributes = attributeList.get(i).split("::");
@@ -182,8 +281,7 @@ public class PageElement implements IObjectValuationAccessor {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<String> extractedAttributes(WebElement element, WebDriver driver) {
-		JavascriptExecutor javascriptDriver = (JavascriptExecutor)driver;
+	public static ArrayList<String> extractedAttributes(WebElement element, JavascriptExecutor javascriptDriver) {
 		return (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 	}
 	
@@ -207,12 +305,24 @@ public class PageElement implements IObjectValuationAccessor {
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public void loadCssProperties(WebElement element){
+		//HashMap<String, String> cssValues = new HashMap<String,String>();
+		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
+
 		for(String propertyName : cssList){
 			if(element.getCssValue(propertyName) != null){
 				this.cssValues.put(propertyName, element.getCssValue(propertyName));	
 			}			
 		}
-		//System.out.println(Thread.currentThread().getName()+" :: style Properties loaded");
+		
+		log.info("Element css properties loaded");
+	}
+	
+	/**
+	 * Sets the css property map
+	 * @param cssValueMap
+	 */
+	public Map<String, String> getCssProperties(){
+		 return this.cssValues;
 	}
 	
 	/**
@@ -241,7 +351,7 @@ public class PageElement implements IObjectValuationAccessor {
 		List<WebElement> childElements = elem.findElements(By.xpath(".//"));
 		ArrayList<PageElement> childPageElements = new ArrayList<PageElement>();
 		for(WebElement childElement : childElements){
-			childPageElements.add(new PageElement(driver, childElement, this.xpath, xpathHash));
+			childPageElements.add(new PageElement(driver, childElement, this.xpath, ActionFactory.getActions(), xpathHash, extractedAttributes(elem, (JavascriptExecutor)driver)));
 		}
 		
 		return childPageElements;
@@ -260,7 +370,7 @@ public class PageElement implements IObjectValuationAccessor {
         
         PageElement that = (PageElement)o;
 		
-		ArrayList<Attribute> newPageElementAttributes = that.getAttributes();
+		List<Attribute> newPageElementAttributes = that.getAttributes();
 		
 		boolean areElementsEqual =  false;
 		
@@ -329,7 +439,7 @@ public class PageElement implements IObjectValuationAccessor {
 		return this.text;
 	}
 
-	public ArrayList<Attribute> getAttributes() {
+	public List<Attribute> getAttributes() {
 		return this.attributes;
 	}
 	
@@ -341,7 +451,7 @@ public class PageElement implements IObjectValuationAccessor {
 		return Arrays.asList().contains(this.tagName);
 	}
 	
-	public ArrayList<PageElement> getChild_elements() {
+	public List<PageElement> getChild_elements() {
 		return child_elements;
 	}
 
@@ -369,19 +479,8 @@ public class PageElement implements IObjectValuationAccessor {
 		return this.actions;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public double getCost() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public double getReward() {
-		// TODO Auto-generated method stub
-		return 0;
+	@Override
+	public PageElement getData() {
+		return this;
 	}
 }

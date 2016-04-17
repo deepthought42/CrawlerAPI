@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 
@@ -25,7 +27,8 @@ import structs.Path;
  *
  */
 public class MemoryRegistryActor extends UntypedActor{
-	
+    private static final Logger log = Logger.getLogger(BrowserActor.class);
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -41,7 +44,7 @@ public class MemoryRegistryActor extends UntypedActor{
 			int last_path_node_hash=0;
 			String action = "contains";
 			//orient_persistor.addVertexType(PathObject.class.getName());
-			for(PathObject<?> pathObj : path.getPath()){
+			for(PathObject pathObj : path.getPath()){
 				int objHash =  pathObj.getData().hashCode();
 				
 				PathNode path_node = new PathNode(objHash, pathObj.getData().getClass().getCanonicalName(), pathObj.getData().toString());

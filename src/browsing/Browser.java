@@ -2,15 +2,19 @@ package browsing;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -180,5 +184,76 @@ public class Browser {
 		//FileUtils.copyFile(srcFile, new File("/home/deepthought/Desktop/screenshots/screenshot"+DateFormat.getInstance().format(new Date()).replace(" ", "")+""+rand.nextInt() +".png"));
 		
 		return src;
+	}
+	
+	/**
+	 * Get immediate child elements for a given element
+	 * @param elem	WebElement to get children for
+	 * @return list of WebElements
+	 */
+	public List<WebElement> getChildElements(String xpath) throws WebDriverException{
+		return driver.findElements(By.xpath(xpath+"/*"));
+	}
+	
+	/**
+	 * Retreives all elements on the current page that are visible. In this instance we take 
+	 *  visible to mean that it is not currently set to {@css display: none} and that it
+	 *  is visible within the confines of the screen. If an element is not hidden but is also 
+	 *  outside of the bounds of the screen it is assumed hidden
+	 *  
+	 * @param driver
+	 * @return list of webelements that are currently visible on the page
+	 */
+	public ArrayList<PageElement> getVisibleElements(String xpath, 
+													 HashMap<String, Integer> xpathHash) 
+															 throws WebDriverException {
+		List<WebElement> pageElements = driver.findElements(By.xpath(xpath + "//*"));
+		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
+		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
+		if(pageElements.size() <= 0){
+			return elementList;
+		}
+		for(WebElement elem : pageElements){
+			
+			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
+				elementList.add(pageElem);
+			}
+		}
+		
+		return elementList;
+	}
+	
+	/**
+	 * retreives all elements on a given page that are visible. In this instance we take 
+	 *  visible to mean that it is not currently set to {@css display: none} and that it
+	 *  is visible within the confines of the screen. If an element is not hidden but is also 
+	 *  outside of the bounds of the screen it is assumed hidden
+	 *  
+	 * @param driver
+	 * @return list of webelements that are currently visible on the page
+	 */
+	 public ArrayList<PageElement> getVisibleElements(String xpath, 
+													 int depth, 
+													 HashMap<String, 
+													 Integer> xpathHash) throws WebDriverException {
+		List<WebElement> childElements = getChildElements(xpath);
+		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
+		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
+		if(childElements.size() <= 0){
+			return elementList;
+		}
+		for(WebElement elem : childElements){			
+			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
+				elementList.add(pageElem);
+			}
+		}
+		
+		for(PageElement pageElem : elementList){
+			pageElem.setChild_elements(getVisibleElements(pageElem.getXpath(), depth+1, xpathHash));
+		}
+		
+		return elementList;
 	}
 }

@@ -164,7 +164,10 @@ public class BrowserActor extends UntypedActor {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public ArrayList<HashMap<String, Double>> getEstimatedElementProbabilities(ArrayList<PageElement> pageElements) throws IllegalArgumentException, IllegalAccessException{
+	public ArrayList<HashMap<String, Double>> getEstimatedElementProbabilities(ArrayList<PageElement> pageElements) 
+			throws IllegalArgumentException, IllegalAccessException
+	{
+		
 		ArrayList<HashMap<String, Double>> element_action_map_list = new ArrayList<HashMap<String, Double>>(0);
 				
 		for(PageElement elem : pageElements){
@@ -234,7 +237,7 @@ public class BrowserActor extends UntypedActor {
 		if (message instanceof Path){
 			log.info("PATH PASSED TO BROWSER ACTOR");
 			Path path = Path.clone((Path)message);
-			this.browser = new Browser(((Page)(path.getPath().get(0).pathObject)).pageUrl.toString());
+			this.browser = new Browser(((Page)(path.getPath().get(0).getData())).pageUrl.toString());
 			if(!path.getPath().isEmpty()){
 				Crawler.crawlPath(path, browser);
 			}
@@ -258,8 +261,7 @@ public class BrowserActor extends UntypedActor {
 			memory_actor.tell(path, getSelf() );
 			
 			//broadcast path
-			PastPathExperienceController exper = new PastPathExperienceController();
-			exper.broadcastPathExperience(path);
+			PastPathExperienceController.broadcastPathExperience(path);
         	
         	this.browser.getDriver().quit();
              
@@ -268,7 +270,7 @@ public class BrowserActor extends UntypedActor {
 			System.out.println("URL PASSED TO BROWSER ACTOR : " +((URL)message).toString());
 		  	this.browser = new Browser(((URL)message).toString());
 		  	Path path = new Path();
-		  	PathObject<?> page_obj = new PathObject<Page>(browser.getPage());
+		  	PathObject page_obj = browser.getPage();
 		  	path.add(page_obj);
 		  	Crawler.crawlPath(path, browser);
 		  	
@@ -285,8 +287,7 @@ public class BrowserActor extends UntypedActor {
 				path.setIsUseful(false);
 			}
 		  	//broadcast path
-			PastPathExperienceController exper = new PastPathExperienceController();
-			exper.broadcastPathExperience(path);		  	
+			PastPathExperienceController.broadcastPathExperience(path);		  	
 			
 			//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
 			//memory_actor.tell(path, getSelf() );

@@ -34,11 +34,11 @@ public class MemoryRetrievalActor extends UntypedActor{
 			OrientDbPersistor<Page> persistor = new OrientDbPersistor<Page>();
 			Iterator<Vertex> page_iter = persistor.findVertices(page).iterator();
 			Vertex page_vert = page_iter.next();
-			path.add(new PathObject<Vertex>(page_vert));
+			path.add(page);
 			Iterator<Vertex> page_element_iter = page_vert.getVertices(Direction.OUT, "Page").iterator();
 			while(page_element_iter.hasNext()){
 				Vertex page_element_vertex = page_element_iter.next();
-				path.add(new PathObject<Vertex>(page_element_vertex));
+				path.add(page_element_vertex);
 				
 				Iterator<Vertex> result_vertices = page_element_vertex.getVertices(Direction.OUT, "PageElement").iterator();
 				

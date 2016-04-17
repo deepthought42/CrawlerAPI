@@ -6,19 +6,11 @@ package browsing;
  * @author Brandon Kindred
  *
  */
-public class PathObject<T> {
-	public T pathObject = null;
-	
-	
-	public PathObject(T object){
-		this.pathObject = object;
-	}
+public interface PathObject {
 	
 	/**
 	 * Returns wrapped object
 	 * @return
 	 */
-	public T getData(){
-		return this.pathObject;
-	}
+	public Object getData();
 }

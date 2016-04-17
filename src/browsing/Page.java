@@ -11,7 +11,12 @@ import java.util.List;
 
 import learning.State;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -22,13 +27,13 @@ import org.openqa.selenium.WebElement;
  * @author Brandon Kindred
  *
  */
-public class Page implements State, IObjectValuationAccessor {
+public class Page implements State, PathObject {
 	private String screenshot = null; 
-	private WebDriver driver = null;
 	private String src = "";
 	public String date = null;
 	public URL pageUrl = null;
-	public ArrayList<PageElement> elements = new ArrayList<PageElement>();
+	private final List<WebElement> web_elements;
+	private final Elements elements;
 	
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
@@ -41,12 +46,15 @@ public class Page implements State, IObjectValuationAccessor {
 	 * @throws URISyntaxException 
 	 */
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
-		this.driver = driver;
 		this.src = driver.getPageSource();
 		this.date = date.format(new Date());
 		this.pageUrl = new URL(driver.getCurrentUrl());
 		this.screenshot = Browser.getScreenshot(driver);
-		this.elements = getVisibleElements(driver, "//body", new HashMap<String, Integer>());
+		this.web_elements = driver.findElements(By.xpath("//"));
+		
+		Document doc = Jsoup.parse(this.src);
+		this.elements = doc.getAllElements(); 
+			//	getVisibleElements(driver, "//body");
 	}
 	
 	/**
@@ -68,18 +76,6 @@ public class Page implements State, IObjectValuationAccessor {
 	}
 	
 	/**
-	 * Retrieves list of {@link PageElement page elements} for current Page
-	 * @return
-	 */
-	public ArrayList<PageElement> getElements(){
-		return this.elements;
-	}
-	
-	public void refreshElements(){
-		this.elements = this.getVisibleElements(driver, "//body", new HashMap<String, Integer>());
-	}
-	
-	/**
 	 * Retreives all elements on a given page that are visible. In this instance we take 
 	 *  visible to mean that it is not currently set to {@css display: none} and that it
 	 *  is visible within the confines of the screen. If an element is not hidden but is also 
@@ -88,10 +84,9 @@ public class Page implements State, IObjectValuationAccessor {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	public ArrayList<PageElement> getVisibleElements(WebDriver driver,
-													 String xpath, 
-													 HashMap<String, Integer> xpathHash) 
+	public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
 															 throws WebDriverException {
+		
 		List<WebElement> pageElements = driver.findElements(By.xpath(xpath + "//*"));
 		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
 		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
@@ -101,66 +96,14 @@ public class Page implements State, IObjectValuationAccessor {
 		for(WebElement elem : pageElements){
 			
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
+				PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
 				elementList.add(pageElem);
 			}
 		}
 		
 		return elementList;
-	}
-	
-	/**
-	 * retreives all elements on a given page that are visible. In this instance we take 
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also 
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *  
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 */
-	 public ArrayList<PageElement> getVisibleElements(WebDriver driver,
-													 String xpath, 
-													 int depth, 
-													 HashMap<String, 
-													 Integer> xpathHash) throws WebDriverException {
-		List<WebElement> childElements = getChildElements(xpath);
-		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
-		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
-		if(childElements.size() <= 0){
-			return elementList;
-		}
-		for(WebElement elem : childElements){			
-			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
-				elementList.add(pageElem);
-			}
-		}
+	}	
 		
-		for(PageElement pageElem : elementList){
-			pageElem.setChild_elements(getVisibleElements(driver, pageElem.getXpath(), depth+1, xpathHash));
-		}
-		
-		return elementList;
-	}
-	
-	/**
-	 * Get immediate child elements for a given element
-	 * @param elem	WebElement to get children for
-	 * @return list of WebElements
-	 */
-	public List<WebElement> getChildElements(WebElement elem){
-		return elem.findElements(By.xpath("/*"));
-	}
-	
-	/**
-	 * Get immediate child elements for a given element
-	 * @param elem	WebElement to get children for
-	 * @return list of WebElements
-	 */
-	public List<WebElement> getChildElements(String xpath) throws WebDriverException{
-		return driver.findElements(By.xpath(xpath+"/*"));
-	}
-	
 	/**
 	 * Checks if Pages are equal
 	 * @param page the {@link Page} object to compare current page to
@@ -203,13 +146,8 @@ public class Page implements State, IObjectValuationAccessor {
         return hash;
     }
 
-	public double getCost() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	public double getReward() {
-		// TODO Auto-generated method stub
-		return 0;
+	@Override
+	public Page getData() {
+		return this;
 	}
 }

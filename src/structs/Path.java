@@ -1,8 +1,22 @@
 package structs;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
+import org.apache.log4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import actors.BrowserActor;
 import browsing.ActionFactory;
+import browsing.Browser;
 import browsing.IObjectValuationAccessor;
 import browsing.PathObject;
 import browsing.Page;
@@ -16,17 +30,20 @@ import browsing.actions.Action;
  *
  */
 public class Path {
+    private static final Logger log = Logger.getLogger(BrowserActor.class);
+	
 	public double reward = 0.0;
 	public double cost = 0.0;
 	private Boolean isUseful;
-	public ArrayList<PathObject<?>> vertexPath = null;
+
+	public ArrayList<PathObject> vertexPath = null;
 	
 	/**
 	 * Creates new instance of Path
 	 */
 	public Path(){
 		this.isUseful = null;
-		this.vertexPath = new ArrayList<PathObject<?>>();
+		this.vertexPath = new ArrayList<PathObject>();
 	}
 
 	/**
@@ -36,7 +53,7 @@ public class Path {
 	 */
 	public Path(Path current_path){
 		this.isUseful = null;
-		this.vertexPath = new  ArrayList<PathObject<?>>();
+		this.vertexPath = new  ArrayList<PathObject>();
 		this.append(current_path);
 	}
 	
@@ -46,12 +63,12 @@ public class Path {
 	 */
 	public void append(Path appendablePath){
 		
-		for(PathObject<?> obj : appendablePath.getPath()){
+		for(PathObject obj : appendablePath.getPath()){
 			this.vertexPath.add(obj);
 		}				
 	}
 		
-	public boolean add(PathObject<?> obj){
+	public boolean add(PathObject obj){
 		return this.vertexPath.add(obj);
 	}
 	
@@ -59,7 +76,7 @@ public class Path {
 	 * 
 	 * @return
 	 */
-	public ArrayList<PathObject<?>> getPath(){
+	public ArrayList<PathObject> getPath(){
 		return this.vertexPath;
 	}
 	
@@ -116,7 +133,7 @@ public class Path {
 	 */
 	public double calculateCost(){
 		this.cost=0;
-		for(PathObject<?> vertex_obj : this.getPath()){
+		for(PathObject vertex_obj : this.getPath()){
 			this.cost += ((IObjectValuationAccessor)vertex_obj.getData()).getCost();
 		}
 		return this.cost;
@@ -130,7 +147,7 @@ public class Path {
 	 */
 	public double calculateReward(){
 		this.reward = 0;
-		for(PathObject<?> vertex_obj : this.getPath()){
+		for(PathObject vertex_obj : this.getPath()){
 			this.reward += ((IObjectValuationAccessor)vertex_obj.getData()).getReward();
 		}
 		
@@ -146,7 +163,7 @@ public class Path {
 	public static Path clone(Path path){
 		Path clonePath = new Path();
 		
-		for(PathObject<?> obj : path.getPath()){
+		for(PathObject obj : path.getPath()){
 			clonePath.add(obj);
 		}
 		
@@ -160,7 +177,7 @@ public class Path {
 	 */
 	public Page getLastPageVertex(){
 		for(int i = this.vertexPath.size()-1; i >= 0; i--){
-			PathObject<?> descNode = this.vertexPath.get(i);
+			PathObject descNode = this.vertexPath.get(i);
 			if(descNode.getData() instanceof Page){
 				return (Page)descNode.getData();
 			}
@@ -188,18 +205,19 @@ public class Path {
 		String[] actions = ActionFactory.getActions();
 		
 		//get all elements for this page
-		ArrayList<PageElement> page_elements = page.getElements();
+		WebDriver phantom_driver = Browser.openWithPhantomjs(page.getUrl().toString());
+		List<PageElement> page_elements = Page.getVisibleElements(phantom_driver, "//");
 	
 		//iterate over all elements
 		for(PageElement page_element : page_elements){
 			//System.err.println("Page element index "+page_elem_vertex_idx);
-			new_path.add(new PathObject<PageElement>(page_element));
+			new_path.add(page_element);
 			
 			//for each element in elements iterate over actions
 			for(String action : actions){
 				Path action_path = Path.clone(new_path);
 				Action action_obj = new Action(action);
-				action_path.add(new PathObject<Action>(action_obj));
+				action_path.add(action_obj);
 				pathList.add(action_path);
 			}
 			

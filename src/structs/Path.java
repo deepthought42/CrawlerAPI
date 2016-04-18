@@ -1,18 +1,12 @@
 package structs;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import org.openqa.selenium.phantomjs.PhantomJSDriver;
 
 import actors.BrowserActor;
 import browsing.ActionFactory;
@@ -88,6 +82,10 @@ public class Path {
 		return this.isUseful;
 	}
 	
+	public Boolean getIsUseful(){
+		return this.isUseful;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -134,7 +132,7 @@ public class Path {
 	public double calculateCost(){
 		this.cost=0;
 		for(PathObject vertex_obj : this.getPath()){
-			this.cost += ((IObjectValuationAccessor)vertex_obj.getData()).getCost();
+			this.cost += ((IObjectValuationAccessor)vertex_obj.data()).getCost();
 		}
 		return this.cost;
 	}
@@ -148,7 +146,7 @@ public class Path {
 	public double calculateReward(){
 		this.reward = 0;
 		for(PathObject vertex_obj : this.getPath()){
-			this.reward += ((IObjectValuationAccessor)vertex_obj.getData()).getReward();
+			this.reward += ((IObjectValuationAccessor)vertex_obj.data()).getReward();
 		}
 		
 		return reward;
@@ -175,11 +173,11 @@ public class Path {
 	 * 
 	 * @return
 	 */
-	public Page getLastPageVertex(){
+	public Page lastPageVertex(){
 		for(int i = this.vertexPath.size()-1; i >= 0; i--){
 			PathObject descNode = this.vertexPath.get(i);
-			if(descNode.getData() instanceof Page){
-				return (Page)descNode.getData();
+			if(descNode.data() instanceof Page){
+				return (Page)descNode.data();
 			}
 		}
 		return null;
@@ -197,7 +195,7 @@ public class Path {
 		ArrayList<Path> pathList = new ArrayList<Path>();
 		Path new_path = Path.clone(path);
 		
-		Page page = path.getLastPageVertex();
+		Page page = path.lastPageVertex();
 		if(page == null){
 			return null;
 		}
@@ -205,8 +203,14 @@ public class Path {
 		String[] actions = ActionFactory.getActions();
 		
 		//get all elements for this page
-		WebDriver phantom_driver = Browser.openWithPhantomjs(page.getUrl().toString());
-		List<PageElement> page_elements = Page.getVisibleElements(phantom_driver, "//");
+		WebDriver webdriver = null;
+		try {
+			webdriver = new Browser(page.getUrl().toString()).getDriver();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		List<PageElement> page_elements = Page.getVisibleElements(webdriver, "");
 	
 		//iterate over all elements
 		for(PageElement page_element : page_elements){
@@ -259,9 +263,9 @@ public class Path {
 	public static boolean hasPageCycle(Path path){
 		for(int i = path.getPath().size()-1; i > 0; i--){
 			for(int j = i-1; j>= 0; j--){
-				if(path.getPath().get(i).getData() instanceof Page 
-						&& path.getPath().get(j).getData() instanceof Page
-						&& path.getPath().get(i).getData().equals(path.getPath().get(j).getData()))
+				if(path.getPath().get(i).data() instanceof Page 
+						&& path.getPath().get(j).data() instanceof Page
+						&& path.getPath().get(i).data().equals(path.getPath().get(j).data()))
 				{
 					return true;
 				}

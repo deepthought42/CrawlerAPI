@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import browsing.Page;
+
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
  * 
@@ -45,7 +47,7 @@ public class PastPathExperienceController {
         emitters.forEach((SseEmitter emitter) -> {
             try {
                 log.info("Sending message to client");
-
+                
                 emitter.send(path, MediaType.APPLICATION_JSON);
                 log.info("Sent message to client");
             } catch (IOException e) {

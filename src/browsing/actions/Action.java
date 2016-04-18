@@ -51,7 +51,7 @@ public class Action implements PathObject, IObjectValuationAccessor{
 	}
 
 	@Override
-	public Action getData() {
+	public Action data() {
 		return this;
 	}
 

@@ -42,7 +42,7 @@ public class PathRetrievalActor extends UntypedActor {
 	 * 
 	 */
 	public void run(){
-		OrientDbPersistor<PathNode> persistor = new OrientDbPersistor<PathNode>();
+		OrientDbPersistor persistor = new OrientDbPersistor();
 		
 		//retrieve all page vertices
 		Iterable<Vertex> objVertices = persistor.graph.getVertices("classname", "browsing.Page");

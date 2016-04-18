@@ -38,22 +38,22 @@ public class MemoryRegistryActor extends UntypedActor{
 		if(message instanceof Path){
 			Path path = (Path)message;
 		
-			OrientDbPersistor<PathNode> orient_persistor = new OrientDbPersistor<PathNode>();
+			OrientDbPersistor orient_persistor = new OrientDbPersistor();
 			Vertex last_vertex = null;
 			boolean last_id_set=false;
 			int last_path_node_hash=0;
 			String action = "contains";
 			//orient_persistor.addVertexType(PathObject.class.getName());
 			for(PathObject pathObj : path.getPath()){
-				int objHash =  pathObj.getData().hashCode();
+				int objHash =  pathObj.data().hashCode();
 				
-				PathNode path_node = new PathNode(objHash, pathObj.getData().getClass().getCanonicalName(), pathObj.getData().toString());
+				PathNode path_node = new PathNode(objHash, pathObj.data().getClass().getCanonicalName(), pathObj.data().toString());
 				Vertex vertex = null;
-				if(!pathObj.getData().getClass().getCanonicalName().equals("browsing.actions.Action")){
+				if(!pathObj.data().getClass().getCanonicalName().equals("browsing.actions.Action")){
 					vertex = orient_persistor.findAndUpdateOrCreate(path_node, new String[0]);
 				}
 				else{
-					action = pathObj.getData().toString();
+					action = pathObj.data().toString();
 					continue;
 				}
 				
@@ -88,14 +88,14 @@ public class MemoryRegistryActor extends UntypedActor{
 		}
 		else if(message instanceof Page){
 			Page page = (Page)message;
-			List<ObjectDefinition> decomposed_list = DataDecomposer.decompose(page);
-			OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
+			List<Object> decomposed_list = DataDecomposer.decompose(page);
+			OrientDbPersistor persistor = new OrientDbPersistor();
 			
-			for(ObjectDefinition objDef : decomposed_list){
+			for(Object objDef : decomposed_list){
 				//if object definition value doesn't exist in vocabulary 
 				// then add value to vocabulary
 				Vocabulary vocabulary = new Vocabulary(new ArrayList<String>(), "page");
-				vocabulary.appendToVocabulary(objDef.getValue());
+				vocabulary.appendToVocabulary(((ObjectDefinition)objDef).getValue());
 				persistor.findAndUpdateOrCreate(vocabulary, ActionFactory.getActions());
 			}
 		}

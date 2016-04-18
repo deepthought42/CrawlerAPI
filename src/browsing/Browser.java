@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -23,19 +25,23 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.seleniumhq.jetty7.util.log.Log;
+
+import actors.BrowserActor;
 
 /**
  * 
  * @author Brandon Kindred
  */
 public class Browser {
+    private static final Logger log = Logger.getLogger(Browser.class);
 
 	private WebDriver driver;
 	private List<WebElement> elements = null;
 	//private Page page = null;
 	
 	public Browser(String url) throws IOException {
-		System.err.println(Thread.currentThread().getName() + " -> URL :: "+url);
+		log.info(" -> URL :: "+url);
 		this.driver = openWithFirefox(url);
 		this.driver.get(url);
 		//page = new Page(this.driver, DateFormat.getDateInstance());
@@ -137,8 +143,8 @@ public class Browser {
 	 * @param url
 	 * @return
 	 */
-	public static WebDriver openWithPhantomjs(String url){
-		
+	public static PhantomJSDriver openWithPhantomjs(String url){
+		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
 	    //Create instance of PhantomJS driver
 	    DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
 	    PhantomJSDriver driver = new PhantomJSDriver(capabilities);
@@ -215,8 +221,9 @@ public class Browser {
 		}
 		for(WebElement elem : pageElements){
 			
-			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
+			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null 
+					|| !elem.getAttribute("backface-visiblity").equals("hidden"))){
+				PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
 				elementList.add(pageElem);
 			}
 		}
@@ -235,8 +242,7 @@ public class Browser {
 	 */
 	 public ArrayList<PageElement> getVisibleElements(String xpath, 
 													 int depth, 
-													 HashMap<String, 
-													 Integer> xpathHash) throws WebDriverException {
+													 HashMap<String, Integer> xpathHash) throws WebDriverException {
 		List<WebElement> childElements = getChildElements(xpath);
 		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
 		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
@@ -245,7 +251,7 @@ public class Browser {
 		}
 		for(WebElement elem : childElements){			
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, xpath, xpathHash);
+				PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
 				elementList.add(pageElem);
 			}
 		}

@@ -20,9 +20,6 @@ public class PathExpansionActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Path){
-			//get last page
-			
-			//get current page
 			Path path = (Path)message;
 			log.info("EXPANDING PATH WITH LENGTH : "+path.getPath().size());
 			ArrayList<Path> pathExpansions = new ArrayList<Path>();
@@ -32,6 +29,7 @@ public class PathExpansionActor extends UntypedActor {
 			
 			if(path.isUseful()){
 				pathExpansions = Path.expandPath(path);
+				log.info("Path expansions found : " +pathExpansions.size());
 				final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 				for(Path expanded : pathExpansions){
 					work_allocator.tell(expanded, getSelf() );

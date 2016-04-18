@@ -18,7 +18,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
  * @author Brandon Kindred
  *
  */
-public class OrientDbPersistor<T>{
+public class OrientDbPersistor{
 	public OrientGraph graph = null;
 	
 	/**
@@ -42,7 +42,7 @@ public class OrientDbPersistor<T>{
 	 * @param obj
 	 * @return
 	 */
-	public Vertex addVertexType(T obj, String[] properties){
+	public Vertex addVertexType(Object obj, String[] properties){
 		if (graph.getVertexType(obj.getClass().getSimpleName().toString()) == null){
             OClass vt = graph.createVertexType(obj.getClass().getSimpleName().toString());
             vt.createIndex(obj.getClass().getSimpleName(), OClass.INDEX_TYPE.UNIQUE, properties);
@@ -101,11 +101,13 @@ public class OrientDbPersistor<T>{
 	 * Finds a given object Definition in graph
 	 * 
 	 * @param obj
+	 * 
 	 * @return
+	 * 
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 */
-	public synchronized Iterable<Vertex> findVertices(T obj) throws IllegalArgumentException, IllegalAccessException{
+	public Iterable<Vertex> findVertices(Object obj) throws IllegalArgumentException, IllegalAccessException{
 		Field[] fieldArray = obj.getClass().getFields();
 		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		
@@ -153,10 +155,10 @@ public class OrientDbPersistor<T>{
 	 * 
 	 * @return 
 	 */
-	public synchronized Vertex findAndUpdateOrCreate(T obj, String[] actions) throws NullPointerException, IllegalAccessException, IllegalArgumentException{
-		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = null;
+	public synchronized Vertex findAndUpdateOrCreate(Object obj, String[] actions) 
+			throws NullPointerException, IllegalAccessException, IllegalArgumentException{
 		Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(obj);
-		memory_iterator = memory_vertex_iter.iterator();
+		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
 
 		com.tinkerpop.blueprints.Vertex v = null;
 		if(memory_iterator != null && memory_iterator.hasNext()){
@@ -203,9 +205,9 @@ public class OrientDbPersistor<T>{
 	 * 
 	 * @return A list of all vertices found. 
 	 */
-	public synchronized List<Vertex> findAll(List<T> objects) throws NullPointerException, IllegalAccessException, IllegalArgumentException{
+	public synchronized List<Vertex> findAll(List<Object> objects) throws NullPointerException, IllegalAccessException, IllegalArgumentException{
 		List<Vertex> vertices = new ArrayList<Vertex>();
-		for(T objDef : objects){
+		for(Object objDef : objects){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(objDef);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
@@ -239,7 +241,7 @@ public class OrientDbPersistor<T>{
 	}
 
 	//Retrieves all public properties for an object
-	private String[] getProperties(T obj){
+	private String[] getProperties(Object obj){
 		String[] properties = new String[obj.getClass().getFields().length];
 		int idx = 0;
 		for(Field field : obj.getClass().getFields()){

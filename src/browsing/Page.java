@@ -11,10 +11,7 @@ import java.util.List;
 
 import learning.State;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -28,12 +25,13 @@ import org.openqa.selenium.WebElement;
  *
  */
 public class Page implements State, PathObject {
+    private static final Logger log = Logger.getLogger(Page.class);
+
 	private String screenshot = null; 
 	private String src = "";
 	public String date = null;
-	public URL pageUrl = null;
-	private final List<WebElement> web_elements;
-	private final Elements elements;
+	public final URL pageUrl;
+	private final List<PageElement> elements;
 	
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
@@ -48,13 +46,12 @@ public class Page implements State, PathObject {
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
 		this.src = driver.getPageSource();
 		this.date = date.format(new Date());
-		this.pageUrl = new URL(driver.getCurrentUrl());
+		this.pageUrl = new URL(driver.getCurrentUrl().replace("/#","/"));
 		this.screenshot = Browser.getScreenshot(driver);
-		this.web_elements = driver.findElements(By.xpath("//"));
-		
-		Document doc = Jsoup.parse(this.src);
-		this.elements = doc.getAllElements(); 
-			//	getVisibleElements(driver, "//body");
+	
+		//Document doc = Jsoup.parse(this.src);
+		//this.elements = doc.getAllElements(); 
+		this.elements = getVisibleElements(driver, "//body");
 	}
 	
 	/**
@@ -64,7 +61,8 @@ public class Page implements State, PathObject {
 	 */
 	public String getSrc() {
 		this.src = src.replaceAll("\\s", "");
-		return src.replace("<canvasid=\"fxdriver-screenshot-canvas\"style=\"display:none;\"width=\"1000\"height=\"720\"></canvas>","");
+		this.src = this.src.replace("<iframeframeborder=\"0\"id=\"rufous-sandbox\"scrolling=\"no\"allowtransparency=\"true\"allowfullscreen=\"true\"style=\"position:absolute;visibility:hidden;display:none;width:0px;height:0px;padding:0px;border:mediumnone;\"></iframe>",  "");
+		return src.replace("<canvasid=\"fxdriver-screenshot-canvas\"style=\"display:none;\"width=\"993\"height=\"493\"></canvas>","");
 	}
 	
 	public void setSrc(String src) {
@@ -87,7 +85,8 @@ public class Page implements State, PathObject {
 	public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
 															 throws WebDriverException {
 		
-		List<WebElement> pageElements = driver.findElements(By.xpath(xpath + "//*"));
+		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
+		log.info("page elements found :: " +pageElements.size());
 		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
 		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
 		if(pageElements.size() <= 0){
@@ -119,21 +118,29 @@ public class Page implements State, PathObject {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-
-		return (this.elements.size() == that.elements.size()) 
-				&& this.pageUrl.equals(that.pageUrl) 
+        log.info(this.elements.size() + " :: "+ that.elements.size());
+        log.info(this.screenshot.equals(that.screenshot));
+        log.info(this.getSrc().length() == that.getSrc().length());
+    	log.info(this.getSrc().equals(that.getSrc()));
+    	return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
+		/*return (//this.elements.size() == that.elements.size() 
+				this.pageUrl.equals(that.pageUrl) 
 				&& this.getSrc().equals(that.getSrc())
-				&& this.screenshot.equals(that.screenshot);
+				&& this.screenshot.equals(that.screenshot));
+				*/
 	}
 	
+	/**
+	 * {@inheritDoc} 	
+	 */
+	@Override
 	public String toString(){
 		return this.getSrc();
 	}
 
-	public Object getObject() {
-		return this;
-	}
-	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
     public int hashCode() {
         int hash = 1;
@@ -146,8 +153,17 @@ public class Page implements State, PathObject {
         return hash;
     }
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public Page getData() {
+	public Page data() {
 		return this;
+	}
+
+	@Override
+	public Object getObject() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

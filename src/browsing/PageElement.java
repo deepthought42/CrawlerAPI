@@ -313,8 +313,6 @@ public class PageElement implements PathObject {
 				this.cssValues.put(propertyName, element.getCssValue(propertyName));	
 			}			
 		}
-		
-		log.info("Element css properties loaded");
 	}
 	
 	/**
@@ -480,7 +478,7 @@ public class PageElement implements PathObject {
 	}
 
 	@Override
-	public PageElement getData() {
+	public PageElement data() {
 		return this;
 	}
 }

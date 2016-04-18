@@ -12,5 +12,5 @@ public interface PathObject {
 	 * Returns wrapped object
 	 * @return
 	 */
-	public Object getData();
+	public Object data();
 }

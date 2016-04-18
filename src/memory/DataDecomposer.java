@@ -4,8 +4,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import akka.actor.UntypedActor;
-
 /**
  * Defines static methods to handle the decomposition of it's data into their constituent pieces.
  * 
@@ -65,8 +63,8 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static List<ObjectDefinition> decompose(Object obj) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
-		List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
+	public static List<Object> decompose(Object obj) throws IllegalArgumentException, IllegalAccessException, NullPointerException{
+		List<Object> objDefList = new ArrayList<Object>();
 		
 		Class<?> objClass = obj.getClass();
 	    Field[] fields = objClass.getFields();
@@ -80,7 +78,7 @@ public class DataDecomposer {
 		        if(value.getClass().equals(ArrayList.class)){
 		        	ArrayList<?> list = ((ArrayList<?>)value);
 		        	//return all elements of array
-		        	List<ObjectDefinition> decomposedList = decomposeArrayList(list);
+		        	List<Object> decomposedList = decomposeArrayList(list);
 	        		objDefList.addAll(decomposedList);
 		        }
 		        else if(value.getClass().equals(String[].class)){
@@ -92,7 +90,7 @@ public class DataDecomposer {
 		        }
 		        else if(value.getClass().equals(Object[].class)){
 		        	Object[] array = (Object[]) value;
-		        	List<ObjectDefinition> decomposedList = decomposeObjectArray(array);
+		        	List<Object> decomposedList = decomposeObjectArray(array);
 		        	objDefList.addAll(decomposedList);
 		        }
 		        else{
@@ -111,8 +109,8 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private static List<ObjectDefinition> decomposeObjectArray(Object[] array) throws IllegalArgumentException, IllegalAccessException{
-    	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
+	private static List<Object> decomposeObjectArray(Object[] array) throws IllegalArgumentException, IllegalAccessException{
+    	List<Object> objDefList = new ArrayList<Object>();
 		if(array == null || array.length == 0){
 			return objDefList;
 		}
@@ -131,8 +129,8 @@ public class DataDecomposer {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private static List<ObjectDefinition> decomposeArrayList(ArrayList<?> list) throws IllegalArgumentException, IllegalAccessException, NullPointerException {
-    	List<ObjectDefinition> objDefList = new ArrayList<ObjectDefinition>();
+	private static List<Object> decomposeArrayList(ArrayList<?> list) throws IllegalArgumentException, IllegalAccessException, NullPointerException {
+    	List<Object> objDefList = new ArrayList<Object>();
 		if(list == null || list.isEmpty()){
 			return objDefList;
 		}

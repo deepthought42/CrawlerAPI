@@ -11,7 +11,6 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 
 import memory.DataDecomposer;
-import memory.ObjectDefinition;
 import memory.OrientDbPersistor;
 import memory.Vocabulary;
 import akka.actor.ActorRef;
@@ -36,7 +35,7 @@ public class BrowserActor extends UntypedActor {
 	private static Random rand = new Random();
 	private UUID uuid = null;
 	private Browser browser = null;
-	private OrientDbPersistor<ObjectDefinition> persistor = new OrientDbPersistor<ObjectDefinition>();
+	private OrientDbPersistor persistor = new OrientDbPersistor();
 	//private ArrayList<Vocabulary> vocabularies = null;
 	
 	//temporary list for vocab labels into it can be determined how best to handle them
@@ -61,12 +60,12 @@ public class BrowserActor extends UntypedActor {
 	 * @throws IllegalAccessException
 	 */
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
-		List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
+		List<Object> definitions = DataDecomposer.decompose(pageElement);
 
 		System.out.println(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
 		
-		for(ObjectDefinition obj : definitions){
+		for(Object obj : definitions){
 			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.findVertices(obj);
 			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
 			
@@ -173,7 +172,7 @@ public class BrowserActor extends UntypedActor {
 		for(PageElement elem : pageElements){
 			HashMap<String, Double> full_action_map = new HashMap<String, Double>(0);
 			//find vertex for given element
-			List<ObjectDefinition> raw_object_definitions = DataDecomposer.decompose(elem);
+			List<Object> raw_object_definitions = DataDecomposer.decompose(elem);
 			List<com.tinkerpop.blueprints.Vertex> object_definition_list
 				= persistor.findAll(raw_object_definitions);
 					
@@ -237,16 +236,17 @@ public class BrowserActor extends UntypedActor {
 		if (message instanceof Path){
 			log.info("PATH PASSED TO BROWSER ACTOR");
 			Path path = Path.clone((Path)message);
-			this.browser = new Browser(((Page)(path.getPath().get(0).getData())).pageUrl.toString());
+			this.browser = new Browser(((Page)(path.getPath().get(0).data())).pageUrl.toString());
 			if(!path.getPath().isEmpty()){
 				Crawler.crawlPath(path, browser);
 			}
 			 
 			//get current page of browser
 			Page current_page = browser.getPage();
-			Page last_page = path.getLastPageVertex();
-			if(!current_page.equals(last_page) || path.getPath().size() <= 1){
-		  		System.err.println("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
+			Page last_page = path.lastPageVertex();
+			if(!current_page.equals(last_page) || path.getPath().size() == 1){
+		  		log.info("PATH SIZE? :: " + path.getPath().size() );
+		  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
 
 				path.setIsUseful(true);
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
@@ -267,7 +267,7 @@ public class BrowserActor extends UntypedActor {
              
 		}
 		else if(message instanceof URL){
-			System.out.println("URL PASSED TO BROWSER ACTOR : " +((URL)message).toString());
+			log.info("URL PASSED TO BROWSER ACTOR : " +((URL)message).toString());
 		  	this.browser = new Browser(((URL)message).toString());
 		  	Path path = new Path();
 		  	PathObject page_obj = browser.getPage();
@@ -275,10 +275,10 @@ public class BrowserActor extends UntypedActor {
 		  	Crawler.crawlPath(path, browser);
 		  	
 		  	Page current_page = browser.getPage();
-			Page last_page = path.getLastPageVertex();
+			Page last_page = path.lastPageVertex();
 			
-		  	if(!current_page.equals(last_page) || path.getPath().size() <= 1){
-		  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE");
+		  	if(!current_page.equals(last_page) || path.getPath().size() == 1){
+		  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
 				path.setIsUseful(true);
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
 				path_expansion_actor.tell(path, getSelf() );

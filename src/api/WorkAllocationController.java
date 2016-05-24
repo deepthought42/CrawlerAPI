@@ -8,8 +8,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.stormpath.sdk.account.Account;
+import com.stormpath.sdk.servlet.account.AccountResolver;
+
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 
@@ -29,8 +34,12 @@ import akka.actor.Props;
 public class WorkAllocationController {
 
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody WorkAllocationActor startWorkAllocator(@RequestParam(value="url", required=true) String url) throws MalformedURLException {
-
+	public @ResponseBody WorkAllocationActor startWorkAllocator(HttpServletRequest request, @RequestParam(value="url", required=true) String url) throws MalformedURLException {
+		Account account = AccountResolver.INSTANCE.getAccount(request);
+        if (account != null) {
+            String name = account.getGivenName();
+            System.err.println("NAME :: "+name);
+        }
 //		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 
 		//String url = "http://127.0.0.1:3000";

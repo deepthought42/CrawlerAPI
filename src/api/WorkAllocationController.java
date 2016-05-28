@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.stormpath.sdk.account.Account;
-import com.stormpath.sdk.servlet.account.AccountResolver;
+import WorkManagement.WorkAllowanceStatus;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,37 +25,65 @@ import akka.actor.Props;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
+ * 
  * @author Brandon Kindred
  */
 @Controller
 @CrossOrigin(origins = "http://localhost:8000")
-@RequestMapping("/workAllocation")
+@RequestMapping("/work")
 public class WorkAllocationController {
 
+	/**
+	 * 
+	 * @param request
+	 * @param url
+	 * @return
+	 * @throws MalformedURLException
+	 */
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody WorkAllocationActor startWorkAllocator(HttpServletRequest request, @RequestParam(value="url", required=true) String url) throws MalformedURLException {
-		Account account = AccountResolver.INSTANCE.getAccount(request);
-        if (account != null) {
-            String name = account.getGivenName();
-            System.err.println("NAME :: "+name);
-        }
+	public @ResponseBody WorkAllocationActor startWork(HttpServletRequest request, @RequestParam(value="url", required=true) String url, @RequestParam(value="account_key", required=true) String account_key) throws MalformedURLException {
+		
 //		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 
 		//String url = "http://127.0.0.1:3000";
 		//String url = "http://brandonkindred.ninja/blog";
 		//String url = "http://www.ideabin.io";
-		System.out.print("INITIALIZING ACTOR...");
-		System.out.println("TOTAL CORES AVAILABLE : "+Runtime.getRuntime().availableProcessors());
-		ActorSystem actor_system = ActorSystem.create("ActorSystem");
-		System.out.print("Initializing page monitor...");
-		//WorkAllocationActor workAllocator = new WorkAllocationActor(actor_system, resourceManager, url);
 		
-		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-		workAllocationActor.tell(new URL(url), ActorRef.noSender());
+		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
+		//String account_key = ""+UUID.randomUUID().toString();
+		//System.out.println("ACCOUNT KEY :: "+account_key);
 
+		WorkAllowanceStatus.register(account_key); 
+		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
+		
+		if(WorkAllowanceStatus.checkStatus(account_key)){
+			System.out.print("Compiling work to be allocated to work allocator...");
+
+			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+			
+			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
+			workAllocationActor.tell(new URL(url), ActorRef.noSender());
+		}
 		return null;
 	}
 
+	/**
+	 * 
+	 * @param request
+	 * @param account_key key of account to stop work for
+	 * @return
+	 * @throws MalformedURLException
+	 */
+	@RequestMapping("/stop")
+	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request, @RequestParam(value="account_key", required=true) String account_key) throws MalformedURLException {
+		
+		System.out.println("ACCOUNT KEY :: "+account_key);
+
+		WorkAllowanceStatus.haltWork(account_key); 
+		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
+		
+		return null;
+	}
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)

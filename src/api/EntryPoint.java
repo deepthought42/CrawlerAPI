@@ -2,12 +2,6 @@ package api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-
-import static com.stormpath.spring.config.StormpathWebSecurityConfigurer.stormpath;
 
 import akka.actor.ActorSystem;
 
@@ -34,15 +28,8 @@ public class EntryPoint {
 		final ActorSystem system = ActorSystem.create("Minion");
 	}
 	
-	@Configuration
-	protected static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			http.apply(stormpath()).and()
-            .authorizeRequests()
-			.antMatchers(HttpMethod.OPTIONS, "/*/**").permitAll()
-		    .antMatchers("/login").permitAll()
-		    .antMatchers("/logout").authenticated();
-	    }
-	}
+	
+	
 }
+
+

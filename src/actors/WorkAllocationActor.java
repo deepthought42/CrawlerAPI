@@ -4,11 +4,14 @@ import java.net.URL;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 
+import WorkManagement.WorkAllowanceStatus;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import observableStructs.ObservableHash;
+import structs.Message;
 import structs.Path;
 
 /**
@@ -43,16 +46,26 @@ public class WorkAllocationActor extends UntypedActor {
 
 	@Override
 	public void onReceive(Object message) throws Exception {
-		if(message instanceof Path){
-			Path path = (Path)message;
-			final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
-			browser_actor.tell(path, getSelf() );
+		if(message instanceof Message){
+			Message<?> acct_message = (Message<?>)message;
+			
+			if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
+	
+				if(acct_message.getData() instanceof Path){
+					Path path = (Path)message;
+					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
+					browser_actor.tell(path, getSelf() );
+				}
+				else if(acct_message.getData() instanceof URL){
+					log.info("message is URL for workAllocator");
+					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
+					browser_actor.tell((URL)message, getSelf());
+				}
+				else unhandled(message);	
+			}
+			else{
+				log.log(Priority.WARN, "Work allocation actor did not start any work due to account key not having a runnable status");
+			}
 		}
-		else if(message instanceof URL){
-			log.info("message is URL for workAllocator");
-			final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
-			browser_actor.tell((URL)message, getSelf());
-		}
-		else unhandled(message);	
 	}
 }

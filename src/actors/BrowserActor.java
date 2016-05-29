@@ -21,6 +21,7 @@ import browsing.Browser;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.PathObject;
+import structs.Message;
 import structs.Path;
 
 /**
@@ -233,66 +234,68 @@ public class BrowserActor extends UntypedActor {
 	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
-		if (message instanceof Path){
-			log.info("PATH PASSED TO BROWSER ACTOR");
-			Path path = Path.clone((Path)message);
-			this.browser = new Browser(((Page)(path.getPath().get(0).data())).pageUrl.toString());
-			if(!path.getPath().isEmpty()){
-				Crawler.crawlPath(path, browser);
+		if(message instanceof Message){
+			Message<?> acct_msg = (Message<?>)message;
+			if (acct_msg.getData() instanceof Path){
+				log.info("PATH PASSED TO BROWSER ACTOR");
+				Path path = Path.clone((Path)acct_msg.getData());
+				this.browser = new Browser(((Page)(path.getPath().get(0).data())).pageUrl.toString());
+				if(!path.getPath().isEmpty()){
+					Crawler.crawlPath(path, browser);
+				}
+				 
+				//get current page of browser
+				Page current_page = browser.getPage();
+				Page last_page = path.lastPageVertex();
+				if(!current_page.equals(last_page) || path.getPath().size() == 1){
+			  		log.info("PATH SIZE? :: " + path.getPath().size() );
+			  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
+	
+					path.setIsUseful(true);
+					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+					path_expansion_actor.tell(path, getSelf() );
+				}
+				else{
+					path.setIsUseful(false);
+				}
+				
+				//tell memory worker of path
+				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+				memory_actor.tell(path, getSelf() );
+				
+				//broadcast path
+				PastPathExperienceController.broadcastPathExperience(path);
+	        	
+	        	this.browser.getDriver().quit();
+	             
 			}
-			 
-			//get current page of browser
-			Page current_page = browser.getPage();
-			Page last_page = path.lastPageVertex();
-			if(!current_page.equals(last_page) || path.getPath().size() == 1){
-		  		log.info("PATH SIZE? :: " + path.getPath().size() );
-		  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
-
-				path.setIsUseful(true);
-				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
-				path_expansion_actor.tell(path, getSelf() );
-			}
-			else{
-				path.setIsUseful(false);
-			}
-			
-			//tell memory worker of path
-			final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-			memory_actor.tell(path, getSelf() );
-			
-			//broadcast path
-			PastPathExperienceController.broadcastPathExperience(path);
-        	
-        	this.browser.getDriver().quit();
-             
-		}
-		else if(message instanceof URL){
-			log.info("URL PASSED TO BROWSER ACTOR : " +((URL)message).toString());
-		  	this.browser = new Browser(((URL)message).toString());
-		  	Path path = new Path();
-		  	PathObject page_obj = browser.getPage();
-		  	path.add(page_obj);
-		  	Crawler.crawlPath(path, browser);
-		  	
-		  	Page current_page = browser.getPage();
-			Page last_page = path.lastPageVertex();
-			
-		  	if(!current_page.equals(last_page) || path.getPath().size() == 1){
-		  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
-				path.setIsUseful(true);
-				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
-				path_expansion_actor.tell(path, getSelf() );
-			}
-			else{
-				path.setIsUseful(false);
-			}
-		  	//broadcast path
-			PastPathExperienceController.broadcastPathExperience(path);		  	
-			
-			//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
-			//memory_actor.tell(path, getSelf() );
-		  	this.browser.getDriver().quit();
-	   }
-		else unhandled(message);
+			else if(acct_msg.getData() instanceof URL){
+				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)message).toString());
+			  	this.browser = new Browser(((URL)acct_msg.getData()).toString());
+			  	Path path = new Path();
+			  	PathObject page_obj = browser.getPage();
+			  	path.add(page_obj);
+			  	Crawler.crawlPath(path, browser);
+			  	
+			  	Page current_page = browser.getPage();
+				Page last_page = path.lastPageVertex();
+				
+			  	if(!current_page.equals(last_page) || path.getPath().size() == 1){
+			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
+					path.setIsUseful(true);
+					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+					path_expansion_actor.tell(path, getSelf() );
+				}
+				else{
+					path.setIsUseful(false);
+				}
+			  	//broadcast path
+				PastPathExperienceController.broadcastPathExperience(path);		  	
+				
+				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
+				//memory_actor.tell(path, getSelf() );
+			  	this.browser.getDriver().quit();
+		   }
+		}else unhandled(message);
 	}
 }

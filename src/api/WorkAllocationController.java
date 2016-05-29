@@ -21,6 +21,7 @@ import actors.WorkAllocationActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import structs.Message;
 
 
 /**
@@ -56,14 +57,13 @@ public class WorkAllocationController {
 		WorkAllowanceStatus.register(account_key); 
 		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
 		
-		if(WorkAllowanceStatus.checkStatus(account_key)){
-			System.out.print("Compiling work to be allocated to work allocator...");
+		System.out.print("Compiling work to be allocated to work allocator...");
 
-			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-			
-			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-			workAllocationActor.tell(new URL(url), ActorRef.noSender());
-		}
+		ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+		Message<URL> message = new Message<URL>(account_key, new URL(url));
+		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
+		workAllocationActor.tell(message, ActorRef.noSender());
+	
 		return null;
 	}
 
@@ -77,7 +77,7 @@ public class WorkAllocationController {
 	@RequestMapping("/stop")
 	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request, @RequestParam(value="account_key", required=true) String account_key) throws MalformedURLException {
 		
-		System.out.println("ACCOUNT KEY :: "+account_key);
+		System.out.println("STOP! ACCOUNT KEY :: "+account_key);
 
 		WorkAllowanceStatus.haltWork(account_key); 
 		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));

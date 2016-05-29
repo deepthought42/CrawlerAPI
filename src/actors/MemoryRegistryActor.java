@@ -18,6 +18,7 @@ import memory.Vocabulary;
 import browsing.ActionFactory;
 import browsing.Page;
 import browsing.PathObject;
+import structs.Message;
 import structs.Path;
 
 /**
@@ -34,72 +35,74 @@ public class MemoryRegistryActor extends UntypedActor{
 	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
-		//Retains lists of productive, unproductive, and unknown value {@link Path}s.
-		if(message instanceof Path){
-			Path path = (Path)message;
-		
-			OrientDbPersistor orient_persistor = new OrientDbPersistor();
-			Vertex last_vertex = null;
-			boolean last_id_set=false;
-			int last_path_node_hash=0;
-			String action = "contains";
-			//orient_persistor.addVertexType(PathObject.class.getName());
-			for(PathObject pathObj : path.getPath()){
-				int objHash =  pathObj.data().hashCode();
-				
-				PathNode path_node = new PathNode(objHash, pathObj.data().getClass().getCanonicalName(), pathObj.data().toString());
-				Vertex vertex = null;
-				if(!pathObj.data().getClass().getCanonicalName().equals("browsing.actions.Action")){
-					vertex = orient_persistor.findAndUpdateOrCreate(path_node, new String[0]);
-				}
-				else{
-					action = pathObj.data().toString();
-					continue;
-				}
-				
-				if(last_id_set){
-					Iterable<Edge> edges = orient_persistor.findEdges("hash_code", last_path_node_hash +""+ path_node.hash_code);
-					Edge edge = null;
+		if(message instanceof Message){
+			Message<?> acct_msg = (Message<?>)message;
+			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
+			if(acct_msg.getData() instanceof Path){
+				Path path = (Path)acct_msg.getData();
+			
+				OrientDbPersistor orient_persistor = new OrientDbPersistor();
+				Vertex last_vertex = null;
+				boolean last_id_set=false;
+				int last_path_node_hash=0;
+				String action = "contains";
+				//orient_persistor.addVertexType(PathObject.class.getName());
+				for(PathObject pathObj : path.getPath()){
+					int objHash =  pathObj.data().hashCode();
 					
-					if(edges.iterator().hasNext()){
-						edge = edges.iterator().next();
+					PathNode path_node = new PathNode(objHash, pathObj.data().getClass().getCanonicalName(), pathObj.data().toString());
+					Vertex vertex = null;
+					if(!pathObj.data().getClass().getCanonicalName().equals("browsing.actions.Action")){
+						vertex = orient_persistor.findAndUpdateOrCreate(path_node, new String[0]);
 					}
 					else{
-						edge = orient_persistor.addEdge(last_vertex, vertex, path_node.getClass().getCanonicalName(), last_path_node_hash +"-"+ path_node.hash_code);
-						//edge.setProperty("path_uid", path_uuid);
-						edge.setProperty("hash_code", last_path_node_hash +"-"+ path_node.hash_code);
-						edge.setProperty("action", action);
-						edge.setProperty("date", new Date());
+						action = pathObj.data().toString();
+						continue;
 					}
 					
-					if(path.isUseful() == null){
-						edge.setProperty("value_status", "UNKNOWN");
+					if(last_id_set){
+						Iterable<Edge> edges = orient_persistor.findEdges("hash_code", last_path_node_hash +""+ path_node.hash_code);
+						Edge edge = null;
+						
+						if(edges.iterator().hasNext()){
+							edge = edges.iterator().next();
+						}
+						else{
+							edge = orient_persistor.addEdge(last_vertex, vertex, path_node.getClass().getCanonicalName(), last_path_node_hash +"-"+ path_node.hash_code);
+							//edge.setProperty("path_uid", path_uuid);
+							edge.setProperty("hash_code", last_path_node_hash +"-"+ path_node.hash_code);
+							edge.setProperty("action", action);
+							edge.setProperty("date", new Date());
+						}
+						
+						if(path.isUseful() == null){
+							edge.setProperty("value_status", "UNKNOWN");
+						}
+						else{
+							edge.setProperty("value_status", path.isUseful());
+						}
 					}
-					else{
-						edge.setProperty("value_status", path.isUseful());
-					}
+					last_vertex = vertex;
+					last_path_node_hash = path_node.hash_code;
+					last_id_set = true;
 				}
-				last_vertex = vertex;
-				last_path_node_hash = path_node.hash_code;
-				last_id_set = true;
+				
+				orient_persistor.save();
 			}
-			
-			orient_persistor.save();
-		}
-		else if(message instanceof Page){
-			Page page = (Page)message;
-			List<Object> decomposed_list = DataDecomposer.decompose(page);
-			OrientDbPersistor persistor = new OrientDbPersistor();
-			
-			for(Object objDef : decomposed_list){
-				//if object definition value doesn't exist in vocabulary 
-				// then add value to vocabulary
-				Vocabulary vocabulary = new Vocabulary(new ArrayList<String>(), "page");
-				vocabulary.appendToVocabulary(((ObjectDefinition)objDef).getValue());
-				persistor.findAndUpdateOrCreate(vocabulary, ActionFactory.getActions());
+			else if(acct_msg.getData() instanceof Page){
+				Page page = (Page)acct_msg.getData();
+				List<Object> decomposed_list = DataDecomposer.decompose(page);
+				OrientDbPersistor persistor = new OrientDbPersistor();
+				
+				for(Object objDef : decomposed_list){
+					//if object definition value doesn't exist in vocabulary 
+					// then add value to vocabulary
+					Vocabulary vocabulary = new Vocabulary(new ArrayList<String>(), "page");
+					vocabulary.appendToVocabulary(((ObjectDefinition)objDef).getValue());
+					persistor.findAndUpdateOrCreate(vocabulary, ActionFactory.getActions());
+				}
 			}
 		}
 		else unhandled(message);
-		
 	}
 }

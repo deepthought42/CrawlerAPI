@@ -24,18 +24,22 @@ public class PathExpansionActor extends UntypedActor {
 			Message<?> acct_msg = (Message<?>)message;
 			if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
+				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
+				
 				log.info("EXPANDING PATH WITH LENGTH : "+path.getPath().size());
 				ArrayList<Path> pathExpansions = new ArrayList<Path>();
-				
+
 				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
-				memory_registry.tell(path, getSelf());
+				memory_registry.tell(path_msg, getSelf());
 				
 				if(path.isUseful()){
 					pathExpansions = Path.expandPath(path);
 					log.info("Path expansions found : " +pathExpansions.size());
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 					for(Path expanded : pathExpansions){
-						work_allocator.tell(expanded, getSelf() );
+						Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded);
+
+						work_allocator.tell(expanded_path_msg, getSelf() );
 					}
 				}			
 			}

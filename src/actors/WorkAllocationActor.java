@@ -52,16 +52,20 @@ public class WorkAllocationActor extends UntypedActor {
 			if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
 	
 				if(acct_message.getData() instanceof Path){
-					Path path = (Path)message;
+					
+					Path path = (Path)acct_message.getData();
+				
+					Message<Path> path_msg = new Message<Path>(acct_message.getAccountKey(), path);
 					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
-					browser_actor.tell(path, getSelf() );
+					browser_actor.tell(path_msg, getSelf() );
 				}
 				else if(acct_message.getData() instanceof URL){
 					log.info("message is URL for workAllocator");
 					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
-					browser_actor.tell((URL)message, getSelf());
+
+					Message<URL> url_msg = new Message<URL>(acct_message.getAccountKey(), (URL)acct_message.getData());
+					browser_actor.tell(url_msg, getSelf());
 				}
-				else unhandled(message);	
 			}
 			else{
 				log.log(Priority.WARN, "Work allocation actor did not start any work due to account key not having a runnable status");

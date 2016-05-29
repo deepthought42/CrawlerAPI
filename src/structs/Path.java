@@ -30,14 +30,14 @@ public class Path {
 	public double cost = 0.0;
 	private Boolean isUseful;
 
-	public ArrayList<PathObject> vertexPath = null;
+	public ArrayList<PathObject> path = null;
 	
 	/**
 	 * Creates new instance of Path
 	 */
 	public Path(){
 		this.isUseful = null;
-		this.vertexPath = new ArrayList<PathObject>();
+		this.path = new ArrayList<PathObject>();
 	}
 
 	/**
@@ -47,7 +47,7 @@ public class Path {
 	 */
 	public Path(Path current_path){
 		this.isUseful = null;
-		this.vertexPath = new  ArrayList<PathObject>();
+		this.path = new  ArrayList<PathObject>();
 		this.append(current_path);
 	}
 	
@@ -58,12 +58,12 @@ public class Path {
 	public void append(Path appendablePath){
 		
 		for(PathObject obj : appendablePath.getPath()){
-			this.vertexPath.add(obj);
+			this.path.add(obj);
 		}				
 	}
 		
 	public boolean add(PathObject obj){
-		return this.vertexPath.add(obj);
+		return this.path.add(obj);
 	}
 	
 	/**
@@ -71,7 +71,7 @@ public class Path {
 	 * @return
 	 */
 	public ArrayList<PathObject> getPath(){
-		return this.vertexPath;
+		return this.path;
 	}
 	
 	public void setIsUseful(boolean isUseful){
@@ -82,15 +82,11 @@ public class Path {
 		return this.isUseful;
 	}
 	
-	public Boolean getIsUseful(){
-		return this.isUseful;
-	}
-	
 	/**
 	 * {@inheritDoc}
 	 */
 	public boolean equals(Path path){
-		int thisPathLength = this.vertexPath.size();
+		int thisPathLength = this.path.size();
 		int comparatorPathLength = path.getPath().size();
 				
 		if(thisPathLength != comparatorPathLength){
@@ -98,7 +94,7 @@ public class Path {
 			return false;
 		}
 		for(int i = 0; i < thisPathLength; i++){
-			Object thisPathNode = this.vertexPath.get(i);
+			Object thisPathNode = this.path.get(i);
 			Object comparatorPathNode = path.getPath().get(i);
 			
 			if(!thisPathNode.getClass().getCanonicalName().equals(comparatorPathNode.getClass().getCanonicalName())){
@@ -174,8 +170,8 @@ public class Path {
 	 * @return
 	 */
 	public Page lastPageVertex(){
-		for(int i = this.vertexPath.size()-1; i >= 0; i--){
-			PathObject descNode = this.vertexPath.get(i);
+		for(int i = this.path.size()-1; i >= 0; i--){
+			PathObject descNode = this.path.get(i);
 			if(descNode.data() instanceof Page){
 				return (Page)descNode.data();
 			}

@@ -40,24 +40,24 @@ public class PastPathExperienceController {
         return emitter;
     }
 	
+    /**
+     * Message emitter that sends path to all registered clients
+     * 
+     * @param path
+     */
     @CrossOrigin(origins = "*")
-	public static Path broadcastPathExperience(Path path) {
-		log.info("Got message" + path);
+	public static void broadcastPathExperience(Path path) {
+		
 		log.info("Emitters available to send to : " + emitters.size());
         emitters.forEach((SseEmitter emitter) -> {
             try {
-                log.info("Sending message to client");
-                
                 emitter.send(path, MediaType.APPLICATION_JSON);
-                log.info("Sent message to client");
             } catch (IOException e) {
-                log.info("Error sending message to client");
+                log.error("Error sending message to client");
                 emitter.complete();
                 emitters.remove(emitter);
                 e.printStackTrace();
             }
         });
-       
-		return path;
 	}
 }

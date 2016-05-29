@@ -9,11 +9,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import learning.State;
-
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -24,13 +23,13 @@ import org.openqa.selenium.WebElement;
  * @author Brandon Kindred
  *
  */
-public class Page implements State, PathObject {
+public class Page implements PathObject {
     private static final Logger log = Logger.getLogger(Page.class);
 
 	private String screenshot = null; 
 	private String src = "";
 	public String date = null;
-	public final URL pageUrl;
+	public final URL url;
 	private final List<PageElement> elements;
 	
 	/**
@@ -44,9 +43,10 @@ public class Page implements State, PathObject {
 	 * @throws URISyntaxException 
 	 */
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
-		this.src = driver.getPageSource();
+		setSrc(driver.getPageSource());
+		
 		this.date = date.format(new Date());
-		this.pageUrl = new URL(driver.getCurrentUrl().replace("/#","/"));
+		this.url = new URL(driver.getCurrentUrl().replace("/#","/"));
 		this.screenshot = Browser.getScreenshot(driver);
 	
 		//Document doc = Jsoup.parse(this.src);
@@ -60,17 +60,25 @@ public class Page implements State, PathObject {
 	 * @return the page of the source
 	 */
 	public String getSrc() {
-		this.src = src.replaceAll("\\s", "");
-		this.src = this.src.replace("<iframeframeborder=\"0\"id=\"rufous-sandbox\"scrolling=\"no\"allowtransparency=\"true\"allowfullscreen=\"true\"style=\"position:absolute;visibility:hidden;display:none;width:0px;height:0px;padding:0px;border:mediumnone;\"></iframe>",  "");
-		return src.replace("<canvasid=\"fxdriver-screenshot-canvas\"style=\"display:none;\"width=\"993\"height=\"493\"></canvas>","");
+		return this.src;
 	}
 	
 	public void setSrc(String src) {
-		this.src = src;
+		this.src = cleanSrc(src);
+	}
+	
+	private static String cleanSrc(String src){
+		//src = src.replaceAll("\\s", "");
+		
+		src = src.replace("<iframe frameborder=\"0\" id=\"rufous-sandbox\" scrolling=\"no\" allowtransparency=\"true\" allowfullscreen=\"true\" style=\"position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: medium none;\"></iframe>",  "");
+		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"993\" height=\"493\"></canvas>","");
+		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"987\" height=\"491\"></canvas>","");
+		src = src.trim();
+		return src;
 	}
 
 	public URL getUrl(){
-		return this.pageUrl;
+		return this.url;
 	}
 	
 	/**
@@ -93,10 +101,13 @@ public class Page implements State, PathObject {
 			return elementList;
 		}
 		for(WebElement elem : pageElements){
-			
-			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
-				elementList.add(pageElem);
+			try{
+				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+					PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
+					elementList.add(pageElem);
+				}
+			}catch(StaleElementReferenceException e){
+				log.error(e);
 			}
 		}
 		
@@ -121,13 +132,15 @@ public class Page implements State, PathObject {
         log.info(this.elements.size() + " :: "+ that.elements.size());
         log.info(this.screenshot.equals(that.screenshot));
         log.info(this.getSrc().length() == that.getSrc().length());
-    	log.info(this.getSrc().equals(that.getSrc()));
-    	return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
-		/*return (//this.elements.size() == that.elements.size() 
-				this.pageUrl.equals(that.pageUrl) 
+    	log.info("PAGE URLs ARE EQUAL? :: "+this.url.equals(that.url));
+
+    	log.info("PAGE SRCs ARE EQUAL? :: "+this.getSrc().equals(that.getSrc()));
+    	//return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
+		return (//this.elements.size() == that.elements.size() &&
+				this.url.equals(that.url) 
 				&& this.getSrc().equals(that.getSrc())
 				&& this.screenshot.equals(that.screenshot));
-				*/
+				
 	}
 	
 	/**
@@ -144,7 +157,7 @@ public class Page implements State, PathObject {
 	@Override
     public int hashCode() {
         int hash = 1;
-        hash = hash * 5 + pageUrl.hashCode();
+        hash = hash * 5 + url.hashCode();
         hash = hash * 17 + src.hashCode();
         hash = hash * 31 + screenshot.hashCode();
        // for(PageElement element : elements){
@@ -159,11 +172,5 @@ public class Page implements State, PathObject {
 	@Override
 	public Page data() {
 		return this;
-	}
-
-	@Override
-	public Object getObject() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

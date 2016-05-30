@@ -26,8 +26,6 @@ import browsing.actions.Action;
 public class Path {
     private static final Logger log = Logger.getLogger(BrowserActor.class);
 	
-	public double reward = 0.0;
-	public double cost = 0.0;
 	private Boolean isUseful;
 
 	public ArrayList<PathObject> path = null;
@@ -110,14 +108,6 @@ public class Path {
 		System.out.println("NODE PATHS ARE EQUAL");
 		return true;		
 	}
-
-	public double getCost(){
-		return this.cost;
-	}
-	
-	public double getReward(){
-		return this.reward;
-	}
 	
 	/**
 	 * Calculates the cost of traversing the path based on the cost of individual vertices within this path
@@ -126,11 +116,12 @@ public class Path {
 	 * @return
 	 */
 	public double calculateCost(){
-		this.cost=0;
+		int cost=0;
 		for(PathObject vertex_obj : this.getPath()){
-			this.cost += ((IObjectValuationAccessor)vertex_obj.data()).getCost();
+			cost += ((IObjectValuationAccessor)vertex_obj.data()).getCost();
 		}
-		return this.cost;
+		
+		return cost;
 	}
 	
 	/**
@@ -140,9 +131,9 @@ public class Path {
 	 * @return
 	 */
 	public double calculateReward(){
-		this.reward = 0;
+		int reward = 0;
 		for(PathObject vertex_obj : this.getPath()){
-			this.reward += ((IObjectValuationAccessor)vertex_obj.data()).getReward();
+			reward += ((IObjectValuationAccessor)vertex_obj.data()).getReward();
 		}
 		
 		return reward;

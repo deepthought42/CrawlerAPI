@@ -25,7 +25,7 @@ import structs.Message;
 import structs.Path;
 
 /**
- * This threadable class is implemented to handle the interaction with a browser 
+ * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
  * 
  * @author Brandon Kindred
  *

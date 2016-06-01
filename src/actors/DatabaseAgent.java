@@ -5,13 +5,15 @@ import java.util.UUID;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
 
+import akka.actor.UntypedActor;
+
 /**
  * Agent that is responsible for persisting data in the OrientDB graph database. 
  * 
  * @author Brandon Kindred
  *
  */
-public class DatabaseAgent extends Thread implements Actor{
+public class DatabaseAgent extends UntypedActor{
 	private OrientGraphFactory factory = null;
 	private OrientGraph graph = null;
 	private String dbUrl = null;
@@ -44,5 +46,11 @@ public class DatabaseAgent extends Thread implements Actor{
 
 	public UUID getActorId() {
 		return uuid;
+	}
+
+	@Override
+	public void onReceive(Object arg0) throws Exception {
+		// TODO Auto-generated method stub
+		
 	}
 }

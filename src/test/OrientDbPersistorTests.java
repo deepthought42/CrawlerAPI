@@ -26,7 +26,7 @@ public class OrientDbPersistorTests {
 	@Test
 	public void ObjectDefinitionSaveTest() throws MalformedURLException, IOException {
 		ObjectDefinition obj = new ObjectDefinition("div", PageElement.class.getSimpleName() );
-		OrientDbPersistor<ObjectDefinition> persistor = new OrientDbPersistor<ObjectDefinition>();
+		OrientDbPersistor persistor = new OrientDbPersistor();
 		persistor.findAndUpdateOrCreate(obj, ActionFactory.getActions());
 	}
 }

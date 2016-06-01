@@ -249,6 +249,10 @@ public class BrowserActor extends UntypedActor {
 				Page current_page = browser.getPage();
 				Page last_page = path.lastPageVertex();
 				if(!current_page.equals(last_page) || path.getPath().size() == 1){
+					if(path.getPath().size() != 1 && !current_page.getUrl().toString().contains(last_page.getUrl().getHost())){
+						log.info("Path is useful but leaves original domain");
+						path.setSpansMultipleDomains(true);
+					}
 			  		log.info("PATH SIZE? :: " + path.getPath().size() );
 			  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
 	

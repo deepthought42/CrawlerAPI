@@ -27,7 +27,7 @@ public class Path {
     private static final Logger log = Logger.getLogger(BrowserActor.class);
 	
 	private Boolean isUseful;
-
+	private boolean spansMultipleDomains;
 	public ArrayList<PathObject> path = null;
 	
 	/**
@@ -35,6 +35,7 @@ public class Path {
 	 */
 	public Path(){
 		this.isUseful = null;
+		this.setSpansMultipleDomains(false);
 		this.path = new ArrayList<PathObject>();
 	}
 
@@ -259,5 +260,13 @@ public class Path {
 			}			
 		}
 		return false;
+	}
+
+	public boolean isSpansMultipleDomains() {
+		return spansMultipleDomains;
+	}
+
+	public void setSpansMultipleDomains(boolean spansMultipleDomains) {
+		this.spansMultipleDomains = spansMultipleDomains;
 	}
 }

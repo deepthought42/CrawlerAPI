@@ -25,7 +25,7 @@ public class OrientDbPersistor{
 	 * Creates a new connection to the orientDB graph
 	 */
 	public OrientDbPersistor() {
-		this.graph = new OrientGraph("remote:localhost/Thoth", "root", "oicu812");
+		this.graph = new OrientGraph("remote:localhost/Thoth", "brandon", "password");
 	}
 	
 	
@@ -160,7 +160,7 @@ public class OrientDbPersistor{
 		Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(obj);
 		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
 
-		com.tinkerpop.blueprints.Vertex v = null;
+		Vertex v = null;
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 
@@ -195,6 +195,28 @@ public class OrientDbPersistor{
 		return v;
 	}
 	
+	public void createVertex(Object obj){
+		System.out.println("Creating new vertex in OrientDB...");
+		/*
+		 Vertex v = this.addVertexType(obj, this.getProperties(obj));
+		//find objDef in memory. If it exists then use value for memory, otherwise choose random value
+		for(Field field : obj.getClass().getFields()){
+			String prop_val = "";
+			try {
+				prop_val =  field.get(obj).toString();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}	
+			catch(NullPointerException e){
+				e.printStackTrace();
+			}*/
+			//v.setProperty(field.getName(), prop_val);
+		//}
+		this.graph.addVertex(obj);
+
+	}
 	/**
 	 * Retrieves all vertices for given {@link ObjectDefinitions}
 	 * 
@@ -219,26 +241,6 @@ public class OrientDbPersistor{
 		return vertices;
 		
 	}
-	
-	/**
-	 * Gets all edges for a given memory state
-	 * 
-	 * @param memState
-	 * 
-	 * @return
-	 */
-	public static synchronized Iterable<Edge> getStateEdges(Vertex state){
-		assert state != null;
-				
-		Iterable<Edge> edgeList = null;
-
-		edgeList = state.getEdges(Direction.OUT, "GOES_TO");
-		for (Edge e : edgeList) {
-			System.out.println("- Bought: " + e);
-		}
-		
-		return edgeList;
-	}
 
 	//Retrieves all public properties for an object
 	private String[] getProperties(Object obj){
@@ -249,5 +251,14 @@ public class OrientDbPersistor{
 			idx++;
 		}
 		return properties;
+	}
+
+
+	/**
+	 * 	Finds vertices with given key. Key should be unique
+	 * @return first {@link Vertex} found. Key is assumed to be unique
+	 */
+	public Vertex findByKey(int key) {
+		return this.graph.getVertex(Integer.toString(key));
 	}
 }

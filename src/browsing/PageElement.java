@@ -50,7 +50,7 @@ public class PageElement implements PathObject {
 						String parentXpath, 
 						String[] actions, 
 						Map<String, Integer> xpathHash,
-						List<String>attrib_list){
+						List<String> attrib_list){
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;

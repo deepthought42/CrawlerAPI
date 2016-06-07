@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -26,6 +27,7 @@ import org.openqa.selenium.WebElement;
 public class Page implements PathObject {
     private static final Logger log = Logger.getLogger(Page.class);
 
+    private boolean landable = false;
 	private String screenshot = null; 
 	private String src = "";
 	public String date = null;
@@ -65,6 +67,38 @@ public class Page implements PathObject {
 	
 	public void setSrc(String src) {
 		this.src = cleanSrc(src);
+	}
+	
+	/**
+	 * Checks if the page is able to be accessed directly as a landing page
+	 * 
+	 * @return
+	 * @throws java.util.NoSuchElementException
+	 * @throws UnhandledAlertException
+	 * @throws IOException 
+	 */
+	public boolean checkIfLandable(Browser browser) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+		browser.getDriver().get(this.getUrl().toString());
+		Page current_page = browser.getPage();
+		if(current_page.equals(this)){
+			landable = true;
+		}
+		else{
+			landable = false;
+		}
+		return landable;
+	}
+	
+	public boolean isLandable(){
+		return this.landable;
+	}
+	
+	/**
+	 * 
+	 * @param isLandable
+	 */
+	public void setIsLandable(boolean isLandable){
+		this.landable = isLandable;
 	}
 	
 	private static String cleanSrc(String src){
@@ -150,6 +184,8 @@ public class Page implements PathObject {
 	public String toString(){
 		return this.getSrc();
 	}
+	
+	
 
 	/**
 	 * {@inheritDoc}

@@ -21,8 +21,12 @@ import browsing.Browser;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.PathObject;
+import browsing.actions.Action;
+import structs.ElementActionSequenceMapper;
 import structs.Message;
 import structs.Path;
+import structs.SessionSequenceTracker;
+import tester.Test;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -43,8 +47,9 @@ public class BrowserActor extends UntypedActor {
 		private String[] vocabLabels = {"html"};
 	//SHOULD BE CHANGED!!!
 	
+		
 	/**
-	 * 
+	 * Gets a random number between 0 and size
 	 * @param size
 	 * @return
 	 */
@@ -93,68 +98,6 @@ public class BrowserActor extends UntypedActor {
 		return cumulative_action_map;
 	}
 	
-	/**
-	 * 
-	 * @param element_probabilities
-	 * @return
-	 */
-	public int getBestIndex(double[] element_probabilities){
-		double p = -1.0;
-		int idx = 0;
-		int best_idx = -1;
-		for(double prob : element_probabilities){
-			if(prob > p){
-				p = prob;
-				best_idx = idx;
-			}
-			idx++;
-		}
-		System.out.println("BEST PROBABILITY :: " + p + " at index "+best_idx);
-		return best_idx;
-	}
-
-	/**
-	 * 
-	 * @param element_probabilities
-	 * @return
-	 */
-	public String getBestAction(HashMap<String, Double> action_probabilities){
-		double p = -1.0;
-		String best_action = "click";
-		for(String action : action_probabilities.keySet()){
-			double action_prob = action_probabilities.get(action);
-			if(action_prob > p){
-				p = action_prob;
-				best_action = action;
-			}
-		}
-		System.out.println("BEST PROBABILITY :: " + p);
-		return best_action;
-	}
-	
-	/**
-	 * Gets the index for the element that has an action probability of state change greater than the rest
-	 * 
-	 * @param element_probabilities
-	 * @return
-	 */
-	public int getBestIndex(ArrayList<HashMap<String, Double>> element_probabilities){
-		double p = -1.0;
-		int idx = 0;
-		int best_idx = 0;
-		
-		for(HashMap<String, Double> action_map : element_probabilities){
-			for(String action: action_map.keySet()){
-				if(action_map.get(action) > p){
-					p = action_map.get(action);
-					best_idx = idx;
-				}
-			}
-			idx++;
-		}
-		System.out.println("BEST PROBABILITY :: " + p + " at index "+best_idx);
-		return best_idx;
-	}
 	
 	/**
 	 * Calculate all estimated element probabilities
@@ -240,6 +183,7 @@ public class BrowserActor extends UntypedActor {
 				log.info("PATH PASSED TO BROWSER ACTOR");
 				Path path = Path.clone((Path)acct_msg.getData());
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
+				
 				this.browser = new Browser(((Page)(path.getPath().get(0).data())).getUrl().toString());
 				if(!path.getPath().isEmpty()){
 					Crawler.crawlPath(path, browser);
@@ -247,7 +191,7 @@ public class BrowserActor extends UntypedActor {
 				 
 				//get current page of browser
 				Page current_page = browser.getPage();
-				Page last_page = path.lastPageVertex();
+				Page last_page = path.getLastPage();
 				if(!current_page.equals(last_page) || path.getPath().size() == 1){
 					if(path.getPath().size() != 1 && !current_page.getUrl().toString().contains(last_page.getUrl().getHost())){
 						log.info("Path is useful but leaves original domain");
@@ -256,7 +200,11 @@ public class BrowserActor extends UntypedActor {
 			  		log.info("PATH SIZE? :: " + path.getPath().size() );
 			  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
 	
-					path.setIsUseful(true);
+					path.setIsUseful(false);
+					if(last_page.checkIfLandable(browser)){
+						last_page.setIsLandable(true);
+					}
+
 					if(path.getPath().size() > 1){
 						path.add(current_page);
 					}
@@ -265,17 +213,41 @@ public class BrowserActor extends UntypedActor {
 					path_expansion_actor.tell(path_msg, getSelf() );
 				}
 				else{
-					path.setIsUseful(false);
+					path.setIsUseful(true);
+					SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
+					ElementActionSequenceMapper elementActionSeqMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+					
+					PageElement page_element = null;
+					Action action_obj = null;
+					List<PathObject> path_seq = path.getPath();
+					for(int i=path_seq.size()-1; i>0; i++){
+						if(page_element != null && action_obj != null){
+							break;
+						}
+						if(path_seq.get(i).data() instanceof PageElement){
+							page_element = (PageElement)path_seq.get(i).data();
+						}
+						if(path_seq.get(i).data() instanceof Action){
+							action_obj = (Action)path_seq.get(i).data();
+						}
+					}
+					
+					elementActionSeqMap.addElementActionSequence(page_element, action_obj);
 				}
 				
 				//tell memory worker of path
 				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 				memory_actor.tell(path_msg, getSelf() );
 				
+				Test test = new Test(path);
+				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+				//tell memory worker of path
+				memory_actor.tell(test_msg, getSelf() );
+				
 				//broadcast path
 				PastPathExperienceController.broadcastPathExperience(path);
 	        	
-	        	this.browser.getDriver().quit();
+	        	this.browser.close();
 	             
 			}
 			else if(acct_msg.getData() instanceof URL){
@@ -287,7 +259,7 @@ public class BrowserActor extends UntypedActor {
 			  	Crawler.crawlPath(path, browser);
 			  	
 			  	Page current_page = browser.getPage();
-				Page last_page = path.lastPageVertex();
+				Page last_page = path.getLastPage();
 				
 			  	if(!current_page.equals(last_page) || path.getPath().size() == 1){
 			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
@@ -303,16 +275,14 @@ public class BrowserActor extends UntypedActor {
 				else{
 					path.setIsUseful(false);
 				}
+			  	
 			  	//broadcast path
 				PastPathExperienceController.broadcastPathExperience(path);		  	
 				
 				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
 				//memory_actor.tell(path, getSelf() );
-			  	this.browser.getDriver().quit();
+			  	this.browser.close();
 		   }
 		}else unhandled(message);
-		
-    	this.browser.getDriver().quit();
-
 	}
 }

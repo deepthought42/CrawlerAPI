@@ -25,9 +25,6 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.seleniumhq.jetty7.util.log.Log;
-
-import actors.BrowserActor;
 
 /**
  * 
@@ -37,27 +34,20 @@ public class Browser {
     private static final Logger log = Logger.getLogger(Browser.class);
 
 	private WebDriver driver;
-	private List<WebElement> elements = null;
-	//private Page page = null;
 	
 	public Browser(String url) throws IOException {
 		log.info(" -> URL :: "+url);
-		this.driver = openWithFirefox(url);
+		//this.driver = openWithFirefox(url);
+		this.driver = openWithPhantomjs(url);
 		this.driver.get(url);
 		//page = new Page(this.driver, DateFormat.getDateInstance());
 	}
 	
 	public Browser(String url, Page browserPage) {
-		driver = openWithFirefox(url);
+		driver = openWithPhantomjs(url);
 		driver.get(url);
 		//page = browserPage;
 	}
-	
-	/*public Browser(String url, Page browserPage) {
-		driver = openWithFirefox(url);
-		page = browserPage;
-	}
-	*/
 	
 	/**
 	 * 
@@ -65,15 +55,6 @@ public class Browser {
 	 */
 	public WebDriver getDriver(){
 		return driver;
-	}
-	
-	/**
-	 * 
-	 * @param elem
-	 * @return
-	 */
-	public List<WebElement> findElement(WebElement elem){		
-		return elements;
 	}
 
 	/**
@@ -83,7 +64,6 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
-		System.out.println("RETRIEVING PAGE");
 		return new Page(driver, DateFormat.getInstance());
 	}
 
@@ -106,10 +86,10 @@ public class Browser {
 			driver.close();
 		}
 		catch(NullPointerException e){
-			System.err.println("Error closing driver. Driver is NULL");
+			log.error("Error closing driver. Driver is NULL");
 		}
 		catch(UnreachableBrowserException e){
-			System.err.println("Error closing driver");
+			log.error("Error closing driver");
 		}
 		finally{
 			driver = null;

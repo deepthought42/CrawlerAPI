@@ -9,6 +9,7 @@ import java.util.Iterator;
 import browsing.ElementAction;
 import browsing.Page;
 import browsing.PageState;
+import browsing.PathObject;
 import structs.ConcurrentNode;
 import structs.Path;
 
@@ -20,11 +21,9 @@ import structs.Path;
 public class TestWriter {
 	private Path path = null;
 	private String filename;
-	private Graph graph;
 	
 	public TestWriter(Path path, Graph graph){
 		this.path = path;
-		this.graph = graph;
 	}
 
 	/**
@@ -32,7 +31,7 @@ public class TestWriter {
 	 * @return
 	 */
 	public String createTest(){
-		Iterator<Integer> pathIterator = this.path.getPath().iterator();
+		Iterator<PathObject> pathIterator = this.path.getPath().iterator();
 		ArrayList<String> testStatements = new ArrayList<String>();
 		while(pathIterator.hasNext()){
 			Integer graph_idx = (Integer) pathIterator.next();

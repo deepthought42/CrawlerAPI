@@ -1,5 +1,7 @@
 package tester;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 
 import structs.Path;
@@ -15,34 +17,38 @@ public class Test {
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Test.class);
 
-	public final boolean resultingUsefulness;
-	public Boolean isCorrect;
+	private final int key;
+	public List<TestRecord> records;
 	public final Path path;
 	
 	/**
 	 * Constructs a test object
 	 * 
-	 * @param resultingUsefulness
-	 * @param path
+	 * @param path {@link Path} that will be used to determine what the expected path should be
+	 * 
+	 * @pre path != null
 	 */
-	public Test(boolean resultingUsefulness, Path path){
-		this.resultingUsefulness = resultingUsefulness;
-		this.isCorrect = null;
+	public Test(Path path){
+		assert path != null;
+		this.key = path.hashCode();
 		this.path = path;
 	}
 	
 	/**
-	 * Sets the correctness of the test. If the resulting path deviates from the original 
-	 * path then it is incorrect
+	 * Returns test by key
 	 * 
-	 * @param isCorrect
+	 * @return
 	 */
-	public void setIsCorrect(boolean isCorrect){
-		this.isCorrect = isCorrect;
+	public int getKey(){
+		return this.key;
+	}
+
+	public Path getPath(){
+		return this.path;
 	}
 	
-	public boolean getIsCorrect(){
-		return this.isCorrect;
+	public void addTestRecord(TestRecord record){
+		this.records.add(record);
 	}
 	
 	@Override

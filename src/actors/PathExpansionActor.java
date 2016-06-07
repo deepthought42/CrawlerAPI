@@ -9,6 +9,7 @@ import akka.actor.ActorRef;
 
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import browsing.Page;
 import structs.Message;
 import structs.Path;
 
@@ -33,9 +34,19 @@ public class PathExpansionActor extends UntypedActor {
 				memory_registry.tell(path_msg, getSelf());
 				
 				if(path.isUseful() && !path.isSpansMultipleDomains()){
+					Page last_page = path.getLastPage();
+					Page first_page = (Page)path.getPath().get(0);
+					
+					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
+						log.info("Last page is landable...truncating path to start with last_page");
+						path = new Path();
+						path.add(last_page);
+					}
+					
 					pathExpansions = Path.expandPath(path);
 					log.info("Path expansions found : " +pathExpansions.size());
-
+					
+					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 					for(Path expanded : pathExpansions){
 						Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded);

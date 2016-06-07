@@ -20,6 +20,8 @@ import browsing.Page;
 import browsing.PathObject;
 import structs.Message;
 import structs.Path;
+import tester.Test;
+import tester.TestRecord;
 
 /**
  * Handles the saving of records into orientDB
@@ -100,6 +102,27 @@ public class MemoryRegistryActor extends UntypedActor{
 					Vocabulary vocabulary = new Vocabulary(new ArrayList<String>(), "page");
 					vocabulary.appendToVocabulary(((ObjectDefinition)objDef).getValue());
 					persistor.findAndUpdateOrCreate(vocabulary, ActionFactory.getActions());
+				}
+			}
+			else if(acct_msg.getData() instanceof Test){
+				Test test = (Test)acct_msg.getData();
+
+				//check if test with key already exists.
+				OrientDbPersistor persistor = new OrientDbPersistor();
+				Vertex vertex = persistor.findByKey(test.getKey());
+				// if record already exists then create TestRecord and append it to records for test
+				if(vertex != null){
+					log.info("Test already exists....adding test as record");
+					Test prev_test = (Test)vertex;					
+					TestRecord record = new TestRecord(test.getPath(), new Date(), prev_test.getPath().equals(test.getPath()));
+					prev_test.addTestRecord(record);
+					
+				}
+				else{
+					log.info("Saving test for the first time");
+					TestRecord record = new TestRecord(test.getPath(), new Date(), true);
+					test.addTestRecord(record);
+					persistor.createVertex(test);
 				}
 			}
 		}

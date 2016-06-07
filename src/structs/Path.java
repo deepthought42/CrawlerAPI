@@ -28,7 +28,7 @@ public class Path {
 	
 	private Boolean isUseful;
 	private boolean spansMultipleDomains;
-	public ArrayList<PathObject> path = null;
+	public List<PathObject> path = null;
 	
 	/**
 	 * Creates new instance of Path
@@ -69,7 +69,7 @@ public class Path {
 	 * 
 	 * @return
 	 */
-	public ArrayList<PathObject> getPath(){
+	public List<PathObject> getPath(){
 		return this.path;
 	}
 	
@@ -161,7 +161,7 @@ public class Path {
 	 * 
 	 * @return
 	 */
-	public Page lastPageVertex(){
+	public Page getLastPage(){
 		for(int i = this.path.size()-1; i >= 0; i--){
 			PathObject descNode = this.path.get(i);
 			if(descNode.data() instanceof Page){
@@ -179,11 +179,11 @@ public class Path {
 	 * @throws IllegalAccessException
 	 */
 	public static ArrayList<Path> expandPath(Path path)  {
-		System.err.println( " EXPANDING PATH...");
+		log.info( " EXPANDING PATH...");
 		ArrayList<Path> pathList = new ArrayList<Path>();
-		Path new_path = Path.clone(path);
+		//Path new_path = Path.clone(path);
 		
-		Page page = path.lastPageVertex();
+		Page page = path.getLastPage();
 		if(page == null){
 			return null;
 		}
@@ -195,26 +195,37 @@ public class Path {
 		try {
 			webdriver = new Browser(page.getUrl().toString()).getDriver();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		List<PageElement> page_elements = Page.getVisibleElements(webdriver, "");
 	
 		//iterate over all elements
 		for(PageElement page_element : page_elements){
-			//System.err.println("Page element index "+page_elem_vertex_idx);
-			new_path.add(page_element);
-			
+			// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
+		
 			//for each element in elements iterate over actions
 			for(String action : actions){
-				Path action_path = Path.clone(new_path);
+				Path action_path = Path.clone(path);
 				Action action_obj = new Action(action);
-				action_path.add(action_obj);
-				pathList.add(action_path);
+				
+				// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
+				SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
+				ElementActionSequenceMapper elementActionSeqMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+				if(!elementActionSeqMap.containsElementAction(page_element, action_obj)){
+					action_path.add(page_element);
+					action_path.add(action_obj);
+					pathList.add(action_path);
+					
+					//elementActionSeqMap.addElementActionSequence(page_element, action_obj);
+				}
+				else{
+					log.info("ELEMENT ACTION PAIR WITH KEY : "+page_element.getXpath()+":::"+page_element.hashCode()+":::"+action+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
+				}
+				//action_path.add(action_obj);
 			}
 			
 			//clone path and add in action and element
-			new_path = Path.clone(path);
+			//new_path = Path.clone(path);
 		}
 		
 		return pathList;

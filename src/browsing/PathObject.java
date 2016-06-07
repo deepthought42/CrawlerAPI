@@ -1,7 +1,7 @@
 package browsing;
 
 /**
- * Provides a wrapper for implementing objects and provides the ability to get cost and reward values
+ * An object wrapper that allows data to be dynamically placed in data structures
  * 
  * @author Brandon Kindred
  *

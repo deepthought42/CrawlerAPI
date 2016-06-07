@@ -1,0 +1,66 @@
+package tester;
+
+import java.util.Date;
+
+import org.apache.log4j.Logger;
+
+import structs.Path;
+
+/**
+ * A record for when a path was observed
+ * 
+ * @author Brandon Kindred
+ *
+ */
+public class TestRecord {
+	
+	@SuppressWarnings("unused")
+	private static final Logger log = Logger.getLogger(Test.class);
+
+	private final Path result_path;
+	private final Date ran_at;
+	private final boolean passes;
+	public Boolean isCorrect;
+	
+	public TestRecord(Path path, Date ran_at, boolean passes){
+		this.result_path = path;
+		this.ran_at = ran_at;
+		this.passes = passes;
+		this.isCorrect = null;
+	}
+	
+	/**
+	 * @return the path that was observed. This may defer from the actual test path
+	 */
+	public Path getResultPath(){
+		return result_path;
+	}
+	
+	/**
+	 * @return {@link Date} when test was ran
+	 */
+	public Date getRanAt(){
+		return ran_at;
+	}
+	
+	/**
+	 * @return whether or not the test passes compared to expected {@link Test test} path
+	 */
+	public boolean getPasses(){
+		return this.passes;
+	}
+	
+	/**
+	 * Sets the correctness of the test. If the resulting path deviates from the original 
+	 * path then it is incorrect
+	 * 
+	 * @param isCorrect
+	 */
+	public Boolean isCorrect(){
+		return this.isCorrect;
+	}
+	
+	public void setIsCorrect(boolean isCorrect){
+		this.isCorrect = isCorrect;
+	}
+}

@@ -1,5 +1,6 @@
 package tester;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -17,7 +18,7 @@ public class Test {
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Test.class);
 
-	private final int key;
+	public final int key;
 	public List<TestRecord> records;
 	public final Path path;
 	
@@ -32,6 +33,7 @@ public class Test {
 		assert path != null;
 		this.key = path.hashCode();
 		this.path = path;
+		this.records = new ArrayList<TestRecord>();
 	}
 	
 	/**
@@ -49,6 +51,14 @@ public class Test {
 	
 	public void addTestRecord(TestRecord record){
 		this.records.add(record);
+	}
+	
+	public List<TestRecord> getTestRecords(){
+		return this.records;
+	}
+	
+	public void setTestRecords(List<TestRecord> records){
+		this.records = records;
 	}
 	
 	@Override

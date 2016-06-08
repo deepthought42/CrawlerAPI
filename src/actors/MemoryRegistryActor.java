@@ -40,7 +40,7 @@ public class MemoryRegistryActor extends UntypedActor{
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
-			if(acct_msg.getData() instanceof Path){
+			/*if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 			
 				OrientDbPersistor orient_persistor = new OrientDbPersistor();
@@ -91,7 +91,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				
 				orient_persistor.save();
 			}
-			else if(acct_msg.getData() instanceof Page){
+			else*/ if(acct_msg.getData() instanceof Page){
 				Page page = (Page)acct_msg.getData();
 				List<Object> decomposed_list = DataDecomposer.decompose(page);
 				OrientDbPersistor persistor = new OrientDbPersistor();
@@ -120,9 +120,17 @@ public class MemoryRegistryActor extends UntypedActor{
 				}
 				else{
 					log.info("Saving test for the first time");
-					TestRecord record = new TestRecord(test.getPath(), new Date(), true);
+					Date date = new Date();
+					TestRecord record = new TestRecord(test.getPath(), date, true);
+					log.info("TEST RECORD :: "+record);
+					log.info("TEST PATH :: "+test.getPath());
+					log.info("DATE :: " + date);
+					
 					test.addTestRecord(record);
-					persistor.createVertex(test);
+					persistor.findAndUpdateOrCreate(test);
+					//persistor.addVertexType(record, OrientDbPersistor.getProperties(record));
+					//persistor.createVertex(test);
+					//persistor.save();
 				}
 			}
 		}

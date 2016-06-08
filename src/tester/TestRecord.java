@@ -1,9 +1,11 @@
 package tester;
 
 import java.util.Date;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import browsing.PathObject;
 import structs.Path;
 
 /**
@@ -17,13 +19,13 @@ public class TestRecord {
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Test.class);
 
-	private final Path result_path;
-	private final Date ran_at;
-	private final boolean passes;
+	public final List<PathObject> result_path;
+	public final Date ran_at;
+	public final boolean passes;
 	public Boolean isCorrect;
 	
 	public TestRecord(Path path, Date ran_at, boolean passes){
-		this.result_path = path;
+		this.result_path = path.getPath();
 		this.ran_at = ran_at;
 		this.passes = passes;
 		this.isCorrect = null;
@@ -32,7 +34,7 @@ public class TestRecord {
 	/**
 	 * @return the path that was observed. This may defer from the actual test path
 	 */
-	public Path getResultPath(){
+	public List<PathObject> getResultPath(){
 		return result_path;
 	}
 	

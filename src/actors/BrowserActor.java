@@ -200,7 +200,7 @@ public class BrowserActor extends UntypedActor {
 			  		log.info("PATH SIZE? :: " + path.getPath().size() );
 			  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
 	
-					path.setIsUseful(false);
+					path.setIsUseful(true);
 					if(last_page.checkIfLandable(browser)){
 						last_page.setIsLandable(true);
 					}
@@ -213,7 +213,7 @@ public class BrowserActor extends UntypedActor {
 					path_expansion_actor.tell(path_msg, getSelf() );
 				}
 				else{
-					path.setIsUseful(true);
+					path.setIsUseful(false);
 					SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
 					ElementActionSequenceMapper elementActionSeqMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 					
@@ -237,8 +237,9 @@ public class BrowserActor extends UntypedActor {
 				
 				//tell memory worker of path
 				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-				memory_actor.tell(path_msg, getSelf() );
+				//memory_actor.tell(path_msg, getSelf() );
 				
+				log.info("Saving test");
 				Test test = new Test(path);
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				//tell memory worker of path

@@ -31,7 +31,7 @@ import structs.SessionSequenceTracker;
  * @author Brandon Kindred
  */
 @Controller
-@CrossOrigin(origins = "http://localhost:8000")
+@CrossOrigin(origins = "http://localhost:8001")
 @RequestMapping("/work")
 public class WorkAllocationController {
 

@@ -58,12 +58,12 @@ public class OrientDbPersistor{
 	 * 
 	 * @return
 	 */
-	public Vertex addVertexType(String clazz){
-		if (graph.getVertexType(clazz) == null){
-            graph.createVertexType(clazz);
+	public Vertex addVertexType(Class<?> clazz){
+		if (graph.getVertexType(clazz.getSimpleName()) == null){
+            graph.createVertexType(clazz.getSimpleName());
         }
 
-		return this.graph.addVertex("class:"+clazz);
+		return this.graph.addVertex("class:"+clazz.getSimpleName());
 	}
 	
 	/**
@@ -147,6 +147,51 @@ public class OrientDbPersistor{
 		return edges;
 	}
 	
+	
+	/**
+	 * Finds and updates the properties or creates a new vertex using the public properties of the Object passed
+	 * 
+	 * @param obj the object to be found or updated
+	 * @param actions array of actions associated with this object
+	 * 
+	 * @return 
+	 */
+	public synchronized Vertex findAndUpdateOrCreate(Object obj) 
+			throws NullPointerException, IllegalAccessException, IllegalArgumentException{
+		Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = this.findVertices(obj);
+		Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
+
+		Vertex v = null;
+		if(memory_iterator != null && memory_iterator.hasNext()){
+			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
+
+			//System.err.println("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
+			v = memory_iterator.next();
+		}
+		else{
+			System.out.println("Creating new vertex in OrientDB...");
+			v = this.addVertexType(obj, getProperties(obj));
+			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
+			for(Field field : obj.getClass().getFields()){
+				String prop_val = "";
+				try {
+					prop_val =  field.get(obj).toString();
+				} catch (IllegalArgumentException e) {
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}	
+				catch(NullPointerException e){
+					e.printStackTrace();
+				}
+				v.setProperty(field.getName(), prop_val);
+			}
+		}
+
+		this.save();
+		return v;
+	}
+	
 	/**
 	 * Finds and updates the properties or creates a new vertex using the public properties of the Object passed
 	 * 
@@ -173,7 +218,7 @@ public class OrientDbPersistor{
 		}
 		else{
 			System.out.println("Creating new vertex in OrientDB...");
-			v = this.addVertexType(obj, this.getProperties(obj));
+			v = this.addVertexType(obj, getProperties(obj));
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 			for(Field field : obj.getClass().getFields()){
 				String prop_val = "";
@@ -197,8 +242,9 @@ public class OrientDbPersistor{
 	
 	public void createVertex(Object obj){
 		System.out.println("Creating new vertex in OrientDB...");
-		/*
-		 Vertex v = this.addVertexType(obj, this.getProperties(obj));
+		
+		 Vertex v = this.addVertexType(obj, getProperties(obj));
+		 
 		//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 		for(Field field : obj.getClass().getFields()){
 			String prop_val = "";
@@ -211,11 +257,11 @@ public class OrientDbPersistor{
 			}	
 			catch(NullPointerException e){
 				e.printStackTrace();
-			}*/
-			//v.setProperty(field.getName(), prop_val);
-		//}
+			}
+			v.setProperty(field.getName(), prop_val);
+		}
 		this.graph.addVertex(obj);
-
+		
 	}
 	/**
 	 * Retrieves all vertices for given {@link ObjectDefinitions}
@@ -243,7 +289,7 @@ public class OrientDbPersistor{
 	}
 
 	//Retrieves all public properties for an object
-	private String[] getProperties(Object obj){
+	public static String[] getProperties(Object obj){
 		String[] properties = new String[obj.getClass().getFields().length];
 		int idx = 0;
 		for(Field field : obj.getClass().getFields()){

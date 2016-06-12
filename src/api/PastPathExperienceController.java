@@ -1,12 +1,11 @@
 package api;
 
 import structs.Path;
+import tester.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -17,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import browsing.Page;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
@@ -54,6 +51,32 @@ public class PastPathExperienceController {
      * @param path
      */
     @CrossOrigin(origins = "*")
+	public static void broadcastTestExperience(Test test) {
+		
+		log.info("Emitters available to send to : " + emitters.size());
+        Iterator<String> iter = emitters.keySet().iterator();
+        
+        while(iter.hasNext()){
+        	String acct_key = iter.next();
+        	log.info("Broadcasting path to account -> "+acct_key);
+        	SseEmitter emit = emitters.get(acct_key);
+        	 try {
+                 emit.send(test, MediaType.APPLICATION_JSON);
+             } catch (IOException e) {
+                 log.error("Error sending message to client");
+                 emit.complete();
+                 emitters.remove(acct_key);
+                 e.printStackTrace();
+             }
+        }
+	}
+    
+    /**
+     * Message emitter that sends path to all registered clients
+     * 
+     * @param path
+     */
+    @CrossOrigin(origins = "*")
 	public static void broadcastPathExperience(Path path) {
 		
 		log.info("Emitters available to send to : " + emitters.size());
@@ -73,4 +96,5 @@ public class PastPathExperienceController {
              }
         }
 	}
+
 }

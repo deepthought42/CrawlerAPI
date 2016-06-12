@@ -5,6 +5,7 @@ import java.util.Map;
 
 import browsing.PageElement;
 import browsing.actions.Action;
+import tester.Test;
 
 
 /**
@@ -13,14 +14,14 @@ import browsing.actions.Action;
  * @author Brandon Kindred
  *
  */
-public class ElementActionSequenceMapper {
-	private Map<String, PageElement> elementActionHash;	
+public class TestMapper {
+	private Map<String, Test> testHash;	
 	
 	/**
 	 * Creates a new instance of the tracker
 	 */
-	public ElementActionSequenceMapper(){
-		elementActionHash = new HashMap<String, PageElement>();
+	public TestMapper(){
+		testHash = new HashMap<String, Test>();
 	}
 	
 	/**
@@ -29,10 +30,11 @@ public class ElementActionSequenceMapper {
 	 * @param elem
 	 * @param action
 	 */
-	public void addElementActionSequence(PageElement elem, Action action){
-		String key = generateHash(elem, action);
-		if(!this.elementActionHash.containsKey(key)){
-			this.elementActionHash.put(key, elem);
+	public void addTest(Test test){
+		int hash_code = test.hashCode();
+		
+		if(!this.testHash.containsKey(Integer.toString(hash_code))){
+			this.testHash.put(Integer.toString(hash_code), test);
 		}
 	}
 	
@@ -62,13 +64,13 @@ public class ElementActionSequenceMapper {
 	 */
 	public boolean containsElementAction(PageElement elem, Action action){
 		String hash_key = generateHash(elem, action);
-		return  this.elementActionHash.containsKey(hash_key);
+		return  this.testHash.containsKey(hash_key);
 	}
 	
 	/** 
 	 * @return hash of element action sequences
 	 */
-	public Map<String, PageElement> getElementActionHash(){
-		return elementActionHash;
+	public Map<String, Test> getTestHash(){
+		return testHash;
 	}
 }

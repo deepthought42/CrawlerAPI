@@ -216,7 +216,7 @@ public class Path {
 					action_path.add(action_obj);
 					pathList.add(action_path);
 					
-					//elementActionSeqMap.addElementActionSequence(page_element, action_obj);
+					elementActionSeqMap.addElementActionSequence(page_element, action_obj);
 				}
 				else{
 					log.info("ELEMENT ACTION PAIR WITH KEY : "+page_element.getXpath()+":::"+page_element.hashCode()+":::"+action+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");

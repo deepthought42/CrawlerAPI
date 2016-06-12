@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import browsing.Page;
 import structs.Path;
 
 /**
@@ -21,6 +22,7 @@ public class Test {
 	public final int key;
 	public List<TestRecord> records;
 	public final Path path;
+	public Page result;
 	
 	/**
 	 * Constructs a test object
@@ -33,8 +35,25 @@ public class Test {
 		assert path != null;
 		this.key = path.hashCode();
 		this.path = path;
+		this.result = null;
 		this.records = new ArrayList<TestRecord>();
 	}
+	
+	/**
+	 * Constructs a test object
+	 * 
+	 * @param path {@link Path} that will be used to determine what the expected path should be
+	 * 
+	 * @pre path != null
+	 */
+	public Test(Path path, Page result){
+		assert path != null;
+		this.key = path.hashCode();
+		this.path = path;
+		this.result = result;
+		this.records = new ArrayList<TestRecord>();
+	}
+	
 	
 	/**
 	 * Returns test by key
@@ -59,6 +78,17 @@ public class Test {
 	
 	public void setTestRecords(List<TestRecord> records){
 		this.records = records;
+	}
+	
+	/**
+	 * @return result of running the test. Can be either null or have a {@link Page} set
+	 */
+	public Page getResult(){
+		return this.result;
+	}
+	
+	public void setResult(Page result_page){
+		this.result = result_page;
 	}
 	
 	@Override

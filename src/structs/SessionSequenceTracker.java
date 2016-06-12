@@ -3,9 +3,6 @@ package structs;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.web.ServerProperties.Session;
-
-import browsing.PageElement;
 
 /**
  * Tracks element action sequences by session
@@ -14,21 +11,21 @@ import browsing.PageElement;
  *
  */
 public class SessionSequenceTracker {
-	private Map<String, ElementActionSequenceMapper> sessionSequences;
+	private Map<String, TestMapper> sessionSequences;
 	private static SessionSequenceTracker instance = null;
 
 	/**
 	 * 
 	 */
 	protected SessionSequenceTracker() {
-		sessionSequences = new HashMap<String, ElementActionSequenceMapper>();
+		sessionSequences = new HashMap<String, TestMapper>();
 	}
 	
 	/**
 	 * 
 	 * @return
 	 */
-    public ElementActionSequenceMapper getSequencesForSession(String session_key){
+    public TestMapper getSequencesForSession(String session_key){
 	   return this.sessionSequences.get(session_key);
     }
    
@@ -36,7 +33,7 @@ public class SessionSequenceTracker {
 	 * Add session to tracker with empty hash map for element actions
 	 */
     public void addSessionSequences(String session_key){
-    	this.sessionSequences.put(session_key, new ElementActionSequenceMapper());
+    	this.sessionSequences.put(session_key, new TestMapper());
     }
     
 	/**

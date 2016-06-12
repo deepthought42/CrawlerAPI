@@ -22,10 +22,10 @@ import browsing.Page;
 import browsing.PageElement;
 import browsing.PathObject;
 import browsing.actions.Action;
-import structs.ElementActionSequenceMapper;
 import structs.Message;
 import structs.Path;
 import structs.SessionSequenceTracker;
+import structs.TestMapper;
 import tester.Test;
 
 /**
@@ -192,61 +192,65 @@ public class BrowserActor extends UntypedActor {
 				//get current page of browser
 				Page current_page = browser.getPage();
 				Page last_page = path.getLastPage();
+				
+				if(path.getPath().size() != 1 && !current_page.getUrl().toString().contains(last_page.getUrl().getHost())){
+					log.info("Path is useful but leaves original domain");
+					path.setSpansMultipleDomains(true);
+				}
+				
+				if(last_page.checkIfLandable(browser)){
+					last_page.setIsLandable(true);
+				}
+				
+				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
+				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
+				log.info("Saving test");
+				Test test = new Test(path, current_page);
+				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+				
+				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+				path_expansion_actor.tell(path_msg, getSelf() );
+
+				//add test to sequences for session
+				SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
+				TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+				testMap.addTest(test);
+
+				//INSTEAD OF ADDING PAGE TO PATH, SEND PAGE TRANSITION OBJECT MESSAGE TO SITE MAPPER ACTOR FOR PROCESSING.
+				//if(path.getPath().size() > 1){
+				//	path.add(current_page);
+				//}
+				
+				
+				/**
 				if(!current_page.equals(last_page) || path.getPath().size() == 1){
-					if(path.getPath().size() != 1 && !current_page.getUrl().toString().contains(last_page.getUrl().getHost())){
-						log.info("Path is useful but leaves original domain");
-						path.setSpansMultipleDomains(true);
-					}
+					
 			  		log.info("PATH SIZE? :: " + path.getPath().size() );
 			  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
 	
 					path.setIsUseful(true);
-					if(last_page.checkIfLandable(browser)){
-						last_page.setIsLandable(true);
-					}
+					
 
-					if(path.getPath().size() > 1){
-						path.add(current_page);
-					}
-
-					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
-					path_expansion_actor.tell(path_msg, getSelf() );
+					//final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+					//path_expansion_actor.tell(path_msg, getSelf() );
 				}
 				else{
 					path.setIsUseful(false);
-					SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
-					ElementActionSequenceMapper elementActionSeqMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-					
-					PageElement page_element = null;
-					Action action_obj = null;
-					List<PathObject> path_seq = path.getPath();
-					for(int i=path_seq.size()-1; i>0; i++){
-						if(page_element != null && action_obj != null){
-							break;
-						}
-						if(path_seq.get(i).data() instanceof PageElement){
-							page_element = (PageElement)path_seq.get(i).data();
-						}
-						if(path_seq.get(i).data() instanceof Action){
-							action_obj = (Action)path_seq.get(i).data();
-						}
-					}
-					
-					elementActionSeqMap.addElementActionSequence(page_element, action_obj);
 				}
+				*/
 				
 				//tell memory worker of path
 				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 				//memory_actor.tell(path_msg, getSelf() );
 				
-				log.info("Saving test");
-				Test test = new Test(path);
-				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+				//log.info("Saving test");
+				//Test test = new Test(path);
+				//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				//tell memory worker of path
 				memory_actor.tell(test_msg, getSelf() );
 				
 				//broadcast path
-				PastPathExperienceController.broadcastPathExperience(path);
+				PastPathExperienceController.broadcastTestExperience(test);
 	        	
 	        	this.browser.close();
 	             

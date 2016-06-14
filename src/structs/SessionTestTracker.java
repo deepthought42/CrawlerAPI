@@ -10,14 +10,14 @@ import java.util.Map;
  * @author Brandon Kindred
  *
  */
-public class SessionSequenceTracker {
+public class SessionTestTracker {
 	private Map<String, TestMapper> sessionSequences;
-	private static SessionSequenceTracker instance = null;
+	private static SessionTestTracker instance = null;
 
 	/**
 	 * 
 	 */
-	protected SessionSequenceTracker() {
+	protected SessionTestTracker() {
 		sessionSequences = new HashMap<String, TestMapper>();
 	}
 	
@@ -39,9 +39,9 @@ public class SessionSequenceTracker {
 	/**
 	 * @return singleton instance of session sequence tracker
 	 */
-	public synchronized static SessionSequenceTracker getInstance() {
+	public synchronized static SessionTestTracker getInstance() {
       if(instance == null) {
-         instance = new SessionSequenceTracker();
+         instance = new SessionTestTracker();
       }
       return instance;
    }	   

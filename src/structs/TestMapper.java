@@ -62,8 +62,8 @@ public class TestMapper {
 	 * @param action
 	 * @return
 	 */
-	public boolean containsElementAction(PageElement elem, Action action){
-		String hash_key = generateHash(elem, action);
+	public boolean containsTest(Test test){
+		String hash_key = Integer.toString(test.hashCode());//generateHash(elem, action);
 		return  this.testHash.containsKey(hash_key);
 	}
 	

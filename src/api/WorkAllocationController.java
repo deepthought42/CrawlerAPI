@@ -22,7 +22,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import structs.Message;
-import structs.SessionSequenceTracker;
+import structs.SessionTestTracker;
 
 
 /**
@@ -54,7 +54,7 @@ public class WorkAllocationController {
 		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
 		//String account_key = ""+UUID.randomUUID().toString();
 		//System.out.println("ACCOUNT KEY :: "+account_key);
-		SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
+		SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 		seqTracker.addSessionSequences("SESSION_KEY_HERE");
 		
 		WorkAllowanceStatus.register(account_key); 

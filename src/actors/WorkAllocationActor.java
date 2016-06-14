@@ -13,6 +13,7 @@ import akka.actor.UntypedActor;
 import observableStructs.ObservableHash;
 import structs.Message;
 import structs.Path;
+import tester.Test;
 
 /**
  * Responsible for starting new Actors, monitoring
@@ -50,11 +51,17 @@ public class WorkAllocationActor extends UntypedActor {
 			Message<?> acct_message = (Message<?>)message;
 			
 			if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
-	
 				if(acct_message.getData() instanceof Path){
-					
 					Path path = (Path)acct_message.getData();
 				
+					Message<Path> path_msg = new Message<Path>(acct_message.getAccountKey(), path);
+					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
+					browser_actor.tell(path_msg, getSelf() );
+				}
+				else if(acct_message.getData() instanceof Test){
+					Test test = (Test)acct_message.getData();
+					Path path = test.getPath();
+					
 					Message<Path> path_msg = new Message<Path>(acct_message.getAccountKey(), path);
 					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
 					browser_actor.tell(path_msg, getSelf() );

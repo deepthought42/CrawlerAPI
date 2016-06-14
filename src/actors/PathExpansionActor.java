@@ -9,10 +9,20 @@ import akka.actor.ActorRef;
 
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import api.PastPathExperienceController;
 import browsing.Page;
 import structs.Message;
 import structs.Path;
+import structs.SessionTestTracker;
+import structs.TestMapper;
+import tester.Test;
 
+/**
+ * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class PathExpansionActor extends UntypedActor {
     private static final Logger log = Logger.getLogger(PathExpansionActor.class);
 
@@ -23,7 +33,54 @@ public class PathExpansionActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			if(acct_msg.getData() instanceof Path){
+			if(acct_msg.getData() instanceof Test){
+				
+				Test test = (Test)acct_msg.getData();
+				Path path = test.getPath();
+				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
+				
+				log.info("EXPANDING TEST PATH WITH LENGTH : "+path.getPath().size());
+				ArrayList<Path> pathExpansions = new ArrayList<Path>();
+
+				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
+				memory_registry.tell(path_msg, getSelf());
+				memory_registry.tell(test_msg, getSelf());
+				
+				//IF RESULT IS DIFFERENT THAN LAST PAGE IN PATH AND TEST DOESN'T CROSS INTO ANOTHER DOMAIN IN RESULT
+				//   THEN 
+				if(path.isUseful() && !path.isSpansMultipleDomains()){
+					if(!test.getPath().getLastPage().getUrl().equals(test.getResult().getUrl()) && test.getResult().isLandable()){
+						log.info("Last page is landable...truncating path to start with last_page");
+						path = new Path();
+						path.add(test.getResult());
+					}
+					
+					//EXPAND PATH IN TEST
+					pathExpansions = Path.expandPath(path);
+					log.info("Path expansions found : " +pathExpansions.size());
+					
+					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+					for(Path expanded : pathExpansions){
+						Test new_test = new Test(expanded, null);
+						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
+						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
+						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+						if(!testMap.containsTest(new_test)){
+							Message<Test> expanded_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+
+							work_allocator.tell(expanded_test_msg, getSelf() );
+							testMap.addTest(new_test);
+						}
+						else{
+							log.info("TEST WITH KEY : "+new_test.hashCode()+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
+							PastPathExperienceController.broadcastTestExperience(testMap.getTestHash().get(test.hashCode()));
+						}
+					}
+				}
+				
+			}
+			else if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
@@ -42,7 +99,17 @@ public class PathExpansionActor extends UntypedActor {
 						path = new Path();
 						path.add(last_page);
 					}
-					
+					// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
+					Test test = new Test(path, last_page);
+					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
+					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+					if(!testMap.containsTest(test)){
+						testMap.addTest(test);
+					}
+					else{
+						log.info("TEST WITH KEY : "+test.hashCode()+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
+					}
+
 					pathExpansions = Path.expandPath(path);
 					log.info("Path expansions found : " +pathExpansions.size());
 					
@@ -51,6 +118,7 @@ public class PathExpansionActor extends UntypedActor {
 					for(Path expanded : pathExpansions){
 						Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded);
 
+						
 						work_allocator.tell(expanded_path_msg, getSelf() );
 					}
 				}	

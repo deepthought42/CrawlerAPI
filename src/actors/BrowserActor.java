@@ -21,10 +21,9 @@ import browsing.Browser;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.PathObject;
-import browsing.actions.Action;
 import structs.Message;
 import structs.Path;
-import structs.SessionSequenceTracker;
+import structs.SessionTestTracker;
 import structs.TestMapper;
 import tester.Test;
 
@@ -209,10 +208,10 @@ public class BrowserActor extends UntypedActor {
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
-				path_expansion_actor.tell(path_msg, getSelf() );
+				path_expansion_actor.tell(test_msg, getSelf() );
 
 				//add test to sequences for session
-				SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
+				SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 				TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 				testMap.addTest(test);
 

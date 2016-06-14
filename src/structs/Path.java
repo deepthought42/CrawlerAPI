@@ -201,31 +201,15 @@ public class Path {
 	
 		//iterate over all elements
 		for(PageElement page_element : page_elements){
-			// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
-		
-			//for each element in elements iterate over actions
+			//iterate over all actions
 			for(String action : actions){
 				Path action_path = Path.clone(path);
 				Action action_obj = new Action(action);
-				
-				// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
-				SessionSequenceTracker seqTracker = SessionSequenceTracker.getInstance();
-				ElementActionSequenceMapper elementActionSeqMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-				if(!elementActionSeqMap.containsElementAction(page_element, action_obj)){
-					action_path.add(page_element);
-					action_path.add(action_obj);
-					pathList.add(action_path);
-					
-					elementActionSeqMap.addElementActionSequence(page_element, action_obj);
-				}
-				else{
-					log.info("ELEMENT ACTION PAIR WITH KEY : "+page_element.getXpath()+":::"+page_element.hashCode()+":::"+action+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
-				}
-				//action_path.add(action_obj);
-			}
-			
-			//clone path and add in action and element
-			//new_path = Path.clone(path);
+								
+				action_path.add(page_element);
+				action_path.add(action_obj);
+				pathList.add(action_path);
+			}			
 		}
 		
 		return pathList;

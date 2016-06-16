@@ -201,6 +201,11 @@ public class BrowserActor extends UntypedActor {
 					last_page.setIsLandable(true);
 				}
 				
+				//INSTEAD OF ADDING PAGE TO PATH, SEND PAGE TRANSITION OBJECT MESSAGE TO SITE MAPPER ACTOR FOR PROCESSING.
+				//if(path.getPath().size() > 1){
+				//	path.add(current_page);
+				//}
+				
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Saving test");
@@ -214,45 +219,19 @@ public class BrowserActor extends UntypedActor {
 				SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 				TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 				testMap.addTest(test);
-
-				//INSTEAD OF ADDING PAGE TO PATH, SEND PAGE TRANSITION OBJECT MESSAGE TO SITE MAPPER ACTOR FOR PROCESSING.
-				//if(path.getPath().size() > 1){
-				//	path.add(current_page);
-				//}
-				
-				
-				/**
-				if(!current_page.equals(last_page) || path.getPath().size() == 1){
-					
-			  		log.info("PATH SIZE? :: " + path.getPath().size() );
-			  		log.info("PAGES ARE EQUAL? :: " + current_page.equals(last_page)  );
-	
-					path.setIsUseful(true);
-					
-
-					//final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
-					//path_expansion_actor.tell(path_msg, getSelf() );
-				}
-				else{
-					path.setIsUseful(false);
-				}
-				*/
 				
 				//tell memory worker of path
 				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-				//memory_actor.tell(path_msg, getSelf() );
 				
-				//log.info("Saving test");
-				//Test test = new Test(path);
-				//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				//tell memory worker of path
+				log.info("Saving test");
 				memory_actor.tell(test_msg, getSelf() );
-				
+				memory_actor.tell(path_msg, getSelf() );
+
 				//broadcast path
 				PastPathExperienceController.broadcastTestExperience(test);
 	        	
 	        	this.browser.close();
-	             
 			}
 			else if(acct_msg.getData() instanceof URL){
 				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());

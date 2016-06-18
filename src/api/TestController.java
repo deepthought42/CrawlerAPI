@@ -13,6 +13,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import structs.Path;
+import tester.Test;
 
 
 /**
@@ -21,8 +22,8 @@ import structs.Path;
  * @author Brandon Kindred
  */
 @Controller
-@RequestMapping("/testingCoordinator")
-public class TestingCoordinatorController {
+@RequestMapping("/test")
+public class TestController {
 
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody TestCoordinatorActor startTestingCoordinator(@RequestParam(value="url", required=true) String url) {
@@ -39,6 +40,14 @@ public class TestingCoordinatorController {
 		testingCoordinatorActor.tell(new Path(), ActorRef.noSender());
 		
 		return null;
+	}
+
+	@RequestMapping(method = RequestMethod.PUT);
+	public @ResponseBody Test updateTestCorrectness(@RequestParam(value="test", required=true) String test){
+		Memory
+		//Find test
+		//update test correctness
+		// return test
 	}
 
 }

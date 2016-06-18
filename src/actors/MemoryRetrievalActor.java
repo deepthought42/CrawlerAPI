@@ -78,7 +78,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 		}
 		else if(message instanceof Vocabulary){
 			//retrieve all vocabulary values from memory
-			OrientDbPersistor<Vocabulary> persistor = new OrientDbPersistor<Vocabulary>();
+			OrientDbPersistor persistor = new OrientDbPersistor();
 			Iterable<Vertex> vertex = persistor.findVertices("vocabulary", "page");
 			//if more than one vertex is available 
 			//  then merge the vertices though learning, delete all vertices and persist the merged verges

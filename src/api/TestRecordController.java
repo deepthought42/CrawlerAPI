@@ -22,18 +22,19 @@ import tester.TestRecord;
  * @author Brandon Kindred
  */
 @Controller
-@RequestMapping("/tests")
-public class TestController {
+@RequestMapping("/tests/records")
+public class TestRecordController {
 
 	/**
-	 * Retrieves list of all tests from the database 
+ 	 * Retrieves list of all test records for a test from the database
+ 	 * 
 	 * @param url
 	 * @return
 	 */
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody List<Test> getTests() {
-		ArrayList<Test> test_list = new ArrayList<Test>();
-		return test_list;
+	public @ResponseBody List<TestRecord> getTestRecords(@RequestParam(value="url", required=true) Test test) {
+		ArrayList<TestRecord> test_records = new ArrayList<TestRecord>();
+		return test_records;
 	}
 
 	/**
@@ -56,14 +57,14 @@ public class TestController {
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-class TestControllerNotFoundException extends RuntimeException {
+class TestCoordinatorNotFoundException extends RuntimeException {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7200878662560716215L;
 
-	public TestControllerNotFoundException() {
-		super("An error occurred accessing tests endpoint.");
+	public TestCoordinatorNotFoundException() {
+		super("could not find user .");
 	}
 }

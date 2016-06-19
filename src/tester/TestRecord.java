@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import browsing.Page;
 import browsing.PathObject;
 import structs.Path;
 
@@ -19,13 +20,13 @@ public class TestRecord {
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Test.class);
 
-	public final List<PathObject> result_path;
+	public final Page result;
 	public final Date ran_at;
 	public final boolean passes;
 	public Boolean isCorrect;
 	
-	public TestRecord(Path path, Date ran_at, boolean passes){
-		this.result_path = path.getPath();
+	public TestRecord(Page page, Date ran_at, boolean passes){
+		this.result = page;
 		this.ran_at = ran_at;
 		this.passes = passes;
 		this.isCorrect = null;
@@ -34,8 +35,8 @@ public class TestRecord {
 	/**
 	 * @return the path that was observed. This may defer from the actual test path
 	 */
-	public List<PathObject> getResultPath(){
-		return result_path;
+	public Page getResult(){
+		return result;
 	}
 	
 	/**

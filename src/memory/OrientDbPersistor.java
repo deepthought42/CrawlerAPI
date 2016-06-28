@@ -10,6 +10,9 @@ import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
+import com.tinkerpop.rexster.client.RexsterClient;
+import com.tinkerpop.rexster.client.RexsterClientFactory;
+import com.tinkerpop.rexster.protocol.msg.RexProMessage;
 
 /**
  * Persists data of various sorts into orientDB
@@ -25,6 +28,14 @@ public class OrientDbPersistor{
 	 */
 	public OrientDbPersistor() {
 		this.graph = new OrientGraph("remote:localhost/Thoth", "brandon", "password");
+        try {
+			RexsterClient client = RexsterClientFactory.open("localhost", 8984);
+//			client.execute(RexProMessage.EMPTY_REQUEST);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 	
 	

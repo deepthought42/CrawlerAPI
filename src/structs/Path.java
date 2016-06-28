@@ -29,7 +29,7 @@ public class Path {
 	private Boolean isUseful;
 	private boolean spansMultipleDomains;
 	public List<PathObject> path = null;
-	
+
 	/**
 	 * Creates new instance of Path
 	 */

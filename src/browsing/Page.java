@@ -18,6 +18,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
+import com.tinkerpop.frames.Property;
+
 /**
  * A reference to a web page 
  * 
@@ -32,6 +34,7 @@ public class Page implements PathObject {
 	private String src = "";
 	public String date = null;
 	public final URL url;
+	
 	private final List<PageElement> elements;
 	
 	/**
@@ -61,6 +64,7 @@ public class Page implements PathObject {
 	 * 
 	 * @return the page of the source
 	 */
+    @Property("src")
 	public String getSrc() {
 		return this.src;
 	}
@@ -89,6 +93,7 @@ public class Page implements PathObject {
 		return landable;
 	}
 	
+	@Property("landable")
 	public boolean isLandable(){
 		return this.landable;
 	}
@@ -97,7 +102,8 @@ public class Page implements PathObject {
 	 * 
 	 * @param isLandable
 	 */
-	public void setIsLandable(boolean isLandable){
+	 @Property("landable")
+	public void setLandable(boolean isLandable){
 		this.landable = isLandable;
 	}
 	
@@ -111,6 +117,7 @@ public class Page implements PathObject {
 		return src;
 	}
 
+    @Property("url")
 	public URL getUrl(){
 		return this.url;
 	}
@@ -208,5 +215,17 @@ public class Page implements PathObject {
 	@Override
 	public Page data() {
 		return this;
+	}
+	
+	/**
+	 * 
+	 * @param page
+	 */
+	public void convertToRecord(IPage page){
+		page.setLandable(this.isLandable());
+		page.setScreenshot(this.getUrl());
+		page.setSrc(this.getSrc());
+		page.setUrl(this.getUrl());
+		
 	}
 }

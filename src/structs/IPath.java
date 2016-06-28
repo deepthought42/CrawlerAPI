@@ -1,0 +1,52 @@
+package structs;
+
+import java.util.List;
+
+import com.tinkerpop.frames.Property;
+
+import browsing.PathObject;
+
+/**
+ * Test object data access interface for use with tinkerpop/frames
+ * 
+ * @author Brandon Kindred
+ *
+ */
+public interface IPath {
+	/**
+	 * @return the key for the current test
+	 */
+	@Property("key")
+	public int getKey();
+		
+	/**
+	 * @return {@link Boolean} value indicating usefulness for a path.
+	 * A value of null means that it's usefulness is unknown.
+	 */
+	@Property("useful")
+	public Boolean isUseful();
+	
+	/**
+	 * Sets the useful property to either true/false/null 
+	 */
+	@Property("useful")
+	public void setUsefulness(Boolean isUseful);
+	
+	/**
+	 * @return whether or not this path goes into another domain
+	 */
+	@Property("spansMultipleDomains")
+	public boolean spansMultipleDomains();
+
+	/**
+	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 */
+	@Property("path")
+	public List<PathObject> getPath();
+
+	/**
+	 * Sets the {@link List} of {@link PathObject}s representing the path sequence
+	 */
+	@Property("path")
+	public void setPath(List<PathObject> path);
+}

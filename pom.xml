@@ -150,7 +150,12 @@
 	<dependency>
 	    <groupId>com.tinkerpop.rexster</groupId>
 	    <artifactId>rexster-protocol</artifactId>
-	    <version>x.y.z</version>
+	    <version>2.6.0</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.tinkerpop</groupId>
+	  <artifactId>frames</artifactId>
+	  <version>2.6.0</version>
 	</dependency>
 	<dependency>
 		<groupId>org.encog</groupId>

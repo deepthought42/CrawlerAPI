@@ -1,13 +1,10 @@
 package tester;
 
 import java.util.Date;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import browsing.Page;
-import browsing.PathObject;
-import structs.Path;
 
 /**
  * A record for when a path was observed
@@ -65,5 +62,16 @@ public class TestRecord {
 	
 	public void setIsCorrect(boolean isCorrect){
 		this.isCorrect = isCorrect;
+	}
+	
+	/**
+	 * 
+	 * @param page
+	 */
+	public void convertToRecord(ITestRecord testRecord){
+		testRecord.setResult(this.getResult());
+		testRecord.setPasses(this.getPasses());
+		testRecord.setRanAt(this.getRanAt());
+		testRecord.setCorrect(this.isCorrect());
 	}
 }

@@ -198,7 +198,7 @@ public class BrowserActor extends UntypedActor {
 				}
 				
 				if(last_page.checkIfLandable(browser)){
-					last_page.setIsLandable(true);
+					last_page.setLandable(true);
 				}
 				
 				//INSTEAD OF ADDING PAGE TO PATH, SEND PAGE TRANSITION OBJECT MESSAGE TO SITE MAPPER ACTOR FOR PROCESSING.

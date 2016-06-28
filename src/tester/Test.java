@@ -15,7 +15,7 @@ import structs.Path;
  * @author Brandon Kindred
  *
  */
-public class Test {
+public class Test{
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Test.class);
 
@@ -68,11 +68,11 @@ public class Test {
 		return this.path;
 	}
 	
-	public void addTestRecord(TestRecord record){
+	public void addRecord(TestRecord record){
 		this.records.add(record);
 	}
 	
-	public List<TestRecord> getTestRecords(){
+	public List<TestRecord> getRecords(){
 		return this.records;
 	}
 	

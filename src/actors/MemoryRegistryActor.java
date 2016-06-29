@@ -64,13 +64,8 @@ public class MemoryRegistryActor extends UntypedActor{
 				FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
 				
 				//Test obj = (Test)framedGraph.addVertex(test, Test.class);
+				ITest test_db = test.convertToRecord(framedGraph);
 				
-				ITest test_db = framedGraph.addVertex(UUID.randomUUID(), ITest.class);
-				//test_db.setPath(test.getPath());
-				IPage page_db = framedGraph.addVertex(UUID.randomUUID(), IPage.class);
-				test.getResult().convertToRecord(page_db);
-				
-				test_db.setResult(page_db);
 				test_db.setKey("key");
 				
 				framedGraph.commit();

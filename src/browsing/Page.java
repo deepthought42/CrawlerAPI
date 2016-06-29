@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
@@ -18,6 +19,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
+import com.tinkerpop.blueprints.impls.orient.OrientGraph;
+import com.tinkerpop.frames.FramedTransactionalGraph;
 import com.tinkerpop.frames.Property;
 
 /**
@@ -218,14 +221,16 @@ public class Page implements PathObject {
 	}
 	
 	/**
-	 * 
+	 * Converts Page to IPage for persistence
 	 * @param page
 	 */
-	public void convertToRecord(IPage page){
+	public IPage convertToRecord(FramedTransactionalGraph<OrientGraph> framedGraph ){
+		IPage page = framedGraph.addVertex(UUID.randomUUID(), IPage.class);
 		page.setLandable(this.isLandable());
 		page.setScreenshot(this.getUrl());
 		page.setSrc(this.getSrc());
 		page.setUrl(this.getUrl());
 		
+		return page;
 	}
 }

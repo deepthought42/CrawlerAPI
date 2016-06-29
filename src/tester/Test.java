@@ -2,8 +2,12 @@ package tester;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
+
+import com.tinkerpop.blueprints.impls.orient.OrientGraph;
+import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import browsing.Page;
 import structs.Path;
@@ -98,5 +102,30 @@ public class Test{
 		}
 		
 		return false;
+	}
+	
+	/**
+	 * 
+	 * @param page
+	 */
+	public ITest convertToRecord(FramedTransactionalGraph<OrientGraph> framedGraph ){
+		ITest test = framedGraph.addVertex(UUID.randomUUID(), ITest.class);
+		test.setPath(this.getPath().convertToRecord(framedGraph));
+		test.setResult(this.getResult().convertToRecord(framedGraph));
+		test.setKey(this.generateKey());
+		
+		return test;
+	}
+
+	/**
+	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
+	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * @return
+	 */
+	private String generateKey() {
+		
+		
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

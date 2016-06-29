@@ -36,7 +36,13 @@ public interface IPath {
 	 * @return whether or not this path goes into another domain
 	 */
 	@Property("spansMultipleDomains")
-	public boolean spansMultipleDomains();
+	public boolean isSpansMultipleDomains();
+
+	/**
+	 * @return whether or not this path goes into another domain
+	 */
+	@Property("spansMultipleDomains")
+	public boolean setSpansMultipleDomains(boolean isSpanningMultipleDomains);
 
 	/**
 	 * @return {@link List} of {@link PathObject}s representing a path sequence

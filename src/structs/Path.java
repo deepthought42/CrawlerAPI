@@ -3,10 +3,13 @@ package structs;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
+
+import com.tinkerpop.blueprints.impls.orient.OrientGraph;
+import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import actors.BrowserActor;
 import browsing.ActionFactory;
@@ -263,5 +266,13 @@ public class Path {
 
 	public void setSpansMultipleDomains(boolean spansMultipleDomains) {
 		this.spansMultipleDomains = spansMultipleDomains;
+	}
+
+	public IPath convertToRecord(FramedTransactionalGraph<OrientGraph> framedGraph) {
+		IPath path = framedGraph.addVertex(UUID.randomUUID(), IPath.class);
+		path.setPath(this.getPath());
+		path.setUsefulness(this.isUseful());
+		path.setSpansMultipleDomains(this.spansMultipleDomains);
+		return path;
 	}
 }

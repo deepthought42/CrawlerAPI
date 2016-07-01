@@ -180,7 +180,7 @@ public class BrowserActor extends UntypedActor {
 			Message<?> acct_msg = (Message<?>)message;
 			if (acct_msg.getData() instanceof Path){
 				log.info("PATH PASSED TO BROWSER ACTOR");
-				Path path = Path.clone((Path)acct_msg.getData());
+				Path path = (Path)acct_msg.getData();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
 				this.browser = new Browser(((Page)(path.getPath().get(0).data())).getUrl().toString());
@@ -192,10 +192,6 @@ public class BrowserActor extends UntypedActor {
 				Page current_page = browser.getPage();
 				Page last_page = path.getLastPage();
 				
-				if(path.getPath().size() != 1 && !current_page.getUrl().toString().contains(last_page.getUrl().getHost())){
-					log.info("Path is useful but leaves original domain");
-					path.setSpansMultipleDomains(true);
-				}
 				
 				if(last_page.checkIfLandable(browser)){
 					last_page.setLandable(true);

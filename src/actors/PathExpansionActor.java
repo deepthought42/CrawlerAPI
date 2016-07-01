@@ -87,6 +87,7 @@ public class PathExpansionActor extends UntypedActor {
 				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
 				memory_registry.tell(path_msg, getSelf());
 				
+				log.info("PATH SPANS MULTIPLE DOMAINS? :: " +path.isSpansMultipleDomains());
 				if(path.isUseful() && !path.isSpansMultipleDomains()){
 					Page last_page = path.getLastPage();
 					Page first_page = (Page)path.getPath().get(0);

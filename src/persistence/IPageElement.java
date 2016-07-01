@@ -1,10 +1,13 @@
-package browsing;
+package persistence;
 
 import java.util.List;
 import java.util.Map;
 
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+
+import browsing.Attribute;
+import browsing.PageElement;
 
 public interface IPageElement {
 	//private String[] actions = ActionFactory.getActions();

@@ -23,6 +23,8 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 import com.tinkerpop.frames.Property;
 
+import persistence.IPage;
+
 /**
  * A reference to a web page 
  * 

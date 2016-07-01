@@ -1,10 +1,9 @@
-package tester;
+package persistence;
 
 import java.util.Date;
 
 import com.tinkerpop.frames.Property;
 
-import browsing.IPage;
 import browsing.Page;
 
 public interface ITestRecord {

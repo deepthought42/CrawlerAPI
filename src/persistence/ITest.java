@@ -1,14 +1,14 @@
-package tester;
+package persistence;
 
 import java.util.Iterator;
+import java.util.List;
 
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 
-import browsing.IPage;
 import browsing.Page;
-import structs.IPath;
 import structs.Path;
+import tester.TestRecord;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
@@ -39,8 +39,8 @@ public interface ITest {
 	 * Adds a record to this test connecting it via edge with label "has"
 	 */
 	@Adjacency(label="has")
-	public void addRecord(TestRecord testRecord);
-	
+	public void setRecords(List<TestRecord> testRecord);
+		
 	/**
 	 * @return {@link Path} that this test was created for
 	 */

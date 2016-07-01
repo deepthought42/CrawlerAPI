@@ -1,10 +1,13 @@
-package browsing;
+package persistence;
 
 import java.net.URL;
 import java.util.Iterator;
 
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+
+import browsing.Page;
+import browsing.PageElement;
 
 /**
  * Tinkerpop/frames interface implementation of {@link Page}

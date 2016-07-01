@@ -10,6 +10,8 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import browsing.Page;
+import browsing.PathObject;
+import persistence.ITest;
 import structs.Path;
 
 /**
@@ -20,10 +22,9 @@ import structs.Path;
  *
  */
 public class Test{
-	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Test.class);
 
-	public final int key;
+	public final String key;
 	public List<TestRecord> records;
 	public final Path path;
 	public Page result;
@@ -37,10 +38,11 @@ public class Test{
 	 */
 	public Test(Path path){
 		assert path != null;
-		this.key = path.hashCode();
+
 		this.path = path;
 		this.result = null;
 		this.records = new ArrayList<TestRecord>();
+		this.key = this.generateKey();
 	}
 	
 	/**
@@ -52,10 +54,11 @@ public class Test{
 	 */
 	public Test(Path path, Page result){
 		assert path != null;
-		this.key = path.hashCode();
+		
 		this.path = path;
 		this.result = result;
 		this.records = new ArrayList<TestRecord>();
+		this.key = this.generateKey();
 	}
 	
 	
@@ -64,7 +67,7 @@ public class Test{
 	 * 
 	 * @return
 	 */
-	public int getKey(){
+	public String getKey(){
 		return this.key;
 	}
 
@@ -112,6 +115,7 @@ public class Test{
 		ITest test = framedGraph.addVertex(UUID.randomUUID(), ITest.class);
 		test.setPath(this.getPath().convertToRecord(framedGraph));
 		test.setResult(this.getResult().convertToRecord(framedGraph));
+		test.setRecords(this.getRecords());
 		test.setKey(this.generateKey());
 		
 		return test;
@@ -120,12 +124,18 @@ public class Test{
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
 	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * 
 	 * @return
 	 */
 	private String generateKey() {
+		String path_key = "";
+		log.error("TEST PATH VALUE :: "+this.getPath());
+		for(PathObject path_obj : this.getPath().getPath()){
+			log.error("TEST PATH -  PATH OBJECT VALUE :: "+path_obj.data().hashCode());
+			path_key += path_obj.data().hashCode()+":";
+		}
 		
-		
-		// TODO Auto-generated method stub
-		return null;
+		path_key += this.getResult().hashCode();
+		return path_key;
 	}
 }

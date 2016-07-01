@@ -16,11 +16,12 @@ import memory.DataDecomposer;
 import memory.ObjectDefinition;
 import memory.OrientDbPersistor;
 import memory.Vocabulary;
+import persistence.IPage;
+import persistence.ITest;
 import browsing.ActionFactory;
-import browsing.IPage;
 import browsing.Page;
 import structs.Message;
-import tester.ITest;
+import structs.Path;
 import tester.Test;
 
 /**
@@ -64,9 +65,9 @@ public class MemoryRegistryActor extends UntypedActor{
 				FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
 				
 				//Test obj = (Test)framedGraph.addVertex(test, Test.class);
-				ITest test_db = test.convertToRecord(framedGraph);
+				test.convertToRecord(framedGraph);
 				
-				test_db.setKey("key");
+				//test_db.setKey("key");
 				
 				framedGraph.commit();
 				//Person person = framedGraph.getVertex(1, Person.class);
@@ -102,6 +103,19 @@ public class MemoryRegistryActor extends UntypedActor{
 					//persistor.save();
 				}
 				*/
+			}
+			else if(acct_msg.getData() instanceof Path){
+				log.info("Saving Test to memory Registry");
+				Path path = (Path)acct_msg.getData();
+				
+				FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
+				OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/Thoth", "brandon", "password");
+			    OrientGraph instance = graphFactory.getTx();
+				FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
+				
+				path.convertToRecord(framedGraph);
+				framedGraph.commit();
+
 			}
 		}
 		else unhandled(message);

@@ -1,4 +1,4 @@
-package structs;
+package persistence;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public interface IPath {
 	 * @return whether or not this path goes into another domain
 	 */
 	@Property("spansMultipleDomains")
-	public boolean setSpansMultipleDomains(boolean isSpanningMultipleDomains);
+	public void setSpansMultipleDomains(boolean spanningMultipleDomains);
 
 	/**
 	 * @return {@link List} of {@link PathObject}s representing a path sequence

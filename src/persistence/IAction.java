@@ -1,8 +1,8 @@
-package browsing;
+package persistence;
 
 import com.tinkerpop.frames.Property;
 
-public interface IAttribute {
+public interface IAction {
 	@Property("name")
 	public String getName();
 	

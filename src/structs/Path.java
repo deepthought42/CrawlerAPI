@@ -19,6 +19,7 @@ import browsing.PathObject;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.actions.Action;
+import persistence.IPath;
 
 /**
  * A set of vertex objects that form a sequential movement through a graph
@@ -30,7 +31,7 @@ public class Path {
     private static final Logger log = Logger.getLogger(BrowserActor.class);
 	
 	private Boolean isUseful;
-	private boolean spansMultipleDomains;
+	private boolean spansMultipleDomains = false;
 	public List<PathObject> path = null;
 
 	/**
@@ -38,7 +39,7 @@ public class Path {
 	 */
 	public Path(){
 		this.isUseful = null;
-		this.setSpansMultipleDomains(false);
+		this.spansMultipleDomains = false;
 		this.path = new ArrayList<PathObject>();
 	}
 
@@ -49,23 +50,34 @@ public class Path {
 	 */
 	public Path(Path current_path){
 		this.isUseful = null;
-		this.path = new  ArrayList<PathObject>();
+		this.path = new ArrayList<PathObject>();
 		this.append(current_path);
+		//this.spansMultipleDomains = checkIfSpansMultipleDomains();
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Appends all objects the the array containing the known path sequence
 	 */
 	public void append(Path appendablePath){
-		
-		for(PathObject obj : appendablePath.getPath()){
+		this.path.addAll(this.path.size(), appendablePath.getPath());
+		/*for(PathObject obj : appendablePath.getPath()){
 			this.path.add(obj);
-		}				
+		}*/
+		this.spansMultipleDomains = checkIfSpansMultipleDomains();
 	}
 		
+	/**
+	 * Adds an object to path and sets whether or not this path spans multiple domains
+	 * 
+	 * @param obj
+	 * @return
+	 */
 	public boolean add(PathObject obj){
-		return this.path.add(obj);
+		boolean added_successfully = this.path.add(obj);
+		if(added_successfully){
+			this.spansMultipleDomains = checkIfSpansMultipleDomains();
+		}
+		return added_successfully; 
 	}
 	
 	/**
@@ -264,15 +276,21 @@ public class Path {
 		return spansMultipleDomains;
 	}
 
-	public void setSpansMultipleDomains(boolean spansMultipleDomains) {
-		this.spansMultipleDomains = spansMultipleDomains;
+	private boolean checkIfSpansMultipleDomains() {
+		log.info("Checking if path spans multiple domains");
+		if(path.size() > 1 && !((Page)path.get(0).data()).getUrl().toString().contains(this.getLastPage().getUrl().getHost())){
+			log.info("Path leaves original domain");
+			return true;
+		}
+		return false;
 	}
 
 	public IPath convertToRecord(FramedTransactionalGraph<OrientGraph> framedGraph) {
 		IPath path = framedGraph.addVertex(UUID.randomUUID(), IPath.class);
 		path.setPath(this.getPath());
 		path.setUsefulness(this.isUseful());
-		path.setSpansMultipleDomains(this.spansMultipleDomains);
+		log.info("Is spans multiple domains set : " + this.isSpansMultipleDomains());
+		path.setSpansMultipleDomains(this.isSpansMultipleDomains());
 		return path;
 	}
 }

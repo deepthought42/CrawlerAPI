@@ -5,6 +5,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 
 import browsing.Page;
+import persistence.ITestRecord;
 
 /**
  * A record for when a path was observed

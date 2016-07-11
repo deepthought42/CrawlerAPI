@@ -1,10 +1,10 @@
 package persistence;
 
 import java.util.Iterator;
-import java.util.List;
 
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 import browsing.Page;
 import structs.Path;
@@ -16,7 +16,7 @@ import tester.TestRecord;
  * @author Brandon Kindred
  *
  */
-public interface ITest {
+@TypeValue("Test") public interface ITest {
 	/**
 	 * @return the key for the current test
 	 */
@@ -38,30 +38,30 @@ public interface ITest {
 	/**
 	 * Adds a record to this test connecting it via edge with label "has"
 	 */
-	@Adjacency(label="has")
-	public void setRecords(List<TestRecord> testRecord);
+	@Adjacency(label="has_record")
+	public void addRecord(ITestRecord testRecord);
 		
 	/**
 	 * @return {@link Path} that this test was created for
 	 */
-	@Property("path")
+	@Adjacency(label="path")
 	public IPath getPath();
 	
 	/**
 	 * Sets the path for this test
 	 */
-	@Property("path")
+	@Adjacency(label="path")
 	public void setPath(IPath path); 
 	
 	/**
 	 * @return {@link Page} experienced as a result of executing the path
 	 */
-	@Property("result")
+	@Adjacency(label="result")
 	public IPage getResult();
 	
 	/**
 	 * Sets the {@link Page} that is the result of executing the path 
 	 */
-	@Property("result")
+	@Adjacency(label="result")
 	public void setResult(IPage page);
 }

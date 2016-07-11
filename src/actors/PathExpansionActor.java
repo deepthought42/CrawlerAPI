@@ -9,7 +9,6 @@ import akka.actor.ActorRef;
 
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import api.PastPathExperienceController;
 import browsing.Page;
 import structs.Message;
 import structs.Path;
@@ -33,7 +32,7 @@ public class PathExpansionActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			if(acct_msg.getData() instanceof Test){
+			/*if(acct_msg.getData() instanceof Test){
 				
 				Test test = (Test)acct_msg.getData();
 				Path path = test.getPath();
@@ -47,7 +46,7 @@ public class PathExpansionActor extends UntypedActor {
 				
 				//IF RESULT IS DIFFERENT THAN LAST PAGE IN PATH AND TEST DOESN'T CROSS INTO ANOTHER DOMAIN IN RESULT
 				//   THEN 
-				if(path.isUseful() && !path.isSpansMultipleDomains()){
+				if(path != null && path.isUseful() && !path.isSpansMultipleDomains()){
 					if(!test.getPath().getLastPage().getUrl().equals(test.getResult().getUrl()) && test.getResult().isLandable()){
 						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
@@ -77,15 +76,16 @@ public class PathExpansionActor extends UntypedActor {
 					}
 				}
 			}
-			else if(acct_msg.getData() instanceof Path){
+			else */if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
-				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
 				log.info("EXPANDING PATH WITH LENGTH : "+path.getPath().size());
 				ArrayList<Path> pathExpansions = new ArrayList<Path>();
 
-				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
-				memory_registry.tell(path_msg, getSelf());
+				//Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
+
+				//final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
+				//memory_registry.tell(path_msg, getSelf());
 				
 				log.info("PATH SPANS MULTIPLE DOMAINS? :: " +path.isSpansMultipleDomains());
 				if(path.isUseful() && !path.isSpansMultipleDomains()){

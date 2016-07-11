@@ -1,9 +1,5 @@
 package actors;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import org.apache.log4j.Logger;
 
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
@@ -12,16 +8,7 @@ import com.tinkerpop.frames.FramedGraphFactory;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import akka.actor.UntypedActor;
-import memory.DataDecomposer;
-import memory.ObjectDefinition;
-import memory.OrientDbPersistor;
-import memory.Vocabulary;
-import persistence.IPage;
-import persistence.ITest;
-import browsing.ActionFactory;
-import browsing.Page;
 import structs.Message;
-import structs.Path;
 import tester.Test;
 
 /**
@@ -41,7 +28,7 @@ public class MemoryRegistryActor extends UntypedActor{
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
-			if(acct_msg.getData() instanceof Page){
+			/*if(acct_msg.getData() instanceof Page){
 				Page page = (Page)acct_msg.getData();
 				List<Object> decomposed_list = DataDecomposer.decompose(page);
 				OrientDbPersistor persistor = new OrientDbPersistor();
@@ -54,10 +41,11 @@ public class MemoryRegistryActor extends UntypedActor{
 					persistor.findAndUpdateOrCreate(vocabulary, ActionFactory.getActions());
 				}
 			}
-			else if(acct_msg.getData() instanceof Test){
+			else */if(acct_msg.getData() instanceof Test){
 				log.info("Saving Test to memory Registry");
 				Test test = (Test)acct_msg.getData();
 
+				test.create();
 				//TinkerGraph graph = TinkerGraphFactory.createTinkerGraph(); //This graph is pre-populated.
 				FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
 				OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/Thoth", "brandon", "password");
@@ -65,8 +53,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
 				
 				//Test obj = (Test)framedGraph.addVertex(test, Test.class);
-				test.convertToRecord(framedGraph);
-				
+				//test.convertToRecord(framedGraph);
 				//test_db.setKey("key");
 				
 				framedGraph.commit();
@@ -103,7 +90,7 @@ public class MemoryRegistryActor extends UntypedActor{
 					//persistor.save();
 				}
 				*/
-			}
+			}/*
 			else if(acct_msg.getData() instanceof Path){
 				log.info("Saving Test to memory Registry");
 				Path path = (Path)acct_msg.getData();
@@ -116,7 +103,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				path.convertToRecord(framedGraph);
 				framedGraph.commit();
 
-			}
+			}*/
 		}
 		else unhandled(message);
 	}

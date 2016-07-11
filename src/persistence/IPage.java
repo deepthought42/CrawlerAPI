@@ -2,19 +2,26 @@ package persistence;
 
 import java.net.URL;
 import java.util.Iterator;
+import java.util.List;
 
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 import browsing.Page;
-import browsing.PageElement;
 
 /**
  * Tinkerpop/frames interface implementation of {@link Page}
  * @author brandon
  *
  */
-public interface IPage {
+@TypeValue("Page") public interface IPage extends IPathObject, IPersistable<IPage>{
+	@Property("key")
+	public String getKey();
+	
+	@Property("key")
+	public void setKey(String key);
+	
 	@Property("landable")
 	public boolean isLandable();
 	
@@ -40,8 +47,8 @@ public interface IPage {
 	public URL setUrl(URL url);
 	
 	@Adjacency(label="contains")
-	public Iterator<PageElement> getElements();
+	public Iterator<IPageElement> getElements();
 	
 	@Adjacency(label="contains")
-	public void setElements();
+	public void setElements(List<IPageElement> elements);
 }

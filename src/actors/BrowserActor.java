@@ -209,7 +209,7 @@ public class BrowserActor extends UntypedActor {
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
-				path_expansion_actor.tell(test_msg, getSelf() );
+				path_expansion_actor.tell(path_msg, getSelf() );
 
 				//add test to sequences for session
 				SessionTestTracker seqTracker = SessionTestTracker.getInstance();
@@ -222,7 +222,7 @@ public class BrowserActor extends UntypedActor {
 				//tell memory worker of path
 				log.info("Saving test");
 				memory_actor.tell(test_msg, getSelf() );
-				memory_actor.tell(path_msg, getSelf() );
+				//memory_actor.tell(path_msg, getSelf() );
 
 				//broadcast path
 				PastPathExperienceController.broadcastTestExperience(test);
@@ -239,7 +239,7 @@ public class BrowserActor extends UntypedActor {
 			  	
 			  	Page current_page = browser.getPage();
 				Page last_page = path.getLastPage();
-				
+
 			  	if(!current_page.equals(last_page) || path.getPath().size() == 1){
 			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
 					path.setIsUseful(true);
@@ -254,12 +254,17 @@ public class BrowserActor extends UntypedActor {
 				else{
 					path.setIsUseful(false);
 				}
-			  	
-			  	//broadcast path
-				PastPathExperienceController.broadcastPathExperience(path);		  	
+
+				Test test = new Test(path, current_page);
+				log.info("Saving test");
+			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+
+				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor");
+				memory_actor.tell(test_msg, getSelf() );
 				
-				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(ShortTermMemoryHandler.class), "ShortTermMemoryActor");
-				//memory_actor.tell(path, getSelf() );
+			  	//broadcast path
+				PastPathExperienceController.broadcastTestExperience(test);		  	
+
 			  	this.browser.close();
 		   }
 		}else unhandled(message);

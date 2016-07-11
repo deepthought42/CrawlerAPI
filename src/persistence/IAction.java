@@ -2,16 +2,16 @@ package persistence;
 
 import com.tinkerpop.frames.Property;
 
-public interface IAction {
+public interface IAction extends IPersistable<IAction> {
+	@Property("key")
+	public String getKey();
+	
+	@Property("key")
+	public void setKey(String key);
+	
 	@Property("name")
 	public String getName();
 	
 	@Property("name")
-	public String setName();
-	
-	@Property("vals")
-	public String[] getVals();
-	
-	@Property("vals")
-	public String[] setVals();
+	public String setName(String name);
 }

@@ -2,24 +2,27 @@ package structs;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.frames.FramedTransactionalGraph;
-
 import actors.BrowserActor;
 import browsing.ActionFactory;
 import browsing.Browser;
 import browsing.IObjectValuationAccessor;
 import browsing.PathObject;
+import browsing.PathObjectFactory;
 import browsing.Page;
 import browsing.PageElement;
 import browsing.actions.Action;
 import persistence.IPath;
+import persistence.IPathObject;
+import persistence.IPersistable;
+import persistence.ITest;
+import persistence.OrientConnectionFactory;
 
 /**
  * A set of vertex objects that form a sequential movement through a graph
@@ -27,20 +30,22 @@ import persistence.IPath;
  * @author Brandon Kindred
  *
  */
-public class Path {
+public class Path implements IPersistable<IPath> {
     private static final Logger log = Logger.getLogger(BrowserActor.class);
 	
-	private Boolean isUseful;
+    private final String key;
+	private boolean isUseful;
 	private boolean spansMultipleDomains = false;
-	public List<PathObject> path = null;
+	public ArrayList<PathObject> path = null;
 
 	/**
 	 * Creates new instance of Path
 	 */
 	public Path(){
-		this.isUseful = null;
+		this.isUseful = false;
 		this.spansMultipleDomains = false;
 		this.path = new ArrayList<PathObject>();
+		this.key = this.generateKey();
 	}
 
 	/**
@@ -49,10 +54,10 @@ public class Path {
 	 * @param current_path
 	 */
 	public Path(Path current_path){
-		this.isUseful = null;
+		this.isUseful = false;
 		this.path = new ArrayList<PathObject>();
 		this.append(current_path);
-		//this.spansMultipleDomains = checkIfSpansMultipleDomains();
+		this.key = this.generateKey();
 	}
 	
 	/**
@@ -92,7 +97,7 @@ public class Path {
 		this.isUseful = isUseful;
 	}
 	
-	public Boolean isUseful(){
+	public boolean isUseful(){
 		return this.isUseful;
 	}
 	
@@ -285,12 +290,89 @@ public class Path {
 		return false;
 	}
 
-	public IPath convertToRecord(FramedTransactionalGraph<OrientGraph> framedGraph) {
-		IPath path = framedGraph.addVertex(UUID.randomUUID(), IPath.class);
-		path.setPath(this.getPath());
+	public IPath convertToRecord(OrientConnectionFactory connection) {
+		IPath path = connection.getTransaction().addVertex(UUID.randomUUID(), IPath.class);
+		path.setKey(key);
+		
+		log.info("Starting conversion from path objects to their respective types");
+		boolean first_pass = true;
+		IPathObject persistablePathObj = connection.getTransaction().addVertex(UUID.randomUUID(), IPathObject.class);
+
+		IPathObject last_obj = persistablePathObj;
+		for(PathObject pathObj : this.getPath()){
+			last_obj.setData(PathObjectFactory.build(pathObj).convertToRecord(connection));
+			
+			if(first_pass){
+				path.setPath(persistablePathObj);
+				first_pass = false;
+			}
+			else{
+				IPathObject persistablePathObj_new = connection.getTransaction().addVertex(UUID.randomUUID(), IPathObject.class);
+				last_obj.setNext(persistablePathObj_new);
+				last_obj = persistablePathObj_new;
+			}
+		}
+				
+		log.info("Path Size: " + this.getPath().size());
 		path.setUsefulness(this.isUseful());
+		
 		log.info("Is spans multiple domains set : " + this.isSpansMultipleDomains());
 		path.setSpansMultipleDomains(this.isSpansMultipleDomains());
 		return path;
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String generateKey() {
+		String path_key = "";
+		for(PathObject path_obj : this.getPath()){
+			path_key += ((IPersistable<?>)path_obj.data()).generateKey() + ":"+hashCode()+":";
+		}
+		return path_key;
+	}
+		
+	public String getKey() {
+		return this.key;
+	}
+
+	@Override
+	public IPersistable<IPath> create() {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		
+		this.convertToRecord(orient_connection);
+		orient_connection.save();
+		
+		return this;
+	}
+
+	@Override
+	public IPersistable<IPath> update(IPath existing_obj) {
+		Iterator<IPath> test_iter = this.findByKey(this.generateKey()).iterator();
+		int cnt=0;
+		while(test_iter.hasNext()){
+			test_iter.next();
+			cnt++;
+		}
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		if(cnt == 0){
+			connection.getTransaction().addVertex(UUID.randomUUID(), ITest.class);
+			this.convertToRecord(connection);
+		}
+		
+		connection.save();
+		
+		return this;
+	}
+
+	@Override
+	public Iterable<IPath> findByKey(String generated_key) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getVertices("key", generated_key, IPath.class);
+	}
 }
+
+

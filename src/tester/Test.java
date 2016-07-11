@@ -1,6 +1,7 @@
 package tester;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,7 +12,9 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import browsing.Page;
 import browsing.PathObject;
+import persistence.IPersistable;
 import persistence.ITest;
+import persistence.OrientConnectionFactory;
 import structs.Path;
 
 /**
@@ -21,29 +24,13 @@ import structs.Path;
  * @author Brandon Kindred
  *
  */
-public class Test{
+public class Test implements IPersistable<ITest>{
 	private static final Logger log = Logger.getLogger(Test.class);
 
 	public final String key;
 	public List<TestRecord> records;
 	public final Path path;
 	public Page result;
-	
-	/**
-	 * Constructs a test object
-	 * 
-	 * @param path {@link Path} that will be used to determine what the expected path should be
-	 * 
-	 * @pre path != null
-	 */
-	public Test(Path path){
-		assert path != null;
-
-		this.path = path;
-		this.result = null;
-		this.records = new ArrayList<TestRecord>();
-		this.key = this.generateKey();
-	}
 	
 	/**
 	 * Constructs a test object
@@ -108,17 +95,35 @@ public class Test{
 	}
 	
 	/**
-	 * 
-	 * @param page
+	 * {@inheritDoc}
 	 */
-	public ITest convertToRecord(FramedTransactionalGraph<OrientGraph> framedGraph ){
-		ITest test = framedGraph.addVertex(UUID.randomUUID(), ITest.class);
-		test.setPath(this.getPath().convertToRecord(framedGraph));
-		test.setResult(this.getResult().convertToRecord(framedGraph));
-		test.setRecords(this.getRecords());
+	@Override
+	public ITest convertToRecord(OrientConnectionFactory connection){
+		Iterable<ITest> tests = findByKey(this.getKey());
+		int cnt = 0;
+		Iterator<ITest> iter = tests.iterator();
+		ITest test = null;
+		while(iter.hasNext()){
+			iter.next();
+			cnt++;
+		}
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		
+		if(cnt == 0){
+			test = connection.getTransaction().addVertex(UUID.randomUUID(), ITest.class);
+		}
+		test.setPath(this.getPath().convertToRecord(connection));
+		test.setResult(this.getResult().convertToRecord(connection));
+		for(TestRecord record : this.getRecords()){
+			test.addRecord(record.convertToRecord(connection));
+		}
 		test.setKey(this.generateKey());
 		
 		return test;
+	}
+	
+	public ITest findById(FramedTransactionalGraph<OrientGraph> framedGraph, String id ){
+		return framedGraph.getVertex(id, ITest.class);
 	}
 
 	/**
@@ -127,15 +132,62 @@ public class Test{
 	 * 
 	 * @return
 	 */
-	private String generateKey() {
+	@Override
+	public String generateKey() {
 		String path_key = "";
-		log.error("TEST PATH VALUE :: "+this.getPath());
+		log.error("TEST PATH VALUE :: "+this.getPath().getKey());
 		for(PathObject path_obj : this.getPath().getPath()){
 			log.error("TEST PATH -  PATH OBJECT VALUE :: "+path_obj.data().hashCode());
-			path_key += path_obj.data().hashCode()+":";
+			path_key +=this.getPath().getKey()+":";
 		}
 		
 		path_key += this.getResult().hashCode();
 		return path_key;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPersistable<ITest> create() {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		
+		this.convertToRecord(orient_connection);
+		orient_connection.save();
+		
+		return this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPersistable<ITest> update(ITest existing_obj) {
+		Iterator<ITest> test_iter = this.findByKey(this.generateKey()).iterator();
+		int cnt=0;
+		while(test_iter.hasNext()){
+			test_iter.next();
+			cnt++;
+		}
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		if(cnt == 0){
+			connection.getTransaction().addVertex(UUID.randomUUID(), ITest.class);
+			this.convertToRecord(connection);
+		}
+		
+		connection.save();
+		
+		return this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<ITest> findByKey(String generated_key) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
 	}
 }

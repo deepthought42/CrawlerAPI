@@ -2,22 +2,29 @@ package persistence;
 
 import java.util.Date;
 
+import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 
-import browsing.Page;
-
-public interface ITestRecord {
+/*
+ * 
+ */
+public interface ITestRecord extends IPersistable<ITestRecord> {
+	@Property("key")
+	public String getKey();
 	
-	@Property("result")
+	@Property("key")
+	public void setKey(String key);
+	
+	@Adjacency(label="result")
 	public IPage getResult();
 	
-	@Property("result")
-	public void setResult(Page page);
+	@Adjacency(label="result")
+	public void setResult(IPage page);
 	
-	@Property("ranAt")
+	@Property("ran_at")
 	public Date getRanAt();
 	
-	@Property("ranAt")
+	@Property("ran_at")
 	public void setRanAt(Date date);
 	
 	@Property("passes")

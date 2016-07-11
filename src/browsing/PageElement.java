@@ -2,8 +2,10 @@ package browsing;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
@@ -12,6 +14,11 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import persistence.IAttribute;
+import persistence.IPageElement;
+import persistence.IPersistable;
+import persistence.OrientConnectionFactory;
+import tester.Test;
 import util.ArrayUtility;
 
 
@@ -23,7 +30,7 @@ import util.ArrayUtility;
  * @author Brandon Kindred
  *
  */
-public class PageElement implements PathObject {
+public class PageElement implements PathObject, IPersistable<IPageElement> {
     private static final Logger log = Logger.getLogger(PageElement.class);
 
 	private String[] actions = ActionFactory.getActions();
@@ -36,6 +43,8 @@ public class PageElement implements PathObject {
 	Map<String, String> cssValues = new HashMap<String,String>();
 
 	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
+
+	private String key;
 		
 	//transfer list to enum class
 	
@@ -57,6 +66,7 @@ public class PageElement implements PathObject {
 		loadAttributes(attrib_list);		
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
+		this.key = this.generateKey();
 	}
 	
 	/**
@@ -76,6 +86,8 @@ public class PageElement implements PathObject {
 		loadAttributes(attrib_list);
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(elem, parentXpath, xpathHash);
+		this.key = this.generateKey();
+
 	}
 
 	/**
@@ -93,6 +105,7 @@ public class PageElement implements PathObject {
 		loadAttributes(attrib_list);
 		//loadCssProperties(web_elem);
 		this.xpath = this.generateXpath(elem);
+		this.key = this.generateKey();
 	}
 	
 	/**
@@ -114,6 +127,7 @@ public class PageElement implements PathObject {
 		loadAttributes(attrib_list);
 		loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver, "", xpathHash);
+		this.key = this.generateKey();
 	}
 	
 	/**
@@ -174,7 +188,7 @@ public class PageElement implements PathObject {
 		xpath += "//"+this.tagName;
 		for(Attribute attr : attributes){
 			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVal()) + "')");
+				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
 			}
 		}
 
@@ -203,7 +217,7 @@ public class PageElement implements PathObject {
 		xpath += "//"+this.tagName;
 		for(Attribute attr : attributes){
 			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVal()) + "')");
+				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
 			}
 		}
 
@@ -239,7 +253,7 @@ public class PageElement implements PathObject {
 	 * @param changed
 	 * @return
 	 */
-	public boolean isChanged(boolean changed){
+	public boolean isChanged(){
 		return this.changed;
 	}
 	
@@ -292,8 +306,8 @@ public class PageElement implements PathObject {
 		System.out.println("+++++++++++++++++++++++++++++++++++++++");
 		for(int j=0; j < this.attributes.size(); j++){
 			System.out.print(this.attributes.get(j).getName() + " : ");
-			for(int i=0; i < attributes.get(j).getVal().length; i++){
-				System.out.print( this.attributes.get(j).getVal()[i] + " ");
+			for(int i=0; i < attributes.get(j).getVals().length; i++){
+				System.out.print( this.attributes.get(j).getVals()[i] + " ");
 			}
 		}
 		System.out.println("\n+++++++++++++++++++++++++++++++++++++++");
@@ -477,8 +491,109 @@ public class PageElement implements PathObject {
 		return this.actions;
 	}
 
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public PageElement data() {
 		return this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPageElement convertToRecord(OrientConnectionFactory framedGraph) {
+		IPageElement pageElement = framedGraph.getTransaction().addVertex(UUID.randomUUID(), IPageElement.class);
+		
+		List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
+		for(Attribute attribute : this.attributes){
+			IAttribute attribute_persist = attribute.convertToRecord(framedGraph);
+			attribute_persist_list.add(attribute_persist);
+		}
+		pageElement.setAttributes(attribute_persist_list);
+		pageElement.setChanged(this.isChanged());
+		
+		List<IPageElement> child_elements_persist = new ArrayList<IPageElement>();
+		for(PageElement elem : this.child_elements){
+			IPageElement child_element = elem.convertToRecord(framedGraph);
+			child_elements_persist.add(child_element);
+		}
+		pageElement.setChildElements(child_elements_persist);
+		
+		pageElement.setCssValues(this.cssValues);
+		pageElement.setTagName(this.tagName);
+		pageElement.setText(this.text);
+		pageElement.setXpath(this.xpath);
+		pageElement.setKey(this.key);
+		return pageElement;
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public String getKey() {
+		return this.key;
+	}
+	
+	/**
+	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
+	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * 
+	 * @return
+	 */
+	@Override
+	public String generateKey() {
+		return "::"+this.getXpath().hashCode()+"::";
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPersistable<IPageElement> create() {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		
+		this.convertToRecord(orient_connection);
+		orient_connection.save();
+		
+		return this;
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPersistable<IPageElement> update(IPageElement existing_obj) {
+		Iterator<IPageElement> page_element_iter = this.findByKey(this.generateKey()).iterator();
+		int cnt=0;
+		while(page_element_iter.hasNext()){
+			page_element_iter.next();
+			cnt++;
+		}
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		IPageElement page_element = null;
+		if(cnt == 0){
+			page_element = connection.getTransaction().addVertex(UUID.randomUUID(), IPageElement.class);	
+		}
+		
+		page_element = this.convertToRecord(connection);
+		connection.save();
+		
+		return page_element;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<IPageElement> findByKey(String generated_key) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getVertices("key", generated_key, IPageElement.class);
 	}
 }

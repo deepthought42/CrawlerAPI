@@ -2,7 +2,9 @@ package persistence;
 
 import java.util.List;
 
+import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 import browsing.PathObject;
 
@@ -12,12 +14,15 @@ import browsing.PathObject;
  * @author Brandon Kindred
  *
  */
-public interface IPath {
+@TypeValue("Path") public interface IPath {
 	/**
 	 * @return the key for the current test
 	 */
 	@Property("key")
 	public int getKey();
+	
+	@Property("key")
+	public void setKey(String key);
 		
 	/**
 	 * @return {@link Boolean} value indicating usefulness for a path.
@@ -47,12 +52,12 @@ public interface IPath {
 	/**
 	 * @return {@link List} of {@link PathObject}s representing a path sequence
 	 */
-	@Property("path")
-	public List<PathObject> getPath();
+	@Adjacency(label="starts_with")
+	public IPathObject getPath();
 
 	/**
 	 * Sets the {@link List} of {@link PathObject}s representing the path sequence
 	 */
-	@Property("path")
-	public void setPath(List<PathObject> path);
+	@Adjacency(label="starts_with")
+	public void setPath(IPathObject path_obj);
 }

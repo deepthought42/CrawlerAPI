@@ -7,6 +7,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,11 +20,10 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.frames.FramedTransactionalGraph;
-import com.tinkerpop.frames.Property;
-
 import persistence.IPage;
+import persistence.IPageElement;
+import persistence.IPersistable;
+import persistence.OrientConnectionFactory;
 
 /**
  * A reference to a web page 
@@ -31,9 +31,10 @@ import persistence.IPage;
  * @author Brandon Kindred
  *
  */
-public class Page implements PathObject {
+public class Page implements PathObject, IPersistable<IPage> {
     private static final Logger log = Logger.getLogger(Page.class);
 
+    private String key;
     private boolean landable = false;
 	private String screenshot = null; 
 	private String src = "";
@@ -55,10 +56,11 @@ public class Page implements PathObject {
 	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
 		setSrc(driver.getPageSource());
 		
+		this.key = generateKey();
 		this.date = date.format(new Date());
 		this.url = new URL(driver.getCurrentUrl().replace("/#","/"));
 		this.screenshot = Browser.getScreenshot(driver);
-	
+		
 		//Document doc = Jsoup.parse(this.src);
 		//this.elements = doc.getAllElements(); 
 		this.elements = getVisibleElements(driver, "//body");
@@ -69,7 +71,6 @@ public class Page implements PathObject {
 	 * 
 	 * @return the page of the source
 	 */
-    @Property("src")
 	public String getSrc() {
 		return this.src;
 	}
@@ -98,7 +99,6 @@ public class Page implements PathObject {
 		return landable;
 	}
 	
-	@Property("landable")
 	public boolean isLandable(){
 		return this.landable;
 	}
@@ -107,7 +107,6 @@ public class Page implements PathObject {
 	 * 
 	 * @param isLandable
 	 */
-	 @Property("landable")
 	public void setLandable(boolean isLandable){
 		this.landable = isLandable;
 	}
@@ -122,9 +121,12 @@ public class Page implements PathObject {
 		return src;
 	}
 
-    @Property("url")
 	public URL getUrl(){
 		return this.url;
+	}
+	
+	public String getKey() {
+		return this.key;
 	}
 	
 	/**
@@ -208,9 +210,9 @@ public class Page implements PathObject {
         hash = hash * 5 + url.hashCode();
         hash = hash * 17 + src.hashCode();
         hash = hash * 31 + screenshot.hashCode();
-       // for(PageElement element : elements){
-       // 	hash = hash * 13 + element.hashCode();
-       // }
+        for(PageElement element : elements){
+        	hash = hash * 13 + element.hashCode();
+        }
         return hash;
     }
 
@@ -226,13 +228,68 @@ public class Page implements PathObject {
 	 * Converts Page to IPage for persistence
 	 * @param page
 	 */
-	public IPage convertToRecord(FramedTransactionalGraph<OrientGraph> framedGraph ){
-		IPage page = framedGraph.addVertex(UUID.randomUUID(), IPage.class);
+	public IPage convertToRecord(OrientConnectionFactory connection){
+		IPage page = connection.getTransaction().addVertex(UUID.randomUUID(), IPage.class);
 		page.setLandable(this.isLandable());
 		page.setScreenshot(this.getUrl());
 		page.setSrc(this.getSrc());
 		page.setUrl(this.getUrl());
+		List<IPageElement> elements = new ArrayList<IPageElement>();
+		for(PageElement elem : this.elements){
+			IPageElement page_elem_persist = elem.convertToRecord(connection);
+			elements.add(page_elem_persist);
+		}
+		page.setElements(elements);
+		page.setKey(key);
+		return page;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String generateKey() {
+		return this.src.hashCode() + "::";
+	}
+
+	@Override
+	public IPersistable<IPage> create() {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		
+		this.convertToRecord(orient_connection);
+		orient_connection.save();
+		
+		return this;
+	}
+
+	@Override
+	public IPersistable<IPage> update(IPage existing_obj) {
+		Iterator<IPage> page_iter = this.findByKey(this.generateKey()).iterator();
+		int cnt=0;
+		while(page_iter.hasNext()){
+			page_iter.next();
+			cnt++;
+		}
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		IPersistable<IPage> page = null;
+		if(cnt == 0){
+			page = connection.getTransaction().addVertex(UUID.randomUUID(), IPage.class);	
+		}
+		
+		page = this.convertToRecord(connection);
+		connection.save();
 		
 		return page;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<IPage> findByKey(String generated_key) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getVertices("key", generated_key, IPage.class);
 	}
 }

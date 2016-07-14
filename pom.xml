@@ -218,10 +218,12 @@
 		    <artifactId>shiro-ehcache</artifactId>
 		    <version>1.2.5</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.shiro/shiro-spring -->
 		<dependency>
-		    <groupId>com.github.boyazuo</groupId>
-		    <artifactId>shiro-spring-boot-starter</artifactId>
-		    <version>1.0.2</version>
+		    <groupId>org.apache.shiro</groupId>
+		    <artifactId>shiro-spring</artifactId>
+		    <version>1.2.5</version>
 		</dependency>
+
 	</dependencies>
 </project>

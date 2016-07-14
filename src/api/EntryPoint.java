@@ -1,5 +1,11 @@
 package api;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.util.Factory;
+import org.seleniumhq.jetty7.util.log.Log;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -25,7 +31,13 @@ public class EntryPoint {
         }		
         */
         SpringApplication.run(EntryPoint.class, args);
-		final ActorSystem system = ActorSystem.create("Minion");
+        Factory<SecurityManager> factory = new IniSecurityManagerFactory("classpath:Shiro.ini");
+        SecurityManager securityManager = factory.getInstance();
+        SecurityUtils.setSecurityManager(securityManager);
+        Subject subject = SecurityUtils.getSubject();
+        System.out.println("Subject :: " + subject.toString());
+        
+        final ActorSystem system = ActorSystem.create("Minion");
 	}
 	
 	

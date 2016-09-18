@@ -7,16 +7,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
-@Configuration
-@EnableCaching
+//@Configuration
+//@EnableCaching
 public class CacheConfig {
     // --------------  Cache Cofig --------------
-    @Bean(name = "ehcache")
+    //@Bean(name = "ehcache")
     public static EhCacheCacheManager ehcache() {
         return new EhCacheCacheManager(cacheManager().getObject());
     }
 
-    @Bean(name = "cacheManager")
+    //@Bean(name = "cacheManager")
     public static EhCacheManagerFactoryBean cacheManager() {
         EhCacheManagerFactoryBean cacheManagerFactoryBean = new EhCacheManagerFactoryBean();
         cacheManagerFactoryBean.setConfigLocation(new ClassPathResource("ehcache.xml"));

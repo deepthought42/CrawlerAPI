@@ -1,7 +1,11 @@
 package com.minion.api;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 
 import akka.actor.ActorSystem;
 
@@ -12,6 +16,13 @@ import akka.actor.ActorSystem;
  *
  */
 @SpringBootApplication
+@EnableAutoConfiguration
+@ComponentScan(basePackages = {"com.auth0.spring.security.api"})
+@PropertySources({
+	@PropertySource("classpath:application.properties"),
+	@PropertySource("classpath:auth0.properties")
+})
+//@PropertySource("file://media/brandon/My Passport/Linux/development/java/WebTestVisualizer/src/main/resources/application.properties")
 public class EntryPoint {
 	
 	public static void main(String[] args){

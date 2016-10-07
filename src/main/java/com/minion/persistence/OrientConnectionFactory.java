@@ -1,26 +1,38 @@
 package com.minion.persistence;
 
+import org.apache.log4j.Logger;
+
+import com.minion.actors.BrowserActor;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
 import com.tinkerpop.frames.FramedGraphFactory;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 /**
+ * Produces connections to the OrientDB instance
  * 
  * @author Brandon Kindred
  *
  */
 public class OrientConnectionFactory {
+    private static final Logger log = Logger.getLogger(BrowserActor.class);
+
 	FramedTransactionalGraph<OrientGraph> current_tx;
 	
 	public OrientConnectionFactory(){
+		log.info("Opening connection to orientdb");
 		this.current_tx = getConnection();
+		log.info("connection opened");
 	}
 	
 	private FramedTransactionalGraph<OrientGraph> getConnection(){
+		log.info("framing graph factory");
 		FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
-		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/Thoth", "brandon", "password");
+		log.info("Initiating orient database graph factory connection");
+		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost:2480/Thoth", "brandon", "password");
+		log.info("creating transaction");
 	    OrientGraph instance = graphFactory.getTx();
+	    log.info("Orientdb transaction created returning instance");
 		return factory.create(instance);
 	}
 	
@@ -31,6 +43,7 @@ public class OrientConnectionFactory {
 	 * @return if save was successful
 	 */
 	public boolean save(){
+		log.info("Saving current transaction to orientDB");
 		try{
 			current_tx.commit();
 		}catch(Exception e){

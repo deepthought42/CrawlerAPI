@@ -3,15 +3,20 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.jsoup.nodes.Element;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.UnhandledAlertException;
@@ -25,6 +30,9 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import com.minion.util.ArrayUtility;
+import com.sun.jna.platform.win32.Secur32Util.SecurityPackage;
 
 /**
  * 
@@ -64,7 +72,7 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
-		return new Page(driver, DateFormat.getInstance());
+		return new Page(driver);
 	}
 
 	/**
@@ -75,7 +83,7 @@ public class Browser {
 	 * @throws IOException 
 	 */
 	public Page updatePage(DateFormat date) throws IOException{
-		return new Page(driver, date);
+		return new Page(driver);
 	}
 	
 	/**
@@ -112,8 +120,10 @@ public class Browser {
 	 * @return
 	 */
 	public static WebDriver openWithFirefox(String url){
+		log.info("Opening Firefox WebDriver connection using URL : " +url);
 		FirefoxProfile firefoxProfile = new FirefoxProfile();
 		WebDriver driver = new FirefoxDriver(firefoxProfile);
+		log.info("firefox opened");
 		return driver;
 	}
 	
@@ -163,13 +173,13 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static String getScreenshot(WebDriver driver) throws IOException{
-		String src = ((TakesScreenshot)driver).getScreenshotAs(OutputType.BASE64);
+		String screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.BASE64);
 		//File srcFile = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 		//Random rand = new Random();
 		// Now you can do whatever you need to do with it, for example copy somewhere
 		//FileUtils.copyFile(srcFile, new File("/home/deepthought/Desktop/screenshots/screenshot"+DateFormat.getInstance().format(new Date()).replace(" ", "")+""+rand.nextInt() +".png"));
 		
-		return src;
+		return screenshot;
 	}
 	
 	/**
@@ -203,7 +213,7 @@ public class Browser {
 			
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null 
 					|| !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
+				PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
 				elementList.add(pageElem);
 			}
 		}
@@ -231,7 +241,7 @@ public class Browser {
 		}
 		for(WebElement elem : childElements){			
 			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
+				PageElement pageElem = new PageElement( elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
 				elementList.add(pageElem);
 			}
 		}
@@ -242,4 +252,48 @@ public class Browser {
 		
 		return elementList;
 	}
+	 
+	 /**
+		 * Retreives all elements on a given page that are visible. In this instance we take 
+		 *  visible to mean that it is not currently set to {@css display: none} and that it
+		 *  is visible within the confines of the screen. If an element is not hidden but is also 
+		 *  outside of the bounds of the screen it is assumed hidden
+		 *  
+		 * @param driver
+		 * @return list of webelements that are currently visible on the page
+		 */
+		public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
+																 throws WebDriverException {
+			
+			List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
+			log.info("page elements found :: " +pageElements.size());
+			//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
+			ArrayList<PageElement> elementList = new ArrayList<PageElement>();
+			if(pageElements.size() <= 0){
+				return elementList;
+			}
+
+			int counter = 0;
+			for(WebElement elem : pageElements){
+				try{
+					log.info("checking visibily and extracting attributes for element " + counter++);
+					Date start = new Date();
+					if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+						PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
+						elementList.add(pageElem);
+					}
+					Date end = new Date();
+					
+					log.info("All attributes extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
+					
+				}catch(StaleElementReferenceException e){
+					log.error(e.toString());
+				}
+			}
+			
+			
+			return elementList;
+		}	
+		
+
 }

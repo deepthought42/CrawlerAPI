@@ -1,9 +1,7 @@
-package com.minion.structs;
+package com.minion.api.models;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.OneToMany;
 
 import org.apache.log4j.Logger;
 import org.springframework.data.orient.commons.repository.annotation.Vertex;
@@ -31,8 +29,6 @@ public class Path {
     private final String key;
 	private boolean isUseful;
 	private boolean spansMultipleDomains = false;
-	
-	@OneToMany
 	private List<PathObject> path = null;
 	
 	/**

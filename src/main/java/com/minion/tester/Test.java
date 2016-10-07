@@ -1,20 +1,18 @@
 package com.minion.tester;
 
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.orient.commons.repository.annotation.Vertex;
+import org.springframework.stereotype.Repository;
 
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.frames.FramedTransactionalGraph;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Page;
 import com.minion.browsing.PathObject;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITest;
-import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Path;
 
 /**
@@ -24,13 +22,23 @@ import com.minion.structs.Path;
  * @author Brandon Kindred
  *
  */
-public class Test implements IPersistable<ITest>{
+@Vertex
+public class Test {
 	private static final Logger log = Logger.getLogger(Test.class);
 
-	public final String key;
-	public List<TestRecord> records;
-	public final Path path;
-	public Page result;
+	@Id
+	private String id;
+	
+	@Version
+    @JsonIgnore
+    private Long version;
+	
+	private String key; 
+	private String name;
+	private List<TestRecord> records;
+	private Path path;
+	private Page result;
+	private URL domain;
 	
 	/**
 	 * Constructs a test object
@@ -39,13 +47,14 @@ public class Test implements IPersistable<ITest>{
 	 * 
 	 * @pre path != null
 	 */
-	public Test(Path path, Page result){
+	public Test(Path path, Page result, URL domain){
 		assert path != null;
 		
 		this.path = path;
 		this.result = result;
 		this.records = new ArrayList<TestRecord>();
 		this.key = this.generateKey();
+		this.domain = domain;
 	}
 	
 	
@@ -54,12 +63,44 @@ public class Test implements IPersistable<ITest>{
 	 * 
 	 * @return
 	 */
+	public String getId(){
+		return this.id;
+	}
+
+	public void setId(String id){
+		this.id = id;
+	}
+	
 	public String getKey(){
 		return this.key;
 	}
-
+	
+	public void setKey(String key){
+		this.key = key;
+	}
+	
+	public String getName(){
+		return this.name;
+	}
+	
+	public void setName(String name){
+		this.name = name;
+	}
+	
+	public URL getDomain(){
+		return this.domain;
+	}
+	
+	public void setDomain(URL domain){
+		this.domain = domain;
+	}
+	
 	public Path getPath(){
 		return this.path;
+	}
+	
+	public void setPath(Path path){
+		this.path = path;
 	}
 	
 	public void addRecord(TestRecord record){
@@ -70,9 +111,10 @@ public class Test implements IPersistable<ITest>{
 		return this.records;
 	}
 	
-	public void setTestRecords(List<TestRecord> records){
+	public void setRecords(List<TestRecord> records){
 		this.records = records;
 	}
+	
 	
 	/**
 	 * @return result of running the test. Can be either null or have a {@link Page} set
@@ -97,7 +139,7 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public ITest convertToRecord(OrientConnectionFactory connection){
 		Iterable<ITest> tests = findByKey(this.getKey());
 		int cnt = 0;
@@ -125,14 +167,13 @@ public class Test implements IPersistable<ITest>{
 	public ITest findById(FramedTransactionalGraph<OrientGraph> framedGraph, String id ){
 		return framedGraph.getVertex(id, ITest.class);
 	}
-
+	*/
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
 	 * as easy identity of {@link Test} when generated in the wild via discovery
 	 * 
 	 * @return
 	 */
-	@Override
 	public String generateKey() {
 		String path_key = "";
 		log.error("TEST PATH VALUE :: "+this.getPath().getKey());
@@ -148,20 +189,24 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public IPersistable<ITest> create() {
+		System.err.println("SAVING TEST TO ORIENTDB");
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		log.info("Orient database connection factory");
 		
 		this.convertToRecord(orient_connection);
-		orient_connection.save();
 		
+		log.info("Convert to record complete for test");
+		orient_connection.save();
+		log.info("TEST SACED TO DATABASE");
 		return this;
-	}
+	}*/
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public IPersistable<ITest> update(ITest existing_obj) {
 		Iterator<ITest> test_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
@@ -180,14 +225,15 @@ public class Test implements IPersistable<ITest>{
 		connection.save();
 		
 		return this;
-	}
+	}*/
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public Iterable<ITest> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
 	}
+	*/
 }

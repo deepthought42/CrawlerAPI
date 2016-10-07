@@ -12,6 +12,7 @@ import com.minion.memory.Vocabulary;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.PathObject;
+import com.minion.browsing.PathObjectFactory;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.tester.Test;
@@ -44,11 +45,15 @@ public class MemoryRetrievalActor extends UntypedActor{
 			Path path = (Path)message;
 			//Retrieve from memory
 			
+			//Get first element of path, expected to be page
 			OrientDbPersistor persistor = new OrientDbPersistor();
 			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)path.getPath().get(0).data()).getSrc()).iterator();
 			
+			
+			
+			//NOT APPROPRIATE FOR THIS METHOD. BEST SUITED FOR SITE MAPPING
 			//load all edges that leading to pageElement
-			while(page_iter.hasNext()){
+			/*while(page_iter.hasNext()){
 				Vertex page_vert = page_iter.next();
 				path.add((Page)page_vert);
 				Iterator<Vertex> page_element_iter = page_vert.getVertices(Direction.OUT, "Page").iterator();
@@ -58,11 +63,12 @@ public class MemoryRetrievalActor extends UntypedActor{
 					
 					Iterator<Vertex> result_vertices = page_element_vertex.getVertices(Direction.OUT, "PageElement").iterator();
 					
+					
 					while(result_vertices.hasNext()){
-						path.add(new PathObject(result_vertices.next()));
+						path.add(PathObjectFactory.build(result_vertices.next()););
 					}
 				}
-			}
+			}*/
 			
 			//send path to actor that handles running tests
 		}
@@ -71,7 +77,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 			//Retrieve from memory
 			
 			OrientDbPersistor persistor = new OrientDbPersistor();
-			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)path.getPath().get(0).data()).getSrc()).iterator();
+			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)test.getRecords().get(0).data()).getSrc()).iterator();
 			Test stored_test = (Test)page_iter.next();
 			Message<Test> msg = new Message<Test>(null, test);
 			//send path to actor that handles running tests

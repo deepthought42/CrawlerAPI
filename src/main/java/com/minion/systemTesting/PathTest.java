@@ -2,7 +2,6 @@ package com.minion.systemTesting;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.text.DateFormat;
 
 import org.testng.annotations.Test;
 
@@ -20,7 +19,7 @@ public class PathTest {
 		try {
 			Browser browser = new Browser(null);
 
-			page = new Page(browser.getDriver(), DateFormat.getDateInstance());
+			page = new Page(browser.getDriver());
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

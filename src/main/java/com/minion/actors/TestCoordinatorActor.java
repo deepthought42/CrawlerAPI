@@ -2,13 +2,18 @@ package com.minion.actors;
 
 import java.net.URL;
 import java.util.Iterator;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Vertex;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
+
+import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
@@ -16,6 +21,7 @@ import com.minion.browsing.actions.Action;
 import com.minion.memory.OrientDbPersistor;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
+import com.minion.tester.Test;
 
 /**
  * Handles retrieving tests
@@ -24,8 +30,15 @@ import com.minion.structs.Path;
  *
  */
 public class TestCoordinatorActor extends UntypedActor {
-    private static final Logger log = Logger.getLogger(WorkAllocationActor.class);
+    private static final Logger log = Logger.getLogger(TestCoordinatorActor.class);
 
+    /**
+     * Inputs
+     * 
+     * URL url: 	Get all tests for this url
+     * Test:		Execute test and determine if still correct or not
+     * List<Test>   Execute list of tests and get the outcomes for all of them
+     */
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
@@ -58,6 +71,58 @@ public class TestCoordinatorActor extends UntypedActor {
 				}
 				
 				//load all edges from pageElements
+			}
+			else if(acct_msg.getData() instanceof Test){
+				Test test = (Test)acct_msg.getData();
+				Path path = test.getPath();
+				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
+				
+				Browser browser = new Browser(((Page)(path.getPath().get(0).data())).getUrl().toString());
+				if(!path.getPath().isEmpty()){
+					Crawler.crawlPath(path, browser);
+				}
+				
+				//get current page of browser
+				Page expected_page = test.getResult();
+				Page last_page = path.getLastPage();
+				
+				
+				if(last_page.checkIfLandable(browser)){
+					last_page.setLandable(true);
+				}
+				
+				if(!last_page.equals(expected_page)){
+					log.info("Saving test, for it has changed");
+					
+					Test test_new = new Test(path, expected_page, expected_page.getUrl());
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test_new);
+					
+					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+					path_expansion_actor.tell(path_msg, getSelf() );
+				
+					//tell memory worker of path
+					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+					memory_actor.tell(test_msg, getSelf() );
+
+				}
+				else{
+					log.info("Saving unchanged test");
+					
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					
+					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
+					path_expansion_actor.tell(path_msg, getSelf() );
+				
+					//tell memory worker of path
+					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+					memory_actor.tell(test_msg, getSelf() );
+
+					//tell memory worker of path
+				}
+				//memory_actor.tell(path_msg, getSelf() );
+
+				//broadcast path
+				PastPathExperienceController.broadcastTestExperience(test);
 			}
 			else{
 				log.info("ERROR : Message contains unknown format");

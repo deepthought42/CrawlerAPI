@@ -7,11 +7,8 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
-import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -19,11 +16,13 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.IPage;
-import com.minion.persistence.IPageElement;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.OrientConnectionFactory;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * A reference to a web page 
@@ -31,41 +30,93 @@ import com.minion.persistence.OrientConnectionFactory;
  * @author Brandon Kindred
  *
  */
-public class Page implements PathObject, IPersistable<IPage> {
-    private static final Logger log = Logger.getLogger(Page.class);
+public class Page implements PathObject {
+    private static final Logger log = LoggerFactory.getLogger(Page.class);
 
-    private String key;
+    @Id
+    private String id;
+    
+    @Version
+    @JsonIgnore
+    private Long version;
+    
     private boolean landable = false;
 	private String screenshot = null; 
 	private String src = "";
-	public String date = null;
-	public final URL url;
+	private URL url;
 	
-	private final List<PageElement> elements;
+	private List<PageElement> elements;
 	
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
 	 * 
 	 * @param driver
-	 * @param date
 	 * @param valid
 	 * @throws MalformedURLException 
 	 * @throws IOException
 	 * @throws URISyntaxException 
 	 */
-	public Page(WebDriver driver, DateFormat date) throws MalformedURLException, IOException{
+	public Page(WebDriver driver) throws MalformedURLException, IOException{
+		log.info("setting source");
 		setSrc(driver.getPageSource());
+
+		log.info("Page URL :: "+driver.getCurrentUrl());
+		this.url = new URL(driver.getCurrentUrl().replace("/#",""));
 		
-		this.key = generateKey();
-		this.date = date.format(new Date());
-		this.url = new URL(driver.getCurrentUrl().replace("/#","/"));
+		log.info("GETTING SCREENSHOT");
 		this.screenshot = Browser.getScreenshot(driver);
-		
+
+		log.info("GETTING PAGE SOURCE");
+		this.setSrc(driver.getPageSource());
 		//Document doc = Jsoup.parse(this.src);
 		//this.elements = doc.getAllElements(); 
+
+		log.info("GETTING VISIBLE ELEMENTS");
 		this.elements = getVisibleElements(driver, "//body");
+		
+		log.info("Page object created");
+		
+	}
+
+	/**
+	 * Creates a page instance that is meant to contain the information found using the driver passed
+	 * 
+	 * @param driver
+	 * @param valid
+	 * @throws MalformedURLException 
+	 * @throws IOException
+	 * @throws URISyntaxException 
+	 */
+	public Page(String pageSource, URL url, String base64Screenshot, List<PageElement> elements) throws MalformedURLException, IOException{
+		
+
+		log.info("Page URL :: "+url.toString());
+		//driver.getCurrentUrl().replace("/#","")
+		this.url = url;
+		
+		log.info("GETTING SCREENSHOT");
+		this.screenshot = base64Screenshot; //Browser.getScreenshot(driver);
+
+		log.info("GETTING PAGE SOURCE");
+		this.setSrc(pageSource);
+		//Document doc = Jsoup.parse(this.src);
+		//this.elements = doc.getAllElements(); 
+
+		log.info("GETTING VISIBLE ELEMENTS");
+		this.elements = elements;//getVisibleElements(driver, "//body");
+		
+		log.info("Page object created");
+		
 	}
 	
+	 public String getId() {
+		 return id;
+	 }
+
+	 public void setId(String id) {
+		 this.id = id;
+	 }
+    
 	/**
 	 * 
 	 * 
@@ -77,6 +128,14 @@ public class Page implements PathObject, IPersistable<IPage> {
 	
 	public void setSrc(String src) {
 		this.src = cleanSrc(src);
+	}
+	
+	public List<PageElement> getElements(){
+		return this.elements;
+	}
+	
+	public void setElements(List<PageElement> elements){
+		this.elements = elements;
 	}
 	
 	/**
@@ -103,30 +162,15 @@ public class Page implements PathObject, IPersistable<IPage> {
 		return this.landable;
 	}
 	
-	/**
-	 * 
-	 * @param isLandable
-	 */
-	public void setLandable(boolean isLandable){
-		this.landable = isLandable;
-	}
-	
 	private static String cleanSrc(String src){
 		//src = src.replaceAll("\\s", "");
 		
 		src = src.replace("<iframe frameborder=\"0\" id=\"rufous-sandbox\" scrolling=\"no\" allowtransparency=\"true\" allowfullscreen=\"true\" style=\"position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: medium none;\"></iframe>",  "");
 		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"993\" height=\"493\"></canvas>","");
 		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"987\" height=\"491\"></canvas>","");
+		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"2284\"></canvas>","");
 		src = src.trim();
 		return src;
-	}
-
-	public URL getUrl(){
-		return this.url;
-	}
-	
-	public String getKey() {
-		return this.key;
 	}
 	
 	/**
@@ -148,16 +192,25 @@ public class Page implements PathObject, IPersistable<IPage> {
 		if(pageElements.size() <= 0){
 			return elementList;
 		}
+
+		int counter = 0;
 		for(WebElement elem : pageElements){
 			try{
+				log.info("checking visibily and extracting attributes for element " + counter++);
+				Date start = new Date();
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-					PageElement pageElem = new PageElement(driver, elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
+					PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
 					elementList.add(pageElem);
 				}
+				Date end = new Date();
+				
+				log.info("All attributes extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
+				
 			}catch(StaleElementReferenceException e){
-				log.error(e);
+				log.error(e.toString());
 			}
 		}
+		
 		
 		return elementList;
 	}	
@@ -178,13 +231,15 @@ public class Page implements PathObject, IPersistable<IPage> {
         
         Page that = (Page)o;
         log.info(this.elements.size() + " :: "+ that.elements.size());
-        log.info(this.screenshot.equals(that.screenshot));
-        log.info(this.getSrc().length() == that.getSrc().length());
-    	log.info("PAGE URLs ARE EQUAL? :: "+this.url.equals(that.url));
+        log.info("Do screenshots match? : "+this.screenshot.equals(that.screenshot));
+        log.info("sources match? : " +(this.getSrc().length() == that.getSrc().length()));
+        
+    	log.info("PAGE URLs ARE EQUAL? :: "+this.url+"=="+that.url +" :: ");
+    	log.info("urls equal?" + this.url.equals(that.url));
 
     	log.info("PAGE SRCs ARE EQUAL? :: "+this.getSrc().equals(that.getSrc()));
     	//return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
-		return (//this.elements.size() == that.elements.size() &&
+		return (this.elements.size() == that.elements.size() &&
 				this.url.equals(that.url) 
 				&& this.getSrc().equals(that.getSrc())
 				&& this.screenshot.equals(that.screenshot));
@@ -228,10 +283,10 @@ public class Page implements PathObject, IPersistable<IPage> {
 	 * Converts Page to IPage for persistence
 	 * @param page
 	 */
-	public IPage convertToRecord(OrientConnectionFactory connection){
+	/*public IPage convertToRecord(OrientConnectionFactory connection){
 		IPage page = connection.getTransaction().addVertex(UUID.randomUUID(), IPage.class);
 		page.setLandable(this.isLandable());
-		page.setScreenshot(this.getUrl());
+		page.setScreenshot(this.getScreenshot());
 		page.setSrc(this.getSrc());
 		page.setUrl(this.getUrl());
 		List<IPageElement> elements = new ArrayList<IPageElement>();
@@ -243,16 +298,40 @@ public class Page implements PathObject, IPersistable<IPage> {
 		page.setKey(key);
 		return page;
 	}
+	*/
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public String generateKey() {
 		return this.src.hashCode() + "::";
 	}
 
-	@Override
+	public URL getUrl(){
+		return this.url;
+	}
+	
+	public void setUrl(URL url){
+		this.url = url;
+	}
+
+	public boolean getLandable(){
+		return this.landable;
+	}
+	
+	public void setLandable(boolean isLandable){
+		this.landable = isLandable;
+	}
+	
+	public String getScreenshot(){
+		return this.screenshot;
+	}
+	
+	public void setScreenshot(String url){
+		this.screenshot = url;
+	}
+	
+	/*@Override
 	public IPersistable<IPage> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -261,7 +340,8 @@ public class Page implements PathObject, IPersistable<IPage> {
 		
 		return this;
 	}
-
+*/
+	/*
 	@Override
 	public IPersistable<IPage> update(IPage existing_obj) {
 		Iterator<IPage> page_iter = this.findByKey(this.generateKey()).iterator();
@@ -283,13 +363,16 @@ public class Page implements PathObject, IPersistable<IPage> {
 		
 		return page;
 	}
-
+	*/
+	
 	/**
 	 * {@inheritDoc}
 	 */
+	/*
 	@Override
 	public Iterable<IPage> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, IPage.class);
 	}
+	*/
 }

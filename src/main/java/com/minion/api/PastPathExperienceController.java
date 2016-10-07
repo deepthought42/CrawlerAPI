@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.log4j.Logger;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
@@ -23,24 +27,23 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * @author Brandon Kindred
  */
 @CrossOrigin(origins = "http://localhost:8001")
-@Controller
+@RestController
 public class PastPathExperienceController {
 	
     private static final Logger log = Logger.getLogger(PastPathExperienceController.class);
 
     private static final Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
     
-	@RequestMapping(path = "/streamPathExperience", method = RequestMethod.GET)
-    public SseEmitter stream(@RequestParam(value="account_key", required=true) String account_key) throws IOException {
-    	
+	@RequestMapping("/realtime/streamPathExperience")
+    public SseEmitter stream(HttpServletRequest request) throws IOException {
         SseEmitter emitter = new SseEmitter();
         log.info("Adding emitter");
         //emitters.add(emitter);
-        if(emitters.containsKey(account_key)){
-        	emitters.get(account_key).complete();
+        if(emitters.containsKey("account_key")){
+        	emitters.get("account_key").complete();
         }
-        emitters.put(account_key, emitter);
-        emitter.onCompletion(() -> emitters.remove(account_key));
+        emitters.put("account_key", emitter);
+        emitter.onCompletion(() -> emitters.remove("account_key"));
 
         return emitter;
     }
@@ -75,7 +78,6 @@ public class PastPathExperienceController {
      * 
      * @param path
      */
-    @CrossOrigin(origins = "*")
 	public static void broadcastPathExperience(Path path) {
 		
 		log.info("Emitters available to send to : " + emitters.size());

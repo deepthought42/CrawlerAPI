@@ -1,45 +1,52 @@
 package com.minion.config;
 
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import javax.annotation.PostConstruct;
 
-import com.auth0.spring.security.api.Auth0SecurityConfig;
-import com.minion.auth.Auth0Client;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.orient.commons.repository.config.EnableOrientRepositories;
+import org.springframework.data.orient.object.OrientObjectDatabaseFactory;
+import org.springframework.data.orient.object.repository.support.OrientObjectRepositoryFactoryBean;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.minion.browsing.Page;
+import com.minion.browsing.PageAlert;
+import com.minion.browsing.PageElement;
+import com.minion.browsing.PathObject;
+import com.minion.structs.Path;
+import com.minion.tester.Test;
+import com.minion.tester.TestRecord;
 
 @Configuration
-@EnableWebSecurity(debug = true)
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
-public class WebConfig extends Auth0SecurityConfig {
+@EnableAutoConfiguration
+@EnableTransactionManagement
+@EnableOrientRepositories(basePackages = "com.minion.persistence", repositoryFactoryBeanClass = OrientObjectRepositoryFactoryBean.class)
+@ComponentScan("com.minion")
+public class WebConfig {
 
-    /**
-     * Provides Auth0 API access
-     */
     @Bean
-    public Auth0Client auth0Client() {
-        return new Auth0Client(clientId, issuer);
+    public OrientObjectDatabaseFactory factory() {
+        OrientObjectDatabaseFactory factory =  new OrientObjectDatabaseFactory();
+
+        factory.setUrl("remote:localhost:2480/Thoth");
+        factory.setUsername("brandon");
+        factory.setPassword("password");
+
+        return factory;
     }
 
-    /**
-     *  Our API Configuration - for Profile CRUD operations
-     *
-     *  Here we choose not to bother using the `auth0.securedRoute` property configuration
-     *  and instead ensure any unlisted endpoint in our config is secured by default
-     */
-    @Override
-    protected void authorizeRequests(final HttpSecurity http) throws Exception {
-    	http.authorizeRequests().anyRequest().authenticated();
-    }
-
-    /*
-     * Only required for sample purposes..
-     */
-    String getAuthorityStrategy() {
-       return super.authorityStrategy;
+    @PostConstruct
+    @Transactional
+    public void registerEntities() {
+        factory().db().getEntityManager().registerEntityClass(Page.class);
+        factory().db().getEntityManager().registerEntityClass(PageElement.class);
+        factory().db().getEntityManager().registerEntityClass(PageAlert.class);
+        factory().db().getEntityManager().registerEntityClass(Test.class);
+        factory().db().getEntityManager().registerEntityClass(Path.class);
+        factory().db().getEntityManager().registerEntityClass(TestRecord.class);
+        factory().db().getEntityManager().registerEntityClass(PathObject.class);
     }
 }

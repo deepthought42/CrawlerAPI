@@ -17,6 +17,9 @@ import com.minion.memory.Vocabulary;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+
 import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Page;
@@ -35,7 +38,8 @@ import com.minion.tester.Test;
  *
  */
 public class BrowserActor extends UntypedActor {
-    private static final Logger log = Logger.getLogger(BrowserActor.class);
+	private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+   // private static final Logger log = Logger.getLogger(BrowserActor.class);
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -178,6 +182,7 @@ public class BrowserActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
+			log.info("Browser actor received message");
 			Message<?> acct_msg = (Message<?>)message;
 			if (acct_msg.getData() instanceof Path){
 				log.info("PATH PASSED TO BROWSER ACTOR");
@@ -190,9 +195,17 @@ public class BrowserActor extends UntypedActor {
 				}
 				 
 				//get current page of browser
-				Page current_page = browser.getPage();
+				//Page current_page = browser.getPage();
+				Page current_page = null;
 				Page last_page = path.getLastPage();
-				
+				if(last_page.getSrc() == browser.getDriver().getPageSource()){
+			  		log.info("Page sources match");
+			  		current_page = last_page;
+			  	}
+			  	else{
+			  		log.info("Page sources don't match");
+			  		current_page = browser.getPage();
+			  	}
 				
 				if(last_page.checkIfLandable(browser)){
 					last_page.setLandable(true);
@@ -206,7 +219,7 @@ public class BrowserActor extends UntypedActor {
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Saving test");
-				Test test = new Test(path, current_page);
+				Test test = new Test(path, current_page, current_page.getUrl());
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");
@@ -233,14 +246,27 @@ public class BrowserActor extends UntypedActor {
 			else if(acct_msg.getData() instanceof URL){
 				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
 			  	this.browser = new Browser(((URL)acct_msg.getData()).toString());
+			  	log.info("creating path");
 			  	Path path = new Path();
+			  	log.info("getting browser page");
 			  	PathObject page_obj = browser.getPage();
+			  	log.info("adding page to path");
 			  	path.add(page_obj);
+			  	log.info("Crawling path");
 			  	Crawler.crawlPath(path, browser);
+			  	log.info("Getting last and current page");
+			  	Page last_page = path.getLastPage();
 			  	
-			  	Page current_page = browser.getPage();
-				Page last_page = path.getLastPage();
-
+			  	Page current_page = null;
+			  	if(last_page.getSrc() == browser.getDriver().getPageSource()){
+			  		log.info("Page sources match");
+			  		current_page = last_page;
+			  	}
+			  	else{
+			  		log.info("Page sources don't match");
+			  		current_page = browser.getPage();
+			  	}
+				
 			  	if(!current_page.equals(last_page) || path.getPath().size() == 1){
 			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
 					path.setIsUseful(true);
@@ -256,7 +282,7 @@ public class BrowserActor extends UntypedActor {
 					path.setIsUseful(false);
 				}
 
-				Test test = new Test(path, current_page);
+				Test test = new Test(path, current_page, current_page.getUrl());
 				log.info("Saving test");
 			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 

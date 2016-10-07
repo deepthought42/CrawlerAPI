@@ -1,15 +1,14 @@
 package com.minion.tester;
 
 import java.util.Date;
-import java.util.Iterator;
-import java.util.UUID;
+
 
 import org.apache.log4j.Logger;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Page;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITestRecord;
-import com.minion.persistence.OrientConnectionFactory;
 
 /**
  * A record for when a path was observed
@@ -17,13 +16,20 @@ import com.minion.persistence.OrientConnectionFactory;
  * @author Brandon Kindred
  *
  */
-public class TestRecord implements IPersistable<ITestRecord> {
+public class TestRecord {
 	private static final Logger log = Logger.getLogger(Test.class);
 
-	public final Page result;
-	public final Date ran_at;
-	public final boolean passes;
-	public Boolean isCorrect;
+	@Id
+	private String id;
+	
+	@Version
+    @JsonIgnore
+    private Long version;
+	
+	private Page result;
+	private Date ran_at;
+	private boolean passes;
+	private Boolean isCorrect;
 	
 	public TestRecord(Page page, Date ran_at, boolean passes){
 		this.result = page;
@@ -33,10 +39,27 @@ public class TestRecord implements IPersistable<ITestRecord> {
 	}
 	
 	/**
+	 * Returns test by key
+	 * 
+	 * @return
+	 */
+	public String getId(){
+		return this.id;
+	}
+
+	public void setId(String id){
+		this.id = id;
+	}
+	
+	/**
 	 * @return the path that was observed. This may defer from the actual test path
 	 */
 	public Page getResult(){
 		return result;
+	}
+	
+	public void setResult(Page resulting_page){
+		this.result = resulting_page;
 	}
 	
 	/**
@@ -47,10 +70,24 @@ public class TestRecord implements IPersistable<ITestRecord> {
 	}
 	
 	/**
+	 * @return {@link Date} when test was ran
+	 */
+	public void setRanAt(Date date){
+		this.ran_at = date;
+	}
+	
+	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
 	public boolean getPasses(){
 		return this.passes;
+	}
+	
+	/**
+	 * @return whether or not the test passes compared to expected {@link Test test} path
+	 */
+	public void setPasses(boolean passing){
+		this.passes = passing;
 	}
 	
 	/**
@@ -71,7 +108,7 @@ public class TestRecord implements IPersistable<ITestRecord> {
 	 * 
 	 * @param page
 	 */
-	@Override
+	/*@Override
 	public ITestRecord convertToRecord(OrientConnectionFactory connection){
 		ITestRecord testRecord = connection.getTransaction().addVertex(UUID.randomUUID(), ITestRecord.class);
 
@@ -82,9 +119,12 @@ public class TestRecord implements IPersistable<ITestRecord> {
 		testRecord.setKey(this.generateKey());
 		
 		return testRecord;
-	}
+	}*/
 
-	@Override
+	/**
+	 * 
+	 * @return
+	 */
 	public String generateKey() {
 		return this.getResult().generateKey() + ":"+this.getPasses()+":"+this.isCorrect();
 	}
@@ -92,7 +132,7 @@ public class TestRecord implements IPersistable<ITestRecord> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public IPersistable<ITestRecord> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -101,11 +141,11 @@ public class TestRecord implements IPersistable<ITestRecord> {
 		
 		return this;
 	}
-
+	*/
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public IPersistable<ITestRecord> update(ITestRecord existing_obj) {
 		Iterator<ITestRecord> page_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
@@ -125,14 +165,15 @@ public class TestRecord implements IPersistable<ITestRecord> {
 		connection.save();
 		
 		return test_record;
-	}
+	}*/
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public Iterable<ITestRecord> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITestRecord.class);
 	}
+	*/
 }

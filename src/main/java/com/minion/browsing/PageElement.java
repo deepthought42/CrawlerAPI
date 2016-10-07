@@ -2,23 +2,21 @@ package com.minion.browsing;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.orient.commons.repository.annotation.Vertex;
 
-import com.minion.persistence.IAttribute;
-import com.minion.persistence.IPageElement;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.OrientConnectionFactory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.tester.Test;
 import com.minion.util.ArrayUtility;
 
@@ -31,9 +29,18 @@ import com.minion.util.ArrayUtility;
  * @author Brandon Kindred
  *
  */
-public class PageElement implements PathObject, IPersistable<IPageElement> {
+@Vertex
+public class PageElement implements PathObject {
     private static final Logger log = Logger.getLogger(PageElement.class);
 
+    @Id
+    private String id;
+    
+    @Version
+    @JsonIgnore
+    private Long version;
+    
+    private String key;
 	private String[] actions = ActionFactory.getActions();
 	public String tagName;
 	public String text;
@@ -43,10 +50,8 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	public List<PageElement> child_elements = new ArrayList<PageElement>();
 	Map<String, String> cssValues = new HashMap<String,String>();
 
-	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
+	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "@xmlns", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
 
-	private String key;
-		
 	//transfer list to enum class
 	
 	/**
@@ -55,7 +60,7 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	 * @param driver
 	 * @param elem
 	 */
-	public PageElement( WebDriver driver, 
+	/*public PageElement( WebDriver driver, 
 						WebElement elem, 
 						String parentXpath, 
 						String[] actions, 
@@ -64,11 +69,12 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		this.tagName = elem.getTagName();
 		this.text    = elem.getText();
 		this.actions = actions;
+
 		loadAttributes(attrib_list);		
-		loadCssProperties(elem);
+		//loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
 		this.key = this.generateKey();
-	}
+	}*/
 	
 	/**
 	 * Constructs a PageElement.
@@ -85,17 +91,19 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		this.text    = elem.getText();
 		this.actions = actions;
 		loadAttributes(attrib_list);
-		loadCssProperties(elem);
+		//loadCssProperties(elem);
 		this.xpath = this.generateXpath(elem, parentXpath, xpathHash);
 		this.key = this.generateKey();
 
 	}
 
 	/**
-	 * Constructs a PageElement.
+ 	 * Constructs a PageElement.
 	 * 
-	 * @param driver
 	 * @param elem
+	 * @param actions
+	 * @param xpathHash
+	 * @param attrib_list
 	 */
 	public PageElement( Element elem, 
 			   		 	String[] actions, 
@@ -114,7 +122,12 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	 * 
 	 * @param driver
 	 * @param elem
+	 * @param page
+	 * @param actions
+	 * @param xpathHash
+	 * @param attrib_list
 	 */
+	/*
 	public PageElement( WebDriver driver,
 						WebElement elem, 
 						Page page, 
@@ -126,128 +139,12 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		this.text    = elem.getText();
 		this.actions = actions;
 		loadAttributes(attrib_list);
-		loadCssProperties(elem);
+		//loadCssProperties(elem);
 		this.xpath = this.generateXpath(driver, "", xpathHash);
 		this.key = this.generateKey();
 	}
+	*/
 	
-	/**
-	 * creates a unique xpath based on a given hash of xpaths
-	 * 
-	 * @param driver
-	 * @param xpathHash
-	 * @return
-	 */
-	public String uniqifyXpath(WebDriver driver, Map<String, Integer> xpathHash, String xpath){
-		if(driver.findElements(By.xpath(xpath)).size() <= 1){
-			return xpath;
-		}
-		else{
-			int count = 1;
-			if(xpathHash.containsKey(xpath)){
-				count = xpathHash.get(xpath);
-				count += 1;
-			}
-		
-			xpathHash.put(xpath, count);
-			xpath = xpath+"[" + count + "]";
-		}
-		return xpath;
-	}
-	
-	/**
-	 * creates a unique xpath based on a given hash of xpaths
-	 * 
-	 * @param driver
-	 * @param xpathHash
-	 * @return
-	 */
-	public String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath){
-		if(elem.findElements(By.xpath(xpath)).size() <= 1){
-			return xpath;
-		}
-		else{
-			int count = 1;
-			if(xpathHash.containsKey(xpath)){
-				count = xpathHash.get(xpath);
-				count += 1;
-			}
-		
-			xpathHash.put(xpath, count);
-			xpath = xpath+"[" + count + "]";
-		}
-		return xpath;
-	}
-
-	/**
-	 * generates a unique xpath for this element.
-	 * 
-	 * @return an xpath that identifies this element uniquely
-	 */
-	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash){
-		ArrayList<String> attributeChecks = new ArrayList<String>();
-		xpath += "//"+this.tagName;
-		for(Attribute attr : attributes){
-			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
-			}
-		}
-
-		if(attributeChecks.size()>0){
-			xpath += "[";
-			for(int i = 0; i < attributeChecks.size(); i++){
-				xpath += attributeChecks.get(i).toString();
-				if(i < attributeChecks.size()-1){
-					xpath += " and ";
-				}
-			}
-			xpath += "]";
-		}
-		xpath = uniqifyXpath(element, xpathHash, xpath);
-
-		return xpath;
-	}
-	
-	/**
-	 * generates a unique xpath for this element.
-	 * 
-	 * @return an xpath that identifies this element uniquely
-	 */
-	public String generateXpath(WebDriver driver, String xpath, Map<String, Integer> xpathHash){
-		ArrayList<String> attributeChecks = new ArrayList<String>();
-		xpath += "//"+this.tagName;
-		for(Attribute attr : attributes){
-			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
-			}
-		}
-
-		if(attributeChecks.size()>0){
-			xpath += "[";
-			for(int i = 0; i < attributeChecks.size(); i++){
-				xpath += attributeChecks.get(i).toString();
-				if(i < attributeChecks.size()-1){
-					xpath += " and ";
-				}
-			}
-			xpath += "]";
-		}
-		xpath = uniqifyXpath(driver, xpathHash, xpath);
-
-		return xpath;
-	}
-	
-	/**
-	 * generates a unique xpath for this element.
-	 * 
-	 * @return an xpath that identifies this element uniquely
-	 */
-	public String generateXpath(Element elem){
-		xpath = "//" + this.tagName + "["+elem.siblingIndex()+"]";
-		log.info("constructed xpath = "+xpath);
-		
-		return xpath;
-	}
 	
 	/**
 	 * 
@@ -267,14 +164,21 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		this.changed = changed;
 	}
 	
+	public String getKey(){
+		return this.key;
+	}
+	
+	public void setKey(String key){
+		this.key = key;
+	}
+	
 	/**
 	 * Loads attributes for this element into a list of {@link Attribute}s
-	 * @param driver
-	 */ 
+	 * 
+	 * @param attributeList
+	 */
 	public void loadAttributes( List<String> attributeList){
-		
 		for(int i = 0; i < attributeList.size(); i++){
-			//System.out.println("ATTRIBUTE ITEM :: "+attributeList.get(i));
 			String[] attributes = attributeList.get(i).split("::");
 			String[] attributeVals;
 			if(attributes.length > 1){
@@ -317,17 +221,28 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	/**
 	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
 	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public void loadCssProperties(WebElement element){
 		//HashMap<String, String> cssValues = new HashMap<String,String>();
 		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
-
+		
+		Date start = new Date();
+		log.info("Loading " + cssList.length+ "  css properties for for page element...");
+		
 		for(String propertyName : cssList){
-			if(element.getCssValue(propertyName) != null){
-				this.cssValues.put(propertyName, element.getCssValue(propertyName));	
-			}			
+			String element_value = element.getCssValue(propertyName);
+			if(element_value != null){
+				this.cssValues.put(propertyName, element_value);	
+			}
 		}
+		
+		Date end = new Date();
+		
+		log.info("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
+		
 	}
 	
 	/**
@@ -360,7 +275,7 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	 * @param elem	WebElement to get children for
 	 * @return list of WebElements
 	 */
-	public ArrayList<PageElement> getChildElements(WebDriver driver, WebElement elem, HashMap<String, Integer> xpathHash){
+	/*public ArrayList<PageElement> getChildElements(WebDriver driver, WebElement elem, HashMap<String, Integer> xpathHash){
 		List<WebElement> childElements = elem.findElements(By.xpath(".//"));
 		ArrayList<PageElement> childPageElements = new ArrayList<PageElement>();
 		for(WebElement childElement : childElements){
@@ -369,7 +284,7 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		
 		return childPageElements;
 	}
-	
+	*/
 	/**
 	 * Checks if {@link PageElement elements} are equal
 	 * 
@@ -418,6 +333,129 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Creates a unique xpath based on a given hash of xpaths
+	 * 
+	 * @param driver
+	 * @param xpathHash
+	 * @param xpath
+	 * @return
+	 */
+	/**public String uniqifyXpath(WebDriver driver, Map<String, Integer> xpathHash, String xpath){
+		if(driver.findElements(By.xpath(xpath)).size() <= 1){
+			return xpath;
+		}
+		else{
+			int count = 1;
+			if(xpathHash.containsKey(xpath)){
+				count = xpathHash.get(xpath);
+				count += 1;
+			}
+		
+			xpathHash.put(xpath, count);
+			xpath = xpath+"[" + count + "]";
+		}
+		return xpath;
+	}
+	*/
+	
+	/**
+	 * creates a unique xpath based on a given hash of xpaths
+	 * 
+	 * @param driver
+	 * @param xpathHash
+	 * @return
+	 */
+	public String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath){
+		if(elem.findElements(By.xpath(xpath)).size() <= 1){
+			return xpath;
+		}
+		else{
+			int count = 1;
+			if(xpathHash.containsKey(xpath)){
+				count = xpathHash.get(xpath);
+				count += 1;
+			}
+		
+			xpathHash.put(xpath, count);
+			xpath = xpath+"[" + count + "]";
+		}
+		return xpath;
+	}
+
+	/**
+	 * generates a unique xpath for this element.
+	 * 
+	 * @return an xpath that identifies this element uniquely
+	 */
+	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash){
+		ArrayList<String> attributeChecks = new ArrayList<String>();
+		xpath += "//"+this.tagName;
+		for(Attribute attr : attributes){
+			
+			System.err.println("attr name: "+attr.getName());
+			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
+				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
+			}
+		}
+		System.err.println("ATTRIBUTES CHECK SKIPPED");
+		if(attributeChecks.size()>0){
+			xpath += "[";
+			for(int i = 0; i < attributeChecks.size(); i++){
+				xpath += attributeChecks.get(i).toString();
+				if(i < attributeChecks.size()-1){
+					xpath += " and ";
+				}
+			}
+			xpath += "]";
+		}
+		xpath = uniqifyXpath(element, xpathHash, xpath);
+
+		return xpath;
+	}
+	
+	/**
+	 * generates a unique xpath for this element.
+	 * 
+	 * @return an xpath that identifies this element uniquely
+	 */
+	/*public String generateXpath(WebDriver driver, String xpath, Map<String, Integer> xpathHash, PageElement page_elem){
+		ArrayList<String> attributeChecks = new ArrayList<String>();
+		xpath += "//"+page_elem.tagName;
+		for(Attribute attr : page_elem.attributes){
+
+			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
+				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
+			}
+		}
+
+		if(attributeChecks.size()>0){
+			xpath += "[";
+			for(int i = 0; i < attributeChecks.size(); i++){
+				xpath += attributeChecks.get(i).toString();
+				if(i < attributeChecks.size()-1){
+					xpath += " and ";
+				}
+			}
+			xpath += "]";
+		}
+		xpath = uniqifyXpath(driver, xpathHash, xpath);
+
+		return xpath;
+	}*/
+	
+	/**
+	 * generates a unique xpath for this element.
+	 * 
+	 * @return an xpath that identifies this element uniquely
+	 */
+	public String generateXpath(Element elem){
+		String xpath = "//" + this.tagName + "["+elem.siblingIndex()+"]";
+		log.info("constructed xpath = "+xpath);
+		
+		return xpath;
 	}
 	
 	/**
@@ -504,7 +542,7 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public IPageElement convertToRecord(OrientConnectionFactory framedGraph) {
 		IPageElement pageElement = framedGraph.getTransaction().addVertex(UUID.randomUUID(), IPageElement.class);
 		
@@ -530,14 +568,7 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		pageElement.setKey(this.key);
 		return pageElement;
 	}
-
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public String getKey() {
-		return this.key;
-	}
+	*/
 	
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
@@ -545,7 +576,6 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	 * 
 	 * @return
 	 */
-	@Override
 	public String generateKey() {
 		return "::"+this.getXpath().hashCode()+"::";
 	}
@@ -553,6 +583,7 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 	/**
 	 * {@inheritDoc}
 	 */
+	/*
 	@Override
 	public IPersistable<IPageElement> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -563,11 +594,11 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		return this;
 
 	}
-
+*/
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public IPersistable<IPageElement> update(IPageElement existing_obj) {
 		Iterator<IPageElement> page_element_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
@@ -588,13 +619,13 @@ public class PageElement implements PathObject, IPersistable<IPageElement> {
 		
 		return page_element;
 	}
-
+*/
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
+	/*@Override
 	public Iterable<IPageElement> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, IPageElement.class);
-	}
+	}*/
 }

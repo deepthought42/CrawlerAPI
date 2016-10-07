@@ -33,6 +33,7 @@ import akka.actor.Props;
  */
 @RestController
 @CrossOrigin(origins = "http://localhost:8001")
+@RequestMapping("/work")
 public class WorkAllocationController {
 
 	/**
@@ -42,7 +43,7 @@ public class WorkAllocationController {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	@RequestMapping("/work")
+	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody String startWork(HttpServletRequest request, 
 													   @RequestParam(value="url", required=true) String url,
 													   @RequestParam(value="account_key", required=true) String account_key) 
@@ -71,7 +72,7 @@ public class WorkAllocationController {
 		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 		workAllocationActor.tell(message, ActorRef.noSender());
 	
-		return "WORK ALLOCATOR RETURNING";
+		return null;
 	}
 
 	/**

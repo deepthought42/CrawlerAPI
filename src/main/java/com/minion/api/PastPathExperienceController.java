@@ -1,5 +1,6 @@
 package com.minion.api;
 
+import com.minion.browsing.PageElement;
 import com.minion.structs.Path;
 import com.minion.tester.Test;
 
@@ -10,14 +11,12 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -29,8 +28,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @CrossOrigin(origins = "http://localhost:8001")
 @RestController
 public class PastPathExperienceController {
-	
-    private static final Logger log = Logger.getLogger(PastPathExperienceController.class);
+    private static final Logger log = LoggerFactory.getLogger(PastPathExperienceController.class);
 
     private static final Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
     

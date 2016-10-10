@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 
 import com.minion.browsing.IObjectValuationAccessor;
-import com.minion.browsing.PathObject;
 import com.minion.persistence.IAction;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
@@ -18,7 +17,7 @@ import com.minion.tester.Test;
  * @author Brandon Kindred
  *
  */
-public class Action implements PathObject, IPersistable<IAction>, IObjectValuationAccessor{
+public class Action implements IPersistable<IAction>, IObjectValuationAccessor{
 	private static final Logger log = Logger.getLogger(Test.class);
 
 	private final String name;
@@ -60,11 +59,6 @@ public class Action implements PathObject, IPersistable<IAction>, IObjectValuati
 	public double getReward() {
 		// TODO Auto-generated method stub
 		return 0;
-	}
-
-	@Override
-	public Action data() {
-		return this;
 	}
 
 	public String getKey() {

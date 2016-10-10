@@ -1,19 +1,23 @@
 package com.minion.tester;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
-import org.apache.log4j.Logger;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.orient.commons.repository.annotation.Vertex;
-import org.springframework.stereotype.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Page;
 import com.minion.browsing.PathObject;
+import com.minion.persistence.IPersistable;
+import com.minion.persistence.ITest;
+import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Path;
+import com.tinkerpop.blueprints.impls.orient.OrientGraph;
+import com.tinkerpop.frames.FramedTransactionalGraph;
 
 /**
  * Defines the path of a test, the result and the expected values to determine if a test was 
@@ -22,16 +26,11 @@ import com.minion.structs.Path;
  * @author Brandon Kindred
  *
  */
-@Vertex
-public class Test {
-	private static final Logger log = Logger.getLogger(Test.class);
+public class Test implements IPersistable<ITest>{
+    private static final Logger log = LoggerFactory.getLogger(Test.class);
 
-	@Id
+
 	private String id;
-	
-	@Version
-    @JsonIgnore
-    private Long version;
 	
 	private String key; 
 	private String name;
@@ -39,6 +38,8 @@ public class Test {
 	private Path path;
 	private Page result;
 	private URL domain;
+	
+	public Test(){}
 	
 	/**
 	 * Constructs a test object
@@ -139,7 +140,7 @@ public class Test {
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public ITest convertToRecord(OrientConnectionFactory connection){
 		Iterable<ITest> tests = findByKey(this.getKey());
 		int cnt = 0;
@@ -152,10 +153,12 @@ public class Test {
 		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
 		
 		if(cnt == 0){
-			test = connection.getTransaction().addVertex(UUID.randomUUID(), ITest.class);
+			test = connection.getTransaction().addVertex("class:"+ITest.class.toString()+","+UUID.randomUUID(), ITest.class);
 		}
 		test.setPath(this.getPath().convertToRecord(connection));
 		test.setResult(this.getResult().convertToRecord(connection));
+		test.setDomain(this.getDomain().toString());
+		test.setName(this.getName());
 		for(TestRecord record : this.getRecords()){
 			test.addRecord(record.convertToRecord(connection));
 		}
@@ -164,10 +167,47 @@ public class Test {
 		return test;
 	}
 	
+	/**
+	 * 
+	 * @param itest
+	 * @return
+	 */
+	public static Test convertFromRecord(ITest itest){
+		Test test = new Test();
+		
+		log.info("converting record with domain : " + itest.getDomain());
+		try {
+			test.setDomain(new URL(itest.getDomain()));
+			log.info("Set domain to new test object");
+		} catch (MalformedURLException e) {
+			test.setDomain(null);
+			e.printStackTrace();
+		}
+		
+		log.info("setting key");
+		test.setKey(itest.getKey());
+		
+		log.info("setting name");
+		test.setName(itest.getName());
+		
+		log.info("converting path to record");
+		test.setPath(Path.convertFromRecord(itest.getPath()));
+		//test.setRecords(itest.getRecords());
+		//test.setResult(itest.getResult());
+		return test;
+		
+	}
+	
+	/**
+	 * 
+	 * @param framedGraph
+	 * @param id
+	 * @return
+	 */
 	public ITest findById(FramedTransactionalGraph<OrientGraph> framedGraph, String id ){
 		return framedGraph.getVertex(id, ITest.class);
 	}
-	*/
+
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
 	 * as easy identity of {@link Test} when generated in the wild via discovery
@@ -177,8 +217,8 @@ public class Test {
 	public String generateKey() {
 		String path_key = "";
 		log.error("TEST PATH VALUE :: "+this.getPath().getKey());
-		for(PathObject path_obj : this.getPath().getPath()){
-			log.error("TEST PATH -  PATH OBJECT VALUE :: "+path_obj.data().hashCode());
+		for(PathObject<?> path_obj : this.getPath().getPath()){
+			log.error("TEST PATH -  PATH OBJECT VALUE :: "+path_obj.getData().hashCode());
 			path_key +=this.getPath().getKey()+":";
 		}
 		
@@ -189,7 +229,7 @@ public class Test {
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public IPersistable<ITest> create() {
 		System.err.println("SAVING TEST TO ORIENTDB");
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -201,12 +241,12 @@ public class Test {
 		orient_connection.save();
 		log.info("TEST SACED TO DATABASE");
 		return this;
-	}*/
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public IPersistable<ITest> update(ITest existing_obj) {
 		Iterator<ITest> test_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
@@ -218,22 +258,49 @@ public class Test {
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		if(cnt == 0){
-			connection.getTransaction().addVertex(UUID.randomUUID(), ITest.class);
+			connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
 			this.convertToRecord(connection);
 		}
 		
 		connection.save();
 		
 		return this;
-	}*/
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public Iterable<ITest> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
 	}
-	*/
+	
+	/**
+	 * {@inheritDoc}
+	 * @throws MalformedURLException 
+	 */
+	public static List<Test> findByUrl(String pageUrl) throws MalformedURLException {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("domain", pageUrl, ITest.class).iterator();
+		
+		ArrayList<Test> list = new ArrayList<Test>();
+		while(test_iter.hasNext()){
+			ITest itest = test_iter.next();
+			
+			
+			Test test = Test.convertFromRecord(itest);
+			list.add(test);
+		}
+		return list;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public static Iterable<ITest> findByName(String test_name) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		
+		return orient_connection.getTransaction().getVertices("name", test_name, ITest.class);
+	}
 }

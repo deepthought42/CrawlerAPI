@@ -44,20 +44,20 @@ public class Crawler {
 		//skip first node since we should have already loaded it during initialization
 	  	log.info("crawling path...");
 
-		for(PathObject browser_obj: path.getPath()){
-			if(browser_obj.data() instanceof Page){
+		for(PathObject<?> browser_obj: path.getPath()){
+			if(browser_obj.getData() instanceof Page){
 				log.info("Current path node is a Page");
 				//pageNode = (Page)browser_obj.getData();
 			}
-			else if(browser_obj.data() instanceof PageElement){
+			else if(browser_obj.getData() instanceof PageElement){
 				log.info("Current path node is a WebElement");
-				last_element = (PageElement) browser_obj.data();
+				last_element = (PageElement) browser_obj.getData();
 			}
 			//String is action in this context
-			else if(browser_obj.data() instanceof Action){
+			else if(browser_obj.getData() instanceof Action){
 				log.info("Current path node is an Action");
 				boolean actionPerformedSuccessfully;
-				Action action = (Action)browser_obj.data();
+				Action action = (Action)browser_obj.getData();
 				browser.updatePage( DateFormat.getDateInstance());
 				int attempts = 0;
 				do{
@@ -65,9 +65,9 @@ public class Crawler {
 					attempts++;
 				}while(!actionPerformedSuccessfully && attempts < 20);
 			}
-			else if(browser_obj.data() instanceof PageAlert){
+			else if(browser_obj.getData() instanceof PageAlert){
 				log.info("Current path node is a PageAlert");
-				PageAlert alert = (PageAlert)browser_obj.data();
+				PageAlert alert = (PageAlert)browser_obj.getData();
 				alert.performChoice(browser.getDriver());
 			}
 		}

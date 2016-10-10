@@ -3,11 +3,12 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -19,10 +20,11 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.minion.persistence.IPage;
+import com.minion.persistence.IPageElement;
+import com.minion.persistence.IPersistable;
+import com.minion.persistence.ITest;
+import com.minion.persistence.OrientConnectionFactory;
 
 /**
  * A reference to a web page 
@@ -30,15 +32,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @author Brandon Kindred
  *
  */
-public class Page implements PathObject {
+public class Page implements IPersistable<IPage> {
     private static final Logger log = LoggerFactory.getLogger(Page.class);
 
-    @Id
     private String id;
-    
-    @Version
-    @JsonIgnore
-    private Long version;
     
     private boolean landable = false;
 	private String screenshot = null; 
@@ -270,35 +267,26 @@ public class Page implements PathObject {
         }
         return hash;
     }
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Page data() {
-		return this;
-	}
 	
 	/**
 	 * Converts Page to IPage for persistence
 	 * @param page
 	 */
-	/*public IPage convertToRecord(OrientConnectionFactory connection){
-		IPage page = connection.getTransaction().addVertex(UUID.randomUUID(), IPage.class);
+	public IPage convertToRecord(OrientConnectionFactory connection){
+		IPage page = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
 		page.setLandable(this.isLandable());
 		page.setScreenshot(this.getScreenshot());
 		page.setSrc(this.getSrc());
-		page.setUrl(this.getUrl());
+		page.setUrl(this.getUrl().toString());
 		List<IPageElement> elements = new ArrayList<IPageElement>();
 		for(PageElement elem : this.elements){
 			IPageElement page_elem_persist = elem.convertToRecord(connection);
 			elements.add(page_elem_persist);
 		}
 		page.setElements(elements);
-		page.setKey(key);
+		page.setKey(this.generateKey());
 		return page;
 	}
-	*/
 	
 	/**
 	 * {@inheritDoc}
@@ -314,10 +302,6 @@ public class Page implements PathObject {
 	public void setUrl(URL url){
 		this.url = url;
 	}
-
-	public boolean getLandable(){
-		return this.landable;
-	}
 	
 	public void setLandable(boolean isLandable){
 		this.landable = isLandable;
@@ -331,7 +315,7 @@ public class Page implements PathObject {
 		this.screenshot = url;
 	}
 	
-	/*@Override
+	@Override
 	public IPersistable<IPage> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -340,8 +324,7 @@ public class Page implements PathObject {
 		
 		return this;
 	}
-*/
-	/*
+
 	@Override
 	public IPersistable<IPage> update(IPage existing_obj) {
 		Iterator<IPage> page_iter = this.findByKey(this.generateKey()).iterator();
@@ -350,29 +333,31 @@ public class Page implements PathObject {
 			page_iter.next();
 			cnt++;
 		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		log.info("# of existing records with key "+this.generateKey() + " :: "+cnt);
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IPersistable<IPage> page = null;
 		if(cnt == 0){
-			page = connection.getTransaction().addVertex(UUID.randomUUID(), IPage.class);	
+			connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
+			this.convertToRecord(connection);
 		}
 		
-		page = this.convertToRecord(connection);
 		connection.save();
 		
-		return page;
+		return this;
 	}
-	*/
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	/*
 	@Override
 	public Iterable<IPage> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, IPage.class);
 	}
-	*/
+
+	public Iterable<ITest> findByUrl(String pageUrl) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -1,4 +1,3 @@
-package com.minion.test;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

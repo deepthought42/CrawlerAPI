@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.memory.DataDecomposer;
@@ -17,8 +18,6 @@ import com.minion.memory.Vocabulary;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 
 import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.Browser;
@@ -38,8 +37,7 @@ import com.minion.tester.Test;
  *
  */
 public class BrowserActor extends UntypedActor {
-	private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-   // private static final Logger log = Logger.getLogger(BrowserActor.class);
+    private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -189,7 +187,7 @@ public class BrowserActor extends UntypedActor {
 				Path path = (Path)acct_msg.getData();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
-				this.browser = new Browser(((Page)(path.getPath().get(0).data())).getUrl().toString());
+				this.browser = new Browser(((Page)(path.getPath().get(0).getData())).getUrl().toString());
 				if(!path.getPath().isEmpty()){
 					Crawler.crawlPath(path, browser);
 				}
@@ -249,9 +247,10 @@ public class BrowserActor extends UntypedActor {
 			  	log.info("creating path");
 			  	Path path = new Path();
 			  	log.info("getting browser page");
-			  	PathObject page_obj = browser.getPage();
+			  	Page page_obj = browser.getPage();
 			  	log.info("adding page to path");
-			  	path.add(page_obj);
+			  	
+			  	path.add( new PathObject<Page>(page_obj));
 			  	log.info("Crawling path");
 			  	Crawler.crawlPath(path, browser);
 			  	log.info("Getting last and current page");
@@ -271,7 +270,7 @@ public class BrowserActor extends UntypedActor {
 			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
 					path.setIsUseful(true);
 					if(path.getPath().size() > 1){
-						path.add(current_page);
+						path.add(new PathObject<Page>(current_page));
 					}
 					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 

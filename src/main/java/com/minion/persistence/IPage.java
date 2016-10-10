@@ -15,7 +15,7 @@ import com.minion.browsing.Page;
  * @author brandon
  *
  */
-@TypeValue("Page") public interface IPage extends IPathObject, IPersistable<IPage>{
+@TypeValue("Page") public interface IPage{
 	@Property("key")
 	public String getKey();
 	
@@ -32,7 +32,7 @@ import com.minion.browsing.Page;
 	public URL getScreenshot();
 	
 	@Property("screenshot")
-	public void setScreenshot(URL screenshotUrl);
+	public void setScreenshot(String screenshotUrl);
 	
 	@Property("src")
 	public String getSrc();
@@ -44,7 +44,7 @@ import com.minion.browsing.Page;
 	public URL getUrl();
 	
 	@Property("url")
-	public URL setUrl(URL url);
+	public void setUrl(String url);
 	
 	@Adjacency(label="contains")
 	public Iterator<IPageElement> getElements();

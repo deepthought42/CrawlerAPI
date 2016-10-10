@@ -1,15 +1,21 @@
 package com.minion.persistence;
 
+/**
+ * 
+ * @author brand
+ *
+ * @param <V>
+ */
 public interface IPersistable<V> {
-	public String generateKey();
+	String generateKey();
 
 	/**
 	 * 
 	 * @param framedGraph
 	 */
-	public V convertToRecord(OrientConnectionFactory connection);
+	V convertToRecord(OrientConnectionFactory connection);
 	
-	public IPersistable<V> create();
+	IPersistable<V> create();
 	
 	/**
 	 * Updates the given object by finding existing instances in the databases, making
@@ -18,7 +24,7 @@ public interface IPersistable<V> {
 	 * @param existing_obj
 	 * @return
 	 */
-	public IPersistable<V> update(V existing_obj);
+	IPersistable<V> update(V existing_obj);
 	
 	/**
 	 * Use a key generated and guaranteed to be unique to retrieve all objects which have
@@ -27,5 +33,5 @@ public interface IPersistable<V> {
 	 * @param generated_key
 	 * @return
 	 */
-	public Iterable<V> findByKey(String generated_key);
+	Iterable<V> findByKey(String generated_key);
 }

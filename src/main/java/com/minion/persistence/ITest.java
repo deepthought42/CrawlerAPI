@@ -16,18 +16,42 @@ import com.minion.tester.TestRecord;
  * @author Brandon Kindred
  *
  */
-@TypeValue("Test") public interface ITest {
+@TypeValue(value="Test") public interface ITest  {
 	/**
 	 * @return the key for the current test
 	 */
 	@Property("key")
-	public int getKey();
+	public String getKey();
 	
 	/**
 	 * sets the key for the current test
 	 */
 	@Property("key")
 	public void setKey(String key);
+	
+	/**
+	 * @return the domain for the current test
+	 */
+	@Property("domain")
+	public String getDomain();
+	
+	/**
+	 * sets the domain for the current test
+	 */
+	@Property("domain")
+	public void setDomain(String url);
+	
+	/**
+	 * @return the name for the current test
+	 */
+	@Property("name")
+	public String getName();
+	
+	/**
+	 * sets the name for the current test
+	 */
+	@Property("name")
+	public void setName(String name);
 	
 	/**
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"

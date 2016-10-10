@@ -7,9 +7,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
 import com.minion.tester.Test;
@@ -22,8 +27,9 @@ import com.minion.tester.TestRecord;
  * @author Brandon Kindred
  */
 @Controller
-@RequestMapping("/tests")
+@RequestMapping("/testFinder")
 public class TestController {
+    private static final Logger log = LoggerFactory.getLogger(TestController.class);
 
 	/**
 	 * Retrieves list of all tests from the database 
@@ -31,8 +37,17 @@ public class TestController {
 	 * @return
 	 */
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody List<Test> getTests() {
-		ArrayList<Test> test_list = new ArrayList<Test>();
+	public @ResponseBody List<Test> getTests(HttpServletRequest request, 
+			   								 @RequestParam(value="url", required=true) String url) {
+		List<Test> test_list = new ArrayList<Test>();
+		try {
+			test_list = Test.findByUrl(url);
+		} catch (MalformedURLException e) {
+			log.info("ERROR GETTING TEST ");
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return test_list;
 	}
 

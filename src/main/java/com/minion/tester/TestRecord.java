@@ -1,14 +1,16 @@
 package com.minion.tester;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.log4j.Logger;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Page;
+import com.minion.persistence.IPersistable;
+import com.minion.persistence.ITestRecord;
+import com.minion.persistence.OrientConnectionFactory;
 
 /**
  * A record for when a path was observed
@@ -16,15 +18,10 @@ import com.minion.browsing.Page;
  * @author Brandon Kindred
  *
  */
-public class TestRecord {
-	private static final Logger log = Logger.getLogger(Test.class);
+public class TestRecord  implements IPersistable<ITestRecord> {
+	private static final Logger log = LoggerFactory.getLogger(Test.class);
 
-	@Id
 	private String id;
-	
-	@Version
-    @JsonIgnore
-    private Long version;
 	
 	private Page result;
 	private Date ran_at;
@@ -105,10 +102,9 @@ public class TestRecord {
 	}
 	
 	/**
-	 * 
-	 * @param page
+	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public ITestRecord convertToRecord(OrientConnectionFactory connection){
 		ITestRecord testRecord = connection.getTransaction().addVertex(UUID.randomUUID(), ITestRecord.class);
 
@@ -119,7 +115,7 @@ public class TestRecord {
 		testRecord.setKey(this.generateKey());
 		
 		return testRecord;
-	}*/
+	}
 
 	/**
 	 * 
@@ -132,7 +128,7 @@ public class TestRecord {
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public IPersistable<ITestRecord> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -141,11 +137,11 @@ public class TestRecord {
 		
 		return this;
 	}
-	*/
+	
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public IPersistable<ITestRecord> update(ITestRecord existing_obj) {
 		Iterator<ITestRecord> page_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
@@ -165,15 +161,15 @@ public class TestRecord {
 		connection.save();
 		
 		return test_record;
-	}*/
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public Iterable<ITestRecord> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITestRecord.class);
 	}
-	*/
+	
 }

@@ -3,7 +3,8 @@ package com.minion.actors;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
 
@@ -12,6 +13,7 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.Page;
+import com.minion.browsing.PathObject;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
@@ -25,7 +27,7 @@ import com.minion.tester.Test;
  *
  */
 public class PathExpansionActor extends UntypedActor {
-    private static final Logger log = Logger.getLogger(PathExpansionActor.class);
+    private static final Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
     /**
      * {@inheritDoc}
@@ -52,7 +54,7 @@ public class PathExpansionActor extends UntypedActor {
 					if(!test.getPath().getLastPage().getUrl().equals(test.getResult().getUrl()) && test.getResult().isLandable()){
 						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
-						path.add(test.getResult());
+						path.add(new PathObject<Page>(test.getResult()));
 					}
 					
 					//EXPAND PATH IN TEST
@@ -92,12 +94,12 @@ public class PathExpansionActor extends UntypedActor {
 				log.info("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains());
 				if(path.getIsUseful() && !path.getSpansMultipleDomains()){
 					Page last_page = path.getLastPage();
-					Page first_page = (Page)path.getPath().get(0);
+					Page first_page = (Page)path.getPath().get(0).getData();
 					
 					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
 						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
-						path.add(last_page);
+						path.add(new PathObject<Page>(last_page));
 					}
 					// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
 					Test test = new Test(path, last_page, last_page.getUrl());

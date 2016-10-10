@@ -1,7 +1,5 @@
 package com.minion.config;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;

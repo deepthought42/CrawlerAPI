@@ -4,24 +4,14 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.orient.commons.core.OrientDatabaseFactory;
-import org.springframework.data.orient.object.OrientObjectDatabaseFactory;
 
 import akka.actor.UntypedActor;
 
-import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Page;
 import com.minion.memory.DataDecomposer;
-import com.minion.memory.OrientDbPersistor;
-import com.minion.memory.Vocabulary;
-import com.minion.persistence.IPath;
-import com.minion.persistence.ITest;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.tester.Test;
-import com.orientechnologies.orient.core.db.ODatabase;
-import com.orientechnologies.orient.object.db.OObjectDatabaseTx;
 
 /**
  * Handles the saving of records into orientDB
@@ -32,14 +22,6 @@ import com.orientechnologies.orient.object.db.OObjectDatabaseTx;
 public class MemoryRegistryActor extends UntypedActor{
     private static final Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
 
-    @Autowired
-    private ITest test_repository;
-
-    @Autowired
-    private IPath path_repository;
-    
-    @Autowired
-    private OrientObjectDatabaseFactory factory;
     
 	/**
 	 * {@inheritDoc}
@@ -47,23 +29,24 @@ public class MemoryRegistryActor extends UntypedActor{
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			OObjectDatabaseTx db = null;
-		        log.info("MESSAGE IN MEMORY REGISTRY");
-		        		        
+			log.info("Initiating connection to orientdb...");
+			/*OrientConnectionFactory connection_factory = new OrientConnectionFactory();
+			
+			log.info("creating FramedGraphFactory instance");
+			FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
+			
+			log.info("opening connection to orientdb");
+			OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost:2480/Thoth", "brandon", "password");
 
-            db = factory.openDatabase();
-            
             log.info("Database connection opened");
-            //db.getEntityManager().registerEntityClass(Path.class);
-		    log.info("Path class type registered with database entity");
-            
+            */
 			Message<?> acct_msg = (Message<?>)message;
 			log.info("message converted to message format");
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
 			if(acct_msg.getData() instanceof Page){
 				Page page = (Page)acct_msg.getData();
 				List<Object> decomposed_list = DataDecomposer.decompose(page);
-				OrientDbPersistor persistor = new OrientDbPersistor();
+				//OrientDbPersistor persistor = new OrientDbPersistor();
 				
 				for(Object objDef : decomposed_list){
 					//if object definition value doesn't exist in vocabulary 
@@ -79,27 +62,23 @@ public class MemoryRegistryActor extends UntypedActor{
 				if(test.equals(null)){
 					log.info("Test object is null");
 				}
-				else if(test_repository == null){
-					log.info("test repo is null");
-				}
+				
 				//test.create();
-				log.info("opening connection to orientdb");
 				//TinkerGraph graph = TinkerGraphFactory.createTinkerGraph(); //This graph is pre-populated.
 				//log.info("adding vertext to tinker graph");
 				//graph.addVertex(test);
 				//log.info("creating FramedGraphFactory instance");
 				//FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
 				log.info("saving test : "+test);
-
-				test_repository.save(test);
-				//OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost:2480/Thoth", "brandon", "password");
+				test.create();
+				//test_repository.save(test);
 				//log.info("Starting transaction with orientdb");
-			    //OrientGraph instance = graphFactory.getTx();
+			   // OrientGraph instance = graphFactory.getTx();
 			    //log.info("creating framed graph");
 				//FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
 				//log.info("adding test to framed graph");
 				//Test test_vertex = (Test)framedGraph.addVertex(test, Test.class);
-				//test.convertToRecord(framedGraph);
+				//test.convertToRecord(connection_factory);
 				//test_db.setKey("key");
 				log.info("Commiting changes");
 				
@@ -141,22 +120,24 @@ public class MemoryRegistryActor extends UntypedActor{
 			else if(acct_msg.getData() instanceof Path){
 				log.info("Converting message to path");
 				Path path = (Path)acct_msg.getData();
-				log.info("Saving Path : ");
-				log.info(path + " :  to memory Registry");
+				log.info("Saving Path : " +path + " :  to memory Registry");
 				
-				path_repository.save(path);
+				//path_repository.save(path);
 				/*FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
-				OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost:2480/Thoth", "brandon", "password");
-			    log.info("graphFactory instantiated. Creating transaction...");
-				OrientGraph instance = graphFactory.getTx();
-				log.info("transaction created");
-				FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
 				
-				Path path_vertex = (Path)framedGraph.addVertex(path, Path.class);
+				OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost:2480/Thoth", "brandon", "password");
+				*/
+				path.create();
+			    //log.info("graphFactory instantiated. Creating transaction...");
+				//OrientGraph instance = graphFactory.getTx();
+				//log.info("transaction created");
+				//FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
+				
+				//Path path_vertex = (Path)framedGraph.addVertex(path, Path.class);
 
 //				path.convertToRecord(framedGraph);
-				framedGraph.commit();
-				*/
+				
+				//framedGraph.commit();
 
 			}
 		}

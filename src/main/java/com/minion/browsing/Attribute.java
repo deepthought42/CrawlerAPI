@@ -101,7 +101,7 @@ public class Attribute implements IPersistable<IAttribute> {
 	 */
 	@Override
 	public IAttribute convertToRecord(OrientConnectionFactory connection) {
-		IAttribute attribute = connection.getTransaction().addVertex(UUID.randomUUID(), IAttribute.class);
+		IAttribute attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);
 		attribute.setName(this.name);
 		attribute.setVals(this.vals);
 		attribute.setKey(this.key);
@@ -138,7 +138,7 @@ public class Attribute implements IPersistable<IAttribute> {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IAttribute attribute = null;
 		if(cnt == 0){
-			attribute = connection.getTransaction().addVertex(UUID.randomUUID(), IAttribute.class);	
+			attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);	
 		}
 		
 		attribute = this.convertToRecord(connection);

@@ -77,7 +77,7 @@ public class TestCoordinatorActor extends UntypedActor {
 				Path path = test.getPath();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
-				Browser browser = new Browser(((Page)(path.getPath().get(0).data())).getUrl().toString());
+				Browser browser = new Browser(((Page)(path.getPath().get(0).getData())).getUrl().toString());
 				if(!path.getPath().isEmpty()){
 					Crawler.crawlPath(path, browser);
 				}

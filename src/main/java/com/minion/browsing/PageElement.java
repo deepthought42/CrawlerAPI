@@ -4,19 +4,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jsoup.nodes.Element;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.orient.commons.repository.annotation.Vertex;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.minion.persistence.IAttribute;
+import com.minion.persistence.IPageElement;
+import com.minion.persistence.IPathObject;
+import com.minion.persistence.IPersistable;
+import com.minion.persistence.OrientConnectionFactory;
 import com.minion.tester.Test;
 import com.minion.util.ArrayUtility;
 
@@ -29,17 +34,10 @@ import com.minion.util.ArrayUtility;
  * @author Brandon Kindred
  *
  */
-@Vertex
-public class PageElement implements PathObject {
-    private static final Logger log = Logger.getLogger(PageElement.class);
+public class PageElement implements IPersistable<IPageElement> {
+    private static final Logger log = LoggerFactory.getLogger(PageElement.class);
 
-    @Id
     private String id;
-    
-    @Version
-    @JsonIgnore
-    private Long version;
-    
     private String key;
 	private String[] actions = ActionFactory.getActions();
 	public String tagName;
@@ -50,7 +48,7 @@ public class PageElement implements PathObject {
 	public List<PageElement> child_elements = new ArrayList<PageElement>();
 	Map<String, String> cssValues = new HashMap<String,String>();
 
-	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "@xmlns", /*Wordpress generated field*/"data-blogger-escaped-onclick"};
+	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown"};
 
 	//transfer list to enum class
 	
@@ -530,21 +528,12 @@ public class PageElement implements PathObject {
 		return this.actions;
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PageElement data() {
-		return this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	/*@Override
 	public IPageElement convertToRecord(OrientConnectionFactory framedGraph) {
-		IPageElement pageElement = framedGraph.getTransaction().addVertex(UUID.randomUUID(), IPageElement.class);
+		IPageElement pageElement = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getCanonicalName()+","+UUID.randomUUID(), IPageElement.class);
 		
 		List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
 		for(Attribute attribute : this.attributes){
@@ -568,7 +557,6 @@ public class PageElement implements PathObject {
 		pageElement.setKey(this.key);
 		return pageElement;
 	}
-	*/
 	
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
@@ -583,7 +571,6 @@ public class PageElement implements PathObject {
 	/**
 	 * {@inheritDoc}
 	 */
-	/*
 	@Override
 	public IPersistable<IPageElement> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -594,11 +581,11 @@ public class PageElement implements PathObject {
 		return this;
 
 	}
-*/
+
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public IPersistable<IPageElement> update(IPageElement existing_obj) {
 		Iterator<IPageElement> page_element_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
@@ -611,7 +598,7 @@ public class PageElement implements PathObject {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IPageElement page_element = null;
 		if(cnt == 0){
-			page_element = connection.getTransaction().addVertex(UUID.randomUUID(), IPageElement.class);	
+			page_element = connection.getTransaction().addVertex("class:"+IPageElement.class.getCanonicalName()+","+UUID.randomUUID(), IPageElement.class);	
 		}
 		
 		page_element = this.convertToRecord(connection);
@@ -619,13 +606,13 @@ public class PageElement implements PathObject {
 		
 		return page_element;
 	}
-*/
+
 	/**
 	 * {@inheritDoc}
 	 */
-	/*@Override
+	@Override
 	public Iterable<IPageElement> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, IPageElement.class);
-	}*/
+	}
 }

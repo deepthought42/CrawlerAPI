@@ -4,7 +4,8 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Vertex;
@@ -30,7 +31,7 @@ import com.minion.tester.Test;
  *
  */
 public class TestCoordinatorActor extends UntypedActor {
-    private static final Logger log = Logger.getLogger(TestCoordinatorActor.class);
+    private static final Logger log = LoggerFactory.getLogger(TestCoordinatorActor.class);
 
     /**
      * Inputs
@@ -77,19 +78,16 @@ public class TestCoordinatorActor extends UntypedActor {
 				Path path = test.getPath();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
-				Browser browser = new Browser(((Page)(path.getPath().get(0).getData())).getUrl().toString());
-				if(!path.getPath().isEmpty()){
+				Browser browser = new Browser(((Page)(path.getPath().get(0))).getUrl().toString());
+				if(path.getPath() != null){
 					Crawler.crawlPath(path, browser);
 				}
 				
 				//get current page of browser
 				Page expected_page = test.getResult();
-				Page last_page = path.getLastPage();
+				Page last_page = path.findLastPage();
 				
-				
-				if(last_page.checkIfLandable(browser)){
-					last_page.setLandable(true);
-				}
+				last_page.setLandable(last_page.checkIfLandable(browser));
 				
 				if(!last_page.equals(expected_page)){
 					log.info("Saving test, for it has changed");

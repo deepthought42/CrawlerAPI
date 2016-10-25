@@ -56,26 +56,26 @@ public class WorkAllocationActor extends UntypedActor {
 				log.info("Approved account : "+acct_message.getAccountKey());
 				if(acct_message.getData() instanceof Path){
 					log.info("Path passed to work allocator");
-					Path path = (Path)acct_message.getData();
+					//Path path = (Path)acct_message.getData();
 				
-					Message<Path> path_msg = new Message<Path>(acct_message.getAccountKey(), path);
+					//Message<Path> path_msg = new Message<Path>(acct_message.getAccountKey(), path);
 					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
-					browser_actor.tell(path_msg, getSelf() );
+					browser_actor.tell(acct_message, getSelf() );
 				}
 				else if(acct_message.getData() instanceof Test){
 					log.info("Test passed to work allocator");
-					Test test = (Test)acct_message.getData();
+					//Test test = (Test)acct_message.getData();
 					
-					Message<Test> test_msg = new Message<Test>(acct_message.getAccountKey(), test);
-					final ActorRef browser_actor = this.getContext().actorOf(Props.create(TestCoordinatorActor.class), "browserActor"+UUID.randomUUID());
-					browser_actor.tell(test_msg, getSelf() );
+					//Message<Test> test_msg = new Message<Test>(acct_message.getAccountKey(), test);
+					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
+					browser_actor.tell(acct_message, getSelf() );
 				}
 				else if(acct_message.getData() instanceof URL){
 					log.info("message is URL for workAllocator");
-					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor");
+					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
 
-					Message<URL> url_msg = new Message<URL>(acct_message.getAccountKey(), (URL)acct_message.getData());
-					browser_actor.tell(url_msg, getSelf());
+					//Message<URL> url_msg = new Message<URL>(acct_message.getAccountKey(), (URL)acct_message.getData());
+					browser_actor.tell(acct_message, getSelf());
 				}
 			}
 			else{

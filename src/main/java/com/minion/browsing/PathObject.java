@@ -1,16 +1,14 @@
 package com.minion.browsing;
 
-import java.util.Iterator;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.IPath;
+import com.minion.browsing.actions.Action;
+import com.minion.persistence.IAction;
+import com.minion.persistence.IPage;
+import com.minion.persistence.IPageElement;
 import com.minion.persistence.IPathObject;
 import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITest;
-import com.minion.persistence.OrientConnectionFactory;
 
 /**
  * An object wrapper that allows data to be dynamically placed in data structures
@@ -19,80 +17,32 @@ import com.minion.persistence.OrientConnectionFactory;
  * @param <V>
  *
  */
-public class PathObject<V> implements IPersistable<IPathObject>{
+public abstract class PathObject<V extends IPathObject> implements IPersistable<V>{
     private static final Logger log = LoggerFactory.getLogger(PathObject.class);
-
-	private V data = null;
+    
 	private PathObject<?> next = null;
-	
-	public PathObject(V data){
-		this.data=data;
-	}
-	
-	/**
-	 * Returns wrapped object
-	 * @return
-	 */
-	public V getData(){
-		return this.data;
-	}
-	
-
-	/**
-	 * Sets data for wrapper
-	 * @return
-	 */
-	public void setData(V data){
-		this.data = data;
-	}
-
-	/**
-	 * Returns wrapped object
-	 * @return
-	 */
-	public PathObject<?> getNext(){
-		return this.next;
-	}
-	
-
-	/**
-	 * Sets data for wrapper
-	 * @return
-	 */
-	public void setNext(PathObject<?> next){
-		this.next = next;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String generateKey() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public IPathObject convertToRecord(OrientConnectionFactory connection) {
-		IPath path = connection.getTransaction().addVertex("class:IPathObject,"+UUID.randomUUID(), IPath.class);
-		path.setKey(this.generateKey());
-		
+	/*@Override
+	public V convertToRecord(OrientConnectionFactory connection) {
+		IPathObject path = connection.getTransaction().addVertex("class:IPathObject,"+UUID.randomUUID(), IPathObject.class);
+		//path.setKey(this.generateKey());
+		path.setData(this.);
 		log.info("Starting conversion from path objects to their respective types");
-		IPathObject persistablePathObj =  connection.getTransaction().addVertex("class:IPathObject,"+UUID.randomUUID(), IPathObject.class);
+		IPathObject persistablePathObj =  connection.getTransaction().addVertex("class:PathObjectRepository,"+UUID.randomUUID(), IPathObject.class);
 		persistablePathObj.setData(this.getData());
 		persistablePathObj.setNext(this.getNext().convertToRecord(connection));
 		return persistablePathObj;
 	}
-
+	*/
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public IPersistable<IPathObject> create() {
-		Iterator<IPathObject> path_obj_iter = this.findByKey(this.generateKey()).iterator();
+	/*@Override
+	public IPersistable<V> create() {
+		Iterator<V> path_obj_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
 		while(path_obj_iter.hasNext()){
 			path_obj_iter.next();
@@ -108,15 +58,15 @@ public class PathObject<V> implements IPersistable<IPathObject>{
 		
 		connection.save();
 		
-		return this;
-	}
+		return null;
+	}*/
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public IPersistable<IPathObject> update(IPathObject existing_obj) {
-		Iterator<IPathObject> path_obj_iter = this.findByKey(this.generateKey()).iterator();
+	/*@Override
+	public IPersistable<V> update(V existing_obj) {
+		Iterator<V> path_obj_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
 		while(path_obj_iter.hasNext()){
 			path_obj_iter.next();
@@ -126,21 +76,53 @@ public class PathObject<V> implements IPersistable<IPathObject>{
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		if(cnt == 0){
-			connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), IPathObject.class);
+			connection.getTransaction().addVertex("class:"+IPathObject.class.getCanonicalName()+","+UUID.randomUUID(), IPathObject.class);
 			this.convertToRecord(connection);
 		}
 		
 		connection.save();
 		
 		return this;
-	}
+	}*/
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<IPathObject> findByKey(String generated_key) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, IPathObject.class);
+
+	public static PathObject<?> convertFromRecord(IPathObject data){
+		String type = data.getType();
+		
+		//log.info("data type :: " + data.getType()+" :: "+data.getClass().getName());
+		log.info("current class name :: " + type);
+		if(type.equals(Page.class)){
+		//if(type.equals(Page.class.getName())){
+			log.info("converting from page");
+			//IPage page_record = ((IPage)data);
+			//Page page_obj = new Page();
+			Page page_obj = new Page();
+			Iterable<IPage> page_iter = page_obj.findByKey(data.getKey());
+			page_obj = Page.convertFromRecord(page_iter.iterator().next());
+			log.info("coverted page from record :: " + page_obj +" :: ");
+			return page_obj;
+		}
+		else if(type.equals(PageElement.class.getName())){
+			log.info("converting from page element");
+
+			//IPageElement page_elem_record = ((IPageElement)data);
+			PageElement page_elem_obj = new PageElement();
+			Iterable<IPageElement> page_elem_record = page_elem_obj.findByKey(data.getKey());
+			page_elem_obj = page_elem_obj.convertFromRecord(page_elem_record.iterator().next());
+			
+			log.info("coverted page element from record :: " + page_elem_obj +" :: ");
+			return page_elem_obj;
+		}
+		else if(type.equals(Action.class.getName())){			
+			Action action = new Action();
+			Iterable<IAction> iaction = action.findByKey(data.getKey());
+
+			action = action.convertFromRecord(iaction.iterator().next());
+			return action;
+		}
+		
+		return null;
 	}
+	
+	public abstract PathObject<?> clone();
 }

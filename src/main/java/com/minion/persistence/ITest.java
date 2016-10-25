@@ -54,6 +54,22 @@ import com.minion.tester.TestRecord;
 	public void setName(String name);
 	
 	/**
+	 * Gets the correctness value of the test
+	 * 
+	 * @return Correctness value. Null indicates value is unset.
+	 */
+	@Property("correct")
+	public Boolean getCorrect();
+	
+	/**
+	 * Sets correctness value of test
+	 * 
+	 * @param correctness value
+	 */
+	@Property("correct")
+	public void setCorrect(Boolean correct);
+	
+	/**
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
 	 */
 	@Adjacency(label="has")

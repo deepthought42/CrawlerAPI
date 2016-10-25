@@ -63,28 +63,10 @@ public class MemoryRegistryActor extends UntypedActor{
 					log.info("Test object is null");
 				}
 				
-				//test.create();
-				//TinkerGraph graph = TinkerGraphFactory.createTinkerGraph(); //This graph is pre-populated.
-				//log.info("adding vertext to tinker graph");
-				//graph.addVertex(test);
-				//log.info("creating FramedGraphFactory instance");
 				//FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
 				log.info("saving test : "+test);
 				test.create();
-				//test_repository.save(test);
-				//log.info("Starting transaction with orientdb");
-			   // OrientGraph instance = graphFactory.getTx();
-			    //log.info("creating framed graph");
-				//FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
-				//log.info("adding test to framed graph");
-				//Test test_vertex = (Test)framedGraph.addVertex(test, Test.class);
-				//test.convertToRecord(connection_factory);
-				//test_db.setKey("key");
 				log.info("Commiting changes");
-				
-				//framedGraph.commit();
-				//Person person = framedGraph.getVertex(1, Person.class);
-				//person.getName(); // equals "marko"
 
 				
 				/*
@@ -120,25 +102,9 @@ public class MemoryRegistryActor extends UntypedActor{
 			else if(acct_msg.getData() instanceof Path){
 				log.info("Converting message to path");
 				Path path = (Path)acct_msg.getData();
-				log.info("Saving Path : " +path + " :  to memory Registry");
+				log.info("Saving Path : " +path + " : to memory Registry");
 				
-				//path_repository.save(path);
-				/*FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
-				
-				OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost:2480/Thoth", "brandon", "password");
-				*/
 				path.create();
-			    //log.info("graphFactory instantiated. Creating transaction...");
-				//OrientGraph instance = graphFactory.getTx();
-				//log.info("transaction created");
-				//FramedTransactionalGraph<OrientGraph> framedGraph = factory.create(instance);
-				
-				//Path path_vertex = (Path)framedGraph.addVertex(path, Path.class);
-
-//				path.convertToRecord(framedGraph);
-				
-				//framedGraph.commit();
-
 			}
 		}
 		else unhandled(message);

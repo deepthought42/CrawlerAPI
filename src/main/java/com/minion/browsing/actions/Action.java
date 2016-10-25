@@ -3,13 +3,13 @@ package com.minion.browsing.actions;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.IObjectValuationAccessor;
+import com.minion.browsing.PathObject;
 import com.minion.persistence.IAction;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
-import com.minion.tester.Test;
 
 /**
  * Defines an action in name only
@@ -17,11 +17,20 @@ import com.minion.tester.Test;
  * @author Brandon Kindred
  *
  */
-public class Action implements IPersistable<IAction>, IObjectValuationAccessor{
-	private static final Logger log = Logger.getLogger(Test.class);
+public class Action extends PathObject<IAction>{
+	private static final Logger log = LoggerFactory.getLogger(Action.class);
 
 	private final String name;
 	private final String key;
+	
+	/**
+	 * Construct empty action object
+	 */
+	public Action(){
+		this.name = null;
+		this.key = null;
+	}
+	
 	/**
 	 * 
 	 * @param action_name
@@ -51,16 +60,6 @@ public class Action implements IPersistable<IAction>, IObjectValuationAccessor{
 		return this.name.hashCode();
 	}
 
-	public double getCost() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	public double getReward() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
 	public String getKey() {
 		return this.key;
 	}
@@ -78,9 +77,27 @@ public class Action implements IPersistable<IAction>, IObjectValuationAccessor{
 	 */
 	@Override
 	public IAction convertToRecord(OrientConnectionFactory connection) {
-		IAction action = connection.getTransaction().addVertex(UUID.randomUUID(), IAction.class);
-		action.setName(this.name);
-		action.setKey(this.key);
+		log.info("Creating Action path object record");
+		Iterable<IAction> actions = findByKey(this.getKey(), connection);
+		
+		int cnt = 0;
+		Iterator<IAction> action_iter = actions.iterator();
+		IAction action = null;
+		while(action_iter.hasNext()){
+			action_iter.next();
+			cnt++;
+		}
+		
+		if(cnt == 0){
+			action = connection.getTransaction().addVertex("class:"+IAction.class.getCanonicalName()+","+UUID.randomUUID(), IAction.class);
+			action.setName(this.name);
+			action.setKey(this.key);
+			action.setType(this.getClass().getName());
+		}
+		else{
+			action = actions.iterator().next();
+		}		
+		
 		return action;
 	}
 
@@ -101,25 +118,27 @@ public class Action implements IPersistable<IAction>, IObjectValuationAccessor{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IAction> update(IAction existing_obj) {
+	public IPersistable<IAction> update() {
 		Iterator<IAction> action_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
 		while(action_iter.hasNext()){
 			action_iter.next();
 			cnt++;
 		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		log.info("# of existing Action records with key "+this.getKey() + " :: "+cnt);
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IPersistable<IAction> action = null;
+		IAction action = null;
 		if(cnt == 0){
 			action = connection.getTransaction().addVertex(UUID.randomUUID(), IAction.class);	
 		}
+		else{
+			action = this.convertToRecord(connection);
+		}
 		
-		action = this.convertToRecord(connection);
 		connection.save();
 		
-		return action;
+		return this;
 	}
 
 	/**
@@ -130,4 +149,26 @@ public class Action implements IPersistable<IAction>, IObjectValuationAccessor{
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, IAction.class);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<IAction> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
+		return orient_connection.getTransaction().getVertices("key", generated_key, IAction.class);
+	}
+
+	public Action convertFromRecord(IAction data) {
+		Action action = new Action(data.getName());
+		
+		return action;
+	}
+
+	@Override
+	public PathObject<?> clone() {
+		Action action_clone = new Action(this.getName());
+		//action_clone.setNext(this.getNext());
+		return action_clone;
+	}
+
 }

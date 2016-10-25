@@ -1,15 +1,13 @@
 package com.minion.browsing;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -30,16 +28,15 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
-import com.minion.util.ArrayUtility;
-import com.sun.jna.platform.win32.Secur32Util.SecurityPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
  * @author Brandon Kindred
  */
 public class Browser {
-    private static final Logger log = Logger.getLogger(Browser.class);
+    private static final Logger log = LoggerFactory.getLogger(Browser.class);
 
 	private WebDriver driver;
 	
@@ -73,6 +70,18 @@ public class Browser {
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
 		return new Page(driver);
+	}
+	
+	public static String cleanSrc(String src){
+		//src = src.replaceAll("\\s", "");
+
+		src = src.replace("<iframe frameborder=\"0\" id=\"rufous-sandbox\" scrolling=\"no\" allowtransparency=\"true\" allowfullscreen=\"true\" style=\"position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: medium none;\"></iframe>",  "");
+		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"993\" height=\"493\"></canvas>","");
+		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"987\" height=\"491\"></canvas>","");
+		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"2284\"></canvas>","");
+		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"4031\"></canvas>","");
+		src = src.trim();
+		return src;
 	}
 
 	/**
@@ -276,16 +285,18 @@ public class Browser {
 			int counter = 0;
 			for(WebElement elem : pageElements){
 				try{
-					log.info("checking visibily and extracting attributes for element " + counter++);
+					//log.info("checking visibily and extracting attributes for element " + counter++);
 					Date start = new Date();
 					if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
 						PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
 						elementList.add(pageElem);
 					}
+					
 					Date end = new Date();
-					
-					log.info("All attributes extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
-					
+					double execution_time = (end.getTime() - start.getTime())/1000.0;
+					if( execution_time > 1.0){
+						log.info("All attributes extracted in " + execution_time + " seconds");
+					}
 				}catch(StaleElementReferenceException e){
 					log.error(e.toString());
 				}

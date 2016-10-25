@@ -4,11 +4,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.minion.browsing.PathObject;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 
 
-public interface IPageElement extends IPersistable<IPageElement> {
+public interface IPageElement extends IPathObject {
 	//private String[] actions = ActionFactory.getActions();
 	@Property("key")
 	public String getKey();
@@ -40,17 +41,20 @@ public interface IPageElement extends IPersistable<IPageElement> {
 	@Property("changed")
 	public void setChanged(boolean isChanged);
 	
+	/*
 	@Adjacency(label="has")
 	public Iterator<IAttribute> getAttributes();
 	
 	@Adjacency(label="has")
 	public void setAttributes(List<IAttribute> attributes);
 	
+	
 	@Adjacency(label="contains")
 	public Iterator<IPageElement> getChildElements();
 	
 	@Adjacency(label="contains")
 	public void setChildElements(List<IPageElement> elements);
+	*/
 	
 	@Property("cssValues")
 	public Map<String, String> getCssValues();

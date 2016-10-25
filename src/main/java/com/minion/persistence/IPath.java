@@ -7,7 +7,6 @@ import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 import com.minion.browsing.PathObject;
-import com.minion.structs.Path;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
@@ -15,7 +14,7 @@ import com.minion.structs.Path;
  * @author Brandon Kindred
  *
  */
-@TypeValue("Path") public interface IPath extends IPersistable<Path>{
+@TypeValue("Path") public interface IPath{
 	/**
 	 * @return the key for the current test
 	 */

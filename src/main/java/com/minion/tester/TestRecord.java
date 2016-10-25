@@ -2,6 +2,7 @@ package com.minion.tester;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -170,6 +171,19 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	public Iterable<ITestRecord> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITestRecord.class);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<ITestRecord> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
+		return orient_connection.getTransaction().getVertices("key", generated_key, ITestRecord.class);
+	}
+
+	public static List<TestRecord> convertFromRecord(Iterator<ITestRecord> records) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

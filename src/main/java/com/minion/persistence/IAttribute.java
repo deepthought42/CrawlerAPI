@@ -2,7 +2,7 @@ package com.minion.persistence;
 
 import com.tinkerpop.frames.Property;
 
-public interface IAttribute extends IPersistable<IAttribute>{
+public interface IAttribute extends IPathObject{
 	@Property("key")
 	public String getKey();
 	

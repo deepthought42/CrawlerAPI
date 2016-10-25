@@ -15,7 +15,7 @@ import com.minion.browsing.Page;
  * @author brandon
  *
  */
-@TypeValue("Page") public interface IPage{
+@TypeValue("Page") public interface IPage extends IPathObject{
 	@Property("key")
 	public String getKey();
 	
@@ -41,14 +41,15 @@ import com.minion.browsing.Page;
 	public void setSrc(String src);
 	
 	@Property("url")
-	public URL getUrl();
+	public String getUrl();
 	
 	@Property("url")
 	public void setUrl(String url);
 	
-	@Adjacency(label="contains")
+	/*@Adjacency(label="contains")
 	public Iterator<IPageElement> getElements();
 	
 	@Adjacency(label="contains")
 	public void setElements(List<IPageElement> elements);
+	*/
 }

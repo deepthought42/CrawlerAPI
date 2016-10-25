@@ -3,9 +3,11 @@ package com.minion.persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
+import com.tinkerpop.frames.FramedGraph;
 import com.tinkerpop.frames.FramedGraphFactory;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
@@ -26,18 +28,19 @@ public class OrientConnectionFactory {
 		log.info("connection opened");
 	}
 	
+	/**
+	 * Opens connection to database
+	 * @return
+	 */
 	private FramedTransactionalGraph<OrientGraph> getConnection(){
 		log.info("framing graph factory");
-		FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
-		log.info("Initiating orient database graph factory connection");
+		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
 		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/Thoth", "brandon", "password").setupPool(1, 20);
-		log.info("creating no transaction");
-		OrientGraphNoTx db = graphFactory.getNoTx();
-		log.info("creating transaction");
 	    OrientGraph instance = graphFactory.getTx();
 	    log.info("Orientdb transaction created returning instance");
 		return factory.create(instance);
 	}
+
 	
 	/**
 	 * Commits transaction

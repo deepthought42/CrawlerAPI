@@ -19,7 +19,6 @@ import org.openqa.selenium.WebElement;
 
 import com.minion.persistence.IAttribute;
 import com.minion.persistence.IPageElement;
-import com.minion.persistence.IPathObject;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
 import com.minion.tester.Test;
@@ -34,10 +33,9 @@ import com.minion.util.ArrayUtility;
  * @author Brandon Kindred
  *
  */
-public class PageElement implements IPersistable<IPageElement> {
+public class PageElement extends PathObject<IPageElement> {
     private static final Logger log = LoggerFactory.getLogger(PageElement.class);
 
-    private String id;
     private String key;
 	private String[] actions = ActionFactory.getActions();
 	public String tagName;
@@ -48,7 +46,7 @@ public class PageElement implements IPersistable<IPageElement> {
 	public List<PageElement> child_elements = new ArrayList<PageElement>();
 	Map<String, String> cssValues = new HashMap<String,String>();
 
-	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown"};
+	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel"};
 
 	//transfer list to enum class
 	
@@ -73,6 +71,14 @@ public class PageElement implements IPersistable<IPageElement> {
 		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
 		this.key = this.generateKey();
 	}*/
+	
+	/**
+	 * Constructs an empty PageElement.
+	 * 
+	 * @param driver
+	 * @param elem
+	 */
+	public PageElement(){}
 	
 	/**
 	 * Constructs a PageElement.
@@ -392,13 +398,10 @@ public class PageElement implements IPersistable<IPageElement> {
 		ArrayList<String> attributeChecks = new ArrayList<String>();
 		xpath += "//"+this.tagName;
 		for(Attribute attr : attributes){
-			
-			System.err.println("attr name: "+attr.getName());
 			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
+				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals()) + "\")");
 			}
 		}
-		System.err.println("ATTRIBUTES CHECK SKIPPED");
 		if(attributeChecks.size()>0){
 			xpath += "[";
 			for(int i = 0; i < attributeChecks.size(); i++){
@@ -483,6 +486,9 @@ public class PageElement implements IPersistable<IPageElement> {
 		this.xpath = new_xpath;
 	}
 	
+	public void setText(String text){
+		this.text = text;
+	}
 
 	public String getText(){
 		return this.text;
@@ -533,29 +539,47 @@ public class PageElement implements IPersistable<IPageElement> {
 	 */
 	@Override
 	public IPageElement convertToRecord(OrientConnectionFactory framedGraph) {
-		IPageElement pageElement = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getCanonicalName()+","+UUID.randomUUID(), IPageElement.class);
+		Iterable<IPageElement> page_elements = findByKey(this.getKey(), framedGraph);
 		
-		List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
-		for(Attribute attribute : this.attributes){
-			IAttribute attribute_persist = attribute.convertToRecord(framedGraph);
-			attribute_persist_list.add(attribute_persist);
+		int cnt = 0;
+		Iterator<IPageElement> iter = page_elements.iterator();
+		IPageElement page_element = null;
+		while(iter.hasNext()){
+			iter.next();
+			cnt++;
 		}
-		pageElement.setAttributes(attribute_persist_list);
-		pageElement.setChanged(this.isChanged());
 		
-		List<IPageElement> child_elements_persist = new ArrayList<IPageElement>();
-		for(PageElement elem : this.child_elements){
-			IPageElement child_element = elem.convertToRecord(framedGraph);
-			child_elements_persist.add(child_element);
+		if(cnt == 0){
+			page_element = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getCanonicalName()+","+UUID.randomUUID(), IPageElement.class);
+
+			List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
+			/*for(Attribute attribute : this.attributes){
+				IAttribute attribute_persist = attribute.convertToRecord(framedGraph);
+				attribute_persist_list.add(attribute_persist);
+			}
+			*/
+			//page_element.setAttributes(attribute_persist_list);
+			page_element.setChanged(this.isChanged());
+			
+			/*List<IPageElement> child_elements_persist = new ArrayList<IPageElement>();
+			for(PageElement elem : this.child_elements){
+				IPageElement child_element = elem.convertToRecord(framedGraph);
+				child_elements_persist.add(child_element);
+			}
+			*/
+			//page_element.setChildElements(child_elements_persist);
+			
+			page_element.setCssValues(this.cssValues);
+			page_element.setTagName(this.tagName);
+			page_element.setText(this.text);
+			page_element.setXpath(this.xpath);
+			page_element.setKey(this.key);
+			page_element.setType(this.getClass().getName());
 		}
-		pageElement.setChildElements(child_elements_persist);
-		
-		pageElement.setCssValues(this.cssValues);
-		pageElement.setTagName(this.tagName);
-		pageElement.setText(this.text);
-		pageElement.setXpath(this.xpath);
-		pageElement.setKey(this.key);
-		return pageElement;
+		else{
+			page_element = page_elements.iterator().next();
+		}
+		return page_element;
 	}
 	
 	/**
@@ -564,6 +588,7 @@ public class PageElement implements IPersistable<IPageElement> {
 	 * 
 	 * @return
 	 */
+	@Override
 	public String generateKey() {
 		return "::"+this.getXpath().hashCode()+"::";
 	}
@@ -586,14 +611,14 @@ public class PageElement implements IPersistable<IPageElement> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IPageElement> update(IPageElement existing_obj) {
+	public IPersistable<IPageElement> update() {
 		Iterator<IPageElement> page_element_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
 		while(page_element_iter.hasNext()){
 			page_element_iter.next();
 			cnt++;
 		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		log.info("# of existing page element records with key "+this.getKey() + " :: "+cnt);
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IPageElement page_element = null;
@@ -604,7 +629,7 @@ public class PageElement implements IPersistable<IPageElement> {
 		page_element = this.convertToRecord(connection);
 		connection.save();
 		
-		return page_element;
+		return this;
 	}
 
 	/**
@@ -614,5 +639,41 @@ public class PageElement implements IPersistable<IPageElement> {
 	public Iterable<IPageElement> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, IPageElement.class);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<IPageElement> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
+		return orient_connection.getTransaction().getVertices("key", generated_key, IPageElement.class);
+	}
+	
+	/**
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public PageElement convertFromRecord(IPageElement data) {
+		PageElement page_elem = new PageElement();
+		page_elem.setChanged(data.getChanged());
+		page_elem.setKey(data.getKey());
+		page_elem.setXpath(data.getXpath());
+		page_elem.setText(data.getText());
+		return page_elem;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public PathObject<?> clone() {
+		PageElement page_elem = new PageElement();
+		page_elem.setChanged(this.isChanged());
+		page_elem.setKey(this.getKey());
+		page_elem.setXpath(this.getXpath());
+		//page_elem.setNext(this.getNext());
+
+		return page_elem;
 	}
 }

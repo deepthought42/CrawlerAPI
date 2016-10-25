@@ -6,12 +6,16 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
+import com.minion.persistence.IPathObject;
+import com.minion.persistence.IPersistable;
+import com.minion.persistence.OrientConnectionFactory;
+
 /**
  * 
  * @author Brandon Kindred
  *
  */
-public class PageAlert implements IObjectValuationAccessor {
+public class PageAlert extends PathObject<IPathObject> implements IObjectValuationAccessor {
 	public Page page = null;
 	public String choice;
 	public String message;
@@ -117,5 +121,29 @@ public class PageAlert implements IObjectValuationAccessor {
 	public double getReward() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public IPathObject convertToRecord(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistable<IPathObject> update(IPathObject existing_obj) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Iterable<IPathObject> findByKey(String generated_key) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public PathObject<?> clone() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -2,16 +2,19 @@
 <testng-results skipped="0" failed="0" total="1" passed="1">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="670" started-at="2016-02-22T04:21:00Z" finished-at="2016-02-22T04:21:01Z">
+  <suite name="Default suite" duration-ms="2198" started-at="2016-10-18T23:55:56Z" finished-at="2016-10-18T23:55:59Z">
     <groups>
+      <group name="Path">
+        <method signature="PathTests.createPath()[pri:0, instance:PathTests@5ae63ade]" name="createPath" class="PathTests"/>
+      </group> <!-- Path -->
     </groups>
-    <test name="Default test" duration-ms="670" started-at="2016-02-22T04:21:00Z" finished-at="2016-02-22T04:21:01Z">
-      <class name="test.OrientDbPersistorTests">
-        <test-method status="PASS" signature="ObjectDefinitionSaveTest()[pri:0, instance:test.OrientDbPersistorTests@54a097cc]" name="ObjectDefinitionSaveTest" duration-ms="661" started-at="2016-02-21T23:21:00Z" finished-at="2016-02-21T23:21:01Z">
+    <test name="Default test" duration-ms="2198" started-at="2016-10-18T23:55:56Z" finished-at="2016-10-18T23:55:59Z">
+      <class name="PathTests">
+        <test-method status="PASS" signature="createPath()[pri:0, instance:PathTests@5ae63ade]" name="createPath" duration-ms="2174" started-at="2016-10-18T19:55:56Z" finished-at="2016-10-18T19:55:59Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- ObjectDefinitionSaveTest -->
-      </class> <!-- test.OrientDbPersistorTests -->
+        </test-method> <!-- createPath -->
+      </class> <!-- PathTests -->
     </test> <!-- Default test -->
   </suite> <!-- Default suite -->
 </testng-results>

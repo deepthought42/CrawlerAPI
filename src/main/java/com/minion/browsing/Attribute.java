@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.minion.persistence.IAttribute;
 import com.minion.persistence.IPersistable;
@@ -18,7 +19,7 @@ import com.minion.util.ArrayUtility;
  *
  */
 public class Attribute implements IPersistable<IAttribute> {
-    private static final Logger log = Logger.getLogger(Page.class);
+    private static final Logger log = LoggerFactory.getLogger(Page.class);
 
 	public String key;
 	public String name;
@@ -89,7 +90,7 @@ public class Attribute implements IPersistable<IAttribute> {
 	 */
 	@Override
 	public String generateKey() {
-		return this.name.hashCode()+"";
+		return this.name.hashCode()+":";
 	}
 
 	public String getKey() {
@@ -101,10 +102,17 @@ public class Attribute implements IPersistable<IAttribute> {
 	 */
 	@Override
 	public IAttribute convertToRecord(OrientConnectionFactory connection) {
-		IAttribute attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);
-		attribute.setName(this.name);
-		attribute.setVals(this.vals);
-		attribute.setKey(this.key);
+		Iterator<IAttribute> attributes = findByKey(this.getKey(), connection).iterator();
+		IAttribute attribute = null;
+		if(!attributes.hasNext()){
+			attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);
+			attribute.setName(this.name);
+			attribute.setVals(this.vals);
+			attribute.setKey(this.key);
+		}
+		else{
+			attribute = attributes.next();
+		}
 		
 		return attribute;
 	}
@@ -133,7 +141,7 @@ public class Attribute implements IPersistable<IAttribute> {
 			attribute_iter.next();
 			cnt++;
 		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		log.info("# of existing Attribute records with key "+this.getKey() + " :: "+cnt);
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IAttribute attribute = null;
@@ -141,10 +149,10 @@ public class Attribute implements IPersistable<IAttribute> {
 			attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);	
 		}
 		
-		attribute = this.convertToRecord(connection);
+		this.convertToRecord(connection);
 		connection.save();
 		
-		return attribute;
+		return this;
 	}
 
 	/**
@@ -153,6 +161,14 @@ public class Attribute implements IPersistable<IAttribute> {
 	@Override
 	public Iterable<IAttribute> findByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getVertices("key", generated_key, IAttribute.class);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<IAttribute> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
 		return orient_connection.getTransaction().getVertices("key", generated_key, IAttribute.class);
 	}
 }

@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Page;
-import com.minion.browsing.PathObject;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
@@ -29,17 +28,24 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
 public class Test implements IPersistable<ITest>{
     private static final Logger log = LoggerFactory.getLogger(Test.class);
 
-
-	private String id;
-	
 	private String key; 
 	private String name;
 	private List<TestRecord> records;
 	private Path path;
 	private Page result;
 	private URL domain;
+	private Boolean correct;
+	private boolean isUseful;
+	private boolean spansMultipleDomains = false;
 	
-	public Test(){}
+	/**
+	 * 
+	 */
+	public Test(){
+		this.records = new ArrayList<TestRecord>();
+		this.isUseful = false;
+		this.spansMultipleDomains = false;
+	}
 	
 	/**
 	 * Constructs a test object
@@ -56,20 +62,17 @@ public class Test implements IPersistable<ITest>{
 		this.records = new ArrayList<TestRecord>();
 		this.key = this.generateKey();
 		this.domain = domain;
+		this.correct = null;
+		this.isUseful = false;
+		this.spansMultipleDomains = false;
 	}
 	
-	
-	/**
-	 * Returns test by key
-	 * 
-	 * @return
-	 */
-	public String getId(){
-		return this.id;
+	public Boolean isCorrect(){
+		return this.correct;
 	}
-
-	public void setId(String id){
-		this.id = id;
+	
+	public void setCorrect(Boolean correct){
+		this.correct = correct;
 	}
 	
 	public String getKey(){
@@ -124,10 +127,17 @@ public class Test implements IPersistable<ITest>{
 		return this.result;
 	}
 	
+	/**
+	 * 
+	 * @param result_page
+	 */
 	public void setResult(Page result_page){
 		this.result = result_page;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public boolean equals(Object o){
 		if(o instanceof Test){
@@ -142,27 +152,32 @@ public class Test implements IPersistable<ITest>{
 	 */
 	@Override
 	public ITest convertToRecord(OrientConnectionFactory connection){
-		Iterable<ITest> tests = findByKey(this.getKey());
+		this.setKey(this.generateKey());
+		Iterable<ITest> tests = findByKey(this.getKey(), connection);
+		
 		int cnt = 0;
 		Iterator<ITest> iter = tests.iterator();
 		ITest test = null;
-		while(iter.hasNext()){
-			iter.next();
-			cnt++;
-		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+
+		log.info("# of existing test records with key "+this.getKey() + " :: "+cnt);
 		
-		if(cnt == 0){
-			test = connection.getTransaction().addVertex("class:"+ITest.class.toString()+","+UUID.randomUUID(), ITest.class);
+		if(!iter.hasNext()){
+			test = connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
 		}
+		else{
+			test = iter.next();
+		}
+		
 		test.setPath(this.getPath().convertToRecord(connection));
 		test.setResult(this.getResult().convertToRecord(connection));
 		test.setDomain(this.getDomain().toString());
 		test.setName(this.getName());
+		test.setCorrect(this.isCorrect());
+		
 		for(TestRecord record : this.getRecords()){
 			test.addRecord(record.convertToRecord(connection));
 		}
-		test.setKey(this.generateKey());
+		test.setKey(this.getKey());
 		
 		return test;
 	}
@@ -181,19 +196,19 @@ public class Test implements IPersistable<ITest>{
 			log.info("Set domain to new test object");
 		} catch (MalformedURLException e) {
 			test.setDomain(null);
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
-		log.info("setting key");
+		log.info("setting key to "+itest.getKey());
 		test.setKey(itest.getKey());
 		
 		log.info("setting name");
 		test.setName(itest.getName());
-		
-		log.info("converting path to record");
+		test.setCorrect(itest.getCorrect());
+		log.info("Converting path from record");
 		test.setPath(Path.convertFromRecord(itest.getPath()));
-		//test.setRecords(itest.getRecords());
-		//test.setResult(itest.getResult());
+		//test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
+		test.setResult(Page.convertFromRecord(itest.getResult()));
 		return test;
 		
 	}
@@ -214,15 +229,14 @@ public class Test implements IPersistable<ITest>{
 	 * 
 	 * @return
 	 */
+	@Override
 	public String generateKey() {
 		String path_key = "";
-		log.error("TEST PATH VALUE :: "+this.getPath().getKey());
-		for(PathObject<?> path_obj : this.getPath().getPath()){
-			log.error("TEST PATH -  PATH OBJECT VALUE :: "+path_obj.getData().hashCode());
-			path_key +=this.getPath().getKey()+":";
-		}
 		
-		path_key += this.getResult().hashCode();
+		path_key += this.getPath().generateKey();
+		
+		path_key += this.getResult().generateKey();
+		this.key = path_key;
 		return path_key;
 	}
 	
@@ -231,7 +245,6 @@ public class Test implements IPersistable<ITest>{
 	 */
 	@Override
 	public IPersistable<ITest> create() {
-		System.err.println("SAVING TEST TO ORIENTDB");
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		log.info("Orient database connection factory");
 		
@@ -239,7 +252,7 @@ public class Test implements IPersistable<ITest>{
 		
 		log.info("Convert to record complete for test");
 		orient_connection.save();
-		log.info("TEST SACED TO DATABASE");
+		log.info("TEST SAVED TO DATABASE");
 		return this;
 	}
 
@@ -247,20 +260,22 @@ public class Test implements IPersistable<ITest>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<ITest> update(ITest existing_obj) {
+	public IPersistable<ITest> update() {
+		/*
 		Iterator<ITest> test_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
 		while(test_iter.hasNext()){
 			test_iter.next();
 			cnt++;
 		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
 		
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		*/
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		if(cnt == 0){
-			connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
+		//if(cnt == 0){
+			//connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
 			this.convertToRecord(connection);
-		}
+		//}
 		
 		connection.save();
 		
@@ -278,11 +293,55 @@ public class Test implements IPersistable<ITest>{
 	
 	/**
 	 * {@inheritDoc}
+	 */
+	public static Iterable<ITest> findTestByKey(String generated_key) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public static Iterable<ITest> findTestByKey(String generated_key, OrientConnectionFactory orient_connection) {
+		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<ITest> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
+		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
+	}
+	
+	/**
+	 * {@inheritDoc}
 	 * @throws MalformedURLException 
 	 */
 	public static List<Test> findByUrl(String pageUrl) throws MalformedURLException {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("domain", pageUrl, ITest.class).iterator();
+		
+		log.info("Looking up tests by url" );
+		ArrayList<Test> list = new ArrayList<Test>();
+		int count = 0;
+		while(test_iter.hasNext()){
+			log.info("Inspecting object " + count);
+			ITest itest = test_iter.next();
+			Test test = Test.convertFromRecord(itest);
+			list.add(test);
+			count++;
+		}
+		return list;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * @throws MalformedURLException 
+	 */
+	public static List<Test> findByLandable(boolean isLandable) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("landable", isLandable, ITest.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
 		while(test_iter.hasNext()){
@@ -298,9 +357,40 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public static Iterable<ITest> findByName(String test_name) {
+	public static List<Test> findByName(String test_name) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("name", test_name, ITest.class).iterator();
 		
-		return orient_connection.getTransaction().getVertices("name", test_name, ITest.class);
+		ArrayList<Test> list = new ArrayList<Test>();
+		while(test_iter.hasNext()){
+			ITest itest = test_iter.next();
+			
+			
+			Test test = Test.convertFromRecord(itest);
+			list.add(test);
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * 
+	 * @param test_name
+	 * @return
+	 */
+	public static List<Test> findBySource(String source) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("name", source, ITest.class).iterator();
+		
+		ArrayList<Test> list = new ArrayList<Test>();
+		while(test_iter.hasNext()){
+			ITest itest = test_iter.next();
+			
+			
+			Test test = Test.convertFromRecord(itest);
+			list.add(test);
+		}
+		
+		return list;
 	}
 }

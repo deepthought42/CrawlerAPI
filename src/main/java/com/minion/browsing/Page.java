@@ -4,26 +4,19 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.persistence.IPage;
 import com.minion.persistence.IPageElement;
+import com.minion.persistence.IPathObject;
 import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
 
 /**
@@ -32,17 +25,19 @@ import com.minion.persistence.OrientConnectionFactory;
  * @author Brandon Kindred
  *
  */
-public class Page implements IPersistable<IPage> {
+public class Page extends PathObject<IPage> {
     private static final Logger log = LoggerFactory.getLogger(Page.class);
 
-    private String id;
-    
+    private String key;
+
     private boolean landable = false;
 	private String screenshot = null; 
 	private String src = "";
 	private URL url;
 	
 	private List<PageElement> elements;
+	
+	public Page(){}
 	
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
@@ -63,13 +58,13 @@ public class Page implements IPersistable<IPage> {
 		log.info("GETTING SCREENSHOT");
 		this.screenshot = Browser.getScreenshot(driver);
 
-		log.info("GETTING PAGE SOURCE");
-		this.setSrc(driver.getPageSource());
+		//log.info("GETTING PAGE SOURCE");
+		//this.setSrc(driver.getPageSource());
 		//Document doc = Jsoup.parse(this.src);
 		//this.elements = doc.getAllElements(); 
 
 		log.info("GETTING VISIBLE ELEMENTS");
-		this.elements = getVisibleElements(driver, "//body");
+		this.elements = Browser.getVisibleElements(driver, "//body");
 		
 		log.info("Page object created");
 		
@@ -105,15 +100,15 @@ public class Page implements IPersistable<IPage> {
 		log.info("Page object created");
 		
 	}
-	
-	 public String getId() {
-		 return id;
+    
+	 public String getKey() {
+		 return key;
 	 }
 
-	 public void setId(String id) {
-		 this.id = id;
+	 public void setKey(String key) {
+		 this.key = key;
 	 }
-    
+	 
 	/**
 	 * 
 	 * 
@@ -124,7 +119,7 @@ public class Page implements IPersistable<IPage> {
 	}
 	
 	public void setSrc(String src) {
-		this.src = cleanSrc(src);
+		this.src = Browser.cleanSrc(src);
 	}
 	
 	public List<PageElement> getElements(){
@@ -143,74 +138,26 @@ public class Page implements IPersistable<IPage> {
 	 * @throws UnhandledAlertException
 	 * @throws IOException 
 	 */
-	public boolean checkIfLandable(Browser browser) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+		log.info("Checking if page is landable");
+		
+		Browser browser = new Browser(this.getUrl().toString());
 		browser.getDriver().get(this.getUrl().toString());
-		Page current_page = browser.getPage();
-		if(current_page.equals(this)){
+		//Page current_page = browser.getPage();
+		String src = Browser.cleanSrc(browser.getDriver().getPageSource());
+		boolean landable = false;
+		if(this.getSrc().equals(src)){
+			log.info("Page sources match in check for landability");
 			landable = true;
 		}
-		else{
-			landable = false;
-		}
+		
 		return landable;
 	}
 	
 	public boolean isLandable(){
 		return this.landable;
 	}
-	
-	private static String cleanSrc(String src){
-		//src = src.replaceAll("\\s", "");
-		
-		src = src.replace("<iframe frameborder=\"0\" id=\"rufous-sandbox\" scrolling=\"no\" allowtransparency=\"true\" allowfullscreen=\"true\" style=\"position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: medium none;\"></iframe>",  "");
-		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"993\" height=\"493\"></canvas>","");
-		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"987\" height=\"491\"></canvas>","");
-		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"2284\"></canvas>","");
-		src = src.trim();
-		return src;
-	}
-	
-	/**
-	 * Retreives all elements on a given page that are visible. In this instance we take 
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also 
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *  
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 */
-	public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
-															 throws WebDriverException {
-		
-		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-		log.info("page elements found :: " +pageElements.size());
-		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
-		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
-		if(pageElements.size() <= 0){
-			return elementList;
-		}
 
-		int counter = 0;
-		for(WebElement elem : pageElements){
-			try{
-				log.info("checking visibily and extracting attributes for element " + counter++);
-				Date start = new Date();
-				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-					PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
-					elementList.add(pageElem);
-				}
-				Date end = new Date();
-				
-				log.info("All attributes extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
-				
-			}catch(StaleElementReferenceException e){
-				log.error(e.toString());
-			}
-		}
-		
-		
-		return elementList;
-	}	
 		
 	/**
 	 * Checks if Pages are equal
@@ -261,9 +208,14 @@ public class Page implements IPersistable<IPage> {
         int hash = 1;
         hash = hash * 5 + url.hashCode();
         hash = hash * 17 + src.hashCode();
-        hash = hash * 31 + screenshot.hashCode();
-        for(PageElement element : elements){
-        	hash = hash * 13 + element.hashCode();
+        if(this.screenshot != null){
+        	hash = hash * 31 + screenshot.hashCode();
+        }
+        
+        if(elements != null){
+	        for(PageElement element : elements){
+	        	hash = hash * 13 + element.hashCode();
+	        }
         }
         return hash;
     }
@@ -272,25 +224,47 @@ public class Page implements IPersistable<IPage> {
 	 * Converts Page to IPage for persistence
 	 * @param page
 	 */
+	@Override
 	public IPage convertToRecord(OrientConnectionFactory connection){
-		IPage page = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
-		page.setLandable(this.isLandable());
-		page.setScreenshot(this.getScreenshot());
-		page.setSrc(this.getSrc());
-		page.setUrl(this.getUrl().toString());
-		List<IPageElement> elements = new ArrayList<IPageElement>();
-		for(PageElement elem : this.elements){
-			IPageElement page_elem_persist = elem.convertToRecord(connection);
-			elements.add(page_elem_persist);
+		this.setKey(this.generateKey());
+		Iterable<IPage> pages = findByKey(this.getKey(), connection);
+		
+		int cnt = 0;
+		Iterator<IPage> iter = pages.iterator();
+		IPage page = null;
+		while(iter.hasNext()){
+			iter.next();
+			cnt++;
 		}
-		page.setElements(elements);
-		page.setKey(this.generateKey());
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		
+		if(cnt == 0){
+			page = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
+			page.setLandable(this.isLandable());
+			page.setScreenshot(this.getScreenshot());
+			page.setSrc(this.getSrc());
+			page.setUrl(this.getUrl().toString());
+			page.setType(this.getClass().getName());
+			List<IPageElement> elements = new ArrayList<IPageElement>();
+			/*for(PageElement elem : this.elements){
+				IPageElement page_elem_persist = elem.convertToRecord(connection);
+				elements.add(page_elem_persist);
+			}*/
+			//page.setElements(elements);
+			page.setKey(this.getKey());
+		}
+		else{
+			page = pages.iterator().next();
+		}
+		
+		
 		return page;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public String generateKey() {
 		return this.src.hashCode() + "::";
 	}
@@ -326,14 +300,14 @@ public class Page implements IPersistable<IPage> {
 	}
 
 	@Override
-	public IPersistable<IPage> update(IPage existing_obj) {
+	public IPersistable<IPage> update() {
 		Iterator<IPage> page_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
 		while(page_iter.hasNext()){
 			page_iter.next();
 			cnt++;
 		}
-		log.info("# of existing records with key "+this.generateKey() + " :: "+cnt);
+		log.info("# of existing page records with key "+this.generateKey() + " :: "+cnt);
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IPersistable<IPage> page = null;
@@ -355,9 +329,62 @@ public class Page implements IPersistable<IPage> {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, IPage.class);
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Iterable<IPage> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
+		return orient_connection.getTransaction().getVertices("key", generated_key, IPage.class);
+	}
+	
+	public static Page convertFromRecord(IPage result) {
+		Page page = new Page();
+		
+		page.setKey(result.getKey());
+		page.setLandable(result.isLandable());
+		page.setSrc(result.getSrc());
+		try {
+			page.setUrl(new URL(result.getUrl()));
+		} catch (MalformedURLException e) {
+			page.setUrl(null);
+			e.printStackTrace();
+		}
+		//page.setElements(result.getElements());
+		return page;
+	}
 
-	public Iterable<ITest> findByUrl(String pageUrl) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Page convertFromRecord(IPathObject pathObject) {
+		/*if(pathObject.getType() != null && !pathObject.getType().equals("IPage")){
+			return null;
+		}*/
+		IPage result = (IPage)pathObject;
+		Page page = new Page();
+		
+		page.setKey(result.getKey());
+		page.setLandable(result.isLandable());
+		page.setSrc(result.getSrc());
+		try {
+			page.setUrl(new URL(result.getUrl()));
+		} catch (MalformedURLException e) {
+			page.setUrl(null);
+			e.printStackTrace();
+		}
+		//page.setElements(result.getElements());
+		return page;
+	}
+
+	@Override
+	public PathObject<?> clone() {
+		Page page = new Page();
+		
+		page.setElements(this.getElements());
+		page.setKey(this.generateKey());
+		page.setLandable(this.isLandable());
+		page.setScreenshot(this.getScreenshot());
+		page.setSrc(this.getSrc());
+		page.setUrl(this.getUrl());
+
+		return page;
 	}
 }

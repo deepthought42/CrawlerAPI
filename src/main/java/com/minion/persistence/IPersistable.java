@@ -24,7 +24,7 @@ public interface IPersistable<V> {
 	 * @param existing_obj
 	 * @return
 	 */
-	IPersistable<V> update(V existing_obj);
+	IPersistable<V> update();
 	
 	/**
 	 * Use a key generated and guaranteed to be unique to retrieve all objects which have
@@ -34,4 +34,6 @@ public interface IPersistable<V> {
 	 * @return
 	 */
 	Iterable<V> findByKey(String generated_key);
+
+	Iterable<V> findByKey(String generated_key, OrientConnectionFactory orient_connection);
 }

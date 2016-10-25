@@ -1,9 +1,7 @@
 package com.minion.actors;
 
 import java.io.IOException;
-import java.text.DateFormat;
 
-import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
@@ -12,6 +10,8 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
@@ -28,7 +28,7 @@ import com.minion.structs.Path;
  * @author brandon kindred
  */
 public class Crawler {
-    private static final Logger log = Logger.getLogger(Crawler.class);
+    private static final Logger log = LoggerFactory.getLogger(Crawler.class);
 
 	/**
 	 * Crawls the path for the current BrowserActor.
@@ -39,35 +39,37 @@ public class Crawler {
 	 * @throws IOException 
 	 */
 	public static void crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+		//Page pageNode = null;
 		PageElement last_element = null;
 		
 		//skip first node since we should have already loaded it during initialization
 	  	log.info("crawling path...");
+		for(PathObject<?> current_obj: path.getPath()){
+	  		//log.info("Current path node is a "+current_obj.getClass().getCanonicalName());
 
-		for(PathObject<?> browser_obj: path.getPath()){
-			if(browser_obj.getData() instanceof Page){
+			if(current_obj instanceof Page){
 				log.info("Current path node is a Page");
-				//pageNode = (Page)browser_obj.getData();
+				//pageNode = (Page)current_obj;
 			}
-			else if(browser_obj.getData() instanceof PageElement){
+			else if(current_obj instanceof PageElement){
 				log.info("Current path node is a WebElement");
-				last_element = (PageElement) browser_obj.getData();
+				last_element = (PageElement) current_obj;
 			}
 			//String is action in this context
-			else if(browser_obj.getData() instanceof Action){
+			else if(current_obj instanceof Action){
 				log.info("Current path node is an Action");
 				boolean actionPerformedSuccessfully;
-				Action action = (Action)browser_obj.getData();
-				browser.updatePage( DateFormat.getDateInstance());
+				Action action = (Action)current_obj;
+				//browser.updatePage( DateFormat.getDateInstance());
 				int attempts = 0;
 				do{
 					actionPerformedSuccessfully = performAction(last_element, action.getName(), browser );
 					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 20);
+				}while(!actionPerformedSuccessfully && attempts < 50);
 			}
-			else if(browser_obj.getData() instanceof PageAlert){
+			else if(current_obj instanceof PageAlert){
 				log.info("Current path node is a PageAlert");
-				PageAlert alert = (PageAlert)browser_obj.getData();
+				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
 			}
 		}

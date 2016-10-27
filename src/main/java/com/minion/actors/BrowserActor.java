@@ -40,10 +40,6 @@ public class BrowserActor extends UntypedActor {
 	private UUID uuid = null;
 	private Browser browser = null;
 	private OrientDbPersistor persistor = new OrientDbPersistor();
-	//private ArrayList<Vocabulary> vocabularies = null;
-	
-	//temporary list for vocab labels into it can be determined how best to handle them
-	private String[] vocabLabels = {"html"};
 		
 	/**
 	 * Gets a random number between 0 and size
@@ -183,14 +179,16 @@ public class BrowserActor extends UntypedActor {
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
 				log.info("Creating new Browser");
+		
+				Page result_page = null;
 				
 				if(path.getPath() != null){
 					log.info("crawling path");
-					Crawler.crawlPath(path);
+					result_page = Crawler.crawlPath(path);
 				}
 				 
 				//get current page of browser
-				Page current_page = browser.getPage();
+				Page current_page = result_page;
 				
 				log.info("Getting last page");
 				Page last_page = path.findLastPage();

@@ -15,32 +15,26 @@ public class Tester {
 	private static final Logger log = LoggerFactory.getLogger(Tester.class);
 
 	/**
+	 * Runs an {@code Test} 
 	 * 
 	 * @param test test to be ran
 	 * 
 	 * @pre test != null
 	 * @return
 	 */
-	public TestRecord runTest(Test test){		
+	public static TestRecord runTest(Test test){		
 		assert test != null;
 		
 		log.info("Running test...");
-		Browser browser;
+		boolean passing = false;
 		try {
-			browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString());
-			log.info("crawling path");
-			Crawler.crawlPath(test.getPath());
-			browser.close();
+			Page page = Crawler.crawlPath(test.getPath());
+			passing = test.isTestPassing(page);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		TestRecord test_record = new TestRecord(test, new Date(), checkIfTestPasses(test));
-		return null;
-	}
-	
-	public boolean checkIfTestPasses(Test test){
-		
-		return null;
+		TestRecord test_record = new TestRecord(test, new Date(), passing );
+		return test_record;
 	}
 }

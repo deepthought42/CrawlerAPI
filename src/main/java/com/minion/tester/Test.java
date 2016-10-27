@@ -42,9 +42,9 @@ public class Test implements IPersistable<ITest>{
 	 * 
 	 */
 	public Test(){
-		this.records = new ArrayList<TestRecord>();
-		this.isUseful = false;
-		this.spansMultipleDomains = false;
+		this.setRecords(new ArrayList<TestRecord>());
+		this.setUseful(false);
+		this.setSpansMultipleDomains(false);
 	}
 	
 	/**
@@ -59,12 +59,12 @@ public class Test implements IPersistable<ITest>{
 		
 		this.path = path;
 		this.result = result;
-		this.records = new ArrayList<TestRecord>();
-		this.key = this.generateKey();
+		this.setRecords(new ArrayList<TestRecord>());
+		this.setKey(this.generateKey());
 		this.domain = domain;
 		this.correct = null;
-		this.isUseful = false;
-		this.spansMultipleDomains = false;
+		this.setUseful(false);
+		this.setSpansMultipleDomains(false);
 	}
 	
 	/**
@@ -73,9 +73,9 @@ public class Test implements IPersistable<ITest>{
 	 * @param record
 	 * @return
 	 */
-	public boolean isTestPassing(TestRecord record){
+	public boolean isTestPassing(Page page){
 		
-		return null;
+		return this.getResult().equals(page);
 	}
 	
 	/**
@@ -388,5 +388,21 @@ public class Test implements IPersistable<ITest>{
 	 */
 	public void setResult(Page result_page){
 		this.result = result_page;
+	}
+
+	public boolean isUseful() {
+		return isUseful;
+	}
+
+	public void setUseful(boolean isUseful) {
+		this.isUseful = isUseful;
+	}
+
+	public boolean isSpansMultipleDomains() {
+		return spansMultipleDomains;
+	}
+
+	public void setSpansMultipleDomains(boolean spansMultipleDomains) {
+		this.spansMultipleDomains = spansMultipleDomains;
 	}
 }

@@ -39,7 +39,7 @@ public class Crawler {
 	 * @throws UnhandledAlertException
 	 * @throws IOException 
 	 */
-	public static void crawlPath(Path path) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+	public static Page crawlPath(Path path) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		assert path != null;
 		
 		Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString());
@@ -76,7 +76,9 @@ public class Crawler {
 		}
 		
 	  	log.info("Path crawl completed");
-
+	  	Page page = browser.getPage();
+	  	browser.close();
+	  	return page;
 	}
 	
 	/**

@@ -31,6 +31,7 @@ import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Message;
 import com.minion.tester.Test;
 import com.minion.tester.TestRecord;
+import com.minion.tester.Tester;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -109,7 +110,7 @@ public class TestController {
 	 * @return
 	 */
 	@RequestMapping(path="/runTest", method = RequestMethod.PUT)
-	public @ResponseBody Test updateTest(HttpServletRequest request, 
+	public @ResponseBody TestRecord updateTest(HttpServletRequest request, 
 										 @RequestParam(value="account_key", required=true) String account_key,
 										 @RequestParam(value="test_key", required=true) String test_key){
 
@@ -118,20 +119,9 @@ public class TestController {
 		ITest itest = itest_iter.next();
 		
 		Test test = Test.convertFromRecord(itest);
-		
-		Browser browser;
-		try {
-			browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString());
-			log.info("crawling path");
-			Crawler.crawlPath(test.getPath(), browser);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		TestRecord record = Tester.runTest(test);
 
-		
-
-		return null;
+		return record;
 	}
 
 }

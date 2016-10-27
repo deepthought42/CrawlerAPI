@@ -41,6 +41,7 @@ public class Crawler {
 	 */
 	public static Page crawlPath(Path path) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		assert path != null;
+		log.info("PATH :: "+path);
 		
 		Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString());
 		

@@ -1,5 +1,6 @@
 package com.minion.tester;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -25,8 +26,10 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  * @author Brandon Kindred
  *
  */
-public class Test implements IPersistable<ITest>{
+public class Test implements IPersistable<ITest>, Serializable{
     private static final Logger log = LoggerFactory.getLogger(Test.class);
+
+	private static final long serialVersionUID = -7788619177798333712L;
 
 	private String key; 
 	private String name;

@@ -186,20 +186,18 @@ public class BrowserActor extends UntypedActor {
 					log.info("crawling path");
 					result_page = Crawler.crawlPath(path);
 				}
-				 
-				//get current page of browser
-				Page current_page = result_page;
 				
 				log.info("Getting last page");
 				Page last_page = path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
 				
 				if(last_page.isLandable()){
-					current_page = last_page;
+					//clone path starting at last page in path
+					//Path shortened_path = path.clone());
 				}
 				
-				log.info("Checking equality of page sources " + last_page.equals(current_page));
-				if(last_page.equals(current_page)){
+				log.info("Checking equality of page sources " + last_page.equals(result_page));
+				if(last_page.equals(result_page)){
 			  		log.info("Page sources match(Path Message)");
 			  		path.setIsUseful(false);
 			  	}
@@ -207,7 +205,7 @@ public class BrowserActor extends UntypedActor {
 			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					path.setIsUseful(true);
 					if(path.size() > 1){
-						path.add(current_page);
+						path.add(result_page);
 					}
 
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
@@ -219,7 +217,7 @@ public class BrowserActor extends UntypedActor {
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Sending test to Memory Actor");
-				Test test = new Test(path, current_page, current_page.getUrl());
+				Test test = new Test(path, result_page, result_page.getUrl());
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				//tell memory worker of path

@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.persistence.IPage;
-import com.minion.persistence.IPageElement;
 import com.minion.persistence.IPathObject;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
@@ -143,8 +141,7 @@ public class Page extends PathObject<IPage> {
 		
 		Browser browser = new Browser(this.getUrl().toString());
 		browser.getDriver().get(this.getUrl().toString());
-		//Page current_page = browser.getPage();
-		String src = Browser.cleanSrc(browser.getDriver().getPageSource());
+		//String src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		boolean landable = false;
 		if(this.equals(browser.getPage())){
 			log.info("Pages match in check for landability");
@@ -245,8 +242,8 @@ public class Page extends PathObject<IPage> {
 			page.setSrc(this.getSrc());
 			page.setUrl(this.getUrl().toString());
 			page.setType(this.getClass().getName());
-			List<IPageElement> elements = new ArrayList<IPageElement>();
-			/*for(PageElement elem : this.elements){
+			/*List<IPageElement> elements = new ArrayList<IPageElement>();
+			for(PageElement elem : this.elements){
 				IPageElement page_elem_persist = elem.convertToRecord(connection);
 				elements.add(page_elem_persist);
 			}*/
@@ -310,7 +307,6 @@ public class Page extends PathObject<IPage> {
 		log.info("# of existing page records with key "+this.generateKey() + " :: "+cnt);
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IPersistable<IPage> page = null;
 		if(cnt == 0){
 			connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
 			this.convertToRecord(connection);

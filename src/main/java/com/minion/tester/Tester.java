@@ -2,13 +2,11 @@ package com.minion.tester;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.actors.Crawler;
-import com.minion.browsing.Browser;
 import com.minion.browsing.Page;
 
 public class Tester {

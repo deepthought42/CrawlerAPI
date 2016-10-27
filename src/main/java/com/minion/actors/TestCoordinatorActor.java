@@ -78,16 +78,15 @@ public class TestCoordinatorActor extends UntypedActor {
 				Path path = test.getPath();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
-				Browser browser = new Browser(((Page)(path.getPath().get(0))).getUrl().toString());
 				if(path.getPath() != null){
-					Crawler.crawlPath(path, browser);
+					Crawler.crawlPath(path);
 				}
 				
 				//get current page of browser
 				Page expected_page = test.getResult();
 				Page last_page = path.findLastPage();
 				
-				last_page.setLandable(last_page.checkIfLandable(browser));
+				last_page.setLandable(last_page.checkIfLandable());
 				
 				if(!last_page.equals(expected_page)){
 					log.info("Saving test, for it has changed");

@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.Page;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.ITestRecord;
 import com.minion.persistence.OrientConnectionFactory;
@@ -22,42 +21,12 @@ import com.minion.persistence.OrientConnectionFactory;
 public class TestRecord  implements IPersistable<ITestRecord> {
 	private static final Logger log = LoggerFactory.getLogger(TestRecord.class);
 
-	private String id;
-	
-	private Page result;
 	private Date ran_at;
 	private boolean passes;
-	private Boolean isCorrect;
 	
-	public TestRecord(Page page, Date ran_at, boolean passes){
-		this.result = page;
+	public TestRecord(Test test, Date ran_at, boolean passes){
 		this.ran_at = ran_at;
 		this.passes = passes;
-		this.isCorrect = null;
-	}
-	
-	/**
-	 * Returns test by key
-	 * 
-	 * @return
-	 */
-	public String getId(){
-		return this.id;
-	}
-
-	public void setId(String id){
-		this.id = id;
-	}
-	
-	/**
-	 * @return the path that was observed. This may defer from the actual test path
-	 */
-	public Page getResult(){
-		return result;
-	}
-	
-	public void setResult(Page resulting_page){
-		this.result = resulting_page;
 	}
 	
 	/**
@@ -89,30 +58,14 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	}
 	
 	/**
-	 * Sets the correctness of the test. If the resulting path deviates from the original 
-	 * path then it is incorrect
-	 * 
-	 * @param isCorrect
-	 */
-	public Boolean isCorrect(){
-		return this.isCorrect;
-	}
-	
-	public void setIsCorrect(boolean isCorrect){
-		this.isCorrect = isCorrect;
-	}
-	
-	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public ITestRecord convertToRecord(OrientConnectionFactory connection){
 		ITestRecord testRecord = connection.getTransaction().addVertex(UUID.randomUUID(), ITestRecord.class);
 
-		testRecord.setResult(this.getResult().convertToRecord(connection));
 		testRecord.setPasses(this.getPasses());
 		testRecord.setRanAt(this.getRanAt());
-		testRecord.setCorrect(this.isCorrect());
 		testRecord.setKey(this.generateKey());
 		
 		return testRecord;
@@ -123,7 +76,7 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	 * @return
 	 */
 	public String generateKey() {
-		return this.getResult().generateKey() + ":"+this.getPasses()+":"+this.isCorrect();
+		return this.getRanAt() + ":"+this.getPasses()+":";
 	}
 
 	/**

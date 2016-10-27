@@ -15,11 +15,11 @@ public interface ITestRecord extends IPersistable<ITestRecord> {
 	@Property("key")
 	public void setKey(String key);
 	
-	@Adjacency(label="result")
-	public IPage getResult();
+	@Adjacency(label="test")
+	public ITest getTest();
 	
-	@Adjacency(label="result")
-	public void setResult(IPage page);
+	@Adjacency(label="test")
+	public void setTest(ITest test);
 	
 	@Property("ran_at")
 	public Date getRanAt();
@@ -32,10 +32,4 @@ public interface ITestRecord extends IPersistable<ITestRecord> {
 	
 	@Property("passes")
 	public void setPasses(boolean isPassing);
-	
-	@Property("correct")
-	public Boolean isCorrect();
-	
-	@Property("correct")
-	public void setCorrect(Boolean isCorrect);
 }

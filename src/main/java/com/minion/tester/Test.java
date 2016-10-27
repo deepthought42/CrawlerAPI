@@ -67,72 +67,15 @@ public class Test implements IPersistable<ITest>{
 		this.spansMultipleDomains = false;
 	}
 	
-	public Boolean isCorrect(){
-		return this.correct;
-	}
-	
-	public void setCorrect(Boolean correct){
-		this.correct = correct;
-	}
-	
-	public String getKey(){
-		return this.key;
-	}
-	
-	public void setKey(String key){
-		this.key = key;
-	}
-	
-	public String getName(){
-		return this.name;
-	}
-	
-	public void setName(String name){
-		this.name = name;
-	}
-	
-	public URL getDomain(){
-		return this.domain;
-	}
-	
-	public void setDomain(URL domain){
-		this.domain = domain;
-	}
-	
-	public Path getPath(){
-		return this.path;
-	}
-	
-	public void setPath(Path path){
-		this.path = path;
-	}
-	
-	public void addRecord(TestRecord record){
-		this.records.add(record);
-	}
-	
-	public List<TestRecord> getRecords(){
-		return this.records;
-	}
-	
-	public void setRecords(List<TestRecord> records){
-		this.records = records;
-	}
-	
-	
 	/**
-	 * @return result of running the test. Can be either null or have a {@link Page} set
-	 */
-	public Page getResult(){
-		return this.result;
-	}
-	
-	/**
+	 * Checks if a {@code TestRecord} snapshot of a {@code Test} is passing or not
 	 * 
-	 * @param result_page
+	 * @param record
+	 * @return
 	 */
-	public void setResult(Page result_page){
-		this.result = result_page;
+	public boolean isTestPassing(TestRecord record){
+		
+		return null;
 	}
 	
 	/**
@@ -207,7 +150,7 @@ public class Test implements IPersistable<ITest>{
 		test.setCorrect(itest.getCorrect());
 		log.info("Converting path from record");
 		test.setPath(Path.convertFromRecord(itest.getPath()));
-		//test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
+		test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
 		test.setResult(Page.convertFromRecord(itest.getResult()));
 		return test;
 		
@@ -247,10 +190,7 @@ public class Test implements IPersistable<ITest>{
 	public IPersistable<ITest> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		log.info("Orient database connection factory");
-		
 		this.convertToRecord(orient_connection);
-		
-		log.info("Convert to record complete for test");
 		orient_connection.save();
 		log.info("TEST SAVED TO DATABASE");
 		return this;
@@ -261,22 +201,8 @@ public class Test implements IPersistable<ITest>{
 	 */
 	@Override
 	public IPersistable<ITest> update() {
-		/*
-		Iterator<ITest> test_iter = this.findByKey(this.generateKey()).iterator();
-		int cnt=0;
-		while(test_iter.hasNext()){
-			test_iter.next();
-			cnt++;
-		}
-		
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
-		*/
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		//if(cnt == 0){
-			//connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
-			this.convertToRecord(connection);
-		//}
-		
+		this.convertToRecord(connection);		
 		connection.save();
 		
 		return this;
@@ -392,5 +318,75 @@ public class Test implements IPersistable<ITest>{
 		}
 		
 		return list;
+	}
+	
+	
+	
+	public Boolean isCorrect(){
+		return this.correct;
+	}
+	
+	public void setCorrect(Boolean correct){
+		this.correct = correct;
+	}
+	
+	public String getKey(){
+		return this.key;
+	}
+	
+	public void setKey(String key){
+		this.key = key;
+	}
+	
+	public String getName(){
+		return this.name;
+	}
+	
+	public void setName(String name){
+		this.name = name;
+	}
+	
+	public URL getDomain(){
+		return this.domain;
+	}
+	
+	public void setDomain(URL domain){
+		this.domain = domain;
+	}
+	
+	public Path getPath(){
+		return this.path;
+	}
+	
+	public void setPath(Path path){
+		this.path = path;
+	}
+	
+	public void addRecord(TestRecord record){
+		this.records.add(record);
+	}
+	
+	public List<TestRecord> getRecords(){
+		return this.records;
+	}
+	
+	public void setRecords(List<TestRecord> records){
+		this.records = records;
+	}
+	
+	
+	/**
+	 * @return result of running the test. Can be either null or have a {@link Page} set
+	 */
+	public Page getResult(){
+		return this.result;
+	}
+	
+	/**
+	 * 
+	 * @param result_page
+	 */
+	public void setResult(Page result_page){
+		this.result = result_page;
 	}
 }

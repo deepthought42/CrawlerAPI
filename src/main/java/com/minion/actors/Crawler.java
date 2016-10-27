@@ -39,8 +39,11 @@ public class Crawler {
 	 * @throws UnhandledAlertException
 	 * @throws IOException 
 	 */
-	public static void crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
-		//Page pageNode = null;
+	public static void crawlPath(Path path) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+		assert path != null;
+		
+		Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString());
+		
 		PageElement last_element = null;
 		
 		//skip first node since we should have already loaded it during initialization
@@ -48,7 +51,6 @@ public class Crawler {
 		for(PathObject<?> current_obj: path.getPath()){
 			if(current_obj instanceof Page){
 				log.info("Current path node is a Page");
-				//pageNode = (Page)current_obj;
 			}
 			else if(current_obj instanceof PageElement){
 				log.info("Current path node is a WebElement");
@@ -62,7 +64,7 @@ public class Crawler {
 				//browser.updatePage( DateFormat.getDateInstance());
 				int attempts = 0;
 				do{
-					actionPerformedSuccessfully = performAction(last_element, action.getName(), browser );
+					actionPerformedSuccessfully = performAction(last_element, action.getName(), browser.getDriver() );
 					attempts++;
 				}while(!actionPerformedSuccessfully && attempts < 50);
 			}
@@ -78,64 +80,18 @@ public class Crawler {
 	}
 	
 	/**
-	 * Crawls the path for the current BrowserActor.
-	 * 
-	 * @return
-	 * @throws java.util.NoSuchElementException
-	 * @throws UnhandledAlertException
-	 * @throws IOException 
-	 */
-	public static void crawlPath(Path path, WebDriver driver) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
-		//Page pageNode = null;
-		PageElement last_element = null;
-		
-		//skip first node since we should have already loaded it during initialization
-	  	log.info("crawling path...");
-		for(PathObject<?> current_obj: path.getPath()){
-			if(current_obj instanceof Page){
-				log.info("Current path node is a Page");
-				//pageNode = (Page)current_obj;
-			}
-			else if(current_obj instanceof PageElement){
-				log.info("Current path node is a WebElement");
-				last_element = (PageElement) current_obj;
-			}
-			//String is action in this context
-			else if(current_obj instanceof Action){
-				log.info("Current path node is an Action");
-				boolean actionPerformedSuccessfully;
-				Action action = (Action)current_obj;
-				//browser.updatePage( DateFormat.getDateInstance());
-				int attempts = 0;
-				do{
-					actionPerformedSuccessfully = performAction(last_element, action.getName(), browser );
-					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 50);
-			}
-			else if(current_obj instanceof PageAlert){
-				log.info("Current path node is a PageAlert");
-				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(driver);
-			}
-		}
-		
-	  	log.info("Path crawl completed");
-
-	}
-	
-	/**
 	 * Executes the given {@link ElementAction element action} pair such that
 	 * the action is executed against the element 
 	 * 
 	 * @param elemAction ElementAction pair
 	 * @return whether action was able to be performed on element or not
 	 */
-	private static boolean performAction(PageElement elem, String action, Browser browser) throws UnreachableBrowserException {
-		ActionFactory actionFactory = new ActionFactory(browser.getDriver());
+	private static boolean performAction(PageElement elem, String action, WebDriver driver) throws UnreachableBrowserException {
+		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 		
 		try{
-			WebElement element = browser.getDriver().findElement(By.xpath(elem.getXpath()));
+			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action);
 			
 			log.info("CRAWLER Performed action "+ action

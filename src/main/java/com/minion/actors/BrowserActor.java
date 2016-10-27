@@ -183,10 +183,10 @@ public class BrowserActor extends UntypedActor {
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
 				log.info("Creating new Browser");
-				this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString());
+				
 				if(path.getPath() != null){
 					log.info("crawling path");
-					Crawler.crawlPath(path, browser);
+					Crawler.crawlPath(path);
 				}
 				 
 				//get current page of browser
@@ -196,11 +196,9 @@ public class BrowserActor extends UntypedActor {
 				Page last_page = path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
 				
-				
 				if(last_page.isLandable()){
 					current_page = last_page;
 				}
-				
 				
 				log.info("Checking equality of page sources " + last_page.equals(current_page));
 				if(last_page.equals(current_page)){
@@ -250,7 +248,7 @@ public class BrowserActor extends UntypedActor {
 			  	path.getPath().add(page_obj);
 			  	
 			  	log.info("Crawling path");
-			  	Crawler.crawlPath(path, browser);
+			  	Crawler.crawlPath(path);
 			  	
 			  	log.info("Getting last and current page");
 			  	Page last_page = path.findLastPage();

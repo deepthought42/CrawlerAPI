@@ -113,6 +113,10 @@ public class Browser {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param url
+	 */
 	public void getUrl(String url){
 		try{
 			this.driver.get(url);

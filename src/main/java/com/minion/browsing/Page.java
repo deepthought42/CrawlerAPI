@@ -146,8 +146,8 @@ public class Page extends PathObject<IPage> {
 		//Page current_page = browser.getPage();
 		String src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		boolean landable = false;
-		if(this.getSrc().equals(src)){
-			log.info("Page sources match in check for landability");
+		if(this.equals(browser.getPage())){
+			log.info("Pages match in check for landability");
 			landable = true;
 		}
 		

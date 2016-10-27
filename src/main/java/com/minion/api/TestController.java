@@ -7,11 +7,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,7 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import com.minion.actors.BrowserActor;
+import com.minion.actors.Crawler;
 import com.minion.actors.WorkAllocationActor;
+import com.minion.browsing.Browser;
+import com.minion.browsing.Page;
 import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Message;
@@ -54,7 +60,6 @@ public class TestController {
 			test_list = Test.findByUrl(url);
 		} catch (MalformedURLException e) {
 			log.info("ERROR GETTING TEST ");
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -114,11 +119,18 @@ public class TestController {
 		
 		Test test = Test.convertFromRecord(itest);
 		
-		ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-		Message<Test> message = new Message<Test>(account_key, test);
-		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-		workAllocationActor.tell(message, ActorRef.noSender());
-	
+		Browser browser;
+		try {
+			browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString());
+			log.info("crawling path");
+			Crawler.crawlPath(test.getPath(), browser);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		
+
 		return null;
 	}
 

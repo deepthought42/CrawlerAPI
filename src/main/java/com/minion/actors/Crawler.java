@@ -7,6 +7,7 @@ import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.UnhandledAlertException;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -45,8 +46,6 @@ public class Crawler {
 		//skip first node since we should have already loaded it during initialization
 	  	log.info("crawling path...");
 		for(PathObject<?> current_obj: path.getPath()){
-	  		//log.info("Current path node is a "+current_obj.getClass().getCanonicalName());
-
 			if(current_obj instanceof Page){
 				log.info("Current path node is a Page");
 				//pageNode = (Page)current_obj;
@@ -71,6 +70,52 @@ public class Crawler {
 				log.info("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
+			}
+		}
+		
+	  	log.info("Path crawl completed");
+
+	}
+	
+	/**
+	 * Crawls the path for the current BrowserActor.
+	 * 
+	 * @return
+	 * @throws java.util.NoSuchElementException
+	 * @throws UnhandledAlertException
+	 * @throws IOException 
+	 */
+	public static void crawlPath(Path path, WebDriver driver) throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
+		//Page pageNode = null;
+		PageElement last_element = null;
+		
+		//skip first node since we should have already loaded it during initialization
+	  	log.info("crawling path...");
+		for(PathObject<?> current_obj: path.getPath()){
+			if(current_obj instanceof Page){
+				log.info("Current path node is a Page");
+				//pageNode = (Page)current_obj;
+			}
+			else if(current_obj instanceof PageElement){
+				log.info("Current path node is a WebElement");
+				last_element = (PageElement) current_obj;
+			}
+			//String is action in this context
+			else if(current_obj instanceof Action){
+				log.info("Current path node is an Action");
+				boolean actionPerformedSuccessfully;
+				Action action = (Action)current_obj;
+				//browser.updatePage( DateFormat.getDateInstance());
+				int attempts = 0;
+				do{
+					actionPerformedSuccessfully = performAction(last_element, action.getName(), browser );
+					attempts++;
+				}while(!actionPerformedSuccessfully && attempts < 50);
+			}
+			else if(current_obj instanceof PageAlert){
+				log.info("Current path node is a PageAlert");
+				PageAlert alert = (PageAlert)current_obj;
+				alert.performChoice(driver);
 			}
 		}
 		

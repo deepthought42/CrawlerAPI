@@ -25,8 +25,6 @@ import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.structs.SessionTestTracker;
-import com.minion.structs.TestMapper;
 import com.minion.tester.Test;
 
 /**
@@ -45,9 +43,7 @@ public class BrowserActor extends UntypedActor {
 	//private ArrayList<Vocabulary> vocabularies = null;
 	
 	//temporary list for vocab labels into it can be determined how best to handle them
-		private String[] vocabLabels = {"html"};
-	//SHOULD BE CHANGED!!!
-	
+	private String[] vocabLabels = {"html"};
 		
 	/**
 	 * Gets a random number between 0 and size
@@ -194,24 +190,24 @@ public class BrowserActor extends UntypedActor {
 				}
 				 
 				//get current page of browser
-				//Page current_page = browser.getPage();
-				Page current_page = null;
+				Page current_page = browser.getPage();
 				
 				log.info("Getting last page");
 				Page last_page = path.findLastPage();
-				
 				last_page.setLandable(last_page.checkIfLandable());
 				
+				
+				if(last_page.isLandable()){
+					current_page = last_page;
+				}
+				
+				
 				log.info("Checking equality of page sources " + last_page.equals(current_page));
-				if(last_page.getSrc().equals(Browser.cleanSrc(browser.getDriver().getPageSource()))){
+				if(last_page.equals(current_page)){
 			  		log.info("Page sources match(Path Message)");
-			  		current_page = last_page;
 			  		path.setIsUseful(false);
 			  	}
 			  	else{
-			  		log.info("Page sources don't match(Path Message)");
-			  		current_page = browser.getPage();
-			  		
 			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					path.setIsUseful(true);
 					if(path.size() > 1){
@@ -223,30 +219,17 @@ public class BrowserActor extends UntypedActor {
 			  	}
 				
 	        	this.browser.close();
-				//INSTEAD OF ADDING PAGE TO PATH, SEND PAGE TRANSITION OBJECT MESSAGE TO SITE MAPPER ACTOR FOR PROCESSING.
-				//if(path.getPath().size() > 1){
-				//	path.add(current_page);
-				//}
 				
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
-				log.info("Saving test");
+				log.info("Sending test to Memory Actor");
 				Test test = new Test(path, current_page, current_page.getUrl());
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-				
-				//final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-				//path_expansion_actor.tell(path_msg, getSelf() );
-
-				//add test to sequences for session
-				SessionTestTracker seqTracker = SessionTestTracker.getInstance();
-				TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-				testMap.addTest(test);
 				
 				//tell memory worker of path
 				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 				
 				//tell memory worker of path
-				log.info("Saving test");
 				memory_actor.tell(test_msg, getSelf() );
 
 				//broadcast path

@@ -20,7 +20,7 @@ import com.minion.persistence.OrientConnectionFactory;
  *
  */
 public class TestRecord  implements IPersistable<ITestRecord> {
-	private static final Logger log = LoggerFactory.getLogger(Test.class);
+	private static final Logger log = LoggerFactory.getLogger(TestRecord.class);
 
 	private String id;
 	
@@ -143,7 +143,7 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<ITestRecord> update(ITestRecord existing_obj) {
+	public IPersistable<ITestRecord> update() {
 		Iterator<ITestRecord> page_iter = this.findByKey(this.generateKey()).iterator();
 		int cnt=0;
 		while(page_iter.hasNext()){
@@ -184,6 +184,5 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	public static List<TestRecord> convertFromRecord(Iterator<ITestRecord> records) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-	
+	}	
 }

@@ -45,6 +45,7 @@ public class Test implements IPersistable<ITest>{
 		this.setRecords(new ArrayList<TestRecord>());
 		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
+		this.setGroups(new ArrayList<String>());
 	}
 	
 	/**
@@ -65,6 +66,7 @@ public class Test implements IPersistable<ITest>{
 		this.correct = null;
 		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
+		this.setGroups(new ArrayList<String>());
 	}
 	
 	/**
@@ -115,6 +117,7 @@ public class Test implements IPersistable<ITest>{
 		test.setDomain(this.getDomain().toString());
 		test.setName(this.getName());
 		test.setCorrect(this.isCorrect());
+		test.setGroups(this.getGroups());
 		
 		for(TestRecord record : this.getRecords()){
 			test.addRecord(record.convertToRecord(connection));
@@ -146,6 +149,8 @@ public class Test implements IPersistable<ITest>{
 		test.setPath(Path.convertFromRecord(itest.getPath()));
 		test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
 		test.setResult(Page.convertFromRecord(itest.getResult()));
+		test.setGroups(itest.getGroups());
+		
 		return test;
 	}
 	
@@ -223,7 +228,7 @@ public class Test implements IPersistable<ITest>{
 	 */
 	public static Iterable<ITest> findTestByGroup(String group) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", group, ITest.class);
+		return orient_connection.getTransaction().getVertices("groups", group, ITest.class);
 	}
 	
 	/**

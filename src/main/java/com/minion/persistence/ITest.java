@@ -1,6 +1,7 @@
 package com.minion.persistence;
 
 import java.util.Iterator;
+import java.util.List;
 
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
@@ -68,6 +69,22 @@ import com.minion.tester.TestRecord;
 	 */
 	@Property("correct")
 	public void setCorrect(Boolean correct);
+	
+	/**
+	 * Gets the correctness value of the test
+	 * 
+	 * @return Correctness value. Null indicates value is unset.
+	 */
+	@Property("groups")
+	public List<String> getGroups();
+	
+	/**
+	 * Sets correctness value of test
+	 * 
+	 * @param correctness value
+	 */
+	@Property("groups")
+	public void setGroups(List<String> groups);
 	
 	/**
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"

@@ -38,10 +38,11 @@ public class TestController {
 	/**
 	 * Retrieves list of all tests from the database 
 	 * @param url
-	 * @return
+	 * 
+	 * @return list of tests previously discovered for given url
 	 */
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody List<Test> getTests(HttpServletRequest request, 
+	public @ResponseBody List<Test> getTestByUrl(HttpServletRequest request, 
 			   								 @RequestParam(value="url", required=true) String url) {
 		List<Test> test_list = new ArrayList<Test>();
 		try {
@@ -91,15 +92,14 @@ public class TestController {
 	}
 	
 	/**
-	 * Updates the correctness of a test with the given test key
+	 * Runs test with a given key
 	 * 
-	 * @param test
+	 * @param key
 	 * @return
 	 */
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody TestRecord runTest(@PathVariable("key") String key){
 		System.out.println("RUNNING TEST WITH KEY : " + key);
-		//OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findTestByKey(key).iterator();
 		ITest itest = itest_iter.next();
 
@@ -109,25 +109,102 @@ public class TestController {
 
 		return record;
 	}
-	
+
 	/**
-	 * Updates the correctness of a test with the given test key
+	 * Finds all tests by group and runs them
 	 * 
-	 * @param test
-	 * @return
+	 * @param group name of group that is associated with tests that should be ran
+	 * @param url domain that group should be ran for
+	 * 
+	 * @return {@link TestRecord records} that define the results of the tests. 
 	 */
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTestByGroup(@PathVariable("group") String group){
+	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
+														@RequestParam(value="url", required=true) String url){
 		System.out.println("RUNNING TEST IN GROUP  : " + group);
-		//OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> itest_iter = Test.findTestByGroup(group).iterator();
+		
+		List<Test> test_list = new ArrayList<Test>();
+		List<Test> group_list = new ArrayList<Test>();
+		
+		try {
+			test_list = Test.findByUrl(url);
+			
+			for(Test test : test_list){
+				if(test.getGroups() != null && test.getGroups().contains(group)){
+					group_list.add(test);
+				}
+			}
+		} catch (MalformedURLException e) {
+			log.info("ERROR GETTING TEST ");
+			e.printStackTrace();
+		}
+		
+		List<TestRecord> group_records = new ArrayList<TestRecord>();
+		
+		for(Test group_test : group_list){
+			TestRecord record = Tester.runTest(group_test);
+			group_records.add(record);
+		}
+		return group_records;
+	}
+	
+	/**
+	 * Adds given group to test with given key
+	 * 
+	 * @param group String representing name of group to add to test
+	 * @param test_key key for test that will have group added to it
+	 * 	
+	 * @return the updated test
+	 */
+	@RequestMapping(path="/addGroup/{group}/{test_key}", method = RequestMethod.POST)
+	public @ResponseBody Test addGroupToTest(@PathVariable("group") String group,
+											 @PathVariable("test_key") String test_key){
+		System.out.println("Addint GROUP to test  : " + group);
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+
+		Iterator<ITest> itest_iter = Test.findTestByKey(test_key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
+		List<String> group_list = itest.getGroups();
+		if(group_list == null){
+			group_list = new ArrayList<String>();
+		}
+		
+		if(!group_list.contains(group)){
+			log.info("group list doesnt contain group : " +group);
+			group_list.add(group);
+			itest.setGroups(group_list);
+		}
+		orient_connection.save();
+		
+		return Test.convertFromRecord(itest);
+	}
+	
 
-		Test test = Test.convertFromRecord(itest);
-		log.info("Received Test :: " + test);
-		TestRecord record = Tester.runTest(test);
-
-		return record;
+	/**
+	 * Retrieves list of all tests from the database 
+	 * @param url
+	 * 
+	 * @return
+	 */
+	@RequestMapping(path="/groups", method = RequestMethod.GET)
+	public @ResponseBody List<String> getGroups(HttpServletRequest request, 
+			   								 @RequestParam(value="url", required=true) String url) {
+		List<Test> test_list = new ArrayList<Test>();
+		List<String> groups = new ArrayList<String>();
+		try {
+			test_list = Test.findByUrl(url);
+			
+			for(Test test : test_list){
+				if(test.getGroups() != null){
+					groups.addAll(test.getGroups());
+				}
+			}
+		} catch (MalformedURLException e) {
+			log.info("ERROR GETTING TEST ");
+			e.printStackTrace();
+		}
+		
+		return groups;
 	}
 }
 

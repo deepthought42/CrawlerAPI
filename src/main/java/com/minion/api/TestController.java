@@ -1,7 +1,7 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,13 +76,13 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
-	@RequestMapping(path="/updateCorrectness", method = RequestMethod.PUT)
+	@RequestMapping(path="/updateCorrectness/{key}", method=RequestMethod.PUT)
 	public @ResponseBody Test updateTest(HttpServletRequest request, 
-										 @RequestParam(value="test_key", required=true) String test_key, 
+										 @PathVariable(value="key") String key, 
 										 @RequestParam(value="correct", required=true) boolean correct){
-
+		System.out.println("updating correctness of test with key : " +key);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> itest_iter = Test.findTestByKey(test_key, orient_connection).iterator();
+		Iterator<ITest> itest_iter = Test.findTestByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
 		orient_connection.save();
@@ -96,24 +96,39 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
-	@RequestMapping(path="/runTest", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTest(HttpServletRequest request,
-										 @RequestBody Test test){
-
+	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
+	public @ResponseBody TestRecord runTest(@PathVariable("key") String key){
+		System.out.println("RUNNING TEST WITH KEY : " + key);
 		//OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		//Iterator<ITest> itest_iter = Test.findTestByKey(test_key, orient_connection).iterator();
-		//ITest itest = itest_iter.next();
-		Gson gson = new Gson();
+		Iterator<ITest> itest_iter = Test.findTestByKey(key).iterator();
+		ITest itest = itest_iter.next();
 
-	    Test test_pojo = gson.fromJson(test, Test.class);
-
-		//Test test = Test.convertFromRecord(itest);
+		Test test = Test.convertFromRecord(itest);
 		log.info("Received Test :: " + test);
 		TestRecord record = Tester.runTest(test);
 
 		return record;
 	}
+	
+	/**
+	 * Updates the correctness of a test with the given test key
+	 * 
+	 * @param test
+	 * @return
+	 */
+	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
+	public @ResponseBody TestRecord runTestByGroup(@PathVariable("group") String group){
+		System.out.println("RUNNING TEST IN GROUP  : " + group);
+		//OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> itest_iter = Test.findTestByGroup(group).iterator();
+		ITest itest = itest_iter.next();
 
+		Test test = Test.convertFromRecord(itest);
+		log.info("Received Test :: " + test);
+		TestRecord record = Tester.runTest(test);
+
+		return record;
+	}
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)

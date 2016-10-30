@@ -217,7 +217,7 @@ public class BrowserActor extends UntypedActor {
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Sending test to Memory Actor");
-				Test test = new Test(path, result_page, result_page.getUrl());
+				Test test = new Test(path, result_page, result_page.getUrl().getHost());
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				//tell memory worker of path
@@ -250,15 +250,12 @@ public class BrowserActor extends UntypedActor {
 			  	Page last_page = path.findLastPage();
 			  	
 			  	Page current_page = null;
-			  	if(last_page != null && last_page.getSrc().equals(Browser.cleanSrc(browser.getDriver().getPageSource()))){
-			  		log.info("Page sources match");
+			  	if(last_page != null && last_page.getSrc().equals(Browser.cleanSrc(browser.getDriver().getPageSource())) && path.getPath().size() > 1){
 			  		current_page = last_page;
 			  		path.setIsUseful(false);
 			  	}
 			  	else{
-			  		log.info("Page sources don't match");
 			  		current_page = browser.getPage();
-			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE");
 					path.setIsUseful(true);
 					if(path.size() > 1){
 						path.add(current_page);
@@ -270,8 +267,7 @@ public class BrowserActor extends UntypedActor {
 			  	}
 			  	this.browser.close();
 
-				Test test = new Test(path, current_page, current_page.getUrl());
-				//broadcast path
+				Test test = new Test(path, current_page, current_page.getUrl().getHost());
 				PastPathExperienceController.broadcastTestExperience(test);
 				
 				log.info("Saving test");

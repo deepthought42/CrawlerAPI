@@ -29,10 +29,7 @@ public class EntryPoint {
         SpringApplication.run(EntryPoint.class, args);
         
         final ActorSystem system = ActorSystem.create("Minion");
-	}
-	
-	
-	
+   	}
 }
 
 

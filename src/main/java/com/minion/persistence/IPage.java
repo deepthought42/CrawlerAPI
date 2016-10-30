@@ -1,10 +1,5 @@
 package com.minion.persistence;
 
-import java.net.URL;
-import java.util.Iterator;
-import java.util.List;
-
-import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
@@ -29,7 +24,7 @@ import com.minion.browsing.Page;
 	public void setLandable(boolean isLandable);
 	
 	@Property("screenshot")
-	public URL getScreenshot();
+	public String getScreenshot();
 	
 	@Property("screenshot")
 	public void setScreenshot(String screenshotUrl);

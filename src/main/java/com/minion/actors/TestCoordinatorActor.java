@@ -91,7 +91,7 @@ public class TestCoordinatorActor extends UntypedActor {
 				if(!last_page.equals(expected_page)){
 					log.info("Saving test, for it has changed");
 					
-					Test test_new = new Test(path, expected_page, expected_page.getUrl());
+					Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test_new);
 					
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor");

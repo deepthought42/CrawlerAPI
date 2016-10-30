@@ -1,8 +1,6 @@
 package com.minion.tester;
 
-import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -26,20 +24,19 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  * @author Brandon Kindred
  *
  */
-public class Test implements IPersistable<ITest>, Serializable{
+public class Test implements IPersistable<ITest>{
     private static final Logger log = LoggerFactory.getLogger(Test.class);
-
-	private static final long serialVersionUID = -7788619177798333712L;
-
+    
 	private String key; 
 	private String name;
 	private List<TestRecord> records;
 	private Path path;
 	private Page result;
-	private URL domain;
+	private String domain;
 	private Boolean correct;
 	private boolean isUseful;
 	private boolean spansMultipleDomains = false;
+	private List<String> groups;
 	
 	/**
 	 * 
@@ -57,7 +54,7 @@ public class Test implements IPersistable<ITest>, Serializable{
 	 * 
 	 * @pre path != null
 	 */
-	public Test(Path path, Page result, URL domain){
+	public Test(Path path, Page result, String domain){
 		assert path != null;
 		
 		this.path = path;
@@ -77,7 +74,6 @@ public class Test implements IPersistable<ITest>, Serializable{
 	 * @return
 	 */
 	public boolean isTestPassing(Page page){
-		
 		return this.getResult().equals(page);
 	}
 	
@@ -137,13 +133,8 @@ public class Test implements IPersistable<ITest>, Serializable{
 		Test test = new Test();
 		
 		log.info("converting record with domain : " + itest.getDomain());
-		try {
-			test.setDomain(new URL(itest.getDomain()));
-			log.info("Set domain to new test object");
-		} catch (MalformedURLException e) {
-			test.setDomain(null);
-			//e.printStackTrace();
-		}
+
+		test.setDomain(itest.getDomain());
 		
 		log.info("setting key to "+itest.getKey());
 		test.setKey(itest.getKey());
@@ -156,7 +147,6 @@ public class Test implements IPersistable<ITest>, Serializable{
 		test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
 		test.setResult(Page.convertFromRecord(itest.getResult()));
 		return test;
-		
 	}
 	
 	/**
@@ -226,6 +216,14 @@ public class Test implements IPersistable<ITest>, Serializable{
 	public static Iterable<ITest> findTestByKey(String generated_key) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
+	}
+	
+	/**
+	 * Looks up tests by group
+	 */
+	public static Iterable<ITest> findTestByGroup(String group) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getVertices("key", group, ITest.class);
 	}
 	
 	/**
@@ -349,11 +347,11 @@ public class Test implements IPersistable<ITest>, Serializable{
 		this.name = name;
 	}
 	
-	public URL getDomain(){
+	public String getDomain(){
 		return this.domain;
 	}
 	
-	public void setDomain(URL domain){
+	public void setDomain(String domain){
 		this.domain = domain;
 	}
 	
@@ -407,5 +405,17 @@ public class Test implements IPersistable<ITest>, Serializable{
 
 	public void setSpansMultipleDomains(boolean spansMultipleDomains) {
 		this.spansMultipleDomains = spansMultipleDomains;
+	}
+
+	public List<String> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(List<String> groups) {
+		this.groups = groups;
+	}
+	
+	public boolean addGroup(String group){
+		return this.groups.add(group);
 	}
 }

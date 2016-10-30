@@ -198,52 +198,6 @@ public class Path implements IPersistable<IPath> {
 	}*/
 	
 	/**
-	 * Produces all possible element, action combinations that can be produced from the given path
-	 * 
-	 * @throws MalformedURLException
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 */
-	public static ArrayList<Path> expandPath(Path path)  {
-		log.info( " EXPANDING PATH...");
-		ArrayList<Path> pathList = new ArrayList<Path>();
-		
-		//get last page
-		Page page = path.findLastPage();
-		if(page == null){
-			return null;
-		}
-
-		String[] actions = ActionFactory.getActions();
-
-		List<PageElement> page_elements = page.getElements();//  .getVisibleElements(webdriver, "");
-		log.info("Expected number of paths : " + (page_elements.size()*actions.length));
-		
-		//iterate over all elements
-		int path_count = 0;
-		for(PageElement page_element : page_elements){
-			//iterate over all actions
-			for(String action : actions){
-				Path action_path = Path.clone(path);
-				Action action_obj = new Action(action);
-				
-				log.info("Constructing path object " + path_count + " for expand path");
-				action_path.add(page_element);
-
-				action_path.add(action_obj);
-				log.info("Setting clone path key to :: " + action_path.generateKey());
-				action_path.setKey(action_path.generateKey());
-				pathList.add(action_path);
-				path_count++;
-			}			
-		}
-		
-		log.info("# of Paths added : "+path_count);
-		
-		return pathList;
-	}
-	
-	/**
 	 * Checks if the path has 2 sequential elements that appear in more than 1 location
 	 * 
 	 * @param path
@@ -254,15 +208,15 @@ public class Path implements IPersistable<IPath> {
 			return false;
 		}
 		
-		PathObject<?> path_obj = path.getPath();
+		List<PathObject<?>> path_obj = path.getPath();
 		Page page = null;
 		do {
-			PathObject<?> path_obj = path.getPath();
+			//PathObject<?> path_obj = path.getPath();
 			
 			do{
 				if(path_obj	 instanceof Page){
 					log.info("last page acquired");
-					page = (Page)path_obj.getData();
+					page = (Page)path_obj;
 					
 					if(path_obj.equals(path)){
 						return true;

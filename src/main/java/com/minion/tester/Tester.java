@@ -9,6 +9,11 @@ import org.slf4j.LoggerFactory;
 import com.minion.actors.Crawler;
 import com.minion.browsing.Page;
 
+/**
+ * 
+ * @author Brandon Kindred
+ *
+ */
 public class Tester {
 	private static final Logger log = LoggerFactory.getLogger(Tester.class);
 

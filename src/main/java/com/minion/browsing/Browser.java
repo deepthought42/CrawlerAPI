@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
-import org.jsoup.nodes.Element;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -21,11 +21,14 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.UnreachableBrowserException;
+import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -41,8 +44,9 @@ public class Browser {
 	private WebDriver driver;
 	
 	public Browser(String url) throws IOException {
-		log.info(" -> URL :: "+url);
-		this.driver = openWithFirefox(url);
+		//log.info(" -> URL :: "+url);
+		this.driver = openWithChrome(url);
+		//this.driver = openWithFirefox(url);
 		//this.driver = openWithPhantomjs(url);
 		this.driver.get(url);
 		//page = new Page(this.driver, DateFormat.getDateInstance());
@@ -73,15 +77,13 @@ public class Browser {
 	}
 	
 	public static String cleanSrc(String src){
-		//src = src.replaceAll("\\s", "");
-
-		src = src.replace("<iframe frameborder=\"0\" id=\"rufous-sandbox\" scrolling=\"no\" allowtransparency=\"true\" allowfullscreen=\"true\" style=\"position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: medium none;\"></iframe>",  "");
-		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"993\" height=\"493\"></canvas>","");
-		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"987\" height=\"491\"></canvas>","");
-		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"2284\"></canvas>","");
-		src = src.replace("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"4031\"></canvas>","");
-		src = src.trim();
-		return src;
+		src = src.replaceAll("\\s", "");
+		
+		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
+	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+	    return p.matcher(src).replaceAll("");
+	    
+		//return src;
 	}
 
 	/**
@@ -130,12 +132,68 @@ public class Browser {
 	 * open new firefox browser
 	 * 
 	 * @param url
-	 * @return
+	 * @return firefox web driver
 	 */
 	public static WebDriver openWithFirefox(String url){
+		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
+
 		log.info("Opening Firefox WebDriver connection using URL : " +url);
-		FirefoxProfile firefoxProfile = new FirefoxProfile();
-		WebDriver driver = new FirefoxDriver(firefoxProfile);
+		//FirefoxProfile firefoxProfile = new FirefoxProfile();
+	    DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+
+		WebDriver driver = new FirefoxDriver(capabilities);
+		log.info("firefox opened");
+		return driver;
+	}
+	
+	/**
+	 * open new Safari browser window
+	 * 
+	 * @param url
+	 * @return safari web driver
+	 */
+	public static WebDriver openWithSafari(String url){
+		log.info("Opening Firefox WebDriver connection using URL : " +url);
+		//FirefoxProfile firefoxProfile = new FirefoxProfile();
+	    DesiredCapabilities capabilities = DesiredCapabilities.safari();
+
+		WebDriver driver = new SafariDriver(capabilities);
+		log.info("firefox opened");
+		return driver;
+	}
+	
+	/**
+	 * Opens internet explorer browser window
+	 * 
+	 * @param url
+	 * @return internet explorer web driver
+	 */
+	public static WebDriver openWithInternetExplorer(String url){
+		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
+
+		log.info("Opening Firefox WebDriver connection using URL : " +url);
+		//FirefoxProfile firefoxProfile = new FirefoxProfile();
+	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
+
+		WebDriver driver = new InternetExplorerDriver(capabilities);
+		log.info("firefox opened");
+		return driver;
+	}
+	
+	/**
+	 * open new Chrome browser window
+	 * 
+	 * @param url
+	 * @return Chrome web driver
+	 */
+	public static WebDriver openWithChrome(String url){
+		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver_win32\\chromedriver.exe");
+
+		log.info("Opening Firefox WebDriver connection using URL : " +url);
+		//FirefoxProfile firefoxProfile = new FirefoxProfile();
+	    DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
+
+		WebDriver driver = new ChromeDriver(capabilities);
 		log.info("firefox opened");
 		return driver;
 	}

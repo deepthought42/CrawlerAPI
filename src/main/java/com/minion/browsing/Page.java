@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.persistence.IPage;
-import com.minion.persistence.IPathObject;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
 
@@ -27,7 +26,7 @@ public class Page extends PathObject<IPage> {
     private static final Logger log = LoggerFactory.getLogger(Page.class);
 
     private String key;
-
+    private String browser;
     private boolean landable = false;
 	private String screenshot = null; 
 	private String src = "";
@@ -48,18 +47,13 @@ public class Page extends PathObject<IPage> {
 	 */
 	public Page(WebDriver driver) throws MalformedURLException, IOException{
 		log.info("setting source");
-		setSrc(driver.getPageSource());
+		this.setSrc(Browser.cleanSrc(driver.getPageSource()));
 
 		log.info("Page URL :: "+driver.getCurrentUrl());
 		this.url = new URL(driver.getCurrentUrl().replace("/#",""));
 		
 		log.info("GETTING SCREENSHOT");
 		this.screenshot = Browser.getScreenshot(driver);
-
-		//log.info("GETTING PAGE SOURCE");
-		//this.setSrc(driver.getPageSource());
-		//Document doc = Jsoup.parse(this.src);
-		//this.elements = doc.getAllElements(); 
 
 		log.info("GETTING VISIBLE ELEMENTS");
 		this.elements = Browser.getVisibleElements(driver, "//body");
@@ -88,9 +82,7 @@ public class Page extends PathObject<IPage> {
 		this.screenshot = base64Screenshot; //Browser.getScreenshot(driver);
 
 		log.info("GETTING PAGE SOURCE");
-		this.setSrc(pageSource);
-		//Document doc = Jsoup.parse(this.src);
-		//this.elements = doc.getAllElements(); 
+		this.setSrc(Browser.cleanSrc(pageSource));
 
 		log.info("GETTING VISIBLE ELEMENTS");
 		this.elements = elements;//getVisibleElements(driver, "//body");
@@ -171,17 +163,17 @@ public class Page extends PathObject<IPage> {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-        log.info(this.elements.size() + " :: "+ that.elements.size());
-        log.info("Do screenshots match? : "+this.screenshot.equals(that.screenshot));
+        //log.info(this.elements.size() + " :: "+ that.elements.size());
+        log.info("Do screenshots match? : "+this.screenshot.equals(that.getScreenshot()));
         log.info("sources match? : " +(this.getSrc().length() == that.getSrc().length()));
-        
-    	log.info("PAGE URLs ARE EQUAL? :: "+this.url+"=="+that.url +" :: ");
+        log.info("Source 1: " +this.getSrc());
+        log.info("Source 2: " +that.getSrc());
+    	log.info("PAGE URLs ARE EQUAL? :: "+this.url+" == "+that.url +" :: ");
     	log.info("urls equal?" + this.url.equals(that.url));
 
     	log.info("PAGE SRCs ARE EQUAL? :: "+this.getSrc().equals(that.getSrc()));
     	//return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
-		return (this.elements.size() == that.elements.size() &&
-				this.url.equals(that.url) 
+		return (this.url.equals(that.url) 
 				&& this.getSrc().equals(that.getSrc())
 				&& this.screenshot.equals(that.screenshot));
 				
@@ -216,47 +208,6 @@ public class Page extends PathObject<IPage> {
         }
         return hash;
     }
-	
-	/**
-	 * Converts Page to IPage for persistence
-	 * @param page
-	 */
-	@Override
-	public IPage convertToRecord(OrientConnectionFactory connection){
-		this.setKey(this.generateKey());
-		Iterable<IPage> pages = findByKey(this.getKey(), connection);
-		
-		int cnt = 0;
-		Iterator<IPage> iter = pages.iterator();
-		IPage page = null;
-		while(iter.hasNext()){
-			iter.next();
-			cnt++;
-		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
-		
-		if(cnt == 0){
-			page = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
-			page.setLandable(this.isLandable());
-			page.setScreenshot(this.getScreenshot());
-			page.setSrc(this.getSrc());
-			page.setUrl(this.getUrl().toString());
-			page.setType(this.getClass().getName());
-			/*List<IPageElement> elements = new ArrayList<IPageElement>();
-			for(PageElement elem : this.elements){
-				IPageElement page_elem_persist = elem.convertToRecord(connection);
-				elements.add(page_elem_persist);
-			}*/
-			//page.setElements(elements);
-			page.setKey(this.getKey());
-		}
-		else{
-			page = pages.iterator().next();
-		}
-		
-		
-		return page;
-	}
 	
 	/**
 	 * {@inheritDoc}
@@ -336,7 +287,7 @@ public class Page extends PathObject<IPage> {
 	
 	public static Page convertFromRecord(IPage result) {
 		Page page = new Page();
-		
+		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setLandable(result.isLandable());
 		page.setSrc(result.getSrc());
@@ -346,30 +297,48 @@ public class Page extends PathObject<IPage> {
 			page.setUrl(null);
 			e.printStackTrace();
 		}
-		//page.setElements(result.getElements());
+
 		return page;
 	}
-
-	public static Page convertFromRecord(IPathObject pathObject) {
-		/*if(pathObject.getType() != null && !pathObject.getType().equals("IPage")){
-			return null;
-		}*/
-		IPage result = (IPage)pathObject;
-		Page page = new Page();
+	
+	/**
+	 * Converts Page to IPage for persistence
+	 * 
+	 * @param page
+	 */
+	@Override
+	public IPage convertToRecord(OrientConnectionFactory connection){
+		this.setKey(this.generateKey());
+		Iterable<IPage> pages = findByKey(this.getKey(), connection);
 		
-		page.setKey(result.getKey());
-		page.setLandable(result.isLandable());
-		page.setSrc(result.getSrc());
-		try {
-			page.setUrl(new URL(result.getUrl()));
-		} catch (MalformedURLException e) {
-			page.setUrl(null);
-			e.printStackTrace();
+		int cnt = 0;
+		Iterator<IPage> iter = pages.iterator();
+		IPage page = null;
+		while(iter.hasNext()){
+			iter.next();
+			cnt++;
 		}
-		//page.setElements(result.getElements());
+		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
+		
+		if(cnt == 0){
+			page = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
+			page.setLandable(this.isLandable());
+			page.setScreenshot(this.getScreenshot());
+			page.setSrc(this.getSrc());
+			page.setUrl(this.getUrl().toString());
+			page.setType(this.getClass().getName());
+			page.setKey(this.getKey());
+		}
+		else{
+			page = pages.iterator().next();
+		}
+
 		return page;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public PathObject<?> clone() {
 		Page page = new Page();

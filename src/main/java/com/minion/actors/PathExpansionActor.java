@@ -17,7 +17,6 @@ import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
-import com.minion.browsing.PathObject;
 import com.minion.browsing.actions.Action;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
@@ -112,7 +111,7 @@ public class PathExpansionActor extends UntypedActor {
 					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 					for(Path expanded : pathExpansions){
-						Test new_test = new Test(expanded, null,  path.findLastPage().getUrl());
+						Test new_test = new Test(expanded, null,  path.findLastPage().getUrl().getHost());
 						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
@@ -156,7 +155,7 @@ public class PathExpansionActor extends UntypedActor {
 						path.getPath().add(last_page);
 					}
 					// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
-					Test test = new Test(path, last_page, last_page.getUrl());
+					Test test = new Test(path, last_page, last_page.getUrl().getHost());
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 					if(!testMap.containsTest(test)){

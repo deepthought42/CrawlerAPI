@@ -98,7 +98,7 @@ public class Test implements IPersistable<ITest>{
 	public ITest convertToRecord(OrientConnectionFactory connection){
 		this.setKey(this.generateKey());
 		Iterable<ITest> tests = findByKey(this.getKey(), connection);
-		
+		log.info("converting test to record");
 		int cnt = 0;
 		Iterator<ITest> iter = tests.iterator();
 		ITest test = null;
@@ -112,7 +112,9 @@ public class Test implements IPersistable<ITest>{
 			test = iter.next();
 		}
 		
+		log.info("setting test properties");
 		test.setPath(this.getPath().convertToRecord(connection));
+		log.info("setting test result");
 		test.setResult(this.getResult().convertToRecord(connection));
 		test.setDomain(this.getDomain().toString());
 		test.setName(this.getName());

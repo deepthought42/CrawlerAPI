@@ -208,12 +208,12 @@ public class Path implements IPersistable<IPath> {
 			return false;
 		}
 		
-		List<PathObject<?>> path_obj = path.getPath();
+		List<PathObject<?>> path_obj_list = path.getPath();
 		Page page = null;
-		do {
-			//PathObject<?> path_obj = path.getPath();
-			
-			do{
+		for(PathObject<?> path_obj : path_obj_list){
+
+			for(PathObject<?> path_obj2 : path_obj_list){
+
 				if(path_obj	 instanceof Page){
 					log.info("last page acquired");
 					page = (Page)path_obj;
@@ -224,8 +224,7 @@ public class Path implements IPersistable<IPath> {
 				}
 				path_obj = path_obj.getNext();
 			}while(path_obj.getNext() != null);
-		}while(path_obj.getNext() != null);
-		
+		}
 		for(int i = path.size()-1; i > 0; i--){
 			for(int j = i-1; j>= 0; j--){
 				if(path.getPath().equals(path.getPath()) 
@@ -246,9 +245,9 @@ public class Path implements IPersistable<IPath> {
 	public static boolean hasPageCycle(Path path){
 		for(int i = path.getPath().size()-1; i > 0; i--){
 			for(int j = i-1; j>= 0; j--){
-				if(path.getPath().get(i).getData() instanceof Page 
-						&& path.getPath().get(j).getData() instanceof Page
-						&& path.getPath().get(i).getData().equals(path.getPath().get(j).getData()))
+				if(path.getPath().get(i) instanceof Page 
+						&& path.getPath().get(j) instanceof Page
+						&& path.getPath().get(i).equals(path.getPath().get(j)))
 				{
 					return true;
 				}

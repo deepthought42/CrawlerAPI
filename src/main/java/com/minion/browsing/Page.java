@@ -1,17 +1,30 @@
 package com.minion.browsing;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.persistence.IPage;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
@@ -26,9 +39,9 @@ public class Page extends PathObject<IPage> {
     private static final Logger log = LoggerFactory.getLogger(Page.class);
 
     private String key;
-    private String browser;
     private boolean landable = false;
 	private String screenshot = null; 
+	private File screenshot_file = null;
 	private String src = "";
 	private URL url;
 	
@@ -53,71 +66,69 @@ public class Page extends PathObject<IPage> {
 		this.url = new URL(driver.getCurrentUrl().replace("/#",""));
 		
 		log.info("GETTING SCREENSHOT");
-		this.screenshot = Browser.getScreenshot(driver);
-
+		
+		this.screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(driver), this.url.getHost(), this.url.getPath().toString());
+		this.screenshot_file = Browser.getScreenshot(driver);
+		
+		System.err.println("IMAGE SAVED TO S3 at : " +this.screenshot);
 		log.info("GETTING VISIBLE ELEMENTS");
 		this.elements = Browser.getVisibleElements(driver, "//body");
 		
+		for(PageElement elem : this.elements){
+			elem.setScreenshot(capturePageElementScreenshot(driver.findElement(By.xpath(elem.getXpath()))));
+		}
 		log.info("Page object created");
 		
 	}
-
+	
 	/**
-	 * Creates a page instance that is meant to contain the information found using the driver passed
+	 * Retrieves all form elements for the page
 	 * 
-	 * @param driver
-	 * @param valid
-	 * @throws MalformedURLException 
-	 * @throws IOException
-	 * @throws URISyntaxException 
+	 * @return
 	 */
-	public Page(String pageSource, URL url, String base64Screenshot, List<PageElement> elements) throws MalformedURLException, IOException{
-		
-
-		log.info("Page URL :: "+url.toString());
-		//driver.getCurrentUrl().replace("/#","")
-		this.url = url;
-		
-		log.info("GETTING SCREENSHOT");
-		this.screenshot = base64Screenshot; //Browser.getScreenshot(driver);
-
-		log.info("GETTING PAGE SOURCE");
-		this.setSrc(Browser.cleanSrc(pageSource));
-
-		log.info("GETTING VISIBLE ELEMENTS");
-		this.elements = elements;//getVisibleElements(driver, "//body");
-		
-		log.info("Page object created");
-		
+	public List<PageElement> getAllForms(){
+		List<PageElement> forms = new ArrayList<PageElement>();
+		for(PageElement elem : this.elements){
+			if(elem.getTagName().equals("form")){
+				forms.add(elem);
+			}
+		}
+		return forms;
 	}
-    
-	 public String getKey() {
-		 return key;
-	 }
-
-	 public void setKey(String key) {
-		 this.key = key;
-	 }
-	 
+	
 	/**
 	 * 
-	 * 
-	 * @return the page of the source
+	 * @param ele
 	 */
-	public String getSrc() {
-		return this.src;
-	}
-	
-	public void setSrc(String src) {
-		this.src = Browser.cleanSrc(src);
-	}
-	
-	public List<PageElement> getElements(){
-		return this.elements;
-	}
-	
-	public void setElements(List<PageElement> elements){
-		this.elements = elements;
+	public String capturePageElementScreenshot(WebElement ele){
+		// Process the objectData stream.
+		BufferedImage fullImg;
+		try {
+			fullImg = ImageIO.read(this.screenshot_file);
+			// Get the location of element on the page
+			Point point = ele.getLocation();
+
+			// Get width and height of the element
+			int eleWidth = ele.getSize().getWidth();
+			int eleHeight = ele.getSize().getHeight();
+
+			// Crop the entire page screenshot to get only element screenshot
+			BufferedImage eleScreenshot= fullImg.getSubimage(point.getX(), point.getY(),
+			    eleWidth, eleHeight);
+			
+			ImageIO.write(eleScreenshot, "png", this.screenshot_file);
+			// Copy the element screenshot to disk
+			File screenshotLocation = new File("C:\\images\\GoogleLogo_screenshot.png");
+			FileUtils.copyFile(this.screenshot_file, screenshotLocation);
+			
+			String elem_screenshot = UploadObjectSingleOperation.saveImageToS3(this.screenshot_file, "webelements/"+this.url.getHost(), this.url.getPath().toString());
+			return elem_screenshot;
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -142,11 +153,6 @@ public class Page extends PathObject<IPage> {
 		
 		return landable;
 	}
-	
-	public boolean isLandable(){
-		return this.landable;
-	}
-
 		
 	/**
 	 * Checks if Pages are equal
@@ -216,27 +222,10 @@ public class Page extends PathObject<IPage> {
 	public String generateKey() {
 		return this.src.hashCode() + "::";
 	}
-
-	public URL getUrl(){
-		return this.url;
-	}
 	
-	public void setUrl(URL url){
-		this.url = url;
-	}
-	
-	public void setLandable(boolean isLandable){
-		this.landable = isLandable;
-	}
-	
-	public String getScreenshot(){
-		return this.screenshot;
-	}
-	
-	public void setScreenshot(String url){
-		this.screenshot = url;
-	}
-	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public IPersistable<IPage> create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -247,6 +236,9 @@ public class Page extends PathObject<IPage> {
 		return this;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public IPersistable<IPage> update() {
 		Iterator<IPage> page_iter = this.findByKey(this.generateKey()).iterator();
@@ -351,5 +343,59 @@ public class Page extends PathObject<IPage> {
 		page.setUrl(this.getUrl());
 
 		return page;
+	}
+	
+	 public String getKey() {
+		 return key;
+	 }
+
+	 public void setKey(String key) {
+		 this.key = key;
+	 }
+	 
+	/**
+	 * 
+	 * 
+	 * @return the page of the source
+	 */
+	public String getSrc() {
+		return this.src;
+	}
+	
+	public void setSrc(String src) {
+		this.src = Browser.cleanSrc(src);
+	}
+	
+	public List<PageElement> getElements(){
+		return this.elements;
+	}
+	
+	public void setElements(List<PageElement> elements){
+		this.elements = elements;
+	}
+	
+	public void setLandable(boolean isLandable){
+		this.landable = isLandable;
+	}
+	
+	public String getScreenshot(){
+		return this.screenshot;
+	}
+	
+	public void setScreenshot(String url){
+		this.screenshot = url;
+	}
+	
+	
+	public boolean isLandable(){
+		return this.landable;
+	}
+
+	public URL getUrl(){
+		return this.url;
+	}
+	
+	public void setUrl(URL url){
+		this.url = url;
 	}
 }

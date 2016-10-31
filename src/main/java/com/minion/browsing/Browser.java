@@ -1,5 +1,6 @@
 package com.minion.browsing;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.DateFormat;
@@ -33,6 +34,8 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.minion.aws.UploadObjectSingleOperation;
 
 /**
  * 
@@ -102,7 +105,7 @@ public class Browser {
 	 */
 	public void close(){
 		try{
-			driver.close();
+			driver.quit();
 		}
 		catch(NullPointerException e){
 			log.error("Error closing driver. Driver is NULL");
@@ -240,15 +243,11 @@ public class Browser {
 	
 	/**
 	 * Gets image as a base 64 string
-	 * @return base64 representation of image
+	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static String getScreenshot(WebDriver driver) throws IOException{
-		String screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.BASE64);
-		//File srcFile = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
-		//Random rand = new Random();
-		// Now you can do whatever you need to do with it, for example copy somewhere
-		//FileUtils.copyFile(srcFile, new File("/home/deepthought/Desktop/screenshots/screenshot"+DateFormat.getInstance().format(new Date()).replace(" ", "")+""+rand.nextInt() +".png"));
+	public static File getScreenshot(WebDriver driver) throws IOException{
+		File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 		
 		return screenshot;
 	}

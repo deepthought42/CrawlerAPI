@@ -38,39 +38,16 @@ public class PageElement extends PathObject<IPageElement> {
 
     private String key;
 	private String[] actions = ActionFactory.getActions();
-	public String tagName;
-	public String text;
+	private String tagName;
+	private String text;
 	private String xpath;
 	private boolean changed=false;
 	public List<Attribute> attributes = new ArrayList<Attribute>();
 	public List<PageElement> child_elements = new ArrayList<PageElement>();
 	Map<String, String> cssValues = new HashMap<String,String>();
+	private String screenshot = null;
 
 	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel"};
-
-	//transfer list to enum class
-	
-	/**
-	 * Constructs a PageElement.
-	 * 
-	 * @param driver
-	 * @param elem
-	 */
-	/*public PageElement( WebDriver driver, 
-						WebElement elem, 
-						String parentXpath, 
-						String[] actions, 
-						Map<String, Integer> xpathHash,
-						List<String> attrib_list){
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		this.actions = actions;
-
-		loadAttributes(attrib_list);		
-		//loadCssProperties(elem);
-		this.xpath = this.generateXpath(driver, parentXpath, xpathHash);
-		this.key = this.generateKey();
-	}*/
 	
 	/**
 	 * Constructs an empty PageElement.
@@ -575,6 +552,7 @@ public class PageElement extends PathObject<IPageElement> {
 			page_element.setXpath(this.xpath);
 			page_element.setKey(this.key);
 			page_element.setType(this.getClass().getName());
+			page_element.setScreenshot(this.getScreenshot());
 		}
 		else{
 			page_element = page_elements.iterator().next();
@@ -660,6 +638,8 @@ public class PageElement extends PathObject<IPageElement> {
 		page_elem.setKey(data.getKey());
 		page_elem.setXpath(data.getXpath());
 		page_elem.setText(data.getText());
+		page_elem.setScreenshot(data.getScreenshot());
+		
 		return page_elem;
 	}
 
@@ -675,5 +655,13 @@ public class PageElement extends PathObject<IPageElement> {
 		//page_elem.setNext(this.getNext());
 
 		return page_elem;
+	}
+
+	public String getScreenshot() {
+		return screenshot;
+	}
+
+	public void setScreenshot(String screenshot) {
+		this.screenshot = screenshot;
 	}
 }

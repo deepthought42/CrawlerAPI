@@ -212,7 +212,7 @@ public class BrowserActor extends UntypedActor {
 					path_expansion_actor.tell(path_msg, getSelf() );
 			  	}
 				
-	        	this.browser.close();
+	        	//this.browser.close();
 				
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE

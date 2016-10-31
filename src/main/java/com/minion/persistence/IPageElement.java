@@ -41,6 +41,12 @@ public interface IPageElement extends IPathObject {
 	@Property("changed")
 	public void setChanged(boolean isChanged);
 	
+	@Property("screenshot")
+	public String getScreenshot();
+	
+	@Property("screenshot")
+	public void setScreenshot(String screenshot_url);
+	
 	/*
 	@Adjacency(label="has")
 	public Iterator<IAttribute> getAttributes();

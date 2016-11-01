@@ -31,7 +31,6 @@ import com.minion.persistence.edges.IPathEdge;
  * @author Brandon Kindred
  *
  */
-
 public class Path implements IPersistable<IPath> {
     private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
 	
@@ -74,7 +73,6 @@ public class Path implements IPersistable<IPath> {
 	}
 	
 	/**
-	 * 
 	 * @return
 	 */
 	public List<PathObject<?>> getPath(){
@@ -105,25 +103,19 @@ public class Path implements IPersistable<IPath> {
 		int comparatorPathLength = path.size();
 				
 		if(thisPathLength != comparatorPathLength){
-			System.out.println("PATHS ARE NOT EQUAL");
 			return false;
 		}
 		
-		//PathObject<?> thisPathNode = this.getPath();
 		List<PathObject<?>> comparatorPathNode = path.getPath();
-		//while(thisPathNode.getNext() != null && comparatorPathNode.getNext() != null){
 		for(PathObject<?> obj : this.getPath()){
 			if(!obj.getClass().getCanonicalName().equals(comparatorPathNode.getClass().getCanonicalName())){
-				System.out.println("NODE CLASS NAMES ARE NOT EQUAL");
 				return false;
 			}
 			if(!obj.equals(comparatorPathNode)){
-				System.out.println("NODE DATA NOT EQUAL.");
 				return false;
 			}
 		}
 		
-		System.out.println("NODE PATHS ARE EQUAL");
 		return true;		
 	}
 	
@@ -173,29 +165,6 @@ public class Path implements IPersistable<IPath> {
 
 		return page;
 	}
-	
-	/**
-	 * Gets the last Vertex in a path that is of type {@link Page}
-	 * 
-	 * @return
-	 */
-	/*public Page getLastPage(){
-		log.info("getting last page");
-		for(int i = this.path.size()-1; i >= 0; i--){
-			log.info("starting at index "+i+" out of "+this.getPath().size());
-			PathObject<?> descNode = this.path.get(i);
-			log.info("checking node data for instance type");
-			
-			if(descNode.getData() instanceof Page){
-				log.info("last page acquired");
-				return (Page)descNode.getData();
-			}
-			else {
-				log.info("could not determine type of node");
-			}
-		}
-		return null;
-	}*/
 	
 	/**
 	 * Checks if the path has 2 sequential elements that appear in more than 1 location
@@ -266,8 +235,6 @@ public class Path implements IPersistable<IPath> {
 
 	private boolean checkIfSpansMultipleDomains() {
 		log.info("checking path for domains :: "+path.getClass().getName());
-		//log.info("checking path data :: " + path.getData());
-		//log.info("Checking if path spans multiple domains : " + ((Page)path).getUrl());
 		log.info("Last page url :: " + this.findLastPage().getUrl());
 		String domain = "";
 		
@@ -312,12 +279,7 @@ public class Path implements IPersistable<IPath> {
 			path = paths.iterator().next();
 		}
 
-		log.info("Starting conversion from path objects to their respective types");
 		boolean first_pass = true;
-
-		log.info("setting last_obj value to IPathObject");
-
-		//List<PathObject<?>> start = this.getPath();
 		IPathObject last_path_obj = null;
 
 		for(PathObject<?> obj: this.getPath()){
@@ -336,8 +298,6 @@ public class Path implements IPersistable<IPath> {
 			}
 			else{
 				log.info("setting next object in path using IPathEdge");
-				
-				//last_path_obj.setNext(persistablePathObj);
 				IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 				
 				log.info("Setting path key on IPathEdge");
@@ -480,17 +440,11 @@ public class Path implements IPersistable<IPath> {
 			PathObject<?> this_path_obj = PathObject.convertFromRecord(path_obj.getNext());
 			log.info("retrieved path object : " + this_path_obj);
 			path.add(this_path_obj);
-			 
 			path_obj = path_obj.getNext();
 			
 			count++;
 		}
-		
-		
-		
-		//log.info("Converting path object and setting it as path : "+path_obj + " : With key :: "+path_key);
-		//path.setPath(PathObject.convertFromRecord(path_obj));
-		
+
 		log.info("PATH OBJECT NEXT :: "+path_obj.getNext());
 		/*while(path_obj != null && path_obj.getNext() != null){
 			log.info("looping through  page elements and adding them to path object");
@@ -502,9 +456,7 @@ public class Path implements IPersistable<IPath> {
 		*/
 		//log.info("path object type : " + path_obj.getType());
 		//log.info("path object canonical class name : " + path_obj.getClass().getCanonicalName());
-		
 		log.info("building path object record");
-
 		
 		return path;
 	}

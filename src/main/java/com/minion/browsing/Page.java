@@ -1,8 +1,6 @@
 package com.minion.browsing;
-import java.awt.image.BufferedImage;
-import java.io.File;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
@@ -11,19 +9,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import javax.imageio.ImageIO;
-
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.persistence.IPage;
 import com.minion.persistence.IPersistable;
@@ -41,7 +31,6 @@ public class Page extends PathObject<IPage> {
     private String key;
     private boolean landable = false;
 	private String screenshot = null; 
-	private File screenshot_file = null;
 	private String src = "";
 	private URL url;
 	
@@ -68,15 +57,11 @@ public class Page extends PathObject<IPage> {
 		log.info("GETTING SCREENSHOT");
 		
 		this.screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(driver), this.url.getHost(), this.url.getPath().toString());
-		this.screenshot_file = Browser.getScreenshot(driver);
 		
 		System.err.println("IMAGE SAVED TO S3 at : " +this.screenshot);
 		log.info("GETTING VISIBLE ELEMENTS");
-		this.elements = Browser.getVisibleElements(driver, "//body");
-		
-		for(PageElement elem : this.elements){
-			elem.setScreenshot(capturePageElementScreenshot(driver.findElement(By.xpath(elem.getXpath()))));
-		}
+		this.elements = Browser.getVisibleElements(driver, "");
+
 		log.info("Page object created");
 		
 	}
@@ -94,41 +79,6 @@ public class Page extends PathObject<IPage> {
 			}
 		}
 		return forms;
-	}
-	
-	/**
-	 * 
-	 * @param ele
-	 */
-	public String capturePageElementScreenshot(WebElement ele){
-		// Process the objectData stream.
-		BufferedImage fullImg;
-		try {
-			fullImg = ImageIO.read(this.screenshot_file);
-			// Get the location of element on the page
-			Point point = ele.getLocation();
-
-			// Get width and height of the element
-			int eleWidth = ele.getSize().getWidth();
-			int eleHeight = ele.getSize().getHeight();
-
-			// Crop the entire page screenshot to get only element screenshot
-			BufferedImage eleScreenshot= fullImg.getSubimage(point.getX(), point.getY(),
-			    eleWidth, eleHeight);
-			
-			ImageIO.write(eleScreenshot, "png", this.screenshot_file);
-			// Copy the element screenshot to disk
-			File screenshotLocation = new File("C:\\images\\GoogleLogo_screenshot.png");
-			FileUtils.copyFile(this.screenshot_file, screenshotLocation);
-			
-			String elem_screenshot = UploadObjectSingleOperation.saveImageToS3(this.screenshot_file, "webelements/"+this.url.getHost(), this.url.getPath().toString());
-			return elem_screenshot;
-		} catch (IOException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		
-		return null;
 	}
 	
 	/**

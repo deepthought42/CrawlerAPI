@@ -47,7 +47,7 @@ public class PageElement extends PathObject<IPageElement> {
 	Map<String, String> cssValues = new HashMap<String,String>();
 	private String screenshot = null;
 
-	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel"};
+	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout"};
 	
 	/**
 	 * Constructs an empty PageElement.
@@ -99,37 +99,9 @@ public class PageElement extends PathObject<IPageElement> {
 	}
 	
 	/**
-	 * Constructs a PageElement.
-	 * 
-	 * @param driver
-	 * @param elem
-	 * @param page
-	 * @param actions
-	 * @param xpathHash
-	 * @param attrib_list
-	 */
-	/*
-	public PageElement( WebDriver driver,
-						WebElement elem, 
-						Page page, 
-						String[] actions, 
-						Map<String, Integer> xpathHash,
-						List<String> attrib_list){
-			 
-		this.tagName = elem.getTagName();
-		this.text    = elem.getText();
-		this.actions = actions;
-		loadAttributes(attrib_list);
-		//loadCssProperties(elem);
-		this.xpath = this.generateXpath(driver, "", xpathHash);
-		this.key = this.generateKey();
-	}
-	*/
-	
-	
-	/**
 	 * 
 	 * @param changed
+	 * 
 	 * @return
 	 */
 	public boolean isChanged(){
@@ -139,6 +111,7 @@ public class PageElement extends PathObject<IPageElement> {
 	/**
 	 * 
 	 * @param changed
+	 * 
 	 * @return
 	 */
 	public void setChanged(boolean changed){
@@ -317,36 +290,11 @@ public class PageElement extends PathObject<IPageElement> {
 	}
 	
 	/**
-	 * Creates a unique xpath based on a given hash of xpaths
-	 * 
-	 * @param driver
-	 * @param xpathHash
-	 * @param xpath
-	 * @return
-	 */
-	/**public String uniqifyXpath(WebDriver driver, Map<String, Integer> xpathHash, String xpath){
-		if(driver.findElements(By.xpath(xpath)).size() <= 1){
-			return xpath;
-		}
-		else{
-			int count = 1;
-			if(xpathHash.containsKey(xpath)){
-				count = xpathHash.get(xpath);
-				count += 1;
-			}
-		
-			xpathHash.put(xpath, count);
-			xpath = xpath+"[" + count + "]";
-		}
-		return xpath;
-	}
-	*/
-	
-	/**
 	 * creates a unique xpath based on a given hash of xpaths
 	 * 
 	 * @param driver
 	 * @param xpathHash
+	 * 
 	 * @return
 	 */
 	public String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath){
@@ -374,6 +322,7 @@ public class PageElement extends PathObject<IPageElement> {
 	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
 		xpath += "//"+this.tagName;
+		log.info("Xpath : "+xpath);
 		for(Attribute attr : attributes){
 			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
 				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals()) + "\")");
@@ -390,39 +339,9 @@ public class PageElement extends PathObject<IPageElement> {
 			xpath += "]";
 		}
 		xpath = uniqifyXpath(element, xpathHash, xpath);
-
+		log.info("Final Xpath : "+xpath);
 		return xpath;
 	}
-	
-	/**
-	 * generates a unique xpath for this element.
-	 * 
-	 * @return an xpath that identifies this element uniquely
-	 */
-	/*public String generateXpath(WebDriver driver, String xpath, Map<String, Integer> xpathHash, PageElement page_elem){
-		ArrayList<String> attributeChecks = new ArrayList<String>();
-		xpath += "//"+page_elem.tagName;
-		for(Attribute attr : page_elem.attributes){
-
-			if(!Arrays.asList(invalid_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",'" + ArrayUtility.joinArray(attr.getVals()) + "')");
-			}
-		}
-
-		if(attributeChecks.size()>0){
-			xpath += "[";
-			for(int i = 0; i < attributeChecks.size(); i++){
-				xpath += attributeChecks.get(i).toString();
-				if(i < attributeChecks.size()-1){
-					xpath += " and ";
-				}
-			}
-			xpath += "]";
-		}
-		xpath = uniqifyXpath(driver, xpathHash, xpath);
-
-		return xpath;
-	}*/
 	
 	/**
 	 * generates a unique xpath for this element.
@@ -582,7 +501,6 @@ public class PageElement extends PathObject<IPageElement> {
 		orient_connection.save();
 		
 		return this;
-
 	}
 
 	/**
@@ -652,7 +570,6 @@ public class PageElement extends PathObject<IPageElement> {
 		page_elem.setChanged(this.isChanged());
 		page_elem.setKey(this.getKey());
 		page_elem.setXpath(this.getXpath());
-		//page_elem.setNext(this.getNext());
 
 		return page_elem;
 	}

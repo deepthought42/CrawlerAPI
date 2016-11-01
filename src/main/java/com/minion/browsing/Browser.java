@@ -1,5 +1,7 @@
 package com.minion.browsing;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.RasterFormatException;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -10,11 +12,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
+
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
@@ -260,68 +265,6 @@ public class Browser {
 	public List<WebElement> getChildElements(String xpath) throws WebDriverException{
 		return driver.findElements(By.xpath(xpath+"/*"));
 	}
-	
-	/**
-	 * Retreives all elements on the current page that are visible. In this instance we take 
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also 
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *  
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 */
-	public ArrayList<PageElement> getVisibleElements(String xpath, 
-													 HashMap<String, Integer> xpathHash) 
-															 throws WebDriverException {
-		List<WebElement> pageElements = driver.findElements(By.xpath(xpath + "//*"));
-		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
-		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
-		if(pageElements.size() <= 0){
-			return elementList;
-		}
-		for(WebElement elem : pageElements){
-			
-			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null 
-					|| !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
-				elementList.add(pageElem);
-			}
-		}
-		
-		return elementList;
-	}
-	
-	/**
-	 * retreives all elements on a given page that are visible. In this instance we take 
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also 
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *  
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 */
-	 public ArrayList<PageElement> getVisibleElements(String xpath, 
-													 int depth, 
-													 HashMap<String, Integer> xpathHash) throws WebDriverException {
-		List<WebElement> childElements = getChildElements(xpath);
-		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
-		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
-		if(childElements.size() <= 0){
-			return elementList;
-		}
-		for(WebElement elem : childElements){			
-			if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-				PageElement pageElem = new PageElement( elem, xpath, ActionFactory.getActions(), xpathHash, PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
-				elementList.add(pageElem);
-			}
-		}
-		
-		for(PageElement pageElem : elementList){
-			pageElem.setChild_elements(getVisibleElements(pageElem.getXpath(), depth+1, xpathHash));
-		}
-		
-		return elementList;
-	}
 	 
 	 /**
 		 * Retreives all elements on a given page that are visible. In this instance we take 
@@ -350,6 +293,8 @@ public class Browser {
 					Date start = new Date();
 					if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
 						PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
+						pageElem.setScreenshot(Browser.capturePageElementScreenshot(driver.findElement(By.xpath(pageElem.getXpath())), pageElem, driver));
+
 						elementList.add(pageElem);
 					}
 					
@@ -361,11 +306,44 @@ public class Browser {
 				}catch(StaleElementReferenceException e){
 					log.error(e.toString());
 				}
+				catch(RasterFormatException e){
+					e.printStackTrace();
+				}
 			}
 			
 			
 			return elementList;
 		}	
 		
+		/**
+		 * 
+		 * @param ele
+		 */
+		public static String capturePageElementScreenshot(WebElement ele, PageElement page_elem, WebDriver driver) throws RasterFormatException{
+			// Process the objectData stream.
+			BufferedImage fullImg;
+			try {
+				fullImg = ImageIO.read(Browser.getScreenshot(driver));
+				// Get the location of element on the page
+				Point point = ele.getLocation();
 
+				// Get width and height of the element
+				int eleWidth = ele.getSize().getWidth();
+				int eleHeight = ele.getSize().getHeight();
+
+				// Crop the entire page screenshot to get only element screenshot
+				String elem_screenshot = null;
+				BufferedImage eleScreenshot= fullImg.getSubimage(point.getX(), point.getY(),
+				    eleWidth, eleHeight);
+			    File outputfile = new File(page_elem.getKey().replace(":", "")+".png");
+				ImageIO.write(eleScreenshot, "png", outputfile);
+
+				elem_screenshot = UploadObjectSingleOperation.saveImageToS3(outputfile, driver.getCurrentUrl()+"/webelements", page_elem.getXpath());
+				outputfile.delete();
+				return elem_screenshot;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
 }

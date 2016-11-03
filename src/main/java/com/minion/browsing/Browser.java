@@ -52,23 +52,19 @@ public class Browser {
 	private WebDriver driver;
 	
 	public Browser(String url) throws IOException {
-		//log.info(" -> URL :: "+url);
 		this.driver = openWithChrome(url);
 		//this.driver = openWithFirefox(url);
 		//this.driver = openWithPhantomjs(url);
 		this.driver.get(url);
-		//page = new Page(this.driver, DateFormat.getDateInstance());
 	}
 	
 	public Browser(String url, Page browserPage) {
 		driver = openWithPhantomjs(url);
 		driver.get(url);
-		//page = browserPage;
 	}
 	
 	/**
-	 * 
-	 * 
+	 * @return current {@link WebDriver driver}
 	 */
 	public WebDriver getDriver(){
 		return driver;
@@ -84,6 +80,12 @@ public class Browser {
 		return new Page(driver);
 	}
 	
+	/**
+	 * Removes canvas element added by Selenium when taking screenshots
+	 * 
+	 * @param src
+	 * @return
+	 */
 	public static String cleanSrc(String src){
 		src = src.replaceAll("\\s", "");
 		
@@ -96,8 +98,10 @@ public class Browser {
 
 	/**
 	 * 
+	 * 
 	 * @param date
 	 * @param valid
+	 * 
 	 * @return
 	 * @throws IOException 
 	 */
@@ -179,8 +183,7 @@ public class Browser {
 	public static WebDriver openWithInternetExplorer(String url){
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
-		log.info("Opening Firefox WebDriver connection using URL : " +url);
-		//FirefoxProfile firefoxProfile = new FirefoxProfile();
+		log.info("Opening Safari WebDriver connection using URL : " +url);
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
 		WebDriver driver = new InternetExplorerDriver(capabilities);
@@ -197,7 +200,7 @@ public class Browser {
 	public static WebDriver openWithChrome(String url){
 		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver_win32\\chromedriver.exe");
 
-		log.info("Opening Firefox WebDriver connection using URL : " +url);
+		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
 	    DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
 
@@ -267,83 +270,83 @@ public class Browser {
 	}
 	 
 	 /**
-		 * Retreives all elements on a given page that are visible. In this instance we take 
-		 *  visible to mean that it is not currently set to {@css display: none} and that it
-		 *  is visible within the confines of the screen. If an element is not hidden but is also 
-		 *  outside of the bounds of the screen it is assumed hidden
-		 *  
-		 * @param driver
-		 * @return list of webelements that are currently visible on the page
-		 */
-		public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
-																 throws WebDriverException {
-			
-			List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-			log.info("page elements found :: " +pageElements.size());
-			//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
-			ArrayList<PageElement> elementList = new ArrayList<PageElement>();
-			if(pageElements.size() <= 0){
-				return elementList;
-			}
-
-			int counter = 0;
-			for(WebElement elem : pageElements){
-				try{
-					//log.info("checking visibily and extracting attributes for element " + counter++);
-					Date start = new Date();
-					if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
-						PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
-						pageElem.setScreenshot(Browser.capturePageElementScreenshot(driver.findElement(By.xpath(pageElem.getXpath())), pageElem, driver));
-
-						elementList.add(pageElem);
-					}
-					
-					Date end = new Date();
-					double execution_time = (end.getTime() - start.getTime())/1000.0;
-					if( execution_time > 1.0){
-						log.info("All attributes extracted in " + execution_time + " seconds");
-					}
-				}catch(StaleElementReferenceException e){
-					log.error(e.toString());
-				}
-				catch(RasterFormatException e){
-					e.printStackTrace();
-				}
-			}
-			
-			
-			return elementList;
-		}	
+	 * Retreives all elements on a given page that are visible. In this instance we take 
+	 *  visible to mean that it is not currently set to {@css display: none} and that it
+	 *  is visible within the confines of the screen. If an element is not hidden but is also 
+	 *  outside of the bounds of the screen it is assumed hidden
+	 *  
+	 * @param driver
+	 * @return list of webelements that are currently visible on the page
+	 */
+	public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
+															 throws WebDriverException {
 		
-		/**
-		 * 
-		 * @param ele
-		 */
-		public static String capturePageElementScreenshot(WebElement ele, PageElement page_elem, WebDriver driver) throws RasterFormatException{
-			// Process the objectData stream.
-			BufferedImage fullImg;
-			try {
-				fullImg = ImageIO.read(Browser.getScreenshot(driver));
-				// Get the location of element on the page
-				Point point = ele.getLocation();
+		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
+		log.info("page elements found :: " +pageElements.size());
+		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
+		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
+		if(pageElements.size() <= 0){
+			return elementList;
+		}
 
-				// Get width and height of the element
-				int eleWidth = ele.getSize().getWidth();
-				int eleHeight = ele.getSize().getHeight();
+		int counter = 0;
+		for(WebElement elem : pageElements){
+			try{
+				//log.info("checking visibily and extracting attributes for element " + counter++);
+				Date start = new Date();
+				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+					PageElement pageElem = new PageElement(elem, xpath, ActionFactory.getActions(), new HashMap<String, Integer>(), PageElement.extractedAttributes(elem, (JavascriptExecutor)driver));
+					pageElem.setScreenshot(Browser.capturePageElementScreenshot(driver.findElement(By.xpath(pageElem.getXpath())), pageElem, driver));
 
-				// Crop the entire page screenshot to get only element screenshot
-				String elem_screenshot = null;
-				BufferedImage eleScreenshot= fullImg.getSubimage(point.getX(), point.getY(),
-				    eleWidth, eleHeight);
-			    File outputfile = new File(page_elem.getKey().replace(":", "")+".png");
-				ImageIO.write(eleScreenshot, "png", outputfile);
-
-				elem_screenshot = UploadObjectSingleOperation.saveImageToS3(outputfile, driver.getCurrentUrl()+"/webelements", page_elem.getXpath());
-				outputfile.delete();
-				return elem_screenshot;
-			} catch (IOException e) {
+					elementList.add(pageElem);
+				}
+				
+				Date end = new Date();
+				double execution_time = (end.getTime() - start.getTime())/1000.0;
+				if( execution_time > 1.0){
+					log.info("All attributes extracted in " + execution_time + " seconds");
+				}
+			}catch(StaleElementReferenceException e){
+				log.error(e.toString());
+			}
+			catch(RasterFormatException e){
 				e.printStackTrace();
 			}
-			return null;
 		}
+		
+		
+		return elementList;
+	}	
+	
+	/**
+	 * 
+	 * @param ele
+	 */
+	public static String capturePageElementScreenshot(WebElement ele, PageElement page_elem, WebDriver driver) throws RasterFormatException{
+		// Process the objectData stream.
+		BufferedImage fullImg;
+		try {
+			fullImg = ImageIO.read(Browser.getScreenshot(driver));
+			// Get the location of element on the page
+			Point point = ele.getLocation();
+
+			// Get width and height of the element
+			int eleWidth = ele.getSize().getWidth();
+			int eleHeight = ele.getSize().getHeight();
+			
+			// Crop the entire page screenshot to get only element screenshot
+			String elem_screenshot = null;
+			BufferedImage eleScreenshot= fullImg.getSubimage(point.getX(), point.getY(),
+			    eleWidth, eleHeight);
+		    File outputfile = new File(page_elem.getKey().replace(":", "")+".png");
+			ImageIO.write(eleScreenshot, "png", outputfile);
+
+			elem_screenshot = UploadObjectSingleOperation.saveImageToS3(outputfile, driver.getCurrentUrl()+"/webelements", page_elem.getXpath());
+			outputfile.delete();
+			return elem_screenshot;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

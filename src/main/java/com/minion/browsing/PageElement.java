@@ -47,7 +47,7 @@ public class PageElement extends PathObject<IPageElement> {
 	Map<String, String> cssValues = new HashMap<String,String>();
 	private String screenshot = null;
 
-	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout"};
+	private String[] invalid_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout"};	
 	
 	/**
 	 * Constructs an empty PageElement.
@@ -189,14 +189,13 @@ public class PageElement extends PathObject<IPageElement> {
 		for(String propertyName : cssList){
 			String element_value = element.getCssValue(propertyName);
 			if(element_value != null){
-				this.cssValues.put(propertyName, element_value);	
+				this.cssValues.put(propertyName, element_value);
 			}
 		}
 		
 		Date end = new Date();
 		
 		log.info("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
-		
 	}
 	
 	/**

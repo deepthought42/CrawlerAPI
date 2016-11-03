@@ -3,6 +3,8 @@ package com.minion.persistence;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
+import java.util.Map;
+
 import com.minion.browsing.Page;
 
 /**
@@ -41,6 +43,11 @@ import com.minion.browsing.Page;
 	@Property("url")
 	public void setUrl(String url);
 	
+	@Property("element_counts")
+	public Map<String, Integer> getElementCounts();
+	
+	@Property("element_counts")
+	public void setElementCounts(Map<String, Integer> element_count);
 	/*@Adjacency(label="contains")
 	public Iterator<IPageElement> getElements();
 	

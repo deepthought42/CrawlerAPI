@@ -5,8 +5,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.openqa.selenium.UnhandledAlertException;
@@ -35,6 +37,7 @@ public class Page extends PathObject<IPage> {
 	private URL url;
 	
 	private List<PageElement> elements;
+	private Map<String, Integer> element_counts = new HashMap<String, Integer>();
 	
 	public Page(){}
 	
@@ -61,9 +64,32 @@ public class Page extends PathObject<IPage> {
 		System.err.println("IMAGE SAVED TO S3 at : " +this.screenshot);
 		log.info("GETTING VISIBLE ELEMENTS");
 		this.elements = Browser.getVisibleElements(driver, "");
-
+		this.element_counts = countTags(this.elements);
+		
 		log.info("Page object created");
 		
+	}
+	
+	/**
+	 * Gets counts for all tags based on {@link PageElement}s passed
+	 * 
+	 * @param page_elements list of {@link PageElement}s
+	 * 
+	 * @return Hash of counts for all tag names in list of {@PageElement}s passed
+	 */
+	public Map<String, Integer> countTags(List<PageElement> page_elements){
+		Map<String, Integer> elem_cnts = new HashMap<String, Integer>();
+		for(PageElement element : page_elements){
+			if(elem_cnts.containsKey(element.getTagName())){
+				int cnt = elem_cnts.get(element.getTagName());
+				cnt += 1;
+				elem_cnts.put(element.getTagName(), cnt);
+			}
+			else{
+				elem_cnts.put(element.getTagName(), 1);
+			}
+		}
+		return elem_cnts;
 	}
 	
 	/**
@@ -233,6 +259,8 @@ public class Page extends PathObject<IPage> {
 		page.setKey(result.getKey());
 		page.setLandable(result.isLandable());
 		page.setSrc(result.getSrc());
+		page.setElementCounts(result.getElementCounts());
+		
 		try {
 			page.setUrl(new URL(result.getUrl()));
 		} catch (MalformedURLException e) {
@@ -270,6 +298,7 @@ public class Page extends PathObject<IPage> {
 			page.setUrl(this.getUrl().toString());
 			page.setType(this.getClass().getName());
 			page.setKey(this.getKey());
+			page.setElementCounts(this.element_counts);
 		}
 		else{
 			page = pages.iterator().next();
@@ -347,5 +376,13 @@ public class Page extends PathObject<IPage> {
 	
 	public void setUrl(URL url){
 		this.url = url;
+	}
+
+	public Map<String, Integer> getElementCounts() {
+		return element_counts;
+	}
+
+	public void setElementCounts(Map<String, Integer> element_counts) {
+		this.element_counts = element_counts;
 	}
 }

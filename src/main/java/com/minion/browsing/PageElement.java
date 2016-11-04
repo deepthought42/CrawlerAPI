@@ -38,12 +38,14 @@ public class PageElement extends PathObject<IPageElement> {
 
     private String key;
 	private String[] actions = ActionFactory.getActions();
+	private HtmlTag tag;
+	
 	private String tagName;
 	private String text;
 	private String xpath;
-	private boolean changed=false;
+	//private boolean changed=false;
 	public List<Attribute> attributes = new ArrayList<Attribute>();
-	public List<PageElement> child_elements = new ArrayList<PageElement>();
+	//public List<PageElement> child_elements = new ArrayList<PageElement>();
 	Map<String, String> cssValues = new HashMap<String,String>();
 	private String screenshot = null;
 
@@ -72,7 +74,7 @@ public class PageElement extends PathObject<IPageElement> {
 		this.text    = elem.getText();
 		this.actions = actions;
 		loadAttributes(attrib_list);
-		//loadCssProperties(elem);
+		loadCssProperties(elem);
 		this.xpath = this.generateXpath(elem, parentXpath, xpathHash);
 		this.key = this.generateKey();
 
@@ -96,34 +98,6 @@ public class PageElement extends PathObject<IPageElement> {
 		//loadCssProperties(web_elem);
 		this.xpath = this.generateXpath(elem);
 		this.key = this.generateKey();
-	}
-	
-	/**
-	 * 
-	 * @param changed
-	 * 
-	 * @return
-	 */
-	public boolean isChanged(){
-		return this.changed;
-	}
-	
-	/**
-	 * 
-	 * @param changed
-	 * 
-	 * @return
-	 */
-	public void setChanged(boolean changed){
-		this.changed = changed;
-	}
-	
-	public String getKey(){
-		return this.key;
-	}
-	
-	public void setKey(String key){
-		this.key = key;
 	}
 	
 	/**
@@ -197,15 +171,7 @@ public class PageElement extends PathObject<IPageElement> {
 		
 		log.info("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
 	}
-	
-	/**
-	 * Sets the css property map
-	 * @param cssValueMap
-	 */
-	public Map<String, String> getCssProperties(){
-		 return this.cssValues;
-	}
-	
+
 	/**
 	 * checks if css properties match between {@link WebElement elements}
 	 * 
@@ -363,44 +329,8 @@ public class PageElement extends PathObject<IPageElement> {
 		return this.xpath;
 	}
 
-	/**
-	 * returns the xpath generated for this element
-	 * @return xpath of this element
-	 */
-	public String getXpath() {
-		return this.xpath;
-	}
-
-	/**
-	 * Sets the xpath for this element
-	 * 
-	 * @param xpath the xpath that identifies the unique location 
-	 * 				of this element on the page
-	 */
-	public void setXpath(String new_xpath) {
-		this.xpath = new_xpath;
-	}
 	
-	public void setText(String text){
-		this.text = text;
-	}
-
-	public String getText(){
-		return this.text;
-	}
-
-	public List<Attribute> getAttributes() {
-		return this.attributes;
-	}
-	
-	public String getTagName(){
-		return this.tagName;
-	}
-
-	public boolean isIgnorable() {
-		return Arrays.asList().contains(this.tagName);
-	}
-	
+	/*
 	public List<PageElement> getChild_elements() {
 		return child_elements;
 	}
@@ -408,6 +338,7 @@ public class PageElement extends PathObject<IPageElement> {
 	public void setChild_elements(ArrayList<PageElement> child_elements) {
 		this.child_elements = child_elements;
 	}
+	*/
 	
 	/**
 	 * {@inheritDoc}
@@ -425,9 +356,6 @@ public class PageElement extends PathObject<IPageElement> {
         return hash;
     }
 
-	public String[] getActions() {
-		return this.actions;
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -447,14 +375,14 @@ public class PageElement extends PathObject<IPageElement> {
 		if(cnt == 0){
 			page_element = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getCanonicalName()+","+UUID.randomUUID(), IPageElement.class);
 
-			List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
+			//List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
 			/*for(Attribute attribute : this.attributes){
 				IAttribute attribute_persist = attribute.convertToRecord(framedGraph);
 				attribute_persist_list.add(attribute_persist);
 			}
 			*/
 			//page_element.setAttributes(attribute_persist_list);
-			page_element.setChanged(this.isChanged());
+			//page_element.setChanged(this.isChanged());
 			
 			/*List<IPageElement> child_elements_persist = new ArrayList<IPageElement>();
 			for(PageElement elem : this.child_elements){
@@ -551,7 +479,7 @@ public class PageElement extends PathObject<IPageElement> {
 	 */
 	public PageElement convertFromRecord(IPageElement data) {
 		PageElement page_elem = new PageElement();
-		page_elem.setChanged(data.getChanged());
+		//page_elem.setChanged(data.getChanged());
 		page_elem.setKey(data.getKey());
 		page_elem.setXpath(data.getXpath());
 		page_elem.setText(data.getText());
@@ -566,7 +494,7 @@ public class PageElement extends PathObject<IPageElement> {
 	@Override
 	public PathObject<?> clone() {
 		PageElement page_elem = new PageElement();
-		page_elem.setChanged(this.isChanged());
+		//page_elem.setChanged(this.isChanged());
 		page_elem.setKey(this.getKey());
 		page_elem.setXpath(this.getXpath());
 
@@ -579,5 +507,65 @@ public class PageElement extends PathObject<IPageElement> {
 
 	public void setScreenshot(String screenshot) {
 		this.screenshot = screenshot;
+	}
+
+	public String[] getActions() {
+		return this.actions;
+	}
+	
+
+	/**
+	 * returns the xpath generated for this element
+	 * @return xpath of this element
+	 */
+	public String getXpath() {
+		return this.xpath;
+	}
+
+	/**
+	 * Sets the xpath for this element
+	 * 
+	 * @param xpath the xpath that identifies the unique location 
+	 * 				of this element on the page
+	 */
+	public void setXpath(String new_xpath) {
+		this.xpath = new_xpath;
+	}
+	
+	public void setText(String text){
+		this.text = text;
+	}
+
+	public String getText(){
+		return this.text;
+	}
+
+	public List<Attribute> getAttributes() {
+		return this.attributes;
+	}
+	
+	public String getTagName(){
+		return this.tagName;
+	}
+
+	public boolean isIgnorable() {
+		return Arrays.asList().contains(this.tagName);
+	}
+	
+	
+	/**
+	 * Sets the css property map
+	 * @param cssValueMap
+	 */
+	public Map<String, String> getCssProperties(){
+		 return this.cssValues;
+	}
+	
+	public String getKey(){
+		return this.key;
+	}
+	
+	public void setKey(String key){
+		this.key = key;
 	}
 }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
+import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IPage;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
@@ -58,13 +58,12 @@ public class Page extends PathObject<IPage> {
 		this.url = new URL(driver.getCurrentUrl().replace("/#",""));
 		
 		log.info("GETTING SCREENSHOT");
-		
 		this.screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(driver), this.url.getHost(), this.url.getPath().toString());
 		
 		System.err.println("IMAGE SAVED TO S3 at : " +this.screenshot);
 		log.info("GETTING VISIBLE ELEMENTS");
 		this.elements = Browser.getVisibleElements(driver, "");
-		this.element_counts = countTags(this.elements);
+		//this.element_counts = countTags(this.elements);
 		
 		log.info("Page object created");
 		
@@ -77,34 +76,19 @@ public class Page extends PathObject<IPage> {
 	 * 
 	 * @return Hash of counts for all tag names in list of {@PageElement}s passed
 	 */
-	public Map<String, Integer> countTags(List<PageElement> page_elements){
+	public Map<String, Integer> countTags(List<PageElement> tags){
 		Map<String, Integer> elem_cnts = new HashMap<String, Integer>();
-		for(PageElement element : page_elements){
-			if(elem_cnts.containsKey(element.getTagName())){
-				int cnt = elem_cnts.get(element.getTagName());
+		for(PageElement tag : tags){
+			if(elem_cnts.containsKey(tag.getName())){
+				int cnt = elem_cnts.get(tag.getName());
 				cnt += 1;
-				elem_cnts.put(element.getTagName(), cnt);
+				elem_cnts.put(tag.getName(), cnt);
 			}
 			else{
-				elem_cnts.put(element.getTagName(), 1);
+				elem_cnts.put(tag.getName(), 1);
 			}
 		}
 		return elem_cnts;
-	}
-	
-	/**
-	 * Retrieves all form elements for the page
-	 * 
-	 * @return
-	 */
-	public List<PageElement> getAllForms(){
-		List<PageElement> forms = new ArrayList<PageElement>();
-		for(PageElement elem : this.elements){
-			if(elem.getTagName().equals("form")){
-				forms.add(elem);
-			}
-		}
-		return forms;
 	}
 	
 	/**
@@ -217,7 +201,7 @@ public class Page extends PathObject<IPage> {
 	 */
 	@Override
 	public IPersistable<IPage> update() {
-		Iterator<IPage> page_iter = this.findByKey(this.generateKey()).iterator();
+		Iterator<IPage> page_iter = (Iterator<IPage>) DataAccessObject.findByKey(this.generateKey(), IPage.class).iterator();
 		int cnt=0;
 		while(page_iter.hasNext()){
 			page_iter.next();
@@ -234,23 +218,6 @@ public class Page extends PathObject<IPage> {
 		connection.save();
 		
 		return this;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<IPage> findByKey(String generated_key) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, IPage.class);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<IPage> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
-		return orient_connection.getTransaction().getVertices("key", generated_key, IPage.class);
 	}
 	
 	public static Page convertFromRecord(IPage result) {
@@ -279,7 +246,7 @@ public class Page extends PathObject<IPage> {
 	@Override
 	public IPage convertToRecord(OrientConnectionFactory connection){
 		this.setKey(this.generateKey());
-		Iterable<IPage> pages = findByKey(this.getKey(), connection);
+		Iterable<IPage> pages = (Iterable<IPage>) DataAccessObject.findByKey(this.getKey(), connection, IPage.class);
 		
 		int cnt = 0;
 		Iterator<IPage> iter = pages.iterator();

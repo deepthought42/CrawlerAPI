@@ -15,6 +15,8 @@ public interface IPersistable<V> {
 	 */
 	V convertToRecord(OrientConnectionFactory connection);
 	
+	//PathObject<?> convertFromRecord(V obj);
+	
 	IPersistable<V> create();
 	
 	/**
@@ -25,15 +27,4 @@ public interface IPersistable<V> {
 	 * @return
 	 */
 	IPersistable<V> update();
-	
-	/**
-	 * Use a key generated and guaranteed to be unique to retrieve all objects which have
-	 * a "key" property value equal to the given generated key
-	 * 
-	 * @param generated_key
-	 * @return
-	 */
-	Iterable<V> findByKey(String generated_key);
-
-	Iterable<V> findByKey(String generated_key, OrientConnectionFactory orient_connection);
 }

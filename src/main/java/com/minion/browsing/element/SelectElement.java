@@ -2,14 +2,18 @@ package com.minion.browsing.element;
 
 import java.util.List;
 
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.HtmlTag;
 import com.minion.browsing.PageElement;
+import com.minion.browsing.actions.Action;
 
-public class SelectElement extends PageElement {
-    private static final Logger log = LoggerFactory.getLogger(SelectElement.class);
+public class SelectElement implements PageElement {
+    @SuppressWarnings("unused")
+	private static final Logger log = LoggerFactory.getLogger(SelectElement.class);
 	
 	private HtmlTag select_element;
 	private List<HtmlTag> option_elements;
@@ -46,5 +50,23 @@ public class SelectElement extends PageElement {
 
 	public void setLabelElement(HtmlTag labelElement) {
 		this.label_element = labelElement;
+	}
+
+	@Override
+	public String getScreenshot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setScreenshot(String screenshot) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean performAction(Action action, String value, WebDriver driver) throws UnreachableBrowserException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

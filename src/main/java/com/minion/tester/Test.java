@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Page;
+import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
@@ -97,19 +98,19 @@ public class Test implements IPersistable<ITest>{
 	@Override
 	public ITest convertToRecord(OrientConnectionFactory connection){
 		this.setKey(this.generateKey());
-		Iterable<ITest> tests = findByKey(this.getKey(), connection);
+		Iterator<ITest> tests = (Iterator<ITest>) DataAccessObject.findByKey(this.getKey(), ITest.class).iterator();
 		log.info("converting test to record");
 		int cnt = 0;
-		Iterator<ITest> iter = tests.iterator();
+		//Iterator<ITest> iter = tests.iterator();
 		ITest test = null;
 
 		log.info("# of existing test records with key "+this.getKey() + " :: "+cnt);
 		
-		if(!iter.hasNext()){
+		if(!tests.hasNext()){
 			test = connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
 		}
 		else{
-			test = iter.next();
+			test = tests.next();
 		}
 		
 		log.info("setting test properties");
@@ -207,15 +208,6 @@ public class Test implements IPersistable<ITest>{
 		
 		return this;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<ITest> findByKey(String generated_key) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
-	}
 	
 	/**
 	 * {@inheritDoc}
@@ -239,15 +231,7 @@ public class Test implements IPersistable<ITest>{
 	public static Iterable<ITest> findTestByKey(String generated_key, OrientConnectionFactory orient_connection) {
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<ITest> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
-		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
-	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * @throws MalformedURLException 

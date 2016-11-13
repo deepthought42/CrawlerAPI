@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IAttribute;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
@@ -29,14 +30,6 @@ public class Attribute implements IPersistable<IAttribute> {
 		this.name = attrName;
 		this.vals = val;
 		this.key = generateKey();
-	}
-	
-	public String getName(){
-		return this.name;
-	}
-	
-	public String[] getVals(){
-		return this.vals;
 	}
 	
 	public boolean equals(Attribute attr){
@@ -93,16 +86,12 @@ public class Attribute implements IPersistable<IAttribute> {
 		return this.name.hashCode()+":";
 	}
 
-	public String getKey() {
-		return this.hashCode()+"";
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public IAttribute convertToRecord(OrientConnectionFactory connection) {
-		Iterator<IAttribute> attributes = findByKey(this.getKey(), connection).iterator();
+		Iterator<IAttribute> attributes = (Iterator<IAttribute>) DataAccessObject.findByKey(this.getKey(), connection, IAttribute.class).iterator();
 		IAttribute attribute = null;
 		if(!attributes.hasNext()){
 			attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);
@@ -134,8 +123,8 @@ public class Attribute implements IPersistable<IAttribute> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IAttribute> update(IAttribute existing_obj) {
-		Iterator<IAttribute> attribute_iter = this.findByKey(this.generateKey()).iterator();
+	public IPersistable<IAttribute> update() {
+		Iterator<IAttribute> attribute_iter = (Iterator<IAttribute>) DataAccessObject.findByKey(this.generateKey(), IAttribute.class).iterator();
 		int cnt=0;
 		while(attribute_iter.hasNext()){
 			attribute_iter.next();
@@ -154,21 +143,17 @@ public class Attribute implements IPersistable<IAttribute> {
 		
 		return this;
 	}
+	
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<IAttribute> findByKey(String generated_key) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, IAttribute.class);
+	public String getKey() {
+		return this.hashCode()+"";
+	}
+
+	public String getName(){
+		return this.name;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<IAttribute> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
-		return orient_connection.getTransaction().getVertices("key", generated_key, IAttribute.class);
+	public String[] getVals(){
+		return this.vals;
 	}
 }

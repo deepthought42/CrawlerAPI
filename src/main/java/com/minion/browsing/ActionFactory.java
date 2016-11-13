@@ -25,6 +25,7 @@ public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
 								"mouseover"};/*,
+								"scroll"};
 								"sendKeys"};*/
 	private static Actions builder;
 	
@@ -38,7 +39,7 @@ public class ActionFactory {
 	 * @param elem
 	 * @param action
 	 */
-	public void execAction(WebElement elem, String action) throws WebDriverException{
+	public void execAction(WebElement elem, String input, String action) throws WebDriverException{
 		if(action.equals("click")){
 			builder.click(elem);
 		}
@@ -64,7 +65,7 @@ public class ActionFactory {
 			builder.release(elem);
 		}
 		else if(action.equals("sendKeys")){
-			builder.sendKeys(elem, Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+			builder.sendKeys(elem, Keys.chord(Keys.CONTROL, input, Keys.DELETE));
 			builder.sendKeys(elem, "Some src Val");
 		}
 		else if(action.equals("mouseover")){

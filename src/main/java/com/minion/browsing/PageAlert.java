@@ -130,19 +130,25 @@ public class PageAlert extends PathObject<IPathObject> implements IObjectValuati
 	}
 
 	@Override
-	public IPersistable<IPathObject> update(IPathObject existing_obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Iterable<IPathObject> findByKey(String generated_key) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public PathObject<?> clone() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String generateKey() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistable<IPathObject> create() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPersistable<IPathObject> update() {
 		// TODO Auto-generated method stub
 		return null;
 	}

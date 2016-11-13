@@ -2,23 +2,106 @@ package com.minion.browsing.form;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.minion.browsing.Attribute;
+import com.minion.browsing.PageElement;
+import com.minion.browsing.PathObject;
+
+/**
+ * Represents a form tag and the encompassed inputs in a web browser
+ */
 public class Form {
+    private static final Logger log = LoggerFactory.getLogger(Form.class);
+
+	private PageElement form_tag;
 	private List<FormField> form_fields;
-	private boolean required;
+	private PageElement submit_field;
+	private FormType type;
+	
+	/**
+	 * Constructs new Form object with form_fields
+	 * @param form_fields
+	 */
+	public Form(PageElement form_tag, List<FormField> form_fields){
+		this.setFormTag(form_tag);
+		this.form_fields = form_fields;
+		this.setType(determineFormType());
+	}
+	
+	public Form(List<FormField> form_fields, PageElement submit_field){
+		this.form_fields = form_fields;
+		this.submit_field = submit_field;
+		this.setType(determineFormType());
+	}
+	
+	/**
+	 * Returns the {@link FormType} of the form based on attribute values on the form tag
+	 * 
+	 * @return {@link FormType}
+	 */
+	private FormType determineFormType(){
+		List<Attribute> attributes = this.form_tag.getAttributes();
+		FormType type = null;
+		for(Attribute attr: attributes){
+			for(String val : attr.getVals()){
+				log.info("FORM TAG ATTRIBUTE :: "+val);
+				if(val.contains("register") || (val.contains("sign") && val.contains("up"))){
+					return FormType.REGISTER;
+				}
+				else if(val.contains("login") || (val.contains("sign") && val.contains("in"))){
+					return FormType.LOGIN;
+				}
+				else if(val.contains("search")){
+					return FormType.SEARCH;
+				}
+				else if(val.contains("reset") && val.contains("password")){
+					return FormType.RESET_PASSWORD;
+				}
+				else if(val.contains("payment") || val.contains("credit")){
+					return FormType.PAYMENT;
+				}
+			}
+		}
+		
+		return FormType.GENERAL_RECORD;
+	}
 	
 	public List<FormField> getFormFields() {
 		return form_fields;
 	}
 	
+	public boolean addFormField(FormField form_field) {
+		return this.form_fields.add(form_field);
+	}
+	
 	public void setFormFields(List<FormField> form_fields) {
 		this.form_fields = form_fields;
 	}
-	
-	public boolean isRequired() {
-		return required;
+
+	public PageElement getSubmitField() {
+		return submit_field;
 	}
-	
-	public void setRequired(boolean required) {
-		this.required = required;
+
+	public void setSubmitField(PageElement submit_field) {
+		this.submit_field = submit_field;
 	}
+
+	public PageElement getFormTag() {
+		return form_tag;
+	}
+
+	public void setFormTag(PageElement form_tag) {
+		this.form_tag = form_tag;
+	}
+
+	public FormType getType() {
+		return type;
+	}
+
+	public void setType(FormType type) {
+		this.type = type;
+	}
+
 }

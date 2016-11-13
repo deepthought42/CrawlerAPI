@@ -86,6 +86,10 @@ public class PathExpansionActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
+			//send data directly to form test builder 
+			final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
+			form_test_discoverer.tell(acct_msg, getSelf() );
+			
 			if(acct_msg.getData() instanceof Test){
 				
 				Test test = (Test)acct_msg.getData();

@@ -16,6 +16,7 @@ import com.minion.browsing.PathObject;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.actions.Action;
+import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IPage;
 import com.minion.persistence.IPath;
 import com.minion.persistence.IPathObject;
@@ -260,7 +261,7 @@ public class Path implements IPersistable<IPath> {
 
 	public IPath convertToRecord(OrientConnectionFactory connection) {
 		this.setKey(this.generateKey());
-		Iterable<IPath> paths = findByKey(this.getKey(), connection);
+		Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(this.getKey(), connection, IPath.class);
 		
 		int cnt = 0;
 		Iterator<IPath> iter = paths.iterator();
@@ -348,7 +349,7 @@ public class Path implements IPersistable<IPath> {
 
 	@Override
 	public IPersistable<IPath> update() {
-		Iterator<IPath> test_iter = this.findByKey(this.generateKey()).iterator();
+		Iterator<IPath> test_iter = (Iterator<IPath>) DataAccessObject.findByKey(this.generateKey(), IPath.class).iterator();
 		int cnt=0;
 		while(test_iter.hasNext()){
 			test_iter.next();
@@ -365,19 +366,7 @@ public class Path implements IPersistable<IPath> {
 		
 		return this;
 	}
-
-	@Override
-	public Iterable<IPath> findByKey(String generated_key) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, IPath.class);
-	}
 	
-
-	@Override
-	public Iterable<IPath> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
-		return orient_connection.getTransaction().getVertices("key", generated_key, IPath.class);
-	}
-
 	public void setKey(String key) {
 		this.key = key;
 		
@@ -405,7 +394,7 @@ public class Path implements IPersistable<IPath> {
 		IPathObject path_obj = ipath.getPath();
 		
 		Page page = new Page();
-		Iterator<IPage> ipage = page.findByKey(ipath.getPath().getKey()).iterator();
+		Iterator<IPage> ipage = (Iterator<IPage>) DataAccessObject.findByKey(ipath.getPath().getKey(), IPage.class).iterator();
 		//path.setPath(new ArrayList<PathObject<?>>());
 		log.info("page found");
 		path.getPath().add(Page.convertFromRecord(ipage.next()));

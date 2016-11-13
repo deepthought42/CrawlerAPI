@@ -1,4 +1,4 @@
-package com.minion.actors;
+package com.minion.browsing;
 
 import java.io.IOException;
 
@@ -14,12 +14,6 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.ActionFactory;
-import com.minion.browsing.Browser;
-import com.minion.browsing.Page;
-import com.minion.browsing.PageAlert;
-import com.minion.browsing.PageElement;
-import com.minion.browsing.PathObject;
 import com.minion.browsing.actions.Action;
 import com.minion.structs.Path;
 
@@ -65,7 +59,8 @@ public class Crawler {
 				//browser.updatePage( DateFormat.getDateInstance());
 				int attempts = 0;
 				do{
-					actionPerformedSuccessfully = performAction(last_element, action.getName(), browser.getDriver() );
+					//actionPerformedSuccessfully = performAction(last_element, action.getName(), browser.getDriver() );
+					actionPerformedSuccessfully = last_element.performAction(action, "String should be entered here", browser.getDriver());
 					attempts++;
 				}while(!actionPerformedSuccessfully && attempts < 50);
 			}
@@ -81,43 +76,5 @@ public class Crawler {
 	  	browser.close();
 	  	return page;
 	}
-	
-	/**
-	 * Executes the given {@link ElementAction element action} pair such that
-	 * the action is executed against the element 
-	 * 
-	 * @param elemAction ElementAction pair
-	 * @return whether action was able to be performed on element or not
-	 */
-	private static boolean performAction(PageElement elem, String action, WebDriver driver) throws UnreachableBrowserException {
-		ActionFactory actionFactory = new ActionFactory(driver);
-		boolean wasPerformedSuccessfully = true;
-		
-		try{
-			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-			actionFactory.execAction(element, action);
-			
-			log.info("CRAWLER Performed action "+ action
-					+ " On element with xpath :: "+elem.getXpath());
-		}
-		catch(StaleElementReferenceException e){
-			
-			 log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
-					+ action + ". ");
-			wasPerformedSuccessfully = false;			
-		}
-		catch(ElementNotVisibleException e){
-			log.info("ELEMENT IS NOT CURRENTLY VISIBLE.");
-		}
-		catch(NoSuchElementException e){
-			log.info(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
-			wasPerformedSuccessfully = false;
-		}
-		catch(WebDriverException e){
-			log.info("Element can not have action performed on it at point performed");
-			wasPerformedSuccessfully = false;
-		}
-		
-		return wasPerformedSuccessfully;
-	}
+
 }

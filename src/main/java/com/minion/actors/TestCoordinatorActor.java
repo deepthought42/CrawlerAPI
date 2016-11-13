@@ -16,6 +16,7 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.Browser;
+import com.minion.browsing.Crawler;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.actions.Action;

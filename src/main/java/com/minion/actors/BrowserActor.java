@@ -20,7 +20,9 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
+import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
+import com.minion.browsing.Crawler;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.structs.Message;
@@ -82,7 +84,7 @@ public class BrowserActor extends UntypedActor {
 					}
 				}
 				else{
-					for(String action: pageElement.getActions()){						
+					for(String action: ActionFactory.getActions()){						
 						cumulative_action_map.put(action, probability);
 					}
 				}
@@ -179,7 +181,6 @@ public class BrowserActor extends UntypedActor {
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				
 				log.info("Creating new Browser");
-		
 				Page result_page = null;
 				
 				if(path.getPath() != null){
@@ -211,9 +212,7 @@ public class BrowserActor extends UntypedActor {
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
 			  	}
-				
-	        	//this.browser.close();
-				
+								
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Sending test to Memory Actor");

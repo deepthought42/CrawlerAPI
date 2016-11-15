@@ -12,7 +12,6 @@ import com.minion.memory.Vocabulary;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.PathObject;
-import com.minion.browsing.PathObjectFactory;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.tester.Test;
@@ -47,7 +46,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 			
 			//Get first element of path, expected to be page
 			OrientDbPersistor persistor = new OrientDbPersistor();
-			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)path.getPath().get(0).data()).getSrc()).iterator();
+			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)path.getPath().get(0)).getSrc()).iterator();
 			
 			
 			
@@ -77,7 +76,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 			//Retrieve from memory
 			
 			OrientDbPersistor persistor = new OrientDbPersistor();
-			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)test.getRecords().get(0).data()).getSrc()).iterator();
+			Iterator<Vertex> page_iter = persistor.findVertices("src", ((Page)test.getPath().getPath().get(0)).getSrc()).iterator();
 			Test stored_test = (Test)page_iter.next();
 			Message<Test> msg = new Message<Test>(null, test);
 			//send path to actor that handles running tests

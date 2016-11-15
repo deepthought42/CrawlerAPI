@@ -1,16 +1,19 @@
 package com.minion.browsing.element;
 
-import com.minion.browsing.HtmlTag;
+import com.minion.browsing.PageElement;
 
+/**
+ * Defines an error element by tag and the string contained within
+ */
 public class ErrorField {
-	private HtmlTag tag;
+	private PageElement tag;
 	private String error;
 	
-	public HtmlTag getTag() {
+	public PageElement getTag() {
 		return tag;
 	}
 	
-	public void setTag(HtmlTag tag) {
+	public void setTag(PageElement tag) {
 		this.tag = tag;
 	}
 	

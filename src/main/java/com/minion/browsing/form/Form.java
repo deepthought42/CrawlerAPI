@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.minion.browsing.Attribute;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.PathObject;
+import com.minion.browsing.element.ComplexField;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser
@@ -16,7 +17,7 @@ public class Form {
     private static final Logger log = LoggerFactory.getLogger(Form.class);
 
 	private PageElement form_tag;
-	private List<FormField> form_fields;
+	private List<ComplexField> form_fields;
 	private PageElement submit_field;
 	private FormType type;
 	
@@ -24,13 +25,13 @@ public class Form {
 	 * Constructs new Form object with form_fields
 	 * @param form_fields
 	 */
-	public Form(PageElement form_tag, List<FormField> form_fields){
+	public Form(PageElement form_tag, List<ComplexField> form_fields){
 		this.setFormTag(form_tag);
 		this.form_fields = form_fields;
 		this.setType(determineFormType());
 	}
 	
-	public Form(List<FormField> form_fields, PageElement submit_field){
+	public Form(List<ComplexField> form_fields, PageElement submit_field){
 		this.form_fields = form_fields;
 		this.submit_field = submit_field;
 		this.setType(determineFormType());
@@ -68,15 +69,15 @@ public class Form {
 		return FormType.GENERAL_RECORD;
 	}
 	
-	public List<FormField> getFormFields() {
+	public List<ComplexField> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(FormField form_field) {
+	public boolean addFormField(ComplexField form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public void setFormFields(List<FormField> form_fields) {
+	public void setFormFields(List<ComplexField> form_fields) {
 		this.form_fields = form_fields;
 	}
 

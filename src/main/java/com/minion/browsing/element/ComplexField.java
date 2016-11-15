@@ -16,36 +16,36 @@ import org.slf4j.LoggerFactory;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.actions.Action;
+import com.minion.browsing.form.FormField;
 
 /**
  * Represents a container with an input field as well as label
  */
-public class ComboElement {
-    private static final Logger log = LoggerFactory.getLogger(ComboElement.class);
+public class ComplexField {
+    private static final Logger log = LoggerFactory.getLogger(ComplexField.class);
 
-	private List<PageElement> elements;
+	private List<FormField> elements;
 	
 	/**
 	 * Constructs new InputContiner without a label
 	 * 
-	 * @param screenshot_url
-	 * @param inputs
+	 * @param elements
 	 * 
-	 * @pre inputs != null
-	 * @pre inputs.size() > 0;
+	 * @pre elements != null
+	 * @pre elements.size() > 0;
 	 */
-	public ComboElement(List<PageElement> elements){
+	public ComplexField(List<FormField> fields){
 		assert elements != null;
 		assert elements.size() > 0;
 		
-		this.setElements(elements);
+		this.setElements(fields);
 	}
 
-	public List<PageElement> getElements() {
+	public List<FormField> getElements() {
 		return elements;
 	}
 
-	public void setElements(List<PageElement> elements) {
+	public void setElements(List<FormField> elements) {
 		this.elements = elements;
 	}
 
@@ -53,17 +53,17 @@ public class ComboElement {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 		
-		for(PageElement elem : this.getElements()){
+		for(FormField elem : this.getElements()){
 			try{
-				WebElement element = driver.findElement(By.xpath(elem.getXpath()));
+				WebElement element = driver.findElement(By.xpath(elem.getInputElement().getXpath()));
 				actionFactory.execAction(element, value, action.getName());
 				
 				log.info("CRAWLER Performed action "+ action
-						+ " On element with xpath :: "+elem.getXpath());
+						+ " On element with xpath :: "+elem.getInputElement().getXpath());
 			}
 			catch(StaleElementReferenceException e){
 				
-				 log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+				log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 						+ action + ". ");
 				wasPerformedSuccessfully = false;			
 			}

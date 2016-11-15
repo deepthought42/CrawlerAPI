@@ -44,10 +44,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
-import com.minion.browsing.element.ComboElement;
+import com.minion.browsing.element.ComplexField;
+import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
+import com.qanairy.rules.Rule;
 
 /**
  * 
@@ -349,7 +351,7 @@ public class Browser {
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 				PageElement tag = new PageElement(form_elem, generateXpath(form_elem, "", xpath_map, driver),form_elem.getTagName(), Browser.loadAttributes(Browser.extractedAttributes(form_elem, (JavascriptExecutor)driver)));
-				Form form = new Form(tag, new ArrayList<FormField>() );
+				Form form = new Form(tag, new ArrayList<ComplexField>() );
 				List<WebElement> input_elements =  form_elem.findElements(By.xpath(tag.getXpath() +"//input"));
 				
 				List<PageElement> input_tags = new ArrayList<PageElement>(); 
@@ -367,23 +369,25 @@ public class Browser {
 						continue;
 					}						
 					
-					List<PageElement> group_inputs = constructGrouping(input_elem, driver);
-					log.info("Total children discovered in group ... " + group_inputs.size());
-					ComboElement combo_input = new ComboElement(group_inputs);
+					List<FormField> group_inputs = constructGrouping(input_elem, driver);
+					ComplexField combo_input = new ComplexField(group_inputs);
 					
 					List<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, driver);
-					
-					combo_input.getElements().addAll(labels);
-					form.addFormField(new FormField(combo_input));
-										
+					for(FormField input_field : group_inputs){
+						PageElement label = findLabelForInput(form_elem, input_field, driver);
+						input_field.setFieldLabel(label);
+					}
+					//combo_input.getElements().addAll(labels);
+					form.addFormField(combo_input);
+					List<Rule<?,?>> combo_rules = new ArrayList<Rule<?,?>>();
+					for(FormField input : group_inputs){
+						combo_rules.addAll(ElementRuleExtractor.extractRules(input.getInputElement()));
+					}
+					log.info("Form combo field has a total of " + combo_rules.size() + " rules");
 					input_tags.add(input_tag);
 				}
 				
 				log.info("Total inputs for form : "+form.getFormFields().size());
-				
-				for(FormField field : form.getFormFields()){
-					log.info("Form field contains a total of " + field.getComboElement().getElements().size() + "  page elements");
-				}
 				
 				form_list.add(form);
 				log.info(form.getType() + " : Form discovered");
@@ -394,12 +398,40 @@ public class Browser {
 	/**
 	 * 
 	 */
-	public static List<PageElement> findLabelsForInputs(WebElement form_elem, List<PageElement> group_inputs, WebDriver driver){
+	public static PageElement findLabelForInput(WebElement form_elem, FormField input_field, WebDriver driver){
 		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();
-		for(PageElement input : group_inputs){
-			input_ids.add(input.getAttribute("id").getVals()[0]);
+		input_ids.add(input_field.getInputElement().getAttribute("id").getVals()[0]);
+		
+		List<PageElement> label_tags = new ArrayList<PageElement>();
+		for(WebElement label_elem : label_elements){
+			//check if input for attribute references an existing id on any of the current child_inputs
+			for(String id : input_ids){
+				log.info("checking labels for id association");
+				log.info(label_elem.getAttribute("for") + " == " + id);
+
+				if(label_elem.getAttribute("for").equals(id)){
+					PageElement label_tag = new PageElement(label_elem, generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), loadAttributes(Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver)));
+					return label_tag;
+				}
+			}
+		}
+		
+		log.info("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
+		
+		return null;
+	}
+	
+	/**
+	 * 
+	 */
+	public static List<PageElement> findLabelsForInputs(WebElement form_elem, List<FormField> group_inputs, WebDriver driver){
+		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
+		//get all ids for current inputs
+		List<String> input_ids = new ArrayList<String>();
+		for(FormField input : group_inputs){
+			input_ids.add(input.getInputElement().getAttribute("id").getVals()[0]);
 		}
 		
 		List<PageElement> label_tags = new ArrayList<PageElement>();
@@ -430,9 +462,9 @@ public class Browser {
 	 * @param driver
 	 * @return
 	 */
-	public static List<PageElement> constructGrouping(WebElement page_elem, WebDriver driver){
+	public static List<FormField> constructGrouping(WebElement page_elem, WebDriver driver){
 
-		List<PageElement> child_inputs = new ArrayList<PageElement>();
+		List<FormField> child_inputs = new ArrayList<FormField>();
 
 		String input_type = page_elem.getAttribute("type");
 		WebElement parent = null;
@@ -464,11 +496,12 @@ public class Browser {
 			if(allChildrenMatch){
 				//create list with new elements
 				List<WebElement> children = parent.findElements(By.xpath(".//input"));
-				child_inputs = new ArrayList<PageElement>();
+				child_inputs = new ArrayList<FormField>();
 
 				for(WebElement child : children){
 					PageElement elem = new PageElement(child, Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), loadAttributes(Browser.extractedAttributes(child, (JavascriptExecutor)driver)));
-					child_inputs.add(elem);
+					FormField input_field = new FormField(elem);
+					child_inputs.add(input_field);
 				}
 				
 				page_elem = parent;
@@ -477,8 +510,8 @@ public class Browser {
 			else{
 				if(child_inputs.size() == 0){
 					PageElement input_tag = new PageElement(page_elem, generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), loadAttributes(Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver)));
-
-					child_inputs.add(input_tag);
+					FormField input_field = new FormField(input_tag);
+					child_inputs.add(input_field);
 				}
 			}
 			log.info("Total children discovered in current loop ... " + child_inputs.size());
@@ -715,6 +748,9 @@ public class Browser {
 		while(!element.getTagName().equals("html")){
 			try{
 				parent = element.findElement(By.xpath(".."));
+				if(parent == null){
+					break;
+				}
 				xpath = "/" + parent.getTagName() + xpath;
 				element = parent;
 			}catch(InvalidSelectorException e){

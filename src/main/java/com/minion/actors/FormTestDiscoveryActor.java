@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -16,13 +17,15 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.PathObject;
-import com.minion.browsing.element.ComboElement;
+import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.tester.Test;
 import com.minion.tester.TestRecord;
+import com.qanairy.rules.BooleanRuleType;
+import com.qanairy.rules.Rule;
 
 import akka.actor.UntypedActor;
 
@@ -66,10 +69,11 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	
 			  	
 			  	for(Form form : choices){
-			  		for(FormField field : form.getFormFields()){
-			  			log.info("Form field combo elements : "+field.getComboElement().getElements().size());
-			  			for(PageElement elem : field.getComboElement().getElements()){
-			  				log.info("assessing element with xpath : " +elem.getXpath());
+			  		for(ComplexField combo_field: form.getFormFields()){
+			  			log.info("Form field combo elements : " + combo_field.getElements().size());
+
+			  			for(FormField field : combo_field.getElements()){
+				  			field.getInputElement();
 			  			}
 			  		}
 			  	}
@@ -173,9 +177,27 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		
 	}
 	
+	public static List<Test> generateRuleTests(Rule<?,?> rule){
+		List<Test> tests = new ArrayList<Test>();
+		if(rule.getType().equals(BooleanRuleType.REQUIRED)){
+			//generate required tests for element type
+		}
+		return null;
+		
+	}
+	
 	public static Test generateAllFormTests(Form form){
-		for(FormField field: form.getFormFields()){
-			ComboElement elem = field.getComboElement();
+		List<Test> form_tests = new ArrayList<Test>();
+		for(ComplexField complex_field: form.getFormFields()){
+			//for each field in the complex field generate a set of tests for all known rules
+			for(FormField field : complex_field.getElements()){
+				PageElement input_elem = field.getInputElement();
+				
+				List<Rule<?,?>> rules = field.getRules();
+				for(Rule<?,?> rule : rules){
+					generateRuleTests(rule);
+				}
+			}
 
 			System.out.println("ELEMENT CLASS : "+elem.getClass());
 		}

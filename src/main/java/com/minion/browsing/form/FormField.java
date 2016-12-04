@@ -1,5 +1,6 @@
 package com.minion.browsing.form;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.minion.browsing.PageElement;
@@ -21,6 +22,7 @@ public class FormField {
 	 */
 	public FormField(PageElement form_field){
 		this.form_field = form_field;
+		this.rules = new ArrayList<Rule<?,?>>();
 	}
 	/**
 	 * Constructs new FormField

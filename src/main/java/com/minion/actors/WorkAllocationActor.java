@@ -35,16 +35,28 @@ public class WorkAllocationActor extends UntypedActor {
 			if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
 				log.info("Approved account : "+acct_message.getAccountKey());
 				if(acct_message.getData() instanceof Path || 
-						acct_message.getData() instanceof Test || 
 						acct_message.getData() instanceof URL){
 					log.info("Path passed to work allocator");
-					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
+					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
 					browser_actor.tell(acct_message, getSelf() );
+					getSender().tell("Status: ok", getSelf());
+
+				}
+				else if(acct_message.getData() instanceof Test){
+					log.info("Test passed to work allocator");
+					final ActorRef testing_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "TestingActor"+UUID.randomUUID());
+					testing_actor.tell(acct_message, getSelf() );
+					getSender().tell("Status: ok", getSelf());
+
 				}
 			}
 			else{
 				log.warn("Work allocation actor did not start any work due to account key not having a runnable status");
+				getSender().tell("Account not allowed to run discovery", getSelf());
 			}
+		}
+		else{
+			getSender().tell("did not recieve Message Object", getSelf());
 		}
 	}
 }

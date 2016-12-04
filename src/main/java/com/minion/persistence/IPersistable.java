@@ -7,6 +7,9 @@ package com.minion.persistence;
  * @param <V>
  */
 public interface IPersistable<V> {
+	/**
+	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
+	 */
 	String generateKey();
 
 	/**
@@ -17,7 +20,11 @@ public interface IPersistable<V> {
 	
 	//PathObject<?> convertFromRecord(V obj);
 	
-	IPersistable<V> create();
+	/**
+	 * 
+	 * @return
+	 */
+	V create();
 	
 	/**
 	 * Updates the given object by finding existing instances in the databases, making
@@ -26,5 +33,5 @@ public interface IPersistable<V> {
 	 * @param existing_obj
 	 * @return
 	 */
-	IPersistable<V> update();
+	V update();
 }

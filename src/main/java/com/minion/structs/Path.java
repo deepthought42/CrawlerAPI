@@ -28,9 +28,6 @@ import com.minion.persistence.edges.IPathEdge;
 
 /**
  * A set of vertex objects that form a sequential movement through a graph
- * 
- * @author Brandon Kindred
- *
  */
 public class Path implements IPersistable<IPath> {
     private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
@@ -74,7 +71,7 @@ public class Path implements IPersistable<IPath> {
 	}
 	
 	/**
-	 * @return
+	 * @return The {@link List} of {@link PathObject}s that comprise a path
 	 */
 	public List<PathObject<?>> getPath(){
 		return this.path;
@@ -127,19 +124,16 @@ public class Path implements IPersistable<IPath> {
 	 * @return
 	 */
 	public static Path clone(Path path){
-		log.info("cloning path");
 		Path clonePath = new Path();
 		
 		List<PathObject<?>> path_obj = path.getPath();
 		List<PathObject<?>> clone_list = new ArrayList<PathObject<?>>();
 		for(PathObject<?> obj : path_obj){
-			log.info("adding path object to list during clone process");
 			PathObject<?> path_obj_clone = obj.clone();
 			clone_list.add(path_obj_clone);
 		}
 		
 		clonePath.setPath(clone_list);
-		log.info("Setting clone key :: " +path.getKey());
 		clonePath.setKey(path.getKey());
 		clonePath.setIsUseful(path.getIsUseful());
 		clonePath.setSpansMultipleDomains(path.getSpansMultipleDomains());
@@ -328,7 +322,7 @@ public class Path implements IPersistable<IPath> {
 			path_key += obj.generateKey() + ":"+hashCode()+":";
 		}
 
-		this.key = path_key;
+		//this.key = path_key;
 		return path_key;
 	}
 
@@ -336,35 +330,25 @@ public class Path implements IPersistable<IPath> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IPath> create() {
+	public IPath create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		log.info("converting path to record");
-		this.convertToRecord(orient_connection);
+		IPath path = this.convertToRecord(orient_connection);
 		
 		log.info("path converted. now saving");
 		orient_connection.save();
 		
-		return this;
+		return path;
 	}
 
 	@Override
-	public IPersistable<IPath> update() {
-		Iterator<IPath> test_iter = (Iterator<IPath>) DataAccessObject.findByKey(this.generateKey(), IPath.class).iterator();
-		int cnt=0;
-		while(test_iter.hasNext()){
-			test_iter.next();
-			cnt++;
-		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
-		
+	public IPath update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		if(cnt == 0){
-			this.convertToRecord(connection);
-		}
+		IPath path = this.convertToRecord(connection);
 		
 		connection.save();
 		
-		return this;
+		return path;
 	}
 	
 	public void setKey(String key) {
@@ -393,12 +377,14 @@ public class Path implements IPersistable<IPath> {
 		log.info("getting initial path vertex in path");
 		IPathObject path_obj = ipath.getPath();
 		
-		Page page = new Page();
+		//Page page = new Page();
 		Iterator<IPage> ipage = (Iterator<IPage>) DataAccessObject.findByKey(ipath.getPath().getKey(), IPage.class).iterator();
 		//path.setPath(new ArrayList<PathObject<?>>());
 		log.info("page found");
-		path.getPath().add(Page.convertFromRecord(ipage.next()));
-		
+		Page page = Page.convertFromRecord(ipage.next());
+		path.getPath().add(page);
+		page.setType(Page.class.getSimpleName());
+
 		int count = 0;
 		while(path_obj.getNext() != null){
 			log.info("Path object is being observed "+path_obj);
@@ -448,6 +434,16 @@ public class Path implements IPersistable<IPath> {
 		log.info("building path object record");
 		
 		return path;
+	}
+
+	public Page getFirstPage() {
+		
+		for(PathObject<?> obj : this.getPath()){
+			if(obj instanceof Page){
+				return (Page)obj;
+			}
+		}
+		return null;
 	}
 }
 

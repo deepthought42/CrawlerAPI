@@ -1,5 +1,7 @@
 package com.qanairy.rules;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class NumericRule implements Rule<Integer, String>{
 	
 	private NumericRuleType type;
@@ -22,9 +24,20 @@ public class NumericRule implements Rule<Integer, String>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean evaluate(String val) {
-		// TODO Auto-generated method stub
-		return false;
+	public Boolean evaluate(String val) {
+		if(this.getType().equals(NumericRuleType.MAX_LENGTH)){
+			return val.length() <= this.getValue();
+		}
+		else if(this.getType().equals(NumericRuleType.MIN_LENGTH)){
+			return val.length() >= this.getValue();
+		}
+		else if(this.getType().equals(NumericRuleType.MIN_VALUE)){
+			return Integer.parseInt(val) >= this.getValue();
+		}
+		else if(this.getType().equals(NumericRuleType.MAX_VALUE)){
+			return Integer.parseInt(val)  <= this.getValue();
+		}
+		return null;
 	}
 
 	/**
@@ -33,12 +46,9 @@ public class NumericRule implements Rule<Integer, String>{
 	@Override
 	public Integer getValue() {
 		return this.value;
-	}
-
-	@Override
-	public boolean evaluate(Integer val) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+	}	
 	
+	public static String generateRandomAlphabeticString(int str_length){
+		return StringUtils.repeat("a", str_length);
+	}
 }

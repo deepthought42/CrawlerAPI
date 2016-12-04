@@ -75,6 +75,6 @@ public class ElementRuleExtractor {
 			}
 		}
 		
-		return null;
+		return rules;
 	}
 }

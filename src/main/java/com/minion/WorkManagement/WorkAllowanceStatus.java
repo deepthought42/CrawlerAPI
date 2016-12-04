@@ -29,7 +29,6 @@ public class WorkAllowanceStatus {
 	 * @return whether or not the status was successfully changed
 	 */
 	public static Boolean haltWork(String key){
-		System.out.print("Punching In...");
 		return accountStatuses.put(key, false);
 	}
 	

@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import com.minion.browsing.PathObject;
 import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IAction;
-import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
 
 /**
@@ -23,6 +22,7 @@ public class Action extends PathObject<IAction>{
 
 	private final String name;
 	private final String key;
+	private final String val;
 	
 	/**
 	 * Construct empty action object
@@ -30,6 +30,7 @@ public class Action extends PathObject<IAction>{
 	public Action(){
 		this.name = null;
 		this.key = null;
+		this.val = "";
 	}
 	
 	/**
@@ -38,6 +39,17 @@ public class Action extends PathObject<IAction>{
 	 */
 	public Action(String action_name) {
 		this.name = action_name;
+		this.val = "";
+		this.key = generateKey();
+	}
+	
+	/**
+	 * 
+	 * @param action_name
+	 */
+	public Action(String action_name, String value) {
+		this.name = action_name;
+		this.val = value;
 		this.key = generateKey();
 	}
 	
@@ -73,7 +85,11 @@ public class Action extends PathObject<IAction>{
 	 */
 	@Override
 	public String generateKey() {
-		return this.name;
+		return this.name + ":"+this.val.hashCode();
+	}
+
+	public String getValue() {
+		return val;
 	}
 
 	/**
@@ -82,18 +98,18 @@ public class Action extends PathObject<IAction>{
 	@Override
 	public IAction convertToRecord(OrientConnectionFactory connection) {
 		log.info("Creating Action path object record with key : "+this.getKey());
+		@SuppressWarnings("unchecked")
 		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(this.getKey(), IAction.class);
 		
-		int cnt = 0;
 		Iterator<IAction> action_iter = actions.iterator();
 		IAction action = null;
 
-		
 		if(!action_iter.hasNext()){
 			action = connection.getTransaction().addVertex("class:"+IAction.class.getCanonicalName()+","+UUID.randomUUID(), IAction.class);
 			action.setName(this.name);
 			action.setKey(this.key);
 			action.setType(this.getClass().getName());
+			action.setValue(this.getValue());
 		}
 		else{
 			action = actions.iterator().next();
@@ -106,53 +122,46 @@ public class Action extends PathObject<IAction>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IAction> create() {
+	public IAction create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
-		this.convertToRecord(orient_connection);
+		IAction action = this.convertToRecord(orient_connection);
 		orient_connection.save();
 		
-		return this;
+		return action;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IAction> update() {
-		Iterator<IAction> action_iter = (Iterator<IAction>) DataAccessObject.findByKey(this.generateKey(), IAction.class).iterator();
-		int cnt=0;
-		while(action_iter.hasNext()){
-			action_iter.next();
-			cnt++;
-		}
-		log.info("# of existing Action records with key "+this.getKey() + " :: "+cnt);
-		
+	public IAction update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IAction action = null;
-		if(cnt == 0){
-			action = connection.getTransaction().addVertex(UUID.randomUUID(), IAction.class);	
-		}
-		else{
-			action = this.convertToRecord(connection);
-		}
-		
+		IAction action = this.convertToRecord(connection);
 		connection.save();
-		
-		return this;
-	}
-
-	
-
-	public Action convertFromRecord(IAction data) {
-		Action action = new Action(data.getName());
 		
 		return action;
 	}
 
+	
+	/**
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public Action convertFromRecord(IAction data) {
+		Action action = new Action(data.getName(), data.getValue());
+		action.setType(Action.class.getSimpleName());
+		
+		return action;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public PathObject<?> clone() {
-		Action action_clone = new Action(this.getName());
+		Action action_clone = new Action(this.getName(), this.getValue());
 		//action_clone.setNext(this.getNext());
 		return action_clone;
 	}

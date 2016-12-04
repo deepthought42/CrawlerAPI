@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Attribute;
 import com.minion.browsing.PageElement;
-import com.minion.browsing.PathObject;
 import com.minion.browsing.element.ComplexField;
 
 /**
@@ -31,7 +30,8 @@ public class Form {
 		this.setType(determineFormType());
 	}
 	
-	public Form(List<ComplexField> form_fields, PageElement submit_field){
+	public Form(PageElement form_tag, List<ComplexField> form_fields, PageElement submit_field){
+		this.setFormTag(form_tag);
 		this.form_fields = form_fields;
 		this.submit_field = submit_field;
 		this.setType(determineFormType());

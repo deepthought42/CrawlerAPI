@@ -25,7 +25,7 @@ public interface Rule<T,Z> {
 	 * 
 	 * @return boolean value indicating the rule is satisfied(true) or not satisfied(false)
 	 */
-	boolean evaluate(Z val);	
+	Boolean evaluate(Z val);	
 	
 	/**
 	 * Rule types

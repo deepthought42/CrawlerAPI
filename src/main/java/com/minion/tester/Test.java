@@ -21,8 +21,6 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
 /**
  * Defines the path of a test, the result and the expected values to determine if a test was 
  * successful or not
- * 
- * @author Brandon Kindred
  *
  */
 public class Test implements IPersistable<ITest>{
@@ -62,12 +60,13 @@ public class Test implements IPersistable<ITest>{
 		this.path = path;
 		this.result = result;
 		this.setRecords(new ArrayList<TestRecord>());
-		this.setKey(this.generateKey());
+		
 		this.domain = domain;
 		this.correct = null;
 		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<String>());
+		this.setKey(this.generateKey());
 	}
 	
 	/**
@@ -95,13 +94,13 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public ITest convertToRecord(OrientConnectionFactory connection){
 		this.setKey(this.generateKey());
 		Iterator<ITest> tests = (Iterator<ITest>) DataAccessObject.findByKey(this.getKey(), ITest.class).iterator();
 		log.info("converting test to record");
 		int cnt = 0;
-		//Iterator<ITest> iter = tests.iterator();
 		ITest test = null;
 
 		log.info("# of existing test records with key "+this.getKey() + " :: "+cnt);
@@ -188,25 +187,24 @@ public class Test implements IPersistable<ITest>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<ITest> create() {
+	public ITest create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		log.info("Orient database connection factory");
-		this.convertToRecord(orient_connection);
+		ITest test = this.convertToRecord(orient_connection);
 		orient_connection.save();
 		log.info("TEST SAVED TO DATABASE");
-		return this;
+		return test;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<ITest> update() {
+	public ITest update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		this.convertToRecord(connection);		
+		ITest test = this.convertToRecord(connection);		
 		connection.save();
 		
-		return this;
+		return test;
 	}
 	
 	/**
@@ -282,7 +280,6 @@ public class Test implements IPersistable<ITest>{
 		ArrayList<Test> list = new ArrayList<Test>();
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();
-			
 			
 			Test test = Test.convertFromRecord(itest);
 			list.add(test);

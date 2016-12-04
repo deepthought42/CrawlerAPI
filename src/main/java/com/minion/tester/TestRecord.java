@@ -8,14 +8,17 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.minion.browsing.Page;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.ITestRecord;
 import com.minion.persistence.OrientConnectionFactory;
 
 /**
- * A record for when a path was observed
- * 
- * @author Brandon Kindred
+ * A {@link Test} record for reflecting an execution of a test 
+ * indicating whether the execution is aligned with the test and therefore passing
+ * or mis-aligned with the expectations of the test and therefore failing in 
+ * which case a {@link Page} can be saved as a record of what the state of the page
+ * was after the test was executed.
  *
  */
 public class TestRecord  implements IPersistable<ITestRecord> {
@@ -23,10 +26,18 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 
 	private Date ran_at;
 	private boolean passes;
+	private Page page;
 	
-	public TestRecord(Test test, Date ran_at, boolean passes){
+	public TestRecord(Date ran_at, boolean passes){
 		this.ran_at = ran_at;
 		this.passes = passes;
+		this.setPage(null);
+	}
+	
+	public TestRecord(Date ran_at, boolean passes, Page page){
+		this.ran_at = ran_at;
+		this.passes = passes;
+		this.setPage(page);
 	}
 	
 	/**
@@ -43,6 +54,14 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 		this.ran_at = date;
 	}
 	
+	public Page getPage() {
+		return page;
+	}
+
+	public void setPage(Page page) {
+		this.page = page;
+	}
+
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
@@ -72,8 +91,8 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	}
 
 	/**
-	 * 
-	 * @return
+	 * Generates a key for thos object
+	 * @return generated key
 	 */
 	public String generateKey() {
 		return this.getRanAt() + ":"+this.getPasses()+":";
@@ -83,55 +102,25 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<ITestRecord> create() {
+	public ITestRecord create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
-		this.convertToRecord(orient_connection);
+		ITestRecord record = this.convertToRecord(orient_connection);
 		orient_connection.save();
 		
-		return this;
+		return record;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<ITestRecord> update() {
-		Iterator<ITestRecord> page_iter = this.findByKey(this.generateKey()).iterator();
-		int cnt=0;
-		while(page_iter.hasNext()){
-			page_iter.next();
-			cnt++;
-		}
-		log.info("# of existing records with key "+this.generateKey() + " :: "+cnt);
-		
+	public ITestRecord update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		ITestRecord test_record = null;
-		if(cnt == 0){
-			test_record = connection.getTransaction().addVertex(UUID.randomUUID(), ITestRecord.class);	
-		}
-		
-		test_record = this.convertToRecord(connection);
+		ITestRecord test_record = this.convertToRecord(connection);
 		connection.save();
 		
 		return test_record;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<ITestRecord> findByKey(String generated_key) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, ITestRecord.class);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Iterable<ITestRecord> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
-		return orient_connection.getTransaction().getVertices("key", generated_key, ITestRecord.class);
 	}
 
 	public static List<TestRecord> convertFromRecord(Iterator<ITestRecord> records) {

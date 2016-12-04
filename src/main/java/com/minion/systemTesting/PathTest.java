@@ -19,7 +19,8 @@ public class PathTest {
 		try {
 			Browser browser = new Browser(null);
 
-			page = new Page(browser.getDriver());
+			page = new Page(browser.getDriver().getPageSource(), browser.getDriver().getCurrentUrl(), Browser.getScreenshot(browser.getDriver()), Browser.getVisibleElements(browser.getDriver(), ""));
+			browser.close();
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

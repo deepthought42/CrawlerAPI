@@ -1,8 +1,6 @@
 package com.minion.browsing;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +17,25 @@ import com.minion.persistence.IPersistable;
  * An object wrapper that allows data to be dynamically placed in data structures
  * 
  * @author Brandon Kindred
- * @param <V>
+ * @param <V extends IPathObject> 
  *
  */
 public abstract class PathObject<V extends IPathObject> implements IPersistable<V>{
     private static final Logger log = LoggerFactory.getLogger(PathObject.class);
+    private String type = null;
     
-	private PathObject<?> next = null;
-
+    public String getType(){
+    	return this.type;
+    }
+    
+    /**
+     * Sets type to the classname passed. System generally expects classname to be simpleClassName()
+     * @param classname
+     */
+    public void setType(String classname){
+    	this.type = classname;
+    }
+    
 	public static PathObject<?> convertFromRecord(IPathObject data){
 		String type = data.getType();
 		
@@ -41,6 +50,7 @@ public abstract class PathObject<V extends IPathObject> implements IPersistable<
 			Iterable<IPage> page_iter = (Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class);
 			page_obj = Page.convertFromRecord(page_iter.iterator().next());
 			log.info("coverted page from record :: " + page_obj +" :: ");
+			page_obj.setType(type);
 			return page_obj;
 		}
 		else if(type.equals(PageElement.class.getName())){
@@ -59,15 +69,15 @@ public abstract class PathObject<V extends IPathObject> implements IPersistable<
 			//}
 			
 			log.info("coverted page element from record :: " + page_elem_obj +" :: ");
+			page_elem_obj.setType(type);
 			return page_elem_obj;
 		}
 		else if(type.equals(Action.class.getName())){			
 			Action action = new Action();
 			
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
-
-			action = action.convertFromRecord(iaction.iterator().next());
-			return action;
+			action.setType(type);
+			return action.convertFromRecord(iaction.iterator().next());
 		}
 		
 		return null;

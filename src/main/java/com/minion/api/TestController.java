@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,11 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import com.minion.actors.TestingActor;
+import com.minion.browsing.Browser;
+import com.minion.browsing.Page;
 import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
 import com.minion.tester.Test;
 import com.minion.tester.TestRecord;
-import com.minion.tester.Tester;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
@@ -96,16 +99,20 @@ public class TestController {
 	 * 
 	 * @param key
 	 * @return
+	 * @throws MalformedURLException 
 	 */
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTest(@PathVariable("key") String key){
+	public @ResponseBody TestRecord runTest(@PathVariable("key") String key) throws MalformedURLException{
 		System.out.println("RUNNING TEST WITH KEY : " + key);
 		Iterator<ITest> itest_iter = Test.findTestByKey(key).iterator();
 		ITest itest = itest_iter.next();
-
+	  
 		Test test = Test.convertFromRecord(itest);
-		log.info("Received Test :: " + test);
-		TestRecord record = Tester.runTest(test);
+		TestRecord record = null;
+		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString());
+		log.info(" Test Received :: " + test);
+		record = TestingActor.runTest(test, browser);
+		browser.close();
 
 		return record;
 	}
@@ -140,10 +147,17 @@ public class TestController {
 		}
 		
 		List<TestRecord> group_records = new ArrayList<TestRecord>();
-		
+
 		for(Test group_test : group_list){
-			TestRecord record = Tester.runTest(group_test);
-			group_records.add(record);
+			Browser browser;
+			try {
+				browser = new Browser(((Page)group_test.getPath().getPath().get(0)).getUrl().toString());
+				TestRecord record = TestingActor.runTest(group_test, browser);
+				group_records.add(record);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return group_records;
 	}

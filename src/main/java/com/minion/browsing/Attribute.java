@@ -1,6 +1,5 @@
 package com.minion.browsing;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -15,9 +14,6 @@ import com.minion.util.ArrayUtility;
 
 /**
  * A pairing of a name and a set of string values
- * 
- * @author Brandon Kindred
- *
  */
 public class Attribute implements IPersistable<IAttribute> {
     private static final Logger log = LoggerFactory.getLogger(Page.class);
@@ -32,21 +28,25 @@ public class Attribute implements IPersistable<IAttribute> {
 		this.key = generateKey();
 	}
 	
-	public boolean equals(Attribute attr){
-		if(this.getName().equals(attr.getName())
-			&& ArrayUtility.joinArray(this.getVals()).equals(ArrayUtility.joinArray(attr.getVals()))){
-			return true;
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object obj){
+		if(obj instanceof Attribute){
+			Attribute attr = (Attribute)obj;
+			if(this.getName().equals(attr.getName())
+				&& ArrayUtility.joinArray(this.getVals()).equals(ArrayUtility.joinArray(attr.getVals()))){
+				return true;
+			}
 		}
 		return false;
 	}
 	
-	public HashMap<String, String> toHash(){
-		HashMap<String, String> hash = new HashMap<String, String>();
-		hash.put("name", this.name);
-		hash.put("values", this.vals.toString());
-		return hash;
-	}
-	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public String toString(){
 		String attrString = "{";
 		
@@ -110,38 +110,25 @@ public class Attribute implements IPersistable<IAttribute> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IAttribute> create() {
+	public IAttribute create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
-		this.convertToRecord(orient_connection);
+		IAttribute attribute = this.convertToRecord(orient_connection);
 		orient_connection.save();
 		
-		return this;
+		return attribute;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IAttribute> update() {
-		Iterator<IAttribute> attribute_iter = (Iterator<IAttribute>) DataAccessObject.findByKey(this.generateKey(), IAttribute.class).iterator();
-		int cnt=0;
-		while(attribute_iter.hasNext()){
-			attribute_iter.next();
-			cnt++;
-		}
-		log.info("# of existing Attribute records with key "+this.getKey() + " :: "+cnt);
-		
+	public IAttribute update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IAttribute attribute = null;
-		if(cnt == 0){
-			attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);	
-		}
-		
-		this.convertToRecord(connection);
+		IAttribute attribute = this.convertToRecord(connection);
 		connection.save();
 		
-		return this;
+		return attribute;
 	}
 	
 

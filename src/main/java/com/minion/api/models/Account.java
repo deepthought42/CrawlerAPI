@@ -1,12 +1,20 @@
 package com.minion.api.models;
 
-//import org.springframework.data.annotation.Id;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+@Entity
+@Table(name = "account")
 public class Account {
-	//@Id
     private String id;
     private String username;
-    
+	private String password;
+	
+    @Id
+    @GeneratedValue
     public String getId() {
 		return id;
 	}
@@ -15,6 +23,7 @@ public class Account {
 		this.id = id;
 	}
 
+	@Column
 	public String getUsername() {
 		return username;
 	}
@@ -23,6 +32,7 @@ public class Account {
 		this.username = username;
 	}
 
+	@Column
 	public String getPassword() {
 		return password;
 	}
@@ -30,8 +40,6 @@ public class Account {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
-	private String password;
 
     public Account(String username, String password) {
         this.username = username;

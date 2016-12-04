@@ -14,12 +14,22 @@ import java.net.URL;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import com.google.gson.Gson;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.minion.structs.SessionTestTracker;
 
+import akka.dispatch.*;
+import akka.pattern.Patterns;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.Future;
+import scala.concurrent.Await;
+import scala.concurrent.Promise;
+import scala.concurrent.duration.Duration;
+import akka.util.Timeout;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -44,24 +54,17 @@ public class WorkAllocationController {
 	 * @throws MalformedURLException
 	 */
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody String startWork(HttpServletRequest request, 
+	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
 													   @RequestParam(value="url", required=true) String url,
 													   @RequestParam(value="account_key", required=true) String account_key) 
 															   throws MalformedURLException {
 		
 //		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
-
-		//String url = "http://127.0.0.1:3000";
-		//String url = "http://brandonkindred.ninja/blog";
-		//String url = "http://www.ideabin.io";
 		
 		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
 		//String account_key = ""+UUID.randomUUID().toString();
 		System.out.println("ACCOUNT KEY :: "+account_key);
-		
-		SessionTestTracker seqTracker = SessionTestTracker.getInstance();
-		seqTracker.addSessionSequences("SESSION_KEY_HERE");
-		
+
 		WorkAllowanceStatus.register(account_key); 
 		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
 		
@@ -70,9 +73,19 @@ public class WorkAllocationController {
 		ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 		Message<URL> message = new Message<URL>(account_key, new URL(url));
 		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-		workAllocationActor.tell(message, ActorRef.noSender());
+		//workAllocationActor.tell(message, ActorRef.noSender());
 	
-		return null;
+		Timeout timeout = new Timeout(Duration.create(10, "seconds"));
+		Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
+		try {
+			Await.result(future, timeout.duration());
+			return new ResponseEntity<String>(HttpStatus.OK);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}Gson gson = new Gson();
+		return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package com.minion.browsing;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,14 +12,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.openqa.selenium.UnhandledAlertException;
-import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IPage;
-import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
 
 /**
@@ -35,34 +34,34 @@ public class Page extends PathObject<IPage> {
 	private String screenshot = null; 
 	private String src = "";
 	private URL url;
+	private int total_weight;
+	private int image_weight;
 	
 	private List<PageElement> elements;
 	private Map<String, Integer> element_counts = new HashMap<String, Integer>();
 	
 	public Page(){}
-	
+
 	/**
 	 * Creates a page instance that is meant to contain the information found using the driver passed
 	 * 
 	 * @param driver
 	 * @param valid
-	 * @throws MalformedURLException 
 	 * @throws IOException
 	 * @throws URISyntaxException 
 	 */
-	public Page(WebDriver driver) throws MalformedURLException, IOException{
+	public Page(String html, String url, File screenshot, List<PageElement> elements) throws IOException {
 		log.info("setting source");
-		this.setSrc(Browser.cleanSrc(driver.getPageSource()));
+		this.setSrc(html);
 
-		log.info("Page URL :: "+driver.getCurrentUrl());
-		this.url = new URL(driver.getCurrentUrl().replace("/#",""));
+		log.info("Page URL :: "+url);
+		this.url = new URL(url.replace("/#",""));
 		
 		log.info("GETTING SCREENSHOT");
-		this.screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(driver), this.url.getHost(), this.url.getPath().toString());
+		this.screenshot = UploadObjectSingleOperation.saveImageToS3(screenshot, this.url.getHost(), this.url.getPath().toString());
 		
 		System.err.println("IMAGE SAVED TO S3 at : " +this.screenshot);
-		log.info("GETTING VISIBLE ELEMENTS");
-		this.elements = Browser.getVisibleElements(driver, "");
+		this.elements = elements;
 		//this.element_counts = countTags(this.elements);
 		
 		log.info("Page object created");
@@ -110,7 +109,7 @@ public class Page extends PathObject<IPage> {
 			log.info("Pages match in check for landability");
 			landable = true;
 		}
-		
+		browser.close();
 		return landable;
 	}
 		
@@ -187,41 +186,30 @@ public class Page extends PathObject<IPage> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IPage> create() {
+	public IPage create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
-		this.convertToRecord(orient_connection);
+		IPage page = this.convertToRecord(orient_connection);
 		orient_connection.save();
 		
-		return this;
+		return page;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPersistable<IPage> update() {
-		Iterator<IPage> page_iter = (Iterator<IPage>) DataAccessObject.findByKey(this.generateKey(), IPage.class).iterator();
-		int cnt=0;
-		while(page_iter.hasNext()){
-			page_iter.next();
-			cnt++;
-		}
-		log.info("# of existing page records with key "+this.generateKey() + " :: "+cnt);
-		
+	public IPage update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		if(cnt == 0){
-			connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
-			this.convertToRecord(connection);
-		}
-		
+		IPage page = this.convertToRecord(connection);
 		connection.save();
 		
-		return this;
+		return page;
 	}
 	
 	public static Page convertFromRecord(IPage result) {
 		Page page = new Page();
+		page.setType(Page.class.getSimpleName());
 		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setLandable(result.isLandable());
@@ -246,6 +234,7 @@ public class Page extends PathObject<IPage> {
 	@Override
 	public IPage convertToRecord(OrientConnectionFactory connection){
 		this.setKey(this.generateKey());
+		@SuppressWarnings("unchecked")
 		Iterable<IPage> pages = (Iterable<IPage>) DataAccessObject.findByKey(this.getKey(), connection, IPage.class);
 		
 		int cnt = 0;
@@ -345,11 +334,27 @@ public class Page extends PathObject<IPage> {
 		this.url = url;
 	}
 
+	public int getTotalWeight() {
+		return total_weight;
+	}
+
+	public void setTotalWeight(int total_weight) {
+		this.total_weight = total_weight;
+	}
+
 	public Map<String, Integer> getElementCounts() {
 		return element_counts;
 	}
 
 	public void setElementCounts(Map<String, Integer> element_counts) {
 		this.element_counts = element_counts;
+	}
+
+	public int getImageWeight() {
+		return image_weight;
+	}
+
+	public void setImageWeight(int image_weight) {
+		this.image_weight = image_weight;
 	}
 }

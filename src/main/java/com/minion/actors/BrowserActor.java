@@ -179,13 +179,14 @@ public class BrowserActor extends UntypedActor {
 				log.info("PATH PASSED TO BROWSER ACTOR");
 				Path path = (Path)acct_msg.getData();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
-				
+			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString());
+
 				log.info("Creating new Browser");
 				Page result_page = null;
 				
 				if(path.getPath() != null){
 					log.info("crawling path");
-					result_page = Crawler.crawlPath(path);
+					result_page = Crawler.crawlPath(path, this.browser);
 				}
 				
 				log.info("Getting last page");
@@ -212,7 +213,8 @@ public class BrowserActor extends UntypedActor {
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
 			  	}
-								
+			  	this.browser.close();
+	
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Sending test to Memory Actor");
@@ -231,7 +233,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if(acct_msg.getData() instanceof URL){
 				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
-			  	this.browser = new Browser(((URL)acct_msg.getData()).toString());
+			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString());
 			  	
 			  	log.info("creating path");
 			  	Path path = new Path();
@@ -239,21 +241,25 @@ public class BrowserActor extends UntypedActor {
 			  	log.info("getting browser page");
 			  	Page page_obj = browser.getPage();
 			  	
-			  	log.info("adding page to path");
+			  	log.info("adding page " + page_obj + " to path");
 			  	path.getPath().add(page_obj);
 			  	
 			  	log.info("Crawling path");
-			  	Crawler.crawlPath(path);
+			  	Crawler.crawlPath(path, browser);
 			  	
 			  	log.info("Getting last and current page");
 			  	Page last_page = path.findLastPage();
 			  	
 			  	Page current_page = null;
+			  
 			  	if(last_page != null && last_page.getSrc().equals(Browser.cleanSrc(browser.getDriver().getPageSource())) && path.getPath().size() > 1){
+			  		log.info("Path isn't useful");
 			  		current_page = last_page;
 			  		path.setIsUseful(false);
 			  	}
 			  	else{
+			  		log.info("Path is useful");
+
 			  		current_page = browser.getPage();
 					path.setIsUseful(true);
 					if(path.size() > 1){
@@ -264,7 +270,7 @@ public class BrowserActor extends UntypedActor {
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
 			  	}
-			  	this.browser.close();
+			  	browser.close();
 
 				Test test = new Test(path, current_page, current_page.getUrl().getHost());
 				PastPathExperienceController.broadcastTestExperience(test);

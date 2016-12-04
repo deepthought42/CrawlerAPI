@@ -1,7 +1,7 @@
 package com.minion.tester;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 import com.minion.browsing.PathObject;
 import com.minion.structs.Path;
@@ -24,9 +24,9 @@ public class TestWriter {
 	 * @return
 	 */
 	public String createTest(){
-		Iterator<PathObject> pathIterator = this.path.getPath().iterator();
+		List<PathObject<?>> pathIterator = this.path.getPath();
 		ArrayList<String> testStatements = new ArrayList<String>();
-		while(pathIterator.hasNext()){
+		for(PathObject<?> obj : pathIterator){
 			//Integer graph_idx = (Integer) pathIterator.next();
 			//Vertex<?> vertex = graph.getVertices().get(graph_idx);
 			IStatementFactory statement = new ElementStatement();

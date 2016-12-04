@@ -1,7 +1,6 @@
 package com.minion.actors;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -17,16 +16,24 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.Page;
 import com.minion.browsing.PageElement;
 import com.minion.browsing.PathObject;
+import com.minion.browsing.actions.Action;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
+import com.minion.structs.SessionTestTracker;
+import com.minion.structs.TestMapper;
 import com.minion.tester.Test;
 import com.minion.tester.TestRecord;
 import com.qanairy.rules.BooleanRuleType;
+import com.qanairy.rules.NumericRule;
+import com.qanairy.rules.NumericRuleType;
+import com.qanairy.rules.PatternRuleType;
 import com.qanairy.rules.Rule;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 /**
@@ -52,78 +59,37 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			}
 			
 			//get first page in path
-			PathObject<?> page_obj = path.getPath().get(0);
-			if(page_obj instanceof Page){
-				Page page = (Page)page_obj;
+			Page page = (Page)path.getPath().get(0);
+			//if(path_obj instanceof Page){
+				//Page page = (Page)path_obj;
 			  	Browser browser = new Browser(page.getUrl().toString());
 			  	
 			  	//clone path
 			  	//Path new_path = Path.clone(path);
 			  	
 			  	log.info("Crawling path for test :: "+(path!=null));
-			  	Page current_page = Crawler.crawlPath(path);
+			  	Page current_page = Crawler.crawlPath(path, browser);
 			  	
 			  	log.info("Getting current choices on page for form tests");
-			  	List<Form> choices = Browser.extractAllForms(current_page, browser.getDriver());
-			  	System.err.println("Total Choice fields : " + choices.size());
+			  	List<Form> forms = Browser.extractAllForms(current_page, browser);
+			  	System.err.println("Total Choice fields : " + forms.size());
 			  	
-			  	
-			  	for(Form form : choices){
-			  		for(ComplexField combo_field: form.getFormFields()){
-			  			log.info("Form field combo elements : " + combo_field.getElements().size());
-
-			  			for(FormField field : combo_field.getElements()){
-				  			field.getInputElement();
-			  			}
-			  		}
+			  	List<Path> form_paths = new ArrayList<Path>();
+			  	log.info("Generating tests for " + forms.size() + " forms");
+			  	for(Form form : forms){
+			  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
 			  	}
 			  	
-			  	List<PageElement> input_choices = Browser.extractAllInputElements(current_page, browser.getDriver());
-			  	System.err.println("Total input Choice fields : " + input_choices.size());
-			}
-			else{
-				
-			}
+			  	log.info("Added form tests ... " + form_paths.size());
+			  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+				for(Path expanded : form_paths){
+					//send all paths to work allocator to be evaluated
+					Message<Path> expanded_test_msg = new Message<Path>(acct_message.getAccountKey(), expanded);
 
-		  	
-		  	/*Page current_page = null;
-		  	if(last_page != null && last_page.getSrc().equals(Browser.cleanSrc(browser.getDriver().getPageSource())) && path.getPath().size() > 1){
-		  		current_page = last_page;
-		  		path.setIsUseful(false);
-		  	}
-		  	else{
-		  		current_page = browser.getPage();
-				path.setIsUseful(true);
-				if(path.size() > 1){
-					path.add(current_page);
+					work_allocator.tell(expanded_test_msg, getSelf() );
 				}
-				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
-
-				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-				path_expansion_actor.tell(path_msg, getSelf() );
-		  	}
-		  	this.browser.close();
-
-			Test test = new Test(path, current_page, current_page.getUrl().getHost());
-			PastPathExperienceController.broadcastTestExperience(test);
-			
-			log.info("Saving test");
-		  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-
-			final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-			memory_actor.tell(test_msg, getSelf() );
-			
-			
-			//get all checkbox fields
-			// check if checkbox field is required
-			Browser.extractAllChoiceElements(elem, tag, driver);
-			//get all radio fields
-			// check if radio button is required
-			
-				log.info("Path passed to work allocator");
-				final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "browserActor"+UUID.randomUUID());
-				browser_actor.tell(acct_message, getSelf() );
-			}*/
+				
+			  	browser.close();
 		}
 	}
 	
@@ -133,75 +99,295 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param test test to be ran
 	 * 
 	 * @pre test != null
-	 * @return
+	 * @return {@link TestRecord} containing analytics for test run. 
+	 * @throws IOException 
 	 */
-	public static TestRecord runTest(Test test){		
+	public static TestRecord runTest(Test test) throws IOException{		
 		assert test != null;
 		
 		log.info("Running test...");
 		boolean passing = false;
-		try {
-			Page page = Crawler.crawlPath(test.getPath());
-			passing = test.isTestPassing(page);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	  	Browser browser = new Browser(test.getPath().getFirstPage().getUrl().toString());
+		Page page = Crawler.crawlPath(test.getPath(), browser);
+	  	browser.close();
+
+		passing = test.isTestPassing(page);
 		
-		TestRecord test_record = new TestRecord(test, new Date(), passing );
+		TestRecord test_record = new TestRecord(new Date(), passing );
 		return test_record;
 	}
 	
-	public static Test generateBoundaryTests(InputField input){
+	public static List<Path> generateBoundaryTests(PageElement input){
 		
 		return null;
 		
 	}
 	
-	public static Test generateLengthBoundaryTests(InputField input){
+	public static List<Path> generateLengthBoundaryTests(PageElement input, Rule<?,?> rule){
+		log.info("generating length boundary test paths");
+
+		List<Path> paths = new ArrayList<Path>();
+
+		if(rule.getType().equals(NumericRuleType.MAX_LENGTH)){
+			//generate empty string test
+			Path path = new Path();
+			path.add(input);
+			
+			//generate string with length equal to MAX_LENGTH
+			String short_str = NumericRule.generateRandomAlphabeticString((Integer)rule.getValue());
+			log.info("Generated string of length : " + short_str.length());
+
+			path.add(new Action("sendKeys", short_str));
+			paths.add(path);
+			
+			log.info("adding single character text string sendKeys action" );
+
+			//generate single character str test
+			path = new Path();
+			path.add(input);
+			
+			//generate string with length that is 1 character greater than MAX_LENGTH
+			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)rule.getValue())+1);
+			log.info("Generated string of length : " + large_str.length());
+			path.add(new Action("sendKeys", large_str));
+			paths.add(path);
+		}
+		else if(rule.getType().equals(NumericRuleType.MIN_LENGTH)){
+			//generate empty string test
+			Path path = new Path();
+			path.add(input);
+			
+			//generate string with length equal to MAX_LENGTH
+			String short_str = NumericRule.generateRandomAlphabeticString((Integer)rule.getValue());
+			log.info("Generated string of length : " + short_str.length());
+
+			path.add(new Action("sendKeys", short_str));
+			paths.add(path);
+			
+			log.info("adding single character text string sendKeys action For MIN LENGTH" );
+
+			//generate single character str test
+			path = new Path();
+			path.add(input);
+			
+			//generate string with length that is 1 character greater than MAX_LENGTH
+			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)rule.getValue())-1);
+			log.info("Generated string of length : " + large_str.length());
+
+			path.add(new Action("sendKeys", large_str));
+			paths.add(path);
+		}
+		else if(rule.getType().equals(NumericRuleType.MAX_VALUE)){
+			//generate empty string test
+			Path path = new Path();
+			path.add(input);
+			
+			//generate string with length equal to MAX_LENGTH
+			path.add(new Action("sendKeys", Integer.toString((Integer)rule.getValue())));
+			paths.add(path);
+			
+			log.info("adding single character text string sendKeys action" );
+
+			//generate single character str test
+			path = new Path();
+			path.add(input);
+			
+			//generate string with length that is 1 character greater than MAX_LENGTH
+			path.add(new Action("sendKeys", Integer.toString(((Integer)rule.getValue())+1)));
+			paths.add(path);
+		}
+		else if(rule.getType().equals(NumericRuleType.MIN_VALUE)){
+			//generate empty string test
+			Path path = new Path();
+			path.add(input);
+			
+			//generate string with length equal to MAX_LENGTH
+			path.add(new Action("sendKeys", Integer.toString((Integer)rule.getValue())));
+			paths.add(path);
+			
+			log.info("adding single character text string sendKeys action" );
+
+			//generate single character str test
+			path = new Path();
+			path.add(input);
+			
+			//generate string with length that is 1 character greater than MAX_LENGTH
+			path.add(new Action("sendKeys", Integer.toString(((Integer)rule.getValue())-1)));
+			paths.add(path);
+		}
+		return paths;
+		
+	}
+	
+	public static List<Path> generateValueBoundaryTests(PageElement input){
+		return null;	
+	}
+	
+	public static List<Path> generateRequirementChecks(PageElement input, boolean isRequired){
+		assert input.getName().equals("input");
+		log.info("generating requirements checks");
+		
+		List<Path> paths = new ArrayList<Path>();
+		String input_type = input.getAttribute("type").getVals()[0];
+		if(input_type.equals("text") ||
+				input_type.equals("textarea") ||
+				input_type.equals("email")){
+			log.info("adding empty text string sendKeys action" );
+			//generate empty string test
+			Path path = new Path();
+			path.add(input);
+			path.add(new Action("sendKeys", ""));
+			paths.add(path);
+			
+			log.info("adding single character text string sendKeys action" );
+
+			//generate single character str test
+			path = new Path();
+			path.add(input);
+			path.add(new Action("sendKeys", "a"));
+			paths.add(path);
+		}
+		else if( input_type.equals("number")){
+			log.info("adding empty text string sendKeys action" );
+
+			//generate empty string test
+			Path path = new Path();
+			path.add(input);
+			path.add(new Action("sendKeys", ""));
+			paths.add(path);
+			
+			log.info("adding single digit text string sendKeys action" );
+
+			//generate single character str test
+			path = new Path();
+			path.add(input);
+			path.add(new Action("sendKeys", "0"));
+			paths.add(path);
+		}
+		return paths;
+		
+	}
+	
+	public static List<Path> generateCharacterTests(PageElement input){
 		return null;
 		
 	}
 	
-	public static Test  generateValueBoundaryTests(InputField input){
-		return null;
+	public static List<Path> generateNumericTests(PageElement input){
+		List<Path> paths = new ArrayList<Path>();
+
+		Path path = new Path();
+		path.add(input);
+		path.add(new Action("sendKeys", "0"));
+		paths.add(path);
 		
+		log.info("adding single digit text string sendKeys action" );
+
+		//generate single character str test
+		path = new Path();
+		path.add(input);
+		path.add(new Action("sendKeys", "a"));
+		paths.add(path);
+		
+		//generate single character str test
+		path = new Path();
+		path.add(input);
+		path.add(new Action("sendKeys", "!"));
+		paths.add(path);
+				
+		return paths;
 	}
 	
-	public static Test  generateRequirementChecks(InputField input){
-		return null;
+	/**
+	 * Generates rule tests for a given {@link PageElement} and {@link Rule}
+	 * 
+	 * @param input_elem
+	 * @param rule
+	 * @return
+	 */
+	public static List<Path> generateRuleTests(PageElement input_elem, Rule<?,?> rule){
+		assert rule != null;
 		
-	}
-	
-	public static Test  generateCharacterTests(InputField input){
-		return null;
-		
-	}
-	
-	public static List<Test> generateRuleTests(Rule<?,?> rule){
-		List<Test> tests = new ArrayList<Test>();
+		List<Path> tests = new ArrayList<Path>();
+		log.info("generating rule test for rule " + rule.getType());
 		if(rule.getType().equals(BooleanRuleType.REQUIRED)){
 			//generate required tests for element type
+			log.info("SHOULD BE GENERATING REQUIRED TESTS");
+			tests.addAll(generateRequirementChecks(input_elem, true));
 		}
-		return null;
+		else if(rule.getType().equals(BooleanRuleType.NUMBER_ONLY)){
+			log.info("SHOULD BE GENERATING NUMBER ONLY NUMERIC TESTS");
+
+			tests.addAll(generateNumericTests(input_elem));
+		}
+		else if(rule.getType().equals(BooleanRuleType.ALPHABETIC_RESTRICITON)){
+			log.info("SHOULD BE GENERATED ALPHABETIC ONLY RESTRICTION");
+		}
+		else if(rule.getType().equals(BooleanRuleType.NUMERIC_RESTRICITON)){
+			log.info("SHOULD BE GENERATING NUMBER RESTRICTION TESTS ");
+		}
+		else if(rule.getType().equals(BooleanRuleType.SPECIAL_CHARACTER_RESTRICTION)){
+			log.info("SHOULD BE GENERATING SPECIAL CHARACTER RESTRICTION TESTS");			
+		}
+		else if(rule.getType().equals(BooleanRuleType.ENABLED)){
+			log.info("SHOULD BE GENERATING ENABLED FIELD TESTS ");
+		}
+		else if(rule.getType().equals(BooleanRuleType.READ_ONLY)){
+			log.info("SHOULD BE GENERATING READ-ONLY FIELD TESTS ");
+		}
+		else if(rule.getType().equals(NumericRuleType.MAX_LENGTH)){
+			log.info("SHOULD BE GENERATING MAX LENGTH TESTS ");
+			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+		}
+		else if(rule.getType().equals(NumericRuleType.MIN_LENGTH)){
+			log.info("SHOULD BE GENERATING MIN LENGTH TESTS ");
+			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+		}
+		else if(rule.getType().equals(NumericRuleType.MAX_VALUE)){
+			log.info("SHOULD BE GENERATING MAX VALUE TESTS ");
+			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+		}
+		else if(rule.getType().equals(NumericRuleType.MIN_VALUE)){
+			log.info("SHOULD BE GENERATING MIN LENGTH TESTS ");
+			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+		}
+		else if(rule.getType().equals(PatternRuleType.REGEX)){
+			
+		}
+		return tests;
 		
 	}
 	
-	public static Test generateAllFormTests(Form form){
-		List<Test> form_tests = new ArrayList<Test>();
+	public static List<Path> generateAllFormPaths(Path path, Form form){
+		List<Path> form_paths = new ArrayList<Path>();
+		log.info("Form complex field size : " + form.getFormFields().size());
 		for(ComplexField complex_field: form.getFormFields()){
+			log.info("complex field elements size : " + complex_field.getElements().size());
 			//for each field in the complex field generate a set of tests for all known rules
 			for(FormField field : complex_field.getElements()){
 				PageElement input_elem = field.getInputElement();
 				
 				List<Rule<?,?>> rules = field.getRules();
+				log.info("field rules length " + rules.size());
 				for(Rule<?,?> rule : rules){
-					generateRuleTests(rule);
+					log.info("RULE :: " +rule);
+					List<Path> path_list = generateRuleTests(input_elem, rule);
+					log.info("# rule tests created : " + path_list.size());
+					for(Path curr_path : path_list){
+						Path clone_path = Path.clone(path);
+						
+						for(PathObject<?> obj : curr_path.getPath()){
+							clone_path.add(obj);	
+						}
+						log.info("loaded clone path for test");
+						//Test test = new Test(clone_path, null, ((Page)path.getPath().get(0)).getUrl().getHost());
+						//log.info("Test created for form path");
+						form_paths.add(clone_path);
+					}
 				}
 			}
-
-			System.out.println("ELEMENT CLASS : "+elem.getClass());
 		}
-		
-		return null;
+		log.info("Tests created for form : " +form_paths.size());
+		return form_paths;
 	}
 }

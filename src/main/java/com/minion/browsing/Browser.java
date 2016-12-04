@@ -5,7 +5,6 @@ import java.awt.image.RasterFormatException;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -36,6 +35,7 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -49,35 +49,29 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
-import com.qanairy.rules.Rule;
 
 /**
- * 
- * @author Brandon Kindred
+ * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 
  */
 public class Browser {
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
 
 	private WebDriver driver;
-	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout"};	
+	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel"};	
 
-	public Browser(String url) throws IOException {
+	public Browser(String url) throws MalformedURLException {
 		this.driver = openWithChrome(url);
+		
 		//this.driver = openWithFirefox(url);
 		//this.driver = openWithPhantomjs(url);
 		this.driver.get(url);
-	}
-	
-	public Browser(String url, Page browserPage) {
-		driver = openWithPhantomjs(url);
-		driver.get(url);
 	}
 	
 	/**
 	 * @return current {@link WebDriver driver}
 	 */
 	public WebDriver getDriver(){
-		return driver;
+		return this.driver;
 	}
 
 	/**
@@ -87,7 +81,8 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
-		return new Page(driver);
+		return new Page(this.driver.getPageSource(), this.driver.getCurrentUrl(), Browser.getScreenshot(this.driver), Browser.getVisibleElements(this.driver, ""));
+
 	}
 	
 	/**
@@ -102,21 +97,6 @@ public class Browser {
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 	    return p.matcher(src).replaceAll("");
-	    
-		//return src;
-	}
-
-	/**
-	 * 
-	 * 
-	 * @param date
-	 * @param valid
-	 * 
-	 * @return
-	 * @throws IOException 
-	 */
-	public Page updatePage(DateFormat date) throws IOException{
-		return new Page(driver);
 	}
 	
 	/**
@@ -131,9 +111,6 @@ public class Browser {
 		}
 		catch(UnreachableBrowserException e){
 			log.error("Error closing driver");
-		}
-		finally{
-			driver = null;
 		}
 	}
 	
@@ -155,15 +132,20 @@ public class Browser {
 	 * 
 	 * @param url
 	 * @return firefox web driver
+	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithFirefox(String url){
+	public static WebDriver openWithFirefox(String url) throws MalformedURLException{
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
 		log.info("Opening Firefox WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
 	    DesiredCapabilities capabilities = DesiredCapabilities.firefox();
 
+	    //capabilities.setBrowserName("firefox");
+	    //capabilities.setPlatform(Platform.LINUX);
+	    //capabilities.setVersion("3.6");
 		WebDriver driver = new FirefoxDriver(capabilities);
+		//WebDriver driver = new RemoteWebDriver(new URL("http://localhost:4444"), capabilities);
 		log.info("firefox opened");
 		return driver;
 	}
@@ -206,15 +188,19 @@ public class Browser {
 	 * 
 	 * @param url
 	 * @return Chrome web driver
+	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithChrome(String url){
+	public static WebDriver openWithChrome(String url) throws MalformedURLException{
 		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver_win32\\chromedriver.exe");
 
 		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
 	    DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+	    //capabilities.setBrowserName("chrome");
+	    //capabilities.setPlatform(Platform.LINUX);
+	    WebDriver driver = new ChromeDriver(capabilities);
+		//WebDriver driver = new RemoteWebDriver(new URL(url), capabilities);
 
-		WebDriver driver = new ChromeDriver(capabilities);
 		log.info("Chrome opened");
 		return driver;
 	}
@@ -226,6 +212,8 @@ public class Browser {
 	 * @return
 	 */
 	public static PhantomJSDriver openWithPhantomjs(String url){
+		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver_win32\\chromedriver.exe");
+
 		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
 	    //Create instance of PhantomJS driver
 	    DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
@@ -261,6 +249,7 @@ public class Browser {
 	
 	/**
 	 * Gets image as a base 64 string
+	 * 
 	 * @return File png file of image
 	 * @throws IOException
 	 */
@@ -269,16 +258,16 @@ public class Browser {
 		
 		return screenshot;
 	}
-	
+	 
 	/**
 	 * Get immediate child elements for a given element
 	 * @param elem	WebElement to get children for
 	 * @return list of WebElements
 	 */
-	public List<WebElement> getChildElements(String xpath) throws WebDriverException{
-		return driver.findElements(By.xpath(xpath+"/*"));
+	public static List<WebElement> getChildElements(WebElement elem) throws WebDriverException{
+		return elem.findElements(By.xpath("./*"));
 	}
-	 
+	
 	 /**
 	 * Retreives all elements on a given page that are visible. In this instance we take 
 	 *  visible to mean that it is not currently set to {@css display: none} and that it
@@ -292,7 +281,6 @@ public class Browser {
 															 throws WebDriverException {
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-		log.info("page elements found :: " +pageElements.size());
 		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
 		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
 		if(pageElements.size() == 0){
@@ -307,9 +295,8 @@ public class Browser {
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
 					String this_xpath = Browser.generateXpath(elem, "", xpath_map, driver); 
 					//PageElement pageElem = new PageElement(ActionFactory.getActions(), new PageElement(elem, this_xpath, "", loadAttributes(Browser.extractedAttributes(elem, (JavascriptExecutor)driver))));
-					PageElement tag = new PageElement(elem, this_xpath, elem.getTagName(), loadAttributes(Browser.extractedAttributes(elem, (JavascriptExecutor)driver)));
+					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver));
 					try{
-						log.info("Adding tag type : " + tag.getName() + " : to element list");
 						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));
 						elementList.add(tag);
 					}
@@ -322,13 +309,13 @@ public class Browser {
 				Date end = new Date();
 				double execution_time = (end.getTime() - start.getTime())/1000.0;
 				if( execution_time > 1.0){
-					log.info("All attributes extracted in " + execution_time + " seconds");
+					log.debug("All attributes extracted in " + execution_time + " seconds");
 				}
 			}catch(StaleElementReferenceException e){
 				log.error(e.toString());
 			}
 			catch(RasterFormatException e){
-				e.printStackTrace();
+				log.error(e.toString());
 			}
 		}
 		
@@ -336,27 +323,30 @@ public class Browser {
 	}
 	
 	/**
+	 * Extracts all forms including the child inputs and associated labels. 
 	 * 
 	 * @param elem
 	 * @param tag
 	 * @param driver
 	 * @return
 	 */
-	public static List<Form> extractAllForms(Page page, WebDriver driver){
+	public static List<Form> extractAllForms(Page page, Browser browser){
+		//Document doc = Jsoup.parse(page.getSrc());
+
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 
 		List<Form> form_list = new ArrayList<Form>();
-		List<WebElement> form_elements = driver.findElements(By.xpath("//form"));
+		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 		log.info("total forms found :: " + form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-				PageElement tag = new PageElement(form_elem, generateXpath(form_elem, "", xpath_map, driver),form_elem.getTagName(), Browser.loadAttributes(Browser.extractedAttributes(form_elem, (JavascriptExecutor)driver)));
-				Form form = new Form(tag, new ArrayList<ComplexField>() );
-				List<WebElement> input_elements =  form_elem.findElements(By.xpath(tag.getXpath() +"//input"));
+				PageElement form_tag = new PageElement(form_elem.getText(), generateXpath(form_elem, "", xpath_map, browser.getDriver()), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()));
+				Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
+				List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 				
 				List<PageElement> input_tags = new ArrayList<PageElement>(); 
 				for(WebElement input_elem : input_elements){
-					PageElement input_tag = new PageElement(input_elem, generateXpath(input_elem, "", xpath_map, driver), input_elem.getTagName(), loadAttributes(Browser.extractedAttributes(input_elem, (JavascriptExecutor)driver)));
+					PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()));
 					
 					boolean alreadySeen = false;
 					for(String path : form_xpath_list){
@@ -369,21 +359,21 @@ public class Browser {
 						continue;
 					}						
 					
-					List<FormField> group_inputs = constructGrouping(input_elem, driver);
+					List<FormField> group_inputs = constructGrouping(input_elem, browser.getDriver());
 					ComplexField combo_input = new ComplexField(group_inputs);
 					
-					List<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, driver);
+					//List<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, browser.getDriver());
 					for(FormField input_field : group_inputs){
-						PageElement label = findLabelForInput(form_elem, input_field, driver);
+						PageElement label = findLabelForInput(form_elem, input_field, browser.getDriver());
 						input_field.setFieldLabel(label);
 					}
 					//combo_input.getElements().addAll(labels);
 					form.addFormField(combo_input);
-					List<Rule<?,?>> combo_rules = new ArrayList<Rule<?,?>>();
 					for(FormField input : group_inputs){
-						combo_rules.addAll(ElementRuleExtractor.extractRules(input.getInputElement()));
+						input.addRules(ElementRuleExtractor.extractRules(input.getInputElement()));
+						//combo_rules.addAll(ElementRuleExtractor.extractRules(input.getInputElement()));
 					}
-					log.info("Form combo field has a total of " + combo_rules.size() + " rules");
+					//log.info("Form combo field has a total of " + combo_rules.size() + " rules");
 					input_tags.add(input_tag);
 				}
 				
@@ -395,6 +385,11 @@ public class Browser {
 		return form_list;
 	}
 	
+	private PageElement findFormSubmitButton(WebElement form_elem) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * 
 	 */
@@ -412,7 +407,7 @@ public class Browser {
 				log.info(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem, generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), loadAttributes(Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver)));
+					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver));
 					return label_tag;
 				}
 			}
@@ -442,7 +437,7 @@ public class Browser {
 				log.info(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem, generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), loadAttributes(Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver)));
+					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver));
 					label_tags.add(label_tag);
 					break;
 				}
@@ -499,7 +494,7 @@ public class Browser {
 				child_inputs = new ArrayList<FormField>();
 
 				for(WebElement child : children){
-					PageElement elem = new PageElement(child, Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), loadAttributes(Browser.extractedAttributes(child, (JavascriptExecutor)driver)));
+					PageElement elem = new PageElement(child.getText(), Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), Browser.extractedAttributes(child, (JavascriptExecutor)driver));
 					FormField input_field = new FormField(elem);
 					child_inputs.add(input_field);
 				}
@@ -509,7 +504,7 @@ public class Browser {
 			}
 			else{
 				if(child_inputs.size() == 0){
-					PageElement input_tag = new PageElement(page_elem, generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), loadAttributes(Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver)));
+					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, page_elem.getTagName(), new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver));
 					FormField input_field = new FormField(input_tag);
 					child_inputs.add(input_field);
 				}
@@ -670,8 +665,14 @@ public class Browser {
 		return null;
 	}
 	
-	
-	public static PageElement findLabelFor(List<PageElement> elements, String[] for_ids){
+	/**
+	 * Finds labels that match ids passed
+	 * @param elements
+	 * @param for_ids
+	 * @return
+	 */
+	public static List<PageElement> findLabelsFor(List<PageElement> elements, String[] for_ids){
+		List<PageElement> labels = new ArrayList<PageElement>();
 		for(PageElement elem : elements){
 			//PageElement tag = (PageElement)elem;
 			if(elem.getName().equals("label") ){
@@ -683,7 +684,7 @@ public class Browser {
 							for(String id : for_ids){
 								if(val.equals(id)){
 									log.info("LABEL FOUND FOR : " + id);
-									return elem;
+									labels.add(elem);
 								}
 							}
 						}
@@ -692,7 +693,7 @@ public class Browser {
 			}
 		}
 		
-		return null;
+		return labels;
 	}
 	
 	/**
@@ -727,8 +728,8 @@ public class Browser {
 	public static String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
 		
-		xpath = "//"+element.getTagName();
-		for(Attribute attr : Browser.loadAttributes(Browser.extractedAttributes(element, (JavascriptExecutor)driver))){
+		xpath += "//"+element.getTagName();
+		for(Attribute attr : Browser.extractedAttributes(element, (JavascriptExecutor)driver)){
 			if(!Arrays.asList(invalid_xpath_attributes).contains(attr.getName())){
 				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals()) + "\")");
 			}
@@ -795,8 +796,9 @@ public class Browser {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static ArrayList<String> extractedAttributes(WebElement element, JavascriptExecutor javascriptDriver) {
-		return (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
+	public static List<Attribute> extractedAttributes(WebElement element, JavascriptExecutor javascriptDriver) {
+		List<String> attribute_strings = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
+		return loadAttributes(attribute_strings);
 	}
 	
 	

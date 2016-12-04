@@ -14,4 +14,10 @@ public interface IAction extends IPathObject {
 	
 	@Property("name")
 	public String setName(String name);
+	
+	@Property("value")
+	public String getValue();
+	
+	@Property("value")
+	public String setValue(String value);
 }

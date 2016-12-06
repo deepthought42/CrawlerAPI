@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
 import com.minion.actors.TestingActor;
+import com.minion.api.models.Test;
+import com.minion.api.models.TestRecord;
 import com.minion.browsing.Browser;
-import com.minion.browsing.Page;
 import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
-import com.minion.tester.Test;
-import com.minion.tester.TestRecord;
+import com.qanairy.models.Page;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past

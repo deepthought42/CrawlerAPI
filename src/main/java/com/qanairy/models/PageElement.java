@@ -1,4 +1,4 @@
-package com.minion.browsing;
+package com.qanairy.models;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,12 +19,13 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.minion.browsing.ActionFactory;
+import com.minion.browsing.Attribute;
 import com.minion.browsing.actions.Action;
 import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IAttribute;
 import com.minion.persistence.IPageElement;
 import com.minion.persistence.OrientConnectionFactory;
-import com.minion.tester.Test;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement

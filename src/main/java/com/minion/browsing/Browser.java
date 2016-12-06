@@ -49,6 +49,8 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
+import com.qanairy.models.Page;
+import com.qanairy.models.PageElement;
 
 /**
  * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 

@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Attribute;
-import com.minion.browsing.PageElement;
 import com.minion.browsing.element.ComplexField;
+import com.qanairy.models.PageElement;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser

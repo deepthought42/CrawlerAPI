@@ -4,11 +4,11 @@ import java.net.MalformedURLException;
 
 import com.minion.memory.ObjectDefinition;
 import com.minion.memory.OrientDbPersistor;
+import com.qanairy.models.PageElement;
 
 import org.testng.annotations.Test;
 
 import com.minion.browsing.ActionFactory;
-import com.minion.browsing.PageElement;
 
 public class OrientDbPersistorTests {
   @Test

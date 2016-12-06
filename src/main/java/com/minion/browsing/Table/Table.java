@@ -9,8 +9,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.PageElement;
 import com.minion.browsing.PageElementNode;
+import com.qanairy.models.PageElement;
 
 public class Table {
 	public List<Row> headers;

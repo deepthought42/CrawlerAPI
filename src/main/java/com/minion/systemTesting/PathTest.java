@@ -6,8 +6,8 @@ import java.net.MalformedURLException;
 import org.testng.annotations.Test;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.Page;
 import com.minion.structs.Path;
+import com.qanairy.models.Page;
 
 
 public class PathTest {

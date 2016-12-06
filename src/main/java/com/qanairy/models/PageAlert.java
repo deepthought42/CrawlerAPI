@@ -1,4 +1,4 @@
-package com.minion.browsing;
+package com.qanairy.models;
 
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
@@ -6,6 +6,7 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
+import com.minion.browsing.IObjectValuationAccessor;
 import com.minion.persistence.IPathObject;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;

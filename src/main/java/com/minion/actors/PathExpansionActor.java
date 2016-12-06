@@ -14,15 +14,15 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
+import com.minion.api.models.Test;
 import com.minion.browsing.ActionFactory;
-import com.minion.browsing.Page;
-import com.minion.browsing.PageElement;
 import com.minion.browsing.actions.Action;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
 import com.minion.structs.TestMapper;
-import com.minion.tester.Test;
+import com.qanairy.models.Page;
+import com.qanairy.models.PageElement;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.

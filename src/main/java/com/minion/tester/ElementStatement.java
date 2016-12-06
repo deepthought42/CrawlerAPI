@@ -1,6 +1,6 @@
 package com.minion.tester;
 
-import com.minion.browsing.PageElement;
+import com.qanairy.models.PageElement;
 
 /**
  * Generates statements for finding an element

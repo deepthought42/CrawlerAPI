@@ -20,14 +20,14 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
+import com.minion.api.models.Test;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.minion.browsing.Page;
-import com.minion.browsing.PageElement;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.tester.Test;
+import com.qanairy.models.Page;
+import com.qanairy.models.PageElement;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 

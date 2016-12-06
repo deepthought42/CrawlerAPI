@@ -1,4 +1,4 @@
-package com.minion.tester;
+package com.qanairy.models;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -9,7 +9,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.Page;
 import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.ITest;
@@ -31,41 +30,43 @@ public class Test implements IPersistable<ITest>{
 	private List<TestRecord> records;
 	private Path path;
 	private Page result;
-	private String domain;
+	private Domain domain;
 	private Boolean correct;
 	private boolean isUseful;
 	private boolean spansMultipleDomains = false;
-	private List<String> groups;
+	private List<Group> groups;
 	
 	/**
-	 * 
+	 * Construct a test with defaults of useful set to fault and 
+	 * spansMultipleDomains set to false
 	 */
 	public Test(){
 		this.setRecords(new ArrayList<TestRecord>());
 		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
-		this.setGroups(new ArrayList<String>());
+		this.setGroups(new ArrayList<Group>());
 	}
 	
 	/**
 	 * Constructs a test object
 	 * 
 	 * @param path {@link Path} that will be used to determine what the expected path should be
+ 	 * @param result
+	 * @param domain
 	 * 
 	 * @pre path != null
 	 */
-	public Test(Path path, Page result, String domain){
+	public Test(Path path, Page result, Domain domain){
 		assert path != null;
 		
 		this.path = path;
 		this.result = result;
 		this.setRecords(new ArrayList<TestRecord>());
-		
 		this.domain = domain;
 		this.correct = null;
 		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
-		this.setGroups(new ArrayList<String>());
+		this.setGroups(new ArrayList<Group>());
 		this.setKey(this.generateKey());
 	}
 	
@@ -116,7 +117,7 @@ public class Test implements IPersistable<ITest>{
 		test.setPath(this.getPath().convertToRecord(connection));
 		log.info("setting test result");
 		test.setResult(this.getResult().convertToRecord(connection));
-		test.setDomain(this.getDomain().toString());
+		test.setDomain(this.getDomain());
 		test.setName(this.getName());
 		test.setCorrect(this.isCorrect());
 		test.setGroups(this.getGroups());
@@ -335,11 +336,11 @@ public class Test implements IPersistable<ITest>{
 		this.name = name;
 	}
 	
-	public String getDomain(){
+	public Domain getDomain(){
 		return this.domain;
 	}
 	
-	public void setDomain(String domain){
+	public void setDomain(Domain domain){
 		this.domain = domain;
 	}
 	
@@ -372,8 +373,7 @@ public class Test implements IPersistable<ITest>{
 	}
 	
 	/**
-	 * 
-	 * @param result_page
+	 * @param result_page expected {@link Page} state after running through path
 	 */
 	public void setResult(Page result_page){
 		this.result = result_page;
@@ -395,15 +395,15 @@ public class Test implements IPersistable<ITest>{
 		this.spansMultipleDomains = spansMultipleDomains;
 	}
 
-	public List<String> getGroups() {
+	public List<Group> getGroups() {
 		return groups;
 	}
 
-	public void setGroups(List<String> groups) {
+	public void setGroups(List<Group> groups) {
 		this.groups = groups;
 	}
 	
-	public boolean addGroup(String group){
+	public boolean addGroup(Group group){
 		return this.groups.add(group);
 	}
 }

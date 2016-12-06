@@ -6,10 +6,11 @@ import java.util.List;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
-
-import com.minion.browsing.Page;
+import com.qanairy.models.Domain;
+import com.qanairy.models.Group;
+import com.qanairy.models.Page;
+import com.qanairy.models.TestRecord;
 import com.minion.structs.Path;
-import com.minion.tester.TestRecord;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
@@ -29,18 +30,6 @@ import com.minion.tester.TestRecord;
 	 */
 	@Property("key")
 	public void setKey(String key);
-	
-	/**
-	 * @return the domain for the current test
-	 */
-	@Property("domain")
-	public String getDomain();
-	
-	/**
-	 * sets the domain for the current test
-	 */
-	@Property("domain")
-	public void setDomain(String url);
 	
 	/**
 	 * @return the name for the current test
@@ -71,20 +60,32 @@ import com.minion.tester.TestRecord;
 	public void setCorrect(Boolean correct);
 	
 	/**
+	 * @return the domain for the current test
+	 */
+	@Adjacency(label="belongs_to")
+	public Domain getDomain();
+	
+	/**
+	 * sets the domain for the current test
+	 */
+	@Adjacency(label="belongs_to")
+	public void setDomain(Domain domain);
+	
+	/**
 	 * Gets the correctness value of the test
 	 * 
 	 * @return Correctness value. Null indicates value is unset.
 	 */
-	@Property("groups")
-	public List<String> getGroups();
+	@Adjacency(label="belongs_to")
+	public List<Group> getGroups();
 	
 	/**
 	 * Sets correctness value of test
 	 * 
 	 * @param correctness value
 	 */
-	@Property("groups")
-	public void setGroups(List<String> groups);
+	@Adjacency(label="belongs_to")
+	public void setGroups(List<Group> groups);
 	
 	/**
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"

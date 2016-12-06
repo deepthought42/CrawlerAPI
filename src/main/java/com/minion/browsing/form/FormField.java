@@ -3,7 +3,7 @@ package com.minion.browsing.form;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.minion.browsing.PageElement;
+import com.qanairy.models.PageElement;
 import com.qanairy.rules.Rule;
 
 /**

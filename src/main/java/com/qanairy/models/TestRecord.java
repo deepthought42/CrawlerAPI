@@ -1,4 +1,4 @@
-package com.minion.tester;
+package com.qanairy.models;
 
 import java.util.Date;
 import java.util.Iterator;
@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.Page;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.ITestRecord;
 import com.minion.persistence.OrientConnectionFactory;
@@ -22,6 +21,7 @@ import com.minion.persistence.OrientConnectionFactory;
  *
  */
 public class TestRecord  implements IPersistable<ITestRecord> {
+	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(TestRecord.class);
 
 	private Date ran_at;

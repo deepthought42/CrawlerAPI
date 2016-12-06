@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.HtmlTag;
-import com.minion.browsing.PageElement;
 import com.minion.browsing.actions.Action;
+import com.qanairy.models.PageElement;
 
 public class SelectElement implements PageElement {
     @SuppressWarnings("unused")

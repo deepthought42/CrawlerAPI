@@ -1,4 +1,4 @@
-package com.minion.browsing;
+package com.qanairy.models;
 
 import java.util.Iterator;
 

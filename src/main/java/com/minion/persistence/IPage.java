@@ -1,11 +1,10 @@
 package com.minion.persistence;
 
+import com.qanairy.models.Page;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 import java.util.Map;
-
-import com.minion.browsing.Page;
 
 /**
  * Tinkerpop/frames interface implementation of {@link Page}

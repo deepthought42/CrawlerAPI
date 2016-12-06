@@ -7,11 +7,11 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.UntypedActor;
 
-import com.minion.browsing.Page;
+import com.minion.api.models.Test;
 import com.minion.memory.DataDecomposer;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.tester.Test;
+import com.qanairy.models.Page;
 
 /**
  * Handles the saving of records into orientDB

@@ -11,6 +11,7 @@ import com.minion.persistence.IAttribute;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
 import com.minion.util.ArrayUtility;
+import com.qanairy.models.Page;
 
 /**
  * A pairing of a name and a set of string values

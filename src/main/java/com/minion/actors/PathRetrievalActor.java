@@ -14,11 +14,12 @@ import akka.actor.ActorSystem;
 import akka.actor.Inbox;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import com.minion.browsing.PathObject;
+
 import com.minion.browsing.actions.Action;
 import com.minion.memory.OrientDbPersistor;
 import com.minion.memory.PathNode;
 import com.minion.structs.Path;
+import com.qanairy.models.PathObject;
 
 /**
  * An {@link Actor} that is responsible for retrieving tests from the database and

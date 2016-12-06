@@ -2,11 +2,10 @@ package com.minion.persistence;
 
 import java.util.List;
 
+import com.qanairy.models.PathObject;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
-
-import com.minion.browsing.PathObject;
 
 /**
  * Test object data access interface for use with tinkerpop/frames

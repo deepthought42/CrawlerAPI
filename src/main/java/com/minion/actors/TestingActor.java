@@ -12,13 +12,13 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
+import com.minion.api.models.Test;
+import com.minion.api.models.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.minion.browsing.Page;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.tester.Test;
-import com.minion.tester.TestRecord;
+import com.qanairy.models.Page;
 
 /**
  * Handles retrieving tests

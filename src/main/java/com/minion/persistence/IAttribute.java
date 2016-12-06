@@ -2,6 +2,9 @@ package com.minion.persistence;
 
 import com.tinkerpop.frames.Property;
 
+/**
+ * Represents {@link Attribute} to be stored in OrientDB database
+ */
 public interface IAttribute extends IPathObject{
 	@Property("key")
 	public String getKey();

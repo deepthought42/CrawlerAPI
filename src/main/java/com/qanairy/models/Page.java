@@ -1,4 +1,4 @@
-package com.minion.browsing;
+package com.qanairy.models;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
+import com.minion.browsing.Browser;
 import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IPage;
 import com.minion.persistence.OrientConnectionFactory;

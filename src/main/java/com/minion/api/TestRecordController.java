@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.minion.api.models.Test;
+import com.minion.api.models.TestRecord;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
-
-import com.minion.tester.Test;
-import com.minion.tester.TestRecord;
 
 
 /**

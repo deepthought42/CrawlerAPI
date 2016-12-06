@@ -9,12 +9,12 @@ import com.tinkerpop.blueprints.Vertex;
 import akka.actor.UntypedActor;
 import com.minion.memory.OrientDbPersistor;
 import com.minion.memory.Vocabulary;
-import com.minion.browsing.Page;
-import com.minion.browsing.PageElement;
-import com.minion.browsing.PathObject;
+import com.minion.api.models.Test;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.tester.Test;
+import com.qanairy.models.Page;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PathObject;
 
 /**
  * Retains lists of productive, unproductive, and unknown value {@link Path}s.

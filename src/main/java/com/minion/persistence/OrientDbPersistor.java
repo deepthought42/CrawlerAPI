@@ -1,4 +1,4 @@
-package com.minion.memory;
+package com.minion.persistence;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

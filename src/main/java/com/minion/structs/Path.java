@@ -12,9 +12,6 @@ import org.slf4j.LoggerFactory;
 import com.minion.actors.BrowserActor;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.IObjectValuationAccessor;
-import com.minion.browsing.PathObject;
-import com.minion.browsing.Page;
-import com.minion.browsing.PageElement;
 import com.minion.browsing.actions.Action;
 import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IPage;
@@ -24,6 +21,9 @@ import com.minion.persistence.IPersistable;
 import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
 import com.minion.persistence.edges.IPathEdge;
+import com.qanairy.models.Page;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PathObject;
 
 
 /**

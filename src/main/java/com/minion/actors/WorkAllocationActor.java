@@ -7,13 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.WorkManagement.WorkAllowanceStatus;
+import com.minion.api.models.Test;
+
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.minion.observableStructs.ObservableHash;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.tester.Test;
 
 
 

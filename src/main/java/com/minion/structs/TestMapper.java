@@ -3,9 +3,9 @@ package com.minion.structs;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.minion.browsing.PageElement;
+import com.minion.api.models.Test;
 import com.minion.browsing.actions.Action;
-import com.minion.tester.Test;
+import com.qanairy.models.PageElement;
 
 
 /**

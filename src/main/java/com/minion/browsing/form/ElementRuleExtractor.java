@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Attribute;
-import com.minion.browsing.PageElement;
+import com.qanairy.models.PageElement;
 import com.qanairy.rules.BooleanRule;
 import com.qanairy.rules.BooleanRuleType;
 import com.qanairy.rules.NumericRule;

@@ -3,15 +3,13 @@ package com.minion.browsing;
 import java.util.Iterator;
 import java.util.Random;
 
-import com.minion.memory.ObjectDefinition;
-import com.minion.memory.OrientDbPersistor;
-
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
+import com.minion.persistence.OrientDbPersistor;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;

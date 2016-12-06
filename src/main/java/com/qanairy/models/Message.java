@@ -1,4 +1,4 @@
-package com.minion.api.models;
+package com.qanairy.models;
 
 /**
  * A data wrapper for messages to be passed around between actors. This wrapper includes in the account

@@ -1,7 +1,7 @@
 package com.minion.api;
 
+import com.minion.api.models.Test;
 import com.minion.structs.Path;
-import com.minion.tester.Test;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -17,6 +17,8 @@ import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.actions.Action;
+import com.minion.persistence.DataAccessObject;
+import com.minion.persistence.ITest;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
@@ -96,13 +98,13 @@ public class PathExpansionActor extends UntypedActor {
 				
 				Test test = (Test)acct_msg.getData();
 				Path path = test.getPath();
-				//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				log.info("EXPANDING TEST PATH WITH LENGTH : "+path.size());
 				ArrayList<Path> pathExpansions = new ArrayList<Path>();
 
-				//final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
-				//memory_registry.tell(test_msg, getSelf());
+				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
+				memory_registry.tell(test_msg, getSelf());
 				
 				if(path != null && path.getIsUseful() && !path.getSpansMultipleDomains()){
 					if(!test.getPath().findLastPage().getUrl().equals(test.getResult().getUrl()) && test.getResult().isLandable()){
@@ -159,16 +161,6 @@ public class PathExpansionActor extends UntypedActor {
 						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
 						path.getPath().add(last_page);
-					}
-					// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
-					Test test = new Test(path, last_page, new Domain(last_page.getUrl().getHost(), new Organization("Qanairy")));
-					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
-					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-					if(!testMap.containsTest(test)){
-						testMap.addTest(test);
-					}
-					else{
-						log.info("TEST WITH KEY : "+test.hashCode()+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
 					}
 
 					pathExpansions = PathExpansionActor.expandPath(path);

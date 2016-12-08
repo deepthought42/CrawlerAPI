@@ -3,7 +3,7 @@ package com.minion.structs;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.minion.api.models.Test;
+import com.qanairy.models.Test;
 import com.minion.browsing.actions.Action;
 import com.qanairy.models.PageElement;
 

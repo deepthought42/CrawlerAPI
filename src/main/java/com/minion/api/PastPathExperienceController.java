@@ -1,6 +1,6 @@
 package com.minion.api;
 
-import com.minion.api.models.Test;
+import com.qanairy.models.Test;
 import com.minion.structs.Path;
 
 import java.io.IOException;

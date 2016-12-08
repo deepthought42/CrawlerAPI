@@ -14,13 +14,15 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
-import com.minion.api.models.Test;
+import com.qanairy.models.Test;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.actions.Action;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
 import com.minion.structs.TestMapper;
+import com.qanairy.models.Domain;
+import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
@@ -115,7 +117,7 @@ public class PathExpansionActor extends UntypedActor {
 					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 					for(Path expanded : pathExpansions){
-						Test new_test = new Test(expanded, null,  path.findLastPage().getUrl().getHost());
+						Test new_test = new Test(expanded, null,  new Domain(path.findLastPage().getUrl().getHost(), new Organization("Qanairy")));
 						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
@@ -159,7 +161,7 @@ public class PathExpansionActor extends UntypedActor {
 						path.getPath().add(last_page);
 					}
 					// CHECK THAT PAGE ELEMENT ACTION SEQUENCE HAS NOT YET BEEN EXPERIENCED
-					Test test = new Test(path, last_page, last_page.getUrl().getHost());
+					Test test = new Test(path, last_page, new Domain(last_page.getUrl().getHost(), new Organization("Qanairy")));
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 					if(!testMap.containsTest(test)){

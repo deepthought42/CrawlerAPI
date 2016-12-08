@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.minion.api.models.Test;
-import com.minion.api.models.TestRecord;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 
 import java.util.ArrayList;
 import java.util.List;

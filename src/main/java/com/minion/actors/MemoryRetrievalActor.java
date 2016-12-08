@@ -7,9 +7,8 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Vertex;
 
 import akka.actor.UntypedActor;
-import com.minion.memory.OrientDbPersistor;
-import com.minion.memory.Vocabulary;
-import com.minion.api.models.Test;
+import com.minion.persistence.OrientDbPersistor;
+import com.qanairy.models.Test;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.qanairy.models.Page;
@@ -81,7 +80,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 			Message<Test> msg = new Message<Test>(null, test);
 			//send path to actor that handles running tests
 		}
-		else if(message instanceof Vocabulary){
+		/*else if(message instanceof Vocabulary){
 			//retrieve all vocabulary values from memory
 			OrientDbPersistor persistor = new OrientDbPersistor();
 			Iterable<Vertex> vertex = persistor.findVertices("vocabulary", "page");
@@ -95,7 +94,7 @@ public class MemoryRetrievalActor extends UntypedActor{
 				//pass vocabulary to appropriate actor
 				
 			}
-		}
+		}*/
 		else unhandled(message);
 		
 	}

@@ -6,13 +6,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.encog.util.normalize.input.InputField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.api.PastPathExperienceController;
-import com.minion.api.models.Test;
-import com.minion.api.models.TestRecord;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.actions.Action;
@@ -21,8 +19,6 @@ import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.structs.SessionTestTracker;
-import com.minion.structs.TestMapper;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PathObject;

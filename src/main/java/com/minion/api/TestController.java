@@ -21,11 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
 import com.minion.actors.TestingActor;
-import com.minion.api.models.Test;
-import com.minion.api.models.TestRecord;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.persistence.ITest;
 import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 
 /**
@@ -171,16 +172,16 @@ public class TestController {
 	 * @return the updated test
 	 */
 	@RequestMapping(path="/addGroup/{group}/{test_key}", method = RequestMethod.POST)
-	public @ResponseBody Test addGroupToTest(@PathVariable("group") String group,
+	public @ResponseBody Test addGroupToTest(@PathVariable("group") Group group,
 											 @PathVariable("test_key") String test_key){
 		System.out.println("Addint GROUP to test  : " + group);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
 		Iterator<ITest> itest_iter = Test.findTestByKey(test_key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
-		List<String> group_list = itest.getGroups();
+		List<Group> group_list = itest.getGroups();
 		if(group_list == null){
-			group_list = new ArrayList<String>();
+			group_list = new ArrayList<Group>();
 		}
 		
 		if(!group_list.contains(group)){
@@ -201,10 +202,10 @@ public class TestController {
 	 * @return
 	 */
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
-	public @ResponseBody List<String> getGroups(HttpServletRequest request, 
+	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								 @RequestParam(value="url", required=true) String url) {
 		List<Test> test_list = new ArrayList<Test>();
-		List<String> groups = new ArrayList<String>();
+		List<Group> groups = new ArrayList<Group>();
 		try {
 			test_list = Test.findByUrl(url);
 			

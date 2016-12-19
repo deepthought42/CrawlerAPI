@@ -96,7 +96,6 @@ public class Test implements IPersistable<ITest>{
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings("unchecked")
-	@Override
 	public ITest convertToRecord(OrientConnectionFactory connection){
 		this.setKey(this.generateKey());
 		Iterator<ITest> tests = (Iterator<ITest>) DataAccessObject.findByKey(this.getKey(), ITest.class).iterator();
@@ -173,7 +172,6 @@ public class Test implements IPersistable<ITest>{
 	 * 
 	 * @return
 	 */
-	@Override
 	public String generateKey() {
 		String path_key = "";
 		
@@ -187,7 +185,6 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public ITest create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		ITest test = this.convertToRecord(orient_connection);
@@ -199,7 +196,6 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public ITest update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		ITest test = this.convertToRecord(connection);		

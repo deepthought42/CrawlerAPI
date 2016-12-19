@@ -2,15 +2,15 @@
 <testng-results skipped="0" failed="0" total="1" passed="1">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="108" started-at="2016-10-30T05:23:44Z" finished-at="2016-10-30T05:23:45Z">
+  <suite name="Default suite" duration-ms="155" started-at="2016-11-24T04:58:35Z" finished-at="2016-11-24T04:58:35Z">
     <groups>
     </groups>
-    <test name="Default test" duration-ms="108" started-at="2016-10-30T05:23:44Z" finished-at="2016-10-30T05:23:45Z">
+    <test name="Default test" duration-ms="155" started-at="2016-11-24T04:58:35Z" finished-at="2016-11-24T04:58:35Z">
       <class name="BrowserTest">
-        <test-method status="PASS" signature="verifyCleanSrc()[pri:0, instance:BrowserTest@3701eaf6]" name="verifyCleanSrc" duration-ms="85" started-at="2016-10-30T01:23:44Z" finished-at="2016-10-30T01:23:45Z">
+        <test-method status="PASS" signature="verifyTestConstructor()[pri:0, instance:BrowserTest@68bbe345]" name="verifyTestConstructor" duration-ms="135" started-at="2016-11-23T23:58:35Z" finished-at="2016-11-23T23:58:35Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- verifyCleanSrc -->
+        </test-method> <!-- verifyTestConstructor -->
       </class> <!-- BrowserTest -->
     </test> <!-- Default test -->
   </suite> <!-- Default suite -->

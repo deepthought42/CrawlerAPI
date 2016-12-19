@@ -52,24 +52,20 @@ public class Organization implements IPersistable<IOrganization> {
 		this.domains = domains;
 	}
 
-	@Override
 	public String generateKey() {
 		return "org:"+this.name;
 	}
 
-	@Override
 	public IOrganization convertToRecord(OrientConnectionFactory connection) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public IOrganization create() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public IOrganization update() {
 		// TODO Auto-generated method stub
 		return null;

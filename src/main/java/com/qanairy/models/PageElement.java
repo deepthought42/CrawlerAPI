@@ -132,7 +132,6 @@ public class PageElement extends PathObject<IPageElement>{
 	 * 
 	 * @return
 	 */
-	@Override
 	public String generateKey() {
 		return this.getXpath().hashCode()+"";
 	}
@@ -140,7 +139,6 @@ public class PageElement extends PathObject<IPageElement>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IPageElement create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -153,7 +151,6 @@ public class PageElement extends PathObject<IPageElement>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IPageElement update() {		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IPageElement html_tag =  this.convertToRecord(connection);
@@ -182,7 +179,6 @@ public class PageElement extends PathObject<IPageElement>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IPageElement convertToRecord(OrientConnectionFactory framedGraph) {
 		@SuppressWarnings("unchecked")
 		Iterable<IPageElement> html_tags = (Iterable<IPageElement>) DataAccessObject.findByKey(this.getKey(), framedGraph, IPageElement.class);

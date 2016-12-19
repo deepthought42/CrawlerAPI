@@ -178,7 +178,6 @@ public class Page extends PathObject<IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public String generateKey() {
 		return this.src.hashCode() + "::";
 	}
@@ -186,7 +185,6 @@ public class Page extends PathObject<IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IPage create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -199,7 +197,6 @@ public class Page extends PathObject<IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IPage update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IPage page = this.convertToRecord(connection);
@@ -207,7 +204,12 @@ public class Page extends PathObject<IPage> {
 		
 		return page;
 	}
-	
+
+	/**
+	 * 
+	 * @param result
+	 * @return
+	 */
 	public static Page convertFromRecord(IPage result) {
 		Page page = new Page();
 		page.setType(Page.class.getSimpleName());
@@ -232,7 +234,6 @@ public class Page extends PathObject<IPage> {
 	 * 
 	 * @param page
 	 */
-	@Override
 	public IPage convertToRecord(OrientConnectionFactory connection){
 		this.setKey(this.generateKey());
 		@SuppressWarnings("unchecked")

@@ -63,7 +63,6 @@ public class Group implements IPersistable<IGroup>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public String generateKey() {
 		return "group:"+name;
 	}
@@ -71,7 +70,6 @@ public class Group implements IPersistable<IGroup>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IGroup convertToRecord(OrientConnectionFactory connection) {
 		
 		// TODO Auto-generated method stub
@@ -81,7 +79,6 @@ public class Group implements IPersistable<IGroup>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IGroup create() {
 		// TODO Auto-generated method stub
 		return null;
@@ -90,11 +87,8 @@ public class Group implements IPersistable<IGroup>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IGroup update() {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	
 }

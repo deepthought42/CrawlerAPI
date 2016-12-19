@@ -82,7 +82,6 @@ public class Attribute implements IPersistable<IAttribute> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public String generateKey() {
 		return this.name.hashCode()+":";
 	}
@@ -90,7 +89,6 @@ public class Attribute implements IPersistable<IAttribute> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IAttribute convertToRecord(OrientConnectionFactory connection) {
 		Iterator<IAttribute> attributes = (Iterator<IAttribute>) DataAccessObject.findByKey(this.getKey(), connection, IAttribute.class).iterator();
 		IAttribute attribute = null;
@@ -110,7 +108,6 @@ public class Attribute implements IPersistable<IAttribute> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IAttribute create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -123,7 +120,6 @@ public class Attribute implements IPersistable<IAttribute> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IAttribute update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		IAttribute attribute = this.convertToRecord(connection);

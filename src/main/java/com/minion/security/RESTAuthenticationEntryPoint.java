@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RESTAuthenticationEntryPoint implements AuthenticationEntryPoint {
     
-    @Override
+    //@Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
         

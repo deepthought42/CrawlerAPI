@@ -21,8 +21,8 @@ public class Domain implements IPersistable<IDomain>{
 	 * @param domain
 	 * @param organization
 	 */
-	public Domain(String domain, Organization organization){
-		this.setDomain(domain);
+	public Domain(String domain_name, Organization organization){
+		this.setUrl(domain);
 		this.setOrganization(organization);
 	}
 	
@@ -34,16 +34,16 @@ public class Domain implements IPersistable<IDomain>{
 	 * @param groups		- groups that belong to this domain
 	 */
 	public Domain(String domain_url, List<Test> tests, List<Group> groups){
-		this.setDomain(domain_url);
+		this.setUrl(domain_url);
 		this.setTests(tests);
 		this.setGroups(groups);
 	}
 
-	public String getDomain() {
+	public String getUrl() {
 		return domain;
 	}
 
-	public void setDomain(String domain) {
+	public void setUrl(String domain) {
 		this.domain = domain;
 	}
 
@@ -74,7 +74,6 @@ public class Domain implements IPersistable<IDomain>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public String generateKey() {
 		// TODO Auto-generated method stub
 		return null;
@@ -83,7 +82,6 @@ public class Domain implements IPersistable<IDomain>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IDomain convertToRecord(OrientConnectionFactory connection) {
 		// TODO Auto-generated method stub
 		return null;
@@ -92,16 +90,29 @@ public class Domain implements IPersistable<IDomain>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public IDomain create() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public IDomain update() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof Domain){
+			Domain domain = (Domain)o;
+			if(domain.getUrl().equals(this.getUrl())){
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 }

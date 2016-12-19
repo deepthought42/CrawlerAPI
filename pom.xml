@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
   
-  <groupId>com.Minion</groupId>
+  <groupId>com.Qanairy</groupId>
   <version>0.0.1</version> 
-  <artifactId>Minion</artifactId>
+  <artifactId>Qanairy</artifactId>
   <packaging>jar</packaging>
 
   <name>Minion</name>
@@ -13,8 +13,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <selenium-version>3.0.1</selenium-version>
-    <spring.version>3.2.2.RELEASE</spring.version>
+    <spring.version>4.3.4.RELEASE</spring.version>
     <java.version>1.8</java.version>
+    <springboot.version>1.4.2.RELEASE</springboot.version>
   </properties>
 
   <build>
@@ -44,7 +45,7 @@
 		        <user>root</user>
 		        <password></password>
 		        <schemas>
-		            <schema>minion</schema>
+		            <schema>qanairy</schema>
 		        </schemas>
 		    </configuration>
 		</plugin>
@@ -61,6 +62,8 @@
     </repository>
 </repositories>
   <dependencies>
+
+
 		<dependency> 
 		    <groupId>xml-apis</groupId>
 		    <artifactId>xml-apis</artifactId>
@@ -215,54 +218,133 @@
 			<artifactId>akka-actor_2.11</artifactId>
 			<version>2.4.2</version>
 		</dependency>
-	   	<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-messaging</artifactId>
-			<version>4.2.5.RELEASE</version>
-		</dependency>
+
 		 
 		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-messaging -->
-		<dependency>
+		<!--  <dependency>
 		    <groupId>org.springframework.security</groupId>
 		    <artifactId>spring-security-messaging</artifactId>
-		    <version>4.1.3.RELEASE</version>
+		    <version>4.2.0.RELEASE</version>
+		</dependency>
+-->
+	 	<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-security</artifactId>
+		    <version>${springboot.version}</version>
 		</dependency>
 
+		
 		<!-- http://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-web</artifactId>
-		    <version>1.3.5.RELEASE</version>
+		    <version>${springboot.version}</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
-			<version>1.4.1.RELEASE</version>
+			<version>${springboot.version}</version>
 		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-web -->
+		<dependency>
+		    <groupId>org.springframework.security</groupId>
+		    <artifactId>spring-security-web</artifactId>
+		    <version>4.2.0.RELEASE</version>
+		</dependency>
 		
+	<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa -->
+	<dependency>
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-data-jpa</artifactId>
+	    <version>${springboot.version}</version>
+	</dependency>
+	
+	<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail -->
+	<dependency>
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-mail</artifactId>
+	    <version>${springboot.version}</version>
+	</dependency>
+	
+<<<<<<< Updated upstream
+=======
+	<!-- https://mvnrepository.com/artifact/org.springframework/spring-context-support -->
+	<dependency>
+	    <groupId>org.springframework</groupId>
+	    <artifactId>spring-context-support</artifactId>
+	    <version>4.3.4.RELEASE</version>
+	</dependency>
+	
+>>>>>>> Stashed changes
+
+	<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-entitymanager -->
+	<dependency>
+	    <groupId>org.hibernate</groupId>
+	    <artifactId>hibernate-entitymanager</artifactId>
+<<<<<<< Updated upstream
+	    <version>5.2.5.Final</version>
+	</dependency>
+=======
+	    <version>5.0.11.Final</version>
+	</dependency>
+
+>>>>>>> Stashed changes
+				
+	<!-- 2fa -->
+        
+    <dependency>
+	    <groupId>org.jboss.aerogear</groupId>
+	    <artifactId>aerogear-otp-java</artifactId>
+	    <version>1.0.0</version>
+	    <scope>compile</scope>
+	</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-websocket -->
-		<dependency>
+		<!-- <dependency>
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-websocket</artifactId>
 		    <version>4.3.3.RELEASE</version>
 		</dependency>
+		-->
 		
-		  <dependency>
+		<!-- JDBC -->      
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-jdbc</artifactId>
+		    <version>4.3.4.RELEASE</version>
+		</dependency>
+
+
+        <!-- MySQL -->
+	  	<dependency>
 		    <groupId>mysql</groupId>
 		    <artifactId>mysql-connector-java</artifactId>
-		    <version>6.0.3</version>
-		  </dependency>
-		
-		<!-- https://mvnrepository.com/artifact/com.auth0/auth0-spring-security-api -->
+	    	<version>6.0.3</version>
+	  	</dependency>
+<<<<<<< Updated upstream
+=======
+	  	
+	  	<!-- Password Validation -->
 		<dependency>
+		    <groupId>org.passay</groupId>
+		    <artifactId>passay</artifactId>
+		    <version>1.0</version>
+		</dependency>
+
+	  	
+>>>>>>> Stashed changes
+
+		<!-- https://mvnrepository.com/artifact/com.auth0/auth0-spring-security-api -->
+		<!-- <dependency>
 		    <groupId>com.auth0</groupId>
 		    <artifactId>auth0-spring-security-api</artifactId>
 		    <version>0.0.3</version>
 		</dependency>
-
+ 		-->
+ 		
 		<dependency>
 		    <groupId>org.mockito</groupId>
 		    <artifactId>mockito-core</artifactId>
@@ -274,7 +356,7 @@
 		<dependency>
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-test</artifactId>
-		    <version>4.3.3.RELEASE</version>
+		    <version>4.3.4.RELEASE</version>
 		</dependency>
         
        	<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3 -->
@@ -282,19 +364,6 @@
 		    <groupId>com.amazonaws</groupId>
 		    <artifactId>aws-java-sdk-s3</artifactId>
 		    <version>1.11.49</version>
-		</dependency>
-
-		<dependency>
-		  <groupId>net.sourceforge.htmlunit</groupId>
-		  <artifactId>htmlunit</artifactId>
-		  <version>2.23</version>
-		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
-		<dependency>
-		    <groupId>org.hibernate</groupId>
-		    <artifactId>hibernate-core</artifactId>
-		    <version>5.2.5.Final</version>
 		</dependency>
 		
 	</dependencies>

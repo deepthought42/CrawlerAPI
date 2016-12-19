@@ -6,6 +6,8 @@ import org.testng.annotations.Test;
 
 import com.minion.browsing.Browser;
 import com.minion.structs.Path;
+import com.qanairy.models.Domain;
+import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
 
 public class BrowserTest {
@@ -28,7 +30,7 @@ public class BrowserTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		com.minion.api.models.Test test = new com.minion.api.models.Test(new Path(), new Page(), page.getUrl().getHost());
+		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost(), new Organization("HardCodedTestOrganization")));
 		
 		Assert.assertTrue(test.getDomain().equals(page.getUrl().getHost()));
 		Assert.assertTrue(test.getKey() != null);

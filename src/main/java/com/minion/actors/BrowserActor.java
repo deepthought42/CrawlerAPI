@@ -161,13 +161,14 @@ public class BrowserActor extends UntypedActor {
 	 * @param vocabLabels
 	 * @return
 	 */
-	public ArrayList<Vocabulary> loadVocabularies(String[] vocabLabels){
+	/*public ArrayList<Vocabulary> loadVocabularies(String[] vocabLabels){
 		ArrayList<Vocabulary> vocabularies = new ArrayList<Vocabulary>();
 		for(String label : vocabLabels){			
 			vocabularies.add(Vocabulary.load(label));
 		}
 		return vocabularies;		
 	}
+	*/
 
 	/**
 	 * {@inheritDoc}

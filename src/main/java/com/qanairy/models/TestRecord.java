@@ -79,7 +79,6 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public ITestRecord convertToRecord(OrientConnectionFactory connection){
 		ITestRecord testRecord = connection.getTransaction().addVertex(UUID.randomUUID(), ITestRecord.class);
 
@@ -101,7 +100,6 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public ITestRecord create() {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
@@ -114,7 +112,6 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public ITestRecord update() {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		ITestRecord test_record = this.convertToRecord(connection);

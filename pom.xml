@@ -16,6 +16,7 @@
     <spring.version>4.3.4.RELEASE</spring.version>
     <java.version>1.8</java.version>
     <springboot.version>1.4.2.RELEASE</springboot.version>
+    
   </properties>
 
   <build>
@@ -247,61 +248,8 @@
 			<artifactId>spring-boot-starter-websocket</artifactId>
 			<version>${springboot.version}</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-web -->
-		<dependency>
-		    <groupId>org.springframework.security</groupId>
-		    <artifactId>spring-security-web</artifactId>
-		    <version>4.2.0.RELEASE</version>
-		</dependency>
-		
-	<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa -->
-	<dependency>
-	    <groupId>org.springframework.boot</groupId>
-	    <artifactId>spring-boot-starter-data-jpa</artifactId>
-	    <version>${springboot.version}</version>
-	</dependency>
-	
-	<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail -->
-	<dependency>
-	    <groupId>org.springframework.boot</groupId>
-	    <artifactId>spring-boot-starter-mail</artifactId>
-	    <version>${springboot.version}</version>
-	</dependency>
-	
-<<<<<<< Updated upstream
-=======
-	<!-- https://mvnrepository.com/artifact/org.springframework/spring-context-support -->
-	<dependency>
-	    <groupId>org.springframework</groupId>
-	    <artifactId>spring-context-support</artifactId>
-	    <version>4.3.4.RELEASE</version>
-	</dependency>
-	
->>>>>>> Stashed changes
 
-	<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-entitymanager -->
-	<dependency>
-	    <groupId>org.hibernate</groupId>
-	    <artifactId>hibernate-entitymanager</artifactId>
-<<<<<<< Updated upstream
-	    <version>5.2.5.Final</version>
-	</dependency>
-=======
-	    <version>5.0.11.Final</version>
-	</dependency>
-
->>>>>>> Stashed changes
 				
-	<!-- 2fa -->
-        
-    <dependency>
-	    <groupId>org.jboss.aerogear</groupId>
-	    <artifactId>aerogear-otp-java</artifactId>
-	    <version>1.0.0</version>
-	    <scope>compile</scope>
-	</dependency>
-		
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-websocket -->
 		<!-- <dependency>
 		    <groupId>org.springframework</groupId>
@@ -309,41 +257,13 @@
 		    <version>4.3.3.RELEASE</version>
 		</dependency>
 		-->
-		
-		<!-- JDBC -->      
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-jdbc</artifactId>
-		    <version>4.3.4.RELEASE</version>
-		</dependency>
-
-
-        <!-- MySQL -->
-	  	<dependency>
-		    <groupId>mysql</groupId>
-		    <artifactId>mysql-connector-java</artifactId>
-	    	<version>6.0.3</version>
-	  	</dependency>
-<<<<<<< Updated upstream
-=======
-	  	
-	  	<!-- Password Validation -->
-		<dependency>
-		    <groupId>org.passay</groupId>
-		    <artifactId>passay</artifactId>
-		    <version>1.0</version>
-		</dependency>
-
-	  	
->>>>>>> Stashed changes
-
+ 	
 		<!-- https://mvnrepository.com/artifact/com.auth0/auth0-spring-security-api -->
-		<!-- <dependency>
+		<dependency>
 		    <groupId>com.auth0</groupId>
 		    <artifactId>auth0-spring-security-api</artifactId>
 		    <version>0.0.3</version>
 		</dependency>
- 		-->
  		
 		<dependency>
 		    <groupId>org.mockito</groupId>

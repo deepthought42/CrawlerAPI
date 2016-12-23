@@ -20,37 +20,6 @@ import com.qanairy.models.dto.UserDto;
 @RequestMapping("/user")
 public class UserController {
 
-	/**
-	 * 
-	 * @param request
-	 * @param model
-	 * @return
-	 */
-	@RequestMapping(value = "/registration", method = RequestMethod.POST)
-	public int registerUser(HttpServletRequest request, 
-				 @RequestParam(value="email", required=true) String email,
-				 @RequestParam(value="password", required=true) String password,
-				 @RequestParam(value="confirmation_password", required=true) String confirmation_password,
-				 @RequestParam(value="acct_name", required=false) String account_name) {
-		UserDto registered = new UserDto();
-		
-		if(!password.equals(confirmation_password)){
-			return HttpStatus.SC_BAD_REQUEST;
-		}
-		
-		registered.setEmail(email);
-		registered.setPassword(password);
-		/*
-		 * if (!result.hasErrors()) {
-	        registered = createUserAccount(accountDto, result);
-	    }
-	    if (registered == null) {
-	        result.rejectValue("email", "message.regError");
-	    }
-	    */
-		return HttpStatus.SC_ACCEPTED;
-	    // rest of the implementation
-	}
 	
 	/*private User createUserAccount(UserDto accountDto, BindingResult result) {
 	    User registered = null;

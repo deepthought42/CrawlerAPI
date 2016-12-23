@@ -1,4 +1,4 @@
-package com.minion.security;
+package com.qanairy.auth;
 
 import java.io.IOException;
 

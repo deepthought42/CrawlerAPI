@@ -15,6 +15,7 @@ public class FormField {
 	private List<Rule<?,?>> rules;
 	private PageElement form_field;
 	private PageElement field_label;
+	
 	/**
 	 * Constructs new FormField
 	 * 
@@ -24,6 +25,7 @@ public class FormField {
 		this.form_field = form_field;
 		this.rules = new ArrayList<Rule<?,?>>();
 	}
+	
 	/**
 	 * Constructs new FormField
 	 * 

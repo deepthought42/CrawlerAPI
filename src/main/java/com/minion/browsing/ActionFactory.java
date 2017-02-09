@@ -10,7 +10,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
 import com.minion.persistence.OrientDbPersistor;
-import com.qanairy.models.ObjectDefinition;
+import com.qanairy.rl.memory.ObjectDefinition;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
@@ -45,6 +45,7 @@ public class ActionFactory {
 		else if(action.equals("clickAndHold")){
 			builder.clickAndHold(elem);
 		}
+		//Context click clicks select/options box
 		else if(action.equals("contextClick")){
 			builder.contextClick(elem);
 		}

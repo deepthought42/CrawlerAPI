@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.testng.annotations.Test;
 
+import com.minion.persistence.IPath;
 import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Path;
 import com.qanairy.models.Page;
@@ -62,8 +63,7 @@ public class PathTests {
 		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
-		path.convertToRecord(orient_connection);
-		
+		IPath ipath = path.convertToRecord(orient_connection);
 		orient_connection.save();
 	}
 	

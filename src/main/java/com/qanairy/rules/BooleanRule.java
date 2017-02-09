@@ -1,5 +1,5 @@
 package com.qanairy.rules;
-
+	
 public class BooleanRule implements Rule<Boolean, Boolean> {
 
 	public BooleanRuleType type;
@@ -16,7 +16,8 @@ public class BooleanRule implements Rule<Boolean, Boolean> {
 	}
 
 	@Override
-	public boolean evaluate(Boolean val) {
+	public Boolean evaluate(Boolean val) {
+		return this.getValue().equals(val);
 		// TODO Auto-generated method stub
 		return false;
 	}

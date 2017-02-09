@@ -15,10 +15,10 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
+import com.qanairy.rl.learning.Brain;
+import com.qanairy.rl.memory.DataDecomposer;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.actions.Action;
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.ITest;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
@@ -62,6 +62,17 @@ public class PathExpansionActor extends UntypedActor {
 		//iterate over all elements
 		int path_count = 0;
 		for(PageElement page_element : page_elements){
+			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
+			/*DataDecomposer data_decomp = new DataDecomposer();
+			try {
+				Brain.predict(DataDecomposer.decompose(page_element), actions);
+			} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			*/
+			//END OF PRECTION CODE
+			
 			//iterate over all actions
 			for(String action : actions){
 				Path action_path = Path.clone(path);

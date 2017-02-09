@@ -1,6 +1,5 @@
 package com.minion.actors;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import com.tinkerpop.blueprints.Direction;

@@ -2,8 +2,8 @@
 import java.io.IOException;
 import java.net.MalformedURLException;
 
-import com.qanairy.models.ObjectDefinition;
 import com.qanairy.models.PageElement;
+import com.qanairy.rl.memory.ObjectDefinition;
 
 import org.testng.annotations.Test;
 

@@ -46,7 +46,7 @@ public class Vocabulary{
 	 *  doesn't yet exist in the valueList
 	 * 
 	 * @param obj
-	 * @return
+	 * @return boolean value indicating if vocabulary object was successfully added to list
 	 */
 	public boolean appendToVocabulary(String obj){
 		if(this.valueList.contains(obj)){

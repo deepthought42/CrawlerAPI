@@ -9,8 +9,6 @@ import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
- * 
- * @author Brandon Kindred
  *
  */
 @TypeValue("Path") public interface IPath{

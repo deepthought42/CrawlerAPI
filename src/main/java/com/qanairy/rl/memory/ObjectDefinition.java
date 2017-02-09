@@ -5,9 +5,6 @@ import java.util.HashMap;
 
 /**
  * Defines objects that are available to the system for learning against
- * 
- * @author Brandon Kindred
- *
  */
 public class ObjectDefinition {
 

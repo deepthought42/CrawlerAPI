@@ -15,9 +15,6 @@ import com.tinkerpop.rexster.client.RexsterClientFactory;
 
 /**
  * Persists data of various sorts into orientDB
- * 
- * @author Brandon Kindred
- *
  */
 public class OrientDbPersistor{
 	public OrientGraph graph = null;
@@ -31,10 +28,8 @@ public class OrientDbPersistor{
 			//RexsterClient client = RexsterClientFactory.open("localhost", 8984);
 //			client.execute(RexProMessage.EMPTY_REQUEST);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 	
 	
@@ -107,7 +102,7 @@ public class OrientDbPersistor{
 
 	
 	/**
-	 * Finds a given object Definition in graph
+	 * Finds a given object in graph
 	 * 
 	 * @param obj
 	 * 
@@ -126,6 +121,7 @@ public class OrientDbPersistor{
 				fieldValue = field.get(obj);
 			}
 		}
+		
 		Iterable<Vertex> objVertices = this.graph.getVertices("hash_code", fieldValue.toString());
 		return objVertices;
 		//Iterable<Vertex> objVertices = this.graph.getVertices(obj.getClass().getCanonicalName().toString(), names, values);

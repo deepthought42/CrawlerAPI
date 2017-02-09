@@ -2,10 +2,9 @@ package com.qanairy.rl.memory;
 
 /**
  * A state consists of an identifier and an image formatted to base64
- * 
- * @author Brandon Kindred
  */
 public class MemoryState {
+	
 	/**
 	 * Identifier is meant to identify the state
 	 */

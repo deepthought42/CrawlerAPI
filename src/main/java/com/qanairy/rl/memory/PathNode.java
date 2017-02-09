@@ -2,7 +2,6 @@ package com.qanairy.rl.memory;
 
 /**
  * 
- * @author Brandon Kindred
  *
  */
 public class PathNode {

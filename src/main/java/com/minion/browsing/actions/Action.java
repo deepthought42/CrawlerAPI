@@ -10,12 +10,10 @@ import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IAction;
 import com.minion.persistence.OrientConnectionFactory;
 import com.qanairy.models.PathObject;
+import com.qanairy.rl.memory.OrientDbPersistor;
 
 /**
  * Defines an action in name only
- * 
- * @author Brandon Kindred
- *
  */
 public class Action extends PathObject<IAction>{
 	private static final Logger log = LoggerFactory.getLogger(Action.class);
@@ -94,7 +92,7 @@ public class Action extends PathObject<IAction>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public IAction convertToRecord(OrientConnectionFactory connection) {
+	public IAction convertToRecord(OrientConnectionFactory rl_conn) {
 		log.info("Creating Action path object record with key : "+this.getKey());
 		@SuppressWarnings("unchecked")
 		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(this.getKey(), IAction.class);
@@ -103,7 +101,7 @@ public class Action extends PathObject<IAction>{
 		IAction action = null;
 
 		if(!action_iter.hasNext()){
-			action = connection.getTransaction().addVertex("class:"+IAction.class.getCanonicalName()+","+UUID.randomUUID(), IAction.class);
+			action = rl_conn.getTransaction().addVertex("class:"+IAction.class.getCanonicalName()+","+UUID.randomUUID(), IAction.class);
 			action.setName(this.name);
 			action.setKey(this.key);
 			action.setType(this.getClass().getName());

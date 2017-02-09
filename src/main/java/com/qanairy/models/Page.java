@@ -23,8 +23,6 @@ import com.minion.persistence.OrientConnectionFactory;
 
 /**
  * A reference to a web page 
- * 
- * @author Brandon Kindred
  *
  */
 public class Page extends PathObject<IPage> {
@@ -322,8 +320,7 @@ public class Page extends PathObject<IPage> {
 	public void setScreenshot(String url){
 		this.screenshot = url;
 	}
-	
-	
+		
 	public boolean isLandable(){
 		return this.landable;
 	}

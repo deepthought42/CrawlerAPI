@@ -19,13 +19,16 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
+import com.qanairy.rl.learning.Brain;
+import com.qanairy.rl.memory.DataDecomposer;
+import com.qanairy.rl.memory.ObjectDefinition;
+import com.qanairy.rl.memory.Vocabulary;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.persistence.OrientDbPersistor;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.qanairy.models.DataDecomposer;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
@@ -33,8 +36,6 @@ import com.qanairy.models.PageElement;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
- * 
- * @author Brandon Kindred
  *
  */
 public class BrowserActor extends UntypedActor {
@@ -63,7 +64,7 @@ public class BrowserActor extends UntypedActor {
 	 * @throws IllegalAccessException
 	 */
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
-		List<Object> definitions = DataDecomposer.decompose(pageElement);
+		List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
 
 		System.out.println(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
@@ -113,7 +114,7 @@ public class BrowserActor extends UntypedActor {
 		for(PageElement elem : pageElements){
 			HashMap<String, Double> full_action_map = new HashMap<String, Double>(0);
 			//find vertex for given element
-			List<Object> raw_object_definitions = DataDecomposer.decompose(elem);
+			List<ObjectDefinition> raw_object_definitions = DataDecomposer.decompose(elem);
 			List<com.tinkerpop.blueprints.Vertex> object_definition_list
 				= persistor.findAll(raw_object_definitions);
 					
@@ -161,14 +162,14 @@ public class BrowserActor extends UntypedActor {
 	 * @param vocabLabels
 	 * @return
 	 */
-	/*public ArrayList<Vocabulary> loadVocabularies(String[] vocabLabels){
+	public ArrayList<Vocabulary> loadVocabularies(String[] vocabLabels){
 		ArrayList<Vocabulary> vocabularies = new ArrayList<Vocabulary>();
 		for(String label : vocabLabels){			
 			vocabularies.add(Vocabulary.load(label));
 		}
 		return vocabularies;		
 	}
-	*/
+	
 
 	/**
 	 * {@inheritDoc}
@@ -232,7 +233,9 @@ public class BrowserActor extends UntypedActor {
 
 				//broadcast path
 				PastPathExperienceController.broadcastTestExperience(test);
-
+				
+				//PLACE CALL TO LEARNING SYSTEM HERE
+				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
 				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());

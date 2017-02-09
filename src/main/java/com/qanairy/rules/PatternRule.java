@@ -3,6 +3,10 @@ package com.qanairy.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 
+ *
+ */
 public class PatternRule implements Rule<Pattern, String> {
 
 	private PatternRuleType type;
@@ -25,10 +29,9 @@ public class PatternRule implements Rule<Pattern, String> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean evaluate(String value) {
-		 Matcher matcher = pattern.matcher(value);
-	        boolean matches = matcher.matches();
-		return matches;
+	public Boolean evaluate(String value) {
+		Matcher matcher = this.pattern.matcher(value);
+	    return matcher.matches();
 	}
 
 	/**

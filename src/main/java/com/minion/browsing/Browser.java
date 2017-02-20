@@ -61,9 +61,32 @@ public class Browser {
 	private WebDriver driver;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel"};	
 
-	public Browser(String url) throws MalformedURLException {
-		this.driver = openWithChrome(url);
-		
+	/**
+	 * 
+	 * @param url
+	 * @param browser  the name of the browser to use
+	 * 			chrome = google chrome
+	 * 			firefox = Firefox
+	 * 			ie = internet explorer
+	 * 
+	 * @throws MalformedURLException
+	 */
+	public Browser(String url, String browser) throws MalformedURLException {
+		if(browser.equals("chrome")){
+			this.driver = openWithChrome(url);
+		}
+		else if(browser.equals("firefox")){
+			this.driver = openWithFirefox(url);
+		}
+		else if(browser.equals("ie")){
+			this.driver = openWithInternetExplorer(url);
+		}
+		else if(browser.equals("safari")){
+			this.driver = openWithSafari(url);
+		}
+		else if(browser.equals("headless")){
+			this.driver = openWithPhantomjs(url);
+		}
 		//this.driver = openWithFirefox(url);
 		//this.driver = openWithPhantomjs(url);
 		this.driver.get(url);

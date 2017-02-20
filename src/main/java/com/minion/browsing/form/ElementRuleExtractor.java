@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Attribute;
 import com.qanairy.models.PageElement;
-import com.qanairy.rules.BooleanRule;
 import com.qanairy.rules.BooleanRuleType;
 import com.qanairy.rules.NumericRule;
 import com.qanairy.rules.NumericRuleType;
 import com.qanairy.rules.PatternRule;
 import com.qanairy.rules.PatternRuleType;
 import com.qanairy.rules.Rule;
+import com.qanairy.rules.booleanRules.BooleanRule;
 
 public class ElementRuleExtractor {
     private static final Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);

@@ -1,12 +1,16 @@
 package com.qanairy.rules;
 
+
+import com.minion.browsing.form.FormField;
+import com.qanairy.rules.formRules.FormRuleType;
+
 /**
  * Defines rule to be used to evaluate if a {@link FormField} has a value that satisfies the 
  * rule based on its {@link RuleType}
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
-public interface Rule<T,Z> {
+public interface FormRule<T> {
 	
 	/**
 	 * @return the {@link RuleType} of this rule
@@ -25,7 +29,7 @@ public interface Rule<T,Z> {
 	 * 
 	 * @return boolean value indicating the rule is satisfied(true) or not satisfied(false)
 	 */
-	Boolean evaluate(Z val);	
+	Boolean evaluate(FormField val);	
 	
 	/**
 	 * Rule types
@@ -43,7 +47,7 @@ public interface Rule<T,Z> {
 	 * IS_READ_ONLY
 	 * 
 	 * 
-	 * --- INTEGER RULES  ---
+	 * --- NUMERIC RULES  ---
 	 * 
 	 * MIN_LENGTH	-- ALL TEXT AND NUMBER
 	 * MAX_LENGTH   -- ALL TEXT AND NUMBER

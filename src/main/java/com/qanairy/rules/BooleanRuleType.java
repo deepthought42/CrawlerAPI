@@ -1,6 +1,0 @@
-package com.qanairy.rules;
-
-public enum BooleanRuleType implements RuleType {
-	REQUIRED, ALPHABETIC_RESTRICTION, SPECIAL_CHARACTER_RESTRICTION, NUMERIC_RESTRICTION, ENABLED, NO_VALIDATE, READ_ONLY, NUMBER_ONLY;
-
-}

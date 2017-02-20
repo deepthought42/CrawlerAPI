@@ -12,6 +12,8 @@ import com.qanairy.models.Test;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+
+import com.minion.structs.ExploratoryPath;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 
@@ -34,7 +36,8 @@ public class WorkAllocationActor extends UntypedActor {
 			log.info("Checking status of account key...");
 			if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
 				log.info("Approved account : "+acct_message.getAccountKey());
-				if(acct_message.getData() instanceof Path || 
+				if(acct_message.getData() instanceof Path ||
+						acct_message.getData() instanceof ExploratoryPath ||
 						acct_message.getData() instanceof URL){
 					log.info("Path passed to work allocator");
 					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());

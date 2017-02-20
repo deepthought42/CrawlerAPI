@@ -9,6 +9,7 @@ import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
 import com.qanairy.rl.memory.DataDecomposer;
+import com.qanairy.rl.memory.ObjectDefinition;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.qanairy.models.Page;
@@ -45,7 +46,7 @@ public class MemoryRegistryActor extends UntypedActor{
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
 			if(acct_msg.getData() instanceof Page){
 				Page page = (Page)acct_msg.getData();
-				List<Object> decomposed_list = DataDecomposer.decompose(page);
+				List<ObjectDefinition> decomposed_list = DataDecomposer.decompose(page);
 				//OrientDbPersistor persistor = new OrientDbPersistor();
 				
 				for(Object objDef : decomposed_list){

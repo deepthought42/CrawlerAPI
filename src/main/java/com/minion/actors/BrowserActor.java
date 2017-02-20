@@ -26,9 +26,13 @@ import com.qanairy.rl.memory.Vocabulary;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
+import com.minion.browsing.actions.Action;
 import com.minion.persistence.OrientDbPersistor;
+import com.minion.structs.ExploratoryPath;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
+import com.minion.structs.SessionTestTracker;
+import com.minion.structs.TestMapper;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
@@ -183,7 +187,7 @@ public class BrowserActor extends UntypedActor {
 				log.info("PATH PASSED TO BROWSER ACTOR");
 				Path path = (Path)acct_msg.getData();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
-			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString());
+			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "headless");
 
 				log.info("Creating new Browser");
 				Page result_page = null;
@@ -216,30 +220,109 @@ public class BrowserActor extends UntypedActor {
 
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
+					
+					Test new_test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), new Organization("Qanairy")));
+					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
+					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
+					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+					if(!testMap.containsTest(new_test)){
+						Message<Test> new_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+						work_allocator.tell(new_test_msg, getSelf() );
+						testMap.addTest(new_test);
+					}
+
+					log.info("Sending test to Memory Actor");
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+					//tell memory worker of path
+					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+					
+					//tell memory worker of path
+					memory_actor.tell(test_msg, getSelf() );
+					//broadcast test
+					PastPathExperienceController.broadcastTestExperience(new_test);
 			  	}
 			  	this.browser.close();
 	
-				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
-				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
-				log.info("Sending test to Memory Actor");
-				Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), new Organization("Qanairy")));
-				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-				
-				//tell memory worker of path
-				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-				
-				//tell memory worker of path
-				memory_actor.tell(test_msg, getSelf() );
+				//PLACE CALL TO LEARNING SYSTEM HERE
+				//Brain.learn(path, path.getIsUseful());
+			}
+			else if (acct_msg.getData() instanceof ExploratoryPath){
+				log.info("EXPLORATORY PATH PASSED TO BROWSER ACTOR");
+				ExploratoryPath path = (ExploratoryPath)acct_msg.getData();
+			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "headless");
 
-				//broadcast path
-				PastPathExperienceController.broadcastTestExperience(test);
+				log.info("Creating new Browser");
+				Page result_page = null;
+				
+				log.info("Getting last page");
+				Page last_page = path.findLastPage();
+				last_page.setLandable(last_page.checkIfLandable());
+				if(last_page.isLandable()){
+					//clone path starting at last page in path
+					//Path shortened_path = path.clone());
+				}
+
+				
+				if(path.getPath() != null){
+					log.info("crawling exploratory path");
+					for(Action action : path.getPossibleActions()){
+						Path crawl_path  = new Path(path.getPath());
+
+						result_page = Crawler.crawlPath(crawl_path, this.browser, action);
+						
+						log.info("Checking equality of page sources " + last_page.equals(result_page));
+						if(last_page.equals(result_page)){
+					  		log.info("Page sources match(Path Message)");
+					  		crawl_path.setIsUseful(false);
+					  	}
+					  	else{
+					  		crawl_path.add(action);
+					  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
+					  		crawl_path.setIsUseful(true);
+							if(crawl_path.size() > 1){
+								crawl_path.add(result_page);
+							}
+							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), crawl_path);
+
+							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+							path_expansion_actor.tell(path_msg, getSelf() );
+							
+							Test new_test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost(), new Organization("Qanairy")));
+							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
+							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
+							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+							if(!testMap.containsTest(new_test)){
+								Message<Test> new_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+								final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+								work_allocator.tell(new_test_msg, getSelf() );
+								testMap.addTest(new_test);
+							}
+
+							log.info("Sending test to Memory Actor");
+							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+							//tell memory worker of path
+							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+							
+							//tell memory worker of path
+							memory_actor.tell(test_msg, getSelf() );
+							//broadcast test
+							PastPathExperienceController.broadcastTestExperience(new_test);
+							
+							break;
+					  	}
+					}
+				}
+
+			  	this.browser.close();
+	
 				
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
 				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
-			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString());
+			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "headless");
 			  	
 			  	log.info("creating path");
 			  	Path path = new Path();
@@ -251,41 +334,39 @@ public class BrowserActor extends UntypedActor {
 			  	path.getPath().add(page_obj);
 			  	
 			  	log.info("Crawling path");
-			  	Crawler.crawlPath(path, browser);
+			  	Page current_page = Crawler.crawlPath(path, browser);
 			  	
 			  	log.info("Getting last and current page");
 			  	Page last_page = path.findLastPage();
 			  	
-			  	Page current_page = null;
-			  
-			  	if(last_page != null && last_page.getSrc().equals(Browser.cleanSrc(browser.getDriver().getPageSource())) && path.getPath().size() > 1){
+			  	if(last_page != null && last_page.getSrc().equals(Browser.cleanSrc(current_page.getSrc())) && path.getPath().size() > 1){
 			  		log.info("Path isn't useful");
-			  		current_page = last_page;
 			  		path.setIsUseful(false);
 			  	}
 			  	else{
 			  		log.info("Path is useful");
 
-			  		current_page = browser.getPage();
 					path.setIsUseful(true);
-					if(path.size() > 1){
-						path.add(current_page);
-					}
-					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 
+					System.out.println("PATH LENGTH : "+path.getPath().size());
+					Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost(), new Organization("Qanairy")));
+					PastPathExperienceController.broadcastTestExperience(test);
+					
+					log.info("Wrapping test in Message");
+				  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+
+					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
+					log.info("Sending test message to memory actor");
+					memory_actor.tell(test_msg, getSelf() );
+					
+					log.info("Wrapping path in Message");
+
+					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
 			  	}
 			  	browser.close();
 
-				Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost(), new Organization("Qanairy")));
-				PastPathExperienceController.broadcastTestExperience(test);
-				
-				log.info("Saving test");
-			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-
-				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-				memory_actor.tell(test_msg, getSelf() );
 		   }
 		}else unhandled(message);
 	}

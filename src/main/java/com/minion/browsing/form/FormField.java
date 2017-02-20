@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.PageElement;
-import com.qanairy.rules.Rule;
+import com.qanairy.rules.FormRule;
 
 /**
- * Defines a complex element grouping of inputs and labels for a field contained within a form. 
- * Also contains list of rules which are can be enforced on the object
+ * Defines a complex element grouping of input and label for a field contained within a form. 
+ * Also contains list of rules which can be enforced on the object
  * 
  */
 public class FormField {
-	private List<Rule<?,?>> rules;
+	private List<FormRule<?>> rules;
 	private PageElement form_field;
 	private PageElement field_label;
 	
@@ -23,7 +23,7 @@ public class FormField {
 	 */
 	public FormField(PageElement form_field){
 		this.form_field = form_field;
-		this.rules = new ArrayList<Rule<?,?>>();
+		this.rules = new ArrayList<FormRule<?>>();
 	}
 	
 	/**
@@ -32,7 +32,7 @@ public class FormField {
 	 * @param form_field combo element defining the input grouping for this FormField
 	 * @param rules list of {@link Rule} defined on this FormField
 	 */
-	public FormField(PageElement form_field, List<Rule<?,?>> rules){
+	public FormField(PageElement form_field, List<FormRule<?>> rules){
 		this.form_field = form_field;
 		this.rules = rules;
 	}
@@ -44,7 +44,7 @@ public class FormField {
 	 * 
 	 * @return true if the rule was added successfully, otherwise return false;
 	 */
-	public boolean addRule(Rule<?,?> rule){
+	public boolean addRule(FormRule<?> rule){
 		return this.rules.add(rule);
 	}
 	
@@ -54,18 +54,18 @@ public class FormField {
 	 * @param rules List of {@link Rule}s to be added
 	 * @return true if rules were added successfully, otherwise return false;
 	 */
-	public boolean addRules(List<Rule<?,?>> rules){
+	public boolean addRules(List<FormRule<?>> rules){
 		return this.rules.addAll(rules);
 	}
 	
 	/**
 	 * @return List of {@link Rule}s defined on this FormField
 	 */
-	public List<Rule<?,?>> getRules() {
+	public List<FormRule<?>> getRules() {
 		return rules;
 	}
 	
-	public void setRules(List<Rule<?,?>> rules) {
+	public void setRules(List<FormRule<?>> rules) {
 		this.rules = rules;
 	}
 	
@@ -88,6 +88,7 @@ public class FormField {
 	public PageElement getFieldLabel() {
 		return field_label;
 	}
+	
 	public void setFieldLabel(PageElement field_label) {
 		this.field_label = field_label;
 	}

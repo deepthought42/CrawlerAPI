@@ -103,14 +103,14 @@ public class TestController {
 	 * @throws MalformedURLException 
 	 */
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTest(@PathVariable("key") String key) throws MalformedURLException{
+	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, @PathVariable("browser_type") String browser_type) throws MalformedURLException{
 		System.out.println("RUNNING TEST WITH KEY : " + key);
 		Iterator<ITest> itest_iter = Test.findTestByKey(key).iterator();
 		ITest itest = itest_iter.next();
 	  
 		Test test = Test.convertFromRecord(itest);
 		TestRecord record = null;
-		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString());
+		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 		log.info(" Test Received :: " + test);
 		record = TestingActor.runTest(test, browser);
 		browser.close();
@@ -128,7 +128,8 @@ public class TestController {
 	 */
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
-														@RequestParam(value="url", required=true) String url){
+														@RequestParam(value="url", required=true) String url,
+														@RequestParam(value="browser_type", required=true) String browser_type){
 		System.out.println("RUNNING TEST IN GROUP  : " + group);
 		
 		List<Test> test_list = new ArrayList<Test>();
@@ -152,7 +153,7 @@ public class TestController {
 		for(Test group_test : group_list){
 			Browser browser;
 			try {
-				browser = new Browser(((Page)group_test.getPath().getPath().get(0)).getUrl().toString());
+				browser = new Browser(((Page)group_test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				TestRecord record = TestingActor.runTest(group_test, browser);
 				group_records.add(record);
 			} catch (IOException e) {

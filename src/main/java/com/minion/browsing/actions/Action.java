@@ -10,7 +10,6 @@ import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IAction;
 import com.minion.persistence.OrientConnectionFactory;
 import com.qanairy.models.PathObject;
-import com.qanairy.rl.memory.OrientDbPersistor;
 
 /**
  * Defines an action in name only
@@ -137,7 +136,6 @@ public class Action extends PathObject<IAction>{
 		return action;
 	}
 
-	
 	/**
 	 * 
 	 * @param data
@@ -159,5 +157,4 @@ public class Action extends PathObject<IAction>{
 		//action_clone.setNext(this.getNext());
 		return action_clone;
 	}
-
 }

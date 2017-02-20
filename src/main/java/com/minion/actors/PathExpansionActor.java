@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.openqa.selenium.interactions.Actions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,9 @@ import com.qanairy.models.Test;
 import com.qanairy.rl.learning.Brain;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.minion.browsing.ActionFactory;
+import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.actions.Action;
+import com.minion.structs.ExploratoryPath;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
@@ -44,9 +47,9 @@ public class PathExpansionActor extends UntypedActor {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static ArrayList<Path> expandPath(Path path)  {
+	public static ArrayList<ExploratoryPath> expandPath(Path path)  {
 		log.info( " EXPANDING PATH...");
-		ArrayList<Path> pathList = new ArrayList<Path>();
+		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
 		Page page = path.findLastPage();
@@ -74,16 +77,15 @@ public class PathExpansionActor extends UntypedActor {
 			//END OF PRECTION CODE
 			
 			//iterate over all actions
-			for(String action : actions){
-				Path action_path = Path.clone(path);
-				Action action_obj = new Action(action);
+			Path new_path = new Path(path.getPath());
+			new_path.add(page_element);
+			
+			for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+				ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+				//Action action_obj = new Action(action);
 				
 				log.info("Constructing path object " + path_count + " for expand path");
-				action_path.add(page_element);
 
-				action_path.add(action_obj);
-				log.info("Setting clone path key to :: " + action_path.generateKey());
-				action_path.setKey(action_path.generateKey());
 				pathList.add(action_path);
 				path_count++;
 			}			
@@ -112,7 +114,7 @@ public class PathExpansionActor extends UntypedActor {
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				log.info("EXPANDING TEST PATH WITH LENGTH : "+path.size());
-				ArrayList<Path> pathExpansions = new ArrayList<Path>();
+				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
 				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
 				memory_registry.tell(test_msg, getSelf());
@@ -127,31 +129,13 @@ public class PathExpansionActor extends UntypedActor {
 					//EXPAND PATH IN TEST
 					pathExpansions = PathExpansionActor.expandPath(path);
 					log.info("Test Path expansions found : " +pathExpansions.size());
-					
-					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-					for(Path expanded : pathExpansions){
-						Test new_test = new Test(expanded, null,  new Domain(path.findLastPage().getUrl().getHost(), new Organization("Qanairy")));
-						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
-						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-						if(!testMap.containsTest(new_test)){
-							Message<Test> expanded_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
-
-							work_allocator.tell(expanded_test_msg, getSelf() );
-							testMap.addTest(new_test);
-						}
-						else{
-							log.info("TEST WITH KEY : "+new_test.hashCode()+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
-							PastPathExperienceController.broadcastTestExperience(testMap.getTestHash().get(test.hashCode()));
-						}
-					}
 				}
 			}
 			else if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				
 				log.info("EXPANDING PATH WITH LENGTH : "+path.size());
-				ArrayList<Path> pathExpansions = new ArrayList<Path>();
+				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 
@@ -178,9 +162,8 @@ public class PathExpansionActor extends UntypedActor {
 					log.info("Path expansions found : " +pathExpansions.size());
 					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-					for(Path expanded : pathExpansions){
-						log.info("Sending expanded path : "+expanded.generateKey());
-						Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded);
+					for(ExploratoryPath expanded : pathExpansions){
+						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded);
 						
 						work_allocator.tell(expanded_path_msg, getSelf() );
 					}

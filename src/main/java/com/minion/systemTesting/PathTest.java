@@ -17,7 +17,7 @@ public class PathTest {
 		Path path = new Path(null);
 		Page page = null;
 		try {
-			Browser browser = new Browser(null);
+			Browser browser = new Browser(null, "headless");
 
 			page = new Page(browser.getDriver().getPageSource(), browser.getDriver().getCurrentUrl(), Browser.getScreenshot(browser.getDriver()), Browser.getVisibleElements(browser.getDriver(), ""));
 			browser.close();

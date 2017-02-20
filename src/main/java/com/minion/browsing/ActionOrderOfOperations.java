@@ -67,4 +67,8 @@ public class ActionOrderOfOperations {
 	public static Integer getOrderOfOperationForAction(String actionName){
 		return actionOrderOfOperationsMap.get(actionName);
 	}
+
+	public static List<List<Action>> getActionLists() {
+		return action_lists;
+	}
 }

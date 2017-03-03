@@ -6,10 +6,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IAction;
-import com.minion.persistence.OrientConnectionFactory;
 import com.qanairy.models.PathObject;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IAction;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Defines an action in name only

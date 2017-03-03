@@ -1,6 +1,6 @@
 package com.minion.persistence.edges;
 
-import com.minion.persistence.IPathObject;
+import com.qanairy.persistence.IPathObject;
 import com.tinkerpop.frames.InVertex;
 import com.tinkerpop.frames.OutVertex;
 import com.tinkerpop.frames.Property;

@@ -6,12 +6,12 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IAttribute;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.OrientConnectionFactory;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Page;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IAttribute;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * A pairing of a name and a set of string values

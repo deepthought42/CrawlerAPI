@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,9 +16,9 @@ import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IPage;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IPage;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * A reference to a web page 
@@ -44,29 +43,25 @@ public class Page extends PathObject<IPage> {
 	public Page(){}
 
 	/**
-	 * Creates a page instance that is meant to contain the information found using the driver passed
-	 * 
-	 * @param driver
-	 * @param valid
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
 	 * @throws IOException
-	 * @throws URISyntaxException 
 	 */
 	public Page(String html, String url, File screenshot, List<PageElement> elements) throws IOException {
 		log.info("setting source");
 		this.setSrc(html);
-
-		log.info("Page URL :: "+url);
 		this.url = new URL(url.replace("/#",""));
-		
-		log.info("GETTING SCREENSHOT");
 		this.screenshot = UploadObjectSingleOperation.saveImageToS3(screenshot, this.url.getHost(), this.url.getPath().toString());
 		
 		System.err.println("IMAGE SAVED TO S3 at : " +this.screenshot);
 		this.elements = elements;
-		//this.element_counts = countTags(this.elements);
+		this.element_counts = countTags(this.elements);
 		
 		log.info("Page object created");
-		
 	}
 	
 	/**
@@ -129,15 +124,6 @@ public class Page extends PathObject<IPage> {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-        //log.info(this.elements.size() + " :: "+ that.elements.size());
-        log.info("Do screenshots match? : "+this.screenshot.equals(that.getScreenshot()));
-        log.info("sources match? : " +(this.getSrc().length() == that.getSrc().length()));
-        log.info("Source 1: " +this.getSrc());
-        log.info("Source 2: " +that.getSrc());
-    	log.info("PAGE URLs ARE EQUAL? :: "+this.url+" == "+that.url +" :: ");
-    	log.info("urls equal?" + this.url.equals(that.url));
-
-    	log.info("PAGE SRCs ARE EQUAL? :: "+this.getSrc().equals(that.getSrc()));
     	//return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
 		return (this.url.equals(that.url) 
 				&& this.getSrc().equals(that.getSrc())

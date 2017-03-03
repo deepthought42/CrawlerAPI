@@ -1,22 +1,29 @@
 package com.qanairy.models;
 
-import java.util.List;
+import java.util.Iterator;
+import java.util.UUID;
+
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IAccount;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
- *
+ * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
-public class Account {
+public class Account implements IPersistable<IAccount> {
+	private String key;
 	private String org_name;
-	private String service_package;
+	private ServicePackage service_package;
 	private String payment_acct_num;
-	private List<Domain> registered_domains;
 	
 	public Account(){}
 	
-	public Account(String org_name, String service_package, String payment_acct_num){
+	public Account(String org_name, ServicePackage service_package, String payment_acct_num){
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
+		this.setKey(this.generateKey());
 	}
 
 	public String getOrgName() {
@@ -27,11 +34,11 @@ public class Account {
 		this.org_name = org_name;
 	}
 
-	public String getServicePackage() {
+	public ServicePackage getServicePackage() {
 		return service_package;
 	}
 
-	public void setServicePackage(String service_package) {
+	public void setServicePackage(ServicePackage service_package) {
 		this.service_package = service_package;
 	}
 
@@ -43,11 +50,64 @@ public class Account {
 		this.payment_acct_num = payment_acct_num;
 	}
 
-	public List<Domain> getRegisteredDomains() {
-		return registered_domains;
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String generateKey() {
+		
+		return this.getOrgName();
 	}
 
-	public void setRegisteredDomains(List<Domain> registered_domains) {
-		this.registered_domains = registered_domains;
+	@Override
+	public IAccount convertToRecord(OrientConnectionFactory connection) {
+		this.setKey(this.generateKey());
+		
+		IAccount acct = connection.getTransaction().addVertex("class:"+IAccount.class.getCanonicalName()+","+UUID.randomUUID(), IAccount.class);
+		acct.setKey(this.key);
+		acct.setOrgName(this.org_name);
+		acct.setServicePackage(this.service_package.convertToRecord(connection));
+		acct.setPaymentAcctNum(this.payment_acct_num);
+
+		return acct;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IAccount create() {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		@SuppressWarnings("unchecked")
+		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(this.getKey(), orient_connection, IAccount.class);
+		Iterator<IAccount> iter = accounts.iterator();
+		  
+		if(iter.hasNext()){
+			//figure out throwing exception because account already exists
+			return iter.next();
+		}
+		IAccount account = this.convertToRecord(orient_connection);
+		orient_connection.save();
+		return account;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IAccount update() {
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		IAccount acct = this.convertToRecord(connection);		
+		connection.save();
+		
+		return acct;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 }

@@ -1,4 +1,4 @@
-package com.minion.persistence;
+package com.qanairy.persistence;
 
 import java.util.Iterator;
 import java.util.List;

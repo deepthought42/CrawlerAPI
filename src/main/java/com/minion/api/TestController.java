@@ -23,9 +23,9 @@ import org.springframework.http.HttpStatus;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.persistence.ITest;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
-import com.minion.persistence.ITest;
-import com.minion.persistence.OrientConnectionFactory;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 

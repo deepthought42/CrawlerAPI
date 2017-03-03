@@ -8,9 +8,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITestRecord;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.ITestRecord;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 

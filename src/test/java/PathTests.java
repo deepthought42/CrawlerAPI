@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 import org.testng.annotations.Test;
 
-import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Path;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 public class PathTests {
 	

@@ -1,4 +1,4 @@
-package com.minion.persistence;
+package com.qanairy.persistence;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

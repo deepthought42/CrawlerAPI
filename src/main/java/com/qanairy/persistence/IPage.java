@@ -1,4 +1,4 @@
-package com.minion.persistence;
+package com.qanairy.persistence;
 
 import com.qanairy.models.Page;
 import com.tinkerpop.frames.Property;

@@ -2,9 +2,9 @@ package com.qanairy.models;
 
 import java.util.List;
 
-import com.minion.persistence.IGroup;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.IGroup;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Defines a name and color used to group {@link Test}s
@@ -73,7 +73,7 @@ public class Group implements IPersistable<IGroup>{
 	public IGroup convertToRecord(OrientConnectionFactory connection) {
 		
 		// TODO Auto-generated method stub
-		return null;
+		return ;
 	}
 
 	/**

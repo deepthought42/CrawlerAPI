@@ -7,8 +7,9 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Vertex;
 
 import akka.actor.UntypedActor;
-import com.minion.persistence.OrientDbPersistor;
+
 import com.qanairy.models.Test;
+import com.qanairy.persistence.OrientDbPersistor;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.qanairy.models.Page;

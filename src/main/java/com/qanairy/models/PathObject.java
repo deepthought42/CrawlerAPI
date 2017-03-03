@@ -6,12 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.actions.Action;
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IAction;
-import com.minion.persistence.IPage;
-import com.minion.persistence.IPageElement;
-import com.minion.persistence.IPathObject;
-import com.minion.persistence.IPersistable;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IAction;
+import com.qanairy.persistence.IPage;
+import com.qanairy.persistence.IPageElement;
+import com.qanairy.persistence.IPathObject;
+import com.qanairy.persistence.IPersistable;
 
 /**
  * An object wrapper that allows data to be dynamically placed in data structures

@@ -22,10 +22,10 @@ import org.slf4j.LoggerFactory;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Attribute;
 import com.minion.browsing.actions.Action;
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IAttribute;
-import com.minion.persistence.IPageElement;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IAttribute;
+import com.qanairy.persistence.IPageElement;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement

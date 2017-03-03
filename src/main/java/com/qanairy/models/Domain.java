@@ -1,10 +1,15 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
-import com.minion.persistence.IDomain;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IAccount;
+import com.qanairy.persistence.IDomain;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Encompasses a domain name as well as all {@link Test}s and {@link Group}s 
@@ -14,16 +19,19 @@ public class Domain implements IPersistable<IDomain>{
 	private String domain;
 	private List<Test> tests;
 	private List<Group> groups;
-	private Organization organization;
+	private String key;
 	
 	/**
+	 * 
 	 * 
 	 * @param domain
 	 * @param organization
 	 */
-	public Domain(String domain_name, Organization organization){
-		this.setUrl(domain);
-		this.setOrganization(organization);
+	public Domain(String domain_name){
+		this.setUrl(domain_name);
+		this.setKey(this.generateKey());
+		this.setTests(new ArrayList<Test>());
+		this.setGroups(new ArrayList<Group>());
 	}
 	
 	/**
@@ -37,6 +45,7 @@ public class Domain implements IPersistable<IDomain>{
 		this.setUrl(domain_url);
 		this.setTests(tests);
 		this.setGroups(groups);
+		this.setKey(this.generateKey());
 	}
 
 	public String getUrl() {
@@ -63,41 +72,49 @@ public class Domain implements IPersistable<IDomain>{
 		this.groups = groups;
 	}
 
-	public Organization getOrganization() {
-		return organization;
-	}
-
-	public void setOrganization(Organization organization) {
-		this.organization = organization;
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
 	public String generateKey() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.getUrl().toString();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public IDomain convertToRecord(OrientConnectionFactory connection) {
-		// TODO Auto-generated method stub
-		return null;
+		IDomain domain = connection.getTransaction().addVertex("class:"+IDomain.class.getCanonicalName()+","+UUID.randomUUID(), IDomain.class);
+		domain.setKey(this.getKey());
+		domain.setUrl(this.getUrl());
+		domain.setTests(this.getTests());
+		domain.setGroups(this.getGroups());
+		return domain;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public IDomain create() {
-		// TODO Auto-generated method stub
-		return null;
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		@SuppressWarnings("unchecked")
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(this.getKey(), orient_connection, IDomain.class);
+		Iterator<IDomain> iter = domains.iterator();
+		  
+		if(iter.hasNext()){
+			//figure out throwing exception because domain already exists
+			return iter.next();
+		}
+		IDomain domain = this.convertToRecord(orient_connection);
+		orient_connection.save();
+		return domain;
 	}
 
 	public IDomain update() {
-		// TODO Auto-generated method stub
-		return null;
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		IDomain domain = this.convertToRecord(connection);		
+		connection.save();
+		
+		return domain;
 	}
 	
 	/**
@@ -113,6 +130,20 @@ public class Domain implements IPersistable<IDomain>{
 		}
 		
 		return false;
+	}
+
+	/**
+	 * @return the key
+	 */
+	public String getKey() {
+		return key;
+	}
+
+	/**
+	 * @param key the key to set
+	 */
+	public void setKey(String key) {
+		this.key = key;
 	}
 	
 }

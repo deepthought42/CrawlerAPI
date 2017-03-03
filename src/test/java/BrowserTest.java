@@ -27,12 +27,10 @@ public class BrowserTest {
 		try {
 			page.setUrl(new URL("http://localhost"));
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost(), new Organization("HardCodedTestOrganization")));
-		
-		Assert.assertTrue(test.getDomain().equals(page.getUrl().getHost()));
+		Assert.assertTrue(test.getDomain().getUrl().toString().equals(page.getUrl().getHost()));
 		Assert.assertTrue(test.getKey() != null);
 	}
 }

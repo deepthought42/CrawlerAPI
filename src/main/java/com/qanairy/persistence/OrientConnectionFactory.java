@@ -1,20 +1,15 @@
-package com.minion.persistence;
+package com.qanairy.persistence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
-import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
-import com.tinkerpop.frames.FramedGraph;
 import com.tinkerpop.frames.FramedGraphFactory;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 /**
  * Produces connections to the OrientDB instance
- * 
- * @author Brandon Kindred
  *
  */
 public class OrientConnectionFactory {
@@ -35,7 +30,7 @@ public class OrientConnectionFactory {
 	private FramedTransactionalGraph<OrientGraph> getConnection(){
 		log.info("framing graph factory");
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/Thoth", "brandon", "password").setupPool(1, 20);
+		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/thoth", "root", "root").setupPool(1, 20);
 	    OrientGraph instance = graphFactory.getTx();
 	    log.info("Orientdb transaction created returning instance");
 		return factory.create(instance);

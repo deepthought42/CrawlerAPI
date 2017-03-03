@@ -9,11 +9,11 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITest;
-import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Path;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.ITest;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
@@ -131,23 +131,17 @@ public class Test implements IPersistable<ITest>{
 	
 	/**
 	 * 
+	 * 
 	 * @param itest
 	 * @return
 	 */
 	public static Test convertFromRecord(ITest itest){
 		Test test = new Test();
 		
-		log.info("converting record with domain : " + itest.getDomain());
-
 		test.setDomain(itest.getDomain());
-		
-		log.info("setting key to "+itest.getKey());
 		test.setKey(itest.getKey());
-		
-		log.info("setting name");
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
-		log.info("Converting path from record");
 		test.setPath(Path.convertFromRecord(itest.getPath()));
 		test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
 		test.setResult(Page.convertFromRecord(itest.getResult()));

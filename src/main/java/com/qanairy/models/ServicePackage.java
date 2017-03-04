@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.IServicePackage;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -72,18 +71,13 @@ public class ServicePackage implements IPersistable<IServicePackage>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IServicePackage create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		@SuppressWarnings("unchecked")
-		Iterable<IServicePackage> svc_pkgs = (Iterable<IServicePackage>) DataAccessObject.findByKey(this.getKey(), orient_connection, IAccount.class);
-		Iterator<IServicePackage> iter = svc_pkgs.iterator();
-		  
-		if(iter.hasNext()){
-			//figure out throwing exception because account already exists
-			return null;
+	public IServicePackage create(OrientConnectionFactory connection) {
+		IServicePackage svc_pkg = this.find(connection);
+
+		if(svc_pkg != null){
+			svc_pkg = this.convertToRecord(connection);
+			connection.save();
 		}
-		IServicePackage svc_pkg = this.convertToRecord(orient_connection);
-		orient_connection.save();
 		return svc_pkg;
 	}
 
@@ -91,12 +85,36 @@ public class ServicePackage implements IPersistable<IServicePackage>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IServicePackage update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IServicePackage svc_pkg = this.convertToRecord(connection);		
+	public IServicePackage update(OrientConnectionFactory connection) {
+		IServicePackage svc_pkg = this.find(connection);
+		  
+		if(!svc_pkg.equals(null)){
+			svc_pkg.setName(this.getName());
+			svc_pkg.setMaxUsers(this.getMaxUsers());
+			svc_pkg.setPrice(this.getPrice());
+		}
+		
 		connection.save();
 		
 		return svc_pkg;
+	}
+	
+	/**
+	 * Looks up the current object by key
+	 * @param orient_connection
+	 * @return
+	 */
+	public IServicePackage find(OrientConnectionFactory orient_connection) {
+		@SuppressWarnings("unchecked")
+		Iterable<IServicePackage> svc_pkgs = (Iterable<IServicePackage>) DataAccessObject.findByKey(this.getKey(), orient_connection, IServicePackage.class);
+		Iterator<IServicePackage> iter = svc_pkgs.iterator();
+		
+		IServicePackage service_package = null; 
+		if(iter.hasNext()){
+			service_package = iter.next();
+		}
+		
+		return service_package;
 	}
 
 	public String getName() {

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
+import com.orientechnologies.orient.core.Orient;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IPage;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -171,11 +172,9 @@ public class Page extends PathObject<IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPage create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		
-		IPage page = this.convertToRecord(orient_connection);
-		orient_connection.save();
+	public IPage create(OrientConnectionFactory connection) {
+		IPage page = this.convertToRecord(connection);
+		connection.save();
 		
 		return page;
 	}
@@ -183,14 +182,22 @@ public class Page extends PathObject<IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPage update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
+	public IPage update(OrientConnectionFactory connection) {
+		a
 		IPage page = this.convertToRecord(connection);
 		connection.save();
 		
 		return page;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPage find(OrientConnectionFactory connection){
+		
+	}
+	
 	/**
 	 * 
 	 * @param result

@@ -24,7 +24,7 @@ public interface IPersistable<V> {
 	 * 
 	 * @return
 	 */
-	V create();
+	V create(OrientConnectionFactory connection);
 	
 	/**
 	 * Updates the given object by finding existing instances in the databases, making
@@ -33,5 +33,7 @@ public interface IPersistable<V> {
 	 * @param existing_obj
 	 * @return
 	 */
-	V update();
+	V update(OrientConnectionFactory connection);
+	
+	V find(OrientConnectionFactory connection);
 }

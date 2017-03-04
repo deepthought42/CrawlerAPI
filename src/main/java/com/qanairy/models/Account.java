@@ -76,33 +76,59 @@ public class Account implements IPersistable<IAccount> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IAccount create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+	public IAccount create(OrientConnectionFactory connection) {
 		@SuppressWarnings("unchecked")
-		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(this.getKey(), orient_connection, IAccount.class);
+		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(this.getKey(), connection, IAccount.class);
 		Iterator<IAccount> iter = accounts.iterator();
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because account already exists
 			return iter.next();
 		}
-		IAccount account = this.convertToRecord(orient_connection);
-		orient_connection.save();
-		return account;
+		else{
+			IAccount account = this.convertToRecord(connection);
+			connection.save();
+			return account;
+		}
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IAccount update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IAccount acct = this.convertToRecord(connection);		
+	public IAccount update(OrientConnectionFactory connection) {
+		@SuppressWarnings("unchecked")
+		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(this.getKey(), connection, IAccount.class);
+		Iterator<IAccount> iter = accounts.iterator();
+		  
+		IAccount acct = null;
+		if(iter.hasNext()){
+			acct = iter.next();
+			acct.setOrgName(this.getOrgName());
+			acct.setPaymentAcctNum(this.getPaymentAcctNum());
+			acct.setServicePackage(this.getServicePackage().find(connection));
+		}
+		
 		connection.save();
 		
 		return acct;
 	}
 
+
+	@Override
+	public IAccount find(OrientConnectionFactory connection) {
+		@SuppressWarnings("unchecked")
+		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(this.getKey(), connection, IAccount.class);
+		Iterator<IAccount> iter = svc_pkgs.iterator();
+		
+		IAccount account = null; 
+		if(iter.hasNext()){
+			account = iter.next();
+		}
+		
+		return account;
+	}
+	
 	public String getKey() {
 		return key;
 	}

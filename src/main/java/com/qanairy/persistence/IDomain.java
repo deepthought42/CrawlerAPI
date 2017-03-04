@@ -1,5 +1,6 @@
 package com.qanairy.persistence;
 
+import java.util.Iterator;
 import java.util.List;
 
 import com.qanairy.models.Group;
@@ -25,13 +26,13 @@ public interface IDomain {
 	void setUrl(String url);
 
 	@Adjacency(label="contains_test")
-	List<Test> getTests();
+	Iterator<Test> getTests();
 
 	@Adjacency(label="contains_test")
 	void setTests(List<Test> tests);
 
 	@Adjacency(label = "has_group")
-	List<Group> getGroups();
+	Iterator<Group> getGroups();
 	
 	@Adjacency(label = "has_group")
 	void setGroups(List<Group> groups);

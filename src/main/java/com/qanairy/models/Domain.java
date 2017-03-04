@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -94,7 +93,8 @@ public class Domain implements IPersistable<IDomain>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public IDomain create() {
+	@Override
+	public IDomain create(OrientConnectionFactory connection) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		@SuppressWarnings("unchecked")
 		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(this.getKey(), orient_connection, IDomain.class);
@@ -104,19 +104,47 @@ public class Domain implements IPersistable<IDomain>{
 			//figure out throwing exception because domain already exists
 			return iter.next();
 		}
-		IDomain domain = this.convertToRecord(orient_connection);
-		orient_connection.save();
-		return domain;
+		else{
+			IDomain domain = this.convertToRecord(orient_connection);
+			orient_connection.save();
+			return domain;
+		}
 	}
 
-	public IDomain update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IDomain domain = this.convertToRecord(connection);		
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IDomain update(OrientConnectionFactory connection) {
+		IDomain domain = this.find(connection);
+		if(domain != null){
+			domain.setGroups(this.getGroups());
+			domain.setTests(this.getTests());
+			domain.setUrl(this.getUrl());
+		}
+		
 		connection.save();
 		
 		return domain;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IDomain find(OrientConnectionFactory connection) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		@SuppressWarnings("unchecked")
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(this.getKey(), orient_connection, IDomain.class);
+		Iterator<IDomain> iter = domains.iterator();
+		  
+		if(iter.hasNext()){
+			//figure out throwing exception because domain already exists
+			return iter.next();
+		}
+		
+		return null;
+	}
 	/**
 	 * {@inheritDoc}
 	 */
@@ -145,5 +173,4 @@ public class Domain implements IPersistable<IDomain>{
 	public void setKey(String key) {
 		this.key = key;
 	}
-	
 }

@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testng-results skipped="0" failed="1" total="2" passed="1">
+<testng-results skipped="0" failed="1" total="1" passed="0">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="1141" started-at="2017-03-03T03:58:04Z" finished-at="2017-03-03T03:58:06Z">
+  <suite name="Default suite" duration-ms="1121" started-at="2017-03-04T22:22:59Z" finished-at="2017-03-04T22:23:00Z">
     <groups>
     </groups>
-    <test name="Default test" duration-ms="1141" started-at="2017-03-03T03:58:04Z" finished-at="2017-03-03T03:58:06Z">
-      <class name="models.AccountTests">
-        <test-method status="FAIL" signature="accountCreateRecord()[pri:0, instance:models.AccountTests@3b084709]" name="accountCreateRecord" duration-ms="976" started-at="2017-03-02T22:58:04Z" finished-at="2017-03-02T22:58:05Z">
-          <exception class="java.lang.NullPointerException">
+    <test name="Default test" duration-ms="1121" started-at="2017-03-04T22:22:59Z" finished-at="2017-03-04T22:23:00Z">
+      <class name="models.DomainTests">
+        <test-method status="FAIL" signature="accountUpdateRecord()[pri:0, instance:models.DomainTests@6737fd8f]" name="accountUpdateRecord" duration-ms="1110" started-at="2017-03-04T17:22:59Z" finished-at="2017-03-04T17:23:00Z">
+          <exception class="java.lang.ClassCastException">
+            <message>
+              <![CDATA[com.tinkerpop.frames.structures.FramedVertexIterable cannot be cast to java.util.List]]>
+            </message>
             <full-stacktrace>
-              <![CDATA[java.lang.NullPointerException
-	at models.AccountTests.accountCreateRecord(AccountTests.java:26)
+              <![CDATA[java.lang.ClassCastException: com.tinkerpop.frames.structures.FramedVertexIterable cannot be cast to java.util.List
+	at com.sun.proxy.$Proxy5.getGroups(Unknown Source)
+	at models.DomainTests.accountUpdateRecord(DomainTests.java:46)
 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
@@ -38,15 +42,11 @@
 	at org.testng.remote.RemoteTestNG.main(RemoteTestNG.java:81)
 ]]>
             </full-stacktrace>
-          </exception> <!-- java.lang.NullPointerException -->
-          <reporter-output>
-          </reporter-output>
-        </test-method> <!-- accountCreateRecord -->
-        <test-method status="PASS" signature="accountUpdateRecord()[pri:0, instance:models.AccountTests@3b084709]" name="accountUpdateRecord" duration-ms="152" started-at="2017-03-02T22:58:05Z" finished-at="2017-03-02T22:58:06Z">
+          </exception> <!-- java.lang.ClassCastException -->
           <reporter-output>
           </reporter-output>
         </test-method> <!-- accountUpdateRecord -->
-      </class> <!-- models.AccountTests -->
+      </class> <!-- models.DomainTests -->
     </test> <!-- Default test -->
   </suite> <!-- Default suite -->
 </testng-results>

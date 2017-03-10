@@ -3,104 +3,95 @@ package com.qanairy.models.dto;
 import java.util.Iterator;
 import java.util.UUID;
 
-import com.qanairy.models.Account;
-import com.qanairy.models.ServicePackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.qanairy.models.Action;
 import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IAccount;
+import com.qanairy.persistence.IAction;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * 
  */
-public class AccountRepository implements IPersistable<Account, IAccount> {
+public class ActionRepository implements IPersistable<Action, IAction> {
+
+	private static final Logger log = LoggerFactory.getLogger(Action.class);
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public String generateKey(Account acct) {
-		return acct.getOrgName()+"";
-	}
-
-	@Override
-	public IAccount convertToRecord(OrientConnectionFactory connection, Account account) {
-		account.setKey(generateKey(account));
-
-		IAccount acct = connection.getTransaction().addVertex("class:"+IAccount.class.getCanonicalName()+","+UUID.randomUUID(), IAccount.class);
-		acct.setKey(account.getKey());
-		acct.setOrgName(account.getOrgName());
-		acct.setServicePackage(account.getServicePackage().convertToRecord(connection));
-		acct.setPaymentAcctNum(account.getPaymentAcctNum());
-
-		return acct;
-	}
-
-	@Override
-	public Account convertFromRecord(IAccount account) {
-		ServicePackage sp = new ServicePackage(account.getServicePackage().getName(), account.getServicePackage().getPrice(), account.getServicePackage().getMaxUsers());
-		return new Account(account.getOrgName(), sp, account.getPaymentAcctNum());
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Account create(OrientConnectionFactory connection, Account account) {
-		account.setKey(generateKey(account));
-
-		@SuppressWarnings("unchecked")
-		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
-		Iterator<IAccount> iter = accounts.iterator();
-		  
-		if(iter.hasNext()){
-			//figure out throwing exception because account already exists
-			return convertFromRecord(iter.next());
-		}
-		else{
-			convertToRecord(connection, account);
-			connection.save();
-			return account;
-		}
+	public String generateKey(Action action) {
+		return action.getName() + ":"+ action.getValue().hashCode();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public Account update(OrientConnectionFactory connection, Account account) {
-		account.setKey(generateKey(account));
+	public IAction convertToRecord(OrientConnectionFactory rl_conn, Action action) {
+		IAction action_record = rl_conn.getTransaction().addVertex("class:"+IAction.class.getCanonicalName()+","+UUID.randomUUID(), IAction.class);
+		action_record.setName(action.getName());
+		action_record.setKey(action.getKey());
+		action_record.setType(action.getClass().getName());
+		action_record.setValue(action.getValue());
 		
-		@SuppressWarnings("unchecked")
-		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
-		Iterator<IAccount> iter = accounts.iterator();
-		  
-		IAccount acct = null;
-		if(iter.hasNext()){
-			acct = iter.next();
-			acct.setOrgName(account.getOrgName());
-			acct.setPaymentAcctNum(account.getPaymentAcctNum());
-			acct.setServicePackage(account.getServicePackage().find(connection));
+		return action_record;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Action create(OrientConnectionFactory connection, Action action) {
+		IAction action_record = find(connection, action.getKey());
+		
+		if(action_record != null){
+			action_record = this.convertToRecord(connection, action);
 			connection.save();
 		}
-		return account;
+		return action;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public Action update(OrientConnectionFactory connection, Action action) {
+		IAction action_record = find(connection, action.getKey());
+		if(action_record != null){
+			action_record.setName(action.getName());
+			action_record.setType(action.getType());
+			action_record.setValue(action.getValue());
+			connection.save();
+		}
+		
+		return action;
+	}
+
+	/**
+	 * 
+	 * @param data
+	 * @return
+	 */
+	public Action convertFromRecord(IAction data) {
+		Action action = new Action(data.getName(), data.getValue());
+		action.setType(Action.class.getSimpleName());
+		return action;
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IAccount find(OrientConnectionFactory connection, String key) {
+	public IAction find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
-		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(key, connection, IAccount.class);
-		Iterator<IAccount> iter = svc_pkgs.iterator();
-		
-		IAccount account = null; 
+		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(key, connection, IAction.class);
+		Iterator<IAction> iter = actions.iterator();
+		  
 		if(iter.hasNext()){
-			account = iter.next();
+			//figure out throwing exception because domain already exists
+			return iter.next();
 		}
 		
-		return account;
-	} 
+		return null;
+	}
 }

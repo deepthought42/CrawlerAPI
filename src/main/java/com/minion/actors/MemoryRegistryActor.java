@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.qanairy.rl.memory.ObjectDefinition;
 
@@ -106,7 +107,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				Path path = (Path)acct_msg.getData();
 				log.info("Saving Path : " +path + " : to memory Registry");
 				
-				path.create();
+				path.create(new OrientConnectionFactory());
 			}
 		}
 		else unhandled(message);

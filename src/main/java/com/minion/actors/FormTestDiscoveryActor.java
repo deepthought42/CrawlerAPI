@@ -23,8 +23,6 @@ import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PathObject;
 import com.qanairy.rules.FormRule;
-import com.qanairy.rules.NumericRuleType;
-import com.qanairy.rules.PatternRuleType;
 import com.qanairy.rules.formRules.FormRuleType;
 import com.qanairy.rules.formRules.NumericRule;
 
@@ -119,7 +117,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		
 	}
 	
-	public static List<Path> generateLengthBoundaryTests(PageElement input, FormRule<?> rule){
+	public static List<Path> generateLengthBoundaryTests(PageElement input, FormRule rule){
 		log.info("generating length boundary test paths");
 
 		List<Path> paths = new ArrayList<Path>();
@@ -270,7 +268,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param rule
 	 * @return
 	 */
-	public static List<Path> generateRuleTests(PageElement input_elem, FormRule<?> rule){
+	public static List<Path> generateRuleTests(PageElement input_elem, FormRule rule){
 		assert rule != null;
 		
 		List<Path> tests = new ArrayList<Path>();
@@ -323,7 +321,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		
 	}
 	
-	private static List<Path> generateAlphabeticRestrictionTests(PageElement input_elem, FormRule<?> rule) {
+	private static List<Path> generateAlphabeticRestrictionTests(PageElement input_elem, FormRule rule) {
 		//generate single character str test		
 		List<Path> paths = new ArrayList<Path>();
 		Path path = new Path();
@@ -333,7 +331,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return paths;
 	}
 
-	private static List<Path> generateNumericRestrictionTests(PageElement input_elem, FormRule<?> rule) {
+	private static List<Path> generateNumericRestrictionTests(PageElement input_elem, FormRule rule) {
 		List<Path> paths = new ArrayList<Path>();
 
 		Path path = new Path();
@@ -345,7 +343,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return paths;
 	}
 
-	private static List<Path> generateSpecialCharacterRestrictionTests(PageElement input_elem, FormRule<?> rule) {
+	private static List<Path> generateSpecialCharacterRestrictionTests(PageElement input_elem, FormRule rule) {
 		//generate single character str test
 		List<Path> paths = new ArrayList<Path>();
 		Path path = new Path();
@@ -356,11 +354,11 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return paths;
 	}
 
-	private static void generateEnabledTests(PageElement input_elem, FormRule<?> rule) {
+	private static void generateEnabledTests(PageElement input_elem, FormRule rule) {
 		// TODO Auto-generated method stub
 	}
 
-	private static void generateReadOnlyTests(PageElement input_elem, FormRule<?> rule) {
+	private static void generateReadOnlyTests(PageElement input_elem, FormRule rule) {
 		// TODO Auto-generated method stub
 	}
 
@@ -379,9 +377,9 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			for(FormField field : complex_field.getElements()){
 				PageElement input_elem = field.getInputElement();
 				
-				List<FormRule<?>> rules = field.getRules();
+				List<FormRule> rules = field.getRules();
 				log.info("field rules length " + rules.size());
-				for(FormRule<?> rule : rules){
+				for(FormRule rule : rules){
 					log.info("RULE :: " +rule);
 					List<Path> path_list = generateRuleTests(input_elem, rule);
 					log.info("# rule tests created : " + path_list.size());

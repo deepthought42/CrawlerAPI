@@ -16,7 +16,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * A pairing of a name and a set of string values
  */
-public class Attribute implements IPersistable<Attribute, IAttribute> {
+public class Attribute {
 
 	public String key;
 	public String name;
@@ -91,56 +91,6 @@ public class Attribute implements IPersistable<Attribute, IAttribute> {
         }
         return hash;
     }
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey() {
-		return this.name.hashCode()+":";
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IAttribute convertToRecord(OrientConnectionFactory connection) {
-		Iterator<IAttribute> attributes = (Iterator<IAttribute>) DataAccessObject.findByKey(this.getKey(), connection, IAttribute.class).iterator();
-		IAttribute attribute = null;
-		if(!attributes.hasNext()){
-			attribute = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);
-			attribute.setName(this.name);
-			attribute.setVals(this.vals);
-			attribute.setKey(this.key);
-		}
-		else{
-			attribute = attributes.next();
-		}
-		
-		return attribute;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IAttribute create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		
-		IAttribute attribute = this.convertToRecord(orient_connection);
-		orient_connection.save();
-		
-		return attribute;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IAttribute update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IAttribute attribute = this.convertToRecord(connection);
-		connection.save();
-		
-		return attribute;
-	}
-	
 
 	public String getKey() {
 		return this.hashCode()+"";
@@ -152,23 +102,5 @@ public class Attribute implements IPersistable<Attribute, IAttribute> {
 	
 	public String[] getVals(){
 		return this.vals;
-	}
-
-	@Override
-	public Attribute create(OrientConnectionFactory connection) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Attribute update(OrientConnectionFactory connection) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Attribute find(OrientConnectionFactory connection) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

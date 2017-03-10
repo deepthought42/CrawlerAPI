@@ -14,6 +14,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.structs.ExploratoryPath;
@@ -112,7 +113,7 @@ public class PathExpansionActor extends UntypedActor {
 				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
 				memory_registry.tell(test_msg, getSelf());
 				
-				if(path != null && path.getIsUseful() && !path.getSpansMultipleDomains()){
+				if(path != null && path.isUseful() && !path.getSpansMultipleDomains()){
 					if(!test.getPath().findLastPage().getUrl().equals(test.getResult().getUrl()) && test.getResult().isLandable()){
 						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
@@ -154,7 +155,7 @@ public class PathExpansionActor extends UntypedActor {
 				memory_registry.tell(path_msg, getSelf());
 				
 				log.info("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains());
-				if(path.getIsUseful() && !path.getSpansMultipleDomains()){
+				if(path.isUseful() && !path.getSpansMultipleDomains()){
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);
 					if(first_page == null){

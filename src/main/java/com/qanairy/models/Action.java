@@ -77,80 +77,10 @@ public class Action extends PathObject<IAction>{
 		return this.key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey() {
-		return this.name + ":"+this.val.hashCode();
-	}
-
 	public String getValue() {
 		return val;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public IAction convertToRecord(OrientConnectionFactory rl_conn) {
-		log.info("Creating Action path object record with key : "+this.getKey());
-		@SuppressWarnings("unchecked")
-		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(this.getKey(), IAction.class);
-		
-		Iterator<IAction> action_iter = actions.iterator();
-		IAction action = null;
-
-		if(!action_iter.hasNext()){
-			action = rl_conn.getTransaction().addVertex("class:"+IAction.class.getCanonicalName()+","+UUID.randomUUID(), IAction.class);
-			action.setName(this.name);
-			action.setKey(this.key);
-			action.setType(this.getClass().getName());
-			action.setValue(this.getValue());
-		}
-		else{
-			action = actions.iterator().next();
-		}		
-		
-		return action;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IAction create(OrientConnectionFactory connection) {
-		IAction action = this.find(connection);
-		
-		if(action != null){
-			action = this.convertToRecord(connection);
-			connection.save();
-		}
-		return action;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IAction update(OrientConnectionFactory connection) {
-		IAction action = this.find(connection);
-		if(action != null){
-			action.setName(this.getName());
-			action.setType(this.getType());
-			action.setValue(this.getValue());
-			connection.save();
-		}
-		
-		return action;
-	}
-
-	/**
-	 * 
-	 * @param data
-	 * @return
-	 */
-	public Action convertFromRecord(IAction data) {
-		Action action = new Action(data.getName(), data.getValue());
-		action.setType(Action.class.getSimpleName());
-		return action;
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -160,22 +90,5 @@ public class Action extends PathObject<IAction>{
 		Action action_clone = new Action(this.getName(), this.getValue());
 		//action_clone.setNext(this.getNext());
 		return action_clone;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Action find(OrientConnectionFactory connection) {
-		@SuppressWarnings("unchecked")
-		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(this.getKey(), connection, IAction.class);
-		Iterator<IAction> iter = actions.iterator();
-		  
-		if(iter.hasNext()){
-			//figure out throwing exception because domain already exists
-			return iter.next();
-		}
-		
-		return null;
 	}
 }

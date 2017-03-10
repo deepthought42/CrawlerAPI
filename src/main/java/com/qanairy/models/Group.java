@@ -12,7 +12,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * Defines a name and color used to group {@link Test}s
  */
-public class Group implements IPersistable<IGroup>{
+public class Group implements IPersistable<Group, IGroup>{
 	private String key;
 	private String name;
 	private List<Test> test;
@@ -55,80 +55,11 @@ public class Group implements IPersistable<IGroup>{
 		this.key = key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey() {
-		return "group:"+this.getName();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IGroup convertToRecord(OrientConnectionFactory connection) {
-		
-		IGroup group = find(connection);
-		
-		if(group == null){
-			group = connection.getTransaction().addVertex("class:"+IGroup.class.getCanonicalName()+","+UUID.randomUUID(), IGroup.class);
-			group.setKey(this.getKey());
-			group.setDescription(this.getDescription());
-			group.setName(this.getName());
-		}
-
-		return group;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IGroup create(OrientConnectionFactory conn) {
-		IGroup group = find(conn);
-		
-		if(group == null){
-			group = this.convertToRecord(conn);
-			conn.save();
-		}
-		return group;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * Only allows for description to be updated
-	 */
-	public IGroup update(OrientConnectionFactory conn) {
-		IGroup group = this.find(conn);
-		if(group != null){
-			group.setDescription(this.getDescription());
-			conn.save();
-		}
-		
-		return group;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public IGroup find(OrientConnectionFactory connection) {
-		@SuppressWarnings("unchecked")
-		Iterable<IGroup> domains = (Iterable<IGroup>) DataAccessObject.findByKey(this.getKey(), connection, IGroup.class);
-		Iterator<IGroup> iter = domains.iterator();
-		  
-		if(iter.hasNext()){
-			//figure out throwing exception because domain already exists
-			return iter.next();
-		}
-		
-		return null;
-	}
-
-	private void setDescription(String description){
+	public void setDescription(String description){
 		this.description = description;
 	}
 	
-	private String getDescription() {
+	public String getDescription() {
 		return this.description;
 	}
 }

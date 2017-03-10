@@ -1,25 +1,12 @@
 package com.qanairy.models;
 
-import java.util.Iterator;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IAction;
-import com.qanairy.persistence.IDomain;
-import com.qanairy.persistence.OrientConnectionFactory;
-
 /**
  * Defines an action in name only
  */
-public class Action extends PathObject<IAction>{
-	private static final Logger log = LoggerFactory.getLogger(Action.class);
-
-	private final String name;
-	private final String key;
-	private final String val;
+public class Action extends PathObject{
+	private String name;
+	private String key;
+	private String val;
 	
 	/**
 	 * Construct empty action object
@@ -37,7 +24,6 @@ public class Action extends PathObject<IAction>{
 	public Action(String action_name) {
 		this.name = action_name;
 		this.val = "";
-		this.key = generateKey();
 	}
 	
 	/**
@@ -47,7 +33,6 @@ public class Action extends PathObject<IAction>{
 	public Action(String action_name, String value) {
 		this.name = action_name;
 		this.val = value;
-		this.key = generateKey();
 	}
 	
 	/**
@@ -86,7 +71,7 @@ public class Action extends PathObject<IAction>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PathObject<?> clone() {
+	public PathObject clone() {
 		Action action_clone = new Action(this.getName(), this.getValue());
 		//action_clone.setNext(this.getNext());
 		return action_clone;

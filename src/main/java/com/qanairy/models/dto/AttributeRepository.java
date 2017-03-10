@@ -4,8 +4,6 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.ServicePackage;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAttribute;
 import com.qanairy.persistence.IPersistable;
@@ -59,5 +57,24 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		connection.save();
 		
 		return attr;
+	}
+
+	@Override
+	public Attribute convertFromRecord(IAttribute attr_record) {
+		return new Attribute(attr_record.getName(), attr_record.getVals());
+	}
+
+	@Override
+	public IAttribute find(OrientConnectionFactory connection, String key) {
+		@SuppressWarnings("unchecked")
+		Iterable<IAttribute> svc_pkgs = (Iterable<IAttribute>) DataAccessObject.findByKey(key, connection, IAttribute.class);
+		Iterator<IAttribute> iter = svc_pkgs.iterator();
+		
+		IAttribute account = null; 
+		if(iter.hasNext()){
+			account = iter.next();
+		}
+		
+		return account;
 	}
 }

@@ -15,7 +15,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * 
  */
-public class ActionRepository implements IPersistable<Action, IAction> {
+public class ActionRepository implements IPersistable<Action, IAction>{
 
 	private static final Logger log = LoggerFactory.getLogger(Action.class);
 

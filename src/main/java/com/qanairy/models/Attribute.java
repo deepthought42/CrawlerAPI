@@ -1,17 +1,6 @@
 package com.qanairy.models;
 
-
-import java.util.Iterator;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.minion.util.ArrayUtility;
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IAttribute;
-import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * A pairing of a name and a set of string values
@@ -25,7 +14,6 @@ public class Attribute {
 	public Attribute(String attrName, String[] val){
 		this.name = attrName;
 		this.vals = val;
-		this.key = generateKey();
 	}
 	
 	/**

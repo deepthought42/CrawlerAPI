@@ -10,6 +10,9 @@ import com.minion.structs.Path;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
+/**
+ * 
+ */
 public class PathTests {
 	
 	@Test(groups="Path")

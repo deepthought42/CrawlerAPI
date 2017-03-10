@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.openqa.selenium.interactions.Actions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,27 +13,18 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
-import com.qanairy.rl.learning.Brain;
-import com.qanairy.rl.memory.DataDecomposer;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.actions.Action;
 import com.minion.structs.ExploratoryPath;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
-import com.minion.structs.SessionTestTracker;
-import com.minion.structs.TestMapper;
-import com.qanairy.models.Domain;
-import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
- * 
- * @author Brandon Kindred
  *
  */
 public class PathExpansionActor extends UntypedActor {

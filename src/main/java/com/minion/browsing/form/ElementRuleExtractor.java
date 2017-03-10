@@ -9,51 +9,59 @@ import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Attribute;
 import com.qanairy.models.PageElement;
-import com.qanairy.rules.BooleanRuleType;
-import com.qanairy.rules.NumericRule;
+import com.qanairy.rules.FormRule;
 import com.qanairy.rules.NumericRuleType;
-import com.qanairy.rules.PatternRule;
-import com.qanairy.rules.PatternRuleType;
-import com.qanairy.rules.Rule;
-import com.qanairy.rules.booleanRules.BooleanRule;
+import com.qanairy.rules.formRules.AlphabeticRestrictionRule;
+import com.qanairy.rules.formRules.DisabledRule;
+import com.qanairy.rules.formRules.MaximumValueRule;
+import com.qanairy.rules.formRules.MinimumValueRule;
+import com.qanairy.rules.formRules.NumericRule;
+import com.qanairy.rules.formRules.PatternRule;
+import com.qanairy.rules.formRules.ReadOnlyRule;
+import com.qanairy.rules.formRules.RequirementRule;
+import com.qanairy.rules.formRules.SpecialCharacterRestriction;
 
 public class ElementRuleExtractor {
     private static final Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);
 
-	public static List<Rule<?,?>> extractRules(PageElement elem){
-		List<Rule<?,?>> rules = new ArrayList<Rule<?,?>>();
+	public static List<FormRule> extractRules(PageElement elem){
+		List<FormRule> rules = new ArrayList<FormRule>();
 
 		for(Attribute attr : elem.getAttributes()){
-			if(attr.getName().equalsIgnoreCase("required")){
-				BooleanRule required = new BooleanRule(BooleanRuleType.REQUIRED, true);
+			System.err.println("GET VALS TO STR :: " + attr.getVals().toString());
+			if(attr.getName().trim().equalsIgnoreCase("required")){
+				FormRule required = new RequirementRule();
 				rules.add(required);
-				log.info("Form field is required");
+				log.info("Form field is required : "+rules.size());
 			}
-			else if(attr.getName().equalsIgnoreCase("disabled")){
-				BooleanRule disabled = new BooleanRule(BooleanRuleType.ENABLED, false);
+			else if(attr.getName().trim().equalsIgnoreCase("disabled")){
+				FormRule disabled = new DisabledRule();
 				rules.add(disabled);
 				log.info("Field is disabled");
 			}
-			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().toString().contains("number")){
-				BooleanRule number_only = new BooleanRule(BooleanRuleType.NUMBER_ONLY, true);
-				rules.add(number_only);
+			else if(attr.getName().equalsIgnoreCase("type") && attr.contains("number")){
+				FormRule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
+				FormRule special_character_rule = new SpecialCharacterRestriction();
+				
+				rules.add(alphabetic_restriction_rule);
+				rules.add(special_character_rule);
 				log.info("form input is of number type. Numbers only.");
 			}
 			else if(attr.getName().equalsIgnoreCase("readonly")){
-				BooleanRule read_only = new BooleanRule(BooleanRuleType.READ_ONLY, true);
-				rules.add(read_only);
+				rules.add(new ReadOnlyRule());
 				log.info("Form field is read only");
 			}
 			else if(attr.getName().equalsIgnoreCase("min")){
-				NumericRule min_val = new NumericRule(NumericRuleType.MIN_VALUE, Integer.parseInt(attr.getVals()[0]));
+				FormRule min_val = new MinimumValueRule(Integer.parseInt(attr.getVals()[0]));
 				rules.add(min_val);
 				log.info("form field has a minimum value of : " + attr.getVals()[0]);
 			}
 			else if(attr.getName().equalsIgnoreCase("max")){
-				NumericRule max_val = new NumericRule(NumericRuleType.MAX_VALUE, Integer.parseInt(attr.getVals()[0]));
+				FormRule max_val = new MaximumValueRule(Integer.parseInt(attr.getVals()[0]));
 				rules.add(max_val);
 				log.info("form field has a maximum value of : " + attr.getVals()[0]);
 			}
+			//minlength only works for certain frameworks such as angularjs that support it as a custom html5 attribute
 			else if(attr.getName().equalsIgnoreCase("minlength")){
 				NumericRule max_val = new NumericRule(NumericRuleType.MIN_LENGTH, Integer.parseInt(attr.getVals()[0]));
 				rules.add(max_val);
@@ -66,12 +74,13 @@ public class ElementRuleExtractor {
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals()[0].equalsIgnoreCase("email")){
 				String email_regex_str = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
-				PatternRule email_rule = new PatternRule(PatternRuleType.REGEX, Pattern.compile(email_regex_str, Pattern.CASE_INSENSITIVE));
+				PatternRule email_rule = new PatternRule(Pattern.compile(email_regex_str, Pattern.CASE_INSENSITIVE));
 				rules.add(email_rule);
 			}
-			else if(attr.getName().equalsIgnoreCase("formnovalidate")){
-				BooleanRule no_validate = new BooleanRule(BooleanRuleType.NO_VALIDATE, true);
-				rules.add(no_validate);
+			else if(attr.getName().equalsIgnoreCase("pattern")){
+				String regex_str = attr.getVals()[0];
+				PatternRule pattern_rule = new PatternRule(Pattern.compile(regex_str));
+				rules.add(pattern_rule);
 			}
 		}
 		

@@ -31,11 +31,9 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -365,47 +363,47 @@ public class Browser {
 		log.info("total forms found :: " + form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-				PageElement form_tag = new PageElement(form_elem.getText(), generateXpath(form_elem, "", xpath_map, browser.getDriver()), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()));
-				Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
-				List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
+			PageElement form_tag = new PageElement(form_elem.getText(), generateXpath(form_elem, "", xpath_map, browser.getDriver()), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()));
+			Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
+			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
+			
+			List<PageElement> input_tags = new ArrayList<PageElement>(); 
+			for(WebElement input_elem : input_elements){
+				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()));
 				
-				List<PageElement> input_tags = new ArrayList<PageElement>(); 
-				for(WebElement input_elem : input_elements){
-					PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()));
-					
-					boolean alreadySeen = false;
-					for(String path : form_xpath_list){
-						if(path.equals(input_tag.getXpath())){
-							alreadySeen = true;
-						}
+				boolean alreadySeen = false;
+				for(String path : form_xpath_list){
+					if(path.equals(input_tag.getXpath())){
+						alreadySeen = true;
 					}
-					
-					if(alreadySeen){
-						continue;
-					}						
-					
-					List<FormField> group_inputs = constructGrouping(input_elem, browser.getDriver());
-					ComplexField combo_input = new ComplexField(group_inputs);
-					
-					//List<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, browser.getDriver());
-					for(FormField input_field : group_inputs){
-						PageElement label = findLabelForInput(form_elem, input_field, browser.getDriver());
-						input_field.setFieldLabel(label);
-					}
-					//combo_input.getElements().addAll(labels);
-					form.addFormField(combo_input);
-					for(FormField input : group_inputs){
-						input.addRules(ElementRuleExtractor.extractRules(input.getInputElement()));
-						//combo_rules.addAll(ElementRuleExtractor.extractRules(input.getInputElement()));
-					}
-					//log.info("Form combo field has a total of " + combo_rules.size() + " rules");
-					input_tags.add(input_tag);
 				}
 				
-				log.info("Total inputs for form : "+form.getFormFields().size());
+				if(alreadySeen){
+					continue;
+				}						
 				
-				form_list.add(form);
-				log.info(form.getType() + " : Form discovered");
+				List<FormField> group_inputs = constructGrouping(input_elem, browser.getDriver());
+				ComplexField combo_input = new ComplexField(group_inputs);
+				
+				//List<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, browser.getDriver());
+				for(FormField input_field : group_inputs){
+					PageElement label = findLabelForInput(form_elem, input_field, browser.getDriver());
+					input_field.setFieldLabel(label);
+				}
+				//combo_input.getElements().addAll(labels);
+				form.addFormField(combo_input);
+				for(FormField input : group_inputs){
+					input.addRules(ElementRuleExtractor.extractRules(input.getInputElement()));
+					//combo_rules.addAll(ElementRuleExtractor.extractRules(input.getInputElement()));
+				}
+				//log.info("Form combo field has a total of " + combo_rules.size() + " rules");
+				input_tags.add(input_tag);
+			}
+			
+			log.info("Total inputs for form : "+form.getFormFields().size());
+			
+			form_list.add(form);
+			log.info(form.getType() + " : Form discovered");
 		}
 		return form_list;
 	}

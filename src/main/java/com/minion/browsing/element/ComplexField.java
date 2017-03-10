@@ -35,8 +35,8 @@ public class ComplexField {
 	 * @pre elements.size() > 0;
 	 */
 	public ComplexField(List<FormField> fields){
-		assert elements != null;
-		assert elements.size() > 0;
+		assert fields != null;
+		assert fields.size() > 0;
 		
 		this.setElements(fields);
 	}

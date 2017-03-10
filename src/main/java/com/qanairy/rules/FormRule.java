@@ -10,19 +10,13 @@ import com.qanairy.rules.formRules.FormRuleType;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
-public interface FormRule<T> {
+public interface FormRule {
 	
 	/**
 	 * @return the {@link RuleType} of this rule
 	 */
 	RuleType getType();
 	
-	/**
-	 * @return the value of this rule based on the type of rule. 
-	 * 
-	 * NB: The type is defined in the implementation
-	 */
-	T getValue();
 	
 	/**
 	 * evaluates the rule to determine if it is satisfied

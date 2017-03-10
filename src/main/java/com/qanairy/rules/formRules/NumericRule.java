@@ -3,15 +3,17 @@ package com.qanairy.rules.formRules;
 import org.apache.commons.lang3.StringUtils;
 
 import com.minion.browsing.form.FormField;
-import com.qanairy.rules.FormRule;
 import com.qanairy.rules.NumericRuleType;
 
-public class NumericRule implements FormRule<Integer>{
+/**
+ * Defines a min/max value or length {@link FormRule} on a {@link FormField}
+ */
+public class NumericRule implements ValueBasedFormRule<Integer>{
 	
-	private FormRuleType type;
+	private NumericRuleType type;
 	private Integer value;
 	
-	public NumericRule(FormRuleType type, Integer value){
+	public NumericRule(NumericRuleType type, Integer value){
 		this.type = type;
 		this.value = value;
 	}
@@ -20,7 +22,7 @@ public class NumericRule implements FormRule<Integer>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FormRuleType getType() {
+	public NumericRuleType getType() {
 		return this.type;
 	}
 

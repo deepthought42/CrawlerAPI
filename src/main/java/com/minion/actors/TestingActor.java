@@ -22,8 +22,6 @@ import com.qanairy.models.Page;
 
 /**
  * Handles retrieving tests
- * 
- * @author brandon kindred
  *
  */
 public class TestingActor extends UntypedActor {
@@ -43,7 +41,7 @@ public class TestingActor extends UntypedActor {
 			if(acct_msg.getData() instanceof Test){
 				Test test = (Test)acct_msg.getData();
 				Path path = test.getPath();
-			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString());
+			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "headless");
 
 				Page resulting_page = null;
 				if(path.getPath() != null){

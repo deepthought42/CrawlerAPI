@@ -7,14 +7,15 @@ import com.minion.browsing.form.FormField;
 import com.qanairy.rules.FormRule;
 import com.qanairy.rules.RuleType;
 
-public class NumericRestrictionRule implements FormRule<Boolean> {
+/**
+ * Defines a {@link FormRule} where the numbers 1-9 cannot appear in a given value when evaluated
+ */
+public class NumericRestrictionRule implements FormRule {
 
 	private FormRuleType type;
-	private boolean value;
 	
-	public NumericRestrictionRule(boolean value) {
+	public NumericRestrictionRule() {
 		this.type = FormRuleType.NUMERIC_RESTRICTION;
-		this.value = value;
 	}
 	
 	/**
@@ -29,18 +30,10 @@ public class NumericRestrictionRule implements FormRule<Boolean> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean getValue() {
-		return this.value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public Boolean evaluate(FormField field) {
 		Pattern pattern = Pattern.compile("[0-9]*");
 
         Matcher matcher = pattern.matcher(field.getInputElement().getText());
-		return matcher.matches();
+		return !matcher.matches();
 	}
 }

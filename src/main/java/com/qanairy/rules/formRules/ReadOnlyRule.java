@@ -4,27 +4,18 @@ import com.minion.browsing.form.FormField;
 import com.qanairy.rules.FormRule;
 
 /**
- * 
+ * Creates a read-only {@link FormRule} on a {@link FormField}  
  *
  */
-public class ReadOnlyRule implements FormRule<Boolean> {
+public class ReadOnlyRule implements FormRule {
 
-	private FormRuleType type;
-	private Boolean value;
 	
 	public ReadOnlyRule(){
-		this.type = FormRuleType.READ_ONLY;
-		this.value = true;
 	}
 	
 	@Override
 	public FormRuleType getType() {
-		return this.type;
-	}
-
-	@Override
-	public Boolean getValue() {
-		return this.value;
+		return FormRuleType.READ_ONLY;
 	}
 
 	@Override

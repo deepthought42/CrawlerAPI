@@ -1,23 +1,19 @@
 package com.minion.browsing;
 
+
 import java.util.Iterator;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.minion.persistence.DataAccessObject;
 import com.minion.persistence.IAttribute;
 import com.minion.persistence.IPersistable;
 import com.minion.persistence.OrientConnectionFactory;
 import com.minion.util.ArrayUtility;
-import com.qanairy.models.Page;
 
 /**
  * A pairing of a name and a set of string values
  */
 public class Attribute implements IPersistable<IAttribute> {
-    private static final Logger log = LoggerFactory.getLogger(Page.class);
 
 	public String key;
 	public String name;
@@ -27,6 +23,20 @@ public class Attribute implements IPersistable<IAttribute> {
 		this.name = attrName;
 		this.vals = val;
 		this.key = generateKey();
+	}
+	
+	/**
+	 * Checks if a value is assigned to this Attribute
+	 * 
+	 * @return true if value exists, otherwise false
+	 */
+	public boolean contains(String val){
+		for(String value : this.vals){
+			if(value.trim().equals(val)){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**

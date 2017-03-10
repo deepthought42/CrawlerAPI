@@ -7,7 +7,6 @@ import org.testng.annotations.Test;
 import com.minion.browsing.Browser;
 import com.minion.structs.Path;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
 
 public class BrowserTest {
@@ -29,7 +28,7 @@ public class BrowserTest {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost(), new Organization("HardCodedTestOrganization")));
+		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost()));
 		Assert.assertTrue(test.getDomain().getUrl().toString().equals(page.getUrl().getHost()));
 		Assert.assertTrue(test.getKey() != null);
 	}

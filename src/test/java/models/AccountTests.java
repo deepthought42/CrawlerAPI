@@ -12,6 +12,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * Defines all tests for the service package POJO
  */
 public class AccountTests {
+	
 	@Test
 	public void accountCreateRecord(){
 		Account acct = new Account("Test Org", new ServicePackage("Test Package", 80, 5), "acct_test1");
@@ -24,6 +25,7 @@ public class AccountTests {
 		Assert.assertTrue(acct_record.getServicePackage().getName().equals(acct.getServicePackage().getName()));
 	}
 	
+	
 	@Test
 	public void accountUpdateRecord(){
 		Account acct = new Account("Test Org", new ServicePackage("Test Package", 80, 5), "acct_test1 update");
@@ -35,6 +37,7 @@ public class AccountTests {
 		Assert.assertTrue(acct_record.getPaymentAcctNum().equals(acct.getPaymentAcctNum()));
 		Assert.assertTrue(acct_record.getServicePackage().getName().equals(acct.getServicePackage().getName()));
 	}
+	
 	
 	@Test
 	public void accountFindRecord(){

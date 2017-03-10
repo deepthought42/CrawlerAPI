@@ -1,4 +1,4 @@
-package com.minion.browsing;
+package com.qanairy.models;
 
 import java.util.Iterator;
 import java.util.UUID;
@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.util.ArrayUtility;
-import com.qanairy.models.Page;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAttribute;
 import com.qanairy.persistence.IPersistable;
@@ -139,5 +138,23 @@ public class Attribute implements IPersistable<IAttribute> {
 	
 	public String[] getVals(){
 		return this.vals;
+	}
+
+	@Override
+	public IAttribute create(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IAttribute update(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IAttribute find(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

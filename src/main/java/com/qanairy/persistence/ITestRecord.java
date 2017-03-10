@@ -5,7 +5,7 @@ import java.util.Date;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 
-/*
+/**
  * 
  */
 public interface ITestRecord extends IPersistable<ITestRecord> {
@@ -14,12 +14,6 @@ public interface ITestRecord extends IPersistable<ITestRecord> {
 	
 	@Property("key")
 	public void setKey(String key);
-	
-	@Adjacency(label="test")
-	public ITest getTest();
-	
-	@Adjacency(label="test")
-	public void setTest(ITest test);
 	
 	@Property("ran_at")
 	public Date getRanAt();
@@ -32,4 +26,17 @@ public interface ITestRecord extends IPersistable<ITestRecord> {
 	
 	@Property("passes")
 	public void setPasses(boolean isPassing);
+	
+	@Adjacency(label="test")
+	public ITest getTest();
+	
+	@Adjacency(label="test")
+	public void setTest(ITest test);
+	
+	@Adjacency(label="has_result")
+	public void setResult(IPage page);
+	
+	@Adjacency(label="has_result")
+	public IPage getResult();
+	
 }

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.models.DataDecomposer;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
@@ -64,8 +65,9 @@ public class MemoryRegistryActor extends UntypedActor{
 				}
 				
 				//FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
+				OrientConnectionFactory connection = new OrientConnectionFactory();
 				log.info("saving test : "+test);
-				test.create();
+				test.create(connection);
 				log.info("Commiting changes");
 
 				

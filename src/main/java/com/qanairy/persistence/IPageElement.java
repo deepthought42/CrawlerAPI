@@ -3,7 +3,7 @@ package com.qanairy.persistence;
 import java.util.List;
 import java.util.Map;
 
-import com.minion.browsing.Attribute;
+import com.qanairy.models.Attribute;
 import com.tinkerpop.frames.Property;
 
 public interface IPageElement extends IPathObject{

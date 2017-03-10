@@ -87,7 +87,7 @@ public class TestController {
 										 @RequestParam(value="correct", required=true) boolean correct){
 		System.out.println("updating correctness of test with key : " +key);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> itest_iter = Test.findTestByKey(key, orient_connection).iterator();
+		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
 		orient_connection.save();
@@ -105,7 +105,7 @@ public class TestController {
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody TestRecord runTest(@PathVariable("key") String key) throws MalformedURLException{
 		System.out.println("RUNNING TEST WITH KEY : " + key);
-		Iterator<ITest> itest_iter = Test.findTestByKey(key).iterator();
+		Iterator<ITest> itest_iter = Test.findByKey(key, new OrientConnectionFactory()).iterator();
 		ITest itest = itest_iter.next();
 	  
 		Test test = Test.convertFromRecord(itest);
@@ -177,7 +177,7 @@ public class TestController {
 		System.out.println("Addint GROUP to test  : " + group);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
-		Iterator<ITest> itest_iter = Test.findTestByKey(test_key, orient_connection).iterator();
+		Iterator<ITest> itest_iter = Test.findByKey(test_key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		List<Group> group_list = itest.getGroups();
 		if(group_list == null){

@@ -12,9 +12,15 @@ public interface IGroup {
 	@Property("name")
 	public void setName(String name);
 	
-	@Property("group")
-	public String getGroup();
+	@Property("key")
+	public String getKey();
 	
-	@Property("group")
-	public void setGroup(String group);
+	@Property("key")
+	public void setKey(String group);
+
+	@Property("description")
+	public void setDescription(String description);
+	
+	@Property("description")
+	public String getDescription();
 }

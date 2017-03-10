@@ -5,7 +5,6 @@ import java.util.Iterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.actions.Action;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAction;
 import com.qanairy.persistence.IPage;

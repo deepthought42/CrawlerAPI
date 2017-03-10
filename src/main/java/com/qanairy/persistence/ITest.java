@@ -69,7 +69,7 @@ import com.minion.structs.Path;
 	 * sets the domain for the current test
 	 */
 	@Adjacency(label="belongs_to")
-	public void setDomain(Domain domain);
+	public void setDomain(IDomain domain);
 	
 	/**
 	 * Gets the correctness value of the test
@@ -86,12 +86,6 @@ import com.minion.structs.Path;
 	 */
 	@Adjacency(label="belongs_to")
 	public void setGroups(List<Group> groups);
-	
-	/**
-	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
-	 */
-	@Adjacency(label="has")
-	public Iterator<ITestRecord> getRecords();
 	
 	/**
 	 * Adds a record to this test connecting it via edge with label "has"
@@ -122,4 +116,17 @@ import com.minion.structs.Path;
 	 */
 	@Adjacency(label="result")
 	public void setResult(IPage page);
+
+	
+	/**
+	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
+	 */
+	@Adjacency(label="has")
+	public Iterator<ITestRecord> getRecords();
+	
+	/**
+	 * Sets the {@link TestRecord} that is the result of executing the path 
+	 */
+	@Adjacency(label="result")
+	public void setRecords(List<TestRecord> page);
 }

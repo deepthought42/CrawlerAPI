@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
-import com.minion.browsing.actions.Action;
 import com.minion.browsing.form.FormField;
+import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
 
 /**

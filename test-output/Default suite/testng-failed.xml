@@ -3,11 +3,11 @@
 <suite name="Failed suite [Default suite]">
   <test name="Default test(failed)">
     <classes>
-      <class name="models.DomainTests">
+      <class name="models.TestTests">
         <methods>
-          <include name="accountUpdateRecord"/>
+          <include name="testUpdateRecord"/>
         </methods>
-      </class> <!-- models.DomainTests -->
+      </class> <!-- models.TestTests -->
     </classes>
   </test> <!-- Default test(failed) -->
 </suite> <!-- Failed suite [Default suite] -->

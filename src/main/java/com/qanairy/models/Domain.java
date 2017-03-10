@@ -95,20 +95,13 @@ public class Domain implements IPersistable<IDomain>{
 	 */
 	@Override
 	public IDomain create(OrientConnectionFactory connection) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		@SuppressWarnings("unchecked")
-		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(this.getKey(), orient_connection, IDomain.class);
-		Iterator<IDomain> iter = domains.iterator();
-		  
-		if(iter.hasNext()){
-			//figure out throwing exception because domain already exists
-			return iter.next();
+		IDomain domain = this.find(connection);
+		
+		if(domain != null){
+			domain = this.convertToRecord(connection);
+			connection.save();
 		}
-		else{
-			IDomain domain = this.convertToRecord(orient_connection);
-			orient_connection.save();
-			return domain;
-		}
+		return domain;
 	}
 
 	/**
@@ -121,9 +114,8 @@ public class Domain implements IPersistable<IDomain>{
 			domain.setGroups(this.getGroups());
 			domain.setTests(this.getTests());
 			domain.setUrl(this.getUrl());
+			connection.save();
 		}
-		
-		connection.save();
 		
 		return domain;
 	}
@@ -133,9 +125,8 @@ public class Domain implements IPersistable<IDomain>{
 	 */
 	@Override
 	public IDomain find(OrientConnectionFactory connection) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		@SuppressWarnings("unchecked")
-		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(this.getKey(), orient_connection, IDomain.class);
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(this.getKey(), connection, IDomain.class);
 		Iterator<IDomain> iter = domains.iterator();
 		  
 		if(iter.hasNext()){
@@ -145,6 +136,7 @@ public class Domain implements IPersistable<IDomain>{
 		
 		return null;
 	}
+	
 	/**
 	 * {@inheritDoc}
 	 */

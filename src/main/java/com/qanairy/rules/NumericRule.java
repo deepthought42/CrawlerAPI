@@ -24,7 +24,7 @@ public class NumericRule implements Rule<Integer, String>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(String val) {
+	public boolean evaluate(String val) {
 		if(this.getType().equals(NumericRuleType.MAX_LENGTH)){
 			return val.length() <= this.getValue();
 		}
@@ -37,7 +37,7 @@ public class NumericRule implements Rule<Integer, String>{
 		else if(this.getType().equals(NumericRuleType.MAX_VALUE)){
 			return Integer.parseInt(val)  <= this.getValue();
 		}
-		return null;
+		return false;
 	}
 
 	/**

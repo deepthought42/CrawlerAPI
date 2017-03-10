@@ -47,10 +47,23 @@ import java.util.Map;
 	
 	@Property("element_counts")
 	public void setElementCounts(Map<String, Integer> element_count);
+	
 	/*@Adjacency(label="contains")
 	public Iterator<IPageElement> getElements();
 	
 	@Adjacency(label="contains")
 	public void setElements(List<IPageElement> elements);
 	*/
+
+	@Property("total_weight")
+	public void setTotalWeight(int totalWeight);
+	
+	@Property("total_weight")
+	public int getTotalWeight();
+
+	@Property("img_weight")
+	public void setImageWeight(int imageWeight);
+	
+	@Property("img_weight")
+	public int getImageWeight();
 }

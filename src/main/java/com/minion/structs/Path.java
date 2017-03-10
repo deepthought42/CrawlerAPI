@@ -12,12 +12,13 @@ import org.slf4j.LoggerFactory;
 import com.minion.actors.BrowserActor;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.IObjectValuationAccessor;
-import com.minion.browsing.actions.Action;
 import com.minion.persistence.edges.IPathEdge;
+import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PathObject;
 import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPage;
 import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.IPathObject;
@@ -85,7 +86,7 @@ public class Path implements IPersistable<IPath> {
 		this.isUseful = isUseful;
 	}
 	
-	public boolean getIsUseful(){
+	public boolean isUseful(){
 		return this.isUseful;
 	}
 	
@@ -135,7 +136,7 @@ public class Path implements IPersistable<IPath> {
 		
 		clonePath.setPath(clone_list);
 		clonePath.setKey(path.getKey());
-		clonePath.setIsUseful(path.getIsUseful());
+		clonePath.setIsUseful(path.isUseful());
 		clonePath.setSpansMultipleDomains(path.getSpansMultipleDomains());
 		
 		return clonePath;
@@ -254,7 +255,6 @@ public class Path implements IPersistable<IPath> {
 	}
 
 	public IPath convertToRecord(OrientConnectionFactory connection) {
-		this.setKey(this.generateKey());
 		Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(this.getKey(), connection, IPath.class);
 		
 		int cnt = 0;
@@ -301,7 +301,7 @@ public class Path implements IPersistable<IPath> {
 			last_path_obj = persistablePathObj;
 		}
 		
-		path.setUsefulness(this.getIsUseful());
+		path.setUsefulness(this.isUseful());
 		
 		log.info("Is spans multiple domains set : " + this.getSpansMultipleDomains());
 		path.setSpansMultipleDomains(this.getSpansMultipleDomains());
@@ -322,32 +322,35 @@ public class Path implements IPersistable<IPath> {
 			path_key += obj.generateKey() + ":"+hashCode()+":";
 		}
 
-		//this.key = path_key;
 		return path_key;
 	}
 
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * Path only allows you to update usefulness and if it spans multiple domains
 	 */
 	@Override
-	public IPath create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		log.info("converting path to record");
-		IPath path = this.convertToRecord(orient_connection);
+	public IPath create(OrientConnectionFactory connection) {
 		
-		log.info("path converted. now saving");
-		orient_connection.save();
+		IPath path = this.find(connection);
 		
+		if(path == null){
+			path = this.convertToRecord(connection);
+			connection.save();
+		}
 		return path;
 	}
 
 	@Override
-	public IPath update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IPath path = this.convertToRecord(connection);
+	public IPath update(OrientConnectionFactory connection) {
+		IPath path = this.find(connection);
 		
-		connection.save();
-		
+		if(path != null){
+			path.setSpansMultipleDomains(this.checkIfSpansMultipleDomains());
+			path.setUsefulness(this.isUseful());
+			connection.save();
+		}
 		return path;
 	}
 	
@@ -360,6 +363,23 @@ public class Path implements IPersistable<IPath> {
 		return this.key;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPath find(OrientConnectionFactory connection) {
+		@SuppressWarnings("unchecked")
+		Iterator<IPath> paths = (Iterator<IPath>) DataAccessObject.findByKey(this.getKey(), connection, IPath.class).iterator();
+		IPath path = null;
+		
+		if(paths.hasNext()){
+			//figure out throwing exception because domain already exists
+			path = paths.next();
+		}
+		
+		return path;
+	}
+	
 	public static Path convertFromRecord(IPath ipath) {
 		Path path = new Path();
 		log.info("converting path record to object");
@@ -367,8 +387,6 @@ public class Path implements IPersistable<IPath> {
 		
 		String path_key = ipath.getKey();
 		log.info("Path key for path Object :: "+path_key);
-		
-		log.info("setting key");
 		path.setKey(path_key);
 			
 		log.info("setting if spans multiple domains");
@@ -377,9 +395,8 @@ public class Path implements IPersistable<IPath> {
 		log.info("getting initial path vertex in path");
 		IPathObject path_obj = ipath.getPath();
 		
-		//Page page = new Page();
 		Iterator<IPage> ipage = (Iterator<IPage>) DataAccessObject.findByKey(ipath.getPath().getKey(), IPage.class).iterator();
-		//path.setPath(new ArrayList<PathObject<?>>());
+
 		log.info("page found");
 		Page page = Page.convertFromRecord(ipage.next());
 		path.getPath().add(page);

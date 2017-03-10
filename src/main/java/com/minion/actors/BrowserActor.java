@@ -27,7 +27,6 @@ import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.qanairy.models.DataDecomposer;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
@@ -221,7 +220,7 @@ public class BrowserActor extends UntypedActor {
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Sending test to Memory Actor");
-				Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), new Organization("Qanairy")));
+				Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				//tell memory worker of path
@@ -275,7 +274,7 @@ public class BrowserActor extends UntypedActor {
 			  	}
 			  	browser.close();
 
-				Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost(), new Organization("Qanairy")));
+				Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
 				PastPathExperienceController.broadcastTestExperience(test);
 				
 				log.info("Saving test");

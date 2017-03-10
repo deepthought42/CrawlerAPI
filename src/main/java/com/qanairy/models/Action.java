@@ -1,4 +1,4 @@
-package com.minion.browsing.actions;
+package com.qanairy.models;
 
 import java.util.Iterator;
 import java.util.UUID;
@@ -6,9 +6,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.qanairy.models.PathObject;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAction;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -119,22 +119,27 @@ public class Action extends PathObject<IAction>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public IAction create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+	public IAction create(OrientConnectionFactory connection) {
+		IAction action = this.find(connection);
 		
-		IAction action = this.convertToRecord(orient_connection);
-		orient_connection.save();
-		
+		if(action != null){
+			action = this.convertToRecord(connection);
+			connection.save();
+		}
 		return action;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public IAction update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IAction action = this.convertToRecord(connection);
-		connection.save();
+	public IAction update(OrientConnectionFactory connection) {
+		IAction action = this.find(connection);
+		if(action != null){
+			action.setName(this.getName());
+			action.setType(this.getType());
+			action.setValue(this.getValue());
+			connection.save();
+		}
 		
 		return action;
 	}
@@ -148,7 +153,6 @@ public class Action extends PathObject<IAction>{
 	public Action convertFromRecord(IAction data) {
 		Action action = new Action(data.getName(), data.getValue());
 		action.setType(Action.class.getSimpleName());
-		
 		return action;
 	}
 
@@ -160,6 +164,23 @@ public class Action extends PathObject<IAction>{
 		Action action_clone = new Action(this.getName(), this.getValue());
 		//action_clone.setNext(this.getNext());
 		return action_clone;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IAction find(OrientConnectionFactory connection) {
+		@SuppressWarnings("unchecked")
+		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(this.getKey(), connection, IDomain.class);
+		Iterator<IAction> iter = actions.iterator();
+		  
+		if(iter.hasNext()){
+			//figure out throwing exception because domain already exists
+			return iter.next();
+		}
+		
+		return null;
 	}
 
 }

@@ -6,34 +6,52 @@ package com.qanairy.persistence;
  *
  * @param <V>
  */
-public interface IPersistable<V> {
+public interface IPersistable<V, Z> {
 	/**
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */
-	String generateKey();
+	String generateKey(V obj);
 
 	/**
 	 * 
-	 * @param framedGraph
+	 * @param connection
+	 * @param obj
+	 * @return
 	 */
-	V convertToRecord(OrientConnectionFactory connection);
-	
-	//PathObject<?> convertFromRecord(V obj);
+	Z convertToRecord(OrientConnectionFactory connection, V obj);
 	
 	/**
 	 * 
+	 * @param connection
+	 * @param obj
 	 * @return
 	 */
-	V create(OrientConnectionFactory connection);
+	V convertFromRecord(Z obj);
+	
+	/**
+	 * 
+	 * @param connection
+	 * @param obj
+	 * @return
+	 */
+	V create(OrientConnectionFactory connection, V obj);
 	
 	/**
 	 * Updates the given object by finding existing instances in the databases, making
 	 * the appropriate updates, then saving the data to the database
 	 * 
-	 * @param existing_obj
+	 * @param connection
+	 * @param key
+	 * @param obj
 	 * @return
 	 */
-	V update(OrientConnectionFactory connection);
-	
-	V find(OrientConnectionFactory connection);
+	V update(OrientConnectionFactory connection, V obj);
+
+	/**
+	 * 
+	 * @param connection
+	 * @param key
+	 * @return
+	 */
+	Z find(OrientConnectionFactory connection, String key);
 }

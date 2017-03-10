@@ -3,7 +3,7 @@ package com.qanairy.rules.formRules;
 import org.apache.commons.lang3.StringUtils;
 
 import com.minion.browsing.form.FormField;
-import com.qanairy.rules.NumericRuleType;
+import com.qanairy.rules.RuleType;
 
 /**
  * Defines a min/max value or length {@link FormRule} on a {@link FormField}
@@ -30,8 +30,7 @@ public class NumericRule implements ValueBasedFormRule<Integer>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(FormField field) {
-		String field_value = field.getInputElement().getText();
+	public boolean evaluate(FormField val) {
 		if(this.getType().equals(NumericRuleType.MAX_LENGTH)){
 			return field_value.length() <= this.getValue();
 		}
@@ -44,7 +43,7 @@ public class NumericRule implements ValueBasedFormRule<Integer>{
 		else if(this.getType().equals(NumericRuleType.MAX_VALUE)){
 			return Integer.parseInt(field_value)  <= this.getValue();
 		}
-		return null;
+		return false;
 	}
 
 	/**
@@ -57,5 +56,11 @@ public class NumericRule implements ValueBasedFormRule<Integer>{
 	
 	public static String generateRandomAlphabeticString(int str_length){
 		return StringUtils.repeat("a", str_length);
+	}
+
+	@Override
+	public RuleType getType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

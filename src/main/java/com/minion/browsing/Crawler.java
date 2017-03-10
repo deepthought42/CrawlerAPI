@@ -5,8 +5,8 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.browsing.actions.Action;
 import com.minion.structs.Path;
+import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;

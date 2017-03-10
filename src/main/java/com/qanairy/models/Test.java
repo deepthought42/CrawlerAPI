@@ -9,11 +9,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITest;
-import com.minion.persistence.OrientConnectionFactory;
 import com.minion.structs.Path;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.ITest;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
@@ -95,28 +94,13 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings("unchecked")
 	public ITest convertToRecord(OrientConnectionFactory connection){
-		this.setKey(this.generateKey());
-		Iterator<ITest> tests = (Iterator<ITest>) DataAccessObject.findByKey(this.getKey(), ITest.class).iterator();
-		log.info("converting test to record");
-		int cnt = 0;
-		ITest test = null;
-
-		log.info("# of existing test records with key "+this.getKey() + " :: "+cnt);
-		
-		if(!tests.hasNext()){
-			test = connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
-		}
-		else{
-			test = tests.next();
-		}
-		
+		ITest test = connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
 		log.info("setting test properties");
 		test.setPath(this.getPath().convertToRecord(connection));
 		log.info("setting test result");
 		test.setResult(this.getResult().convertToRecord(connection));
-		test.setDomain(this.getDomain());
+		test.setDomain(this.getDomain().convertToRecord(connection));
 		test.setName(this.getName());
 		test.setCorrect(this.isCorrect());
 		test.setGroups(this.getGroups());
@@ -131,23 +115,17 @@ public class Test implements IPersistable<ITest>{
 	
 	/**
 	 * 
+	 * 
 	 * @param itest
 	 * @return
 	 */
 	public static Test convertFromRecord(ITest itest){
 		Test test = new Test();
 		
-		log.info("converting record with domain : " + itest.getDomain());
-
 		test.setDomain(itest.getDomain());
-		
-		log.info("setting key to "+itest.getKey());
 		test.setKey(itest.getKey());
-		
-		log.info("setting name");
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
-		log.info("Converting path from record");
 		test.setPath(Path.convertFromRecord(itest.getPath()));
 		test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
 		test.setResult(Page.convertFromRecord(itest.getResult()));
@@ -178,38 +156,46 @@ public class Test implements IPersistable<ITest>{
 		path_key += this.getPath().generateKey();
 		
 		path_key += this.getResult().generateKey();
-		this.key = path_key;
 		return path_key;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	public ITest create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		ITest test = this.convertToRecord(orient_connection);
-		orient_connection.save();
-		log.info("TEST SAVED TO DATABASE");
+	public ITest create(OrientConnectionFactory conn) {
+		ITest test = find(conn);
+		
+		if(test == null){
+			test = this.convertToRecord(conn);
+			conn.save();
+		}
 		return test;
 	}
 
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * Does not allow updating domain
 	 */
-	public ITest update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		ITest test = this.convertToRecord(connection);		
-		connection.save();
+	public ITest update(OrientConnectionFactory conn) {
+		ITest test = this.find(conn);
+		if(test != null){
+			test.setCorrect(this.isCorrect());
+			test.setGroups(this.getGroups());
+			test.setName(this.getName());
+			test.setRecords(this.getRecords());
+			test.setResult(this.getResult().convertToRecord(conn));
+			conn.save();
+		}
 		
 		return test;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	public static Iterable<ITest> findTestByKey(String generated_key) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
+
+	@Override
+	public ITest find(OrientConnectionFactory connection) {
+		Iterator<ITest> tests = findByKey(this.getKey(), connection).iterator();
+		return tests.next();
 	}
 	
 	/**
@@ -223,7 +209,7 @@ public class Test implements IPersistable<ITest>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public static Iterable<ITest> findTestByKey(String generated_key, OrientConnectionFactory orient_connection) {
+	public static Iterable<ITest> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
 		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
 	}
 

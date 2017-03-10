@@ -6,8 +6,6 @@ import java.util.Random;
 
 /**
  * Encapsulates the possible values for a value field as a domain of values.
- * 
- * @author Brandon Kindred
  */
 public class ValueDomain {
 	

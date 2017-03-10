@@ -3,12 +3,13 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 
 import com.qanairy.models.PageElement;
+
+import com.qanairy.persistence.OrientDbPersistor;
 import com.qanairy.rl.memory.ObjectDefinition;
 
 import org.testng.annotations.Test;
 
 import com.minion.browsing.ActionFactory;
-import com.minion.persistence.OrientDbPersistor;
 
 public class OrientDbPersistorTests {
   @Test

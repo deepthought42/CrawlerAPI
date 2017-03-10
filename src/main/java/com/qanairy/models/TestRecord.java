@@ -8,9 +8,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITestRecord;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.ITestRecord;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 
@@ -24,20 +25,25 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(TestRecord.class);
 
+	private String key;
 	private Date ran_at;
 	private boolean passes;
-	private Page page;
+	private Page result;
+	private Test test;
 	
 	public TestRecord(Date ran_at, boolean passes){
-		this.ran_at = ran_at;
-		this.passes = passes;
+		this.setRanAt(ran_at);
+		this.setPasses(passes);
 		this.setPage(null);
+		this.setKey(generateKey());
 	}
 	
-	public TestRecord(Date ran_at, boolean passes, Page page){
-		this.ran_at = ran_at;
-		this.passes = passes;
-		this.setPage(page);
+	public TestRecord(Date ran_at, boolean passes, Page result, Test test){
+		this.setRanAt(ran_at);
+		this.setPasses(passes);
+		this.setPage(null);
+		this.setTest(test);
+		this.setKey(generateKey());
 	}
 	
 	/**
@@ -55,11 +61,11 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	}
 	
 	public Page getPage() {
-		return page;
+		return this.result;
 	}
 
 	public void setPage(Page page) {
-		this.page = page;
+		this.result = page;
 	}
 
 	/**
@@ -84,7 +90,7 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 
 		testRecord.setPasses(this.getPasses());
 		testRecord.setRanAt(this.getRanAt());
-		testRecord.setKey(this.generateKey());
+		testRecord.setKey(this.getKey());
 		
 		return testRecord;
 	}
@@ -94,17 +100,18 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	 * @return generated key
 	 */
 	public String generateKey() {
-		return this.getRanAt() + ":"+this.getPasses()+":";
+		return this.getPage().getKey()+":"+this.getRanAt();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public ITestRecord create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		
-		ITestRecord record = this.convertToRecord(orient_connection);
-		orient_connection.save();
+	public ITestRecord create(OrientConnectionFactory connection) {
+		ITestRecord record = find(connection);
+		if(record == null){
+			record = this.convertToRecord(connection);
+			connection.save();
+		}
 		
 		return record;
 	}
@@ -112,16 +119,52 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public ITestRecord update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		ITestRecord test_record = this.convertToRecord(connection);
-		connection.save();
+	public ITestRecord update(OrientConnectionFactory connection) {
+		ITestRecord record = this.find(connection);
+		if(record != null){
+			record.setPasses(this.getPasses());
+			record.setRanAt(this.getRanAt());
+			
+			connection.save();
+		}
 		
-		return test_record;
+		return record;
 	}
 
+	/**
+	 * 
+	 */
+	@Override
+	public ITestRecord find(OrientConnectionFactory conn){
+		@SuppressWarnings("unchecked")
+		Iterable<ITestRecord> domains = (Iterable<ITestRecord>) DataAccessObject.findByKey(this.getKey(), conn, ITestRecord.class);
+		Iterator<ITestRecord> iter = domains.iterator();
+		  
+		if(iter.hasNext()){
+			return iter.next();
+		}
+		
+		return null;
+	}
+	
 	public static List<TestRecord> convertFromRecord(Iterator<ITestRecord> records) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public Test getTest() {
+		return test;
+	}
+
+	public void setTest(Test test) {
+		this.test = test;
 	}	
 }

@@ -5,6 +5,7 @@ import java.awt.image.RasterFormatException;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -47,6 +48,7 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
@@ -104,7 +106,12 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
-		return new Page(this.driver.getPageSource(), this.driver.getCurrentUrl(), Browser.getScreenshot(this.driver), Browser.getVisibleElements(this.driver, ""));
+		URL page_url = new URL(this.driver.getCurrentUrl());
+
+		return new Page(this.driver.getPageSource(), 
+						this.driver.getCurrentUrl(), 
+						UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), page_url.getPath().toString()), 
+						Browser.getVisibleElements(this.driver, ""));
 
 	}
 	
@@ -181,7 +188,6 @@ public class Browser {
 	 */
 	public static WebDriver openWithSafari(String url){
 		log.info("Opening Firefox WebDriver connection using URL : " +url);
-		//FirefoxProfile firefoxProfile = new FirefoxProfile();
 	    DesiredCapabilities capabilities = DesiredCapabilities.safari();
 
 		WebDriver driver = new SafariDriver(capabilities);

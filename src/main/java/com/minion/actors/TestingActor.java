@@ -58,7 +58,7 @@ public class TestingActor extends UntypedActor {
 					log.info("Saving test, for it has changed");
 					
 					//Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
-					TestRecord record = new TestRecord(new Date(), false, resulting_page);
+					TestRecord record = new TestRecord(new Date(), false, resulting_page, test);
 					test.addRecord(record);
 					
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
@@ -71,7 +71,7 @@ public class TestingActor extends UntypedActor {
 					
 					TestRecord record = null;
 					if(!test.isCorrect()){
-						record = new TestRecord(new Date(), false, resulting_page);
+						record = new TestRecord(new Date(), false, resulting_page, test);
 					}
 					else{
 						record = new TestRecord(new Date(), true);
@@ -124,7 +124,7 @@ public class TestingActor extends UntypedActor {
 				 test_record = new TestRecord(new Date(), passing);
 			 }
 			 else{
-				 test_record = new TestRecord(new Date(), passing, page );
+				 test_record = new TestRecord(new Date(), passing, page, test );
 			 }
 		 } catch (IOException e) {		
 			 e.printStackTrace();		

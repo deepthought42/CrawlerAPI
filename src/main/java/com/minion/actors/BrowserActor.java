@@ -19,6 +19,7 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
+import com.qanairy.persistence.OrientDbPersistor;
 import com.qanairy.rl.learning.Brain;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.qanairy.rl.memory.ObjectDefinition;
@@ -26,15 +27,13 @@ import com.qanairy.rl.memory.Vocabulary;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.minion.browsing.actions.Action;
-import com.minion.persistence.OrientDbPersistor;
 import com.minion.structs.ExploratoryPath;
+
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
 import com.minion.structs.TestMapper;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Organization;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
@@ -254,6 +253,12 @@ public class BrowserActor extends UntypedActor {
 
 				log.info("Creating new Browser");
 				Page result_page = null;
+
+				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
+				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
+				log.info("Sending test to Memory Actor");
+				Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
+				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				log.info("Getting last page");
 				Page last_page = path.findLastPage();
@@ -349,7 +354,7 @@ public class BrowserActor extends UntypedActor {
 					path.setIsUseful(true);
 
 					System.out.println("PATH LENGTH : "+path.getPath().size());
-					Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost(), new Organization("Qanairy")));
+					Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
 					PastPathExperienceController.broadcastTestExperience(test);
 					
 					log.info("Wrapping test in Message");
@@ -367,6 +372,14 @@ public class BrowserActor extends UntypedActor {
 			  	}
 			  	browser.close();
 
+				Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
+				PastPathExperienceController.broadcastTestExperience(test);
+				
+				log.info("Saving test");
+			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+
+				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
+				memory_actor.tell(test_msg, getSelf() );
 		   }
 		}else unhandled(message);
 	}

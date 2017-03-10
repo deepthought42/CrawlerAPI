@@ -16,10 +16,13 @@ import akka.actor.UntypedActor;
 import com.qanairy.models.Test;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
-import com.minion.browsing.actions.Action;
 import com.minion.structs.ExploratoryPath;
 import com.minion.structs.Message;
 import com.minion.structs.Path;
+import com.minion.structs.SessionTestTracker;
+import com.minion.structs.TestMapper;
+import com.qanairy.models.Action;
+import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
@@ -119,6 +122,24 @@ public class PathExpansionActor extends UntypedActor {
 					//EXPAND PATH IN TEST
 					pathExpansions = PathExpansionActor.expandPath(path);
 					log.info("Test Path expansions found : " +pathExpansions.size());
+					
+					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+					for(Path expanded : pathExpansions){
+						Test new_test = new Test(expanded, null,  new Domain(path.findLastPage().getUrl().getHost()));
+						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
+						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
+						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+						if(!testMap.containsTest(new_test)){
+							Message<Test> expanded_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+
+							work_allocator.tell(expanded_test_msg, getSelf() );
+							testMap.addTest(new_test);
+						}
+						else{
+							log.info("TEST WITH KEY : "+new_test.hashCode()+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
+							PastPathExperienceController.broadcastTestExperience(testMap.getTestHash().get(test.hashCode()));
+						}
+					}
 				}
 			}
 			else if(acct_msg.getData() instanceof Path){

@@ -24,6 +24,7 @@ public interface FormRule {
 	 * @return boolean value indicating the rule is satisfied(true) or not satisfied(false)
 	 */
 	Boolean evaluate(FormField val);	
+
 	
 	/**
 	 * Rule types

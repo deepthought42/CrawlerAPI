@@ -20,12 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
-import com.minion.browsing.Attribute;
-import com.minion.browsing.actions.Action;
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IAttribute;
-import com.minion.persistence.IPageElement;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IPageElement;
+import com.qanairy.persistence.IAttribute;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement
@@ -139,11 +137,9 @@ public class PageElement extends PathObject<IPageElement>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPageElement create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		
-		IPageElement elem = this.convertToRecord(orient_connection);
-		orient_connection.save();
+	public IPageElement create(OrientConnectionFactory connection) {
+		IPageElement elem = this.convertToRecord(connection);
+		connection.save();
 		
 		return elem;
 	}
@@ -151,12 +147,33 @@ public class PageElement extends PathObject<IPageElement>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPageElement update() {		
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IPageElement html_tag =  this.convertToRecord(connection);
-		connection.save();
-		
+	public IPageElement update(OrientConnectionFactory connection) {
+		IPageElement html_tag = this.find(connection);
+		  
+		if(html_tag != null){
+			html_tag.setName(this.getName());
+			html_tag.setAttributes(this.getAttributes());
+			html_tag.setCssValues(this.getCssValues());
+			html_tag.setText(this.getText());
+			html_tag.setXpath(this.getXpath());
+			connection.save();
+		}
+	
 		return html_tag;
+	}
+	
+	@Override
+	public IPageElement find(OrientConnectionFactory connection) {
+		@SuppressWarnings("unchecked")
+		Iterable<IPageElement> page_elements = (Iterable<IPageElement>) DataAccessObject.findByKey(this.getKey(), connection, IPageElement.class);
+		Iterator<IPageElement> iter = page_elements.iterator();
+		
+		IPageElement page_element = null; 
+		if(iter.hasNext()){
+			page_element = iter.next();
+		}
+		
+		return page_element;
 	}
 	
 	/**

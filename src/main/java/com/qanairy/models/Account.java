@@ -1,19 +1,17 @@
 package com.qanairy.models;
 
-import java.util.List;
-
 /**
- *
+ * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
 public class Account {
+	private String key;
 	private String org_name;
-	private String service_package;
+	private ServicePackage service_package;
 	private String payment_acct_num;
-	private List<Domain> registered_domains;
 	
 	public Account(){}
 	
-	public Account(String org_name, String service_package, String payment_acct_num){
+	public Account(String org_name, ServicePackage service_package, String payment_acct_num){
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
@@ -27,11 +25,11 @@ public class Account {
 		this.org_name = org_name;
 	}
 
-	public String getServicePackage() {
+	public ServicePackage getServicePackage() {
 		return service_package;
 	}
 
-	public void setServicePackage(String service_package) {
+	public void setServicePackage(ServicePackage service_package) {
 		this.service_package = service_package;
 	}
 
@@ -42,12 +40,12 @@ public class Account {
 	public void setPaymentAcctNum(String payment_acct_num) {
 		this.payment_acct_num = payment_acct_num;
 	}
-
-	public List<Domain> getRegisteredDomains() {
-		return registered_domains;
+	
+	public String getKey() {
+		return key;
 	}
 
-	public void setRegisteredDomains(List<Domain> registered_domains) {
-		this.registered_domains = registered_domains;
+	public void setKey(String key) {
+		this.key = key;
 	}
 }

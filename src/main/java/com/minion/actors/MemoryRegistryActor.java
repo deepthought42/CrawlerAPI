@@ -10,6 +10,7 @@ import akka.actor.UntypedActor;
 import com.qanairy.models.Test;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.qanairy.rl.memory.ObjectDefinition;
+
 import com.minion.structs.Message;
 import com.minion.structs.Path;
 import com.qanairy.models.Page;
@@ -17,7 +18,6 @@ import com.qanairy.models.Page;
 /**
  * Handles the saving of records into orientDB
  * 
- * @author Brandon Kindred
  *
  */
 public class MemoryRegistryActor extends UntypedActor{
@@ -65,8 +65,9 @@ public class MemoryRegistryActor extends UntypedActor{
 				}
 				
 				//FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
+				OrientConnectionFactory connection = new OrientConnectionFactory();
 				log.info("saving test : "+test);
-				test.create();
+				test.create(connection);
 				log.info("Commiting changes");
 
 				

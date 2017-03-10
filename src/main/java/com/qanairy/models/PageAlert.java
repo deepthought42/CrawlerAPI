@@ -7,13 +7,11 @@ import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
 import com.minion.browsing.IObjectValuationAccessor;
-import com.minion.persistence.IPathObject;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.IPathObject;
+import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
- * 
- * @author Brandon Kindred
  *
  */
 public class PageAlert extends PathObject<IPathObject> implements IObjectValuationAccessor {
@@ -143,13 +141,13 @@ public class PageAlert extends PathObject<IPathObject> implements IObjectValuati
 	}
 
 	@Override
-	public IPersistable<IPathObject> create() {
+	public IPathObject create() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public IPersistable<IPathObject> update() {
+	public IPathObject update() {
 		// TODO Auto-generated method stub
 		return null;
 	}

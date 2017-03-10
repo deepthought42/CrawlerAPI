@@ -1,10 +1,8 @@
 package com.qanairy.models;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,11 +13,10 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IPage;
-import com.minion.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IPage;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * A reference to a web page 
@@ -39,32 +36,60 @@ public class Page extends PathObject<IPage> {
 	private List<PageElement> elements;
 	private Map<String, Integer> element_counts = new HashMap<String, Integer>();
 	
-	public Page(){}
+	public Page(){
+		this.setType(Page.class.getCanonicalName());
+	}
 
 	/**
-	 * Creates a page instance that is meant to contain the information found using the driver passed
-	 * 
-	 * @param driver
-	 * @param valid
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
 	 * @throws IOException
-	 * @throws URISyntaxException 
+	 * 
+	 * @pre elements != null
 	 */
-	public Page(String html, String url, File screenshot, List<PageElement> elements) throws IOException {
+	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
+		assert elements != null;
+
 		log.info("setting source");
 		this.setSrc(html);
-
-		log.info("Page URL :: "+url);
 		this.url = new URL(url.replace("/#",""));
-		
-		log.info("GETTING SCREENSHOT");
-		this.screenshot = UploadObjectSingleOperation.saveImageToS3(screenshot, this.url.getHost(), this.url.getPath().toString());
-		
-		System.err.println("IMAGE SAVED TO S3 at : " +this.screenshot);
+		this.screenshot = screenshot_url;
 		this.elements = elements;
-		//this.element_counts = countTags(this.elements);
+		this.element_counts = countTags(this.elements);
+		this.setType(Page.class.getCanonicalName());
+		this.setKey(this.generateKey());
+		log.info("Page object created");
+	}
+	
+	/**
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null;
+	 */
+	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
+		assert elements != null;
+				
+		log.info("setting source");
+		this.setSrc(html);
+		this.setUrl(new URL(url.replace("/#","")));
+		this.setScreenshot(screenshot);
+		this.setElements(elements);
+		this.setElementCounts(countTags(this.elements));
+		this.setLandable(isLandable);
+		this.setKey(this.generateKey());
+		this.setType(Page.class.getCanonicalName());
 		
 		log.info("Page object created");
-		
 	}
 	
 	/**
@@ -127,15 +152,6 @@ public class Page extends PathObject<IPage> {
         if (!(o instanceof Page)) return false;
         
         Page that = (Page)o;
-        //log.info(this.elements.size() + " :: "+ that.elements.size());
-        log.info("Do screenshots match? : "+this.screenshot.equals(that.getScreenshot()));
-        log.info("sources match? : " +(this.getSrc().length() == that.getSrc().length()));
-        log.info("Source 1: " +this.getSrc());
-        log.info("Source 2: " +that.getSrc());
-    	log.info("PAGE URLs ARE EQUAL? :: "+this.url+" == "+that.url +" :: ");
-    	log.info("urls equal?" + this.url.equals(that.url));
-
-    	log.info("PAGE SRCs ARE EQUAL? :: "+this.getSrc().equals(that.getSrc()));
     	//return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
 		return (this.url.equals(that.url) 
 				&& this.getSrc().equals(that.getSrc())
@@ -177,17 +193,18 @@ public class Page extends PathObject<IPage> {
 	 * {@inheritDoc}
 	 */
 	public String generateKey() {
-		return this.src.hashCode() + "::";
+		return this.getSrc().hashCode() + "::"+this.getUrl().hashCode();
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPage create() {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		
-		IPage page = this.convertToRecord(orient_connection);
-		orient_connection.save();
+	public IPage create(OrientConnectionFactory connection) {
+		IPage page = find(connection);
+		if(page == null){
+			page = this.convertToRecord(connection);
+			connection.save();
+		}
 		
 		return page;
 	}
@@ -195,14 +212,40 @@ public class Page extends PathObject<IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPage update() {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		IPage page = this.convertToRecord(connection);
-		connection.save();
+	public IPage update(OrientConnectionFactory connection) {
+		IPage page = this.find(connection);
+		if(page != null){
+			page.setElementCounts(this.getElementCounts());
+			page.setLandable(this.isLandable());
+			page.setScreenshot(this.getScreenshot());
+			page.setSrc(this.getSrc());
+			page.setType(this.getType());
+			page.setUrl(this.getUrl().toString());
+			page.setTotalWeight(this.getTotalWeight());
+			page.setImageWeight(this.getImageWeight());
+			connection.save();
+		}
 		
 		return page;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public IPage find(OrientConnectionFactory connection){
+		@SuppressWarnings("unchecked")
+		Iterable<IPage> domains = (Iterable<IPage>) DataAccessObject.findByKey(this.getKey(), connection, IPage.class);
+		Iterator<IPage> iter = domains.iterator();
+		  
+		if(iter.hasNext()){
+			//figure out throwing exception because domain already exists
+			return iter.next();
+		}
+		
+		return null;
+	}
+	
 	/**
 	 * 
 	 * @param result
@@ -233,31 +276,26 @@ public class Page extends PathObject<IPage> {
 	 * @param page
 	 */
 	public IPage convertToRecord(OrientConnectionFactory connection){
-		this.setKey(this.generateKey());
 		@SuppressWarnings("unchecked")
 		Iterable<IPage> pages = (Iterable<IPage>) DataAccessObject.findByKey(this.getKey(), connection, IPage.class);
 		
-		int cnt = 0;
 		Iterator<IPage> iter = pages.iterator();
 		IPage page = null;
-		while(iter.hasNext()){
-			iter.next();
-			cnt++;
-		}
-		log.info("# of existing records with key "+this.getKey() + " :: "+cnt);
 		
-		if(cnt == 0){
+		if(iter.hasNext()){
+			page = pages.iterator().next();
+		}
+		else{
 			page = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
+			page.setKey(this.getKey());
+			page.setElementCounts(this.getElementCounts());
 			page.setLandable(this.isLandable());
 			page.setScreenshot(this.getScreenshot());
 			page.setSrc(this.getSrc());
+			page.setType(this.getType());
 			page.setUrl(this.getUrl().toString());
-			page.setType(this.getClass().getName());
-			page.setKey(this.getKey());
-			page.setElementCounts(this.element_counts);
-		}
-		else{
-			page = pages.iterator().next();
+			page.setTotalWeight(this.getTotalWeight());
+			page.setImageWeight(this.getImageWeight());
 		}
 
 		return page;

@@ -11,7 +11,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * Defines the settings of a service package (eg. how many users, how many domains/projects, etc..)
  */
-public class ServicePackage implements IPersistable<IServicePackage>{
+public class ServicePackage implements IPersistable<ServicePackage, IServicePackage>{
 
 	private String key;
 	private String name;
@@ -41,80 +41,6 @@ public class ServicePackage implements IPersistable<IServicePackage>{
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String generateKey() {
-		return this.name;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public IServicePackage convertToRecord(OrientConnectionFactory connection) {
-		this.setKey(this.generateKey());
-		
-		IServicePackage svc_pkg = connection.getTransaction().addVertex("class:"+IServicePackage.class.getCanonicalName()+","+UUID.randomUUID(), IServicePackage.class);
-		svc_pkg.setKey(this.generateKey());
-		svc_pkg.setName(this.name);
-		svc_pkg.setPrice(this.price);
-		svc_pkg.setMaxUsers(this.max_users);
-
-		return svc_pkg;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public IServicePackage create(OrientConnectionFactory connection) {
-		IServicePackage svc_pkg = this.find(connection);
-
-		if(svc_pkg != null){
-			svc_pkg = this.convertToRecord(connection);
-			connection.save();
-		}
-		return svc_pkg;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public IServicePackage update(OrientConnectionFactory connection) {
-		IServicePackage svc_pkg = this.find(connection);
-		  
-		if(!svc_pkg.equals(null)){
-			svc_pkg.setName(this.getName());
-			svc_pkg.setMaxUsers(this.getMaxUsers());
-			svc_pkg.setPrice(this.getPrice());
-		}
-		
-		connection.save();
-		
-		return svc_pkg;
-	}
-	
-	/**
-	 * Looks up the current object by key
-	 * @param orient_connection
-	 * @return
-	 */
-	public IServicePackage find(OrientConnectionFactory orient_connection) {
-		@SuppressWarnings("unchecked")
-		Iterable<IServicePackage> svc_pkgs = (Iterable<IServicePackage>) DataAccessObject.findByKey(this.getKey(), orient_connection, IServicePackage.class);
-		Iterator<IServicePackage> iter = svc_pkgs.iterator();
-		
-		IServicePackage service_package = null; 
-		if(iter.hasNext()){
-			service_package = iter.next();
-		}
-		
-		return service_package;
 	}
 
 	public String getName() {

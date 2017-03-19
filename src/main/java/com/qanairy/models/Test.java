@@ -90,50 +90,7 @@ public class Test implements IPersistable<ITest>{
 		
 		return false;
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	public ITest convertToRecord(OrientConnectionFactory connection){
-		ITest test = connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
-		log.info("setting test properties");
-		test.setPath(this.getPath().convertToRecord(connection));
-		log.info("setting test result");
-		test.setResult(this.getResult().convertToRecord(connection));
-		test.setDomain(this.getDomain().convertToRecord(connection));
-		test.setName(this.getName());
-		test.setCorrect(this.isCorrect());
-		test.setGroups(this.getGroups());
 		
-		for(TestRecord record : this.getRecords()){
-			test.addRecord(record.convertToRecord(connection));
-		}
-		test.setKey(this.getKey());
-		
-		return test;
-	}
-	
-	/**
-	 * 
-	 * 
-	 * @param itest
-	 * @return
-	 */
-	public static Test convertFromRecord(ITest itest){
-		Test test = new Test();
-		
-		test.setDomain(itest.getDomain());
-		test.setKey(itest.getKey());
-		test.setName(itest.getName());
-		test.setCorrect(itest.getCorrect());
-		test.setPath(Path.convertFromRecord(itest.getPath()));
-		test.setRecords(TestRecord.convertFromRecord(itest.getRecords()));
-		test.setResult(Page.convertFromRecord(itest.getResult()));
-		test.setGroups(itest.getGroups());
-		
-		return test;
-	}
-	
 	/**
 	 * 
 	 * @param framedGraph
@@ -144,60 +101,6 @@ public class Test implements IPersistable<ITest>{
 		return framedGraph.getVertex(id, ITest.class);
 	}
 
-	/**
-	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
-	 * as easy identity of {@link Test} when generated in the wild via discovery
-	 * 
-	 * @return
-	 */
-	public String generateKey() {
-		String path_key = "";
-		
-		path_key += this.getPath().generateKey();
-		
-		path_key += this.getResult().generateKey();
-		return path_key;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	public ITest create(OrientConnectionFactory conn) {
-		ITest test = find(conn);
-		
-		if(test == null){
-			test = this.convertToRecord(conn);
-			conn.save();
-		}
-		return test;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * Does not allow updating domain
-	 */
-	public ITest update(OrientConnectionFactory conn) {
-		ITest test = this.find(conn);
-		if(test != null){
-			test.setCorrect(this.isCorrect());
-			test.setGroups(this.getGroups());
-			test.setName(this.getName());
-			test.setRecords(this.getRecords());
-			test.setResult(this.getResult().convertToRecord(conn));
-			conn.save();
-		}
-		
-		return test;
-	}
-	
-
-	@Override
-	public ITest find(OrientConnectionFactory connection) {
-		Iterator<ITest> tests = findByKey(this.getKey(), connection).iterator();
-		return tests.next();
-	}
-	
 	/**
 	 * Looks up tests by group
 	 */

@@ -43,7 +43,7 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 	 */
 	@Override
 	public ServicePackage create(OrientConnectionFactory connection, ServicePackage service_package) {
-		IServicePackage svc_pkg = find(connection, generateKey(service_package));
+		IServicePackage svc_pkg = find(connection, 	generateKey(service_package));
 
 		if(svc_pkg != null){
 			svc_pkg = convertToRecord(connection, service_package);

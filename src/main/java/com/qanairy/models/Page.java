@@ -60,7 +60,6 @@ public class Page extends PathObject<IPage> {
 		this.screenshot = screenshot_url;
 		this.elements = elements;
 		this.element_counts = countTags(this.elements);
-		this.setType(Page.class.getCanonicalName());
 		this.setKey(this.generateKey());
 		log.info("Page object created");
 	}
@@ -87,7 +86,6 @@ public class Page extends PathObject<IPage> {
 		this.setElementCounts(countTags(this.elements));
 		this.setLandable(isLandable);
 		this.setKey(this.generateKey());
-		this.setType(Page.class.getCanonicalName());
 		
 		log.info("Page object created");
 	}
@@ -189,15 +187,6 @@ public class Page extends PathObject<IPage> {
         return hash;
     }
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey() {
-		return this.getSrc().hashCode() + "::"+this.getUrl().hashCode();
-	}
-	
-	
-
 	/**
 	 * {@inheritDoc}
 	 */

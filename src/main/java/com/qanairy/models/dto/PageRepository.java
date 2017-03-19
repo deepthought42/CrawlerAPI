@@ -20,7 +20,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page create(OrientConnectionFactory connection, Page page) {
-		IPage page_record = find(connection);
+		IPage page_record = find(connection, generateKey(page));
 		if(page_record == null){
 			page_record = convertToRecord(connection, page);
 			connection.save();
@@ -33,13 +33,12 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page update(OrientConnectionFactory connection, Page page) {
-		IPage page_record = find(connection);
+		IPage page_record = find(connection, generateKey(page));
 		if(page != null){
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
 			page_record.setScreenshot(page.getScreenshot());
 			page_record.setSrc(page.getSrc());
-			page_record.setType(page.getType());
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
@@ -74,7 +73,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	@Override
 	public Page convertFromRecord(IPage result) {
 		Page page = new Page();
-		page.setType(Page.class.getSimpleName());
 		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setLandable(result.isLandable());
@@ -96,31 +94,39 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * 
 	 * @param page
 	 */
-	public IPage convertToRecord(OrientConnectionFactory connection, Paqe page){
+	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
 		page.setKey(generateKey(page));
 		find(connection, page.getKey());
 		@SuppressWarnings("unchecked")
-		Iterable<IPage> pages = (Iterable<IPage>) DataAccessObject.findByKey(this.getKey(), connection, IPage.class);
+		Iterable<IPage> pages = (Iterable<IPage>) DataAccessObject.findByKey(page.getKey(), connection, IPage.class);
 		
 		Iterator<IPage> iter = pages.iterator();
-		IPage page = null;
+		IPage page_record = null;
 		
 		if(iter.hasNext()){
-			page = pages.iterator().next();
+			page_record = pages.iterator().next();
 		}
 		else{
-			page = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
-			page.setKey(this.getKey());
-			page.setElementCounts(this.getElementCounts());
-			page.setLandable(this.isLandable());
-			page.setScreenshot(this.getScreenshot());
-			page.setSrc(this.getSrc());
-			page.setType(this.getType());
-			page.setUrl(this.getUrl().toString());
-			page.setTotalWeight(this.getTotalWeight());
-			page.setImageWeight(this.getImageWeight());
+			page_record = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
+			page_record.setKey(page.getKey());
+			page_record.setElementCounts(page.getElementCounts());
+			page_record.setLandable(page.isLandable());
+			page_record.setScreenshot(page.getScreenshot());
+			page_record.setSrc(page.getSrc());
+			page_record.setType((Page.class.getCanonicalName()));
+			page_record.setUrl(page.getUrl().toString());
+			page_record.setTotalWeight(page.getTotalWeight());
+			page_record.setImageWeight(page.getImageWeight());
 		}
 
-		return page;
+		return page_record;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String generateKey(Page page) {
+		return page.getSrc().hashCode() + "::"+page.getUrl().hashCode();
 	}
 }

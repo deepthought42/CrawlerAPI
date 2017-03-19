@@ -27,15 +27,15 @@ import com.qanairy.rl.memory.Vocabulary;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.minion.structs.ExploratoryPath;
+
 
 import com.minion.structs.Message;
-import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
 import com.minion.structs.TestMapper;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.Path;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 

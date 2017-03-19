@@ -4,11 +4,13 @@ import java.util.Date;
 
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 /**
  * 
  */
-public interface ITestRecord extends IPersistable<ITestRecord> {
+@TypeValue(value="TestRecord") 
+public interface ITestRecord {
 	@Property("key")
 	public String getKey();
 	

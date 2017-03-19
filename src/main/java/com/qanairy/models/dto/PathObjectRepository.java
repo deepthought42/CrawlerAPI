@@ -83,8 +83,9 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			//IPage page_record = ((IPage)data);
 			//Page page_obj = new Page();
 			Page page_obj = new Page();
+			PageRepository page_record = new PageRepository();
 			Iterable<IPage> page_iter = (Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class);
-			page_obj = Page.convertFromRecord(page_iter.iterator().next());
+			page_obj = page_record.convertFromRecord(page_iter.iterator().next());
 			log.info("coverted page from record :: " + page_obj +" :: ");
 			page_obj.setType(type);
 			return page_obj;
@@ -94,18 +95,18 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 
 			//IPageElement page_elem_record = ((IPageElement)data);
 			PageElement page_elem_obj = null;
-			Iterator<IPageElement> page_elem_record = (Iterator<IPageElement>) DataAccessObject.findByKey(data.getKey(), IPageElement.class).iterator();
-			
+			Iterator<IPageElement> page_elem_record_iter = (Iterator<IPageElement>) DataAccessObject.findByKey(data.getKey(), IPageElement.class).iterator();
+
 			//List<PageElement> page_elem_records = new ArrayList<PageElement>();
 			//for(IPageElement elem_record : page_elem_record){
-				if(page_elem_record.next() instanceof IPageElement){
-					page_elem_obj = PageElement.convertFromRecord((IPageElement)page_elem_record.next());
+				IPageElement page_elem_record = page_elem_record_iter.next();
+				if(page_elem_record instanceof IPageElement){
+					page_elem_obj = ((PageElementRepository)page_elem_record).convertFromRecord(page_elem_record);
 					//page_elem_records.add(page_elem_obj);
 				}
 			//}
 			
 			log.info("coverted page element from record :: " + page_elem_obj +" :: ");
-			page_elem_obj.setType(type);
 			return page_elem_obj;
 		}
 		else if(type.equals(Action.class.getName())){			

@@ -1,4 +1,4 @@
-package com.minion.structs;
+package com.qanairy.models;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -17,6 +17,8 @@ import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.dto.PageRepository;
+import com.qanairy.models.dto.PathObjectRepository;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPage;
@@ -30,7 +32,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * A set of vertex objects that form a sequential movement through a graph
  */
-public class Path implements IPersistable<IPath> {
+public class Path {
     private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
 	
     private String key;
@@ -46,7 +48,7 @@ public class Path implements IPersistable<IPath> {
 		this.isUseful = false;
 		this.spansMultipleDomains = false;
 		this.path = new ArrayList<PathObject>();
-		this.key = this.generateKey();
+		this.key = null;
 	}
 
 	/**
@@ -57,9 +59,19 @@ public class Path implements IPersistable<IPath> {
 	public Path(List<PathObject> current_path){
 		this.isUseful = false;
 		this.path = current_path;
-		this.key = this.generateKey();
+		this.key = null;
 	}
 
+	/**
+	 * Creates new instance of path setting it to the given path
+	 * 
+	 * @param current_path
+	 */
+	public Path(String key, boolean isUseful, List<PathObject> current_path){
+		this.isUseful = false;
+		this.path = current_path;
+		this.key = null;
+	}
 		
 	/**
 	 * Adds an object to path and sets whether or not this path spans multiple domains
@@ -229,7 +241,7 @@ public class Path implements IPersistable<IPath> {
 		this.spansMultipleDomains= isSpanningMultipleDomains;
 	}
 
-	private boolean checkIfSpansMultipleDomains() {
+	public boolean checkIfSpansMultipleDomains() {
 		log.info("checking path for domains :: "+path.getClass().getName());
 		log.info("Last page url :: " + this.findLastPage().getUrl());
 		String domain = "";
@@ -254,106 +266,7 @@ public class Path implements IPersistable<IPath> {
 		return false;
 	}
 
-	public IPath convertToRecord(OrientConnectionFactory connection) {
-		Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(this.getKey(), connection, IPath.class);
 		
-		int cnt = 0;
-		Iterator<IPath> iter = paths.iterator();
-		IPath path = null;
-		while(iter.hasNext()){
-			iter.next();
-			cnt++;
-		}
-		log.info("# of existing Path records with key "+this.getKey() + " :: "+cnt);
-		
-		if(cnt == 0){
-			path = connection.getTransaction().addVertex("class:"+IPath.class.getCanonicalName()+","+UUID.randomUUID(), IPath.class);
-			path.setKey(this.getKey());
-		}
-		else{
-			path = paths.iterator().next();
-		}
-
-		boolean first_pass = true;
-		IPathObject last_path_obj = null;
-
-		for(PathObject obj: this.getPath()){
-			log.info("setting data for last object");
-			if(obj == null){
-				break;
-			}
-			
-			IPathObject persistablePathObj = obj.convertToRecord(connection);
-			if(first_pass){
-				log.info("First object detected : "+persistablePathObj.getClass());
-				path.setPath(persistablePathObj);
-				
-				log.info("adding object to path");
-				first_pass = false;
-			}
-			else{
-				log.info("setting next object in path using IPathEdge");
-				IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
-				
-				log.info("Setting path key on IPathEdge");
-				path_edge.setPathKey(this.generateKey());
-			}
-			last_path_obj = persistablePathObj;
-		}
-		
-		path.setUsefulness(this.isUseful());
-		
-		log.info("Is spans multiple domains set : " + this.getSpansMultipleDomains());
-		path.setSpansMultipleDomains(this.getSpansMultipleDomains());
-		return path;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String generateKey() {
-		String path_key = "";
-
-		for(PathObject obj : this.getPath()){
-			if(obj == null){
-				break;
-			}
-			path_key += obj.generateKey() + ":"+hashCode()+":";
-		}
-
-		return path_key;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * Path only allows you to update usefulness and if it spans multiple domains
-	 */
-	@Override
-	public IPath create(OrientConnectionFactory connection) {
-		
-		IPath path = this.find(connection);
-		
-		if(path == null){
-			path = this.convertToRecord(connection);
-			connection.save();
-		}
-		return path;
-	}
-
-	@Override
-	public IPath update(OrientConnectionFactory connection) {
-		IPath path = this.find(connection);
-		
-		if(path != null){
-			path.setSpansMultipleDomains(this.checkIfSpansMultipleDomains());
-			path.setUsefulness(this.isUseful());
-			connection.save();
-		}
-		return path;
-	}
-	
 	public void setKey(String key) {
 		this.key = key;
 		
@@ -363,96 +276,7 @@ public class Path implements IPersistable<IPath> {
 		return this.key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public IPath find(OrientConnectionFactory connection) {
-		@SuppressWarnings("unchecked")
-		Iterator<IPath> paths = (Iterator<IPath>) DataAccessObject.findByKey(this.getKey(), connection, IPath.class).iterator();
-		IPath path = null;
-		
-		if(paths.hasNext()){
-			//figure out throwing exception because domain already exists
-			path = paths.next();
-		}
-		
-		return path;
-	}
 	
-	public static Path convertFromRecord(IPath ipath) {
-		Path path = new Path();
-		log.info("converting path record to object");
-		path.setIsUseful(ipath.isUseful());
-		
-		String path_key = ipath.getKey();
-		log.info("Path key for path Object :: "+path_key);
-		path.setKey(path_key);
-			
-		log.info("setting if spans multiple domains");
-		path.setSpansMultipleDomains(ipath.isSpansMultipleDomains());
-		
-		log.info("getting initial path vertex in path");
-		IPathObject path_obj = ipath.getPath();
-		
-		Iterator<IPage> ipage = (Iterator<IPage>) DataAccessObject.findByKey(ipath.getPath().getKey(), IPage.class).iterator();
-
-		log.info("page found");
-		Page page = Page.convertFromRecord(ipage.next());
-		path.getPath().add(page);
-		page.setType(Page.class.getSimpleName());
-
-		int count = 0;
-		while(path_obj.getNext() != null){
-			log.info("Path object is being observed "+path_obj);
-			int matching_edge_cnt = 0;
-			Iterator<IPathEdge> path_edge = path_obj.getPathEdges().iterator();
-			
-			while(path_edge.hasNext()){
-				IPathEdge next_path_edge = path_edge.next();
-				String key = next_path_edge.getPathKey();
-				log.info("Observing edge with key " + key);
-
-				if(key.equals(path_key)){
-					log.info("Edge with path key located");
-					IPathObject path_obj_out = next_path_edge.getPathObjectOut();
-					
-					log.info("looping through  page elements and adding them to path object " + count);
-					PathObject this_path_obj = PathObject.convertFromRecord(path_obj_out);
-					log.info("retrieved path object : " + this_path_obj);
-					path.add(this_path_obj);
-					matching_edge_cnt++;
-					break;
-				}
-			}
-
-			if(matching_edge_cnt == 0){
-				break;
-			}
-			PathObject this_path_obj = PathObject.convertFromRecord(path_obj.getNext());
-			log.info("retrieved path object : " + this_path_obj);
-			path.add(this_path_obj);
-			path_obj = path_obj.getNext();
-			
-			count++;
-		}
-
-		log.info("PATH OBJECT NEXT :: "+path_obj.getNext());
-		/*while(path_obj != null && path_obj.getNext() != null){
-			log.info("looping through  page elements and adding them to path object");
-			PathObject this_path_obj = PathObject.convertFromRecord(path_obj.getNext());
-			log.info("retrieved path object : " + this_path_obj);
-			path.add(this_path_obj);
-			path_obj = path_obj.getNext();
-		}
-		*/
-		//log.info("path object type : " + path_obj.getType());
-		//log.info("path object canonical class name : " + path_obj.getClass().getCanonicalName());
-		log.info("building path object record");
-		
-		return path;
-	}
-
 	public Page getFirstPage() {
 		
 		for(PathObject obj : this.getPath()){

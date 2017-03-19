@@ -1,4 +1,4 @@
-package com.minion.structs;
+package com.qanairy.models;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -12,18 +12,12 @@ import org.slf4j.LoggerFactory;
 import com.minion.actors.BrowserActor;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.IObjectValuationAccessor;
-import com.minion.browsing.actions.Action;
-import com.minion.persistence.DataAccessObject;
-import com.minion.persistence.IPage;
-import com.minion.persistence.IPath;
-import com.minion.persistence.IPathObject;
-import com.minion.persistence.IPersistable;
-import com.minion.persistence.ITest;
-import com.minion.persistence.OrientConnectionFactory;
 import com.minion.persistence.edges.IPathEdge;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PathObject;
+import com.qanairy.persistence.IPath;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 
 /**
@@ -36,7 +30,7 @@ public class ExploratoryPath {
 	private boolean isUseful;
 	private boolean spansMultipleDomains = false;
 	
-	private List<PathObject<?>> path = null;
+	private List<PathObject> path = null;
 	private List<Action> possible_actions = null;
 	
 	/**
@@ -45,7 +39,7 @@ public class ExploratoryPath {
 	public ExploratoryPath(){
 		this.isUseful = false;
 		this.spansMultipleDomains = false;
-		this.path = new ArrayList<PathObject<?>>();
+		this.path = new ArrayList<PathObject>();
 		this.setPossibleActions(new ArrayList<>());
 	}
 
@@ -54,7 +48,7 @@ public class ExploratoryPath {
 	 * 
 	 * @param current_path
 	 */
-	public ExploratoryPath(List<PathObject<?>> current_path, List<Action> actions){
+	public ExploratoryPath(List<PathObject> current_path, List<Action> actions){
 		this.isUseful = false;
 		this.path = current_path;
 		this.setPossibleActions(actions);
@@ -67,18 +61,18 @@ public class ExploratoryPath {
 	 * @param obj
 	 * @return
 	 */
-	public boolean add(PathObject<?> obj){
+	public boolean add(PathObject obj){
 		return this.getPath().add(obj);
 	}
 	
 	/**
 	 * @return The {@link List} of {@link PathObject}s that comprise a path
 	 */
-	public List<PathObject<?>> getPath(){
+	public List<PathObject> getPath(){
 		return this.path;
 	}
 	
-	public void setPath( List<PathObject<?>> path){
+	public void setPath( List<PathObject> path){
 		this.path = path;
 	}
 	
@@ -105,8 +99,8 @@ public class ExploratoryPath {
 			return false;
 		}
 		
-		List<PathObject<?>> comparatorPathNode = path.getPath();
-		for(PathObject<?> obj : this.getPath()){
+		List<PathObject> comparatorPathNode = path.getPath();
+		for(PathObject obj : this.getPath()){
 			if(!obj.getClass().getCanonicalName().equals(comparatorPathNode.getClass().getCanonicalName())){
 				return false;
 			}
@@ -127,16 +121,16 @@ public class ExploratoryPath {
 	public static Path clone(Path path){
 		Path clonePath = new Path();
 		
-		List<PathObject<?>> path_obj = path.getPath();
-		List<PathObject<?>> clone_list = new ArrayList<PathObject<?>>();
-		for(PathObject<?> obj : path_obj){
-			PathObject<?> path_obj_clone = obj.clone();
+		List<PathObject> path_obj = path.getPath();
+		List<PathObject> clone_list = new ArrayList<PathObject>();
+		for(PathObject obj : path_obj){
+			PathObject path_obj_clone = obj.clone();
 			clone_list.add(path_obj_clone);
 		}
 		
 		clonePath.setPath(clone_list);
 		clonePath.setKey(path.getKey());
-		clonePath.setIsUseful(path.getIsUseful());
+		clonePath.setIsUseful(path.isUseful());
 		clonePath.setSpansMultipleDomains(path.getSpansMultipleDomains());
 		
 		return clonePath;
@@ -149,10 +143,10 @@ public class ExploratoryPath {
 	 */
 	public Page findLastPage(){
 		log.info("getting last page");
-		List<PathObject<?>> path_obj_list = this.getPath();
+		List<PathObject> path_obj_list = this.getPath();
 		Page page = null;
 
-		for(PathObject<?> obj : path_obj_list){
+		for(PathObject obj : path_obj_list){
 			if(obj instanceof Page){
 				log.info("last page acquired");
 				page = (Page)obj;
@@ -173,11 +167,11 @@ public class ExploratoryPath {
 			return false;
 		}
 		
-		List<PathObject<?>> path_obj_list = path.getPath();
+		List<PathObject> path_obj_list = path.getPath();
 		Page page = null;
-		for(PathObject<?> path_obj : path_obj_list){
+		for(PathObject path_obj : path_obj_list){
 
-			for(PathObject<?> path_obj2 : path_obj_list){
+			for(PathObject path_obj2 : path_obj_list){
 
 				if(path_obj	 instanceof Page){
 					log.info("last page acquired");
@@ -235,9 +229,9 @@ public class ExploratoryPath {
 		String domain = "";
 		
 		//iterate over path
-		List<PathObject<?>> path_obj_list = this.getPath();
+		List<PathObject> path_obj_list = this.getPath();
 		
-		for(PathObject<?> obj : path_obj_list){
+		for(PathObject obj : path_obj_list){
 			if(obj instanceof Page){
 				Page page = (Page)obj;
 				String curr_domain = page.getUrl().toString();
@@ -254,8 +248,8 @@ public class ExploratoryPath {
 		return false;
 	}
 
-	public IPath convertToRecord(OrientConnectionFactory connection) {
-		this.setKey(this.generateKey());
+	public IPath convertToRecord(OrientConnectionFactory connection, Path path) {
+		this.setKey(generateKey(path));
 		Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(this.getKey(), connection, IPath.class);
 		
 		int cnt = 0;
@@ -278,7 +272,7 @@ public class ExploratoryPath {
 		boolean first_pass = true;
 		IPathObject last_path_obj = null;
 
-		for(PathObject<?> obj: this.getPath()){
+		for(PathObject obj: this.getPath()){
 			log.info("setting data for last object");
 			if(obj == null){
 				break;
@@ -364,7 +358,7 @@ public class ExploratoryPath {
 		
 		//Page page = new Page();
 		Iterator<IPage> ipage = (Iterator<IPage>) DataAccessObject.findByKey(ipath.getPath().getKey(), IPage.class).iterator();
-		//path.setPath(new ArrayList<PathObject<?>>());
+		//path.setPath(new ArrayList<PathObject>());
 		log.info("page found");
 		Page page = Page.convertFromRecord(ipage.next());
 		path.getPath().add(page);
@@ -386,7 +380,7 @@ public class ExploratoryPath {
 					IPathObject path_obj_out = next_path_edge.getPathObjectOut();
 					
 					log.info("looping through  page elements and adding them to path object " + count);
-					PathObject<?> this_path_obj = PathObject.convertFromRecord(path_obj_out);
+					PathObject this_path_obj = PathObject.convertFromRecord(path_obj_out);
 					log.info("retrieved path object : " + this_path_obj);
 					path.add(this_path_obj);
 					matching_edge_cnt++;
@@ -397,7 +391,7 @@ public class ExploratoryPath {
 			if(matching_edge_cnt == 0){
 				break;
 			}
-			PathObject<?> this_path_obj = PathObject.convertFromRecord(path_obj.getNext());
+			PathObject this_path_obj = PathObject.convertFromRecord(path_obj.getNext());
 			log.info("retrieved path object : " + this_path_obj);
 			path.add(this_path_obj);
 			path_obj = path_obj.getNext();
@@ -408,7 +402,7 @@ public class ExploratoryPath {
 		log.info("PATH OBJECT NEXT :: "+path_obj.getNext());
 		/*while(path_obj != null && path_obj.getNext() != null){
 			log.info("looping through  page elements and adding them to path object");
-			PathObject<?> this_path_obj = PathObject.convertFromRecord(path_obj.getNext());
+			PathObject this_path_obj = PathObject.convertFromRecord(path_obj.getNext());
 			log.info("retrieved path object : " + this_path_obj);
 			path.add(this_path_obj);
 			path_obj = path_obj.getNext();
@@ -423,7 +417,7 @@ public class ExploratoryPath {
 
 	public Page getFirstPage() {
 		
-		for(PathObject<?> obj : this.getPath()){
+		for(PathObject obj : this.getPath()){
 			if(obj instanceof Page){
 				return (Page)obj;
 			}

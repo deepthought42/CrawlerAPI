@@ -88,7 +88,6 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 
 	@Override
 	public Group convertFromRecord(IGroup obj) {
-		a// TODO Auto-generated method stub
-		return null;
+		return new Group(obj.getKey(), obj.getName(), obj.getTests(), obj.getDescription());
 	}	
 }

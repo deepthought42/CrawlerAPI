@@ -30,7 +30,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  *  may be a Parent and/or child of another PageElement. This heirarchy is not
  *  maintained by PageElement though. 
  */
-public class PageElement extends PathObject<IPageElement>{
+public class PageElement extends PathObject{
 	private static final Logger log = LoggerFactory.getLogger(PageElement.class);
 
     private String key;

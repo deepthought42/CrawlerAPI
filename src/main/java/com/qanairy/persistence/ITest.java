@@ -10,7 +10,6 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 import com.qanairy.models.TestRecord;
-import com.minion.structs.Path;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
@@ -18,7 +17,8 @@ import com.minion.structs.Path;
  * @author Brandon Kindred
  *
  */
-@TypeValue(value="Test") public interface ITest  {
+@TypeValue(value="Test") 
+public interface ITest  {
 	/**
 	 * @return the key for the current test
 	 */

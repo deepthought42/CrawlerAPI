@@ -1,10 +1,12 @@
 package com.qanairy.persistence;
 
 import com.tinkerpop.frames.Property;
+import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 /**
  * Graph DB implementation for various {@link ServicePackage}s offered by the system 
  */
+@TypeValue(value="ServicePackage")
 public interface IServicePackage {
 
 	@Property("key")

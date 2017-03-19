@@ -1,18 +1,11 @@
 package com.qanairy.models;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
-
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IGroup;
-import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Defines a name and color used to group {@link Test}s
  */
-public class Group implements IPersistable<Group, IGroup>{
+public class Group {
 	private String key;
 	private String name;
 	private List<Test> test;
@@ -28,9 +21,38 @@ public class Group implements IPersistable<Group, IGroup>{
 	public Group(String name, List<Test> test){
 		this.setName(name);
 		this.setDescription("");
-		this.generateKey();
+		this.setTests(test);
+		this.setKey(null);
+	}
+	
+	/**
+	 * Construct a new grouping	
+	 * 
+	 * @param name 		name of the group
+	 * @param test		{@link List} of {@link Test}s
+	 * @param description describes group
+	 */
+	public Group(String name, List<Test> test, String desc){
+		this.setName(name);
+		this.setDescription(desc);
+		this.setTests(test);
+		this.setKey(null);
 	}
 
+	/**
+	 * Construct a new grouping	
+	 * 
+	 * @param name 		name of the group
+	 * @param test		{@link List} of {@link Test}s
+	 * @param description describes group
+	 */
+	public Group(String key, String name, List<Test> test, String desc){
+		this.setName(name);
+		this.setDescription(desc);
+		this.setTests(test);
+		this.setKey(key);
+	}
+	
 	public String getName() {
 		return name;
 	}
@@ -39,11 +61,11 @@ public class Group implements IPersistable<Group, IGroup>{
 		this.name = name;
 	}
 	
-	public List<Test> getTest() {
+	public List<Test> getTests() {
 		return test;
 	}
 
-	public void setTest(List<Test> test) {
+	public void setTests(List<Test> test) {
 		this.test = test;
 	}
 

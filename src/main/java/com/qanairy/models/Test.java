@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.minion.structs.Path;
+import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -21,7 +21,7 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  * successful or not
  *
  */
-public class Test implements IPersistable<ITest>{
+public class Test {
     private static final Logger log = LoggerFactory.getLogger(Test.class);
     
 	private String key; 
@@ -66,7 +66,30 @@ public class Test implements IPersistable<ITest>{
 		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
-		this.setKey(this.generateKey());
+		this.setKey(null);
+	}
+	
+	/**
+	 * Constructs a test object
+	 * 
+	 * @param path {@link Path} that will be used to determine what the expected path should be
+ 	 * @param result
+	 * @param domain
+	 * 
+	 * @pre path != null
+	 */
+	public Test(String key, Path path, Page result, Domain domain, boolean correct, boolean isUseful, boolean doesSpanMultipleDomains){
+		assert path != null;
+		
+		this.setPath(path);
+		this.setResult(result);
+		this.setRecords(new ArrayList<TestRecord>());
+		this.setDomain(domain);
+		this.setCorrect(correct);
+		this.setUseful(isUseful);
+		this.setSpansMultipleDomains(doesSpanMultipleDomains);
+		this.setGroups(new ArrayList<Group>());
+		this.setKey(key);
 	}
 	
 	/**
@@ -127,10 +150,12 @@ public class Test implements IPersistable<ITest>{
 		log.info("Looking up tests by url" );
 		ArrayList<Test> list = new ArrayList<Test>();
 		int count = 0;
+		TestRepository test_record = new TestRepository();
+
 		while(test_iter.hasNext()){
 			log.info("Inspecting object " + count);
 			ITest itest = test_iter.next();
-			Test test = Test.convertFromRecord(itest);
+			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
 			count++;
 		}
@@ -146,11 +171,12 @@ public class Test implements IPersistable<ITest>{
 		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("landable", isLandable, ITest.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
+		TestRepository test_record = new TestRepository();
+
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();
 			
-			
-			Test test = Test.convertFromRecord(itest);
+			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
 		}
 		return list;
@@ -164,10 +190,12 @@ public class Test implements IPersistable<ITest>{
 		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("name", test_name, ITest.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
+		TestRepository test_record = new TestRepository();
+
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();
 			
-			Test test = Test.convertFromRecord(itest);
+			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
 		}
 		
@@ -184,11 +212,13 @@ public class Test implements IPersistable<ITest>{
 		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("name", source, ITest.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
+		TestRepository test_record = new TestRepository();
+
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();
 			
 			
-			Test test = Test.convertFromRecord(itest);
+			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
 		}
 		

@@ -1,17 +1,9 @@
 package com.qanairy.models;
 
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.ITestRecord;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 
@@ -21,7 +13,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * was after the test was executed.
  *
  */
-public class TestRecord  implements IPersistable<ITestRecord> {
+public class TestRecord {
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(TestRecord.class);
 
@@ -35,15 +27,23 @@ public class TestRecord  implements IPersistable<ITestRecord> {
 		this.setRanAt(ran_at);
 		this.setPasses(passes);
 		this.setPage(null);
-		this.setKey(generateKey());
+		this.setKey(null);
 	}
 	
 	public TestRecord(Date ran_at, boolean passes, Page result, Test test){
 		this.setRanAt(ran_at);
 		this.setPasses(passes);
-		this.setPage(null);
+		this.setPage(result);
 		this.setTest(test);
-		this.setKey(generateKey());
+		this.setKey(null);
+	}
+	
+	public TestRecord(String key, Date ran_at, boolean passes, Page result, Test test){
+		this.setRanAt(ran_at);
+		this.setPasses(passes);
+		this.setPage(result);
+		this.setTest(test);
+		this.setKey(key);
 	}
 	
 	/**

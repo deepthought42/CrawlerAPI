@@ -1,17 +1,9 @@
 package com.qanairy.models;
 
-import java.util.Iterator;
-import java.util.UUID;
-
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.IServicePackage;
-import com.qanairy.persistence.OrientConnectionFactory;
-
 /**
  * Defines the settings of a service package (eg. how many users, how many domains/projects, etc..)
  */
-public class ServicePackage implements IPersistable<ServicePackage, IServicePackage>{
+public class ServicePackage {
 
 	private String key;
 	private String name;
@@ -26,12 +18,22 @@ public class ServicePackage implements IPersistable<ServicePackage, IServicePack
 	 * {@inheritDoc}
 	 */
 	public ServicePackage(String name, int price, int max_users) {
-		this.name = name;
-		this.price = price;
-		this.max_users = max_users;
-		this.key = generateKey();
+		this.setName(name);
+		this.setPrice(price);
+		this.setMaxUsers(max_users);
+		this.setKey(null);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public ServicePackage(String key, String name, int price, int max_users) {
+		this.setName(name);
+		this.setPrice(price);
+		this.setMaxUsers(max_users);
+		this.setKey(key);
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */

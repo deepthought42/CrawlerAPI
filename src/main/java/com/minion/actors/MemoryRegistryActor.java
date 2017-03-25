@@ -8,13 +8,15 @@ import org.slf4j.LoggerFactory;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.PathRepository;
+import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.qanairy.rl.memory.ObjectDefinition;
 
 import com.minion.structs.Message;
-import com.minion.structs.Path;
 import com.qanairy.models.Page;
+import com.qanairy.models.Path;
 
 /**
  * Handles the saving of records into orientDB
@@ -68,7 +70,9 @@ public class MemoryRegistryActor extends UntypedActor{
 				//FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
 				OrientConnectionFactory connection = new OrientConnectionFactory();
 				log.info("saving test : "+test);
-				test.create(connection);
+				TestRepository test_repo = new TestRepository();
+				
+				test_repo.create(connection, test);
 				log.info("Commiting changes");
 
 				
@@ -106,8 +110,8 @@ public class MemoryRegistryActor extends UntypedActor{
 				log.info("Converting message to path");
 				Path path = (Path)acct_msg.getData();
 				log.info("Saving Path : " +path + " : to memory Registry");
-				
-				path.create(new OrientConnectionFactory());
+				PathRepository path_repo = new PathRepository();
+				path_repo.create(new OrientConnectionFactory(), path);
 			}
 		}
 		else unhandled(message);

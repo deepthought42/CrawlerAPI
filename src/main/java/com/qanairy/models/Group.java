@@ -8,7 +8,6 @@ import java.util.List;
 public class Group {
 	private String key;
 	private String name;
-	private List<Test> test;
 	private String description;
 	
 	/**
@@ -21,7 +20,6 @@ public class Group {
 	public Group(String name, List<Test> test){
 		this.setName(name);
 		this.setDescription("");
-		this.setTests(test);
 		this.setKey(null);
 	}
 	
@@ -35,7 +33,6 @@ public class Group {
 	public Group(String name, List<Test> test, String desc){
 		this.setName(name);
 		this.setDescription(desc);
-		this.setTests(test);
 		this.setKey(null);
 	}
 
@@ -49,7 +46,6 @@ public class Group {
 	public Group(String key, String name, List<Test> test, String desc){
 		this.setName(name);
 		this.setDescription(desc);
-		this.setTests(test);
 		this.setKey(key);
 	}
 	
@@ -59,14 +55,6 @@ public class Group {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-	
-	public List<Test> getTests() {
-		return test;
-	}
-
-	public void setTests(List<Test> test) {
-		this.test = test;
 	}
 
 	public String getKey() {

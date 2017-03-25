@@ -1,5 +1,7 @@
 package com.qanairy.persistence;
 
+import java.util.List;
+
 import com.tinkerpop.frames.Property;
 
 /**
@@ -13,14 +15,17 @@ public interface IAttribute extends IPathObject{
 	public void setKey(String key);
 	
 	@Property("name")
-	public String getName();
+	public String records();
 	
 	@Property("name")
 	public void setName(String name);
 	
-	@Property("vals")
-	public String[] getVals();
+	@Property("name")
+	public String getName();
 	
 	@Property("vals")
-	public void setVals(String[] vals);
+	public List<String> getVals();
+	
+	@Property("vals")
+	public void setVals(List<String> vals);
 }

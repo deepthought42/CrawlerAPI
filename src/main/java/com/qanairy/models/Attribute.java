@@ -1,5 +1,10 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.collections.ListUtils;
+
 import com.minion.util.ArrayUtility;
 
 /**
@@ -9,11 +14,29 @@ public class Attribute {
 
 	public String key;
 	public String name;
-	public String[] vals;
+	public List<String> vals;
 	
-	public Attribute(String attrName, String[] val){
+	/**
+	 * 
+	 * @param attrName
+	 * @param val
+	 * 
+	 * @pre attrName != null
+	 * @pre val != null;
+	 */
+	public Attribute(String attrName, List<String> vals){
+		assert attrName != null;
+		assert vals != null;
+		
 		this.name = attrName;
-		this.vals = val;
+		this.vals = vals;
+		this.key = getKey();
+	}
+	
+	public Attribute(String key, String attrName, List<String> vals){
+		this.key = key;
+		this.name = attrName;
+		this.vals = vals;
 	}
 	
 	/**
@@ -38,7 +61,7 @@ public class Attribute {
 		if(obj instanceof Attribute){
 			Attribute attr = (Attribute)obj;
 			if(this.getName().equals(attr.getName())
-				&& ArrayUtility.joinArray(this.getVals()).equals(ArrayUtility.joinArray(attr.getVals()))){
+				&& ListUtils.subtract(this.getVals(), attr.getVals()).size() == 0){
 				return true;
 			}
 		}
@@ -57,7 +80,7 @@ public class Attribute {
 		int idx = 0;
 		for(String val : this.getVals()){
 			attrString += val;
-			if(idx != this.getVals().length-1){
+			if(idx != this.getVals().size()-1){
 				attrString += ",";
 			}
 			idx++;
@@ -81,14 +104,14 @@ public class Attribute {
     }
 
 	public String getKey() {
-		return this.hashCode()+"";
+		return hashCode()+"";
 	}
 
 	public String getName(){
 		return this.name;
 	}
 	
-	public String[] getVals(){
+	public List<String> getVals(){
 		return this.vals;
 	}
 }

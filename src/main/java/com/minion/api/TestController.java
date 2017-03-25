@@ -23,6 +23,8 @@ import org.springframework.http.HttpStatus;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.dto.TestRepository;
+import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
@@ -92,7 +94,8 @@ public class TestController {
 		itest.setCorrect(correct);
 		orient_connection.save();
 
-		return Test.convertFromRecord(itest);
+		TestRepository test_record = new TestRepository();
+		return test_record.convertFromRecord(itest);
 	}
 	
 	/**
@@ -107,8 +110,9 @@ public class TestController {
 		System.out.println("RUNNING TEST WITH KEY : " + key);
 		Iterator<ITest> itest_iter = Test.findByKey(key, new OrientConnectionFactory()).iterator();
 		ITest itest = itest_iter.next();
-	  
-		Test test = Test.convertFromRecord(itest);
+		TestRepository test_record = new TestRepository();
+
+		Test test = test_record.convertFromRecord(itest);
 		TestRecord record = null;
 		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 		log.info(" Test Received :: " + test);
@@ -180,19 +184,21 @@ public class TestController {
 
 		Iterator<ITest> itest_iter = Test.findByKey(test_key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
-		List<Group> group_list = itest.getGroups();
-		if(group_list == null){
-			group_list = new ArrayList<Group>();
+		Iterator<IGroup> group_iter = itest.getGroups();
+		if(!group_iter.hasNext()){
+			List<Group> group_list = new ArrayList<Group>();
 		}
 		
+		List<Group> group_list = new ArrayList<Group>();
 		if(!group_list.contains(group)){
 			log.info("group list doesnt contain group : " +group);
 			group_list.add(group);
 			itest.setGroups(group_list);
 		}
 		orient_connection.save();
-		
-		return Test.convertFromRecord(itest);
+		TestRepository test_record = new TestRepository();
+
+		return test_record.convertFromRecord(itest);
 	}
 	
 

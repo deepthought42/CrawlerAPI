@@ -17,15 +17,15 @@ import com.qanairy.models.Test;
 import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
-import com.minion.structs.ExploratoryPath;
 import com.minion.structs.Message;
-import com.minion.structs.Path;
 import com.minion.structs.SessionTestTracker;
 import com.minion.structs.TestMapper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
+import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.Path;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -125,8 +125,8 @@ public class PathExpansionActor extends UntypedActor {
 					log.info("Test Path expansions found : " +pathExpansions.size());
 					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-					for(Path expanded : pathExpansions){
-						Test new_test = new Test(expanded, null,  new Domain(path.findLastPage().getUrl().getHost()));
+					for(ExploratoryPath expanded : pathExpansions){
+						Test new_test = new Test(new Path(expanded.getKey(), expanded.getIsUseful(), expanded.getPath()), null,  new Domain(path.findLastPage().getUrl().getHost()));
 						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");

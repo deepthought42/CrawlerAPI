@@ -13,8 +13,6 @@ import com.qanairy.models.TestRecord;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
- * 
- * @author Brandon Kindred
  *
  */
 @TypeValue(value="Test") 
@@ -77,7 +75,7 @@ public interface ITest  {
 	 * @return Correctness value. Null indicates value is unset.
 	 */
 	@Adjacency(label="belongs_to")
-	public List<Group> getGroups();
+	public Iterator<IGroup> getGroups();
 	
 	/**
 	 * Sets correctness value of test

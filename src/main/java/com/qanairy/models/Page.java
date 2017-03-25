@@ -1,23 +1,16 @@
 package com.qanairy.models;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.openqa.selenium.UnhandledAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Browser;
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IPage;
-import com.qanairy.persistence.OrientConnectionFactory;
-
 /**
  * A reference to a web page 
  *
@@ -53,7 +46,9 @@ public class Page extends PathObject {
 	 */
 	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
 		assert elements != null;
-
+		
+		super.setType(Page.class.getCanonicalName());
+		
 		log.info("setting source");
 		this.setSrc(html);
 		this.url = new URL(url.replace("/#",""));
@@ -77,7 +72,8 @@ public class Page extends PathObject {
 	 */
 	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-				
+		super.setType(Page.class.getCanonicalName());
+
 		log.info("setting source");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
@@ -104,7 +100,8 @@ public class Page extends PathObject {
 	 */
 	public Page(String key, String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-				
+		super.setType(Page.class.getCanonicalName());
+
 		log.info("setting source");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));

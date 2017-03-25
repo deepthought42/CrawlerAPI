@@ -26,7 +26,7 @@ public class TestRecordTests {
 	@Test
 	public void testRecordUpdateRecord(){
 		TestRecord test_record = new TestRecord(new Date(), false);
-		ITestRecord test_record_record = test_record.update(new OrientConnectionFactory());
+		TestRecord test_record_record = test_record.update(new OrientConnectionFactory());
 		
 		Assert.assertTrue(test_record_record.getKey().equals(test_record.getKey()));
 	}
@@ -37,7 +37,7 @@ public class TestRecordTests {
 
 		TestRecord test_record = new TestRecord(new Date(), false);
 		test_record.create(orient_connection);
-		ITestRecord test_record_record = test_record.find(orient_connection);
+		TestRecord test_record_record = test_record.find(orient_connection);
 		
 		Assert.assertTrue(test_record_record.getKey().equals(test_record.getKey()));
 	}

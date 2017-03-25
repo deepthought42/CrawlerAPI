@@ -1,6 +1,8 @@
 package com.qanairy.models.dto;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.models.Attribute;
@@ -40,9 +42,12 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	@Override
 	public Attribute create(OrientConnectionFactory conn, Attribute attr) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Attribute found_attr = find(conn, attr.getKey());
 		
-		this.convertToRecord(orient_connection, attr);
-		orient_connection.save();
+		if( found_attr == null ){
+			this.convertToRecord(orient_connection, attr);
+			orient_connection.save();
+		}
 		
 		return attr;
 	}
@@ -53,28 +58,33 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	@Override
 	public Attribute update(OrientConnectionFactory conn, Attribute attr) {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		convertToRecord(connection, attr);
-		connection.save();
+		@SuppressWarnings("unchecked")
+		Iterable<IAttribute> svc_pkgs = (Iterable<IAttribute>) DataAccessObject.findByKey(attr.getKey(), conn, IAttribute.class);
+		Iterator<IAttribute> iter = svc_pkgs.iterator();
+		
+		if(iter.hasNext()){
+			convertToRecord(connection, attr);
+			connection.save();
+		}
 		
 		return attr;
 	}
 
 	@Override
 	public Attribute convertFromRecord(IAttribute attr_record) {
-		return new Attribute(attr_record.getName(), attr_record.getVals());
+		return new Attribute(attr_record.getKey(), attr_record.getName(),  attr_record.getVals());
 	}
 
 	@Override
-	public IAttribute find(OrientConnectionFactory connection, String key) {
+	public Attribute find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
 		Iterable<IAttribute> svc_pkgs = (Iterable<IAttribute>) DataAccessObject.findByKey(key, connection, IAttribute.class);
 		Iterator<IAttribute> iter = svc_pkgs.iterator();
 		
-		IAttribute account = null; 
 		if(iter.hasNext()){
-			account = iter.next();
+			return convertFromRecord(iter.next());
 		}
 		
-		return account;
+		return null;
 	}
 }

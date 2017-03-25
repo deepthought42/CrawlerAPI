@@ -20,9 +20,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page create(OrientConnectionFactory connection, Page page) {
-		IPage page_record = find(connection, generateKey(page));
+		page.setKey(generateKey(page));
+		Page page_record = find(connection, generateKey(page));
 		if(page_record == null){
-			page_record = convertToRecord(connection, page);
+			convertToRecord(connection, page);
 			connection.save();
 		}
 		
@@ -33,8 +34,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page update(OrientConnectionFactory connection, Page page) {
-		IPage page_record = find(connection, generateKey(page));
-		if(page != null){
+		Page page2 = find(connection, generateKey(page));
+		IPage page_record = null;
+		if(page2 != null){
+			page_record = convertToRecord(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
 			page_record.setScreenshot(page.getScreenshot());
@@ -44,22 +47,23 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setImageWeight(page.getImageWeight());
 			connection.save();
 		}
+		PageRepository page_repo = new PageRepository();
 		
-		return page;
+		return page_repo.convertFromRecord(page_record);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPage find(OrientConnectionFactory connection, String key){
+	public Page find(OrientConnectionFactory connection, String key){
 		@SuppressWarnings("unchecked")
 		Iterable<IPage> pages = (Iterable<IPage>) DataAccessObject.findByKey(key, connection, IPage.class);
 		Iterator<IPage> iter = pages.iterator();
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return iter.next();
+			return convertFromRecord(iter.next());
 		}
 		
 		return null;

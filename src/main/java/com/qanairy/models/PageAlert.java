@@ -14,7 +14,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  *
  */
-public class PageAlert extends PathObject<IPathObject> implements IObjectValuationAccessor {
+public class PageAlert extends PathObject implements IObjectValuationAccessor {
 	public Page page = null;
 	public String choice;
 	public String message;
@@ -120,35 +120,5 @@ public class PageAlert extends PathObject<IPathObject> implements IObjectValuati
 	public double getReward() {
 		// TODO Auto-generated method stub
 		return 0;
-	}
-
-	@Override
-	public IPathObject convertToRecord(OrientConnectionFactory connection) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public PathObject<?> clone() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String generateKey() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public IPathObject create() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public IPathObject update() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

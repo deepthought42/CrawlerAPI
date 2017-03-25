@@ -32,7 +32,9 @@ import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.structs.SessionTestTracker;
 import com.minion.structs.TestMapper;
+import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
+import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
@@ -117,7 +119,7 @@ public class BrowserActor extends UntypedActor {
 		for(PageElement elem : pageElements){
 			HashMap<String, Double> full_action_map = new HashMap<String, Double>(0);
 			//find vertex for given element
-			List<ObjectDefinition> raw_object_definitions = DataDecomposer.decompose(elem);
+			List<Object> raw_object_definitions = DataDecomposer.decompose(elem);
 			List<com.tinkerpop.blueprints.Vertex> object_definition_list
 				= persistor.findAll(raw_object_definitions);
 					
@@ -248,7 +250,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if (acct_msg.getData() instanceof ExploratoryPath){
 				log.info("EXPLORATORY PATH PASSED TO BROWSER ACTOR");
-				ExploratoryPath path = (ExploratoryPath)acct_msg.getData();
+				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "headless");
 
 				log.info("Creating new Browser");
@@ -257,7 +259,7 @@ public class BrowserActor extends UntypedActor {
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				log.info("Sending test to Memory Actor");
-				Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
+				Test test = new Test(new Path(exploratory_path.getPath()), result_page, new Domain(result_page.getUrl().getHost()));
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				log.info("Getting last page");
@@ -271,8 +273,8 @@ public class BrowserActor extends UntypedActor {
 				
 				if(path.getPath() != null){
 					log.info("crawling exploratory path");
-					for(Action action : path.getPossibleActions()){
-						Path crawl_path  = new Path(path.getPath());
+					for(Action action : exploratory_path.getPossibleActions()){
+						Path crawl_path  = new Path(exploratory_path.getPath());
 
 						result_page = Crawler.crawlPath(crawl_path, this.browser, action);
 						
@@ -293,7 +295,7 @@ public class BrowserActor extends UntypedActor {
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 							path_expansion_actor.tell(path_msg, getSelf() );
 							
-							Test new_test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost(), new Organization("Qanairy")));
+							Test new_test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
 							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");

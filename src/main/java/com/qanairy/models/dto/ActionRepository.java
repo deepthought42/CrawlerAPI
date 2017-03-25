@@ -43,10 +43,10 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	 * {@inheritDoc}
 	 */
 	public Action create(OrientConnectionFactory connection, Action action) {
-		IAction action_record = find(connection, action.getKey());
+		Action action_record = find(connection, action.getKey());
 		
 		if(action_record != null){
-			action_record = this.convertToRecord(connection, action);
+			this.convertToRecord(connection, action);
 			connection.save();
 		}
 		return action;
@@ -56,8 +56,13 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	 * {@inheritDoc}
 	 */
 	public Action update(OrientConnectionFactory connection, Action action) {
-		IAction action_record = find(connection, action.getKey());
-		if(action_record != null){
+		assert action.getKey() != null;
+		
+		@SuppressWarnings("unchecked")
+		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(action.getKey(), connection, IAction.class);
+		Iterator<IAction> iter = actions.iterator();
+		if(iter.hasNext()){
+			IAction action_record = iter.next();
 			action_record.setName(action.getName());
 			action_record.setType(action.getType());
 			action_record.setValue(action.getValue());
@@ -82,14 +87,14 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IAction find(OrientConnectionFactory connection, String key) {
+	public Action find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
 		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(key, connection, IAction.class);
 		Iterator<IAction> iter = actions.iterator();
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return iter.next();
+			convertFromRecord(iter.next());
 		}
 		
 		return null;

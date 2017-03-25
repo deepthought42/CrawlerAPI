@@ -7,15 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.WorkManagement.WorkAllowanceStatus;
+import com.qanairy.models.ExploratoryPath;
+import com.qanairy.models.Path;
 import com.qanairy.models.Test;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.minion.structs.ExploratoryPath;
 import com.minion.structs.Message;
-import com.minion.structs.Path;
 
 
 

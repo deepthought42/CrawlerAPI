@@ -4,13 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.minion.browsing.actions.Action;
+import com.qanairy.models.Action;
+
 
 /**
  * Contains the Order of operations for actions. A lower value indicates that
  *   an action has less precedence.
- *   
- * @author Brandon Kindred
  *
  */
 public class ActionOrderOfOperations {

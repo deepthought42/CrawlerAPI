@@ -14,8 +14,6 @@ import akka.actor.ActorSystem;
 
 /**
  * Initializes the system and launches it. 
- * 
- * @author Brandon Kindred
  *
  */
 @SpringBootApplication

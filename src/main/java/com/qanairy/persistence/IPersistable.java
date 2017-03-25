@@ -53,5 +53,5 @@ public interface IPersistable<V, Z> {
 	 * @param key
 	 * @return
 	 */
-	Z find(OrientConnectionFactory connection, String key);
+	V find(OrientConnectionFactory connection, String key);
 }

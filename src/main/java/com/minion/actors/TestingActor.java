@@ -17,8 +17,8 @@ import com.qanairy.models.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.minion.structs.Path;
 import com.qanairy.models.Page;
+import com.qanairy.models.Path;
 
 /**
  * Handles retrieving tests

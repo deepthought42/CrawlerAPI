@@ -40,10 +40,10 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	@Override
 	public Domain create(OrientConnectionFactory connection, Domain domain) {
 		domain.setKey(generateKey(domain));
-		IDomain domain_record = find(connection, generateKey(domain));
+		Domain domain_record = find(connection, domain.getKey());
 		
-		if(domain_record != null){
-			domain_record = convertToRecord(connection, domain);
+		if(domain_record == null){
+			convertToRecord(connection, domain);
 			connection.save();
 		}
 		return domain;
@@ -54,8 +54,12 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	 */
 	@Override
 	public Domain update(OrientConnectionFactory connection, Domain domain) {
-		IDomain domain_record = find(connection, domain.getKey());
-		if(domain_record != null){
+		@SuppressWarnings("unchecked")
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(domain.getKey(), connection, IDomain.class);
+		Iterator<IDomain> iter = domains.iterator();
+
+		if(iter.hasNext()){
+			IDomain domain_record = iter.next();
 			domain_record.setGroups(domain.getGroups());
 			domain_record.setTests(domain.getTests());
 			domain_record.setUrl(domain.getUrl());
@@ -69,14 +73,14 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IDomain find(OrientConnectionFactory connection, String key) {
+	public Domain find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
 		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(key, connection, IDomain.class);
 		Iterator<IDomain> iter = domains.iterator();
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return iter.next();
+			return convertFromRecord(iter.next());
 		}
 		
 		return null;

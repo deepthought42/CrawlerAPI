@@ -1,7 +1,7 @@
 package com.minion.api;
 
+import com.qanairy.models.Path;
 import com.qanairy.models.Test;
-import com.minion.structs.Path;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,8 +20,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
- * 
- * @author Brandon Kindred
  */
 @CrossOrigin(origins = "http://localhost:8001")
 @RestController
@@ -47,7 +45,7 @@ public class PastPathExperienceController {
     /**
      * Message emitter that sends path to all registered clients
      * 
-     * @param path
+     * @param test
      */
 	public static void broadcastTestExperience(Test test) {
 		

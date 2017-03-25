@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.qanairy.persistence.IPage;
+import com.qanairy.models.dto.PageRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -22,7 +22,9 @@ public class PageTests {
 		Page page;
 		try {
 			page = new Page("<html></html>","http://www.test.test", null, new ArrayList<PageElement>(), true);
-			IPage page_record = page.create(new OrientConnectionFactory());
+			PageRepository page_repo = new PageRepository();
+			
+			Page page_record = page_repo.create(new OrientConnectionFactory(), page);
 			
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());
@@ -43,16 +45,17 @@ public class PageTests {
 	public void pageUpdateRecord(){
 		try {
 			Page page = new Page("<html></html>","http://www.test.test", null, new ArrayList<PageElement>(), false);
-			IPage page_record = page.update(new OrientConnectionFactory());
+			PageRepository page_repo = new PageRepository();
 			
-			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
+			Page page_record = page_repo.update(new OrientConnectionFactory(), page);
+			
+			Assert.assertTrue(page_record.getKey().equals(page_repo.generateKey(page)));
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());
 			Assert.assertTrue(page_record.getImageWeight() == page.getImageWeight());
 			Assert.assertTrue(page_record.getTotalWeight() == page.getTotalWeight());
 			//Assert.assertTrue(page_record.getScreenshot().equals(page.getScreenshot()));
 			Assert.assertTrue(page_record.getType().equals(page.getType()));
 			Assert.assertTrue(page_record.isLandable() == page.isLandable());
-			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
 			Assert.assertTrue(page_record.getSrc().equals(page.getSrc()));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -67,9 +70,11 @@ public class PageTests {
 
 		Page page;
 		try {
-			page = new Page("<html></html>","http://www.test.test", null, new ArrayList<PageElement>(), true);
-			page.create(orient_connection);
-			IPage page_record = page.find(orient_connection);
+			page = new Page("<html><body></body></html>","http://www.test11.test", null, new ArrayList<PageElement>(), true);
+			PageRepository page_repo = new PageRepository();
+
+			page = page_repo.create(orient_connection, page);
+			Page page_record = page_repo.find(orient_connection, page.getKey());
 			
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());

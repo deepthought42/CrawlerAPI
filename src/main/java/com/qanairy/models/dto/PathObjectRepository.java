@@ -114,7 +114,9 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
 			action.setType(type);
-			return action.convertFromRecord(iaction.iterator().next());
+			
+			ActionRepository action_record = new ActionRepository();
+			return action_record.convertFromRecord(iaction.iterator().next());
 		}
 		
 		return null;

@@ -7,38 +7,38 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.Account;
-import com.qanairy.models.dto.AccountRepository;
+import com.qanairy.models.Domain;
+import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 @Service
-public class AccountService {
+public class DomainService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    protected AccountRepository accountRepository;
+    protected DomainRepository domainRepository;
 
     private Auth0Client auth0Client;
 
     @Autowired
-    public AccountService(final Auth0Client auth0Client, final AccountRepository accountRepository) {
+    public DomainService(final Auth0Client auth0Client, final DomainRepository domainRepository) {
         this.auth0Client = auth0Client;
-        this.accountRepository = accountRepository;
+        this.domainRepository = domainRepository;
     }
 
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Account create(Account account) {
-        return accountRepository.create(new OrientConnectionFactory(), account);
+    public Domain create(Domain domain) {
+        return domainRepository.create(new OrientConnectionFactory(), domain);
     }
 
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
-    public Account get(String key) {
-        return accountRepository.find(new OrientConnectionFactory(), key);
+    public Domain get(String key) {
+        return domainRepository.find(new OrientConnectionFactory(), key);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public Account update(Account account) {
-        return accountRepository.update(new OrientConnectionFactory(), account);
+    public Domain update(Domain domain) {
+        return domainRepository.update(new OrientConnectionFactory(), domain);
     }
 }

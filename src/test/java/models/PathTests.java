@@ -5,9 +5,9 @@ import java.util.ArrayList;
 
 import org.testng.annotations.Test;
 
-import com.minion.structs.Path;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.Path;
 import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -32,9 +32,9 @@ public class PathTests {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		page.setKey(page.generateKey());
+		//page.setKey(page.generateKey());
 		path.add(page);
-		path.setKey(path.generateKey());
+		//path.setKey(path.generateKey());
 
 		
 		Page page2 = new Page();

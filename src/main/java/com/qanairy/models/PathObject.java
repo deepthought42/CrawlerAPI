@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 /**
  * An object wrapper that allows data to be dynamically placed in data structures
  * 
- * @param <V extends IPathObject> 
  *
  */
 public abstract class PathObject{

@@ -17,10 +17,10 @@ import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
-import com.minion.structs.Path;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 import com.qanairy.rules.FormRule;
 import com.qanairy.rules.formRules.FormRuleType;
@@ -386,7 +386,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					for(Path curr_path : path_list){
 						Path clone_path = Path.clone(path);
 						
-						for(PathObject<?> obj : curr_path.getPath()){
+						for(PathObject obj : curr_path.getPath()){
 							clone_path.add(obj);	
 						}
 						log.info("loaded clone path for test");

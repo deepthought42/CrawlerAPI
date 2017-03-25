@@ -132,7 +132,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	}
 
 	@Override
-	public IPath find(OrientConnectionFactory connection, String key) {
+	public Path find(OrientConnectionFactory connection, String key) {
 		// TODO Auto-generated method stub
 		return null;
 	}

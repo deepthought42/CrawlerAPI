@@ -426,7 +426,7 @@ public class Browser {
 		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();
-		input_ids.add(input_field.getInputElement().getAttribute("id").getVals()[0]);
+		input_ids.add(input_field.getInputElement().getAttribute("id").getVals().get(0));
 		
 		List<PageElement> label_tags = new ArrayList<PageElement>();
 		for(WebElement label_elem : label_elements){
@@ -455,7 +455,7 @@ public class Browser {
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();
 		for(FormField input : group_inputs){
-			input_ids.add(input.getInputElement().getAttribute("id").getVals()[0]);
+			input_ids.add(input.getInputElement().getAttribute("id").getVals().get(0));
 		}
 		
 		List<PageElement> label_tags = new ArrayList<PageElement>();
@@ -760,7 +760,7 @@ public class Browser {
 		xpath += "//"+element.getTagName();
 		for(Attribute attr : Browser.extractedAttributes(element, (JavascriptExecutor)driver)){
 			if(!Arrays.asList(invalid_xpath_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals()) + "\")");
+				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()])) + "\")");
 			}
 		}
 		if(attributeChecks.size()>0){
@@ -812,7 +812,7 @@ public class Browser {
 				attributeVals = new String[0];
 			}
 			
-			attr_lst.add(new Attribute(attributes[0].trim().replace("\'", "'"), attributeVals));
+			attr_lst.add(new Attribute(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
 		}
 		 return attr_lst;
 	}

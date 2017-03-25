@@ -16,6 +16,13 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 	}
+	
+	public Account(String key, String org_name, ServicePackage service_package, String payment_acct_num){
+		this.setKey(key);
+		this.setOrgName(org_name);
+		this.setServicePackage(service_package);
+		this.setPaymentAcctNum(payment_acct_num);
+	}
 
 	public String getOrgName() {
 		return org_name;

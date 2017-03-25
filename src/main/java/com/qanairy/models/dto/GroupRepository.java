@@ -27,15 +27,11 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 * {@inheritDoc}
 	 */
 	public IGroup convertToRecord(OrientConnectionFactory connection, Group group) {
-		
-		IGroup group_record = find(connection, generateKey(group));
-		
-		if(group_record == null){
-			group_record = connection.getTransaction().addVertex("class:"+IGroup.class.getCanonicalName()+","+UUID.randomUUID(), IGroup.class);
-			group_record.setKey(group.getKey());
-			group_record.setDescription(group.getDescription());
-			group_record.setName(group.getName());
-		}
+
+		IGroup group_record = connection.getTransaction().addVertex("class:"+IGroup.class.getCanonicalName()+","+UUID.randomUUID(), IGroup.class);
+		group_record.setKey(group.getKey());
+		group_record.setDescription(group.getDescription());
+		group_record.setName(group.getName());
 
 		return group_record;
 	}
@@ -44,10 +40,10 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 * {@inheritDoc}
 	 */
 	public Group create(OrientConnectionFactory conn, Group group) {
-		IGroup group_record = find(conn, generateKey(group));
+		Group group_record = find(conn, generateKey(group));
 		
 		if(group_record == null){
-			group_record = convertToRecord(conn, group);
+			convertToRecord(conn, group);
 			conn.save();
 		}
 		group.setKey(generateKey(group));
@@ -60,8 +56,12 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 * Only allows for description to be updated
 	 */
 	public Group update(OrientConnectionFactory conn, Group group) {
-		IGroup group_record = find(conn, generateKey(group));
-		if(group_record != null){
+		@SuppressWarnings("unchecked")
+		Iterable<IGroup> domains = (Iterable<IGroup>) DataAccessObject.findByKey(group.getKey(), conn, IGroup.class);
+		Iterator<IGroup> iter = domains.iterator();
+		
+		if(iter.hasNext()){
+			IGroup group_record = iter.next();
 			group_record.setDescription(group.getDescription());
 			conn.save();
 		}
@@ -73,14 +73,14 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IGroup find(OrientConnectionFactory connection, String key) {
+	public Group find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
 		Iterable<IGroup> domains = (Iterable<IGroup>) DataAccessObject.findByKey(key, connection, IGroup.class);
 		Iterator<IGroup> iter = domains.iterator();
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return iter.next();
+			return convertFromRecord(iter.next());
 		}
 		
 		return null;

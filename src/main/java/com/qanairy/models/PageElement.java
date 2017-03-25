@@ -3,10 +3,8 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
@@ -20,10 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IPageElement;
-import com.qanairy.persistence.IAttribute;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement
@@ -51,7 +45,16 @@ public class PageElement extends PathObject{
 		this.attributes = attributes;
 		this.text = text;
 		this.cssValues = this.getCssValues();
-		this.key = generateKey();
+		this.setKey(null);
+	}
+	
+	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes){
+		this.setName(name);
+		this.setXpath(xpath);
+		this.setAttributes(attributes);
+		this.setText(text);
+		this.setCssValues(this.getCssValues());
+		this.setKey(key);
 	}
 	
 	/**
@@ -61,8 +64,8 @@ public class PageElement extends PathObject{
 		System.out.println("+++++++++++++++++++++++++++++++++++++++");
 		for(int j=0; j < this.attributes.size(); j++){
 			System.out.print(this.attributes.get(j).getName() + " : ");
-			for(int i=0; i < attributes.get(j).getVals().length; i++){
-				System.out.print( this.attributes.get(j).getVals()[i] + " ");
+			for(int i=0; i < attributes.get(j).getVals().size(); i++){
+				System.out.print( this.attributes.get(j).getVals().get(i) + " ");
 			}
 		}
 		System.out.println("\n+++++++++++++++++++++++++++++++++++++++");
@@ -198,7 +201,7 @@ public class PageElement extends PathObject{
 		return attributes;
 	}
 	
-	public String[] getAttributeValues(String attr_name){
+	public List<String> getAttributeValues(String attr_name){
 		String id = "";
 		//get id for element
 		for(Attribute tag_attr : this.attributes){
@@ -262,7 +265,7 @@ public class PageElement extends PathObject{
 	}
 
 
-	public PathObject<?> clone() {
+	public PathObject clone() {
 		// TODO Auto-generated method stub
 		return null;
 	}

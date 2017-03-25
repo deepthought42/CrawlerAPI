@@ -3,6 +3,8 @@ package com.qanairy.models.dto;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.springframework.stereotype.Component;
+
 import com.qanairy.models.Account;
 import com.qanairy.models.ServicePackage;
 import com.qanairy.persistence.DataAccessObject;
@@ -13,6 +15,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * 
  */
+@Component
 public class AccountRepository implements IPersistable<Account, IAccount> {
 
 	/**
@@ -25,12 +28,12 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 
 	@Override
 	public IAccount convertToRecord(OrientConnectionFactory connection, Account account) {
-		account.setKey(generateKey(account));
-
 		IAccount acct = connection.getTransaction().addVertex("class:"+IAccount.class.getCanonicalName()+","+UUID.randomUUID(), IAccount.class);
 		acct.setKey(account.getKey());
 		acct.setOrgName(account.getOrgName());
-		acct.setServicePackage(account.getServicePackage().convertToRecord(connection));
+		
+		ServicePackageRepository svc_pkg_record = new ServicePackageRepository();
+		acct.setServicePackage(svc_pkg_record.convertToRecord(connection, account.getServicePackage()));
 		acct.setPaymentAcctNum(account.getPaymentAcctNum());
 
 		return acct;
@@ -38,8 +41,10 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 
 	@Override
 	public Account convertFromRecord(IAccount account) {
-		ServicePackage sp = new ServicePackage(account.getServicePackage().getName(), account.getServicePackage().getPrice(), account.getServicePackage().getMaxUsers());
-		return new Account(account.getOrgName(), sp, account.getPaymentAcctNum());
+		ServicePackage sp = new ServicePackage(account.getServicePackage().getName(), 
+											   account.getServicePackage().getPrice(), 
+											   account.getServicePackage().getMaxUsers());
+		return new Account(account.getKey(), account.getOrgName(), sp, account.getPaymentAcctNum());
 	}
 	
 	/**
@@ -53,15 +58,12 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
 		Iterator<IAccount> iter = accounts.iterator();
 		  
-		if(iter.hasNext()){
-			//figure out throwing exception because account already exists
-			return convertFromRecord(iter.next());
-		}
-		else{
+		if(!iter.hasNext()){
 			convertToRecord(connection, account);
 			connection.save();
-			return account;
 		}
+		return account;
+
 	}
 
 	/**
@@ -69,8 +71,6 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	 */
 	@Override
 	public Account update(OrientConnectionFactory connection, Account account) {
-		account.setKey(generateKey(account));
-		
 		@SuppressWarnings("unchecked")
 		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
 		Iterator<IAccount> iter = accounts.iterator();
@@ -80,10 +80,13 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			acct = iter.next();
 			acct.setOrgName(account.getOrgName());
 			acct.setPaymentAcctNum(account.getPaymentAcctNum());
-			acct.setServicePackage(account.getServicePackage().find(connection));
+			ServicePackageRepository svc_pkg_record = new ServicePackageRepository();
+			
+			
+			acct.setServicePackage(svc_pkg_record.convertToRecord(connection, account.getServicePackage()));
 			connection.save();
 		}
-		return account;
+		return convertFromRecord(acct);
 	}
 
 
@@ -91,16 +94,15 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IAccount find(OrientConnectionFactory connection, String key) {
+	public Account find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
 		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(key, connection, IAccount.class);
 		Iterator<IAccount> iter = svc_pkgs.iterator();
 		
-		IAccount account = null; 
 		if(iter.hasNext()){
-			account = iter.next();
+			return convertFromRecord(iter.next());
 		}
 		
-		return account;
+		return null;
 	} 
 }

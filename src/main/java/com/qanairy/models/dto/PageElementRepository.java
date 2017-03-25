@@ -22,6 +22,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * {@inheritDoc}
 	 */
 	public PageElement create(OrientConnectionFactory connection, PageElement elem) {
+		elem.setKey(generateKey(elem));
 		convertToRecord(connection, elem);
 		connection.save();
 		
@@ -32,29 +33,33 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * {@inheritDoc}
 	 */
 	public PageElement update(OrientConnectionFactory connection, PageElement elem) {
-		IPageElement page_elem_record = find(connection, elem.getKey());
-		  
+		PageElement page_elem_record = find(connection, elem.getKey());
+		IPageElement page_elem = null;
+		
 		if(page_elem_record != null){
-			page_elem_record.setName(elem.getName());
-			page_elem_record.setAttributes(elem.getAttributes());
-			page_elem_record.setCssValues(elem.getCssValues());
-			page_elem_record.setText(elem.getText());
-			page_elem_record.setXpath(elem.getXpath());
+			page_elem = convertToRecord(connection, page_elem_record);
+
+			page_elem.setName(elem.getName());
+			page_elem.setAttributes(elem.getAttributes());
+			page_elem.setCssValues(elem.getCssValues());
+			page_elem.setText(elem.getText());
+			page_elem.setXpath(elem.getXpath());
 			connection.save();
 		}
 	
-		return elem;
+		return convertFromRecord(page_elem);
 	}
 	
 	@Override
-	public IPageElement find(OrientConnectionFactory connection, String key) {
+	public PageElement find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
 		Iterable<IPageElement> page_elements = (Iterable<IPageElement>) DataAccessObject.findByKey(key, connection, IPageElement.class);
 		Iterator<IPageElement> iter = page_elements.iterator();
+		PageElementRepository page_elem_repo = new PageElementRepository();
 		
-		IPageElement page_element = null; 
+		PageElement page_element = null;
 		if(iter.hasNext()){
-			page_element = iter.next();
+			page_element = page_elem_repo.convertFromRecord(iter.next());
 		}
 		
 		return page_element;
@@ -83,15 +88,11 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		@SuppressWarnings("unchecked")
 		Iterable<IPageElement> html_tags = (Iterable<IPageElement>) DataAccessObject.findByKey(elem.getKey(), framedGraph, IPageElement.class);
 		
-		int cnt = 0;
 		Iterator<IPageElement> iter = html_tags.iterator();
 		IPageElement page_elem_record = null;
-		while(iter.hasNext()){
-			iter.next();
-			cnt++;
-		}
+
 		
-		if(cnt == 0){
+		if(!iter.hasNext()){
 			page_elem_record = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getCanonicalName()+","+UUID.randomUUID(), IPageElement.class);
 
 			List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();

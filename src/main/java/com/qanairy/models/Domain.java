@@ -3,25 +3,33 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 
 /**
  * Encompasses a domain name as well as all {@link Test}s and {@link Group}s 
  * belong to this domain
  */
+@Component
 public class Domain {
 	private String domain;
 	private List<Test> tests;
 	private List<Group> groups;
 	private String key;
 	
+	public Domain(){
+		this.setUrl(null);
+		this.setTests(new ArrayList<Test>());
+		this.setGroups(new ArrayList<Group>());
+	}
 	/**
 	 * 
 	 * 
 	 * @param domain
 	 * @param organization
 	 */
-	public Domain(String domain_name){
-		this.setUrl(domain_name);
+	public Domain(String url){
+		this.setUrl(url);
 		this.setTests(new ArrayList<Test>());
 		this.setGroups(new ArrayList<Group>());
 	}
@@ -33,7 +41,8 @@ public class Domain {
 	 * @param tests			- tests that belong to this domain
 	 * @param groups		- groups that belong to this domain
 	 */
-	public Domain(String domain_url, List<Test> tests, List<Group> groups){
+	public Domain(String key, String domain_url, List<Test> tests, List<Group> groups){
+		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
 		this.setGroups(groups);

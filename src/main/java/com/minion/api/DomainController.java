@@ -1,6 +1,8 @@
 package com.minion.api;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
 import com.qanairy.auth.WebSecurityConfig;
@@ -28,9 +31,7 @@ public class DomainController {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    protected WebSecurityConfig appConfig;
-
+    
     @Autowired
     protected DomainService domainService;
 
@@ -39,33 +40,37 @@ public class DomainController {
      * Simple demonstration of how Principal can be injected
      * Here, as demonstration, we want to do audit as only ROLE_ADMIN can create user..
      */
-    @RequestMapping(value ="domains", method = RequestMethod.POST)
-    public Domain create(final @Validated @RequestBody Domain domain, final Principal principal) {
-        logger.info("create invoked");
-        printGrantedAuthorities((Auth0JWTToken) principal);
+    @RequestMapping(method = RequestMethod.POST)
+    public @ResponseBody Domain create(final @Validated @RequestBody String url, final Principal principal) {
+        logger.info("create invoked :: "+ url);
+        /*printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
             // log username of user requesting domain creation
             logger.info("creating new domain in domain");
-        }
-        return domainService.create(domain);
+        }*/
+        Domain domain = new Domain(url);
+        Domain domain2 = domainService.create(domain);
+        return domain2;
     }
 
 
-    @RequestMapping(value ="domains", method = RequestMethod.GET)
-    public Domain getAll(final @PathVariable String key) {
+    @RequestMapping(method = RequestMethod.GET)
+    public  @ResponseBody List<Domain> getAll() {
         logger.info("get invoked");
-        return domainService.get(key);
+        ArrayList<Domain> domains = new ArrayList<Domain>();
+        domains.add(new Domain("http://localhost:8001"));
+        return domains;
     }
     
-    @RequestMapping(value ="domains/{id}", method = RequestMethod.GET)
+   /* @RequestMapping(value ="/domains/{id}", method = RequestMethod.GET)
     public Domain get(final @PathVariable String key) {
         logger.info("get invoked");
         return domainService.get(key);
     }
-
-    @RequestMapping(value ="domains/{id}", method = RequestMethod.PUT)
-    public Domain update(final @PathVariable String key, final @Validated @RequestBody Domain domain) {
+*/
+    @RequestMapping(value ="/domains/{id}", method = RequestMethod.PUT)
+    public @ResponseBody Domain update(final @PathVariable String key, final @Validated @RequestBody Domain domain) {
         logger.info("update invoked");
         return domainService.update(domain);
     }

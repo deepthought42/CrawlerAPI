@@ -31,10 +31,9 @@ public interface IDomain {
 	@Adjacency(label="contains_test")
 	void setTests(List<Test> tests);
 
-	@Adjacency(label = "has_group")
+	@Adjacency(label="group")
 	Iterator<Group> getGroups();
-	
-	@Adjacency(label = "has_group")
+
+	@Adjacency(label="group")
 	void setGroups(List<Group> groups);
-	
 }

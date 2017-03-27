@@ -1,9 +1,16 @@
 package com.qanairy.models.dto;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
+import org.springframework.stereotype.Component;
+
+import com.google.common.collect.Lists;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Group;
+import com.qanairy.models.Test;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
@@ -12,6 +19,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * 
  */
+@Component
 public class DomainRepository implements IPersistable<Domain, IDomain> {
 
 	/**
@@ -26,11 +34,11 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	 * {@inheritDoc}
 	 */
 	public IDomain convertToRecord(OrientConnectionFactory connection, Domain domain) {
+		domain.setKey(generateKey(domain));
 		IDomain domain_record = connection.getTransaction().addVertex("class:"+IDomain.class.getCanonicalName()+","+UUID.randomUUID(), IDomain.class);
-		domain_record.setKey(generateKey(domain));
+		domain_record.setKey(domain.getKey());
 		domain_record.setUrl(domain.getUrl());
 		domain_record.setTests(domain.getTests());
-		domain_record.setGroups(domain.getGroups());
 		return domain_record;
 	}
 
@@ -88,7 +96,16 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 
 	@Override
 	public Domain convertFromRecord(IDomain obj) {
-		// TODO Auto-generated method stub
-		return null;
+		List<Test> tests = new ArrayList<Test>();
+		if(obj.getTests() != null){
+			tests = Lists.newArrayList(obj.getTests());
+		}
+		
+		List<Group> groups = new ArrayList<Group>();
+		if(obj.getGroups() != null){
+			Lists.newArrayList(obj.getGroups());
+		}
+		Domain domain = new Domain(obj.getKey(), obj.getUrl().toString(), tests, groups);
+		return domain;
 	}	
 }

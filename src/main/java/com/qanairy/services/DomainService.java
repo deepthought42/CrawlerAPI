@@ -27,7 +27,7 @@ public class DomainService {
     }
 
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    //@PreAuthorize("hasAuthority('ROLE_USER')")
     public Domain create(Domain domain) {
         return domainRepository.create(new OrientConnectionFactory(), domain);
     }

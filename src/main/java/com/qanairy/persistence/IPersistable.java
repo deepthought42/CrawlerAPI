@@ -1,5 +1,7 @@
 package com.qanairy.persistence;
 
+import java.util.List;
+
 /**
  * 
  * @author brand
@@ -54,4 +56,11 @@ public interface IPersistable<V, Z> {
 	 * @return
 	 */
 	V find(OrientConnectionFactory connection, String key);
+	
+	/**
+	 * 
+	 * @param connection
+	 * @return
+	 */
+	List<V> findAll(OrientConnectionFactory connection);
 }

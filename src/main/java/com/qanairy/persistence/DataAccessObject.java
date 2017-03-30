@@ -1,5 +1,9 @@
 package com.qanairy.persistence;
 
+import org.mortbay.log.Log;
+
+import com.tinkerpop.blueprints.Vertex;
+
 public class DataAccessObject<V> {
 
 	
@@ -25,5 +29,16 @@ public class DataAccessObject<V> {
 	 */
 	public static Iterable<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) {
 		return orient_connection.getTransaction().getVertices("key", generated_key, clazz);
+	}
+	
+	public static Iterable<?> findAll(OrientConnectionFactory conn, Class<?> clazz){
+		Iterable<?> vertices = null;
+		try{
+			vertices = conn.getTransaction().getVertices("@class", clazz.getSimpleName());//getVerticesOfClass(clazz.getSimpleName());
+		}catch(IllegalArgumentException e){
+			Log.warn(e.getMessage());
+		}
+		
+		return vertices;
 	}
 }

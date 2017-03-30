@@ -2,6 +2,7 @@ package com.minion.api;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -18,8 +19,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
-import com.qanairy.auth.WebSecurityConfig;
 import com.qanairy.models.Domain;
+import com.qanairy.models.dto.DomainRepository;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.DomainService;
 
 /**
@@ -49,6 +51,7 @@ public class DomainController {
             // log username of user requesting domain creation
             logger.info("creating new domain in domain");
         }*/
+        System.err.println("url :: " + url);
         Domain domain = new Domain(url);
         Domain domain2 = domainService.create(domain);
         return domain2;
@@ -58,9 +61,10 @@ public class DomainController {
     @RequestMapping(method = RequestMethod.GET)
     public  @ResponseBody List<Domain> getAll() {
         logger.info("get invoked");
-        ArrayList<Domain> domains = new ArrayList<Domain>();
-        domains.add(new Domain("http://localhost:8001"));
-        return domains;
+	    DomainRepository domain_repo = new DomainRepository();
+	    List<Domain> domains = domain_repo.findAll(new OrientConnectionFactory());
+
+	    return domains;
     }
     
    /* @RequestMapping(value ="/domains/{id}", method = RequestMethod.GET)

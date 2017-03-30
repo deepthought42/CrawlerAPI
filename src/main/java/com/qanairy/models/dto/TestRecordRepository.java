@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.models.TestRecord;
@@ -39,41 +40,41 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 * {@inheritDoc}
 	 */
 	public TestRecord create(OrientConnectionFactory connection, TestRecord record) {
-		ITestRecord test_record_record = find(connection, generateKey(record));
+		TestRecord test_record_record = find(connection, generateKey(record));
 		if(test_record_record == null){
-			test_record_record = convertToRecord(connection, record);
+			convertToRecord(connection, record);
 			connection.save();
 		}
 		
-		return record;
+		return test_record_record;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	public TestRecord update(OrientConnectionFactory connection, TestRecord record) {
-		ITestRecord test_record_record = find(connection, record.getKey());
-		if(record != null){
-			record.setPasses(record.getPasses());
-			record.setRanAt(record.getRanAt());
+		TestRecord test_record_record = find(connection, record.getKey());
+		if(test_record_record != null){
+			test_record_record.setPasses(record.getPasses());
+			test_record_record.setRanAt(record.getRanAt());
 			
 			connection.save();
 		}
 		
-		return record;
+		return test_record_record;
 	}
 
 	/**
 	 * 
 	 */
 	@Override
-	public ITestRecord find(OrientConnectionFactory conn, String key){
+	public TestRecord find(OrientConnectionFactory conn, String key){
 		@SuppressWarnings("unchecked")
 		Iterable<ITestRecord> domains = (Iterable<ITestRecord>) DataAccessObject.findByKey(key, conn, ITestRecord.class);
 		Iterator<ITestRecord> iter = domains.iterator();
 		  
 		if(iter.hasNext()){
-			return iter.next();
+			return convertFromRecord(iter.next());
 		}
 		
 		return null;
@@ -81,7 +82,13 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 
 	@Override
 	public TestRecord convertFromRecord(ITestRecord obj) {
-a		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<TestRecord> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

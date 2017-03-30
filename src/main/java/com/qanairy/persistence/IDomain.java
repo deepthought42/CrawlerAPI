@@ -12,7 +12,6 @@ import com.tinkerpop.frames.Property;
  * Represents an {@link Domain} record in OrientDB database
  */
 public interface IDomain {
-
 	@Property("key")
 	String getKey();
 	

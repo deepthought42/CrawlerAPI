@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.mortbay.log.Log;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
@@ -15,6 +16,8 @@ import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
 /**
  * 
@@ -35,7 +38,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	 */
 	public IDomain convertToRecord(OrientConnectionFactory connection, Domain domain) {
 		domain.setKey(generateKey(domain));
-		IDomain domain_record = connection.getTransaction().addVertex("class:"+IDomain.class.getCanonicalName()+","+UUID.randomUUID(), IDomain.class);
+		IDomain domain_record = connection.getTransaction().addVertex("class:"+IDomain.class.getSimpleName()+","+UUID.randomUUID(), IDomain.class);
 		domain_record.setKey(domain.getKey());
 		domain_record.setUrl(domain.getUrl());
 		domain_record.setTests(domain.getTests());
@@ -106,6 +109,35 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			Lists.newArrayList(obj.getGroups());
 		}
 		Domain domain = new Domain(obj.getKey(), obj.getUrl().toString(), tests, groups);
+		return domain;
+	}
+	
+	public Domain convertFromRecord(OrientVertex obj) {
+		List<Test> tests = new ArrayList<Test>();
+		/*if(obj.getTests() != null){
+			tests = Lists.newArrayList(obj.getProperty("tests"));
+		}
+		*/
+		List<Group> groups = new ArrayList<Group>();
+		/*if(obj.getGroups() != null){
+			Lists.newArrayList(obj.getGroups());
+		}*/
+		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), tests, groups);
+		return domain;
+	}
+	
+	@Override
+	public List<Domain> findAll(OrientConnectionFactory conn) {
+		@SuppressWarnings("unchecked")
+		Iterable<OrientVertex> domains = (Iterable<OrientVertex>) DataAccessObject.findAll(conn, IDomain.class);
+		Iterator<OrientVertex> iter = domains.iterator();
+		
+		List<Domain> domain = new ArrayList<>();
+		while(iter.hasNext()){
+			OrientVertex v = iter.next();
+			domain.add(convertFromRecord(v));
+		}
+		
 		return domain;
 	}	
 }

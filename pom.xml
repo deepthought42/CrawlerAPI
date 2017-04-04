@@ -8,7 +8,7 @@
   <artifactId>Qanairy</artifactId>
   <packaging>jar</packaging>
 
-  <name>Minion</name>
+  <name>Qanairy</name>
 	
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -285,6 +285,6 @@
 		    <artifactId>aws-java-sdk-s3</artifactId>
 		    <version>1.11.49</version>
 		</dependency>
-		
+
 	</dependencies>
 </project>

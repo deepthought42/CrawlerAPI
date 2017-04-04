@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.auth0.spring.security.api.Auth0JWTToken;
 import com.qanairy.auth.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.ServicePackage;
+import com.qanairy.models.dto.AccountRepository;
+import com.qanairy.models.dto.ServicePackageRepository;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.UsernameService;
 
@@ -43,15 +47,28 @@ public class AccountController {
      * Here, as demonstration, we want to do audit as only ROLE_ADMIN can create user..
      */
     @RequestMapping(value ="accounts", method = RequestMethod.POST)
-    public Account create(final @Validated @RequestBody Account account, final Principal principal) {
+    public Account create(final Principal principal) {
         logger.info("create invoked");
+        
+        /*
+         * Put the following inside the role check once roles are in place
+         */
+        OrientConnectionFactory conn = new OrientConnectionFactory();
+        ServicePackageRepository pkg_repo = new ServicePackageRepository();
+        ServicePackage alpha_pkg = pkg_repo.find(conn, "alpha");
+        Account acct = new Account(usernameService.getUsername(), alpha_pkg, null);
+        AccountRepository acct_repo = new AccountRepository();
+        
+        //create account
+        //associate user with account
+        
         printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             final String username = usernameService.getUsername();
             // log username of user requesting account creation
             logger.info("User with email: " + username + " creating new account");
         }
-        return accountService.create(account);
+        return acct_repo.create(conn, acct);
     }
 
     @RequestMapping(value ="accounts/{id}", method = RequestMethod.GET)

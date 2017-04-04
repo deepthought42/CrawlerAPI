@@ -15,9 +15,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 
 import com.minion.actors.TestingActor;
@@ -28,6 +30,8 @@ import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
+import com.qanairy.models.Account;
+import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 
@@ -37,7 +41,8 @@ import com.qanairy.models.Page;
  * @author Brandon Kindred
  */
 @Controller
-@RequestMapping("/tester")
+@Scope("session")
+@RequestMapping("/tests")
 public class TestController {
     private static final Logger log = LoggerFactory.getLogger(TestController.class);
 
@@ -69,10 +74,29 @@ public class TestController {
 	 * @return all tests matching name passed
 	 */
 	@RequestMapping(path="/name", method = RequestMethod.GET)
-	public @ResponseBody List<Test> getTestsByName(HttpServletRequest request, 
+	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
 			   								 @RequestParam(value="name", required=true) String name) {
+		//session.setAttribute(Constants.FOO, new Domain());
 		List<Test> test_list = new ArrayList<Test>();
 		test_list = Test.findByName(name);
+		
+		return test_list;
+	}
+	
+	/**
+	 * Retrieves list of all tests from the database 
+	 * 
+	 * @param name test name to lookup
+	 * 
+	 * @return all tests matching name passed
+	 */
+	@RequestMapping(path="/unverified", method = RequestMethod.GET)
+	public @ResponseBody List<Test> getUnverifiedTests(HttpSession session, HttpServletRequest request, 
+			   								 @RequestParam(value="name", required=true) String name) {
+		List<Test> test_list = new ArrayList<Test>();
+		Domain domain = (Domain) session.getAttribute("current_domain");
+
+		test_list = Test.findTestUnverifiedByDomain(domain.getUrl());
 		
 		return test_list;
 	}

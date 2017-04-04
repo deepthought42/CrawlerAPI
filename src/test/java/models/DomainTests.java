@@ -37,7 +37,7 @@ public class DomainTests {
 	 */
 	@Test
 	public void accountUpdateRecord(){
-		Domain domain = new Domain("Test.test", new ArrayList<com.qanairy.models.Test>(), new ArrayList<Group>());
+		Domain domain = new Domain("Test.test", "Test.test", new ArrayList<com.qanairy.models.Test>(), new ArrayList<Group>());
 		DomainRepository domain_repo = new DomainRepository();
 		domain.setKey(domain_repo.generateKey(domain));
 

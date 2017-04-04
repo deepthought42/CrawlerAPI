@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
+import com.qanairy.models.dto.PathRepository;
 import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -66,8 +67,8 @@ public class PathTests {
 		path.add(page3);
 		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		
-		path.convertToRecord(orient_connection);
+		PathRepository path_repo = new PathRepository();
+		path_repo.convertToRecord(orient_connection, path);
 		orient_connection.save();
 	}
 	

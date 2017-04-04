@@ -33,7 +33,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 * @return generated key
 	 */
 	public String generateKey(TestRecord record) {
-		return record.getPage().getKey()+":"+record.getRanAt();
+		return record.getTest().getKey()+":"+record.getRanAt();
 	}
 
 	/**

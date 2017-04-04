@@ -4,13 +4,12 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.qanairy.models.dto.TestRepository;
-import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
@@ -130,6 +129,31 @@ public class Test {
 	public static Iterable<ITest> findTestByGroup(String group) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		return orient_connection.getTransaction().getVertices("groups", group, ITest.class);
+	}
+	
+	/**
+	 * Looks up tests unverified tests
+	 */
+	public static Iterable<ITest> findByDomain(String domain) {
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		return orient_connection.getTransaction().getBaseGraph().getRawGraph().query(new OSQLSynchQuery("SELECT FROM V WHERE color = 'red'"));
+	}
+	
+	/**
+	 * Looks up tests unverified tests
+	 */
+	public static List<Test> findTestUnverifiedByDomain(String domain) {
+		Iterator<ITest> test_records = findByDomain(domain).iterator();
+		List<Test> tests = new ArrayList<Test>();
+		TestRepository test_repo = new TestRepository();
+		while(test_records.hasNext()){
+			ITest test = test_records.next();
+			if(test.getCorrect() == null){
+				tests.add(test_repo.convertFromRecord(test));
+			}
+		}
+		
+		return tests;
 	}
 	
 	/**

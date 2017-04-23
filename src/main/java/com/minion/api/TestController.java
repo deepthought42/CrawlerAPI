@@ -19,26 +19,32 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.TestRepository;
+import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.services.AccountService;
 import com.minion.browsing.Browser;
+import com.qanairy.api.exception.DomainNotOwnedByAccountException;
+import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 
 /**
- * REST controller that defines endpoints to access data for path's experienced in the past
- * 
- * @author Brandon Kindred
+ * REST controller that defines endpoints to access tests
  */
 @Controller
 @Scope("session")
@@ -46,25 +52,50 @@ import com.qanairy.models.Page;
 public class TestController {
     private static final Logger log = LoggerFactory.getLogger(TestController.class);
 
+    @Autowired
+    protected AccountService accountService;
+
 	/**
 	 * Retrieves list of all tests from the database 
 	 * @param url
 	 * 
 	 * @return list of tests previously discovered for given url
+	 * @throws UnknownAccountException 
+	 * @throws DomainNotOwnedByAccountException 
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestByUrl(HttpServletRequest request, 
-			   								 @RequestParam(value="url", required=true) String url) {
-		List<Test> test_list = new ArrayList<Test>();
-		try {
-			test_list = Test.findByUrl(url);
-		} catch (MalformedURLException e) {
-			log.info("ERROR GETTING TEST ");
-			e.printStackTrace();
-		}
+			   								 @RequestParam(value="url", required=true) String url) throws UnknownAccountException, DomainNotOwnedByAccountException {
+    	//make sure domain belongs to user account first
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+    	boolean domain_belongs_to_acct = false;
+    	for(Domain domain : acct.getDomains()){
+    		if(domain.getUrl().equals(url)){
+    			domain_belongs_to_acct = true;
+    		}
+    	}
+    	
+    	if(domain_belongs_to_acct){
+			List<Test> test_list = new ArrayList<Test>();
+			try {
+				test_list = Test.findByUrl(url);
+			} catch (MalformedURLException e) {
+				log.info("ERROR GETTING TEST ");
+				e.printStackTrace();
+			}
 		
-		return test_list;
+			return test_list;
+    	}
+    	
+    	throw new DomainNotOwnedByAccountException();
 	}
 	
 	/**

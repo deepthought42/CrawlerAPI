@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,7 +32,6 @@ import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.auth.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
-import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.UsernameService;
@@ -64,11 +64,14 @@ public class AccountController {
      * @param authorization_header
      * @param account
      * @param principal
+     * 
      * @return
+     * 
      * @throws InvalidUserException
      * @throws UnirestException
      * @throws Auth0ManagementApiException 
      */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create(@RequestHeader("Authorization") String authorization_header, 
     						@RequestBody Account account,
@@ -112,6 +115,7 @@ public class AccountController {
      * @param key account key
      * @return {@link Account account}
      */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(value ="/{id}", method = RequestMethod.GET)
     public Account get(final @PathVariable String key) {
         logger.info("get invoked");

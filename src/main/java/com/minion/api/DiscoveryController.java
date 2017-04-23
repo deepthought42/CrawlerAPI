@@ -15,10 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.auth0.spring.security.api.Auth0UserDetails;
-import com.google.gson.Gson;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
@@ -51,6 +50,7 @@ public class DiscoveryController {
 	 * @return
 	 * @throws MalformedURLException
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
 													   @RequestParam(value="url", required=true) String url,
@@ -93,6 +93,7 @@ public class DiscoveryController {
 	 * @return
 	 * @throws MalformedURLException
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping("/stop")
 	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request, 
 		   @RequestParam(value="account_key", required=true) String account_key) throws MalformedURLException {

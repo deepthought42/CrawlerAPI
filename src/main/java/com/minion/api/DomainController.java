@@ -7,6 +7,7 @@ import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,6 +53,7 @@ public class DomainController {
      * @throws UnknownUserException 
      * @throws UnknownAccountException 
      */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(final @Validated @RequestBody String url, final Principal principal) throws UnknownUserException, UnknownAccountException {
         /*printGrantedAuthorities((Auth0JWTToken) principal);
@@ -84,6 +86,7 @@ public class DomainController {
     }
 
 
+    @PreAuthorize("hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.GET)
     public  @ResponseBody List<Domain> getAll() {
         logger.info("get invoked");
@@ -99,6 +102,7 @@ public class DomainController {
         return domainService.get(key);
     }
 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(value ="/domains/{id}", method = RequestMethod.PUT)
     public @ResponseBody Domain update(final @PathVariable String key, final @Validated @RequestBody Domain domain) {
         logger.info("update invoked");

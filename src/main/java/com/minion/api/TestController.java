@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
@@ -51,6 +52,7 @@ public class TestController {
 	 * 
 	 * @return list of tests previously discovered for given url
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestByUrl(HttpServletRequest request, 
 			   								 @RequestParam(value="url", required=true) String url) {
@@ -72,6 +74,7 @@ public class TestController {
 	 * 
 	 * @return all tests matching name passed
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/name", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
 			   								 @RequestParam(value="name", required=true) String name) {
@@ -89,6 +92,7 @@ public class TestController {
 	 * 
 	 * @return all tests matching name passed
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getUnverifiedTests(HttpSession session, HttpServletRequest request, 
 			   								 @RequestParam(value="name", required=true) String name) {
@@ -106,6 +110,7 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/updateCorrectness/{key}", method=RequestMethod.PUT)
 	public @ResponseBody Test updateTest(HttpServletRequest request, 
 										 @PathVariable(value="key") String key, 
@@ -128,6 +133,7 @@ public class TestController {
 	 * @return
 	 * @throws MalformedURLException 
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, @PathVariable("browser_type") String browser_type) throws MalformedURLException{
 		System.out.println("RUNNING TEST WITH KEY : " + key);
@@ -153,6 +159,7 @@ public class TestController {
 	 * 
 	 * @return {@link TestRecord records} that define the results of the tests. 
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
 														@RequestParam(value="url", required=true) String url,
@@ -199,6 +206,7 @@ public class TestController {
 	 * 	
 	 * @return the updated test
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/addGroup/{group}/{test_key}", method = RequestMethod.POST)
 	public @ResponseBody Test addGroupToTest(@PathVariable("group") Group group,
 											 @PathVariable("test_key") String test_key){
@@ -231,6 +239,7 @@ public class TestController {
 	 * 
 	 * @return
 	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								 @RequestParam(value="url", required=true) String url) {

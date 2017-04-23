@@ -12,6 +12,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -92,10 +93,12 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			
 			for(Domain domain : account.getDomains()){
 				DomainRepository repo = new DomainRepository();
-				acct.addDomain(repo.convertToRecord(connection, domain));
+				
+				if(repo.find(connection, domain.getUrl()) == null){
+					acct.addDomain(repo.convertToRecord(connection, domain));	
+				}
 			}
-			//ServicePackageRepository svc_pkg_record = new ServicePackageRepository();
-			//acct.setServicePackage(svc_pkg_record.convertToRecord(connection, account.getServicePackage()));
+			
 			connection.save();
 		}
 		return convertFromRecord(acct);

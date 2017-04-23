@@ -8,7 +8,6 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mashape.unirest.http.Headers;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -51,7 +50,7 @@ public class Auth0ManagementApi {
 		return map;
 	}
 	
-	public static void updateUserAppMetadata(String user_id, String app_metadata_body) throws UnirestException{
+	public static HttpResponse<String> updateUserAppMetadata(String user_id, String app_metadata_body) throws UnirestException{
     	String token = getToken();
     	String request_url = audience_url+"users/" + user_id;
 		HttpResponse<String> response = Unirest.patch(request_url)
@@ -59,5 +58,7 @@ public class Auth0ManagementApi {
 				  .header("Authorization", "Bearer " + token)
 				  .body("{\"app_metadata\": " + app_metadata_body + "}")
 				  .asString();
+		
+		return response;
 	}
 }

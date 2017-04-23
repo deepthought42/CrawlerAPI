@@ -1,6 +1,5 @@
 package com.qanairy.persistence;
 
-import com.qanairy.models.QanairyUser;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
@@ -35,4 +34,10 @@ public interface IAccount {
 	
 	@Adjacency(direction=Direction.OUT, label="has_user")
 	public void addUser(IQanairyUser user);
+	
+	@Adjacency(direction=Direction.OUT, label="has_domain")
+	public Iterable<IDomain> getDomains();
+	
+	@Adjacency(direction=Direction.OUT, label="has_domain")
+	public void addDomain(IDomain domain);
 }

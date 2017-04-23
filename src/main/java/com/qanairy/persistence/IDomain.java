@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.qanairy.models.Group;
 import com.qanairy.models.Test;
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 
@@ -35,4 +36,10 @@ public interface IDomain {
 
 	@Adjacency(label="group")
 	void setGroups(List<Group> groups);
+	
+	@Adjacency(direction=Direction.IN, label="has_domain")
+	Iterator<IAccount> getAccounts();
+
+	@Adjacency(direction=Direction.IN, label="group")
+	void setAccounts(List<IAccount> groups);
 }

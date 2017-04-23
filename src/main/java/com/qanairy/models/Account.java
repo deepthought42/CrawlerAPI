@@ -12,6 +12,7 @@ public class Account {
 	private String service_package;
 	private String payment_acct_num;
 	private List<QanairyUser> users;
+	private List<Domain> domains;
 	
 	public Account(){}
 	
@@ -31,6 +32,7 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = users;
+		this.domains = new ArrayList<Domain>();
 	}
 	
 	public Account(String key, String org_name, String service_package, String payment_acct_num){
@@ -39,6 +41,7 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = new ArrayList<>();
+		this.domains = new ArrayList<Domain>();
 	}
 	
 	/**
@@ -59,6 +62,7 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = users;
+		this.domains = new ArrayList<Domain>();
 	}
 
 	public String getOrgName() {
@@ -103,5 +107,17 @@ public class Account {
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public List<Domain> getDomains(){
+		return this.domains;
+	}
+	
+	public boolean setDomains(List<Domain> domains){
+		return this.domains.addAll(domains);
+	}
+	
+	public boolean addDomain(Domain domain) {
+		return this.domains.add(domain);
 	}
 }

@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
 import com.auth0.spring.security.api.Auth0UserDetails;
+import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.qanairy.api.exception.Auth0ManagementApiException;
 import com.qanairy.api.exception.InvalidUserException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
@@ -57,19 +59,22 @@ public class AccountController {
     protected UsernameService usernameService;
     
     /**
-     * Simple demonstration of how Principal can be injected
-     * Here, as demonstration, we want to do audit as only ROLE_ADMIN can create user..
-     * @throws UnirestException 
+     * Create new account
+     * 
+     * @param authorization_header
+     * @param account
+     * @param principal
+     * @return
+     * @throws InvalidUserException
+     * @throws UnirestException
+     * @throws Auth0ManagementApiException 
      */
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create(@RequestHeader("Authorization") String authorization_header, 
     						@RequestBody Account account,
     						final Principal principal) 
-    				throws InvalidUserException, UnirestException{
-        logger.info("create invoked");
-        
+    				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
         OrientConnectionFactory conn = new OrientConnectionFactory();
-       // ServicePackage alpha_pkg = pkg_repo.find(conn, "alpha");
        
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
@@ -77,22 +82,20 @@ public class AccountController {
 
         if(currentUser.getUsername().equals("UNKNOWN_USER")){
         	throw new InvalidUserException();
-        	//return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR_500).body(null);
         }
         
         //create account
         Account acct = new Account(currentUser.getUsername(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>());
-        AccountRepository acct_repo = new AccountRepository();
         
         //Create user
         QanairyUser user = new QanairyUser(currentUser.getUsername());
         acct.addUser(user);
-        
-       String user_id = auth0Client.getUserId((Auth0JWTToken) principal);
-       
-       // Connect to Auth0 API and update user metadata
-       Auth0ManagementApi.updateUserAppMetadata(user_id, "{\"status\": \"account_owner\"}");
-        
+
+        // Connect to Auth0 API and update user metadata
+        HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
+        if(api_resp.getStatus() != 200){
+        	throw new Auth0ManagementApiException();
+        }
         printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             final String username = usernameService.getUsername();
@@ -100,9 +103,15 @@ public class AccountController {
             logger.info("User with email: " + username + " creating new account");
         }
 
-        return ResponseEntity.accepted().body(acct_repo.create(conn, acct));
+        return ResponseEntity.accepted().body(accountService.create(acct));
     }
 
+    /**
+     * Retrieves {@link Account account} with a given key
+     * 
+     * @param key account key
+     * @return {@link Account account}
+     */
     @RequestMapping(value ="/{id}", method = RequestMethod.GET)
     public Account get(final @PathVariable String key) {
         logger.info("get invoked");
@@ -118,6 +127,8 @@ public class AccountController {
 
     /**
      * Simple demonstration of how Principal info can be accessed
+     * 
+     * @param principal
      */
     private void printGrantedAuthorities(final Auth0JWTToken principal) {
         for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {

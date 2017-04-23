@@ -7,8 +7,8 @@ import java.util.UUID;
 import org.apache.commons.collections.IteratorUtils;
 import org.springframework.stereotype.Component;
 
-import com.beust.jcommander.internal.Lists;
 import com.qanairy.models.Account;
+import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
@@ -76,6 +76,9 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	 */
 	@Override
 	public Account update(OrientConnectionFactory connection, Account account) {
+		if(account.getKey() == null){
+			account.setKey(generateKey(account));
+		}
 		@SuppressWarnings("unchecked")
 		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
 		Iterator<IAccount> iter = accounts.iterator();
@@ -85,9 +88,13 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			acct = iter.next();
 			acct.setOrgName(account.getOrgName());
 			acct.setPaymentAcctNum(account.getPaymentAcctNum());
-			ServicePackageRepository svc_pkg_record = new ServicePackageRepository();
+			acct.setServicePackage(account.getServicePackage());
 			
-			
+			for(Domain domain : account.getDomains()){
+				DomainRepository repo = new DomainRepository();
+				acct.addDomain(repo.convertToRecord(connection, domain));
+			}
+			//ServicePackageRepository svc_pkg_record = new ServicePackageRepository();
 			//acct.setServicePackage(svc_pkg_record.convertToRecord(connection, account.getServicePackage()));
 			connection.save();
 		}

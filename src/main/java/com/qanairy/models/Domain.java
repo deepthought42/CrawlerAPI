@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Domain {
 	private String domain;
+	private List<Account> accounts;
 	private List<Test> tests;
 	private List<Group> groups;
 	private String key;
@@ -22,6 +23,7 @@ public class Domain {
 		this.setTests(new ArrayList<Test>());
 		this.setGroups(new ArrayList<Group>());
 	}
+	
 	/**
 	 * 
 	 * 
@@ -70,6 +72,10 @@ public class Domain {
 
 	public void setGroups(List<Group> groups) {
 		this.groups = groups;
+	}
+	
+	public boolean addAccount(Account acct){
+		return this.accounts.add(acct);
 	}
 
 

@@ -27,18 +27,23 @@ public class AccountService {
     }
 
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('qanairy')")
     public Account create(Account account) {
         return accountRepository.create(new OrientConnectionFactory(), account);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('qanairy')")
     public Account get(String key) {
         return accountRepository.find(new OrientConnectionFactory(), key);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('qanairy')")
     public Account update(Account account) {
         return accountRepository.update(new OrientConnectionFactory(), account);
+    }
+    
+    @PreAuthorize("hasAuthority('qanairy')")
+    public Account find(String key){
+    	return accountRepository.find(new OrientConnectionFactory(), key);
     }
 }

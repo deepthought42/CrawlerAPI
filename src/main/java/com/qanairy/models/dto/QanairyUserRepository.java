@@ -1,13 +1,16 @@
 package com.qanairy.models.dto;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IQanairyUser;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -101,4 +104,25 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 		// TODO Auto-generated method stub
 		return null;
 	} 
+	
+	public List<Account> getAccounts(OrientConnectionFactory connection, String key){
+		@SuppressWarnings("unchecked")
+		Iterable<IQanairyUser> svc_pkgs = (Iterable<IQanairyUser>) DataAccessObject.findByKey(key, connection, IQanairyUser.class);
+		Iterator<IQanairyUser> iter = svc_pkgs.iterator();
+		
+		List<Account> account_list = new ArrayList<Account>();
+		AccountRepository repo = new AccountRepository();
+		if(iter.hasNext()){
+			IQanairyUser user = iter.next();
+			Iterable<IAccount> accounts = user.getAccounts();
+			Iterator<IAccount> account_iter = accounts.iterator();
+			
+			while(account_iter.hasNext()){
+				IAccount account = account_iter.next();
+				account_list.add(repo.convertFromRecord(account));
+			}
+		}
+		return account_list;
+
+	}
 }

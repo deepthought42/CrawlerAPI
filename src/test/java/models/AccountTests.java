@@ -1,10 +1,13 @@
 package models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.qanairy.models.Account;
-import com.qanairy.models.ServicePackage;
+import com.qanairy.models.QanairyUser;
 import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -14,9 +17,9 @@ import com.qanairy.persistence.OrientConnectionFactory;
 public class AccountTests {
 	
 	@Test
-	public void accountCreateRecord(){
+	public void accountCreateRecordWithoutUsers(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		Account acct = new Account("Test Org", new ServicePackage("Test Package", 80, 5), "acct_test1");
+		Account acct = new Account("Test Org", "Test Package", "#00000012SD", new ArrayList<QanairyUser>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -25,14 +28,33 @@ public class AccountTests {
 		Assert.assertTrue(acct_record.getKey().equals(created_acct.getKey()));
 		Assert.assertTrue(acct_record.getOrgName().equals(created_acct.getOrgName()));
 		Assert.assertTrue(acct_record.getPaymentAcctNum().equals(created_acct.getPaymentAcctNum()));
-		Assert.assertTrue(acct_record.getServicePackage().getName().equals(created_acct.getServicePackage().getName()));
+		Assert.assertTrue(acct_record.getServicePackage().equals(created_acct.getServicePackage()));
 	}
 	
+	@Test
+	public void accountCreateRecordWithUsers(){
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		
+		List<QanairyUser> users = new ArrayList<QanairyUser>();
+		QanairyUser user = new QanairyUser("Test user 1");
+		users.add(user);
+		
+		Account acct = new Account("Test Org", "Test Package", "#00000012SD", users);
+		AccountRepository acct_repo = new AccountRepository();
+		
+		Account created_acct = acct_repo.create(connection, acct);
+		Assert.assertTrue(created_acct != null);
+		Account acct_record = acct_repo.find(connection, created_acct.getKey()); 
+		Assert.assertTrue(acct_record.getKey().equals(created_acct.getKey()));
+		Assert.assertTrue(acct_record.getOrgName().equals(created_acct.getOrgName()));
+		Assert.assertTrue(acct_record.getPaymentAcctNum().equals(created_acct.getPaymentAcctNum()));
+		Assert.assertTrue(acct_record.getServicePackage().equals(created_acct.getServicePackage()));
+	}
 	
 	@Test
 	public void accountUpdateRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		Account acct = new Account("Test Org2", new ServicePackage("Test Package", 80, 5), "acct_test1");
+		Account acct = new Account("Test Org2", "Test Package", "acct_test1", new ArrayList<QanairyUser>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -46,7 +68,7 @@ public class AccountTests {
 		Assert.assertTrue(acct_record.getKey().equals(updated_acct.getKey()));
 		Assert.assertTrue(acct_record.getOrgName().equals(updated_acct.getOrgName()));
 		Assert.assertTrue(acct_record.getPaymentAcctNum().equals(updated_acct.getPaymentAcctNum()));
-		Assert.assertTrue(acct_record.getServicePackage().getName().equals(updated_acct.getServicePackage().getName()));
+		Assert.assertTrue(acct_record.getServicePackage().equals(updated_acct.getServicePackage()));
 	}
 	
 	
@@ -55,13 +77,13 @@ public class AccountTests {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		AccountRepository acct_repo = new AccountRepository();
 
-		Account acct = new Account("Find Test Org", new ServicePackage("Test Package", 80, 5), "acct_test1 update");
+		Account acct = new Account("Find Test Org", "Test Package", "acct_test1 update", new ArrayList<QanairyUser>());
 		acct = acct_repo.create(orient_connection, acct);
 		Account acct_record = acct_repo.find(orient_connection, acct.getKey());
 		
 		Assert.assertTrue(acct_record.getKey().equals(acct.getKey()));
 		Assert.assertTrue(acct_record.getOrgName().equals(acct.getOrgName()));
 		Assert.assertTrue(acct_record.getPaymentAcctNum().equals(acct.getPaymentAcctNum()));
-		Assert.assertTrue(acct_record.getServicePackage().getName().equals(acct.getServicePackage().getName()));
+		Assert.assertTrue(acct_record.getServicePackage().equals(acct.getServicePackage()));
 	}
 }

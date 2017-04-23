@@ -30,4 +30,9 @@ public class Auth0Client {
         return profile.getEmail();
     }
 
+    public String getUserId(Auth0JWTToken token) {
+        final Request<UserProfile> request = client.tokenInfo(token.getJwt());
+        final UserProfile profile = request.execute();
+        return profile.getId();
+    }
 }

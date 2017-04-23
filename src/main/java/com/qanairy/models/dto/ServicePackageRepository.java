@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.models.ServicePackage;
@@ -36,7 +37,7 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 		Iterator<IServicePackage> iter = svc_pkgs.iterator();
 		
 		IServicePackage svc_pkg_record = null;
-		if(!iter.hasNext()){		
+		if(!iter.hasNext()){
 			svc_pkg_record = connection.getTransaction().addVertex("class:"+IServicePackage.class.getCanonicalName()+","+UUID.randomUUID(), IServicePackage.class);
 			svc_pkg_record.setKey(service_package.getKey());
 			svc_pkg_record.setName(service_package.getName());
@@ -112,5 +113,11 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 		ServicePackage pkg = new ServicePackage(obj.getKey(), obj.getName(), obj.getPrice(), obj.getMaxUsers());
 
 		return pkg;
+	}
+
+	@Override
+	public List<ServicePackage> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

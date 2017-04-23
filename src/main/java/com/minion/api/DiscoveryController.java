@@ -15,19 +15,17 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.auth0.spring.security.api.Auth0UserDetails;
 import com.google.gson.Gson;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
-import com.minion.structs.SessionTestTracker;
 
-import akka.dispatch.*;
 import akka.pattern.Patterns;
-import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.Await;
-import scala.concurrent.Promise;
 import scala.concurrent.duration.Duration;
 import akka.util.Timeout;
 import akka.actor.ActorRef;
@@ -43,8 +41,8 @@ import akka.actor.Props;
  */
 @RestController
 @CrossOrigin(origins = "http://localhost:8001")
-@RequestMapping("/work")
-public class WorkAllocationController {
+@RequestMapping("/discovery")
+public class DiscoveryController {
 
 	/**
 	 * 
@@ -64,7 +62,7 @@ public class WorkAllocationController {
 		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
 		//String account_key = ""+UUID.randomUUID().toString();
 		System.out.println("ACCOUNT KEY :: "+account_key);
-
+		System.err.println(" USER NAME :: " + SecurityContextHolder.getContext().getAuthentication().getName());
 		WorkAllowanceStatus.register(account_key); 
 		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
 		
@@ -83,9 +81,9 @@ public class WorkAllocationController {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-		}Gson gson = new Gson();
-		return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
 
+		}
 	}
 
 	/**

@@ -1,12 +1,15 @@
 package com.qanairy.models.dto;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.springframework.stereotype.Component;
 
+import com.beust.jcommander.internal.Lists;
 import com.qanairy.models.Account;
-import com.qanairy.models.ServicePackage;
+import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IPersistable;
@@ -23,28 +26,30 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	 */
 	@Override
 	public String generateKey(Account acct) {
-		return acct.getOrgName()+"";
+		return acct.getOrgName();
 	}
 
 	@Override
 	public IAccount convertToRecord(OrientConnectionFactory connection, Account account) {
-		IAccount acct = connection.getTransaction().addVertex("class:"+IAccount.class.getCanonicalName()+","+UUID.randomUUID(), IAccount.class);
+		IAccount acct = connection.getTransaction().addVertex("class:"+IAccount.class.getSimpleName()+","+UUID.randomUUID(), IAccount.class);
 		acct.setKey(account.getKey());
 		acct.setOrgName(account.getOrgName());
 		
-		ServicePackageRepository svc_pkg_record = new ServicePackageRepository();
-		acct.setServicePackage(svc_pkg_record.convertToRecord(connection, account.getServicePackage()));
+		acct.setServicePackage(account.getServicePackage());
 		acct.setPaymentAcctNum(account.getPaymentAcctNum());
 
+		for(QanairyUser user : account.getUsers()){
+			QanairyUserRepository repo = new QanairyUserRepository();
+			//repo.create(connection, user);
+			acct.addUser(repo.convertToRecord(connection, user));
+		}
 		return acct;
 	}
 
 	@Override
 	public Account convertFromRecord(IAccount account) {
-		ServicePackage sp = new ServicePackage(account.getServicePackage().getName(), 
-											   account.getServicePackage().getPrice(), 
-											   account.getServicePackage().getMaxUsers());
-		return new Account(account.getKey(), account.getOrgName(), sp, account.getPaymentAcctNum());
+		List<QanairyUser> users = IteratorUtils.toList(account.getUsers().iterator());
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), users);
 	}
 	
 	/**
@@ -60,7 +65,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		  
 		if(!iter.hasNext()){
 			convertToRecord(connection, account);
-			connection.save();
+			connection.getTransaction().commit();
 		}
 		return account;
 
@@ -83,7 +88,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			ServicePackageRepository svc_pkg_record = new ServicePackageRepository();
 			
 			
-			acct.setServicePackage(svc_pkg_record.convertToRecord(connection, account.getServicePackage()));
+			//acct.setServicePackage(svc_pkg_record.convertToRecord(connection, account.getServicePackage()));
 			connection.save();
 		}
 		return convertFromRecord(acct);
@@ -103,6 +108,12 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			return convertFromRecord(iter.next());
 		}
 		
+		return null;
+	}
+
+	@Override
+	public List<Account> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
 		return null;
 	} 
 }

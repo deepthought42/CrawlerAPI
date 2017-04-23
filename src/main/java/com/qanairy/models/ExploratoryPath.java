@@ -40,7 +40,7 @@ public class ExploratoryPath extends Path{
 		this.isUseful = false;
 		this.spansMultipleDomains = false;
 		this.path = new ArrayList<PathObject>();
-		this.setPossibleActions(new ArrayList<>());
+		this.setPossibleActions(new ArrayList<?>());
 	}
 
 	/**

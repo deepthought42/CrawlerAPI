@@ -30,7 +30,7 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	 * {@inheritDoc}
 	 */
 	public IAction convertToRecord(OrientConnectionFactory rl_conn, Action action) {
-		IAction action_record = rl_conn.getTransaction().addVertex("class:"+IAction.class.getCanonicalName()+","+UUID.randomUUID(), IAction.class);
+		IAction action_record = rl_conn.getTransaction().addVertex("class:"+IAction.class.getSimpleName()+","+UUID.randomUUID(), IAction.class);
 		action_record.setName(action.getName());
 		action_record.setKey(action.getKey());
 		action_record.setType(action.getClass().getName());

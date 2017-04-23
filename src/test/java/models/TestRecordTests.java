@@ -21,7 +21,7 @@ public class TestRecordTests {
 	public void testRecordCreateRecord(){
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 		com.qanairy.models.Test test = new com.qanairy.models.Test();
-		TestRecord test_record = new TestRecord(new Date(), true, null, );
+		TestRecord test_record = new TestRecord(new Date(), true, null, null);
 		
 		TestRecord test_record_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
 		

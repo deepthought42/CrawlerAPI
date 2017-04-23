@@ -30,7 +30,7 @@ public class UsernameService {
     @Autowired
     private Auth0Client auth0Client;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+   // @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String getUsername() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails principal = (Auth0UserDetails) authentication.getPrincipal();

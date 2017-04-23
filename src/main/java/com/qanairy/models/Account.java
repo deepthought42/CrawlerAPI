@@ -1,27 +1,64 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
 public class Account {
 	private String key;
 	private String org_name;
-	private ServicePackage service_package;
+	private String service_package;
 	private String payment_acct_num;
+	private List<QanairyUser> users;
 	
 	public Account(){}
 	
-	public Account(String org_name, ServicePackage service_package, String payment_acct_num){
+	/**
+	 * 
+	 * @param org_name
+	 * @param service_package
+	 * @param payment_acct_num
+	 * @param users
+	 * 
+	 * @pre users != null
+	 */
+	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users){
+		assert users != null;
+		
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
+		this.users = users;
 	}
 	
-	public Account(String key, String org_name, ServicePackage service_package, String payment_acct_num){
+	public Account(String key, String org_name, String service_package, String payment_acct_num){
 		this.setKey(key);
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
+		this.users = new ArrayList<>();
+	}
+	
+	/**
+	 * 
+	 * @param key
+	 * @param org_name
+	 * @param service_package
+	 * @param payment_acct_num
+	 * @param users
+	 * 
+	 * @pre users != null
+	 */
+	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users){
+		assert users != null;
+		
+		this.setKey(key);
+		this.setOrgName(org_name);
+		this.setServicePackage(service_package);
+		this.setPaymentAcctNum(payment_acct_num);
+		this.users = users;
 	}
 
 	public String getOrgName() {
@@ -32,11 +69,11 @@ public class Account {
 		this.org_name = org_name;
 	}
 
-	public ServicePackage getServicePackage() {
+	public String getServicePackage() {
 		return service_package;
 	}
 
-	public void setServicePackage(ServicePackage service_package) {
+	public void setServicePackage(String service_package) {
 		this.service_package = service_package;
 	}
 
@@ -46,6 +83,18 @@ public class Account {
 
 	public void setPaymentAcctNum(String payment_acct_num) {
 		this.payment_acct_num = payment_acct_num;
+	}
+	
+	public List<QanairyUser> getUsers(){
+		return this.users;
+	}
+	
+	public void setUsers(List<QanairyUser> users){
+		this.users = users;
+	}
+	
+	public boolean addUser(QanairyUser user){
+		return this.users.add(user);
 	}
 	
 	public String getKey() {

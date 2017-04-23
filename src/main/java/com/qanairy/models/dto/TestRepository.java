@@ -173,7 +173,6 @@ public class TestRepository implements IPersistable<Test, ITest> {
 	@Override
 	public List<Test> findAll(OrientConnectionFactory connection) {
 		// TODO Auto-generated method stub
-		a
 		return null;
 	}
 

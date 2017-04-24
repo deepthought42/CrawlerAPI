@@ -40,7 +40,7 @@ public class ExploratoryPath extends Path{
 		this.isUseful = false;
 		this.spansMultipleDomains = false;
 		this.path = new ArrayList<PathObject>();
-		this.setPossibleActions(new ArrayList<?>());
+		this.setPossibleActions(new ArrayList<Action>());
 	}
 
 	/**
@@ -167,32 +167,28 @@ public class ExploratoryPath extends Path{
 			return false;
 		}
 		
+		//extract all pages
+		//iterate through pages to see if any match
+		List<Page> page_list = new ArrayList<Page>();
 		List<PathObject> path_obj_list = path.getPath();
 		Page page = null;
 		for(PathObject path_obj : path_obj_list){
-
-			for(PathObject path_obj2 : path_obj_list){
-
-				if(path_obj	 instanceof Page){
-					log.info("last page acquired");
-					page = (Page)path_obj;
-					
-					if(path_obj.equals(path)){
-						return true;
-					}
-				}
-				path_obj = path_obj.getNext();
-			}while(path_obj.getNext() != null);
+			if(path_obj instanceof Page){
+				page_list.add((Page)path_obj);
+			}
 		}
-		for(int i = path.size()-1; i > 0; i--){
-			for(int j = i-1; j>= 0; j--){
-				if(path.getPath().equals(path.getPath()) 
-					&& path.getPath().get(i-1).equals(path.getPath().get(j-1))){
-					return true;
+		
+		boolean cycle_exists = false;
+		for(int first_page_idx =0; first_page_idx < page_list.size()-1 && !cycle_exists; first_page_idx++){
+			for(int second_page_idx =1; second_page_idx < page_list.size() && !cycle_exists; first_page_idx++){
+				if(page_list.get(first_page_idx).equals(page_list.get(second_page_idx))){
+					cycle_exists = true;
+					break;
 				}
-			}			
+			}	
 		}
-		return false;
+
+		return cycle_exists;
 	}
 	
 	/**

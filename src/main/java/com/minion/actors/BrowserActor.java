@@ -222,7 +222,7 @@ public class BrowserActor extends UntypedActor {
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
 					
-					Test new_test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), new Organization("Qanairy")));
+					Test new_test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
@@ -251,7 +251,7 @@ public class BrowserActor extends UntypedActor {
 			else if (acct_msg.getData() instanceof ExploratoryPath){
 				log.info("EXPLORATORY PATH PASSED TO BROWSER ACTOR");
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "headless");
+			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "headless");
 
 				log.info("Creating new Browser");
 				Page result_page = null;
@@ -263,7 +263,7 @@ public class BrowserActor extends UntypedActor {
 				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				log.info("Getting last page");
-				Page last_page = path.findLastPage();
+				Page last_page = exploratory_path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
 				if(last_page.isLandable()){
 					//clone path starting at last page in path
@@ -271,10 +271,12 @@ public class BrowserActor extends UntypedActor {
 				}
 
 				
-				if(path.getPath() != null){
+				if(exploratory_path.getPath() != null){
 					log.info("crawling exploratory path");
+					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
+					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
-						Path crawl_path  = new Path(exploratory_path.getPath());
+						Path crawl_path = new Path(exploratory_path.getPath());
 
 						result_page = Crawler.crawlPath(crawl_path, this.browser, action);
 						
@@ -307,12 +309,12 @@ public class BrowserActor extends UntypedActor {
 							}
 
 							log.info("Sending test to Memory Actor");
-							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+							Message<Test> test_memory_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
 							//tell memory worker of path
 							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 							
 							//tell memory worker of path
-							memory_actor.tell(test_msg, getSelf() );
+							memory_actor.tell(test_memory_msg, getSelf() );
 							//broadcast test
 							PastPathExperienceController.broadcastTestExperience(new_test);
 							

@@ -1,5 +1,6 @@
 package com.qanairy.models.dto;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
 /**
  * 
@@ -122,8 +124,16 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	@Override
-	public List<Account> findAll(OrientConnectionFactory connection) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Account> findAll(OrientConnectionFactory conn) {
+		@SuppressWarnings("unchecked")
+		Iterator<OrientVertex> iter = ((Iterable<OrientVertex>) DataAccessObject.findAll(conn, IAccount.class)).iterator();
+		
+		List<Account> accounts = new ArrayList<>();
+		while(iter.hasNext()){
+			OrientVertex v = iter.next();
+			accounts.add(convertFromRecord((IAccount)v));
+		}
+		
+		return accounts;
 	} 
 }

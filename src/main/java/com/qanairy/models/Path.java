@@ -1,32 +1,14 @@
 package com.qanairy.models;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.actors.BrowserActor;
-import com.minion.browsing.ActionFactory;
-import com.minion.browsing.IObjectValuationAccessor;
-import com.minion.persistence.edges.IPathEdge;
-import com.qanairy.models.Action;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.dto.PageRepository;
-import com.qanairy.models.dto.PathObjectRepository;
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IDomain;
-import com.qanairy.persistence.IPage;
-import com.qanairy.persistence.IPath;
-import com.qanairy.persistence.IPathObject;
-import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.ITest;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 
 /**
@@ -38,7 +20,6 @@ public class Path {
     private String key;
 	private boolean isUseful;
 	private boolean spansMultipleDomains = false;
-	
 	private List<PathObject> path = null;
 	
 	/**
@@ -185,32 +166,28 @@ public class Path {
 			return false;
 		}
 		
+		//extract all pages
+		//iterate through pages to see if any match
+		List<Page> page_list = new ArrayList<Page>();
 		List<PathObject> path_obj_list = path.getPath();
 		Page page = null;
 		for(PathObject path_obj : path_obj_list){
-
-			for(PathObject path_obj2 : path_obj_list){
-
-				if(path_obj	 instanceof Page){
-					log.info("last page acquired");
-					page = (Page)path_obj;
-					
-					if(path_obj.equals(path)){
-						return true;
-					}
-				}
-				path_obj = path_obj.getNext();
-			}while(path_obj.getNext() != null);
+			if(path_obj instanceof Page){
+				page_list.add((Page)path_obj);
+			}
 		}
-		for(int i = path.size()-1; i > 0; i--){
-			for(int j = i-1; j>= 0; j--){
-				if(path.getPath().equals(path.getPath()) 
-					&& path.getPath().get(i-1).equals(path.getPath().get(j-1))){
-					return true;
+		
+		boolean cycle_exists = false;
+		for(int first_page_idx =0; first_page_idx < page_list.size()-1 && !cycle_exists; first_page_idx++){
+			for(int second_page_idx =1; second_page_idx < page_list.size() && !cycle_exists; first_page_idx++){
+				if(page_list.get(first_page_idx).equals(page_list.get(second_page_idx))){
+					cycle_exists = true;
+					break;
 				}
-			}			
+			}	
 		}
-		return false;
+
+		return cycle_exists;
 	}
 	
 	/**

@@ -112,7 +112,6 @@ public class Browser {
 						this.driver.getCurrentUrl(), 
 						UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), page_url.getPath().toString()), 
 						Browser.getVisibleElements(this.driver, ""));
-
 	}
 	
 	/**

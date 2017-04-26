@@ -10,6 +10,7 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
 /**
  * A reference to a web page 
@@ -21,14 +22,20 @@ public class Page extends PathObject {
     private String key;
     private boolean landable = false;
 	private String screenshot = null; 
+	
+	@JsonIgnore
 	private String src = "";
 	private URL url;
 	private int total_weight;
 	private int image_weight;
 	
+	@JsonIgnore
 	private List<PageElement> elements;
 	private Map<String, Integer> element_counts = new HashMap<String, Integer>();
 	
+	/**
+	 * instantiate an empty page instance
+	 */
 	public Page(){
 		this.setType(Page.class.getCanonicalName());
 	}

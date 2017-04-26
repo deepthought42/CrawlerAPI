@@ -3,6 +3,7 @@ package com.qanairy.models.dto;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.models.Page;
@@ -131,6 +132,13 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 */
 	@Override
 	public String generateKey(Page page) {
-		return page.getSrc().hashCode() + "::"+page.getUrl().hashCode();
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
+		//return page.getSrc().hashCode()+"";
+	}
+
+	@Override
+	public List<Page> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

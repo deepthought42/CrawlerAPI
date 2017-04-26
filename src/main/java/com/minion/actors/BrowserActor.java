@@ -188,7 +188,7 @@ public class BrowserActor extends UntypedActor {
 				log.info("PATH PASSED TO BROWSER ACTOR");
 				Path path = (Path)acct_msg.getData();
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
-			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "headless");
+			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "chrome");
 
 				log.info("Creating new Browser");
 				Page result_page = null;
@@ -251,7 +251,7 @@ public class BrowserActor extends UntypedActor {
 			else if (acct_msg.getData() instanceof ExploratoryPath){
 				log.info("EXPLORATORY PATH PASSED TO BROWSER ACTOR");
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "headless");
+			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "chrome");
 
 				log.info("Creating new Browser");
 				Page result_page = null;
@@ -286,6 +286,7 @@ public class BrowserActor extends UntypedActor {
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{
+					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page));
 					  		crawl_path.add(action);
 					  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					  		crawl_path.setIsUseful(true);
@@ -331,7 +332,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if(acct_msg.getData() instanceof URL){
 				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
-			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "headless");
+			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "chrome");
 			  	
 			  	log.info("creating path");
 			  	Path path = new Path();

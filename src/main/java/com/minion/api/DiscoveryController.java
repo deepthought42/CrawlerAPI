@@ -50,7 +50,6 @@ public class DiscoveryController {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
 													   @RequestParam(value="url", required=true) String url,

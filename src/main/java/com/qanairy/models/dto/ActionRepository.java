@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -97,6 +98,12 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 			convertFromRecord(iter.next());
 		}
 		
+		return null;
+	}
+
+	@Override
+	public List<Action> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

@@ -56,7 +56,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			Page page = (Page)path.getPath().get(0);
 			//if(path_obj instanceof Page){
 				//Page page = (Page)path_obj;
-			  	Browser browser = new Browser(page.getUrl().toString(), "headless");
+			  	Browser browser = new Browser(page.getUrl().toString(), "chrome");
 			  	
 			  	//clone path
 			  	//Path new_path = Path.clone(path);
@@ -101,7 +101,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		
 		log.info("Running test...");
 		boolean passing = false;
-	  	Browser browser = new Browser(test.getPath().getFirstPage().getUrl().toString(), browser_type);
+	  	Browser browser = new Browser(test.getPath().firstPage().getUrl().toString(), browser_type);
 		Page page = Crawler.crawlPath(test.getPath(), browser);
 	  	browser.close();
 

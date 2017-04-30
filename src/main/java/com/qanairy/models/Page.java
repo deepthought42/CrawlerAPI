@@ -37,7 +37,7 @@ public class Page extends PathObject {
 	 * instantiate an empty page instance
 	 */
 	public Page(){
-		this.setType(Page.class.getCanonicalName());
+		this.setType(Page.class.getSimpleName());
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class Page extends PathObject {
 	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
-		super.setType(Page.class.getCanonicalName());
+		super.setType(Page.class.getSimpleName());
 		
 		log.info("setting source");
 		this.setSrc(html);
@@ -79,7 +79,7 @@ public class Page extends PathObject {
 	 */
 	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		super.setType(Page.class.getCanonicalName());
+		super.setType(Page.class.getSimpleName());
 
 		log.info("setting source");
 		this.setSrc(html);
@@ -107,7 +107,7 @@ public class Page extends PathObject {
 	 */
 	public Page(String key, String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		super.setType(Page.class.getCanonicalName());
+		super.setType(Page.class.getSimpleName());
 
 		log.info("setting source");
 		this.setSrc(html);
@@ -154,9 +154,9 @@ public class Page extends PathObject {
 	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		log.info("Checking if page is landable");
 		
-		Browser browser = new Browser(this.getUrl().toString(), "headless");
+		Browser browser = new Browser(this.getUrl().toString(), "firefox");
 		browser.getDriver().get(this.getUrl().toString());
-		//String src = Browser.cleanSrc(browser.getDriver().getPageSource());
+		String src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		boolean landable = false;
 		if(this.equals(browser.getPage())){
 			log.info("Pages match in check for landability");
@@ -248,18 +248,22 @@ public class Page extends PathObject {
 	 * 
 	 * @return the page of the source
 	 */
+	@JsonIgnore
 	public String getSrc() {
 		return this.src;
 	}
 	
+	@JsonIgnore
 	public void setSrc(String src) {
 		this.src = Browser.cleanSrc(src);
 	}
 	
+	@JsonIgnore
 	public List<PageElement> getElements(){
 		return this.elements;
 	}
 	
+	@JsonIgnore
 	public void setElements(List<PageElement> elements){
 		this.elements = elements;
 	}

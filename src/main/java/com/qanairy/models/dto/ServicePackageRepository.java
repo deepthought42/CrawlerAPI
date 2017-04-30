@@ -38,7 +38,7 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 		
 		IServicePackage svc_pkg_record = null;
 		if(!iter.hasNext()){
-			svc_pkg_record = connection.getTransaction().addVertex("class:"+IServicePackage.class.getCanonicalName()+","+UUID.randomUUID(), IServicePackage.class);
+			svc_pkg_record = connection.getTransaction().addVertex("class:"+IServicePackage.class.getSimpleName()+","+UUID.randomUUID(), IServicePackage.class);
 			svc_pkg_record.setKey(service_package.getKey());
 			svc_pkg_record.setName(service_package.getName());
 			svc_pkg_record.setPrice(service_package.getPrice());

@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	 * {@inheritDoc}
 	 */
 	public String generateKey(PathObject attr) {
-		return attr.getType().hashCode()+"";
+		return this.getClass().getSimpleName();
 	}
 
 	/**
@@ -36,7 +37,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	 */
 	@Override
 	public IPathObject convertToRecord(OrientConnectionFactory connection, PathObject path_obj) {
-		IPathObject attribute_record = connection.getTransaction().addVertex("class:"+PathObject.class.getCanonicalName()+","+UUID.randomUUID(), IPathObject.class);
+		IPathObject attribute_record = connection.getTransaction().addVertex("class:"+PathObject.class.getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
 		attribute_record.setType(path_obj.getType());
 		attribute_record.setKey(generateKey(path_obj));
 		
@@ -122,17 +123,26 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		return null;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public IPathObject find(OrientConnectionFactory connection, String key) {
+	public PathObject find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
 		Iterable<IPathObject> svc_pkgs = (Iterable<IPathObject>) DataAccessObject.findByKey(key, connection, IPathObject.class);
 		Iterator<IPathObject> iter = svc_pkgs.iterator();
 		
-		IPathObject account = null; 
+		PathObject path_obj = null; 
 		if(iter.hasNext()){
-			account = iter.next();
+			path_obj = convertFromRecord(iter.next());
 		}
 		
-		return account;
+		return path_obj;
+	}
+
+	@Override
+	public List<PathObject> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

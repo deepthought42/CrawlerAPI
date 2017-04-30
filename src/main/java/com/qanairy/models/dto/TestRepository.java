@@ -94,7 +94,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		DomainRepository domain_record = new DomainRepository();
 		TestRecordRepository test_record_record = new TestRecordRepository();
 		
-		ITest test_record = connection.getTransaction().addVertex("class:"+ITest.class.getCanonicalName()+","+UUID.randomUUID(), ITest.class);
+		ITest test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
 		log.info("setting test_record properties");
 		test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
 		log.info("setting test_record result");

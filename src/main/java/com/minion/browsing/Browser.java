@@ -219,7 +219,7 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
-		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver_win32\\chromedriver.exe");
+		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver.exe");
 
 		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
@@ -392,8 +392,13 @@ public class Browser {
 				
 				//List<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, browser.getDriver());
 				for(FormField input_field : group_inputs){
-					PageElement label = findLabelForInput(form_elem, input_field, browser.getDriver());
-					input_field.setFieldLabel(label);
+					try{
+						PageElement label = findLabelForInput(form_elem, input_field, browser.getDriver());
+						input_field.setFieldLabel(label);
+					}
+					catch(NullPointerException e){
+						
+					}
 				}
 				//combo_input.getElements().addAll(labels);
 				form.addFormField(combo_input);
@@ -421,7 +426,7 @@ public class Browser {
 	/**
 	 * 
 	 */
-	public static PageElement findLabelForInput(WebElement form_elem, FormField input_field, WebDriver driver){
+	public static PageElement findLabelForInput(WebElement form_elem, FormField input_field, WebDriver driver) throws NullPointerException{
 		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();

@@ -93,7 +93,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 
 		
 		if(!iter.hasNext()){
-			page_elem_record = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getCanonicalName()+","+UUID.randomUUID(), IPageElement.class);
+			page_elem_record = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getSimpleName()+","+UUID.randomUUID(), IPageElement.class);
 
 			List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
 			/*for(Attribute attribute : this.attributes){

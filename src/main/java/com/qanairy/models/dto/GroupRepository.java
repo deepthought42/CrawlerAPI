@@ -28,7 +28,7 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 */
 	public IGroup convertToRecord(OrientConnectionFactory connection, Group group) {
 
-		IGroup group_record = connection.getTransaction().addVertex("class:"+IGroup.class.getCanonicalName()+","+UUID.randomUUID(), IGroup.class);
+		IGroup group_record = connection.getTransaction().addVertex("class:"+IGroup.class.getSimpleName()+","+UUID.randomUUID(), IGroup.class);
 		group_record.setKey(group.getKey());
 		group_record.setDescription(group.getDescription());
 		group_record.setName(group.getName());

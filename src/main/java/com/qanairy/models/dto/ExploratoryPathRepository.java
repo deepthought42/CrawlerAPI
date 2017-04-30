@@ -39,7 +39,7 @@ public class ExploratoryPathRepository implements IPersistable<ExploratoryPath, 
 		log.info("# of existing ExploratoryPath records with key "+path.getKey() + " :: "+cnt);
 		
 		if(cnt == 0){
-			path_record = connection.getTransaction().addVertex("class:"+IExploratoryPath.class.getCanonicalName()+","+UUID.randomUUID(), IExploratoryPath.class);
+			path_record = connection.getTransaction().addVertex("class:"+IExploratoryPath.class.getSimpleName()+","+UUID.randomUUID(), IExploratoryPath.class);
 			path_record.setKey(path.getKey());
 		}
 		else{

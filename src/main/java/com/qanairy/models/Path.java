@@ -100,7 +100,7 @@ public class Path {
 		
 		List<PathObject> comparatorPathNode = path.getPath();
 		for(PathObject obj : this.getPath()){
-			if(!obj.getClass().getCanonicalName().equals(comparatorPathNode.getClass().getCanonicalName())){
+			if(!obj.getClass().getSimpleName().equals(comparatorPathNode.getClass().getSimpleName())){
 				return false;
 			}
 			if(!obj.equals(comparatorPathNode)){
@@ -254,7 +254,7 @@ public class Path {
 	}
 
 	
-	public Page getFirstPage() {
+	public Page firstPage() {
 		
 		for(PathObject obj : this.getPath()){
 			if(obj instanceof Page){

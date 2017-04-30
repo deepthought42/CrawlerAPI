@@ -19,7 +19,6 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
-import com.qanairy.persistence.OrientDbPersistor;
 import com.qanairy.rl.learning.Brain;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.qanairy.rl.memory.ObjectDefinition;
@@ -49,7 +48,7 @@ public class BrowserActor extends UntypedActor {
 	private static Random rand = new Random();
 	private UUID uuid = null;
 	private Browser browser = null;
-	private OrientDbPersistor persistor = new OrientDbPersistor();
+
 		
 	/**
 	 * Gets a random number between 0 and size
@@ -377,14 +376,14 @@ public class BrowserActor extends UntypedActor {
 			  	}
 			  	browser.close();
 
-				Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
-				PastPathExperienceController.broadcastTestExperience(test);
+				//Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
+				//PastPathExperienceController.broadcastTestExperience(test);
 				
-				log.info("Saving test");
-			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+				//log.info("Saving test");
+			  	//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 
-				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-				memory_actor.tell(test_msg, getSelf() );
+				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
+				//memory_actor.tell(test_msg, getSelf() );
 		   }
 		}else unhandled(message);
 	}

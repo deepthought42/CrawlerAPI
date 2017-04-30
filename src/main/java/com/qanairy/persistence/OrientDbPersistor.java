@@ -13,8 +13,6 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 
 /**
  * Persists data of various sorts into orientDB
- * 
- * @author Brandon Kindred
  *
  */
 public class OrientDbPersistor{
@@ -125,8 +123,6 @@ public class OrientDbPersistor{
 		}
 		Iterable<Vertex> objVertices = this.graph.getVertices("hash_code", fieldValue.toString());
 		return objVertices;
-		//Iterable<Vertex> objVertices = this.graph.getVertices(obj.getClass().getCanonicalName().toString(), names, values);
-		//return objVertices;
 	}
 	
 	/**

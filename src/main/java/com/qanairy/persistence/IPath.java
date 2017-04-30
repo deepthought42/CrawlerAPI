@@ -32,7 +32,7 @@ import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 	 * Sets the useful property to either true/false/null 
 	 */
 	@Property("useful")
-	public void setUsefulness(Boolean isUseful);
+	public void setIsUseful(Boolean isUseful);
 	
 	/**
 	 * @return whether or not this path goes into another domain

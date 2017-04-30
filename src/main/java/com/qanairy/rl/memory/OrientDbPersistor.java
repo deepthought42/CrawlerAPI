@@ -124,8 +124,6 @@ public class OrientDbPersistor{
 		
 		Iterable<Vertex> objVertices = this.graph.getVertices("hash_code", fieldValue.toString());
 		return objVertices;
-		//Iterable<Vertex> objVertices = this.graph.getVertices(obj.getClass().getCanonicalName().toString(), names, values);
-		//return objVertices;
 	}
 	
 	/**

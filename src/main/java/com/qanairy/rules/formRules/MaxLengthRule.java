@@ -1,7 +1,6 @@
 package com.qanairy.rules.formRules;
 
 import com.minion.browsing.form.FormField;
-import com.qanairy.rules.NumericRuleType;
 import com.qanairy.rules.RuleType;
 
 /**
@@ -20,7 +19,7 @@ public class MaxLengthRule implements ValueBasedFormRule<Integer> {
 	 */
 	@Override
 	public RuleType getType() {
-		return NumericRuleType.MAX_LENGTH;
+		return FormRuleType.MAXIMUM_LENGTH;
 	}
 
 	/**

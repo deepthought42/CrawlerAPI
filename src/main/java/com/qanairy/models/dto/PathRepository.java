@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		log.info("# of existing Path records with key "+path.getKey() + " :: "+cnt);
 		
 		if(cnt == 0){
-			path_record = connection.getTransaction().addVertex("class:"+IPath.class.getCanonicalName()+","+UUID.randomUUID(), IPath.class);
+			path_record = connection.getTransaction().addVertex("class:"+IPath.class.getSimpleName()+","+UUID.randomUUID(), IPath.class);
 			path_record.setKey(path.getKey());
 		}
 		else{
@@ -71,7 +72,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			last_path_obj = persistablePathObj;
 		}
 		
-		path_record.setUsefulness(path.isUseful());
+		path_record.setIsUseful(path.isUseful());
 		
 		log.info("Is spans multiple domains set : " + path.getSpansMultipleDomains());
 		path_record.setSpansMultipleDomains(path.getSpansMultipleDomains());
@@ -104,10 +105,10 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	@Override
 	public Path create(OrientConnectionFactory connection, Path path) {
 		
-		IPath path_record = find(connection, path.getKey());
+		Path path_tmp = find(connection, path.getKey());
 		
-		if(path_record == null){
-			path_record = this.convertToRecord(connection, path);
+		if(path_tmp == null){
+			this.convertToRecord(connection, path);
 			connection.save();
 		}
 		return path;
@@ -115,11 +116,11 @@ public class PathRepository implements IPersistable<Path, IPath> {
 
 	@Override
 	public Path update(OrientConnectionFactory connection, Path path) {
-		IPath path_record = find(connection, path.getKey());
+		Path path_record = find(connection, path.getKey());
 		
 		if(path != null){
 			path_record.setSpansMultipleDomains(path.checkIfSpansMultipleDomains());
-			path_record.setUsefulness(path.isUseful());
+			path_record.setIsUseful(path.isUseful());
 			connection.save();
 		}
 		return path;
@@ -133,6 +134,12 @@ public class PathRepository implements IPersistable<Path, IPath> {
 
 	@Override
 	public Path find(OrientConnectionFactory connection, String key) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Path> findAll(OrientConnectionFactory connection) {
 		// TODO Auto-generated method stub
 		return null;
 	}

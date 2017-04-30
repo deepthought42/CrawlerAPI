@@ -28,7 +28,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 */
 	@Override
 	public IAttribute convertToRecord(OrientConnectionFactory connection, Attribute attr) {
-		IAttribute attribute_record = connection.getTransaction().addVertex("class:"+Attribute.class.getCanonicalName()+","+UUID.randomUUID(), IAttribute.class);
+		IAttribute attribute_record = connection.getTransaction().addVertex("class:"+Attribute.class.getSimpleName()+","+UUID.randomUUID(), IAttribute.class);
 		attribute_record.setName(attr.getName());
 		attribute_record.setVals(attr.getVals());
 		attribute_record.setKey(attr.getKey());

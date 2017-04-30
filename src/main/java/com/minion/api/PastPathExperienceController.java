@@ -1,9 +1,12 @@
 package com.minion.api;
 
+import com.qanairy.models.Page;
 import com.qanairy.models.Path;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -57,6 +60,20 @@ public class PastPathExperienceController {
         	log.info("Broadcasting path to account -> "+acct_key);
         	SseEmitter emit = emitters.get(acct_key);
         	 try {
+        		 test.getResult().setSrc("");
+        		 test.getResult().setElements(new ArrayList<>());
+        		 
+        		 int idx=0;
+        		 for(PathObject obj : test.getPath().getPath()){
+        			 log.info("Type : "+obj.getType());
+        			 if(obj instanceof Page){
+        				 Page page = (Page)obj;
+        				 page.setSrc("");
+        				 page.setElements(new ArrayList<>());
+        				 test.getPath().getPath().set(idx, page);
+        			 }
+        			 idx++;
+        		 }
                  emit.send(test, MediaType.APPLICATION_JSON);
              } catch (IOException e) {
                  log.error("Error sending message to client");

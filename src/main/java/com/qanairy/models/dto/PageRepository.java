@@ -112,13 +112,13 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record = pages.iterator().next();
 		}
 		else{
-			page_record = connection.getTransaction().addVertex("class:"+IPage.class.getCanonicalName()+","+UUID.randomUUID(), IPage.class);
+			page_record = connection.getTransaction().addVertex("class:"+IPage.class.getSimpleName()+","+UUID.randomUUID(), IPage.class);
 			page_record.setKey(page.getKey());
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
 			page_record.setScreenshot(page.getScreenshot());
 			page_record.setSrc(page.getSrc());
-			page_record.setType((Page.class.getCanonicalName()));
+			page_record.setType((Page.class.getSimpleName()));
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());

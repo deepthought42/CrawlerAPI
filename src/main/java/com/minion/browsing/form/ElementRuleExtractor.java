@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 import com.qanairy.rules.FormRule;
-import com.qanairy.rules.NumericRuleType;
 import com.qanairy.rules.formRules.AlphabeticRestrictionRule;
 import com.qanairy.rules.formRules.DisabledRule;
+import com.qanairy.rules.formRules.FormRuleType;
 import com.qanairy.rules.formRules.MaximumValueRule;
 import com.qanairy.rules.formRules.MinimumValueRule;
 import com.qanairy.rules.formRules.NumericRule;
@@ -52,33 +52,33 @@ public class ElementRuleExtractor {
 				log.info("Form field is read only");
 			}
 			else if(attr.getName().equalsIgnoreCase("min")){
-				FormRule min_val = new MinimumValueRule(Integer.parseInt(attr.getVals()[0]));
+				FormRule min_val = new MinimumValueRule(Integer.parseInt(attr.getVals().get(0)));
 				rules.add(min_val);
-				log.info("form field has a minimum value of : " + attr.getVals()[0]);
+				log.info("form field has a minimum value of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("max")){
-				FormRule max_val = new MaximumValueRule(Integer.parseInt(attr.getVals()[0]));
+				FormRule max_val = new MaximumValueRule(Integer.parseInt(attr.getVals().get(0)));
 				rules.add(max_val);
-				log.info("form field has a maximum value of : " + attr.getVals()[0]);
+				log.info("form field has a maximum value of : " + attr.getVals().get(0));
 			}
 			//minlength only works for certain frameworks such as angularjs that support it as a custom html5 attribute
 			else if(attr.getName().equalsIgnoreCase("minlength")){
-				NumericRule max_val = new NumericRule(NumericRuleType.MIN_LENGTH, Integer.parseInt(attr.getVals()[0]));
-				rules.add(max_val);
-				log.info("form field has a minimum length of : " + attr.getVals()[0]);
+				NumericRule min_length = new NumericRule(NumericRuleType.MIN_LENGTH, Integer.parseInt(attr.getVals().get(0)));
+				rules.add(min_length);
+				log.info("form field has a minimum length of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("maxlength")){
-				NumericRule max_val = new NumericRule(NumericRuleType.MAX_LENGTH, Integer.parseInt(attr.getVals()[0]));
-				rules.add(max_val);
-				log.info("form field has a maximum length of : " + attr.getVals()[0]);
+				NumericRule max_length = new NumericRule(NumericRuleType.MAX_LENGTH, Integer.parseInt(attr.getVals().get(0)));
+				rules.add(max_length);
+				log.info("form field has a maximum length of : " + attr.getVals().get(0));
 			}
-			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals()[0].equalsIgnoreCase("email")){
+			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().get(0).equalsIgnoreCase("email")){
 				String email_regex_str = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
 				PatternRule email_rule = new PatternRule(Pattern.compile(email_regex_str, Pattern.CASE_INSENSITIVE));
 				rules.add(email_rule);
 			}
 			else if(attr.getName().equalsIgnoreCase("pattern")){
-				String regex_str = attr.getVals()[0];
+				String regex_str = attr.getVals().get(0);
 				PatternRule pattern_rule = new PatternRule(Pattern.compile(regex_str));
 				rules.add(pattern_rule);
 			}

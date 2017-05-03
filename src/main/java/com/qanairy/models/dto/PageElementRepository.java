@@ -133,4 +133,10 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	public String generateKey(PageElement obj) {
 		return obj.getXpath();
 	}
+
+	@Override
+	public List<PageElement> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

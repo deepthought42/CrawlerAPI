@@ -1,6 +1,5 @@
 package com.qanairy.rules.formRules;
 
-import com.minion.browsing.Attribute;
 import com.minion.browsing.form.FormField;
 import com.qanairy.rules.FormRule;
 

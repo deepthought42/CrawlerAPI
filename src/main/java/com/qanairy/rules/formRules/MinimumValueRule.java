@@ -1,7 +1,6 @@
 package com.qanairy.rules.formRules;
 
 import com.minion.browsing.form.FormField;
-import com.qanairy.rules.FormRule;
 
 /**
  * Defines a minimum value allowed on a field
@@ -31,7 +30,7 @@ public class MinimumValueRule implements ValueBasedFormRule<Integer> {
 	}
 
 	@Override
-	public Object getValue() {
+	public Integer getValue() {
 		return this.min_value;
 	}
 	

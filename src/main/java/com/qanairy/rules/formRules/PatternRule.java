@@ -4,18 +4,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.minion.browsing.form.FormField;
-import com.qanairy.rules.PatternRuleType;
 
 /**
  * Defines a regular expression based rule that applies to the entire text content(beginning to end) of a field.
  */
 public class PatternRule implements ValueBasedFormRule<Pattern> {
 
-	private PatternRuleType type;
+	private FormRuleType type;
 	private Pattern pattern;
 	
 	public PatternRule(Pattern pattern){
-		this.type = PatternRuleType.REGEX;
+		this.type = FormRuleType.PATTERN;
 		this.pattern = pattern;
 	}
 	
@@ -23,7 +22,7 @@ public class PatternRule implements ValueBasedFormRule<Pattern> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PatternRuleType getType() {
+	public FormRuleType getType() {
 		return this.type;
 	}
 

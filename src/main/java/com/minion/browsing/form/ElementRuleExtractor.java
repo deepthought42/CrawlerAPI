@@ -63,12 +63,12 @@ public class ElementRuleExtractor {
 			}
 			//minlength only works for certain frameworks such as angularjs that support it as a custom html5 attribute
 			else if(attr.getName().equalsIgnoreCase("minlength")){
-				NumericRule min_length = new NumericRule(NumericRuleType.MIN_LENGTH, Integer.parseInt(attr.getVals().get(0)));
+				NumericRule min_length = new NumericRule(FormRuleType.MIN_LENGTH, Integer.parseInt(attr.getVals().get(0)));
 				rules.add(min_length);
 				log.info("form field has a minimum length of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("maxlength")){
-				NumericRule max_length = new NumericRule(NumericRuleType.MAX_LENGTH, Integer.parseInt(attr.getVals().get(0)));
+				NumericRule max_length = new NumericRule(FormRuleType.MAX_LENGTH, Integer.parseInt(attr.getVals().get(0)));
 				rules.add(max_length);
 				log.info("form field has a maximum length of : " + attr.getVals().get(0));
 			}

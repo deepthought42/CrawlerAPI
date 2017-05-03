@@ -34,33 +34,11 @@ public class MemoryRegistryActor extends UntypedActor{
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			log.info("Initiating connection to orientdb...");
-			/*OrientConnectionFactory connection_factory = new OrientConnectionFactory();
 			
-			log.info("creating FramedGraphFactory instance");
-			FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
-			
-			log.info("opening connection to orientdb");
-			OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost:2480/Thoth", "brandon", "password");
-
-            log.info("Database connection opened");
-            */
 			Message<?> acct_msg = (Message<?>)message;
 			log.info("message converted to message format");
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
-			if(acct_msg.getData() instanceof Page){
-				Page page = (Page)acct_msg.getData();
-				List<ObjectDefinition> decomposed_list = DataDecomposer.decompose(page);
-				//OrientDbPersistor persistor = new OrientDbPersistor();
-				
-				for(Object objDef : decomposed_list){
-					//if object definition value doesn't exist in vocabulary 
-					// then add value to vocabulary
-					//Vocabulary vocabulary = new Vocabulary(new ArrayList<String>(), "page");
-					//vocabulary.appendToVocabulary(((ObjectDefinition)objDef).getValue());
-					//persistor.findAndUpdateOrCreate(vocabulary, ActionFactory.getActions());
-				}
-			}
-			else if(acct_msg.getData() instanceof Test){
+			if(acct_msg.getData() instanceof Test){
 				log.info("Saving Test to memory Registry");
 				Test test = (Test)acct_msg.getData();
 				if(test.equals(null)){

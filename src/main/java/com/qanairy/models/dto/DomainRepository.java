@@ -36,10 +36,21 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	 */
 	public IDomain convertToRecord(OrientConnectionFactory connection, Domain domain) {
 		domain.setKey(generateKey(domain));
-		IDomain domain_record = connection.getTransaction().addVertex("class:"+IDomain.class.getSimpleName()+","+UUID.randomUUID(), IDomain.class);
-		domain_record.setKey(domain.getKey());
+		@SuppressWarnings("unchecked")
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(domain.getKey(), connection, IDomain.class);
+		Iterator<IDomain> iter = domains.iterator();
+		IDomain domain_record = null;
+
+		if(!iter.hasNext()){
+			domain_record = connection.getTransaction().addVertex("class:"+IDomain.class.getSimpleName()+","+UUID.randomUUID(), IDomain.class);
+			domain_record.setKey(domain.getKey());
+		}
+		else{
+			//figure out throwing exception because domain already exists
+			domain_record = iter.next();
+		}
 		domain_record.setUrl(domain.getUrl());
-		domain_record.setTests(domain.getTests());
+		//domain_record.setTests(domain.getTests());
 		return domain_record;
 	}
 
@@ -69,8 +80,11 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 
 		if(iter.hasNext()){
 			IDomain domain_record = iter.next();
-			domain_record.setGroups(domain.getGroups());
-			domain_record.setTests(domain.getTests());
+			GroupRepository group_repo = new GroupRepository();
+			//domain_record.setGroups(domain.getGroups());
+			
+			TestRepository test_repo = new TestRepository();
+			//domain_record.setTests(domain.getTests());
 			domain_record.setUrl(domain.getUrl());
 			connection.save();
 		}
@@ -99,7 +113,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	public Domain convertFromRecord(IDomain obj) {
 		List<Test> tests = new ArrayList<Test>();
 		if(obj.getTests() != null){
-			tests = Lists.newArrayList(obj.getTests());
+			//tests = Lists.newArrayList(obj.getTests());
 		}
 		
 		List<Group> groups = new ArrayList<Group>();

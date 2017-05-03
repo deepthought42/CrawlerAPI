@@ -54,7 +54,7 @@ public class PathExpansionActor extends UntypedActor {
 		String[] actions = ActionFactory.getActions();
 
 		List<PageElement> page_elements = page.getElements();//  .getVisibleElements(webdriver, "");
-		log.info("Expected number of paths : " + (page_elements.size()*actions.length));
+		log.info("Expected number of exploratory paths : " + (page_elements.size()*actions.length) + " : # Elems : "+page.getElements().size()+ " ; # actions :: "+ActionFactory.getActions());
 		
 		//iterate over all elements
 		int path_count = 0;
@@ -71,8 +71,8 @@ public class PathExpansionActor extends UntypedActor {
 			//END OF PRECTION CODE
 			
 			//iterate over all actions
-			Path new_path = new Path(path.getPath());
-			new_path.add(page_element);
+			Path new_path = Path.clone(path);
+			//new_path.add(page_element);
 			
 			for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 				ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);

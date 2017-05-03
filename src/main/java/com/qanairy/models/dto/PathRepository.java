@@ -30,18 +30,15 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		int cnt = 0;
 		Iterator<IPath> iter = paths.iterator();
 		IPath path_record = null;
-		while(iter.hasNext()){
-			iter.next();
-			cnt++;
-		}
+
 		log.info("# of existing Path records with key "+path.getKey() + " :: "+cnt);
 		
-		if(cnt == 0){
+		if(!iter.hasNext()){
 			path_record = connection.getTransaction().addVertex("class:"+IPath.class.getSimpleName()+","+UUID.randomUUID(), IPath.class);
 			path_record.setKey(path.getKey());
 		}
 		else{
-			path_record = paths.iterator().next();
+			path_record = iter.next();
 		}
 
 		boolean first_pass = true;

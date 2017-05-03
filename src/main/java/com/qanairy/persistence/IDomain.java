@@ -26,16 +26,16 @@ public interface IDomain {
 	void setUrl(String url);
 
 	@Adjacency(label="contains_test")
-	Iterator<Test> getTests();
+	Iterator<ITest> getTests();
 
 	@Adjacency(label="contains_test")
-	void setTests(List<Test> tests);
+	void setTests(List<ITest> tests);
 
 	@Adjacency(label="group")
-	Iterator<Group> getGroups();
+	Iterator<IGroup> getGroups();
 
 	@Adjacency(label="group")
-	void setGroups(List<Group> groups);
+	void setGroups(List<IGroup> groups);
 	
 	@Adjacency(direction=Direction.IN, label="has_domain")
 	Iterator<IAccount> getAccounts();

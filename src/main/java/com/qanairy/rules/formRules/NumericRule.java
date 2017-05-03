@@ -10,10 +10,10 @@ import com.qanairy.rules.RuleType;
  */
 public class NumericRule implements ValueBasedFormRule<Integer>{
 	
-	private NumericRuleType type;
+	private FormRuleType type;
 	private Integer value;
 	
-	public NumericRule(NumericRuleType type, Integer value){
+	public NumericRule(FormRuleType type, Integer value){
 		this.type = type;
 		this.value = value;
 	}
@@ -22,7 +22,7 @@ public class NumericRule implements ValueBasedFormRule<Integer>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public NumericRuleType getType() {
+	public RuleType getType() {
 		return this.type;
 	}
 
@@ -30,17 +30,18 @@ public class NumericRule implements ValueBasedFormRule<Integer>{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean evaluate(FormField val) {
-		if(this.getType().equals(NumericRuleType.MAX_LENGTH)){
+	public Boolean evaluate(FormField val) {
+		String field_value = val.getInputElement().getAttribute("val").toString();
+		if(this.getType().equals(FormRuleType.MAX_LENGTH)){
 			return field_value.length() <= this.getValue();
 		}
-		else if(this.getType().equals(NumericRuleType.MIN_LENGTH)){
+		else if(this.getType().equals(FormRuleType.MIN_LENGTH)){
 			return field_value.length() >= this.getValue();
 		}
-		else if(this.getType().equals(NumericRuleType.MIN_VALUE)){
+		else if(this.getType().equals(FormRuleType.MIN_VALUE)){
 			return Integer.parseInt(field_value) >= this.getValue();
 		}
-		else if(this.getType().equals(NumericRuleType.MAX_VALUE)){
+		else if(this.getType().equals(FormRuleType.MAX_VALUE)){
 			return Integer.parseInt(field_value)  <= this.getValue();
 		}
 		return false;
@@ -56,11 +57,5 @@ public class NumericRule implements ValueBasedFormRule<Integer>{
 	
 	public static String generateRandomAlphabeticString(int str_length){
 		return StringUtils.repeat("a", str_length);
-	}
-
-	@Override
-	public RuleType getType() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

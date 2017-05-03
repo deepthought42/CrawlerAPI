@@ -37,11 +37,12 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	 */
 	@Override
 	public IPathObject convertToRecord(OrientConnectionFactory connection, PathObject path_obj) {
-		IPathObject attribute_record = connection.getTransaction().addVertex("class:"+PathObject.class.getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
-		attribute_record.setType(path_obj.getType());
-		attribute_record.setKey(generateKey(path_obj));
 		
-		return attribute_record;
+			IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
+			path_object_record.setType(path_obj.getType());
+			path_object_record.setKey(generateKey(path_obj));
+			
+		return path_object_record;
 	}
 
 	/**

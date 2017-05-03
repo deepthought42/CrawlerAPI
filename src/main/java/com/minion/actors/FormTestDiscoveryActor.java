@@ -122,7 +122,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 		List<Path> paths = new ArrayList<Path>();
 
-		if(rule.getType().equals(NumericRuleType.MAX_LENGTH)){
+		if(rule.getType().equals(FormRuleType.MAX_LENGTH)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
@@ -171,7 +171,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(new Action("sendKeys", large_str));
 			paths.add(path);
 		}
-		else if(rule.getType().equals(NumericRuleType.MAX_VALUE)){
+		else if(rule.getType().equals(FormRuleType.MAX_VALUE)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
@@ -190,7 +190,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(new Action("sendKeys", Integer.toString(((Integer)rule.getValue())+1)));
 			paths.add(path);
 		}
-		else if(rule.getType().equals(NumericRuleType.MIN_VALUE)){
+		else if(rule.getType().equals(FormRuleType.MIN_VALUE)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
@@ -222,7 +222,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		log.info("generating requirements checks");
 		
 		List<Path> paths = new ArrayList<Path>();
-		String input_type = input.getAttribute("type").getVals()[0];
+		String input_type = input.getAttribute("type").getVals().get(0);
 		if(input_type.equals("text") ||
 				input_type.equals("textarea") ||
 				input_type.equals("email")){
@@ -298,23 +298,23 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			log.info("SHOULD BE GENERATING READ-ONLY FIELD TESTS ");
 			generateReadOnlyTests(input_elem, rule);
 		}
-		else if(rule.getType().equals(NumericRuleType.MAX_LENGTH)){
+		else if(rule.getType().equals(FormRuleType.MAX_LENGTH)){
 			log.info("SHOULD BE GENERATING MAX LENGTH TESTS ");
 			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(NumericRuleType.MIN_LENGTH)){
+		else if(rule.getType().equals(FormRuleType.MIN_LENGTH)){
 			log.info("SHOULD BE GENERATING MIN LENGTH TESTS ");
 			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(NumericRuleType.MAX_VALUE)){
+		else if(rule.getType().equals(FormRuleType.MAX_VALUE)){
 			log.info("SHOULD BE GENERATING MAX VALUE TESTS ");
 			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(NumericRuleType.MIN_VALUE)){
+		else if(rule.getType().equals(FormRuleType.MIN_VALUE)){
 			log.info("SHOULD BE GENERATING MIN LENGTH TESTS ");
 			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(PatternRuleType.REGEX)){
+		else if(rule.getType().equals(FormRuleType.PATTERN)){
 			
 		}
 		return tests;

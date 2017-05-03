@@ -13,7 +13,6 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
-import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
@@ -34,19 +33,24 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 
 	@Override
 	public IAccount convertToRecord(OrientConnectionFactory connection, Account account) {
-		IAccount acct = connection.getTransaction().addVertex("class:"+IAccount.class.getSimpleName()+","+UUID.randomUUID(), IAccount.class);
-		acct.setKey(account.getKey());
-		acct.setOrgName(account.getOrgName());
-		
-		acct.setServicePackage(account.getServicePackage());
-		acct.setPaymentAcctNum(account.getPaymentAcctNum());
+		Account acct = find(connection, account.getKey());
+		IAccount acct_record = null;  
+		if(acct != null){
+			acct_record = connection.getTransaction().addVertex("class:"+IAccount.class.getSimpleName()+","+UUID.randomUUID(), IAccount.class);
+			acct_record.setKey(account.getKey());
+			acct_record.setOrgName(account.getOrgName());
+			
+			acct_record.setServicePackage(account.getServicePackage());
+			acct_record.setPaymentAcctNum(account.getPaymentAcctNum());
 
-		for(QanairyUser user : account.getUsers()){
-			QanairyUserRepository repo = new QanairyUserRepository();
-			//repo.create(connection, user);
-			acct.addUser(repo.convertToRecord(connection, user));
+			for(QanairyUser user : account.getUsers()){
+				QanairyUserRepository repo = new QanairyUserRepository();
+				//repo.create(connection, user);
+				acct_record.addUser(repo.convertToRecord(connection, user));
+			}
+
 		}
-		return acct;
+		return acct_record;
 	}
 
 	@Override

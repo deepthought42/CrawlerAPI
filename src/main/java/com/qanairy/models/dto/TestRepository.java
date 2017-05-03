@@ -99,6 +99,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
 		log.info("setting test_record result");
 		test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
+		log.error("test.getDomain() =  "+test.getDomain().getUrl());
 		test_record.setDomain(domain_record.convertToRecord(connection, test.getDomain()));
 		test_record.setName(test.getName());
 		test_record.setCorrect(test.isCorrect());

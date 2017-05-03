@@ -93,34 +93,6 @@ public class Page extends PathObject {
 		log.info("Page object created");
 	}
 	
-	
-	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null;
-	 */
-	public Page(String key, String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
-		assert elements != null;
-		super.setType(Page.class.getSimpleName());
-
-		log.info("setting source");
-		this.setSrc(html);
-		this.setUrl(new URL(url.replace("/#","")));
-		this.setScreenshot(screenshot);
-		this.setElements(elements);
-		this.setElementCounts(countTags(this.elements));
-		this.setLandable(isLandable);
-		this.setKey(key);
-		
-		log.info("Page object created");
-	}
-	
 	/**
 	 * Gets counts for all tags based on {@link PageElement}s passed
 	 * 
@@ -154,7 +126,7 @@ public class Page extends PathObject {
 	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		log.info("Checking if page is landable");
 		
-		Browser browser = new Browser(this.getUrl().toString(), "firefox");
+		Browser browser = new Browser(this.getUrl().toString(), "chrome");
 		browser.getDriver().get(this.getUrl().toString());
 		String src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		boolean landable = false;

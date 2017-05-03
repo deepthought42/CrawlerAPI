@@ -59,7 +59,7 @@ public class Browser {
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
 
 	private WebDriver driver;
-	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel"};	
+	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel"};	
 
 	/**
 	 * 
@@ -316,7 +316,9 @@ public class Browser {
 		}
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
+		System.err.println("ELEMENTS :: "+pageElements.size());
 		for(WebElement elem : pageElements){
+			
 			try{
 				//log.info("checking visibily and extracting attributes for element " + counter++);
 				Date start = new Date();
@@ -346,7 +348,8 @@ public class Browser {
 				log.error(e.toString());
 			}
 		}
-		
+		System.err.println("ELEMENTS list:: "+elementList.size());
+
 		return elementList;
 	}
 	
@@ -738,10 +741,9 @@ public class Browser {
 	 * @return
 	 */
 	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath){
-		if(elem.findElements(By.xpath(xpath)).size() <= 1){
-			return xpath;
-		}
-		else{
+		try {
+			elem.findElements(By.xpath(xpath));
+		}catch(InvalidSelectorException e){
 			int count = 1;
 			if(xpathHash.containsKey(xpath)){
 				count = xpathHash.get(xpath);

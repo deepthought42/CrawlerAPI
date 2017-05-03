@@ -257,9 +257,6 @@ public class BrowserActor extends UntypedActor {
 
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
-				log.info("Sending test to Memory Actor");
-				Test test = new Test(new Path(exploratory_path.getPath()), result_page, new Domain(result_page.getUrl().getHost()));
-				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				
 				log.info("Getting last page");
 				Page last_page = exploratory_path.findLastPage();
@@ -285,7 +282,9 @@ public class BrowserActor extends UntypedActor {
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{
-					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page));
+					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page)){
+					  			break;
+					  		}
 					  		crawl_path.add(action);
 					  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					  		crawl_path.setIsUseful(true);
@@ -297,26 +296,29 @@ public class BrowserActor extends UntypedActor {
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 							path_expansion_actor.tell(path_msg, getSelf() );
 							
-							Test new_test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
+							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
 							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-							if(!testMap.containsTest(new_test)){
-								Message<Test> new_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+							if(!testMap.containsTest(test)){
+								Message<Test> new_test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 								final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 								work_allocator.tell(new_test_msg, getSelf() );
-								testMap.addTest(new_test);
+								testMap.addTest(test);
 							}
 
 							log.info("Sending test to Memory Actor");
-							Message<Test> test_memory_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
+							Message<Test> test_memory_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 							//tell memory worker of path
 							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+							log.info("Sending test to Memory Actor");
+							
+							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 							
 							//tell memory worker of path
 							memory_actor.tell(test_memory_msg, getSelf() );
 							//broadcast test
-							PastPathExperienceController.broadcastTestExperience(new_test);
+							PastPathExperienceController.broadcastTestExperience(test);
 							
 							break;
 					  	}

@@ -225,7 +225,7 @@ public class BrowserActor extends UntypedActor {
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-					if(!testMap.containsTest(new_test)){
+					if(testMap != null && !testMap.containsTest(new_test)){
 						Message<Test> new_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						work_allocator.tell(new_test_msg, getSelf() );

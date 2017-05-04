@@ -61,7 +61,6 @@ public class DiscoveryController {
 		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
 		//String account_key = ""+UUID.randomUUID().toString();
 		System.out.println("ACCOUNT KEY :: "+account_key);
-		System.err.println(" USER NAME :: " + SecurityContextHolder.getContext().getAuthentication().getName());
 		WorkAllowanceStatus.register(account_key); 
 		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
 		

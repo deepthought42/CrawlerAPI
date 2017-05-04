@@ -13,8 +13,6 @@ import com.qanairy.rules.FormRule;
 import com.qanairy.rules.formRules.AlphabeticRestrictionRule;
 import com.qanairy.rules.formRules.DisabledRule;
 import com.qanairy.rules.formRules.FormRuleType;
-import com.qanairy.rules.formRules.MaximumValueRule;
-import com.qanairy.rules.formRules.MinimumValueRule;
 import com.qanairy.rules.formRules.NumericRule;
 import com.qanairy.rules.formRules.PatternRule;
 import com.qanairy.rules.formRules.ReadOnlyRule;
@@ -28,7 +26,6 @@ public class ElementRuleExtractor {
 		List<FormRule> rules = new ArrayList<FormRule>();
 
 		for(Attribute attr : elem.getAttributes()){
-			System.err.println("GET VALS TO STR :: " + attr.getVals().toString());
 			if(attr.getName().trim().equalsIgnoreCase("required")){
 				FormRule required = new RequirementRule();
 				rules.add(required);
@@ -52,12 +49,12 @@ public class ElementRuleExtractor {
 				log.info("Form field is read only");
 			}
 			else if(attr.getName().equalsIgnoreCase("min")){
-				FormRule min_val = new MinimumValueRule(Integer.parseInt(attr.getVals().get(0)));
+				FormRule min_val = new NumericRule(FormRuleType.MIN_VALUE,Integer.parseInt(attr.getVals().get(0)));
 				rules.add(min_val);
 				log.info("form field has a minimum value of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("max")){
-				FormRule max_val = new MaximumValueRule(Integer.parseInt(attr.getVals().get(0)));
+				FormRule max_val = new NumericRule(FormRuleType.MAX_VALUE, Integer.parseInt(attr.getVals().get(0)));
 				rules.add(max_val);
 				log.info("form field has a maximum value of : " + attr.getVals().get(0));
 			}

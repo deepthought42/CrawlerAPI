@@ -28,8 +28,7 @@ public class Crawler {
 	 */
 	public static Page crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, IOException{
 		assert path != null;
-		log.info("PATH :: "+path);
-
+		
 		PageElement last_element = null;
 		
 		//skip first node since we should have already loaded it during initialization

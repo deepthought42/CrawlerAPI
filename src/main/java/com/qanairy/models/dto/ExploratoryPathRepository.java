@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import com.minion.actors.BrowserActor;
 import com.minion.persistence.edges.IPathEdge;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.IPage;
-import com.qanairy.models.IPathObject;
 import com.qanairy.models.Page;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;

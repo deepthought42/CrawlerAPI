@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.models.Group;
@@ -89,5 +90,11 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	@Override
 	public Group convertFromRecord(IGroup obj) {
 		return new Group(obj.getKey(), obj.getName(), obj.getTests(), obj.getDescription());
+	}
+
+	@Override
+	public List<Group> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
+		return null;
 	}	
 }

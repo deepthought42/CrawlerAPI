@@ -1,4 +1,4 @@
-package com.qanairy.auth;
+package com.qanairy.config;
 
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;

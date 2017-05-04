@@ -316,7 +316,7 @@ public class Browser {
 		}
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-		System.err.println("ELEMENTS :: "+pageElements.size());
+		log.debug("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
 		for(WebElement elem : pageElements){
 			
 			try{
@@ -348,7 +348,8 @@ public class Browser {
 				log.error(e.toString());
 			}
 		}
-		System.err.println("ELEMENTS list:: "+elementList.size());
+		log.debug("Total elements that are visible on page :: "
+					+ elementList.size() + "; with url "+driver.getCurrentUrl());
 
 		return elementList;
 	}

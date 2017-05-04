@@ -29,7 +29,7 @@ import com.qanairy.api.exception.Auth0ManagementApiException;
 import com.qanairy.api.exception.InvalidUserException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
-import com.qanairy.auth.WebSecurityConfig;
+import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.OrientConnectionFactory;

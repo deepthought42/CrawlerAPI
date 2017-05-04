@@ -130,15 +130,16 @@ public class PathExpansionActor extends UntypedActor {
 						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+						
 						if(!testMap.containsTest(new_test)){
 							Message<Test> expanded_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
 
 							work_allocator.tell(expanded_test_msg, getSelf() );
 							testMap.addTest(new_test);
+							PastPathExperienceController.broadcastTestExperience(testMap.getTestHash().get(test.hashCode()));
 						}
 						else{
-							log.info("TEST WITH KEY : "+new_test.hashCode()+" : HAS ALREADY BEEN EXAMINED!!!! No future examination will happen during this sessions");
-							PastPathExperienceController.broadcastTestExperience(testMap.getTestHash().get(test.hashCode()));
+							log.debug("TEST WITH KEY : "+new_test.hashCode()+" : HAS ALREADY BEEN EXAMINED THIS SESSION!!!! No future examination will happen during this sessions");
 						}
 					}
 				}

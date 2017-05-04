@@ -63,18 +63,16 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	
 			  	log.info("Crawling path for test :: "+(path!=null));
 			  	Page current_page = Crawler.crawlPath(path, browser);
-			  	
-			  	log.info("Getting current choices on page for form tests");
+			  				  	
 			  	List<Form> forms = Browser.extractAllForms(current_page, browser);
-			  	System.err.println("Total Choice fields : " + forms.size());
+			  	log.debug("Total Choice fields in form : " + forms.size());
 			  	
 			  	List<Path> form_paths = new ArrayList<Path>();
-			  	log.info("Generating tests for " + forms.size() + " forms");
+			  	log.debug("Generating tests for " + forms.size() + " forms");
 			  	for(Form form : forms){
 			  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
 			  	}
 			  	
-			  	log.info("Added form tests ... " + form_paths.size());
 			  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 				for(Path expanded : form_paths){
 					//send all paths to work allocator to be evaluated
@@ -128,7 +126,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			String short_str = NumericRule.generateRandomAlphabeticString((Integer)rule.getValue());
+			String short_str = NumericRule.generateRandomAlphabeticString((Integer)((NumericRule)rule).getValue());
 			log.info("Generated string of length : " + short_str.length());
 
 			path.add(new Action("sendKeys", short_str));
@@ -141,18 +139,18 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)rule.getValue())+1);
+			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)((NumericRule)rule).getValue())+1);
 			log.info("Generated string of length : " + large_str.length());
 			path.add(new Action("sendKeys", large_str));
 			paths.add(path);
 		}
-		else if(rule.getType().equals(NumericRuleType.MIN_LENGTH)){
+		else if(rule.getType().equals(FormRuleType.MIN_LENGTH)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			String short_str = NumericRule.generateRandomAlphabeticString((Integer)rule.getValue());
+			String short_str = NumericRule.generateRandomAlphabeticString((Integer)((NumericRule)rule).getValue());
 			log.info("Generated string of length : " + short_str.length());
 
 			path.add(new Action("sendKeys", short_str));
@@ -165,7 +163,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)rule.getValue())-1);
+			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)((NumericRule)rule).getValue())-1);
 			log.info("Generated string of length : " + large_str.length());
 
 			path.add(new Action("sendKeys", large_str));
@@ -177,7 +175,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString((Integer)rule.getValue())));
+			path.add(new Action("sendKeys", Integer.toString((Integer)((NumericRule)rule).getValue())));
 			paths.add(path);
 			
 			log.info("adding single character text string sendKeys action" );
@@ -187,7 +185,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString(((Integer)rule.getValue())+1)));
+			path.add(new Action("sendKeys", Integer.toString(((Integer)((NumericRule)rule).getValue())+1)));
 			paths.add(path);
 		}
 		else if(rule.getType().equals(FormRuleType.MIN_VALUE)){
@@ -196,7 +194,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString((Integer)rule.getValue())));
+			path.add(new Action("sendKeys", Integer.toString((Integer)((NumericRule)rule).getValue())));
 			paths.add(path);
 			
 			log.info("adding single character text string sendKeys action" );
@@ -206,7 +204,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString(((Integer)rule.getValue())-1)));
+			path.add(new Action("sendKeys", Integer.toString(((Integer)((NumericRule)rule).getValue())-1)));
 			paths.add(path);
 		}
 		return paths;
@@ -318,7 +316,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			
 		}
 		return tests;
-		
 	}
 	
 	private static List<Path> generateAlphabeticRestrictionTests(PageElement input_elem, FormRule rule) {

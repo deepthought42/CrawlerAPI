@@ -35,8 +35,9 @@ public class PastPathExperienceController {
     public SseEmitter stream(HttpServletRequest request) throws IOException {
         SseEmitter emitter = new SseEmitter();
         log.info("Adding emitter");
-        //emitters.add(emitter);
+
         if(emitters.containsKey("account_key")){
+        	log.info("Marking emitter complete");
         	emitters.get("account_key").complete();
         }
         emitters.put("account_key", emitter);

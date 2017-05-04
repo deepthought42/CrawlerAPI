@@ -15,7 +15,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 /**
  * 
  */
-public class PageRepository implements IPersistable<Page, IPage>, PathObjectRepository {
+public class PageRepository implements IPersistable<Page, IPage> {
 
 	/**
 	 * {@inheritDoc}

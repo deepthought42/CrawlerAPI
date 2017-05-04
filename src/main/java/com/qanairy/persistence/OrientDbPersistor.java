@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.minion.actors.FormTestDiscoveryActor;
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.tinkerpop.blueprints.Edge;
@@ -16,6 +20,8 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
  *
  */
 public class OrientDbPersistor{
+	private static final Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
+
 	public OrientGraph graph = null;
 	
 	/**
@@ -81,7 +87,7 @@ public class OrientDbPersistor{
 		}
 		catch(OConcurrentModificationException e){
 			graph.rollback();
-			//System.err.println("Concurrent Modification EXCEPTION Error thrown");
+			log.debug("Concurrent Modification EXCEPTION Error thrown");
 			e.printStackTrace();
 		}
 	}
@@ -113,7 +119,6 @@ public class OrientDbPersistor{
 	 */
 	public Iterable<Vertex> findVertices(Object obj) throws IllegalArgumentException, IllegalAccessException{
 		Field[] fieldArray = obj.getClass().getFields();
-		//System.err.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		
 		Object fieldValue = 0;
 		for(Field field : fieldArray){
@@ -167,7 +172,7 @@ public class OrientDbPersistor{
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 
-			//System.err.println("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
+			log.debug("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
 			v = memory_iterator.next();
 		}
 		else{
@@ -211,10 +216,10 @@ public class OrientDbPersistor{
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 
-			//System.err.println("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
+			log.debug("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
 			v = memory_iterator.next();
 			if(actions.length != 0){
-				System.err.println("......Actions : "+actions.length);
+				log.debug("......Actions : "+actions.length);
 				v.setProperty("actions", actions);
 			}
 		}

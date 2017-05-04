@@ -5,4 +5,4 @@
  * @author brand
  *
  */
-package com.qanairy.rules.booleanRules;
+package com.qanairy.rules.formRules;

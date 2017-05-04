@@ -1,6 +1,5 @@
 package com.qanairy.models.dto;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -85,6 +84,12 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 			return convertFromRecord(iter.next());
 		}
 		
+		return null;
+	}
+
+	@Override
+	public List<Attribute> findAll(OrientConnectionFactory connection) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

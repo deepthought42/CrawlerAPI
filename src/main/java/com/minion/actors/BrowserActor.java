@@ -193,7 +193,7 @@ public class BrowserActor extends UntypedActor {
 				Page result_page = null;
 				
 				if(path.getPath() != null){
-					log.info("crawling path");
+					log.info("crawling path : "+path);
 					result_page = Crawler.crawlPath(path, this.browser);
 				}
 				

@@ -89,13 +89,22 @@ public class TestRepository implements IPersistable<Test, ITest> {
 	 * {@inheritDoc}
 	 */
 	public ITest convertToRecord(OrientConnectionFactory connection, Test test){
+		
+		@SuppressWarnings("unchecked")
+		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(generateKey(test), connection, ITest.class);
+		Iterator<ITest> iter = tests.iterator();
+		
+		if(!iter.hasNext()){
+			return null;
+		}	
+		
 		PathRepository path_record = new PathRepository();
 		PageRepository page_record = new PageRepository();
 		DomainRepository domain_record = new DomainRepository();
 		TestRecordRepository test_record_record = new TestRecordRepository();
 		
 		ITest test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
-		log.info("setting test_record properties");
+		log.info("setting test_record path : "+test.getPath().size()); 
 		test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
 		log.info("setting test_record result");
 		test_record.setResult(page_record.convertToRecord(connection, test.getResult()));

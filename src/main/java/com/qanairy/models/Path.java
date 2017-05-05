@@ -94,6 +94,7 @@ public class Path {
 		int thisPathLength = this.size();
 		int comparatorPathLength = path.size();
 				
+		
 		if(thisPathLength != comparatorPathLength){
 			return false;
 		}

@@ -109,7 +109,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		IPage page_record = null;
 		
 		if(iter.hasNext()){
-			page_record = pages.iterator().next();
+			page_record = iter.next();
 		}
 		else{
 			page_record = connection.getTransaction().addVertex("class:"+IPage.class.getSimpleName()+","+UUID.randomUUID(), IPage.class);

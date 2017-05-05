@@ -219,7 +219,7 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
-		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver.exe");
+		System.setProperty("webdriver.chrome.driver", "drivers/chrome/chromedriver");
 
 		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();

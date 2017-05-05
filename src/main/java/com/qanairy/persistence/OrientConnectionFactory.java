@@ -2,12 +2,6 @@ package com.qanairy.persistence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
@@ -39,7 +33,7 @@ public class OrientConnectionFactory {
 	private FramedTransactionalGraph<OrientGraph> getConnection(){
 		log.info("framing graph factory");
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/thoth", "brandon", "password").setupPool(1, 20);
+		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/thoth", "root", "password").setupPool(1, 20);
 	    OrientGraph instance = graphFactory.getTx();
 	    log.info("Orientdb transaction created returning instance");
 		return factory.create(instance);

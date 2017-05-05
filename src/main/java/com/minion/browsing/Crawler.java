@@ -43,10 +43,11 @@ public class Crawler {
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
-				log.info("Current path node is an Action");
 				boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
-				//browser.updatePage( DateFormat.getDateInstance());
+				
+				log.info("Current path node is an Action : "+action.getName());
+				log.info(" :: With driver : "+browser.getDriver());
 				int attempts = 0;
 				do{
 					//actionPerformedSuccessfully = performAction(last_element, action.getName(), browser.getDriver() );

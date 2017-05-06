@@ -47,7 +47,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				
 				//FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
 				OrientConnectionFactory connection = new OrientConnectionFactory();
-				log.info("saving test : "+test);
+				log.info("saving test : " + test);
 				TestRepository test_repo = new TestRepository();
 				
 				test_repo.create(connection, test);
@@ -55,7 +55,6 @@ public class MemoryRegistryActor extends UntypedActor{
 
 				
 				/*
-				
 				
 				//check if test with key already exists.
 				OrientDbPersistor persistor = new OrientDbPersistor();

@@ -14,14 +14,10 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
-import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.structs.Message;
-import com.minion.structs.SessionTestTracker;
-import com.minion.structs.TestMapper;
 import com.qanairy.models.Action;
-import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -53,12 +49,13 @@ public class PathExpansionActor extends UntypedActor {
 
 		String[] actions = ActionFactory.getActions();
 
-		List<PageElement> page_elements = page.getElements();//  .getVisibleElements(webdriver, "");
+		List<PageElement> page_elements = page.getElements();
 		log.info("Expected number of exploratory paths : " + (page_elements.size()*actions.length) + " : # Elems : "+page.getElements().size()+ " ; # actions :: "+ActionFactory.getActions());
 		
 		//iterate over all elements
 		int path_count = 0;
 		for(PageElement page_element : page_elements){
+			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -101,50 +98,7 @@ public class PathExpansionActor extends UntypedActor {
 			final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
 			form_test_discoverer.tell(acct_msg, getSelf() );
 			
-			if(acct_msg.getData() instanceof Test){
-				
-				Test test = (Test)acct_msg.getData();
-				Path path = test.getPath();
-				Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-				
-				log.info("EXPANDING TEST PATH WITH LENGTH : "+path.size());
-				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
-
-				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
-				memory_registry.tell(test_msg, getSelf());
-				
-				if(path != null && path.isUseful() && !path.getSpansMultipleDomains()){
-					if(!test.getPath().findLastPage().getUrl().equals(test.getResult().getUrl()) && test.getResult().isLandable()){
-						log.info("Last page is landable...truncating path to start with last_page");
-						path = new Path();
-						path.getPath().add(test.getResult());
-					}
-					
-					//EXPAND PATH IN TEST
-					pathExpansions = PathExpansionActor.expandPath(path);
-					log.info("Test Path expansions found : " +pathExpansions.size());
-					
-					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-					for(ExploratoryPath expanded : pathExpansions){
-						Test new_test = new Test(new Path(expanded.getKey(), expanded.getIsUseful(), expanded.getPath()), null,  new Domain(path.findLastPage().getUrl().getHost()));
-						// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-						SessionTestTracker seqTracker = SessionTestTracker.getInstance();
-						TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-						
-						if(!testMap.containsTest(new_test)){
-							Message<Test> expanded_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
-
-							work_allocator.tell(expanded_test_msg, getSelf() );
-							testMap.addTest(new_test);
-							PastPathExperienceController.broadcastTestExperience(testMap.getTestHash().get(test.hashCode()));
-						}
-						else{
-							log.debug("TEST WITH KEY : "+new_test.hashCode()+" : HAS ALREADY BEEN EXAMINED THIS SESSION!!!! No future examination will happen during this sessions");
-						}
-					}
-				}
-			}
-			else if(acct_msg.getData() instanceof Path){
+			if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				
 				log.info("EXPANDING PATH WITH LENGTH : "+path.size());

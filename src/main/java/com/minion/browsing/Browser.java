@@ -87,8 +87,7 @@ public class Browser {
 		else if(browser.equals("headless")){
 			this.driver = openWithPhantomjs(url);
 		}
-		//this.driver = openWithFirefox(url);
-		//this.driver = openWithPhantomjs(url);
+		
 		this.driver.get(url);
 	}
 	

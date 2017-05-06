@@ -43,14 +43,12 @@ public class WorkAllocationActor extends UntypedActor {
 					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
 					browser_actor.tell(acct_message, getSelf() );
 					getSender().tell("Status: ok", getSelf());
-
 				}
 				else if(acct_message.getData() instanceof Test){
 					log.info("Test passed to work allocator");
-					final ActorRef testing_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "TestingActor"+UUID.randomUUID());
+					final ActorRef testing_actor = this.getContext().actorOf(Props.create(TestingActor.class), "TestingActor"+UUID.randomUUID());
 					testing_actor.tell(acct_message, getSelf() );
 					getSender().tell("Status: ok", getSelf());
-
 				}
 			}
 			else{

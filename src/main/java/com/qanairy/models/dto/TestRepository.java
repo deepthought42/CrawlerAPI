@@ -93,9 +93,12 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		@SuppressWarnings("unchecked")
 		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(generateKey(test), connection, ITest.class);
 		Iterator<ITest> iter = tests.iterator();
-		
-		if(!iter.hasNext()){
-			return null;
+		ITest test_record = null;
+		if(iter.hasNext()){
+			test_record = iter.next();
+		}
+		else{
+			 test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
 		}	
 		
 		PathRepository path_record = new PathRepository();
@@ -103,7 +106,6 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		DomainRepository domain_record = new DomainRepository();
 		TestRecordRepository test_record_record = new TestRecordRepository();
 		
-		ITest test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
 		log.info("setting test_record path : "+test.getPath().size()); 
 		test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
 		log.info("setting test_record result");
@@ -153,9 +155,11 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setResult(page_record.convertFromRecord(itest.getResult()));
 		Iterator<IGroup> group_records_iter = itest.getGroups();
 		List<Group> group_records = new ArrayList<Group>();
+		
 		while(group_records_iter != null && group_records_iter.hasNext()){
 			group_records.add(group_repo.convertFromRecord(group_records_iter.next()));
 		}
+		
 		test.setGroups(group_records);
 		return test;
 	}

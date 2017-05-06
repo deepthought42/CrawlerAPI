@@ -183,6 +183,7 @@ public class BrowserActor extends UntypedActor {
 		if(message instanceof Message){
 			log.info("Browser actor received message");
 			Message<?> acct_msg = (Message<?>)message;
+			
 			if (acct_msg.getData() instanceof Path){
 				log.info("PATH PASSED TO BROWSER ACTOR");
 				Path path = (Path)acct_msg.getData();
@@ -225,15 +226,15 @@ public class BrowserActor extends UntypedActor {
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+					
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
 					if(testMap != null && !testMap.containsTest(new_test)){
-						Message<Test> new_test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						work_allocator.tell(new_test_msg, getSelf() );
+						work_allocator.tell(test_msg, getSelf() );
 						testMap.addTest(new_test);
 					}
 
 					log.info("Sending test to Memory Actor");
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
 					//tell memory worker of path
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					
@@ -291,36 +292,34 @@ public class BrowserActor extends UntypedActor {
 							if(crawl_path.size() > 1){
 								crawl_path.add(result_page);
 							}
-							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), crawl_path);
-
-							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-							path_expansion_actor.tell(path_msg, getSelf() );
+							
 							
 							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
 							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+							
+							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 							if(!testMap.containsTest(test)){
-								Message<Test> new_test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 								final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-								work_allocator.tell(new_test_msg, getSelf() );
+								work_allocator.tell(test_msg, getSelf() );
 								testMap.addTest(test);
 							}
 
 							log.info("Sending test to Memory Actor");
-							Message<Test> test_memory_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 							//tell memory worker of path
 							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 							log.info("Sending test to Memory Actor");
-							
-							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-							
+														
 							//tell memory worker of path
-							memory_actor.tell(test_memory_msg, getSelf() );
+							memory_actor.tell(test_msg, getSelf() );
 							//broadcast test
 							PastPathExperienceController.broadcastTestExperience(test);
 							
-							break;
+							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), crawl_path);
+
+							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+							path_expansion_actor.tell(path_msg, getSelf() );
 					  	}
 					}
 				}

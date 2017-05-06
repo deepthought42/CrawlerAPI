@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.slf4j.Logger;
+import org.apache.log4j.Logger
 import org.slf4j.LoggerFactory;
 
 import com.minion.actors.FormTestDiscoveryActor;
@@ -20,7 +20,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
  *
  */
 public class OrientDbPersistor{
-	private static final Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
+	private static Logger log = Logger.getLogger(FormTestDiscoveryActor.class);
 
 	public OrientGraph graph = null;
 	

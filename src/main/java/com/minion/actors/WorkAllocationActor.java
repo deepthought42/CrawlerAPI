@@ -3,8 +3,7 @@ package com.minion.actors;
 import java.net.URL;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.qanairy.models.ExploratoryPath;
@@ -27,7 +26,7 @@ import com.minion.structs.Message;
  *
  */
 public class WorkAllocationActor extends UntypedActor {
-    private static final Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
+    private static Logger log = Logger.getLogger(WorkAllocationActor.class);
 
 	@Override
 	public void onReceive(Object message) throws Exception {

@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import akka.actor.ActorRef;
 
@@ -28,7 +27,7 @@ import com.qanairy.models.Path;
  *
  */
 public class PathExpansionActor extends UntypedActor {
-    private static final Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
+	private static Logger log = Logger.getLogger(PathExpansionActor.class);
 
     /**
 	 * Produces all possible element, action combinations that can be produced from the given path
@@ -106,8 +105,8 @@ public class PathExpansionActor extends UntypedActor {
 
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 
-				final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
-				memory_registry.tell(path_msg, getSelf());
+				//final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
+				//memory_registry.tell(path_msg, getSelf());
 				
 				log.info("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains());
 				if(path.isUseful() && !path.getSpansMultipleDomains()){

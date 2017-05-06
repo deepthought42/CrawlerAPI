@@ -5,13 +5,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.qanairy.models.Group;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.ITestRecord;
@@ -22,7 +22,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class TestRepository implements IPersistable<Test, ITest> {
-    private static final Logger log = LoggerFactory.getLogger(Test.class);
+	private static Logger log = Logger.getLogger(Test.class);
 
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
@@ -98,7 +98,8 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			test_record = iter.next();
 		}
 		else{
-			 test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
+			test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
+			test_record.setKey(generateKey(test));
 		}	
 		
 		PathRepository path_record = new PathRepository();
@@ -111,7 +112,11 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		log.info("setting test_record result");
 		test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
 		log.error("test.getDomain() =  "+test.getDomain().getUrl());
-		test_record.setDomain(domain_record.convertToRecord(connection, test.getDomain()));
+		
+		IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
+		idomain.addTest(test_record);
+
+		test_record.setDomain(idomain);
 		test_record.setName(test.getName());
 		test_record.setCorrect(test.isCorrect());
 		test_record.setGroups(test.getGroups());
@@ -119,7 +124,6 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		for(TestRecord record : test.getRecords()){
 			test_record.addRecord(test_record_record.convertToRecord(connection, record));
 		}
-		test_record.setKey(test.getKey());
 		
 		return test_record;
 	}
@@ -136,10 +140,10 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		PageRepository page_record = new PageRepository();
 		PathRepository path_record = new PathRepository();
 		GroupRepository group_repo = new GroupRepository();
-		
+		DomainRepository domain_repo = new DomainRepository();
 		Test test = new Test();
 		
-		test.setDomain(itest.getDomain());
+		test.setDomain(domain_repo.convertFromRecord(itest.getDomain()));
 		test.setKey(itest.getKey());
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());

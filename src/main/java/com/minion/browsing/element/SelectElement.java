@@ -2,17 +2,17 @@ package com.minion.browsing.element;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
 
 public class SelectElement implements PageElement {
     @SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(SelectElement.class);
+    private static Logger log = Logger.getLogger(SelectElement.class);
 	
 	private HtmlTag select_element;
 	private List<HtmlTag> option_elements;

@@ -3,13 +3,11 @@ package com.minion.tester;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.minion.structs.Path;
+import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 
 /**
  * Writes contents of testDefinition to a file.
- * 
- * @author Brandon Kindred
  */
 public class TestWriter {
 	private Path path = null;
@@ -24,9 +22,9 @@ public class TestWriter {
 	 * @return
 	 */
 	public String createTest(){
-		List<PathObject<?>> pathIterator = this.path.getPath();
+		List<PathObject> pathIterator = this.path.getPath();
 		ArrayList<String> testStatements = new ArrayList<String>();
-		for(PathObject<?> obj : pathIterator){
+		for(PathObject obj : pathIterator){
 			//Integer graph_idx = (Integer) pathIterator.next();
 			//Vertex<?> vertex = graph.getVertices().get(graph_idx);
 			IStatementFactory statement = new ElementStatement();

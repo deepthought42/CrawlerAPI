@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.qanairy.models.dto.TestRepository;
@@ -21,7 +20,7 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  *
  */
 public class Test {
-    private static final Logger log = LoggerFactory.getLogger(Test.class);
+    private static Logger log = Logger.getLogger(Test.class);
     
 	private String key; 
 	private String name;

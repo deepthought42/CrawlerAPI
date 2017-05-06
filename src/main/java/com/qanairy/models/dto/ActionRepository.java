@@ -4,8 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.qanairy.models.Action;
 import com.qanairy.persistence.DataAccessObject;
@@ -18,7 +17,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class ActionRepository implements IPersistable<Action, IAction>{
 
-	private static final Logger log = LoggerFactory.getLogger(Action.class);
+	private static Logger log = Logger.getLogger(Action.class);
 
 	/**
 	 * {@inheritDoc}

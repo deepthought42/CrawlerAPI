@@ -2,8 +2,7 @@ package com.minion.browsing.form;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.minion.browsing.element.ComplexField;
 import com.qanairy.models.Attribute;
@@ -13,7 +12,7 @@ import com.qanairy.models.PageElement;
  * Represents a form tag and the encompassed inputs in a web browser
  */
 public class Form {
-    private static final Logger log = LoggerFactory.getLogger(Form.class);
+	private static Logger log = Logger.getLogger(Form.class);
 
 	private PageElement form_tag;
 	private List<ComplexField> form_fields;

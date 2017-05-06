@@ -1,30 +1,19 @@
 package com.qanairy.models;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
-import com.minion.actors.BrowserActor;
-import com.minion.browsing.ActionFactory;
-import com.minion.browsing.IObjectValuationAccessor;
-import com.minion.persistence.edges.IPathEdge;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
 import com.qanairy.models.PathObject;
-import com.qanairy.persistence.IPath;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 
 /**
  * A set of vertex objects that form a sequential movement through a graph
  */
 public class ExploratoryPath extends Path{
-    private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
+	private static Logger log = Logger.getLogger(ExploratoryPath.class);
 	
     private String key;
 	private boolean isUseful;

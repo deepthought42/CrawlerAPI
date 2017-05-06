@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.minion.actors.MemoryRegistryActor;
 
@@ -19,6 +18,8 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.TestRepository;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rl.learning.Brain;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.qanairy.rl.memory.ObjectDefinition;
@@ -43,7 +44,7 @@ import com.qanairy.models.Path;
  *
  */
 public class BrowserActor extends UntypedActor {
-    private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
+	private static Logger log = Logger.getLogger(BrowserActor.class.getName());
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -222,16 +223,19 @@ public class BrowserActor extends UntypedActor {
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
 					
-					Test new_test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
+					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
+					TestRepository test_repo = new TestRepository();
+					test = test_repo.create(new OrientConnectionFactory(), test);
+					
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 					
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), new_test);
-					if(testMap != null && !testMap.containsTest(new_test)){
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					if(testMap != null && !testMap.containsTest(test)){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						work_allocator.tell(test_msg, getSelf() );
-						testMap.addTest(new_test);
+						testMap.addTest(test);
 					}
 
 					log.info("Sending test to Memory Actor");
@@ -241,7 +245,7 @@ public class BrowserActor extends UntypedActor {
 					//tell memory worker of path
 					memory_actor.tell(test_msg, getSelf() );
 					//broadcast test
-					PastPathExperienceController.broadcastTestExperience(new_test);
+					PastPathExperienceController.broadcastTestExperience(test);
 			  	}
 			  	this.browser.close();
 	

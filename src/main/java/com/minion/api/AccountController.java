@@ -3,8 +3,8 @@ package com.minion.api;
 import java.security.Principal;
 import java.util.ArrayList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +44,7 @@ import com.qanairy.services.UsernameService;
 @RequestMapping("/accounts")
 public class AccountController {
 	
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private final Logger logger = Logger.getLogger(this.getClass());
 	
     @Autowired
     private Auth0Client auth0Client;

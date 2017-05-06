@@ -1,7 +1,6 @@
 package com.qanairy.services;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 @Service
 public class DomainService {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     protected DomainRepository domainRepository;
 

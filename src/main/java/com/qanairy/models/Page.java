@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openqa.selenium.UnhandledAlertException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
@@ -17,7 +16,7 @@ import com.minion.browsing.Browser;
  *
  */
 public class Page extends PathObject {
-    private static final Logger log = LoggerFactory.getLogger(Page.class);
+	private static Logger log = Logger.getLogger(Page.class);
 
     private String key;
     private boolean landable = false;

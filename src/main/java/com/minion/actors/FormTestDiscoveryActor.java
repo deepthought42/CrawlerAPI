@@ -6,8 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -34,7 +33,7 @@ import akka.actor.UntypedActor;
  * Handles discovery and creation of various form tests
  */
 public class FormTestDiscoveryActor extends UntypedActor {
-	private static final Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
+	private static Logger log = Logger.getLogger(FormTestDiscoveryActor.class);
 
 	/**
 	 * {@inheritDoc}

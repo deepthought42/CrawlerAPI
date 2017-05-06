@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
+import org.apache.log4j.Logger;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidSelectorException;
@@ -39,8 +40,7 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.element.ComplexField;
@@ -56,7 +56,7 @@ import com.qanairy.models.PageElement;
  * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 
  */
 public class Browser {
-    private static final Logger log = LoggerFactory.getLogger(Browser.class);
+	private static Logger log = Logger.getLogger(Browser.class);
 
 	private WebDriver driver;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel"};	
@@ -218,7 +218,7 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
-		System.setProperty("webdriver.chrome.driver", "drivers/chrome/chromedriver");
+		System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
 
 		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();

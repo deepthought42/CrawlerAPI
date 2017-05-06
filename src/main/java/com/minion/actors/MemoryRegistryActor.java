@@ -1,9 +1,6 @@
 package com.minion.actors;
 
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import akka.actor.UntypedActor;
 
@@ -11,11 +8,8 @@ import com.qanairy.models.Test;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.rl.memory.DataDecomposer;
-import com.qanairy.rl.memory.ObjectDefinition;
 
 import com.minion.structs.Message;
-import com.qanairy.models.Page;
 import com.qanairy.models.Path;
 
 /**
@@ -24,7 +18,7 @@ import com.qanairy.models.Path;
  *
  */
 public class MemoryRegistryActor extends UntypedActor{
-    private static final Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
+    private static Logger log = Logger.getLogger(MemoryRegistryActor.class);
 
     
 	/**

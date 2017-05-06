@@ -1,13 +1,12 @@
 package com.qanairy.models.dto;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
-import com.minion.actors.BrowserActor;
 import com.minion.persistence.edges.IPathEdge;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -27,7 +26,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathRepository implements IPersistable<Path, IPath> {
-    private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
+	private static Logger log = Logger.getLogger(PathRepository.class);
 
 	public IPath convertToRecord(OrientConnectionFactory connection, Path path) {
 		path.setKey(generateKey(path));
@@ -137,13 +136,8 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	public String generateKey(Path path) {
 		String path_key = "";
 		
-		PathObjectRepository path_object_record = new PathObjectRepository();
 
 		for(PathObject obj : path.getPath()){
-			if(obj == null){
-				break;
-			}
-			
 			if(obj instanceof Page){
 				PageRepository page_record = new PageRepository();
 				path_key += page_record.generateKey((Page)obj) + "::";
@@ -193,8 +187,22 @@ public class PathRepository implements IPersistable<Path, IPath> {
 
 	@Override
 	public Path convertFromRecord(IPath obj) {
-		// TODO Auto-generated method stub
-		return null;
+		IPathObject path_obj = obj.getPath();
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		while(path_obj != null){
+			Iterator<IPathEdge> path_edges = path_obj.getPathEdges().iterator();
+			while(path_edges.hasNext()){
+				IPathEdge edge = path_edges.next();
+				if(edge.getPathKey().equals(obj.getKey()) ){
+					PathObjectRepository path_obj_repo = new PathObjectRepository();
+					path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
+					path_obj = edge.getPathObjectOut();
+					break;
+				}
+			}
+		}
+		
+		return new Path(obj.getKey(), obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);
 	}
 
 	@Override

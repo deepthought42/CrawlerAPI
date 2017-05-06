@@ -3,6 +3,7 @@ package com.qanairy.persistence;
 import java.util.Iterator;
 import java.util.List;
 
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
@@ -60,13 +61,13 @@ public interface ITest  {
 	/**
 	 * @return the domain for the current test
 	 */
-	@Adjacency(label="belongs_to")
-	public Domain getDomain();
+	@Adjacency(direction=Direction.IN, label="contains_test")
+	public IDomain getDomain();
 	
 	/**
 	 * sets the domain for the current test
 	 */
-	@Adjacency(label="belongs_to")
+	@Adjacency(direction=Direction.IN, label="contains_test")
 	public void setDomain(IDomain domain);
 	
 	/**

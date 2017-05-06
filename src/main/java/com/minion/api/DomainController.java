@@ -4,8 +4,7 @@ import java.security.Principal;
 import java.util.List;
 
 import org.omg.CORBA.UnknownUserException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -38,7 +37,7 @@ import com.qanairy.services.DomainService;
 @RequestMapping("/domains")
 public class DomainController {
 	
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private final Logger logger = Logger.getLogger(this.getClass());
 
     @Autowired
     protected AccountService accountService;

@@ -4,16 +4,15 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
@@ -25,7 +24,7 @@ import com.qanairy.models.Path;
  *
  */
 public class TestingActor extends UntypedActor {
-    private static final Logger log = LoggerFactory.getLogger(TestingActor.class);
+	private static Logger log = Logger.getLogger(TestingActor.class);
 
     /**
      * Inputs

@@ -31,6 +31,9 @@ public interface IDomain {
 	@Adjacency(label="contains_test")
 	void setTests(List<ITest> tests);
 
+	@Adjacency(label="contains_test")
+	void addTest(ITest test);
+	
 	@Adjacency(label="group")
 	Iterator<IGroup> getGroups();
 
@@ -42,4 +45,5 @@ public interface IDomain {
 
 	@Adjacency(direction=Direction.IN, label="group")
 	void setAccounts(List<IAccount> groups);
+
 }

@@ -2,8 +2,7 @@ package com.minion.browsing;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -16,7 +15,7 @@ import com.qanairy.models.PathObject;
  * Provides methods for crawling webpages using selenium
  */
 public class Crawler {
-    private static final Logger log = LoggerFactory.getLogger(Crawler.class);
+	private static Logger log = Logger.getLogger(Crawler.class);
 
 	/**
 	 * Crawls the path for the current BrowserActor.

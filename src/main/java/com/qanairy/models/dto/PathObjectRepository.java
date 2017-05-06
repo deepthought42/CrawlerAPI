@@ -4,8 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -23,7 +22,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathObjectRepository implements IPersistable<PathObject, IPathObject> {
-    private static final Logger log = LoggerFactory.getLogger(PathObject.class);
+	private static Logger log = Logger.getLogger(PathObject.class);
 
 	/**
 	 * {@inheritDoc}

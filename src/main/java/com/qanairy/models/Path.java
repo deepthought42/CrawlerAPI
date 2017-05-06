@@ -3,10 +3,8 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
-import com.minion.actors.BrowserActor;
 import com.qanairy.models.Page;
 import com.qanairy.models.PathObject;
 
@@ -15,7 +13,7 @@ import com.qanairy.models.PathObject;
  * A set of vertex objects that form a sequential movement through a graph
  */
 public class Path {
-    private static final Logger log = LoggerFactory.getLogger(BrowserActor.class);
+	private static Logger log = Logger.getLogger(Path.class);
 	
     private String key;
 	private boolean isUseful;
@@ -48,10 +46,11 @@ public class Path {
 	 * 
 	 * @param current_path
 	 */
-	public Path(String key, boolean isUseful, List<PathObject> current_path){
+	public Path(String key, boolean isUseful, boolean spansMultipleDomains, List<PathObject> current_path){
 		this.isUseful = false;
 		this.path = current_path;
 		this.key = null;
+		this.spansMultipleDomains = spansMultipleDomains;
 	}
 		
 	/**

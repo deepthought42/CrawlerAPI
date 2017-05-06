@@ -1,7 +1,6 @@
 package com.qanairy.persistence;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
@@ -13,7 +12,7 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  *
  */
 public class OrientConnectionFactory {
-    private static final Logger log = LoggerFactory.getLogger(OrientConnectionFactory.class);
+    private static Logger log = Logger.getLogger(OrientConnectionFactory.class);
         
 	FramedTransactionalGraph<OrientGraph> current_tx;
 	
@@ -33,7 +32,7 @@ public class OrientConnectionFactory {
 	private FramedTransactionalGraph<OrientGraph> getConnection(){
 		log.info("framing graph factory");
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/thoth", "root", "password").setupPool(1, 20);
+		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/thoth", "brandon", "password").setupPool(1, 20);
 	    OrientGraph instance = graphFactory.getTx();
 	    log.info("Orientdb transaction created returning instance");
 		return factory.create(instance);

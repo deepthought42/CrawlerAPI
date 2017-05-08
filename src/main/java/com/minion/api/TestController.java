@@ -17,7 +17,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
@@ -49,7 +50,7 @@ import com.qanairy.models.Page;
 @Scope("session")
 @RequestMapping("/tests")
 public class TestController {
-	private static Logger log = Logger.getLogger(TestController.class);
+	private static Logger log = LogManager.getLogger(TestController.class);
 
     @Autowired
     protected AccountService accountService;

@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidSelectorException;
@@ -56,7 +57,7 @@ import com.qanairy.models.PageElement;
  * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 
  */
 public class Browser {
-	private static Logger log = Logger.getLogger(Browser.class);
+	private static Logger log = LogManager.getLogger(Browser.class);
 
 	private WebDriver driver;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel"};	

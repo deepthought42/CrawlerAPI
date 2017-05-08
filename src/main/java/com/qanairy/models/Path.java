@@ -3,7 +3,8 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.qanairy.models.Page;
 import com.qanairy.models.PathObject;
@@ -13,7 +14,7 @@ import com.qanairy.models.PathObject;
  * A set of vertex objects that form a sequential movement through a graph
  */
 public class Path {
-	private static Logger log = Logger.getLogger(Path.class);
+	private static Logger log = LogManager.getLogger(Path.class);
 	
     private String key;
 	private boolean isUseful;

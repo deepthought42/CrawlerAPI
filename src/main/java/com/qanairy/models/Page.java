@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.openqa.selenium.UnhandledAlertException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
@@ -16,7 +17,7 @@ import com.minion.browsing.Browser;
  *
  */
 public class Page extends PathObject {
-	private static Logger log = Logger.getLogger(Page.class);
+	private static Logger log = LogManager.getLogger(Page.class);
 
     private String key;
     private boolean landable = false;
@@ -53,7 +54,7 @@ public class Page extends PathObject {
 	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
-		super.setType(Page.class.getSimpleName());
+		super.setType("Page");
 		
 		log.info("setting source");
 		this.setSrc(html);

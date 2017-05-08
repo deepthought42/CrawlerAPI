@@ -4,7 +4,8 @@ import com.auth0.spring.security.api.Auth0JWTToken;
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.qanairy.auth.Auth0Client;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -24,7 +25,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UsernameService {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
     private Auth0Client auth0Client;

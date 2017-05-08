@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.ITest;
@@ -20,7 +20,7 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  *
  */
 public class Test {
-    private static Logger log = Logger.getLogger(Test.class);
+    private static Logger log = LogManager.getLogger(Test.class);
     
 	private String key; 
 	private String name;

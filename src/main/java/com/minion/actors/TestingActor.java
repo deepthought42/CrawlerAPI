@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -24,7 +25,7 @@ import com.qanairy.models.Path;
  *
  */
 public class TestingActor extends UntypedActor {
-	private static Logger log = Logger.getLogger(TestingActor.class);
+	private static Logger log = LogManager.getLogger(TestingActor.class);
 
     /**
      * Inputs

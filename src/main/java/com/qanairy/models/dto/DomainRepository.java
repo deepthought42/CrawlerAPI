@@ -14,6 +14,7 @@ import com.qanairy.models.Test;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
@@ -112,10 +113,12 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	@Override
 	public Domain convertFromRecord(IDomain obj) {
 		List<Test> tests = new ArrayList<Test>();
-		if(obj.getTests() != null){
-			//tests = Lists.newArrayList(obj.getTests());
-		}
-		
+		//TestRepository test_repo = new TestRepository();
+		//Lists.newArrayList(obj.getTests());
+		//Iterator<ITest> test_iter = obj.getTests().iterator();
+		//while(test_iter.hasNext()){
+		//	tests.add(test_repo.convertFromRecord(test_iter.next()));
+		//}
 		List<Group> groups = new ArrayList<Group>();
 		if(obj.getGroups() != null){
 			Lists.newArrayList(obj.getGroups());

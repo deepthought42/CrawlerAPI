@@ -4,8 +4,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -22,7 +22,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathObjectRepository implements IPersistable<PathObject, IPathObject> {
-	private static Logger log = Logger.getLogger(PathObject.class);
+	private static Logger log = LogManager.getLogger(PathObject.class);
 
 	/**
 	 * {@inheritDoc}
@@ -37,9 +37,9 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	@Override
 	public IPathObject convertToRecord(OrientConnectionFactory connection, PathObject path_obj) {
 		
-			IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
-			path_object_record.setType(path_obj.getType());
-			path_object_record.setKey(generateKey(path_obj));
+		IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
+		path_object_record.setType(path_obj.getType());
+		path_object_record.setKey(generateKey(path_obj));
 			
 		return path_object_record;
 	}
@@ -76,23 +76,22 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	public PathObject convertFromRecord(IPathObject data){
 		String type = data.getType();
 		
-		//log.info("data type :: " + data.getType()+" :: "+data.getClass().getName());
-		log.info("current class name :: " + type);
-		if(type.equals(Page.class)){
+		//System.err.println("data type :: " + data.getType()+" :: "+data.getClass().getName());
+		if(type.equals("Page")){
 		//if(type.equals(Page.class.getName())){
-			log.info("converting from page");
+			System.err.println("converting from page");
 			//IPage page_record = ((IPage)data);
 			//Page page_obj = new Page();
 			Page page_obj = new Page();
 			PageRepository page_record = new PageRepository();
 			Iterable<IPage> page_iter = (Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class);
 			page_obj = page_record.convertFromRecord(page_iter.iterator().next());
-			log.info("coverted page from record :: " + page_obj +" :: ");
+			System.err.println("coverted page from record :: " + page_obj +" :: ");
 			page_obj.setType(type);
 			return page_obj;
 		}
-		else if(type.equals(PageElement.class.getName())){
-			log.info("converting from page element");
+		else if(type.equals("PageElement")){
+			System.err.println("converting from page element");
 
 			//IPageElement page_elem_record = ((IPageElement)data);
 			PageElement page_elem_obj = null;
@@ -103,14 +102,16 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 				IPageElement page_elem_record = page_elem_record_iter.next();
 				if(page_elem_record instanceof IPageElement){
 					page_elem_obj = ((PageElementRepository)page_elem_record).convertFromRecord(page_elem_record);
+					page_elem_obj.setType(type);
 					//page_elem_records.add(page_elem_obj);
 				}
 			//}
 			
-			log.info("coverted page element from record :: " + page_elem_obj +" :: ");
+			System.err.println("coverted page element from record :: " + page_elem_obj +" :: ");
 			return page_elem_obj;
 		}
-		else if(type.equals(Action.class.getName())){			
+		else if(type.equals("Action")){			
+			System.err.println("converting from Action");
 			Action action = new Action();
 			
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
@@ -119,7 +120,8 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			ActionRepository action_record = new ActionRepository();
 			return action_record.convertFromRecord(iaction.iterator().next());
 		}
-		
+		System.err.println("current class name :: " + type);
+
 		return null;
 	}
 

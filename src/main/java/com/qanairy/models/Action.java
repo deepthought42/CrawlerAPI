@@ -12,6 +12,7 @@ public class Action extends PathObject{
 	 * Construct empty action object
 	 */
 	public Action(){
+		super.setType("Action");
 		this.name = null;
 		this.key = null;
 		this.val = "";
@@ -22,6 +23,7 @@ public class Action extends PathObject{
 	 * @param action_name
 	 */
 	public Action(String action_name) {
+		super.setType("Action");
 		this.name = action_name;
 		this.val = "";
 	}
@@ -31,6 +33,7 @@ public class Action extends PathObject{
 	 * @param action_name
 	 */
 	public Action(String action_name, String value) {
+		super.setType("Action");
 		this.name = action_name;
 		this.val = value;
 	}

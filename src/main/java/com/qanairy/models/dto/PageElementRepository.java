@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Test;
 import com.qanairy.persistence.DataAccessObject;
@@ -76,7 +77,8 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		elem.setXpath(data.getXpath());
 		elem.setText(data.getText());
 		elem.setName(data.getName());
-		
+		elem.setType(Action.class.getSimpleName());
+
 		return elem;
 	}
 

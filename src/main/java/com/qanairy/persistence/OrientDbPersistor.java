@@ -20,7 +20,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
  *
  */
 public class OrientDbPersistor{
-	private static Logger log = Logger.getLogger(FormTestDiscoveryActor.class);
+	private static Logger log = LogManager.getLogger(FormTestDiscoveryActor.class);
 
 	public OrientGraph graph = null;
 	

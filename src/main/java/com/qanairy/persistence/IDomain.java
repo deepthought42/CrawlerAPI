@@ -26,7 +26,7 @@ public interface IDomain {
 	void setUrl(String url);
 
 	@Adjacency(label="contains_test")
-	Iterator<ITest> getTests();
+	Iterable<ITest> getTests();
 
 	@Adjacency(label="contains_test")
 	void setTests(List<ITest> tests);

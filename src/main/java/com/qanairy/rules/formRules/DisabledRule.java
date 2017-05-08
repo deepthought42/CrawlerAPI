@@ -9,7 +9,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.rules.FormRule;
 
 public class DisabledRule implements FormRule {
-	private static Logger log = Logger.getLogger(FormTestDiscoveryActor.class);
+	private static Logger log = LogManager.getLogger(FormTestDiscoveryActor.class);
 
 	private FormRuleType type;
 	

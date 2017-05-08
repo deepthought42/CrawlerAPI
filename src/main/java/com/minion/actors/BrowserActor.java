@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.minion.actors.MemoryRegistryActor;
 
 import akka.actor.ActorRef;
@@ -44,7 +44,7 @@ import com.qanairy.models.Path;
  *
  */
 public class BrowserActor extends UntypedActor {
-	private static Logger log = Logger.getLogger(BrowserActor.class.getName());
+	private static Logger log = LogManager.getLogger(BrowserActor.class.getName());
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -188,7 +188,6 @@ public class BrowserActor extends UntypedActor {
 			if (acct_msg.getData() instanceof Path){
 				log.info("PATH PASSED TO BROWSER ACTOR");
 				Path path = (Path)acct_msg.getData();
-				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "chrome");
 
 				log.info("Creating new Browser");
@@ -221,11 +220,11 @@ public class BrowserActor extends UntypedActor {
 					}
 
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-					path_expansion_actor.tell(path_msg, getSelf() );
+					path_expansion_actor.tell(acct_msg, getSelf() );
 					
 					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
 					TestRepository test_repo = new TestRepository();
-					test = test_repo.create(new OrientConnectionFactory(), test);
+					test.setKey(test_repo.generateKey(test));
 					
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
@@ -299,6 +298,9 @@ public class BrowserActor extends UntypedActor {
 							
 							
 							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
+							TestRepository test_repo = new TestRepository();
+							test.setKey(test_repo.generateKey(test));
+							
 							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
@@ -364,6 +366,8 @@ public class BrowserActor extends UntypedActor {
 
 					System.out.println("PATH LENGTH : "+path.getPath().size());
 					Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
+					TestRepository test_repo = new TestRepository();
+					test.setKey(test_repo.generateKey(test));
 					PastPathExperienceController.broadcastTestExperience(test);
 					
 					log.info("Wrapping test in Message");
@@ -380,15 +384,6 @@ public class BrowserActor extends UntypedActor {
 					path_expansion_actor.tell(path_msg, getSelf() );
 			  	}
 			  	browser.close();
-
-				//Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
-				//PastPathExperienceController.broadcastTestExperience(test);
-				
-				//log.info("Saving test");
-			  	//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-
-				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-				//memory_actor.tell(test_msg, getSelf() );
 		   }
 		}else unhandled(message);
 	}

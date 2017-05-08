@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.minion.persistence.edges.IPathEdge;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -26,7 +26,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathRepository implements IPersistable<Path, IPath> {
-	private static Logger log = Logger.getLogger(PathRepository.class);
+	private static Logger log = LogManager.getLogger(PathRepository.class);
 
 	public IPath convertToRecord(OrientConnectionFactory connection, Path path) {
 		path.setKey(generateKey(path));
@@ -45,7 +45,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			path_record = iter.next();
 		}
 
-		boolean first_pass = true;
 		IPathObject last_path_obj = null;
 
 		for(PathObject obj: path.getPath()){
@@ -58,12 +57,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				PageRepository page_repo = new PageRepository();
 				IPage persistablePathObj = page_repo.convertToRecord(connection, (Page)obj);
 				
-				if(first_pass){
+				if(last_path_obj == null){
 					log.info("First object detected : "+persistablePathObj.getClass());
 					path_record.setPath(persistablePathObj);
-					
-					log.info("adding object to path");
-					first_pass = false;
 				}
 				else{
 					log.info("setting next object in path using IPathEdge");
@@ -79,15 +75,12 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				PageElementRepository page_elem_repo = new PageElementRepository();
 				IPageElement persistablePathObj = page_elem_repo.convertToRecord(connection, (PageElement)obj);
 
-				if(first_pass){
+				if(last_path_obj == null){
 					log.info("First object detected : "+persistablePathObj.getClass());
 					path_record.setPath(persistablePathObj);
-					
-					log.info("adding object to path");
-					first_pass = false;
 				}
 				else{
-					log.info("setting next object in path using IPathEdge");
+					log.info("setting page element as next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
 					log.info("Setting path key on IPathEdge");
@@ -99,12 +92,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				ActionRepository action_repo = new ActionRepository();
 				IAction persistablePathObj = action_repo.convertToRecord(connection, (Action)obj);
 
-				if(first_pass){
+				if(last_path_obj == null){
 					log.info("First object detected : "+persistablePathObj.getClass());
 					path_record.setPath(persistablePathObj);
-					
-					log.info("adding object to path");
-					first_pass = false;
 				}
 				else{
 					log.info("setting next object in path using IPathEdge");
@@ -116,10 +106,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				
 				last_path_obj = persistablePathObj;
 			}
-			
-			
-			//last_path_obj = persistablePathObj;
-			
 		}
 		
 		path_record.setIsUseful(path.isUseful());
@@ -202,6 +188,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			}
 		}
 		
+		for(PathObject path_obj2 : path_obj_list){
+			System.err.println("Path Object Type : "+path_obj2.getType());
+		}
 		return new Path(obj.getKey(), obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);
 	}
 

@@ -1,6 +1,7 @@
 package com.qanairy.models;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An object wrapper that allows data to be dynamically placed in data structures
@@ -8,7 +9,7 @@ import org.apache.log4j.Logger;
  *
  */
 public abstract class PathObject{
-    private static Logger log = Logger.getLogger(PathObject.class);
+    private static Logger log = LogManager.getLogger(PathObject.class);
     private String type = null;
     
     public String getType(){
@@ -19,8 +20,8 @@ public abstract class PathObject{
      * Sets type to the classname passed. System generally expects classname to be simpleClassName()
      * @param classname
      */
-    public void setType(String classname){
-    	this.type = classname;
+    public void setType(String type){
+    	this.type = type;
     }
 	
 	public abstract PathObject clone();

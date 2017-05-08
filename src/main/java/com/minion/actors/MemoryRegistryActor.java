@@ -1,6 +1,7 @@
 package com.minion.actors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import akka.actor.UntypedActor;
 
@@ -18,7 +19,7 @@ import com.qanairy.models.Path;
  *
  */
 public class MemoryRegistryActor extends UntypedActor{
-    private static Logger log = Logger.getLogger(MemoryRegistryActor.class);
+    private static Logger log = LogManager.getLogger(MemoryRegistryActor.class);
 
     
 	/**

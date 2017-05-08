@@ -14,7 +14,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.minion.browsing.ActionFactory;
 
@@ -24,7 +25,7 @@ import com.minion.browsing.ActionFactory;
  *  maintained by PageElement though. 
  */
 public class PageElement extends PathObject{
-	private static Logger log = Logger.getLogger(PageElement.class);
+	private static Logger log = LogManager.getLogger(PageElement.class);
 
     private String key;
     private String screenshot;
@@ -39,6 +40,7 @@ public class PageElement extends PathObject{
 	}
 	
 	public PageElement(String text, String xpath, String name, List<Attribute> attributes){
+		super.setType("PageElement");
 		this.name = name;
 		this.xpath = xpath;
 		this.attributes = attributes;
@@ -48,6 +50,7 @@ public class PageElement extends PathObject{
 	}
 	
 	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes){
+		super.setType("PageElement");
 		this.setName(name);
 		this.setXpath(xpath);
 		this.setAttributes(attributes);

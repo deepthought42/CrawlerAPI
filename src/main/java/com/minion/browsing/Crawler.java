@@ -2,7 +2,8 @@ package com.minion.browsing;
 
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -15,7 +16,7 @@ import com.qanairy.models.PathObject;
  * Provides methods for crawling webpages using selenium
  */
 public class Crawler {
-	private static Logger log = Logger.getLogger(Crawler.class);
+	private static Logger log = LogManager.getLogger(Crawler.class);
 
 	/**
 	 * Crawls the path for the current BrowserActor.
@@ -33,11 +34,15 @@ public class Crawler {
 		//skip first node since we should have already loaded it during initialization
 	  	log.info("crawling path...");
 		for(PathObject current_obj: path.getPath()){
+			if(current_obj == null){
+				continue;
+			}
+
 			if(current_obj instanceof Page){
 				log.info("Current path node is a Page");
 			}
 			else if(current_obj instanceof PageElement){
-				log.info("Current path node is a WebElement");
+				System.err.println("Current path node is a WebElement");
 				last_element = (PageElement) current_obj;
 			}
 			//String is action in this context
@@ -45,11 +50,21 @@ public class Crawler {
 				boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
 				
-				log.info("Current path node is an Action : "+action.getName());
-				log.info(" :: With driver : "+browser.getDriver());
+				System.err.println("Current path node is an Action : "+action.getName());
+				System.err.println(" :: With driver : "+browser.getDriver());
+				System.err.println("last element :: "+last_element);
+				System.err.println("path size :: "+path.getPath().size());
+
+				for(PathObject obj : path.getPath()){
+					if(obj == null){
+						System.err.println("Path object is null!");
+						continue;
+					}
+					System.err.println("Path Object Class ::" + obj.getClass().getName());
+				}
+				
 				int attempts = 0;
 				do{
-					//actionPerformedSuccessfully = performAction(last_element, action.getName(), browser.getDriver() );
 					actionPerformedSuccessfully = last_element.performAction(action, "String should be entered here", browser.getDriver());
 					attempts++;
 				}while(!actionPerformedSuccessfully && attempts < 50);
@@ -62,8 +77,7 @@ public class Crawler {
 		}
 		
 	  	log.info("Path crawl completed");
-	  	Page page = browser.getPage();
-	  	return page;
+	  	return browser.getPage();
 	}
 
 	/**

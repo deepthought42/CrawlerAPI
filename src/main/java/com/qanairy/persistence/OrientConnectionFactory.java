@@ -1,7 +1,7 @@
 package com.qanairy.persistence;
 
-import org.apache.log4j.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
 import com.tinkerpop.frames.FramedGraphFactory;
@@ -12,7 +12,7 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  *
  */
 public class OrientConnectionFactory {
-    private static Logger log = Logger.getLogger(OrientConnectionFactory.class);
+    private static Logger log = LogManager.getLogger(OrientConnectionFactory.class);
         
 	FramedTransactionalGraph<OrientGraph> current_tx;
 	

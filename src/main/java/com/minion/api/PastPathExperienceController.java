@@ -13,7 +13,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +27,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @CrossOrigin(origins = "http://localhost:8001")
 @RestController
 public class PastPathExperienceController {
-	private static Logger log = Logger.getLogger(PastPathExperienceController.class);
+	private static Logger log = LogManager.getLogger(PastPathExperienceController.class);
 
     private static final Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
     

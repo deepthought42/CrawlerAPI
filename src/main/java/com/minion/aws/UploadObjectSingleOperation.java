@@ -1,13 +1,8 @@
 package com.minion.aws;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-
-import javax.imageio.ImageIO;
-
-import org.openqa.selenium.Point;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -23,17 +18,17 @@ import com.amazonaws.services.s3.model.S3Object;
 public class UploadObjectSingleOperation {
 	private static String bucketName     = "qanairy";
 	
-	public static String saveImageToS3(File image, String domain, String url) throws IOException {
+	public static String saveImageToS3(File image, String domain, String page_key) throws IOException {
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");;
 
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
         try {
         	
-            System.out.println("Uploading a new object to S3 from a filen: "+domain+"/"+image.getName() + " " + image);
+            System.out.println("Uploading a new object to S3 from a file: "+domain+"/"+image.getName() + " " + image);
             s3client.putObject(new PutObjectRequest(
-            		                 bucketName, domain+""+url+".png", image).withCannedAcl(CannedAccessControlList.PublicRead));
-            return "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+""+url+".png";
+            		                 bucketName, domain+"/"+page_key+".png", image).withCannedAcl(CannedAccessControlList.PublicRead));
+            return "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+".png";
          } catch (AmazonServiceException ase) {
             System.out.println("Caught an AmazonServiceException, which " +
             		"means your request made it " +

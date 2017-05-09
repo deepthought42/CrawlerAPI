@@ -267,8 +267,17 @@ public class PageElement extends PathObject{
 
 
 	public PathObject clone() {
-		// TODO Auto-generated method stub
-		return null;
+		PageElement page_elem = new PageElement();
+		page_elem.setAttributes(this.getAttributes());
+		page_elem.setCssValues(this.getCssValues());
+		page_elem.setKey(this.getKey());
+		page_elem.setName(this.getName());
+		page_elem.setScreenshot(this.getScreenshot());
+		page_elem.setText(this.getText());
+		page_elem.setType(this.getType());
+		page_elem.setXpath(this.getXpath());
+		
+		return page_elem;
 	}
 
 	public String getScreenshot() {

@@ -93,7 +93,6 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		Iterator<IPageElement> iter = html_tags.iterator();
 		IPageElement page_elem_record = null;
 
-		
 		if(!iter.hasNext()){
 			page_elem_record = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getSimpleName()+","+UUID.randomUUID(), IPageElement.class);
 
@@ -120,7 +119,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			page_elem_record.setKey(elem.getKey());
 		}
 		else{
-			page_elem_record = html_tags.iterator().next();
+			page_elem_record = iter.next();
 		}
 		return page_elem_record;
 	}
@@ -132,8 +131,10 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * @return
 	 */
 	@Override
-	public String generateKey(PageElement obj) {
-		return obj.getXpath();
+	public String generateKey(PageElement page_elem) {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page_elem.getXpath());   
+
+		//return obj.getXpath();
 	}
 
 	@Override

@@ -133,7 +133,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	@Override
 	public String generateKey(Page page) {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
-		//return page.getSrc().hashCode()+"";
 	}
 
 	@Override

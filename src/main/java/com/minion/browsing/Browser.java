@@ -28,7 +28,6 @@ import org.openqa.selenium.Point;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -110,7 +109,7 @@ public class Browser {
 
 		return new Page(this.driver.getPageSource(), 
 						this.driver.getCurrentUrl(), 
-						UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), page_url.getPath().toString()), 
+						UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource())), 
 						Browser.getVisibleElements(this.driver, ""));
 	}
 	
@@ -121,7 +120,7 @@ public class Browser {
 	 * @return
 	 */
 	public static String cleanSrc(String src){
-		//src = src.replaceAll("\\s", "");
+		src = src.replaceAll("\\s", "");
 		
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
@@ -144,19 +143,6 @@ public class Browser {
 	}
 	
 	/**
-	 * 
-	 * @param url
-	 */
-	public void getUrl(String url){
-		try{
-			this.driver.get(url);
-		}
-		catch(UnhandledAlertException exc){
-			AcceptAlert(driver, new WebDriverWait(driver, 5));
-		}
-	}
-	
-	/**
 	 * open new firefox browser
 	 * 
 	 * @param url
@@ -175,7 +161,6 @@ public class Browser {
 	    //capabilities.setVersion("3.6");
 		WebDriver driver = new FirefoxDriver(capabilities);
 		//WebDriver driver = new RemoteWebDriver(new URL("http://localhost:4444"), capabilities);
-		log.info("firefox opened");
 		return driver;
 	}
 	
@@ -282,6 +267,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static File getScreenshot(WebDriver driver) throws IOException{
+		driver.manage().window().maximize();
 		File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 		
 		return screenshot;

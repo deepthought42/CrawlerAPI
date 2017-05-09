@@ -61,7 +61,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	//clone path
 			  	//Path new_path = Path.clone(path);
 			  	
-			  	log.info("Crawling path for test :: "+(path!=null));
+			  	System.err.println("Form Test Discovery Actor is crawling path for test :: "+path.getKey());
 			  	Page current_page = Crawler.crawlPath(path, browser);
 			  				  	
 			  	List<Form> forms = Browser.extractAllForms(current_page, browser);
@@ -78,6 +78,9 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					//send all paths to work allocator to be evaluated
 					Message<Path> expanded_path_msg = new Message<Path>(acct_message.getAccountKey(), expanded);
 
+					for(PathObject obj : expanded.getPath()){
+						System.err.println("Expanded Object Type :: " + obj.getType());
+					}
 					work_allocator.tell(expanded_path_msg, getSelf() );
 				}
 				
@@ -367,7 +370,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 */
 	public static List<Path> generateAllFormPaths(Path path, Form form){
 		List<Path> form_paths = new ArrayList<Path>();
-		log.info("Form complex field size : " + form.getFormFields().size());
+		System.err.println("Form complex field size : " + form.getFormFields().size());
 		for(ComplexField complex_field: form.getFormFields()){
 			log.info("complex field elements size : " + complex_field.getElements().size());
 			//for each field in the complex field generate a set of tests for all known rules
@@ -386,7 +389,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 						for(PathObject obj : curr_path.getPath()){
 							clone_path.add(obj);	
 						}
-						log.info("loaded clone path for test");
+						System.err.println("loaded clone path for test");
 						//Test test = new Test(clone_path, null, ((Page)path.getPath().get(0)).getUrl().getHost());
 						//log.info("Test created for form path");
 						form_paths.add(clone_path);

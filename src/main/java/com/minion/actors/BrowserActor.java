@@ -186,7 +186,7 @@ public class BrowserActor extends UntypedActor {
 			Message<?> acct_msg = (Message<?>)message;
 			
 			if (acct_msg.getData() instanceof Path){
-				log.info("PATH PASSED TO BROWSER ACTOR");
+				log.info("Path passed to BrowserActor");
 				Path path = (Path)acct_msg.getData();
 			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "chrome");
 
@@ -194,7 +194,7 @@ public class BrowserActor extends UntypedActor {
 				Page result_page = null;
 				
 				if(path.getPath() != null){
-					log.info("crawling path : "+path);
+					System.err.println("Browser Actor is crawling path : "+path.getKey());
 					result_page = Crawler.crawlPath(path, this.browser);
 				}
 				

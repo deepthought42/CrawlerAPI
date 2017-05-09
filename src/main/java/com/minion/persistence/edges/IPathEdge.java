@@ -21,5 +21,5 @@ public interface IPathEdge {
     IPathObject getPathObjectOut();
 
     @InVertex
-    IPathObject getPathProjectIn();
+    IPathObject getPathObjectIn();
 }

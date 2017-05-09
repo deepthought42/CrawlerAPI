@@ -34,15 +34,13 @@ public class Crawler {
 		//skip first node since we should have already loaded it during initialization
 	  	log.info("crawling path...");
 		for(PathObject current_obj: path.getPath()){
-			if(current_obj == null){
-				continue;
-			}
+			System.err.println("Current path node of type :: "+current_obj.getType());
 
 			if(current_obj instanceof Page){
 				log.info("Current path node is a Page");
 			}
 			else if(current_obj instanceof PageElement){
-				System.err.println("Current path node is a WebElement");
+				System.err.println("Current path node is a Page Element :: "+current_obj.getType());
 				last_element = (PageElement) current_obj;
 			}
 			//String is action in this context

@@ -48,10 +48,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		IPathObject last_path_obj = null;
 		
 		for(PathObject obj: path.getPath()){
-			if(obj == null){
-				break;
-			}
-			
 			if(obj instanceof Page){
 				PageRepository page_repo = new PageRepository();
 				IPage persistablePathObj = page_repo.convertToRecord(connection, (Page)obj);
@@ -87,7 +83,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				}
 				last_path_obj = persistablePathObj;
 			}
-			if(obj instanceof Action){
+			else if(obj instanceof Action){
 				ActionRepository action_repo = new ActionRepository();
 				IAction persistablePathObj = action_repo.convertToRecord(connection, (Action)obj);
 
@@ -121,18 +117,16 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	public String generateKey(Path path) {
 		String path_key = "";
 		
-
 		for(PathObject obj : path.getPath()){
-			if(obj instanceof Page){
+			if(obj.getType().equals("Page")){
 				PageRepository page_record = new PageRepository();
 				path_key += page_record.generateKey((Page)obj) + "::";
-
 			}
-			else if(obj instanceof PageElement){
+			else if(obj.getType().equals("PageElement")){
 				PageElementRepository page_elem_record = new PageElementRepository();
 				path_key += page_elem_record.generateKey((PageElement)obj) + "::";
 			}
-			else if(obj instanceof Action){
+			else if(obj.getType().equals("Action")){
 				ActionRepository action_record = new ActionRepository();
 				path_key += action_record.generateKey((Action)obj) + "::";
 			}
@@ -158,6 +152,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		return path;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public Path update(OrientConnectionFactory connection, Path path) {
 		Path path_record = find(connection, path.getKey());
@@ -174,20 +171,47 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	public Path convertFromRecord(IPath obj) {
 		IPathObject path_obj = obj.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
-		while(path_obj != null){
+		int index = 0;
+		IPathObject last_path_obj = null;
+		while(path_obj != null && (last_path_obj == null || !last_path_obj.getKey().equals(path_obj.getKey()))){
 			Iterator<IPathEdge> path_edges = path_obj.getPathEdges().iterator();
+			System.err.println("getting path edges");
+			last_path_obj = path_obj;
+			PathObjectRepository path_obj_repo = new PathObjectRepository();
+			path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
 			while(path_edges.hasNext()){
+				index++;
 				IPathEdge edge = path_edges.next();
-				if(edge.getPathKey().equals(obj.getKey()) ){
-					PathObjectRepository path_obj_repo = new PathObjectRepository();
-					path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
-					path_obj = edge.getPathObjectOut();
+				System.err.println("retrieving next edge on iteration :: "+index);
+				if(edge != null && edge.getPathKey().equals(obj.getKey()) ){
+					System.err.println("Edge key matches object key");
+					
+					/*
+					if(path_obj.getType().equals("Page")){
+						PageRepository page_repo = new PageRepository();
+						path_obj_list.add(page_repo.convertFromRecord(path_obj));
+					}
+					else if(path_obj.getType().equals("PageElement")){
+						PageElementRepository page_elem_repo = new PageElementRepository();
+						path_obj_list.add(page_elem_repo.convertFromRecord((IPageElement)path_obj));	
+					}
+					else if(path_obj.getType().equals("Action")){
+						ActionRepository action_repo = new ActionRepository();
+						path_obj_list.add(action_repo.convertFromRecord((IAction)path_obj));
+					}
+					*/
+					//path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
+					path_obj = edge.getPathObjectIn();
+					System.err.println("Path obj in :: "+edge.getPathObjectIn());
 					break;
 				}
 			}
 		}
 		
 		for(PathObject path_obj2 : path_obj_list){
+			if(path_obj2 == null){
+				continue;
+			}
 			System.err.println("Path Object Type : "+path_obj2.getType());
 		}
 		return new Path(obj.getKey(), obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);

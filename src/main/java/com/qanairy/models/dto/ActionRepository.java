@@ -17,6 +17,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class ActionRepository implements IPersistable<Action, IAction>{
 
+	@SuppressWarnings("unused")
 	private static Logger log = LogManager.getLogger(Action.class);
 
 	/**
@@ -29,13 +30,24 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public IAction convertToRecord(OrientConnectionFactory rl_conn, Action action) {
-		IAction action_record = rl_conn.getTransaction().addVertex("class:"+IAction.class.getSimpleName()+","+UUID.randomUUID(), IAction.class);
-		action_record.setName(action.getName());
-		action_record.setKey(action.getKey());
-		action_record.setType(action.getClass().getName());
-		action_record.setValue(action.getValue());
+	public IAction convertToRecord(OrientConnectionFactory conn, Action action) {
+		action.setKey(generateKey(action));
 		
+		@SuppressWarnings("unchecked")
+		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(action.getKey(), conn, IAction.class);
+		Iterator<IAction> iter = actions.iterator();
+		
+		IAction action_record = null;
+		if(!iter.hasNext()){
+			action_record = conn.getTransaction().addVertex("class:"+IAction.class.getSimpleName()+","+UUID.randomUUID(), IAction.class);
+			action_record.setName(action.getName());
+			action_record.setKey(action.getKey());
+			action_record.setType(Action.class.getSimpleName());
+			action_record.setValue(action.getValue());
+		}
+		else{
+			action_record = iter.next();
+		}
 		return action_record;
 	}
 

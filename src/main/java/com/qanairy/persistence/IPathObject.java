@@ -3,6 +3,7 @@ package com.qanairy.persistence;
 import java.util.List;
 
 import com.minion.persistence.edges.IPathEdge;
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Incidence;
 import com.tinkerpop.frames.Property;
@@ -22,7 +23,7 @@ public interface IPathObject {
 	public void setType(String type);
 	
 	@Adjacency(label="goes_to")
-	public IPathObject getNext();
+	public Iterable<IPathObject> getNext();
 	
 	@Adjacency(label="goes_to")
 	public void setNext(IPathObject path_obj);
@@ -30,9 +31,9 @@ public interface IPathObject {
 	@Adjacency(label="goes_to")
 	public void setNext(List<IPathObject> path_obj);
 	
-	@Incidence(label="goes_to")
+	@Incidence(direction=Direction.OUT, label="goes_to")
 	public Iterable<IPathEdge> getPathEdges();
 	
-	@Incidence(label="goes_to")
+	@Incidence(direction=Direction.OUT, label="goes_to")
 	public IPathEdge addPathEdge(IPathObject path_obj);
 }

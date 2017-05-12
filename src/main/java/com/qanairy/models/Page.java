@@ -58,6 +58,7 @@ public class Page extends PathObject {
 		
 		log.info("setting source");
 		this.setSrc(html);
+		this.setType("Page");
 		this.url = new URL(url.replace("/#",""));
 		this.screenshot = screenshot_url;
 		this.elements = elements;
@@ -79,7 +80,7 @@ public class Page extends PathObject {
 	 */
 	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		super.setType(Page.class.getSimpleName());
+		super.setType("Page");
 
 		log.info("setting source");
 		this.setSrc(html);

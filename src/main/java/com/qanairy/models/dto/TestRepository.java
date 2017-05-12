@@ -100,30 +100,30 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		else{
 			test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
 			test_record.setKey(generateKey(test));
+			
+			PathRepository path_record = new PathRepository();
+			PageRepository page_record = new PageRepository();
+			DomainRepository domain_record = new DomainRepository();
+			TestRecordRepository test_record_record = new TestRecordRepository();
+			
+			log.info("setting test_record path : "+test.getPath().size()); 
+			test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
+			log.info("setting test_record result");
+			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
+			log.error("test.getDomain() =  "+test.getDomain().getUrl());
+			
+			IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
+			idomain.addTest(test_record);
+
+			test_record.setDomain(idomain);
+			for(TestRecord record : test.getRecords()){
+				test_record.addRecord(test_record_record.convertToRecord(connection, record));
+			}
 		}	
 		
-		PathRepository path_record = new PathRepository();
-		PageRepository page_record = new PageRepository();
-		DomainRepository domain_record = new DomainRepository();
-		TestRecordRepository test_record_record = new TestRecordRepository();
-		
-		log.info("setting test_record path : "+test.getPath().size()); 
-		test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
-		log.info("setting test_record result");
-		test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
-		log.error("test.getDomain() =  "+test.getDomain().getUrl());
-		
-		IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
-		idomain.addTest(test_record);
-
-		test_record.setDomain(idomain);
 		test_record.setName(test.getName());
 		test_record.setCorrect(test.isCorrect());
 		test_record.setGroups(test.getGroups());
-		
-		for(TestRecord record : test.getRecords()){
-			test_record.addRecord(test_record_record.convertToRecord(connection, record));
-		}
 		
 		return test_record;
 	}

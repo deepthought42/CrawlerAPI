@@ -18,6 +18,7 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rl.learning.Brain;
@@ -188,13 +189,13 @@ public class BrowserActor extends UntypedActor {
 			if (acct_msg.getData() instanceof Path){
 				log.info("Path passed to BrowserActor");
 				Path path = (Path)acct_msg.getData();
+				
 			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "chrome");
 
-				log.info("Creating new Browser");
+				System.err.println("Creating new Browser");
 				Page result_page = null;
 				
 				if(path.getPath() != null){
-					System.err.println("Browser Actor is crawling path : "+path.getKey());
 					result_page = Crawler.crawlPath(path, this.browser);
 				}
 				
@@ -207,7 +208,12 @@ public class BrowserActor extends UntypedActor {
 					//Path shortened_path = path.clone());
 				}
 				
-				log.info("Checking equality of page sources " + last_page.equals(result_page));
+				PathRepository path_repo = new PathRepository();
+				path.setKey(path_repo.generateKey(path));
+				System.err.println("Browser Actor crawled path : "+path.getKey());
+				System.err.println("Path length of Path Message : "+path.getPath().size());
+				
+				log.debug("Checking equality of page sources " + last_page.equals(result_page));
 				if(last_page.equals(result_page)){
 			  		log.info("Page sources match(Path Message)");
 			  		path.setIsUseful(false);
@@ -252,11 +258,11 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if (acct_msg.getData() instanceof ExploratoryPath){
-				log.info("EXPLORATORY PATH PASSED TO BROWSER ACTOR");
+				log.debug("EXPLORATORY PATH PASSED TO BROWSER ACTOR");
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "chrome");
 
-				log.info("Creating new Browser");
+				System.err.println("Creating new Browser");
 				Page result_page = null;
 
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
@@ -301,6 +307,9 @@ public class BrowserActor extends UntypedActor {
 							TestRepository test_repo = new TestRepository();
 							test.setKey(test_repo.generateKey(test));
 							
+							PathRepository path_repo = new PathRepository();
+							crawl_path.setKey(path_repo.generateKey(crawl_path));
+							
 							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
@@ -312,10 +321,10 @@ public class BrowserActor extends UntypedActor {
 								testMap.addTest(test);
 							}
 
-							log.info("Sending test to Memory Actor");
+							log.debug("Sending test to Memory Actor");
 							//tell memory worker of path
 							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-							log.info("Sending test to Memory Actor");
+							System.err.println("Sending test to Memory Actor");
 														
 							//tell memory worker of path
 							memory_actor.tell(test_msg, getSelf() );
@@ -368,6 +377,12 @@ public class BrowserActor extends UntypedActor {
 					Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
 					TestRepository test_repo = new TestRepository();
 					test.setKey(test_repo.generateKey(test));
+					
+					
+					PathRepository path_repo = new PathRepository();
+					path.setKey(path_repo.generateKey(path));
+					
+					
 					PastPathExperienceController.broadcastTestExperience(test);
 					
 					log.info("Wrapping test in Message");

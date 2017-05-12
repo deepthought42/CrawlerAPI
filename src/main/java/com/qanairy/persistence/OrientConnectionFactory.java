@@ -32,7 +32,7 @@ public class OrientConnectionFactory {
 	private FramedTransactionalGraph<OrientGraph> getConnection(){
 		log.info("framing graph factory");
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/thoth", "brandon", "password").setupPool(1, 20);
+		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/Thoth", "root", "password").setupPool(1, 20);
 	    OrientGraph instance = graphFactory.getTx();
 	    log.info("Orientdb transaction created returning instance");
 		return factory.create(instance);

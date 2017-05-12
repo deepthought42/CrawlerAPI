@@ -40,7 +40,16 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
 		path_object_record.setType(path_obj.getType());
 		path_object_record.setKey(generateKey(path_obj));
+		System.err.println("Converting path object to record");
+		if(path_obj instanceof Page){
 			
+		}
+		else if(path_obj instanceof PageElement){
+			
+		}
+		else if(path_obj instanceof Action){
+	
+		}
 		return path_object_record;
 	}
 
@@ -82,10 +91,13 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			System.err.println("converting from page");
 			//IPage page_record = ((IPage)data);
 			//Page page_obj = new Page();
-			Page page_obj = new Page();
+			Page page_obj = null;
 			PageRepository page_record = new PageRepository();
-			Iterable<IPage> page_iter = (Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class);
-			page_obj = page_record.convertFromRecord(page_iter.iterator().next());
+			Iterator<IPage> page_iter = ((Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class)).iterator();
+			if(page_iter.hasNext()){
+				System.err.println("Page Iteration exists");
+				page_obj = page_record.convertFromRecord(page_iter.next());
+			}
 			System.err.println("coverted page from record :: " + page_obj +" :: ");
 			page_obj.setType(type);
 			return page_obj;
@@ -100,8 +112,10 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			//List<PageElement> page_elem_records = new ArrayList<PageElement>();
 			//for(IPageElement elem_record : page_elem_record){
 				IPageElement page_elem_record = page_elem_record_iter.next();
-				if(page_elem_record instanceof IPageElement){
-					page_elem_obj = ((PageElementRepository)page_elem_record).convertFromRecord(page_elem_record);
+				if(page_elem_record != null){
+					PageElementRepository page_elem_repo = new PageElementRepository();
+
+					page_elem_obj = page_elem_repo.convertFromRecord(page_elem_record);
 					page_elem_obj.setType(type);
 					//page_elem_records.add(page_elem_obj);
 				}

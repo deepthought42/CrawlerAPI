@@ -5,9 +5,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.minion.browsing.Browser;
-import com.minion.structs.Path;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
+import com.qanairy.models.Path;
 
 public class BrowserTest {
 

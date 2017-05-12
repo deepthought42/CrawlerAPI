@@ -22,8 +22,6 @@ import com.minion.structs.Message;
 /**
  * Responsible for starting new Actors, monitoring
  * {@link Path}s traversed, and allotting work to Actors as work is requested.
- * 
- * @author Brandon Kindred
  *
  */
 public class WorkAllocationActor extends UntypedActor {

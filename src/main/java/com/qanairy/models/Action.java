@@ -65,6 +65,10 @@ public class Action extends PathObject{
 		return this.key;
 	}
 
+	public void setKey(String key) {
+		this.key = key;
+	}
+	
 	public String getValue() {
 		return val;
 	}

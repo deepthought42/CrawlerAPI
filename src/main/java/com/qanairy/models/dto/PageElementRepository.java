@@ -23,10 +23,14 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * {@inheritDoc}
 	 */
 	public PageElement create(OrientConnectionFactory connection, PageElement elem) {
-		elem.setKey(generateKey(elem));
-		convertToRecord(connection, elem);
-		connection.save();
-		
+		PageElement page_elem = find(connection, generateKey(elem));
+		if(page_elem == null){
+			convertToRecord(connection, elem);
+			connection.save();
+		}
+		else{
+			elem = page_elem;
+		}
 		return elem;
 	}
 
@@ -77,7 +81,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		elem.setXpath(data.getXpath());
 		elem.setText(data.getText());
 		elem.setName(data.getName());
-		elem.setType(Action.class.getSimpleName());
+		elem.setType(data.getType());
 
 		return elem;
 	}
@@ -87,6 +91,8 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * {@inheritDoc}
 	 */
 	public IPageElement convertToRecord(OrientConnectionFactory framedGraph, PageElement elem) {
+		elem.setKey(generateKey(elem));
+
 		@SuppressWarnings("unchecked")
 		Iterable<IPageElement> html_tags = (Iterable<IPageElement>) DataAccessObject.findByKey(elem.getKey(), framedGraph, IPageElement.class);
 		
@@ -95,7 +101,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 
 		if(!iter.hasNext()){
 			page_elem_record = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getSimpleName()+","+UUID.randomUUID(), IPageElement.class);
-
+			page_elem_record.setType("PageElement");
 			List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
 			/*for(Attribute attribute : this.attributes){
 				IAttribute attribute_persist = attribute.convertToRecord(framedGraph);

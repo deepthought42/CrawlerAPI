@@ -1,13 +1,18 @@
 package models;
+import org.testng.annotations.Test;
+import org.testng.Assert;
+import org.testng.AssertJUnit;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
 import org.testng.annotations.Test;
 
+import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -18,7 +23,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 public class PathTests {
 	
 	@Test(groups="Path")
-	public void createPath(){
+	public void pathDatabaseRecordConfirmation(){
 		Path path = new Path();
 		path.setIsUseful(false);
 		path.setSpansMultipleDomains(false);
@@ -33,43 +38,32 @@ public class PathTests {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		//page.setKey(page.generateKey());
+
 		path.add(page);
-		//path.setKey(path.generateKey());
 
+		PageElement page_element = new PageElement("test element", "//div", "div", null);
+		path.add(page_element);
 		
-		Page page2 = new Page();
-		page2.setLandable(true);
-		page2.setScreenshot("Test screenshot url");
-		page2.setSrc("src goes here 2");
-		page2.setElements(new ArrayList<PageElement>());
-
-		try {
-			page2.setUrl(new URL("http://www.test.com/test2"));
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-		
-		path.add(page2);
-		
-		Page page3 = new Page();
-		page3.setLandable(true);
-		page3.setScreenshot("Test screenshot url");
-		page3.setSrc("src goes here 3");
-		page3.setElements(new ArrayList<PageElement>());
-
-		try {
-			page3.setUrl(new URL("http://www.test.com/test3"));
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-		
-		path.add(page3);
+		Action action = new Action("click");
+				
+		path.add(action);
 		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		PathRepository path_repo = new PathRepository();
 		path_repo.convertToRecord(orient_connection, path);
 		orient_connection.save();
+		
+		//look up path and verify all elements
+		Path path_record = path_repo.find(orient_connection, path.getKey());
+		
+		System.err.println("path object record type : "+path_record.getPath().get(0).getType());
+		Assert.assertTrue(path_record.getPath().get(0).getType().equals("Page"));
+		
+		System.err.println("path object record type 1: "+path_record.getPath().get(1).getType());
+		Assert.assertTrue(path_record.getPath().get(1).getType().equals("PageElement"));
+		
+		System.err.println("path object record type 2: "+path_record.getPath().get(2));
+		Assert.assertTrue(path_record.getPath().get(2).getType().equals("Action"));
 	}
 	
 	@Test

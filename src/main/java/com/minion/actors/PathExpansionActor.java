@@ -38,7 +38,7 @@ public class PathExpansionActor extends UntypedActor {
 	 * @throws IllegalAccessException
 	 */
 	public static ArrayList<ExploratoryPath> expandPath(Path path)  {
-		log.info( " EXPANDING PATH...");
+		log.debug( " EXPANDING PATH...");
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
@@ -101,7 +101,7 @@ public class PathExpansionActor extends UntypedActor {
 			if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				
-				log.info("EXPANDING PATH WITH LENGTH : "+path.size());
+				System.err.println("EXPANDING PATH WITH LENGTH : "+path.size());
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);

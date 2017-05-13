@@ -56,7 +56,6 @@ public class Page extends PathObject {
 		
 		super.setType("Page");
 		
-		log.info("setting source");
 		this.setSrc(html);
 		this.setType("Page");
 		this.url = new URL(url.replace("/#",""));
@@ -64,7 +63,6 @@ public class Page extends PathObject {
 		this.elements = elements;
 		this.element_counts = countTags(this.elements);
 		this.setKey(null);
-		log.info("Page object created");
 	}
 	
 	/**
@@ -155,9 +153,9 @@ public class Page extends PathObject {
         
         Page that = (Page)o;
     	//return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
-		return (this.url.equals(that.url) 
+		return (this.getUrl().equals(that.getUrl()) 
 				&& this.getSrc().equals(that.getSrc())
-				&& this.screenshot.equals(that.screenshot));
+				&& this.getScreenshot().equals(that.getScreenshot()));
 				
 	}
 	

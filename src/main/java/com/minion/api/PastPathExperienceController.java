@@ -61,16 +61,16 @@ public class PastPathExperienceController {
         	log.info("Broadcasting path to account -> "+acct_key);
         	SseEmitter emit = emitters.get(acct_key);
         	 try {
-        		 test.getResult().setSrc("");
-        		 test.getResult().setElements(new ArrayList<>());
+        		// test.getResult().setSrc("");
+        		// test.getResult().setElements(new ArrayList<>());
         		 
         		 int idx=0;
         		 for(PathObject obj : test.getPath().getPath()){
         			 log.info("Type : "+obj.getType());
         			 if(obj instanceof Page){
         				 Page page = (Page)obj;
-        				 page.setSrc("");
-        				 page.setElements(new ArrayList<>());
+        				 //page.setSrc("");
+        				 //page.setElements(new ArrayList<>());
         				 test.getPath().getPath().set(idx, page);
         			 }
         			 idx++;

@@ -121,14 +121,17 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			if(obj.getType().equals("Page")){
 				PageRepository page_record = new PageRepository();
 				path_key += page_record.generateKey((Page)obj) + "::";
+				System.err.println("Page key :: "+path_key);
 			}
 			else if(obj.getType().equals("PageElement")){
 				PageElementRepository page_elem_record = new PageElementRepository();
 				path_key += page_elem_record.generateKey((PageElement)obj) + "::";
+				System.err.println("Page element key:: "+path_key);
 			}
 			else if(obj.getType().equals("Action")){
 				ActionRepository action_record = new ActionRepository();
 				path_key += action_record.generateKey((Action)obj) + "::";
+				System.err.println("Action key :: "+path_key);
 			}
 		}
 
@@ -182,7 +185,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			while(path_edges.hasNext()){
 				index++;
 				IPathEdge edge = path_edges.next();
-				System.err.println("retrieving next edge on iteration :: "+index);
+				System.err.println("retrieving next edge on iteration :: "+index + " :: with key == "+ edge.getPathKey());
 				if(edge != null && edge.getPathKey().equals(obj.getKey()) ){
 					System.err.println("Edge key matches object key");
 					

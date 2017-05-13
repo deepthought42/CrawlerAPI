@@ -199,7 +199,6 @@ public class BrowserActor extends UntypedActor {
 					result_page = Crawler.crawlPath(path, this.browser);
 				}
 				
-				log.info("Getting last page");
 				Page last_page = path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
 				
@@ -210,17 +209,19 @@ public class BrowserActor extends UntypedActor {
 				
 				PathRepository path_repo = new PathRepository();
 				path.setKey(path_repo.generateKey(path));
-				System.err.println("Browser Actor crawled path : "+path.getKey());
+				System.err.println("Browser Actor crawled path : "+path_repo.generateKey(path));
 				System.err.println("Path length of Path Message : "+path.getPath().size());
 				
-				log.debug("Checking equality of page sources " + last_page.equals(result_page));
+				System.err.println("Checking equality of page sources " + last_page.equals(result_page));
 				if(last_page.equals(result_page)){
-			  		log.info("Page sources match(Path Message)");
+					log.debug("Page sources match(Path Message)");
 			  		path.setIsUseful(false);
 			  	}
 			  	else{
-			  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
-					path.setIsUseful(true);
+			  		log.debug("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
+			  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
+					
+			  		path.setIsUseful(true);
 					if(path.size() > 1){
 						path.add(result_page);
 					}
@@ -258,17 +259,15 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if (acct_msg.getData() instanceof ExploratoryPath){
-				log.debug("EXPLORATORY PATH PASSED TO BROWSER ACTOR");
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "chrome");
 
-				System.err.println("Creating new Browser");
+				System.err.println("Creating new Browser for exploratory path crawling");
 				Page result_page = null;
 
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				
-				log.info("Getting last page");
 				Page last_page = exploratory_path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
 				if(last_page.isLandable()){
@@ -276,9 +275,7 @@ public class BrowserActor extends UntypedActor {
 					//Path shortened_path = path.clone());
 				}
 
-				
 				if(exploratory_path.getPath() != null){
-					log.info("crawling exploratory path");
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
@@ -286,29 +283,30 @@ public class BrowserActor extends UntypedActor {
 
 						result_page = Crawler.crawlPath(crawl_path, this.browser, action);
 						
-						log.info("Checking equality of page sources " + last_page.equals(result_page));
+						System.err.println("Checking equality of page sources " + last_page.equals(result_page));
 						if(last_page.equals(result_page)){
-					  		log.info("Page sources match(Path Message)");
+					  		System.err.println("Page sources match(Path Message)");
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{
+					  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
+
 					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page)){
 					  			break;
 					  		}
 					  		crawl_path.add(action);
-					  		log.info("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					  		crawl_path.setIsUseful(true);
 							if(crawl_path.size() > 1){
 								crawl_path.add(result_page);
 							}
 							
+							PathRepository path_repo = new PathRepository();
+							crawl_path.setKey(path_repo.generateKey(crawl_path));
 							
 							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
 							TestRepository test_repo = new TestRepository();
 							test.setKey(test_repo.generateKey(test));
 							
-							PathRepository path_repo = new PathRepository();
-							crawl_path.setKey(path_repo.generateKey(crawl_path));
 							
 							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
@@ -321,10 +319,8 @@ public class BrowserActor extends UntypedActor {
 								testMap.addTest(test);
 							}
 
-							log.debug("Sending test to Memory Actor");
 							//tell memory worker of path
 							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-							System.err.println("Sending test to Memory Actor");
 														
 							//tell memory worker of path
 							memory_actor.tell(test_msg, getSelf() );
@@ -340,65 +336,37 @@ public class BrowserActor extends UntypedActor {
 				}
 
 			  	this.browser.close();
-	
 				
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
-				log.info("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
+				log.debug("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
 			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "chrome");
 			  	
-			  	log.info("creating path");
 			  	Path path = new Path();
-			  	
-			  	log.info("getting browser page");
 			  	Page page_obj = browser.getPage();
-			  	
-			  	log.info("adding page " + page_obj + " to path");
 			  	path.getPath().add(page_obj);
-			  	
-			  	log.info("Crawling path");
 			  	Page current_page = Crawler.crawlPath(path, browser);
-			  	
-			  	log.info("Getting last and current page");
-			  	Page last_page = path.findLastPage();
-			  	
-			  	if(last_page != null && last_page.getSrc().equals(Browser.cleanSrc(current_page.getSrc())) && path.getPath().size() > 1){
-			  		log.info("Path isn't useful");
-			  		path.setIsUseful(false);
-			  	}
-			  	else{
-			  		log.info("Path is useful");
 
-					path.setIsUseful(true);
+				Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
+				TestRepository test_repo = new TestRepository();
+				test.setKey(test_repo.generateKey(test));
+				
+				PathRepository path_repo = new PathRepository();
+				path.setKey(path_repo.generateKey(path));
+				
+				PastPathExperienceController.broadcastTestExperience(test);
+				
+			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
+				memory_actor.tell(test_msg, getSelf() );
+				
+				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
+				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+				path_expansion_actor.tell(path_msg, getSelf() );
 
-					System.out.println("PATH LENGTH : "+path.getPath().size());
-					Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
-					TestRepository test_repo = new TestRepository();
-					test.setKey(test_repo.generateKey(test));
-					
-					
-					PathRepository path_repo = new PathRepository();
-					path.setKey(path_repo.generateKey(path));
-					
-					
-					PastPathExperienceController.broadcastTestExperience(test);
-					
-					log.info("Wrapping test in Message");
-				  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-
-					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-					log.info("Sending test message to memory actor");
-					memory_actor.tell(test_msg, getSelf() );
-					
-					log.info("Wrapping path in Message");
-
-					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
-					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-					path_expansion_actor.tell(path_msg, getSelf() );
-			  	}
-			  	browser.close();
+				browser.close();
 		   }
 		}else unhandled(message);
 	}

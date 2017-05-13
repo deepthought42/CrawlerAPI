@@ -32,7 +32,6 @@ public class Crawler {
 		PageElement last_element = null;
 		
 		//skip first node since we should have already loaded it during initialization
-	  	log.info("crawling path...");
 		for(PathObject current_obj: path.getPath()){
 			System.err.println("Current path node of type :: "+current_obj.getType());
 
@@ -40,26 +39,17 @@ public class Crawler {
 				log.info("Current path node is a Page");
 			}
 			else if(current_obj instanceof PageElement){
-				System.err.println("Current path node is a Page Element :: "+current_obj.getType());
 				last_element = (PageElement) current_obj;
+				System.err.println("Current path node is a Page Element :: "+current_obj.getType() + " :: key : "+last_element.getKey());
+
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
 				boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
 				
-				System.err.println("Current path node is an Action : "+action.getName());
-				System.err.println(" :: With driver : "+browser.getDriver());
 				System.err.println("last element :: "+last_element);
 				System.err.println("path size :: "+path.getPath().size());
-
-				for(PathObject obj : path.getPath()){
-					if(obj == null){
-						System.err.println("Path object is null!");
-						continue;
-					}
-					System.err.println("Path Object Class ::" + obj.getClass().getName());
-				}
 				
 				int attempts = 0;
 				do{
@@ -68,14 +58,13 @@ public class Crawler {
 				}while(!actionPerformedSuccessfully && attempts < 50);
 			}
 			else if(current_obj instanceof PageAlert){
-				log.info("Current path node is a PageAlert");
+				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
 			}
 		}
 		
-	  	log.info("Path crawl completed");
-	  	return browser.getPage();
+		return browser.getPage();
 	}
 
 	/**

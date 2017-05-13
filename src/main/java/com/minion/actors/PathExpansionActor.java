@@ -14,6 +14,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.PathRepository;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.structs.Message;
@@ -123,8 +124,11 @@ public class PathExpansionActor extends UntypedActor {
 						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
 						path.getPath().add(last_page);
+						
+						PathRepository path_repo = new PathRepository();
+						path_repo.generateKey(path);
 					}
-
+					
 					pathExpansions = PathExpansionActor.expandPath(path);
 					log.info("Path expansions found : " +pathExpansions.size());
 					

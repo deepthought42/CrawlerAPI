@@ -190,7 +190,11 @@ public class BrowserActor extends UntypedActor {
 				log.info("Path passed to BrowserActor");
 				Path path = (Path)acct_msg.getData();
 				
-			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "chrome");
+				String browser = "";
+				if(acct_msg.getOptions().isEmpty()){
+					
+				}
+			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
 
 				System.err.println("Creating new Browser");
 				Page result_page = null;
@@ -222,9 +226,9 @@ public class BrowserActor extends UntypedActor {
 			  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					
 			  		path.setIsUseful(true);
-					if(path.size() > 1){
-						path.add(result_page);
-					}
+					//if(path.size() > 1){
+					//	path.add(result_page);
+					//}
 
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(acct_msg, getSelf() );
@@ -237,7 +241,7 @@ public class BrowserActor extends UntypedActor {
 					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 					
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 					if(testMap != null && !testMap.containsTest(test)){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						work_allocator.tell(test_msg, getSelf() );
@@ -260,7 +264,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "chrome");
+			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
 
 				System.err.println("Creating new Browser for exploratory path crawling");
 				Page result_page = null;
@@ -312,7 +316,7 @@ public class BrowserActor extends UntypedActor {
 							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
 							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
 							
-							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 							if(!testMap.containsTest(test)){
 								final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 								work_allocator.tell(test_msg, getSelf() );
@@ -342,7 +346,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if(acct_msg.getData() instanceof URL){
 				log.debug("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
-			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "chrome");
+			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
 			  	
 			  	Path path = new Path();
 			  	Page page_obj = browser.getPage();

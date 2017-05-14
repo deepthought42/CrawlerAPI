@@ -1,7 +1,7 @@
 package com.qanairy.rules.formRules;
 
-import org.apache.log4j.Logger
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import com.minion.actors.FormTestDiscoveryActor;
 import com.minion.browsing.form.FormField;

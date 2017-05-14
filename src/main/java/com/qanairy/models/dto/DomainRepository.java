@@ -147,7 +147,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		Iterable<OrientVertex> domains = (Iterable<OrientVertex>) DataAccessObject.findAll(conn, IDomain.class);
 		Iterator<OrientVertex> iter = domains.iterator();
 		
-		List<Domain> domain = new ArrayList<>();
+		List<Domain> domain = new ArrayList<Domain>();
 		while(iter.hasNext()){
 			OrientVertex v = iter.next();
 			domain.add(convertFromRecord(v));

@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -55,7 +57,7 @@ public class TestingActor extends UntypedActor {
 				resulting_page.setLandable(resulting_page.checkIfLandable());
 				
 				if(!resulting_page.equals(expected_page)){
-					log.info("Saving test, for it has changed");
+					log.info("Saving test, cuz it has changed");
 					
 					//Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
 					TestRecord record = new TestRecord(new Date(), false, resulting_page, test);
@@ -120,8 +122,18 @@ public class TestingActor extends UntypedActor {
 
 			 passing = test.isTestPassing(page);
 			 
+			 Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
+			    String browserName = cap.getBrowserName().toLowerCase();
+			    System.out.println(browserName);
+			    String os = cap.getPlatform().toString();
+			    System.out.println(os);
+			    String v = cap.getVersion().toString();
+			    System.out.println(v);
+			    
+		    test.setBrowserStatus(browserName, passing);
+			    
 			 if(passing){
-				 test_record = new TestRecord(new Date(), passing);
+				 test_record = new TestRecord(new Date(), passing);	 
 			 }
 			 else{
 				 test_record = new TestRecord(new Date(), passing, page, test );

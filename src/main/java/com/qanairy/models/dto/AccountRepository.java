@@ -132,7 +132,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		@SuppressWarnings("unchecked")
 		Iterator<OrientVertex> iter = ((Iterable<OrientVertex>) DataAccessObject.findAll(conn, IAccount.class)).iterator();
 		
-		List<Account> accounts = new ArrayList<>();
+		List<Account> accounts = new ArrayList<Account>();
 		while(iter.hasNext()){
 			OrientVertex v = iter.next();
 			accounts.add(convertFromRecord((IAccount)v));

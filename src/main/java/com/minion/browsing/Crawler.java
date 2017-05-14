@@ -19,7 +19,7 @@ public class Crawler {
 	private static Logger log = LogManager.getLogger(Crawler.class);
 
 	/**
-	 * Crawls the path for the current BrowserActor.
+	 * Crawls the path using the provided {@link Browser browser}
 	 * 
 	 * @return
 	 * @throws java.util.NoSuchElementException
@@ -68,7 +68,7 @@ public class Crawler {
 	}
 
 	/**
-	 * Crawls the path for the current BrowserActor.
+	 * Crawls the {@link Path path} using the given {@link Browser browser}
 	 * 
 	 * @return
 	 * @throws java.util.NoSuchElementException

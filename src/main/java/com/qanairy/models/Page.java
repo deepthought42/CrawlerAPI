@@ -125,7 +125,7 @@ public class Page extends PathObject {
 	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
 		log.info("Checking if page is landable");
 		
-		Browser browser = new Browser(this.getUrl().toString(), "chrome");
+		Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
 		browser.getDriver().get(this.getUrl().toString());
 		String src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		boolean landable = false;
@@ -150,9 +150,8 @@ public class Page extends PathObject {
 	public boolean equals(Object o){
 		if (this == o) return true;
         if (!(o instanceof Page)) return false;
-        
         Page that = (Page)o;
-    	//return (this.getSrc().equals(that.getSrc()) || this.getSrc().length() == that.getSrc().length() || this.screenshot.equals(that.screenshot));
+        
 		return (this.getUrl().equals(that.getUrl()) 
 				&& this.getSrc().equals(that.getSrc())
 				&& this.getScreenshot().equals(that.getScreenshot()));

@@ -41,7 +41,6 @@ import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -51,6 +50,9 @@ import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+
+import io.github.bonigarcia.wdm.ChromeDriverManager;
+import io.github.bonigarcia.wdm.PhantomJsDriverManager;
 
 /**
  * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 
@@ -84,10 +86,10 @@ public class Browser {
 		else if(browser.equals("safari")){
 			this.driver = openWithSafari(url);
 		}
-		else if(browser.equals("headless")){
+		else if(browser.equals("phantomjs")){
 			this.driver = openWithPhantomjs(url);
 		}
-		
+
 		this.driver.get(url);
 	}
 	
@@ -204,15 +206,16 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
-		System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
-
+		//System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
+		ChromeDriverManager.getInstance().setup();
 		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
 	    DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 	    //capabilities.setBrowserName("chrome");
 	    //capabilities.setPlatform(Platform.LINUX);
-	    WebDriver driver = new ChromeDriver(capabilities);
-		//WebDriver driver = new RemoteWebDriver(new URL(url), capabilities);
+	    //WebDriver driver = new ChromeDriverManager(capabilities);
+	    WebDriver driver = new ChromeDriver();
+	    //WebDriver driver = new RemoteWebDriver(new URL(url), capabilities);
 
 		log.info("Chrome opened");
 		return driver;
@@ -225,12 +228,18 @@ public class Browser {
 	 * @return
 	 */
 	public static PhantomJSDriver openWithPhantomjs(String url){
-		System.setProperty("webdriver.chrome.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\chromedriver_win32\\chromedriver.exe");
+		//System.setProperty("webdriver.phantomjs.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\phantomjs\\phantomjs-2.1.1-windows\\phantomjs.exe");
 
 		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
 	    //Create instance of PhantomJS driver
-	    DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
+		DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
+		capabilities.setCapability("phantomjs.binary.path","C:\\Users\\brand\\Dev\\browser_drivers\\phantomjs\\phantomjs-2.1.1-windows\\bin\\phantomjs.exe");
+
 	    PhantomJSDriver driver = new PhantomJSDriver(capabilities);
+	    
+	    //PhantomJsDriverManager.getInstance().setup();
+	    //PhantomJSDriver driver = new PhantomJSDriver();
+	    
 		return driver;
 	}
 	

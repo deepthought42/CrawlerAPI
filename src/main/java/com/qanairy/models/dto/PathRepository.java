@@ -60,7 +60,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					System.err.println("setting page next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
-					System.err.println("Setting path key on IPathEdge :: "+path.getKey());
+					System.err.println("Setting path key on IPathEdge :: "+path.getKey() );
 					path_edge.setPathKey(path.getKey());
 				}
 				
@@ -188,22 +188,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				System.err.println("retrieving next edge on iteration :: "+index + " :: with key == "+ edge.getPathKey());
 				if(edge != null && edge.getPathKey().equals(obj.getKey()) ){
 					System.err.println("Edge key matches object key");
-					
-					/*
-					if(path_obj.getType().equals("Page")){
-						PageRepository page_repo = new PageRepository();
-						path_obj_list.add(page_repo.convertFromRecord(path_obj));
-					}
-					else if(path_obj.getType().equals("PageElement")){
-						PageElementRepository page_elem_repo = new PageElementRepository();
-						path_obj_list.add(page_elem_repo.convertFromRecord((IPageElement)path_obj));	
-					}
-					else if(path_obj.getType().equals("Action")){
-						ActionRepository action_repo = new ActionRepository();
-						path_obj_list.add(action_repo.convertFromRecord((IAction)path_obj));
-					}
-					*/
-					//path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
+
 					path_obj = edge.getPathObjectIn();
 					System.err.println("Path obj in :: "+edge.getPathObjectIn());
 					break;

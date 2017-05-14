@@ -24,9 +24,9 @@ import com.tinkerpop.blueprints.Vertex;
 public class ActionFactory {
 	private static String[] actions = {"click",
 								"doubleClick",
-								"mouseover"};/*,
-								"scroll"};
-								"sendKeys"};*/
+								"mouseover",
+								"scroll",
+								"sendKeys"};
 	private static Actions builder;
 	
 	public ActionFactory(WebDriver driver){

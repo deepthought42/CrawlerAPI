@@ -2,8 +2,10 @@ package com.qanairy.models;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +31,9 @@ public class Test {
 	private Page result;
 	private Domain domain;
 	private Boolean correct;
-	private boolean isUseful;
+	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
+	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	private List<Group> groups;
 	
 	/**
@@ -39,7 +42,6 @@ public class Test {
 	 */
 	public Test(){
 		this.setRecords(new ArrayList<TestRecord>());
-		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
 	}
@@ -61,7 +63,6 @@ public class Test {
 		this.setRecords(new ArrayList<TestRecord>());
 		this.domain = domain;
 		this.correct = null;
-		this.setUseful(false);
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
 		this.setKey(null);
@@ -238,8 +239,7 @@ public class Test {
 		TestRepository test_record = new TestRepository();
 
 		while(test_iter.hasNext()){
-			ITest itest = test_iter.next();
-			
+			ITest itest = test_iter.next();	
 			
 			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
@@ -280,6 +280,10 @@ public class Test {
 	
 	public void setDomain(Domain domain){
 		this.domain = domain;
+	}
+	
+	public void setBrowserStatus(String browser_name, boolean status){
+		this.browser_statuses.put(browser_name, status);
 	}
 	
 	public Path getPath(){

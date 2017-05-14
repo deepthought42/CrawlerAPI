@@ -40,7 +40,7 @@ public class Account {
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.users = new ArrayList<>();
+		this.users = new ArrayList<QanairyUser>();
 		this.domains = new ArrayList<Domain>();
 	}
 	

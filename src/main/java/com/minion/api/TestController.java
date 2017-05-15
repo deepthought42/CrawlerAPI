@@ -30,12 +30,14 @@ import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
+import com.qanairy.services.DomainService;
 import com.minion.browsing.Browser;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.models.Account;
@@ -54,6 +56,9 @@ public class TestController {
 
     @Autowired
     protected AccountService accountService;
+    
+    @Autowired
+    protected DomainService domainService;
 
 	/**
 	 * Retrieves list of all tests from the database 
@@ -65,7 +70,7 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody List<Test> getTestByUrl(HttpServletRequest request, 
+	public @ResponseBody List<Test> getTestByDomain(HttpServletRequest request, 
 			   								 @RequestParam(value="url", required=true) String url) throws UnknownAccountException, DomainNotOwnedByAccountException {
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -76,27 +81,26 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	
-    	boolean domain_belongs_to_acct = false;
-    	for(Domain domain : acct.getDomains()){
-    		if(domain.getUrl().equals(url)){
-    			domain_belongs_to_acct = true;
+       	boolean owned_by_acct = false;
+    	for(Domain domain_rec : acct.getDomains()){
+    		System.err.println("domain tests :: "+domain_rec.getTests().size());
+    		if(domain_rec.getUrl().equals(url)){
+    			owned_by_acct = true;
+    			break;
     		}
     	}
     	
-    	if(domain_belongs_to_acct){
-			List<Test> test_list = new ArrayList<Test>();
-			try {
-				test_list = Test.findByUrl(url);
-			} catch (MalformedURLException e) {
-				log.info("ERROR GETTING TEST ");
-				e.printStackTrace();
-			}
-		
-			return test_list;
+    	if(!owned_by_acct){
+    		throw new DomainNotOwnedByAccountException();
     	}
     	
-    	throw new DomainNotOwnedByAccountException();
-	}
+		DomainRepository domain_repo = new DomainRepository();
+    	Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
+    	List<Test> tests = domain.getTests();
+		System.err.println("Tests are being loaded for domain : " + domain.getUrl() + " :: Total tests : " + tests.size() );
+
+		return tests;
+    }
 	
 	/**
 	 * Retrieves list of all tests from the database 
@@ -122,17 +126,51 @@ public class TestController {
 	 * @param name test name to lookup
 	 * 
 	 * @return all tests matching name passed
+	 * @throws DomainNotOwnedByAccountException 
+	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getUnverifiedTests(HttpSession session, HttpServletRequest request, 
-			   								 @RequestParam(value="name", required=true) String name) {
-		List<Test> test_list = new ArrayList<Test>();
-		Domain domain = (Domain) session.getAttribute("current_domain");
-
-		test_list = Test.findTestUnverifiedByDomain(domain.getUrl());
+			   								 @RequestParam(value="url", required=true) String url) throws DomainNotOwnedByAccountException, UnknownAccountException {
 		
-		return test_list;
+    	//make sure domain belongs to user account first
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+       	boolean owned_by_acct = false;
+    	for(Domain domain_rec : acct.getDomains()){
+    		System.err.println("domain tests :: "+domain_rec.getTests().size());
+    		if(domain_rec.getUrl().equals(url)){
+    			owned_by_acct = true;
+    			break;
+    		}
+    	}
+    	
+    	if(!owned_by_acct){
+    		throw new DomainNotOwnedByAccountException();
+    	}
+    	
+		DomainRepository domain_repo = new DomainRepository();
+    	Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
+    	List<Test> tests = domain.getTests();
+		System.err.println("Tests are being loaded for domain : " + domain.getUrl() + " :: Total tests : " + tests.size() );
+
+		TestRepository test_repo = new TestRepository();
+		List<Test> unverified_tests = new ArrayList<Test>();
+		for(Test test : tests){
+			//ITest test = test_records.next();
+			if(test.isCorrect() == null){
+				unverified_tests.add(test);
+			}
+		}
+		
+		return unverified_tests;
 	}
 
 	/**

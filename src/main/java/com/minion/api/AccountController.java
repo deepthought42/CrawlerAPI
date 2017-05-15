@@ -74,16 +74,14 @@ public class AccountController {
      */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Account> create(@RequestHeader("Authorization") String authorization_header, 
-    						@RequestBody Account account,
-    						final Principal principal) 
+    public ResponseEntity<Account> create(@RequestBody Account account,
+    										final Principal principal) 
     				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
-        OrientConnectionFactory conn = new OrientConnectionFactory();
        
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-        logger.info("Current user accessed Admin secured resource: " + currentUser.getUsername());
-
+        System.err.println("Current user accessed Admin secured resource: " + currentUser.getUsername());
+        
         if(currentUser.getUsername().equals("UNKNOWN_USER")){
         	throw new InvalidUserException();
         }
@@ -100,14 +98,18 @@ public class AccountController {
         if(api_resp.getStatus() != 200){
         	throw new Auth0ManagementApiException();
         }
+        
         printGrantedAuthorities((Auth0JWTToken) principal);
+        Account new_account = null;
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             final String username = usernameService.getUsername();
             // log username of user requesting account creation
-            logger.info("User with email: " + username + " creating new account");
+            System.err.println("User with email: " + username + " creating new account");
+            new_account = accountService.create(acct);
         }
+        System.err.println("so far so good!!");
 
-        return ResponseEntity.accepted().body(accountService.create(acct));
+        return ResponseEntity.accepted().body(new_account);
     }
 
     /**

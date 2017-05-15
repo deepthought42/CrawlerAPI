@@ -1,5 +1,7 @@
 package com.qanairy.persistence;
 
+import java.util.List;
+
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
@@ -34,6 +36,9 @@ public interface IAccount {
 	
 	@Adjacency(direction=Direction.OUT, label="has_user")
 	public void addUser(IQanairyUser user);
+	
+	@Adjacency(direction=Direction.OUT, label="has_user")
+	public void setUsers(List<IQanairyUser> user);
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public Iterable<IDomain> getDomains();

@@ -62,15 +62,9 @@ public class DomainController {
             // log username of user requesting domain creation
             logger.info("creating new domain in domain");
         }*/
-        OrientConnectionFactory conn = new OrientConnectionFactory();
 
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-        QanairyUserRepository user_repo = new QanairyUserRepository();
-        QanairyUser user = user_repo.find(conn, currentUser.getUsername());
-    	if(user == null){
-    		throw new UnknownUserException();
-    	}
     	
     	Account acct = accountService.find(currentUser.getUsername());
     	if(acct == null){
@@ -81,19 +75,22 @@ public class DomainController {
         Domain domain = new Domain(url);
     	acct.addDomain(domain);
     	accountService.update(acct);
-        Domain domain2 = domainService.create(domain);
-        return domain2;
+        return domainService.create(domain);
     }
 
 
     @PreAuthorize("hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll() {
-        logger.info("get invoked");
-	    DomainRepository domain_repo = new DomainRepository();
-	    List<Domain> domains = domain_repo.findAll(new OrientConnectionFactory());
+    public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-	    return domains;
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+
+	    return acct.getDomains();
     }
     
    /* @RequestMapping(value ="/domains/{id}", method = RequestMethod.GET)

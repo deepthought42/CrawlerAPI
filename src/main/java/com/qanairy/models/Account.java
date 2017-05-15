@@ -12,7 +12,7 @@ public class Account {
 	private String service_package;
 	private String payment_acct_num;
 	private List<QanairyUser> users;
-	private List<Domain> domains;
+	private List<Domain> domains = new ArrayList<Domain>();
 	
 	public Account(){}
 	
@@ -32,7 +32,6 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = users;
-		this.domains = new ArrayList<Domain>();
 	}
 	
 	public Account(String key, String org_name, String service_package, String payment_acct_num){
@@ -41,7 +40,6 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = new ArrayList<QanairyUser>();
-		this.domains = new ArrayList<Domain>();
 	}
 	
 	/**
@@ -54,15 +52,16 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users){
+	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains){
 		assert users != null;
 		
 		this.setKey(key);
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.users = users;
-		this.domains = new ArrayList<Domain>();
+		this.setUsers(users);
+
+		this.setDomains(domains);
 	}
 
 	public String getOrgName() {

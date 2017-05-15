@@ -32,10 +32,21 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 	@Override
 	public IQanairyUser convertToRecord(OrientConnectionFactory connection, QanairyUser qanairyUser) {
 		qanairyUser.setKey(generateKey(qanairyUser));
-		IQanairyUser qanairy_user = connection.getTransaction().addVertex("class:"+IQanairyUser.class.getSimpleName()+","+UUID.randomUUID(), IQanairyUser.class);
-		qanairy_user.setKey(qanairyUser.getKey());
-		qanairy_user.setEmail(qanairyUser.getEmail());
 
+		@SuppressWarnings("unchecked")
+		Iterable<IQanairyUser> qanairyUsers = (Iterable<IQanairyUser>) DataAccessObject.findByKey(generateKey(qanairyUser), connection, IQanairyUser.class);
+		Iterator<IQanairyUser> iter = qanairyUsers.iterator();
+		IQanairyUser qanairy_user = null;
+		
+		if(!iter.hasNext()){
+			qanairy_user = connection.getTransaction().addVertex("class:"+IQanairyUser.class.getSimpleName()+","+UUID.randomUUID(), IQanairyUser.class);
+			qanairy_user.setKey(qanairyUser.getKey());
+			qanairy_user.setEmail(qanairyUser.getEmail());
+		}
+		else{
+			qanairy_user = iter.next();
+		}
+		
 		return qanairy_user;
 	}
 

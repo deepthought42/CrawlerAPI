@@ -27,7 +27,7 @@ public class AccountService {
     }
 
 
-    @PreAuthorize("hasAuthority('qanairy')")
+   // @PreAuthorize("hasAuthority('qanairy')")
     public Account create(Account account) {
         return accountRepository.create(new OrientConnectionFactory(), account);
     }

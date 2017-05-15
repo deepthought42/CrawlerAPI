@@ -143,17 +143,7 @@ public class Test {
 	 * Looks up tests unverified tests
 	 */
 	public static List<Test> findTestUnverifiedByDomain(String domain) {
-		Iterator<ITest> test_records = findByDomain(domain).iterator();
-		List<Test> tests = new ArrayList<Test>();
-		TestRepository test_repo = new TestRepository();
-		while(test_records.hasNext()){
-			ITest test = test_records.next();
-			if(test.getCorrect() == null){
-				tests.add(test_repo.convertFromRecord(test));
-			}
-		}
 		
-		return tests;
 	}
 	
 	/**

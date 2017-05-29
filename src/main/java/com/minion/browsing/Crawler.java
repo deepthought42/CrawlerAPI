@@ -111,6 +111,10 @@ public class Crawler {
 			}
 		}
 
+		
+		System.err.println("Lst element :: " + last_element.getXpath());
+		System.err.println("action to be performed :: " + final_action.getName());
+
 		last_element.performAction(final_action, browser.getDriver());
 	  	log.info("Path crawl completed");
 	  	Page page = browser.getPage();

@@ -59,7 +59,7 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 		
 		if(action_record != null){
 			this.convertToRecord(connection, action);
-			connection.save();
+			//connection.save();
 		}
 		return action;
 	}

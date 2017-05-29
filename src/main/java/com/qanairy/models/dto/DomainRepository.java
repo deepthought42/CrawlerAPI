@@ -93,6 +93,19 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		return domain;
 	}
 	
+	public IDomain find(String key){
+		@SuppressWarnings("unchecked")
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(key, new OrientConnectionFactory(), IDomain.class);
+		Iterator<IDomain> iter = domains.iterator();
+		  
+		if(iter.hasNext()){
+			//figure out throwing exception because domain already exists
+			return iter.next();
+		}
+		
+		return null;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -116,9 +129,13 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		TestRepository test_repo = new TestRepository();
 		Lists.newArrayList(obj.getTests());
 		Iterator<ITest> test_iter = obj.getTests().iterator();
+		/*
+		NOTE:: TESTS SHOULD BE LAZY LOADED, AKA ONLY WHEN THEY ARE NEEDED
+		
 		while(test_iter.hasNext()){
 			tests.add(test_repo.convertFromRecord(test_iter.next()));
 		}
+		*/
 		List<Group> groups = new ArrayList<Group>();
 		if(obj.getGroups() != null){
 			Lists.newArrayList(obj.getGroups());

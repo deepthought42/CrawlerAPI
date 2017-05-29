@@ -37,7 +37,7 @@ public class WorkAllocationActor extends UntypedActor {
 				if(acct_message.getData() instanceof Path ||
 						acct_message.getData() instanceof ExploratoryPath ||
 						acct_message.getData() instanceof URL){
-					log.info("Path passed to work allocator");
+					System.err.println("Data passed to work allocator is of type : "+acct_message.getData().getClass().getSimpleName());
 					final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
 					browser_actor.tell(acct_message, getSelf() );
 					getSender().tell("Status: ok", getSelf());

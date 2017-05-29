@@ -70,7 +70,7 @@ public class PathExpansionActor extends UntypedActor {
 			
 			//iterate over all actions
 			Path new_path = Path.clone(path);
-			//new_path.add(page_element);
+			new_path.add(page_element);
 			
 			for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 				ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
@@ -83,7 +83,7 @@ public class PathExpansionActor extends UntypedActor {
 			}			
 		}
 		
-		log.info("# of Paths added : "+path_count);
+		System.err.println("# of Paths added : "+path_count);
 		
 		return pathList;
 	}
@@ -105,12 +105,13 @@ public class PathExpansionActor extends UntypedActor {
 				System.err.println("EXPANDING PATH WITH LENGTH : "+path.size());
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
-				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
+				//Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 
 				//final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
 				//memory_registry.tell(path_msg, getSelf());
 				
-				log.info("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains());
+				System.err.println("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains() );
+				System.err.println("PATH is useful? :: " +path.isUseful());
 				if(path.isUseful() && !path.getSpansMultipleDomains()){
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);

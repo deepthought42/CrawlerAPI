@@ -23,11 +23,7 @@ import com.auth0.spring.security.api.Auth0JWTToken;
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
-import com.qanairy.models.QanairyUser;
-import com.qanairy.models.dto.DomainRepository;
-import com.qanairy.models.dto.QanairyUserRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 

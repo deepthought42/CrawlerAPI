@@ -33,6 +33,7 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -82,6 +83,7 @@ public class TestController {
     	}
     	
        	boolean owned_by_acct = false;
+
     	for(Domain domain_rec : acct.getDomains()){
     		System.err.println("domain tests :: "+domain_rec.getTests().size());
     		if(domain_rec.getUrl().equals(url)){
@@ -94,12 +96,35 @@ public class TestController {
     		throw new DomainNotOwnedByAccountException();
     	}
     	
+    	
 		DomainRepository domain_repo = new DomainRepository();
-    	Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
-    	List<Test> tests = domain.getTests();
-		System.err.println("Tests are being loaded for domain : " + domain.getUrl() + " :: Total tests : " + tests.size() );
+    	
+		IDomain idomain = domain_repo.find(url);
+		Iterator<ITest> tests = idomain.getTests().iterator();
+		TestRepository test_repo = new TestRepository();
+		List<Test> verified_tests = new ArrayList<Test>();
+		
+		int total_tests = 0;
+		while(tests.hasNext()){
+			ITest itest = tests.next();
+			verified_tests.add(test_repo.convertFromRecord(itest));
+			total_tests++;
+		}
+		System.err.println("Tests are being loaded for domain : " + url + " :: Total tests : " + total_tests );
 
-		return tests;
+		/*
+		Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
+    	List<Test> tests = domain.getTests();
+    	
+		List<Test> verified_tests = new ArrayList<Test>();
+		for(Test test : tests){
+			//ITest test = test_records.next();
+			if(test.isCorrect() != null){
+				verified_tests.add(test);
+			}
+		}
+		*/
+		return verified_tests;
     }
 	
 	/**
@@ -161,7 +186,6 @@ public class TestController {
     	List<Test> tests = domain.getTests();
 		System.err.println("Tests are being loaded for domain : " + domain.getUrl() + " :: Total tests : " + tests.size() );
 
-		TestRepository test_repo = new TestRepository();
 		List<Test> unverified_tests = new ArrayList<Test>();
 		for(Test test : tests){
 			//ITest test = test_records.next();
@@ -295,7 +319,7 @@ public class TestController {
 			group_list.add(group);
 			itest.setGroups(group_list);
 		}
-		orient_connection.save();
+		//orient_connection.save();
 		TestRepository test_record = new TestRepository();
 
 		return test_record.convertFromRecord(itest);

@@ -68,7 +68,7 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 		  
 		if(!iter.hasNext()){
 			convertToRecord(connection, qanairyUser);
-			connection.getTransaction().commit();
+			connection.save();
 		}
 		return qanairyUser;
 

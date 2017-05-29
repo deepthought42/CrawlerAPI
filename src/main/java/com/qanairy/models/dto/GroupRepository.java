@@ -45,7 +45,7 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 		
 		if(group_record == null){
 			convertToRecord(conn, group);
-			conn.save();
+			//conn.save();
 		}
 		group.setKey(generateKey(group));
 		return group;

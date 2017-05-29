@@ -68,10 +68,13 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		List<QanairyUser> users = IteratorUtils.toList(account.getUsers().iterator());
 		List<IDomain> domain_records = IteratorUtils.toList(account.getDomains().iterator());
 		
+		System.err.println("DOMAIN RECORDS FOR ACCOUNT :: " + domain_records.size());
 		List<Domain> domains = new ArrayList<Domain>();
 		DomainRepository domain_repo = new DomainRepository();
+		int idx=0;
 		for(IDomain domain : domain_records){
 			domains.add(domain_repo.convertFromRecord(domain));
+			System.err.println("Adding domain #:"+ (++idx));
 		}
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), users, domains);
 	}
@@ -123,7 +126,19 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 					acct.addDomain(repo.convertToRecord(connection, domain));	
 				}
 				else{
-					acct.addDomain(repo.convertToRecord(connection, domain_record));
+					//check if domain is part of account before adding it to the account
+					Iterator<IDomain> domain_iter = acct.getDomains().iterator();
+					boolean domain_account_linked = false;
+					while(domain_iter.hasNext()){
+						IDomain idomain = domain_iter.next();
+						if(idomain.getUrl().equals(domain.getUrl())){
+							domain_account_linked = true;
+						}
+					}
+					
+					if(!domain_account_linked){
+						acct.addDomain(repo.convertToRecord(connection, domain_record));
+					}
 				}
 			}
 			

@@ -80,7 +80,6 @@ public class DiscoveryController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-
 		}
 	}
 

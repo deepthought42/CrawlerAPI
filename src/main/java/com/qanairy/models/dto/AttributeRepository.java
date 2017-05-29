@@ -45,7 +45,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		
 		if( found_attr == null ){
 			this.convertToRecord(orient_connection, attr);
-			orient_connection.save();
+			//orient_connection.save();
 		}
 		
 		return attr;

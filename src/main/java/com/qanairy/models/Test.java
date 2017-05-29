@@ -140,13 +140,6 @@ public class Test {
 	}
 	
 	/**
-	 * Looks up tests unverified tests
-	 */
-	public static List<Test> findTestUnverifiedByDomain(String domain) {
-		
-	}
-	
-	/**
 	 * {@inheritDoc}
 	 */
 	public static Iterable<ITest> findByKey(String generated_key, OrientConnectionFactory orient_connection) {

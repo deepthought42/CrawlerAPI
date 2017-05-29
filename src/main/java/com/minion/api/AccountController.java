@@ -17,7 +17,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -72,7 +71,7 @@ public class AccountController {
      * @throws UnirestException
      * @throws Auth0ManagementApiException 
      */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    //@PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create(@RequestBody Account account,
     										final Principal principal) 

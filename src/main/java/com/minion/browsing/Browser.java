@@ -1,6 +1,5 @@
 package com.minion.browsing;
 
-import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.imageio.ImageIO;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Alert;
@@ -24,7 +21,6 @@ import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
@@ -61,8 +57,8 @@ public class Browser {
 	private static Logger log = LogManager.getLogger(Browser.class);
 
 	private WebDriver driver;
-	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel"};	
-
+	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
+	private String url = "";
 	/**
 	 * 
 	 * @param url
@@ -89,7 +85,7 @@ public class Browser {
 		else if(browser.equals("phantomjs")){
 			this.driver = openWithPhantomjs(url);
 		}
-
+		this.url = url;
 		this.driver.get(url);
 	}
 	
@@ -107,10 +103,10 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
-		URL page_url = new URL(this.driver.getCurrentUrl());
+		URL page_url = new URL(url);
 
 		return new Page(this.driver.getPageSource(), 
-						this.driver.getCurrentUrl(), 
+						url, 
 						UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource())), 
 						Browser.getVisibleElements(this.driver, ""));
 	}
@@ -206,15 +202,15 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
-		//System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
-		ChromeDriverManager.getInstance().setup();
+		System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
+		//ChromeDriverManager.getInstance().setup();
 		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
 	    DesiredCapabilities capabilities = DesiredCapabilities.chrome();
 	    //capabilities.setBrowserName("chrome");
 	    //capabilities.setPlatform(Platform.LINUX);
 	    //WebDriver driver = new ChromeDriverManager(capabilities);
-	    WebDriver driver = new ChromeDriver();
+	    WebDriver driver = new ChromeDriver(capabilities);
 	    //WebDriver driver = new RemoteWebDriver(new URL(url), capabilities);
 
 		log.info("Chrome opened");
@@ -364,15 +360,16 @@ public class Browser {
 
 		List<Form> form_list = new ArrayList<Form>();
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
-		log.info("total forms found :: " + form_elements.size());
+		System.err.println("total forms found :: " + form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-			PageElement form_tag = new PageElement(form_elem.getText(), generateXpath(form_elem, "", xpath_map, browser.getDriver()), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()));
+			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()));
 			Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 			
 			List<PageElement> input_tags = new ArrayList<PageElement>(); 
 			for(WebElement input_elem : input_elements){
+				System.err.println("building form element input :: " + input_elem.getTagName());
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()));
 				
 				boolean alreadySeen = false;
@@ -396,20 +393,19 @@ public class Browser {
 						input_field.setFieldLabel(label);
 					}
 					catch(NullPointerException e){
-						
+						System.err.println("Error occurred while finding label for form input field");
 					}
 				}
 				//combo_input.getElements().addAll(labels);
 				form.addFormField(combo_input);
 				for(FormField input : group_inputs){
 					input.addRules(ElementRuleExtractor.extractRules(input.getInputElement()));
-					//combo_rules.addAll(ElementRuleExtractor.extractRules(input.getInputElement()));
 				}
-				//log.info("Form combo field has a total of " + combo_rules.size() + " rules");
+
 				input_tags.add(input_tag);
 			}
 			
-			log.info("Total inputs for form : "+form.getFormFields().size());
+			System.err.println("Total inputs for form : "+form.getFormFields().size());
 			
 			form_list.add(form);
 			log.info(form.getType() + " : Form discovered");
@@ -435,8 +431,8 @@ public class Browser {
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
-				log.info("checking labels for id association");
-				log.info(label_elem.getAttribute("for") + " == " + id);
+				System.err.println("checking labels for id association");
+				System.err.println(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
 					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver));
@@ -445,7 +441,7 @@ public class Browser {
 			}
 		}
 		
-		log.info("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
+		System.err.println("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
 		
 		return null;
 	}
@@ -532,11 +528,12 @@ public class Browser {
 				}
 				
 				page_elem = parent;
-				log.info("All Children match and have been loaded into list");
+				System.err.println("All Children match and have been loaded into list");
 			}
 			else{
+				System.err.println("all children do not match for grouping. Has size :: "+child_inputs.size());
 				if(child_inputs.size() == 0){
-					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, page_elem.getTagName(), new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver));
+					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver));
 					FormField input_field = new FormField(input_tag);
 					child_inputs.add(input_field);
 				}
@@ -738,16 +735,23 @@ public class Browser {
 	 */
 	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath){
 		try {
-			elem.findElements(By.xpath(xpath));
-		}catch(InvalidSelectorException e){
-			int count = 1;
-			if(xpathHash.containsKey(xpath)){
-				count = xpathHash.get(xpath);
-				count += 1;
+			List<WebElement> elements = elem.findElements(By.xpath(xpath));
+			
+			if(elements.size()>1){
+				int count = 1;
+				if(xpathHash.containsKey(xpath)){
+					count = xpathHash.get(xpath);
+					count += 1;
+				}
+				xpathHash.put(xpath, count);
+				xpath = xpath+"[" + count + "]";
 			}
-			xpathHash.put(xpath, count);
-			xpath = xpath+"[" + count + "]";
+			
+		}catch(InvalidSelectorException e){
+			System.out.println("invalid selector");
+			
 		}
+
 		return xpath;
 	}
 
@@ -762,7 +766,7 @@ public class Browser {
 		xpath += "//"+element.getTagName();
 		for(Attribute attr : Browser.extractedAttributes(element, (JavascriptExecutor)driver)){
 			if(!Arrays.asList(invalid_xpath_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()])) + "\")");
+				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()])).trim() + "\")");
 			}
 		}
 		if(attributeChecks.size()>0){
@@ -831,43 +835,4 @@ public class Browser {
 		List<String> attribute_strings = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		return loadAttributes(attribute_strings);
 	}
-	
-	
-	/**
-	 * Captures current page screenshot
-	 * 
-	 * @param ele
-	 * @param page_elem
-	 * @param driver
-	 * @return
-	 * @throws RasterFormatException
-	 */
-	public static String capturePageElementScreenshot(WebElement ele, PageElement tag, WebDriver driver) throws RasterFormatException{
-		// Process the objectData stream.
-		BufferedImage fullImg;
-		try {
-			fullImg = ImageIO.read(Browser.getScreenshot(driver));
-			// Get the location of element on the page
-			Point point = ele.getLocation();
-
-			// Get width and height of the element
-			int eleWidth = ele.getSize().getWidth();
-			int eleHeight = ele.getSize().getHeight();
-			
-			// Crop the entire page screenshot to get only element screenshot
-			String elem_screenshot = null;
-			BufferedImage eleScreenshot= fullImg.getSubimage(point.getX(), point.getY(),
-			    eleWidth, eleHeight);
-		    File outputfile = new File(tag.getKey().replace(":", "")+".png");
-			ImageIO.write(eleScreenshot, "png", outputfile);
-
-			elem_screenshot = UploadObjectSingleOperation.saveImageToS3(outputfile, driver.getCurrentUrl()+"/webelements", tag.getXpath());
-			outputfile.delete();
-			return elem_screenshot;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
 }

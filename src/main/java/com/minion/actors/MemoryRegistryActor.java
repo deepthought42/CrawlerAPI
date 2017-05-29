@@ -28,13 +28,10 @@ public class MemoryRegistryActor extends UntypedActor{
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			log.info("Initiating connection to orientdb...");
 			
 			Message<?> acct_msg = (Message<?>)message;
-			log.info("message converted to message format");
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
 			if(acct_msg.getData() instanceof Test){
-				log.info("Saving Test to memory Registry");
 				Test test = (Test)acct_msg.getData();
 				if(test.equals(null)){
 					log.info("Test object is null");

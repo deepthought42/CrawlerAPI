@@ -127,7 +127,7 @@ public class PathExpansionActor extends UntypedActor {
 						path.getPath().add(last_page);
 						
 						PathRepository path_repo = new PathRepository();
-						path_repo.generateKey(path);
+						//path_repo.generateKey(path);
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);

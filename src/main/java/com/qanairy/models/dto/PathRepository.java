@@ -29,8 +29,10 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	private static Logger log = LogManager.getLogger(PathRepository.class);
 
 	public IPath convertToRecord(OrientConnectionFactory connection, Path path) {
-		path.setKey(generateKey(path));
-		Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(path.getKey(), connection, IPath.class);
+		String path_key = generateKey(path);
+		path.setKey(path_key);
+		
+		Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(path_key, connection, IPath.class);
 		
 		Iterator<IPath> iter = paths.iterator();
 		IPath path_record = null;
@@ -39,7 +41,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		
 		if(!iter.hasNext()){
 			path_record = connection.getTransaction().addVertex("class:"+IPath.class.getSimpleName()+","+UUID.randomUUID(), IPath.class);
-			path_record.setKey(path.getKey());
+			path_record.setKey(path_key);
 		}
 		else{
 			path_record = iter.next();
@@ -47,6 +49,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 
 		IPathObject last_path_obj = null;
 		
+		//NEED TO EXCHANGE PATH.getKey() for generating key 
 		for(PathObject obj: path.getPath()){
 			if(obj instanceof Page){
 				PageRepository page_repo = new PageRepository();
@@ -60,8 +63,8 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					System.err.println("setting page next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
-					System.err.println("Setting path key on IPathEdge :: "+path.getKey() );
-					path_edge.setPathKey(path.getKey());
+					System.err.println("Setting path key on IPathEdge :: "+path_key );
+					path_edge.setPathKey(path_key);
 				}
 				
 				last_path_obj = persistablePathObj;
@@ -78,8 +81,8 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					System.err.println("setting page element as next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
-					System.err.println("Setting path key on IPathEdge :: "+path.getKey());
-					path_edge.setPathKey(path.getKey());
+					System.err.println("Setting path key on IPathEdge :: "+path_key);
+					path_edge.setPathKey(path_key);
 				}
 				last_path_obj = persistablePathObj;
 			}
@@ -95,8 +98,8 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					System.err.println("setting Action as next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
-					System.err.println("Setting path key on IPathEdge :: "+path.getKey());
-					path_edge.setPathKey(path.getKey());
+					System.err.println("Setting path key on Action IPathEdge :: "+path_key);
+					path_edge.setPathKey(path_key);
 				}
 				
 				last_path_obj = persistablePathObj;
@@ -134,7 +137,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				System.err.println("Action key :: "+path_key);
 			}
 		}
-
+		
 		return path_key;
 	}
 

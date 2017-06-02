@@ -46,9 +46,11 @@ import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.SystemInfo;
+import com.qanairy.models.dto.SystemInfoRepository;
+import com.qanairy.persistence.ISystemInfo;
+import com.qanairy.persistence.OrientConnectionFactory;
 
-import io.github.bonigarcia.wdm.ChromeDriverManager;
-import io.github.bonigarcia.wdm.PhantomJsDriverManager;
 
 /**
  * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 
@@ -84,6 +86,18 @@ public class Browser {
 		}
 		else if(browser.equals("phantomjs")){
 			this.driver = openWithPhantomjs(url);
+		}
+		
+		if(this.driver != null){
+			ISystemInfo info = SystemInfoRepository.find(new OrientConnectionFactory(), "system_info");
+			if(info == null){
+				info = new SystemInfo();
+			}
+			else{
+				info.setBrowserCount(info.getBrowserCount()+1);
+			}
+			
+			SystemInfoRepository.save(new OrientConnectionFactory(), info);
 		}
 		this.url = url;
 		this.driver.get(url);
@@ -131,6 +145,10 @@ public class Browser {
 	public void close(){
 		try{
 			driver.quit();
+			ISystemInfo info = SystemInfoRepository.find(new OrientConnectionFactory(), "system_info");
+			info.setBrowserCount(info.getBrowserCount()-1);
+			
+			SystemInfoRepository.save(new OrientConnectionFactory(), info);
 		}
 		catch(NullPointerException e){
 			log.error("Error closing driver. Driver is NULL");

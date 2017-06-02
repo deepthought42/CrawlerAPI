@@ -1,24 +1,20 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.tools.ant.util.XMLFragment.Child;
+import com.qanairy.persistence.ISystemInfo;
 
 /**
  * 
  * 
  */
-public class SystemInfo {
+public class SystemInfo implements ISystemInfo{
 	private int browser_count;
 	private int actor_count;
 	private String key;
-	private List<ChildModelTempDemo> groups = null;
+	
 	public SystemInfo(){};
 	
 	public SystemInfo(int count){
 		this.browser_count = count;
-		groups = new ArrayList<ChildModelTempDemo>();
 	}
 	
 	public int getBrowserCount(){

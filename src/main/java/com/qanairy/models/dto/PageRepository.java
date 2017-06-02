@@ -101,15 +101,14 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 */
 	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
 		page.setKey(generateKey(page));
-		find(connection, page.getKey());
+
 		@SuppressWarnings("unchecked")
-		Iterable<IPage> pages = (Iterable<IPage>) DataAccessObject.findByKey(page.getKey(), connection, IPage.class);
+		Iterator<IPage> pages_iter = ((Iterable<IPage>) DataAccessObject.findByKey(page.getKey(), connection, IPage.class)).iterator();
 		
-		Iterator<IPage> iter = pages.iterator();
 		IPage page_record = null;
 		
-		if(iter.hasNext()){
-			page_record = iter.next();
+		if(pages_iter.hasNext()){
+			page_record = pages_iter.next();
 		}
 		else{
 			page_record = connection.getTransaction().addVertex("class:"+IPage.class.getSimpleName()+","+UUID.randomUUID(), IPage.class);

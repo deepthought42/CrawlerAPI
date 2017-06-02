@@ -3,9 +3,6 @@ package com.qanairy.models.dto;
 import java.util.Iterator;
 import java.util.UUID;
 
-import com.orientechnologies.orient.core.Orient;
-import com.qanairy.models.ChildModelTempDemo;
-import com.qanairy.models.Group;
 import com.qanairy.models.SystemInfo;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.ISystemInfo;
@@ -16,19 +13,19 @@ public class SystemInfoRepository {
 	/**
 	 * {@inheritDoc}
 	 */
-	public static SystemInfo save(OrientConnectionFactory conn, SystemInfo system_info) {
-		ISystemInfo record = find(conn, generateKey(system_info));
-		system_info.setKey(generateKey(system_info));
+	public static ISystemInfo save(OrientConnectionFactory conn, ISystemInfo info) {
+		ISystemInfo record = find(conn, generateKey(info));
+		//info.setKey(generateKey(info));
 
 		if(record == null){
 			record = conn.getTransaction().addVertex("class:"+SystemInfo.class.getSimpleName()+","+UUID.randomUUID(), ISystemInfo.class);
-			record.setKey(system_info.getKey());
+			record.setKey(generateKey(info));
 		}
 		
-		record.setBrowserCount(system_info.getBrowserCount());
+		record.setBrowserCount(info.getBrowserCount());
 		conn.save();
 		
-		return system_info;
+		return info;
 	}
 
 	/**
@@ -47,15 +44,11 @@ public class SystemInfoRepository {
 		return null;
 	}
 
-	public static Iterator<ChildModelTempDemo> findAllGroups(OrientConnectionFactory conn, SystemInfo info){
-		ISystemInfo sys_info = find(conn, info.getKey());
-		return sys_info.getGroups();
-		
-	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
-	public static String generateKey(SystemInfo info) {
+	public static String generateKey(ISystemInfo info) {
 		return "system_info";
 	}
 }

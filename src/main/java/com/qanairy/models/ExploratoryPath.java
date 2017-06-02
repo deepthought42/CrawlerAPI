@@ -102,30 +102,6 @@ public class ExploratoryPath extends Path{
 	}
 	
 	/**
-	 * Clone {@link Path} object
-	 * 
-	 * @param path
-	 * @return
-	 */
-	public static Path clone(Path path){
-		Path clonePath = new Path();
-		
-		List<PathObject> path_obj = path.getPath();
-		List<PathObject> clone_list = new ArrayList<PathObject>();
-		for(PathObject obj : path_obj){
-			PathObject path_obj_clone = obj.clone();
-			clone_list.add(path_obj_clone);
-		}
-		
-		clonePath.setPath(clone_list);
-		clonePath.setKey(path.getKey());
-		clonePath.setIsUseful(path.isUseful());
-		clonePath.setSpansMultipleDomains(path.getSpansMultipleDomains());
-		
-		return clonePath;
-	}
-	
-	/**
 	 * Gets the last Vertex in a path that is of type {@link Page}
 	 * 
 	 * @return

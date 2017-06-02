@@ -324,10 +324,10 @@ public class BrowserActor extends UntypedActor {
 							}
 
 							//tell memory worker of path
-							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+							//final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 														
 							//tell memory worker of path
-							memory_actor.tell(test_msg, getSelf() );
+							//memory_actor.tell(test_msg, getSelf() );
 							//broadcast test
 							PastPathExperienceController.broadcastTestExperience(test);
 							

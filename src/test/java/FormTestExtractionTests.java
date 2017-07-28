@@ -9,8 +9,7 @@ import com.minion.browsing.form.Form;
 import com.qanairy.models.Page;
 import com.qanairy.rules.FormRule;
 import com.qanairy.rules.formRules.AlphabeticRestrictionRule;
-import com.qanairy.rules.formRules.MaximumValueRule;
-import com.qanairy.rules.formRules.MinimumValueRule;
+import com.qanairy.rules.formRules.NumericRule;
 import com.qanairy.rules.formRules.NumericRestrictionRule;
 import com.qanairy.rules.formRules.ReadOnlyRule;
 import com.qanairy.rules.formRules.RequirementRule;
@@ -185,7 +184,7 @@ public class FormTestExtractionTests {
 
 			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
 				System.err.println("rule class :: " + rule.getClass());
-				if(rule.getClass().equals(MinimumValueRule.class)){
+				if(rule.getClass().equals(NumericRule.class)){
 					min_value_rule = true;
 				}
 			}
@@ -215,7 +214,7 @@ public class FormTestExtractionTests {
 			boolean max_value_rule = false;
 
 			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				if(rule.getClass().equals(MaximumValueRule.class)){
+				if(rule.getClass().equals(NumericRule.class)){
 					max_value_rule = true;
 				}
 			}

@@ -70,7 +70,7 @@ public class BrowserActor extends UntypedActor {
 	 * @throws IllegalAccessException
 	 */
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
-		List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
+		/*List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
 
 		System.out.println(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
@@ -100,6 +100,8 @@ public class BrowserActor extends UntypedActor {
 			}
 		}
 		return cumulative_action_map;
+		*/
+		return null;
 	}
 	
 	
@@ -114,7 +116,7 @@ public class BrowserActor extends UntypedActor {
 	public ArrayList<HashMap<String, Double>> getEstimatedElementProbabilities(ArrayList<PageElement> pageElements) 
 			throws IllegalArgumentException, IllegalAccessException
 	{
-		
+		/*
 		ArrayList<HashMap<String, Double>> element_action_map_list = new ArrayList<HashMap<String, Double>>(0);
 				
 		for(PageElement elem : pageElements){
@@ -153,6 +155,9 @@ public class BrowserActor extends UntypedActor {
 		}
 		
 		return element_action_map_list;
+		*/
+		
+		return null;
 	}
 	
 	/**

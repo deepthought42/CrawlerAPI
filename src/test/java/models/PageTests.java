@@ -21,7 +21,11 @@ public class PageTests {
 	public void pageCreateRecord(){
 		Page page;
 		try {
-			page = new Page("<html></html>","http://www.test.test", null, new ArrayList<PageElement>(), true);
+			page = new Page("<html></html>",
+							"http://www.test.test", 
+							null,
+							new ArrayList<PageElement>(), 
+							true);
 			PageRepository page_repo = new PageRepository();
 			
 			Page page_record = page_repo.create(new OrientConnectionFactory(), page);

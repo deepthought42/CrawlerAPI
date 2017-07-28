@@ -121,4 +121,10 @@ public class PageAlert extends PathObject implements IObjectValuationAccessor {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	@Override
+	public PathObject clone() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

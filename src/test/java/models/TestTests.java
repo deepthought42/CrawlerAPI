@@ -27,7 +27,10 @@ public class TestTests {
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
-			test = new com.qanairy.models.Test(new Path(), new Page("<html></html>","http://www.test.test", "", new ArrayList<PageElement>(), true), new Domain("http://www.test.test"));
+			Page page = new Page("<html></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			Path path = new Path();
+			path.add(page);
+			test = new com.qanairy.models.Test(path, page, new Domain("http://www.test.test"));
 			test.setKey(test_repo.generateKey(test));
 			com.qanairy.models.Test test_record = test_repo.create(new OrientConnectionFactory(), test);
 			
@@ -46,10 +49,14 @@ public class TestTests {
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
-
-			test = new com.qanairy.models.Test(new Path(), new Page("<html></html>","http://www.test.test", "", new ArrayList<PageElement>(), true), new Domain("http://www.test.test"));
+			Page page = new Page("<html><body></body></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			Path path = new Path();
+			path.add(page);
+			test = new com.qanairy.models.Test(path, page, new Domain("http://www.test.test"));
 			test.setKey(test_repo.generateKey(test));
-			com.qanairy.models.Test test_record = test_repo.update(new OrientConnectionFactory(), test);
+			com.qanairy.models.Test test_record_create = test_repo.create(new OrientConnectionFactory(), test);
+
+			com.qanairy.models.Test test_record = test_repo.update(new OrientConnectionFactory(), test_record_create);
 			
 			Assert.assertTrue(test_record.getKey().equals(test.getKey()));
 		} catch (IOException e) {
@@ -66,9 +73,12 @@ public class TestTests {
 
 		com.qanairy.models.Test test;
 		try {
+			Page page = new Page("<html></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			Path path = new Path();
+			path.add(page);
 			TestRepository test_repo = new TestRepository();
 
-			test = new com.qanairy.models.Test(new Path(), new Page("<html></html>","http://www.test.test", "", new ArrayList<PageElement>(), true), new Domain("http://www.test.test"));
+			test = new com.qanairy.models.Test(path, page, new Domain("http://www.test.test"));
 			test = test_repo.create(orient_connection, test);
 			com.qanairy.models.Test test_record = test_repo.find(orient_connection, test.getKey());
 			

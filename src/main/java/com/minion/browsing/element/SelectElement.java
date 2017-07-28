@@ -11,10 +11,11 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
 
-public class SelectElement implements PageElement {
+public class SelectElement extends PageElement {
     @SuppressWarnings("unused")
     private static Logger log = LogManager.getLogger(SelectElement.class);
 	
+	/*
 	private HtmlTag select_element;
 	private List<HtmlTag> option_elements;
 	private HtmlTag label_element;
@@ -69,4 +70,5 @@ public class SelectElement implements PageElement {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	*/
 }

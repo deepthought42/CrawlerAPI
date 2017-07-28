@@ -60,6 +60,6 @@ public class Table {
 	}
 	
 	public List<Row> loadRows(WebElement table_body){
-		
+		return null;
 	}
 }

@@ -124,17 +124,17 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			if(obj.getType().equals("Page")){
 				PageRepository page_record = new PageRepository();
 				path_key += page_record.generateKey((Page)obj) + "::";
-				System.err.println("Page key :: "+path_key);
+				log.debug("Page key :: "+path_key);
 			}
 			else if(obj.getType().equals("PageElement")){
 				PageElementRepository page_elem_record = new PageElementRepository();
 				path_key += page_elem_record.generateKey((PageElement)obj) + "::";
-				System.err.println("Page element key:: "+path_key);
+				log.debug("Page element key:: "+path_key);
 			}
 			else if(obj.getType().equals("Action")){
 				ActionRepository action_record = new ActionRepository();
 				path_key += action_record.generateKey((Action)obj) + "::";
-				System.err.println("Action key :: "+path_key);
+				log.debug("Action key :: "+path_key);
 			}
 		}
 		
@@ -181,19 +181,15 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		IPathObject last_path_obj = null;
 		while(path_obj != null && (last_path_obj == null || !last_path_obj.getKey().equals(path_obj.getKey()))){
 			Iterator<IPathEdge> path_edges = path_obj.getPathEdges().iterator();
-			System.err.println("getting path edges");
 			last_path_obj = path_obj;
 			PathObjectRepository path_obj_repo = new PathObjectRepository();
 			path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
 			while(path_edges.hasNext()){
 				index++;
 				IPathEdge edge = path_edges.next();
-				System.err.println("retrieving next edge on iteration :: "+index + " :: with key == "+ edge.getPathKey());
 				if(edge != null && edge.getPathKey().equals(obj.getKey()) ){
-					System.err.println("Edge key matches object key");
 
 					path_obj = edge.getPathObjectIn();
-					System.err.println("Path obj in :: "+edge.getPathObjectIn());
 					break;
 				}
 			}
@@ -203,7 +199,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			if(path_obj2 == null){
 				continue;
 			}
-			System.err.println("Path Object Type : "+path_obj2.getType());
 		}
 		return new Path(obj.getKey(), obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);
 	}

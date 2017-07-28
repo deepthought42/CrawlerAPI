@@ -88,22 +88,20 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		//System.err.println("data type :: " + data.getType()+" :: "+data.getClass().getName());
 		if(type.equals("Page")){
 		//if(type.equals(Page.class.getName())){
-			System.err.println("converting from page");
+			log.debug("converting from page");
 			//IPage page_record = ((IPage)data);
 			//Page page_obj = new Page();
 			Page page_obj = null;
 			PageRepository page_record = new PageRepository();
 			Iterator<IPage> page_iter = ((Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class)).iterator();
 			if(page_iter.hasNext()){
-				System.err.println("Page Iteration exists");
 				page_obj = page_record.convertFromRecord(page_iter.next());
 			}
-			System.err.println("coverted page from record :: " + page_obj +" :: ");
 			page_obj.setType(type);
 			return page_obj;
 		}
 		else if(type.equals("PageElement")){
-			System.err.println("converting from page element");
+			log.debug("converting from page element");
 
 			//IPageElement page_elem_record = ((IPageElement)data);
 			PageElement page_elem_obj = null;
@@ -121,11 +119,9 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 				}
 			//}
 			
-			System.err.println("coverted page element from record :: " + page_elem_obj +" :: ");
 			return page_elem_obj;
 		}
 		else if(type.equals("Action")){			
-			System.err.println("converting from Action");
 			Action action = new Action();
 			
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
@@ -134,7 +130,6 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			ActionRepository action_record = new ActionRepository();
 			return action_record.convertFromRecord(iaction.iterator().next());
 		}
-		System.err.println("current class name :: " + type);
 
 		return null;
 	}

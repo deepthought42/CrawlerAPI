@@ -13,14 +13,20 @@ import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
+import com.qanairy.models.Account;
+import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.services.AccountService;
 
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -35,39 +41,44 @@ import akka.actor.Props;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
- * 
- * @author Brandon Kindred
  */
 @RestController
 @CrossOrigin(origins = "http://localhost:8001")
 @RequestMapping("/discovery")
 public class DiscoveryController {
 
+    @Autowired
+    protected AccountService accountService;
+    
 	/**
 	 * 
 	 * @param request
 	 * @param url
 	 * @return
 	 * @throws MalformedURLException
+	 * @throws UnknownAccountException 
 	 */
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
-													   @RequestParam(value="url", required=true) String url,
-													   @RequestParam(value="account_key", required=true) String account_key) 
-															   throws MalformedURLException {
+													   @RequestParam(value="url", required=true) String url) 
+															   throws MalformedURLException, UnknownAccountException {
 		
-//		ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
-		
+		//ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
 		//String account_key = ""+UUID.randomUUID().toString();
-		System.out.println("ACCOUNT KEY :: "+account_key);
-		WorkAllowanceStatus.register(account_key); 
-		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
 		
-		System.out.print("Compiling work to be allocated to work allocator...");
+		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+		
+		WorkAllowanceStatus.register(acct.getKey()); 
 
 		ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-		Message<URL> message = new Message<URL>(account_key, new URL(url));
+		Message<URL> message = new Message<URL>(acct.getKey(), new URL(url));
 		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 		//workAllocationActor.tell(message, ActorRef.noSender());
 	
@@ -89,16 +100,22 @@ public class DiscoveryController {
 	 * @param account_key key of account to stop work for
 	 * @return
 	 * @throws MalformedURLException
+	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping("/stop")
-	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request, 
-		   @RequestParam(value="account_key", required=true) String account_key) throws MalformedURLException {
+	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request) 
+			throws MalformedURLException, UnknownAccountException {
 		
-		System.out.println("STOP! ACCOUNT KEY :: "+account_key);
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
 
-		WorkAllowanceStatus.haltWork(account_key); 
-		System.out.println("WORK ALLOWANCE STATUS :: "+WorkAllowanceStatus.checkStatus(account_key));
+		WorkAllowanceStatus.haltWork(acct.getKey()); 
 		
 		return null;
 	}

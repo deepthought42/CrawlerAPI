@@ -38,7 +38,7 @@ public class ServicePackageTests {
 		ServicePackage svc_pkg_record_create = sp_repo.create(new OrientConnectionFactory(), svc_pkg);
 		svc_pkg_record_create.setMaxUsers(5);
 		svc_pkg_record_create.setPrice(75);
-		ServicePackage svc_pkg_record_update = sp_repo.update(new OrientConnectionFactory(), svc_pkg);
+		ServicePackage svc_pkg_record_update = sp_repo.update(new OrientConnectionFactory(), svc_pkg_record_create);
 		
 		Assert.assertTrue(svc_pkg_record_update.getKey().equals(svc_pkg_record_create.getKey()));
 		Assert.assertTrue(svc_pkg_record_update.getName().equals(svc_pkg_record_create.getName()));

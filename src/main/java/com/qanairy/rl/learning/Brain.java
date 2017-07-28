@@ -8,9 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.minion.browsing.ActionFactory;
-import com.minion.browsing.actions.Action;
-import com.minion.persistence.OrientConnectionFactory;
-import com.minion.structs.Path;
+import com.qanairy.models.Action;
+import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.models.Path;
+import com.qanairy.models.PathObject;
 //import com.minion.structs.Path;
 import com.qanairy.rl.memory.DataDecomposer;
 import com.qanairy.rl.memory.MemoryState;
@@ -30,7 +31,7 @@ import com.qanairy.rl.memory.OrientRLMemoryConnectionFactory;
  */
 public class Brain {
 	
-	private OrientDbPersistor persistor = null;
+	private static OrientDbPersistor persistor = null;
 	
 	public static double[] predict(List<ObjectDefinition> object_definitions, String[] actions){
 		// 1. identify vocabulary (NOTE: This is currently hard coded since we only currently care about 1 context)
@@ -146,7 +147,7 @@ public class Brain {
 			
 			//NEED TO LOOK UP OBJECT DEFINITION IN MEMORY, IF IT EXISTS, THEN IT SHOULD BE LOADED AND USED, 
 			//IF NOT THEN IT SHOULD BE CREATED, POPULATED, AND SAVED
-			Iterator<com.tinkerpop.blueprints.Vertex> v_mem_iter = persistor.find(objDef).iterator();
+			Iterator<com.tinkerpop.blueprints.Vertex> v_mem_iter = null; //persistor.findAll(objDef).iterator();
 			com.tinkerpop.blueprints.Vertex memory_vertex = null;
 			if(v_mem_iter.hasNext()){
 				memory_vertex = v_mem_iter.next();
@@ -168,11 +169,11 @@ public class Brain {
 			System.err.println("estimated_reward : "+estimated_reward);
 			
 			double q_learn_val = q_learn.calculate(last_reward, actual_reward, estimated_reward );
-			action_map.put(last_action, q_learn_val);
-			System.err.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
+			//action_map.put(last_action, q_learn_val);
+			//System.err.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
 
-			objDef.setActions(action_map);
-			com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);
+			//objDef.setActions(action_map);
+			//com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);
 		}
 		
 		
@@ -256,13 +257,13 @@ public class Brain {
 		
 		PathObject prev_obj = null;
 		for(PathObject obj : path.getPath()){
-			List<ObjectDefinition> decomposer = DataDecomposer.decompose(obj.data());
+			//List<ObjectDefinition> decomposer = DataDecomposer.decompose(obj.data());
 
-			for(ObjectDefinition objDef : object_definition_list){
+			//for(ObjectDefinition objDef : object_definition_list){
 				//if object definition value doesn't exist in vocabulary 
 				// then add value to vocabulary
-				vocabulary.appendToVocabulary(objDef.getValue());
-			}
+				//vocabulary.appendToVocabulary(objDef.getValue());
+			//}
 			
 			//Save states
 			/** Handled already in memory Registry I think...LEAVE THIS UNTIL VERIFIED ITS NOT NEEDED
@@ -376,10 +377,12 @@ public class Brain {
 	}
 	
 	private List<ObjectDefinition> generateVocabRecord(List<ObjectDefinition> object_list, Vocabulary vocabulary){
+		return object_list;
 		
 	}
 	
 	private List<List<ObjectDefinition>> loadActionPolicies(List<ObjectDefinition> object_list, Vocabulary vocabulary){
+		return null;
 		
 	}
 	
@@ -391,7 +394,6 @@ public class Brain {
 		
 	}
 	
-	private 
 	@Deprecated
 	public static synchronized void registerPath(Path path){
 		

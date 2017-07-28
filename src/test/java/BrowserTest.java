@@ -16,7 +16,7 @@ public class BrowserTest {
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
 		
 		String clean_src = Browser.cleanSrc(src_example);
-		System.out.println("clean src: " +clean_src);
+		//System.out.println("clean src: " +clean_src);
 		Assert.assertTrue(clean_src.equals("<html><head></head></html>"));
 	}
 	
@@ -30,6 +30,5 @@ public class BrowserTest {
 		}
 		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost()));
 		Assert.assertTrue(test.getDomain().getUrl().toString().equals(page.getUrl().getHost()));
-		Assert.assertTrue(test.getKey() != null);
 	}
 }

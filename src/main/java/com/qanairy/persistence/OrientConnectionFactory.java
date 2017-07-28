@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.config.ConfigService;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 import com.tinkerpop.frames.FramedGraph;
@@ -18,10 +19,11 @@ public class OrientConnectionFactory {
     private static Logger log = LogManager.getLogger(OrientConnectionFactory.class);
         
 	FramedGraph<OrientGraphNoTx> current_tx;
+
+	//private static String username = ConfigService.getProperty("db.username");
+	//private static String password = ConfigService.getProperty("db.password");
+	//private static String db_path = ConfigService.getProperty("db.serverurl");
 	
-	private String username;
-	private String password;
-	 
 	public OrientConnectionFactory(){
 		this.current_tx = getConnection();
 		log.info("Opened connection to OrientDB");
@@ -33,7 +35,7 @@ public class OrientConnectionFactory {
 	 */
 	private FramedGraph<OrientGraphNoTx> getConnection(){
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:localhost/Thoth", "root", "password").setupPool(1, 50);
+		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:67.205.165.64/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 50);
 	    OrientGraphNoTx instance = graphFactory.getNoTx();
 	    log.info("Orientdb transaction created. returning instance");
 		return factory.create(instance);

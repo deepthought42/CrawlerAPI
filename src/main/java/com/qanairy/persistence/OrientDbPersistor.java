@@ -172,7 +172,7 @@ public class OrientDbPersistor{
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 
-			log.debug("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
+			//log.debug("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
 			v = memory_iterator.next();
 		}
 		else{
@@ -216,7 +216,7 @@ public class OrientDbPersistor{
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 
-			log.debug("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
+			//log.debug("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
 			v = memory_iterator.next();
 			if(actions.length != 0){
 				log.debug("......Actions : "+actions.length);

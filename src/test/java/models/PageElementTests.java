@@ -15,7 +15,7 @@ public class PageElementTests {
 	
 	@Test
 	public void pageElementCreateRecord(){
-		PageElement page_element = new PageElement("test element", "//div", "div", null);
+		PageElement page_element = new PageElement("71a7731fee27df1b6e01a589ab1f386aaf83f2b9456083d6e49264c91941b911", "test element", "//div", "div", null);
 		PageElementRepository page_elem_repo = new PageElementRepository();
 		
 		PageElement page_element_record = page_elem_repo.create(new OrientConnectionFactory(), page_element);
@@ -32,7 +32,7 @@ public class PageElementTests {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		PageElement page_element = new PageElement("test element2", "//div/test", "div", null);
 		PageElementRepository page_elem_repo = new PageElementRepository();
-		page_elem_repo.create(connection, page_element);
+		page_element = page_elem_repo.create(connection, page_element);
 		page_element.setName("updated test element2");
 		
 		PageElement page_element_record = page_elem_repo.update(connection, page_element);
@@ -52,7 +52,7 @@ public class PageElementTests {
 		PageElement page_element = new PageElement("find test element", "//body/div", "div", null);
 		PageElementRepository page_elem_repo = new PageElementRepository();
 
-		page_elem_repo.create(connection, page_element);
+		page_element = page_elem_repo.create(connection, page_element);
 		PageElement page_element_record = page_elem_repo.find(connection, page_element.getKey());
 			
 		Assert.assertTrue(page_element_record.getKey().equals(page_element.getKey()));

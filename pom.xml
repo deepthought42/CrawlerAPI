@@ -4,7 +4,7 @@
 
   
   <groupId>com.Qanairy</groupId>
-  <version>0.0.1</version> 
+  <version>0.0.2</version> 
   <artifactId>Qanairy</artifactId>
   <packaging>jar</packaging>
 
@@ -15,53 +15,39 @@
     <selenium-version>3.4.0</selenium-version>
     <spring.version>4.3.4.RELEASE</spring.version>
     <java.version>1.8</java.version>
-    <springboot.version>1.4.2.RELEASE</springboot.version>
+    <springboot.version>1.5.5.RELEASE</springboot.version>
     
   </properties>
 
   <build>
   	<plugins>
-	  	<plugin>
-	      <!-- Build an executable JAR -->
-	      <groupId>org.apache.maven.plugins</groupId>
-	      <artifactId>maven-jar-plugin</artifactId>
-	      <version>2.6</version>
-	      <configuration>
-	        <archive>
-	          <manifest>
-	            <addClasspath>true</addClasspath>
-	            <classpathPrefix>src/*</classpathPrefix>
-	            
-	            <mainClass>com.minion.EntryPoint</mainClass>
-	          </manifest>
-	        </archive>
-	      </configuration>
-	    </plugin>
-		<plugin>
-		    <groupId>org.flywaydb</groupId>
-		    <artifactId>flyway-maven-plugin</artifactId>
-		    <version>3.2.1</version>
-		    <configuration>
-		    	<url>jdbc:mysql://localhost:3306</url>
-		        <user>root</user>
-		        <password></password>
-		        <schemas>
-		            <schema>qanairy</schema>
-		        </schemas>
-		    </configuration>
-		</plugin>
+  	 	<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration>
+        </plugin>
 	    <plugin>
-	      <groupId>org.springframework.boot</groupId>
-	      <artifactId>spring-boot-maven-plugin</artifactId>
+	       <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${springboot.version}</version>
+          <configuration>
+              <fork>true</fork>
+              <mainClass>com.minion.api.EntryPoint</mainClass>
+          </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>repackage</goal>
+                </goals>
+              </execution>
+          </executions>
 	    </plugin>
 	</plugins>
 </build>
-<repositories>
-    <repository>
-        <id>codehaus</id>
-        <url>http://repository.codehaus.org/org/codehaus</url>
-    </repository>
-</repositories>
+
   <dependencies>
 		<!-- https://mvnrepository.com/artifact/log4j/log4j -->
 		<dependency>
@@ -93,6 +79,12 @@
 		    <groupId>org.seleniumhq.selenium</groupId>
 		    <artifactId>selenium-server</artifactId>
 		    <version>${selenium-version}</version>
+		    <exclusions>
+			    <exclusion>
+			        <groupId>javax.servlet</groupId>
+			        <artifactId>servlet-api</artifactId>
+			    </exclusion>
+			</exclusions>
 		</dependency>
 			    
 	    <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium.grid/selenium-grid-hub -->
@@ -100,6 +92,12 @@
 		    <groupId>org.seleniumhq.selenium.grid</groupId>
 		    <artifactId>selenium-grid-hub</artifactId>
 		    <version>1.0.5</version>
+		    <exclusions>
+			    <exclusion>
+			        <groupId>javax.servlet</groupId>
+			        <artifactId>servlet-api</artifactId>
+			    </exclusion>
+			</exclusions>
 		</dependency>
 			    
    	    <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
@@ -107,6 +105,12 @@
 	    	<groupId>org.seleniumhq.selenium</groupId>
 	        <artifactId>selenium-java</artifactId>
 	        <version>${selenium-version}</version>
+	        <exclusions>
+			    <exclusion>
+			        <groupId>javax.servlet</groupId>
+			        <artifactId>servlet-api</artifactId>
+			    </exclusion>
+			</exclusions>
 	    </dependency>
 	    
 	    <!-- https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager -->
@@ -282,12 +286,12 @@
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
-		<dependency>
+		<!-- <dependency>
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-test</artifactId>
 		    <version>4.3.4.RELEASE</version>
 		</dependency>
-        
+        -->
        	<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3 -->
 		<dependency>
 		    <groupId>com.amazonaws</groupId>

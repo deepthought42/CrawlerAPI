@@ -132,10 +132,10 @@ public class Browser {
 	 * @return
 	 */
 	public static String cleanSrc(String src){
-		src = src.replaceAll("\\s", "");
 		
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
 	    return p.matcher(src).replaceAll("");
 	}
 	

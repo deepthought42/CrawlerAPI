@@ -136,7 +136,8 @@ public class Test {
 	 */
 	public static Iterable<ITest> findByDomain(String domain) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getBaseGraph().getRawGraph().query(new OSQLSynchQuery("SELECT FROM V WHERE color = 'red'"));
+		//return orient_connection.getTransaction().getBaseGraph().getRawGraph().query(new OSQLSynchQuery<ITest>("SELECT FROM V WHERE color = 'red'"));
+		return null;
 	}
 	
 	/**

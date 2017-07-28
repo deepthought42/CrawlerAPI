@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.ListUtils;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;

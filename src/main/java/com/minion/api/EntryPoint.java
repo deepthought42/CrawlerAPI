@@ -28,7 +28,7 @@ public class EntryPoint {
 	public static void main(String[] args){
         SpringApplication.run(EntryPoint.class, args);
         
-        final ActorSystem system = ActorSystem.create("Minion");
+        final ActorSystem system = ActorSystem.create("Qanairy-api");
    	}
 	
 

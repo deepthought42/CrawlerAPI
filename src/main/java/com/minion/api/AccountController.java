@@ -1,4 +1,4 @@
-package com.qanairy.models.dto;
+package com.minion.api;
 
 import java.security.Principal;
 import java.util.ArrayList;

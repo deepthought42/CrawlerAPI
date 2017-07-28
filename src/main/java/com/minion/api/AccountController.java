@@ -130,6 +130,7 @@ public class AccountController {
         return accountService.update(account);
     }
     
+    
 
     /**
      * Simple demonstration of how Principal info can be accessed

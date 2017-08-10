@@ -61,7 +61,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	//clone path
 			  	//Path new_path = Path.clone(path);
 			  	
-			  	System.err.println("Form Test Discovery Actor is crawling path for test :: "+path.getKey());
+			  	System.err.println("Form Test Discovery Actor is crawling path :: "+path.getKey());
 			  	Page current_page = Crawler.crawlPath(path, browser);
 			  				  	
 			  	List<Form> forms = Browser.extractAllForms(current_page, browser);

@@ -43,6 +43,7 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
+import com.qanairy.config.ConfigService;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -50,6 +51,8 @@ import com.qanairy.models.SystemInfo;
 import com.qanairy.models.dto.SystemInfoRepository;
 import com.qanairy.persistence.ISystemInfo;
 import com.qanairy.persistence.OrientConnectionFactory;
+
+import io.github.bonigarcia.wdm.PhantomJsDriverManager;
 
 
 /**
@@ -61,6 +64,8 @@ public class Browser {
 	private WebDriver driver;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
 	private String url = "";
+	
+	//private static String phantomjs_driver = ConfigService.getProperty("drivers.phantomjs");
 	/**
 	 * 
 	 * @param url
@@ -246,13 +251,13 @@ public class Browser {
 
 		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
 	    //Create instance of PhantomJS driver
-		DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
-		capabilities.setCapability("phantomjs.binary.path","C:\\Users\\brand\\Dev\\browser_drivers\\phantomjs\\phantomjs-2.1.1-windows\\bin\\phantomjs.exe");
+		//DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
+		//capabilities.setCapability("phantomjs.binary.path","C:\\Users\\brand\\Dev\\browser_drivers\\phantomjs\\phantomjs-2.1.1-windows\\bin\\phantomjs.exe");
 
-	    PhantomJSDriver driver = new PhantomJSDriver(capabilities);
+	    //PhantomJSDriver driver = new PhantomJSDriver(capabilities);
 	    
-	    //PhantomJsDriverManager.getInstance().setup();
-	    //PhantomJSDriver driver = new PhantomJSDriver();
+	    PhantomJsDriverManager.getInstance().setup();
+	    PhantomJSDriver driver = new PhantomJSDriver();
 	    
 		return driver;
 	}

@@ -66,13 +66,11 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		List<QanairyUser> users = IteratorUtils.toList(account.getUsers().iterator());
 		List<IDomain> domain_records = IteratorUtils.toList(account.getDomains().iterator());
 		
-		System.err.println("DOMAIN RECORDS FOR ACCOUNT :: " + domain_records.size());
 		List<Domain> domains = new ArrayList<Domain>();
 		DomainRepository domain_repo = new DomainRepository();
 		int idx=0;
 		for(IDomain domain : domain_records){
 			domains.add(domain_repo.convertFromRecord(domain));
-			System.err.println("Adding domain #:"+ (++idx));
 		}
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), users, domains);
 	}
@@ -89,7 +87,6 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		Iterator<IAccount> iter = accounts.iterator();
 		  
 		if(!iter.hasNext()){
-			System.err.println("converting account to graph vertex");
 			convertToRecord(connection, account);
 			connection.save();
 		}

@@ -34,7 +34,7 @@ public class WebSecurityConfig extends Auth0SecurityConfig {
      */
     @Override
     protected void authorizeRequests(final HttpSecurity http) throws Exception {
-    	http.authorizeRequests()
+    	http.cors().and().authorizeRequests()
     		.antMatchers("/realtime/**").permitAll()
     		.anyRequest().authenticated();
     }

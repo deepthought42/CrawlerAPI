@@ -32,13 +32,22 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		return domain.getUrl().toString();
 	}
 
+	public boolean addTest(Domain domain, ITest test){
+		try{
+			IDomain idomain = find(domain.getKey());
+			idomain.addTest(test);
+			return true;
+		}catch(Exception e){
+			return false;
+		}
+	}
 	/**
 	 * {@inheritDoc}
 	 */
 	public IDomain convertToRecord(OrientConnectionFactory connection, Domain domain) {
 		domain.setKey(generateKey(domain));
 		@SuppressWarnings("unchecked")
-		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(domain.getKey(), connection, IDomain.class);
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(generateKey(domain), connection, IDomain.class);
 		Iterator<IDomain> iter = domains.iterator();
 		IDomain domain_record = null;
 
@@ -51,7 +60,12 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			domain_record = iter.next();
 		}
 		domain_record.setUrl(domain.getUrl());
-		//domain_record.setTests(domain.getTests());
+		TestRepository test_repo = new TestRepository();
+		List<ITest> tests = new ArrayList<ITest>();
+		for(Test test : domain.getTests()){
+			tests.add(test_repo.convertToRecord(connection, test));
+		}
+		domain_record.setTests(tests);
 		return domain_record;
 	}
 
@@ -61,7 +75,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	@Override
 	public Domain create(OrientConnectionFactory connection, Domain domain) {
 		domain.setKey(generateKey(domain));
-		Domain domain_record = find(connection, domain.getKey());
+		Domain domain_record = find(connection, generateKey(domain));
 		
 		if(domain_record == null){
 			convertToRecord(connection, domain);

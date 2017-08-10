@@ -117,7 +117,7 @@
 		<dependency>
 		    <groupId>io.github.bonigarcia</groupId>
 		    <artifactId>webdrivermanager</artifactId>
-		    <version>1.6.2</version>
+		    <version>1.7.1</version>
 		</dependency>
 
 	    <dependency>
@@ -196,12 +196,12 @@
 		</dependency>	
 	  	
 		<!-- https://mvnrepository.com/artifact/com.codeborne/phantomjsdriver -->
-		<dependency>
+		<!-- <dependency>
 		    <groupId>com.codeborne</groupId>
 		    <artifactId>phantomjsdriver</artifactId>
-		    <version>1.4.2</version>
+		    <version>1.4.3</version>
 		</dependency>
-
+ -->
 	
 	    <dependency>
 	        <groupId>org.javassist</groupId>
@@ -275,7 +275,7 @@
 		<dependency>
 		    <groupId>com.auth0</groupId>
 		    <artifactId>auth0-spring-security-api</artifactId>
-		    <version>0.3.3</version>
+		    <version>0.4.0</version>
 		</dependency>
 
 		<dependency>

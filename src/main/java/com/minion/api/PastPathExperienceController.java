@@ -6,7 +6,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,28 +16,34 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
  */
-@CrossOrigin(origins = "http://localhost:8001")
+@CrossOrigin(origins = "http://alpha.qanairy.com")
 @RestController
 public class PastPathExperienceController {
 	private static Logger log = LogManager.getLogger(PastPathExperienceController.class);
 
     private static final Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
     
-	@RequestMapping("/realtime/streamPathExperience")
-    public SseEmitter stream(HttpServletRequest request) throws IOException {
-        SseEmitter emitter = new SseEmitter();
-        log.info("Adding emitter");
+    @PreAuthorize("hasAuthority('qanairy')")
+	@RequestMapping("/realtime/streamPathExperience" )
+    public SseEmitter stream(HttpServletRequest request,
+    		 				 @RequestParam(value="account_key", required=true) String account_key,
+    		 				 Principal principal) throws IOException {
+        System.err.println("CREATING EMITTER");
+		SseEmitter emitter = new SseEmitter();
+        System.err.println("Adding emitter");
 
         if(emitters.containsKey("account_key")){
-        	log.info("Marking emitter complete");
+        	System.err.println("Marking emitter complete");
         	emitters.get("account_key").complete();
         }
         emitters.put("account_key", emitter);

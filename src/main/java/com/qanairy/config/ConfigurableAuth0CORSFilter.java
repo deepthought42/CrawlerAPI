@@ -35,7 +35,7 @@ public class ConfigurableAuth0CORSFilter extends Auth0CORSFilter {
             }
         } );
 
-        filterChain.doFilter( servletRequest, servletResponse );
+        filterChain.doFilter( servletRequest, response );
     }
 
 }

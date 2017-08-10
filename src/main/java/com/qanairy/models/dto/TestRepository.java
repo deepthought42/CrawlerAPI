@@ -105,7 +105,6 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			
 			PathRepository path_record = new PathRepository();
 			PageRepository page_record = new PageRepository();
-			DomainRepository domain_record = new DomainRepository();
 			TestRecordRepository test_record_record = new TestRecordRepository();
 			
 			log.info("setting test_record path : "+test.getPath().size()); 
@@ -114,10 +113,12 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
 			log.error("test.getDomain() =  "+test.getDomain().getUrl());
 			
+			DomainRepository domain_record = new DomainRepository();
 			IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
 			idomain.addTest(test_record);
 
 			test_record.setDomain(idomain);
+			
 			for(TestRecord record : test.getRecords()){
 				test_record.addRecord(test_record_record.convertToRecord(connection, record));
 			}

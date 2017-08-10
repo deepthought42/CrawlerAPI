@@ -39,7 +39,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				
 				//FramedGraphFactory factory = new FramedGraphFactory(); //(1) Factories should be reused for performance and memory conservation.
 				OrientConnectionFactory connection = new OrientConnectionFactory();
-				log.info("saving test : " + test);
+				System.err.println("saving test : " + test + " with key : "+test.getKey());
 				TestRepository test_repo = new TestRepository();
 				
 				test_repo.create(connection, test);
@@ -76,9 +76,8 @@ public class MemoryRegistryActor extends UntypedActor{
 				*/
 			}
 			else if(acct_msg.getData() instanceof Path){
-				log.info("Converting message to path");
 				Path path = (Path)acct_msg.getData();
-				log.info("Saving Path : " +path + " : to memory Registry");
+				System.err.println("Saving Path : " +path + " : " + path.getKey() +" to memory Registry");
 				PathRepository path_repo = new PathRepository();
 				path_repo.create(new OrientConnectionFactory(), path);
 			}

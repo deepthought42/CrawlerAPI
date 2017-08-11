@@ -294,7 +294,7 @@ public class BrowserActor extends UntypedActor {
 						
 						System.err.println("Checking equality of page sources " + last_page.equals(result_page));
 						if(last_page.equals(result_page)){
-					  		System.err.println("Page sources match(Path Message)");
+					  		System.err.println("Page sources match, marking not valuable, (Path Message)");
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{

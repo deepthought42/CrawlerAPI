@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,6 +10,20 @@ public class Group {
 	private String key;
 	private String name;
 	private String description;
+	private List<Test> tests;
+	/**
+	 * Construct a new grouping	
+	 * 
+	 * @param name 		name of the group
+	 * @param test		{@link List} of {@link Test}s
+	 * @param description describes group
+	 */
+	public Group(String name){
+		this.setName(name);
+		this.setDescription("");
+		this.setTests(new ArrayList<Test>());
+		this.setKey(null);
+	}
 	
 	/**
 	 * Construct a new grouping	
@@ -17,8 +32,9 @@ public class Group {
 	 * @param test		{@link List} of {@link Test}s
 	 * @param description describes group
 	 */
-	public Group(String name, List<Test> test){
+	public Group(String name, List<Test> tests){
 		this.setName(name);
+		this.setTests(tests);
 		this.setDescription("");
 		this.setKey(null);
 	}
@@ -30,8 +46,9 @@ public class Group {
 	 * @param test		{@link List} of {@link Test}s
 	 * @param description describes group
 	 */
-	public Group(String name, List<Test> test, String desc){
+	public Group(String name, List<Test> tests, String desc){
 		this.setName(name);
+		this.setTests(tests);
 		this.setDescription(desc);
 		this.setKey(null);
 	}
@@ -43,12 +60,27 @@ public class Group {
 	 * @param test		{@link List} of {@link Test}s
 	 * @param description describes group
 	 */
-	public Group(String key, String name, List<Test> test, String desc){
+	public Group(String key, String name, List<Test> tests, String desc){
 		this.setName(name);
+		this.setTests(tests);
 		this.setDescription(desc);
 		this.setKey(key);
 	}
 	
+	/**
+	 * Construct a new grouping	
+	 * 
+	 * @param name 		name of the group
+	 * @param test		{@link List} of {@link Test}s
+	 * @param description describes group
+	 */
+	public Group(String name, String desc){
+		this.setName(name);
+		this.setTests(new ArrayList<Test>());
+		this.setDescription(desc);
+		this.setKey(null);
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -71,5 +103,13 @@ public class Group {
 	
 	public String getDescription() {
 		return this.description;
+	}
+
+	public List<Test> getTests() {
+		return tests;
+	}
+
+	public void setTests(List<Test> tests) {
+		this.tests = tests;
 	}
 }

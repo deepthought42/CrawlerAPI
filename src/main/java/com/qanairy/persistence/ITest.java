@@ -75,16 +75,24 @@ public interface ITest  {
 	 * 
 	 * @return Correctness value. Null indicates value is unset.
 	 */
-	@Adjacency(label="belongs_to")
-	public Iterator<IGroup> getGroups();
+	@Adjacency(direction=Direction.IN, label="test_group")
+	public Iterable<IGroup> getGroups();
 	
 	/**
 	 * Sets correctness value of test
 	 * 
 	 * @param correctness value
 	 */
-	@Adjacency(label="belongs_to")
-	public void setGroups(List<Group> groups);
+	@Adjacency(direction=Direction.IN, label="test_group")
+	public void setGroups(List<IGroup> groups);
+	
+	/**
+	 * Sets correctness value of test
+	 * 
+	 * @param correctness value
+	 */
+	@Adjacency(direction=Direction.IN, label="test_group")
+	public void addGroup(IGroup group);
 	
 	/**
 	 * Adds a record to this test connecting it via edge with label "has"
@@ -121,7 +129,7 @@ public interface ITest  {
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
 	 */
 	@Adjacency(label="has")
-	public Iterator<ITestRecord> getRecords();
+	public Iterable<ITestRecord> getRecords();
 	
 	/**
 	 * Sets the {@link TestRecord} that is the result of executing the path 

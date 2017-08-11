@@ -31,6 +31,7 @@ import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
+import com.qanairy.models.dto.GroupRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.IDomain;
@@ -137,7 +138,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/name", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
-			   								 @RequestParam(value="name", required=true) String name) {
+			   								 		@RequestParam(value="name", required=true) String name) {
 		//session.setAttribute(Constants.FOO, new Domain());
 		List<Test> test_list = new ArrayList<Test>();
 		test_list = Test.findByName(name);
@@ -300,26 +301,27 @@ public class TestController {
 	 * @return the updated test
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
-	@RequestMapping(path="/addGroup/{group}/{test_key}", method = RequestMethod.POST)
-	public @ResponseBody Test addGroupToTest(@PathVariable("group") Group group,
-											 @PathVariable("test_key") String test_key){
-		System.out.println("Addint GROUP to test  : " + group);
+	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
+	public @ResponseBody Test addGroup(@RequestParam(value="name", required=true) String name,
+										@RequestParam(value="description", required=true) String description,
+										@RequestParam(value="key", required=true) String key){
+		System.out.println("Adding GROUP to test  : " + name);
+		Group group = new Group(name, description);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
-		Iterator<ITest> itest_iter = Test.findByKey(test_key, orient_connection).iterator();
+		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
-		Iterator<IGroup> group_iter = itest.getGroups();
-		if(!group_iter.hasNext()){
-			List<Group> group_list = new ArrayList<Group>();
-		}
+		Iterator<IGroup> group_iter = itest.getGroups().iterator();
 		
-		List<Group> group_list = new ArrayList<Group>();
-		if(!group_list.contains(group)){
-			log.info("group list doesnt contain group : " +group);
-			group_list.add(group);
-			itest.setGroups(group_list);
+		GroupRepository group_repo = new GroupRepository();
+		while(itest_iter.hasNext()){
+			itest = itest_iter.next();
 		}
-		//orient_connection.save();
+		//if(group_iter == null || !group_iter.hasNext()){
+			itest.addGroup(group_repo.convertToRecord(orient_connection, group));
+			orient_connection.save();
+		//}
+		
 		TestRepository test_record = new TestRepository();
 
 		return test_record.convertFromRecord(itest);

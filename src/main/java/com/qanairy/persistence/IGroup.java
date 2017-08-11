@@ -1,8 +1,8 @@
 package com.qanairy.persistence;
 
+import java.util.Iterator;
 import java.util.List;
 
-import com.qanairy.models.Test;
 import com.tinkerpop.frames.Property;
 
 /**
@@ -27,9 +27,12 @@ public interface IGroup {
 	@Property("description")
 	public String getDescription();
 	
-	@Property("")
-	public void setTests();
+	@Property("test_group")
+	public void setTests(List<ITest> tests);
 	
-	@Property("")
-	public List<Test> getTests();
+	@Property("test_group")
+	public Iterable<ITest> getTests();
+	
+	@Property("test_group")
+	public void addTest(ITest test);
 }

@@ -33,12 +33,9 @@ public class PastPathExperienceController {
 
     private static final Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
     
-    @PreAuthorize("hasAuthority('qanairy')")
 	@RequestMapping("/realtime/streamPathExperience" )
     public SseEmitter stream(HttpServletRequest request,
-    		 				 @RequestParam(value="account_key", required=true) String account_key,
     		 				 Principal principal) throws IOException {
-        System.err.println("CREATING EMITTER");
 		SseEmitter emitter = new SseEmitter();
         System.err.println("Adding emitter");
 

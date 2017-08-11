@@ -60,12 +60,13 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			domain_record = iter.next();
 		}
 		domain_record.setUrl(domain.getUrl());
-		TestRepository test_repo = new TestRepository();
+		/*TestRepository test_repo = new TestRepository();
 		List<ITest> tests = new ArrayList<ITest>();
 		for(Test test : domain.getTests()){
 			tests.add(test_repo.convertToRecord(connection, test));
 		}
 		domain_record.setTests(tests);
+		*/
 		return domain_record;
 	}
 

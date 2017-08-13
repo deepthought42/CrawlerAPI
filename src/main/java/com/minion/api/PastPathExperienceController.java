@@ -16,10 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -39,10 +37,11 @@ public class PastPathExperienceController {
 		SseEmitter emitter = new SseEmitter();
         System.err.println("Adding emitter");
 
-        if(emitters.containsKey("account_key")){
+       /* if(emitters.containsKey("account_key")){
         	System.err.println("Marking emitter complete");
         	emitters.get("account_key").complete();
         }
+        */
         emitters.put("account_key", emitter);
         emitter.onCompletion(() -> emitters.remove("account_key"));
 

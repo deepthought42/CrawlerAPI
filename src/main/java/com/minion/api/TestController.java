@@ -1,6 +1,7 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -52,6 +53,7 @@ import com.qanairy.models.Page;
  */
 @Controller
 @Scope("session")
+@CrossOrigin(origins = "http://alpha.qanairy.com")
 @RequestMapping("/tests")
 public class TestController {
 	private static Logger log = LogManager.getLogger(TestController.class);

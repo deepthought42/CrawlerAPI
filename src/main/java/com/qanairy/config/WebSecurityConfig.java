@@ -1,14 +1,20 @@
 package com.qanairy.config;
 
+import java.util.Arrays;
+
+import javax.servlet.Filter;
+
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
-
+import com.auth0.spring.security.api.Auth0CORSFilter;
 import com.auth0.spring.security.api.Auth0SecurityConfig;
 import com.qanairy.auth.Auth0Client;
 
@@ -25,7 +31,7 @@ public class WebSecurityConfig extends Auth0SecurityConfig {
     public Auth0Client auth0Client() {
         return new Auth0Client(clientId, issuer);
     }
-
+    
     /**
      *  Our API Configuration - for Profile CRUD operations
      *
@@ -34,7 +40,8 @@ public class WebSecurityConfig extends Auth0SecurityConfig {
      */
     @Override
     protected void authorizeRequests(final HttpSecurity http) throws Exception {
-    	http.cors().and().authorizeRequests()
+    	http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
+    	
     		.antMatchers("/realtime/**").permitAll()
     		.anyRequest().authenticated();
     }

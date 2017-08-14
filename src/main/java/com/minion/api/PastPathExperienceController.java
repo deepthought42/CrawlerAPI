@@ -16,8 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -31,19 +33,20 @@ public class PastPathExperienceController {
 
     private static final Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
     
+    @PreAuthorize("hasAuthority('qanairy')")
 	@RequestMapping("/realtime/streamPathExperience" )
     public SseEmitter stream(HttpServletRequest request,
+    		 				 @RequestParam(value="account_key", required=true) String account_key,
     		 				 Principal principal) throws IOException {
 		SseEmitter emitter = new SseEmitter();
         System.err.println("Adding emitter");
 
-       /* if(emitters.containsKey("account_key")){
+        if(emitters.containsKey(account_key)){
         	System.err.println("Marking emitter complete");
-        	emitters.get("account_key").complete();
+        	emitters.get(account_key).complete();
         }
-        */
-        emitters.put("account_key", emitter);
-        emitter.onCompletion(() -> emitters.remove("account_key"));
+        emitters.put(account_key, emitter);
+        emitter.onCompletion(() -> emitters.remove(account_key));
 
         return emitter;
     }

@@ -1,21 +1,19 @@
 package com.minion.api;
 
-import com.qanairy.models.Page;
-import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
+import com.google.gson.Gson;
+import com.pusher.rest.Pusher;
 import com.qanairy.models.Test;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,11 +39,10 @@ public class PastPathExperienceController {
 		SseEmitter emitter = new SseEmitter();
         System.err.println("Adding emitter");
 
-        if(emitters.containsKey(account_key)){
-        	System.err.println("Marking emitter complete");
-        	emitters.get(account_key).complete();
+        //find emitter for account before broadcasting data
+        if(!emitters.containsKey(account_key)){
+        	emitters.put(account_key, emitter);
         }
-        emitters.put(account_key, emitter);
         emitter.onCompletion(() -> emitters.remove(account_key));
 
         return emitter;
@@ -57,62 +54,13 @@ public class PastPathExperienceController {
      * @param test
      */
 	public static void broadcastTestExperience(Test test) {
-		
-		log.info("Emitters available to send to : " + emitters.size());
-        Iterator<String> iter = emitters.keySet().iterator();
-        
-        while(iter.hasNext()){
-        	String acct_key = iter.next();
-        	log.info("Broadcasting path to account -> "+acct_key);
-        	SseEmitter emit = emitters.get(acct_key);
-        	 try {
-        		// test.getResult().setSrc("");
-        		// test.getResult().setElements(new ArrayList<>());
-        		 
-        		 int idx=0;
-        		 for(PathObject obj : test.getPath().getPath()){
-        			 log.info("Type : "+obj.getType());
-        			 if(obj instanceof Page){
-        				 Page page = (Page)obj;
-        				 //page.setSrc("");
-        				 //page.setElements(new ArrayList<>());
-        				 test.getPath().getPath().set(idx, page);
-        			 }
-        			 idx++;
-        		 }
-                 emit.send(test, MediaType.APPLICATION_JSON);
-             } catch (IOException e) {
-                 log.error("Error sending message to client");
-                 emit.complete();
-                 emitters.remove(acct_key);
-                 e.printStackTrace();
-             }
-        }
-	}
-    
-    /**
-     * Message emitter that sends path to all registered clients
-     * 
-     * @param path
-     */
-	public static void broadcastPathExperience(Path path) {
-		
-		log.info("Emitters available to send to : " + emitters.size());
-        Iterator<String> iter = emitters.keySet().iterator();
-        
-        while(iter.hasNext()){
-        	String acct_key = iter.next();
-        	log.info("Broadcasting path to account -> "+acct_key);
-        	SseEmitter emit = emitters.get(acct_key);
-        	 try {
-                 emit.send(path, MediaType.APPLICATION_JSON);
-             } catch (IOException e) {
-                 log.error("Error sending message to client");
-                 emit.complete();
-                 emitters.remove(acct_key);
-                 e.printStackTrace();
-             }
-        }
-	}
+		Pusher pusher = new Pusher("384928", "5103e64528e1579e78e3", "33cc2853b73ba2d0befb");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
 
+		Gson gson = new Gson();
+        String test_json = gson.toJson(test);
+		pusher.trigger(test.getDomain().getUrl(), "test-discovered ", Collections.singletonMap("message", test_json));
+		
+	}
 }

@@ -18,10 +18,17 @@ public class Domain {
 	private List<Group> groups;
 	private String key;
 	
+	/**
+	 * 
+	 * 
+	 * @param domain
+	 * @param organization
+	 */
 	public Domain(){
 		this.setUrl(null);
 		this.setTests(new ArrayList<Test>());
 		this.setGroups(new ArrayList<Group>());
+		this.accounts = new ArrayList<Account>();
 	}
 	
 	/**
@@ -43,7 +50,10 @@ public class Domain {
 	 * @param tests			- tests that belong to this domain
 	 * @param groups		- groups that belong to this domain
 	 */
-	public Domain(String key, String domain_url, List<Test> tests, List<Group> groups){
+	public Domain(	String key, 
+					String domain_url, 
+					List<Test> tests, 
+					List<Group> groups){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);

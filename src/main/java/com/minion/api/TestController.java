@@ -53,7 +53,6 @@ import com.qanairy.models.Page;
  */
 @Controller
 @Scope("session")
-@CrossOrigin(origins = "http://alpha.qanairy.com")
 @RequestMapping("/tests")
 public class TestController {
 	private static Logger log = LogManager.getLogger(TestController.class);

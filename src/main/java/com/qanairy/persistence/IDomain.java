@@ -40,7 +40,9 @@ public interface IDomain {
 	@Adjacency(direction=Direction.IN, label="has_domain")
 	Iterable<IAccount> getAccounts();
 
-	@Adjacency(direction=Direction.IN, label="group")
-	void setAccounts(List<IAccount> groups);
+	@Adjacency(direction=Direction.IN, label="has_domain")
+	void setAccounts(List<IAccount> accounts);
 
+	@Adjacency(direction=Direction.IN, label="has_domain")
+	void addAccount(IAccount account);
 }

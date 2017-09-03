@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,6 +22,7 @@ import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Platform;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
@@ -32,6 +34,7 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -52,9 +55,6 @@ import com.qanairy.models.dto.SystemInfoRepository;
 import com.qanairy.persistence.ISystemInfo;
 import com.qanairy.persistence.OrientConnectionFactory;
 
-import io.github.bonigarcia.wdm.PhantomJsDriverManager;
-
-
 /**
  * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 
  */
@@ -65,7 +65,6 @@ public class Browser {
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
 	private String url = "";
 	
-	//private static String phantomjs_driver = ConfigService.getProperty("drivers.phantomjs");
 	/**
 	 * 
 	 * @param url
@@ -171,6 +170,19 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithFirefox(String url) throws MalformedURLException{
+		String Node = "http://10.132.126.118:5555/wd/hub";
+	    DesiredCapabilities cap = DesiredCapabilities.firefox();
+	    cap.setBrowserName("firefox");
+	    
+	    WebDriver driver = new RemoteWebDriver(new URL(Node), cap);
+	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
+	    driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+	    
+	    // Launch website
+	    driver.navigate().to(url);
+	    driver.manage().window().maximize();
+	    
+	    /*
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
 		log.info("Opening Firefox WebDriver connection using URL : " +url);
@@ -181,6 +193,7 @@ public class Browser {
 	    //capabilities.setPlatform(Platform.LINUX);
 	    //capabilities.setVersion("3.6");
 		WebDriver driver = new FirefoxDriver(capabilities);
+		*/
 		//WebDriver driver = new RemoteWebDriver(new URL("http://localhost:4444"), capabilities);
 		return driver;
 	}
@@ -225,7 +238,29 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
-		System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
+		DesiredCapabilities cap = DesiredCapabilities.chrome();
+		cap.setJavascriptEnabled(true);
+		cap.setPlatform(Platform.LINUX);
+		// optional video recording
+		/*String record_video = "True";
+		// video record
+		if (record_video.equalsIgnoreCase("True")) {
+			cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
+		} else {
+			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
+		}*/
+        String ipAddress = "172.17.0.1";
+        
+        WebDriver driver = new RemoteWebDriver(new URL("http://"+ipAddress+":4444/wd/hub"), cap);
+	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
+	    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
+	    
+	    // Launch website
+	    driver.get(url);
+	    //driver.manage().window().maximize();
+	    
+		/*
+	 	System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
 		//ChromeDriverManager.getInstance().setup();
 		log.info("Opening Chrome WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
@@ -235,7 +270,7 @@ public class Browser {
 	    //WebDriver driver = new ChromeDriverManager(capabilities);
 	    WebDriver driver = new ChromeDriver(capabilities);
 	    //WebDriver driver = new RemoteWebDriver(new URL(url), capabilities);
-
+	*/
 		log.info("Chrome opened");
 		return driver;
 	}
@@ -243,10 +278,32 @@ public class Browser {
 	/**
 	 * open new firefox browser
 	 * 
-	 * @param url
+	 * @param url 
 	 * @return
+	 * @throws MalformedURLException 
 	 */
-	public static PhantomJSDriver openWithPhantomjs(String url){
+	public static WebDriver openWithPhantomjs(String url) throws MalformedURLException{
+		
+		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
+		cap.setJavascriptEnabled(true);
+
+		// optional video recording
+		/*String record_video = "True";
+		// video record
+		if (record_video.equalsIgnoreCase("True")) {
+			cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
+		} else {
+			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
+		}*/
+        String ipAddress = "10.132.126.118";
+        
+        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+ipAddress+":4444/wd/hub"), cap);
+	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
+	    
+	    // Launch website
+	    driver.navigate().to(url);
+	    driver.manage().window().maximize();
+	    
 		//System.setProperty("webdriver.phantomjs.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\phantomjs\\phantomjs-2.1.1-windows\\phantomjs.exe");
 
 		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
@@ -256,8 +313,9 @@ public class Browser {
 
 	    //PhantomJSDriver driver = new PhantomJSDriver(capabilities);
 	    
-	    PhantomJsDriverManager.getInstance().setup();
-	    PhantomJSDriver driver = new PhantomJSDriver();
+	  //  PhantomJsDriverManager.getInstance().setup();
+	   // PhantomJSDriver driver = new PhantomJSDriver();
+	    
 	    
 		return driver;
 	}

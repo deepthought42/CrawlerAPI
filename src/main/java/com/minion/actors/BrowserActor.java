@@ -199,7 +199,7 @@ public class BrowserActor extends UntypedActor {
 				if(acct_msg.getOptions().isEmpty()){
 					
 				}
-			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "chrome");
 
 				System.err.println("Creating new Browser");
 				Page result_page = null;
@@ -269,7 +269,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
+			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "chrome");
 
 				System.err.println("Creating new Browser for exploratory path crawling");
 				Page result_page = null;
@@ -351,7 +351,7 @@ public class BrowserActor extends UntypedActor {
 			}
 			else if(acct_msg.getData() instanceof URL){
 				log.debug("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
-			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
+			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "chrome");
 			  	
 			  	Path path = new Path();
 			  	Page page_obj = browser.getPage();

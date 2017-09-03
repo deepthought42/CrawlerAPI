@@ -104,7 +104,7 @@ public class FormTestExtractionTests {
 		String url = "C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser(url, "chrome");
 			Page page = browser.getPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);

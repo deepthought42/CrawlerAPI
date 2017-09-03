@@ -87,7 +87,6 @@ public class TestController {
        	boolean owned_by_acct = false;
 
     	for(Domain domain_rec : acct.getDomains()){
-    		System.err.println("domain tests :: "+domain_rec.getTests().size());
     		if(domain_rec.getUrl().equals(url)){
     			owned_by_acct = true;
     			break;
@@ -112,7 +111,6 @@ public class TestController {
 			verified_tests.add(test_repo.convertFromRecord(itest));
 			total_tests++;
 		}
-		System.err.println("Tests are being loaded for domain : " + url + " :: Total tests : " + total_tests );
 
 		/*
 		Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
@@ -172,7 +170,6 @@ public class TestController {
     	
        	boolean owned_by_acct = false;
     	for(Domain domain_rec : acct.getDomains()){
-    		System.err.println("domain tests :: "+domain_rec.getTests().size());
     		if(domain_rec.getUrl().equals(url)){
     			owned_by_acct = true;
     			break;
@@ -186,7 +183,6 @@ public class TestController {
 		DomainRepository domain_repo = new DomainRepository();
     	Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
     	List<Test> tests = domain.getTests();
-		System.err.println("Tests are being loaded for domain : " + domain.getUrl() + " :: Total tests : " + tests.size() );
 
 		List<Test> unverified_tests = new ArrayList<Test>();
 		for(Test test : tests){
@@ -230,7 +226,8 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, @PathVariable("browser_type") String browser_type) throws MalformedURLException{
+	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, 
+											@RequestParam("browser_type") String browser_type) throws MalformedURLException{
 		System.out.println("RUNNING TEST WITH KEY : " + key);
 		Iterator<ITest> itest_iter = Test.findByKey(key, new OrientConnectionFactory()).iterator();
 		ITest itest = itest_iter.next();

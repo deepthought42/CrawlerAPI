@@ -109,7 +109,6 @@ public class Account {
 	}
 
 	public List<Domain> getDomains(){
-		System.err.println("domain list size :: "+domains.size());
 		return this.domains;
 	}
 	

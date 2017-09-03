@@ -12,7 +12,7 @@
 	
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <selenium-version>3.4.0</selenium-version>
+    <selenium-version>3.5.3</selenium-version>
     <spring.version>4.3.4.RELEASE</spring.version>
     <java.version>1.8</java.version>
     <springboot.version>1.5.5.RELEASE</springboot.version>
@@ -112,13 +112,6 @@
 			    </exclusion>
 			</exclusions>
 	    </dependency>
-	    
-	    <!-- https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager -->
-		<dependency>
-		    <groupId>io.github.bonigarcia</groupId>
-		    <artifactId>webdrivermanager</artifactId>
-		    <version>1.7.1</version>
-		</dependency>
 
 	    <dependency>
 			<groupId>jtidy</groupId>
@@ -194,14 +187,6 @@
 			<artifactId>encog-core</artifactId>
 			<version>3.3.0</version>
 		</dependency>	
-	  	
-		<!-- https://mvnrepository.com/artifact/com.codeborne/phantomjsdriver -->
-		<!-- <dependency>
-		    <groupId>com.codeborne</groupId>
-		    <artifactId>phantomjsdriver</artifactId>
-		    <version>1.4.3</version>
-		</dependency>
- -->
 	
 	    <dependency>
 	        <groupId>org.javassist</groupId>

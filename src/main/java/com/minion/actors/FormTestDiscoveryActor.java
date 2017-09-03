@@ -56,7 +56,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			Page page = (Page)path.getPath().get(0);
 			//if(path_obj instanceof Page){
 				//Page page = (Page)path_obj;
-			  	Browser browser = new Browser(page.getUrl().toString(), "phantomjs");
+			  	Browser browser = new Browser(page.getUrl().toString(), "chrome");
 			  	
 			  	//clone path
 			  	//Path new_path = Path.clone(path);

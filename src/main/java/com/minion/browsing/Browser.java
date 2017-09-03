@@ -240,6 +240,7 @@ public class Browser {
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
 		DesiredCapabilities cap = DesiredCapabilities.chrome();
 		cap.setJavascriptEnabled(true);
+		cap.setCapability("screenshot", true);
 		cap.setPlatform(Platform.LINUX);
 		// optional video recording
 		/*String record_video = "True";
@@ -249,7 +250,7 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-        String ipAddress = "172.17.0.1";
+        String ipAddress = "172.17.0.2";
         
         WebDriver driver = new RemoteWebDriver(new URL("http://"+ipAddress+":4444/wd/hub"), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
@@ -339,7 +340,7 @@ public class Browser {
 	                  return null;
 	                }
 	              }
-	            }
+	           }
 	        );
 	        alert.accept();
 	    }
@@ -353,7 +354,10 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static File getScreenshot(WebDriver driver) throws IOException{
-		driver.manage().window().maximize();
+		try{
+			driver.manage().window().maximize();
+		}catch(Exception e){}
+		
 		File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 		
 		return screenshot;

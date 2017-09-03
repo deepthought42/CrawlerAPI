@@ -105,11 +105,11 @@ public class TestController {
 		TestRepository test_repo = new TestRepository();
 		List<Test> verified_tests = new ArrayList<Test>();
 		
-		int total_tests = 0;
 		while(tests.hasNext()){
 			ITest itest = tests.next();
-			verified_tests.add(test_repo.convertFromRecord(itest));
-			total_tests++;
+			if(itest.getCorrect() != null){
+				verified_tests.add(test_repo.convertFromRecord(itest));
+			}
 		}
 
 		/*
@@ -156,7 +156,7 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
-	public @ResponseBody List<Test> getUnverifiedTests(HttpSession session, HttpServletRequest request, 
+	public @ResponseBody List<Test> getUnverifiedTests(HttpServletRequest request, 
 			   								 @RequestParam(value="url", required=true) String url) throws DomainNotOwnedByAccountException, UnknownAccountException {
 		
     	//make sure domain belongs to user account first
@@ -183,7 +183,7 @@ public class TestController {
 		DomainRepository domain_repo = new DomainRepository();
     	Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
     	List<Test> tests = domain.getTests();
-
+    	System.out.println("# of tests for domain" + tests.size());
 		List<Test> unverified_tests = new ArrayList<Test>();
 		for(Test test : tests){
 			//ITest test = test_records.next();
@@ -191,7 +191,7 @@ public class TestController {
 				unverified_tests.add(test);
 			}
 		}
-		
+
 		return unverified_tests;
 	}
 

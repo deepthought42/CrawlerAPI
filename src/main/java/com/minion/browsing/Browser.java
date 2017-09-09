@@ -21,6 +21,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -158,7 +159,10 @@ public class Browser {
 			log.error("Error closing driver. Driver is NULL");
 		}
 		catch(UnreachableBrowserException e){
-			log.error("Error closing driver");
+			log.error("Error: browser unreachable while closing driver");
+		}
+		catch(NoSuchSessionException e){
+			log.error("Error finding session for closing driver");			
 		}
 	}
 	
@@ -250,7 +254,7 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-        String ipAddress = "172.17.0.2";
+        String ipAddress = "165.227.120.79";
         
         WebDriver driver = new RemoteWebDriver(new URL("http://"+ipAddress+":4444/wd/hub"), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception

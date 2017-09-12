@@ -105,6 +105,7 @@ public class TestController {
 		TestRepository test_repo = new TestRepository();
 		List<Test> verified_tests = new ArrayList<Test>();
 		
+		
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() != null){
@@ -168,30 +169,42 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	
-       	boolean owned_by_acct = false;
+       /*	boolean owned_by_acct = false;
     	for(Domain domain_rec : acct.getDomains()){
     		if(domain_rec.getUrl().equals(url)){
     			owned_by_acct = true;
     			break;
     		}
     	}
-    	
     	if(!owned_by_acct){
     		throw new DomainNotOwnedByAccountException();
     	}
-    	
+        	*/
+
 		DomainRepository domain_repo = new DomainRepository();
+		IDomain idomain = domain_repo.find(url);
+
     	Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
-    	List<Test> tests = domain.getTests();
-    	System.out.println("# of tests for domain" + tests.size());
+		Iterator<ITest> tests = idomain.getTests().iterator();
+		TestRepository test_repo = new TestRepository();
+		
+		//	List<Test> tests = domain.getTests();
+    	//
 		List<Test> unverified_tests = new ArrayList<Test>();
-		for(Test test : tests){
+		/*for(Test test : tests){
 			//ITest test = test_records.next();
 			if(test.isCorrect() == null){
 				unverified_tests.add(test);
 			}
 		}
-
+*/
+		while(tests.hasNext()){
+			ITest itest = tests.next();
+			if(itest.getCorrect() == null){
+				unverified_tests.add(test_repo.convertFromRecord(itest));
+			}
+		}
+		System.out.println("# of unverified tests for domain" + unverified_tests.size());
 		return unverified_tests;
 	}
 

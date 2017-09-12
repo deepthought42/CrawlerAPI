@@ -30,10 +30,7 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -47,7 +44,6 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
-import com.qanairy.config.ConfigService;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -65,7 +61,8 @@ public class Browser {
 	private WebDriver driver;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
 	private String url = "";
-	
+    private static final String HUB_IP_ADDRESS= "165.227.120.79";
+
 	/**
 	 * 
 	 * @param url
@@ -137,7 +134,6 @@ public class Browser {
 	 * @return
 	 */
 	public static String cleanSrc(String src){
-		
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
@@ -242,41 +238,43 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithChrome(String url) throws MalformedURLException{
-		DesiredCapabilities cap = DesiredCapabilities.chrome();
-		cap.setJavascriptEnabled(true);
-		cap.setCapability("screenshot", true);
-		cap.setPlatform(Platform.LINUX);
-		// optional video recording
-		/*String record_video = "True";
-		// video record
-		if (record_video.equalsIgnoreCase("True")) {
-			cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
-		} else {
-			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
-		}*/
-        String ipAddress = "165.227.120.79";
-        
-        WebDriver driver = new RemoteWebDriver(new URL("http://"+ipAddress+":4444/wd/hub"), cap);
-	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
-	    
-	    // Launch website
-	    driver.get(url);
-	    //driver.manage().window().maximize();
-	    
-		/*
-	 	System.setProperty("webdriver.chrome.driver", "drivers/chrome/windows/chromedriver.exe");
-		//ChromeDriverManager.getInstance().setup();
-		log.info("Opening Chrome WebDriver connection using URL : " +url);
-		//FirefoxProfile firefoxProfile = new FirefoxProfile();
-	    DesiredCapabilities capabilities = DesiredCapabilities.chrome();
-	    //capabilities.setBrowserName("chrome");
-	    //capabilities.setPlatform(Platform.LINUX);
-	    //WebDriver driver = new ChromeDriverManager(capabilities);
-	    WebDriver driver = new ChromeDriver(capabilities);
-	    //WebDriver driver = new RemoteWebDriver(new URL(url), capabilities);
-	*/
-		log.info("Chrome opened");
+		WebDriver driver = null;
+		int connectFailures = 0;
+		boolean connectSucceeded = false;
+		do{
+			try{
+				DesiredCapabilities cap = DesiredCapabilities.chrome();
+				cap.setJavascriptEnabled(true);
+				cap.setCapability("screenshot", true);
+				cap.setPlatform(Platform.LINUX);
+				cap.setCapability("maxInstances", 5);
+				// optional video recording
+				/*String record_video = "True";
+				// video record
+				if (record_video.equalsIgnoreCase("True")) {
+					cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
+				} else {
+					cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
+				}*/
+		        
+		        driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);
+			    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
+			    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
+			    
+			    // Launch website
+			    driver.get(url);
+			    //driver.manage().window().maximize();
+			    
+			    connectSucceeded = true;
+				log.info("Chrome opened");
+			}
+			catch(WebDriverException e){
+				connectFailures++;
+				try {
+					Thread.sleep(30000);
+				} catch (InterruptedException e1) {}
+			}
+		}while(connectFailures < 10 && !connectSucceeded);
 		return driver;
 	}
 	
@@ -300,9 +298,8 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-        String ipAddress = "10.132.126.118";
         
-        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+ipAddress+":4444/wd/hub"), cap);
+        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    
 	    // Launch website

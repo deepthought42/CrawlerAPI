@@ -130,7 +130,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			List<IGroup> igroups = new ArrayList<IGroup>();
 			GroupRepository group_repo = new GroupRepository();
 			for(Group group : test.getGroups()){
-				group_repo.convertToRecord(connection, group);
+				igroups.add(group_repo.convertToRecord(connection, group));
 			}
 			test_record.setGroups(igroups);
 			

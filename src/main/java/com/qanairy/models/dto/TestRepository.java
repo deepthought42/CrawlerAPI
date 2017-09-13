@@ -121,7 +121,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
 			idomain.addTest(test_record);
 
-			test_record.setDomain(idomain);
+			test_record.addDomain(idomain);
 			
 			for(TestRecord record : test.getRecords()){
 				test_record.addRecord(test_record_record.convertToRecord(connection, record));

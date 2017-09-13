@@ -219,7 +219,6 @@ public class TestController {
 	public @ResponseBody Test updateTest(HttpServletRequest request, 
 										 @PathVariable(value="key") String key, 
 										 @RequestParam(value="correct", required=true) boolean correct){
-		System.out.println("updating correctness of test with key : " +key);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();

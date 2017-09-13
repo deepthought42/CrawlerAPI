@@ -67,7 +67,7 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
-        Domain domain = new Domain(url);
+        Domain domain = new Domain(url.substring(url.indexOf("://")));
     	acct.addDomain(domain);
     	accountService.update(acct);
         return domainService.create(domain);
@@ -101,7 +101,6 @@ public class DomainController {
         return domainService.update(domain);
     }
     
-
     /**
      * Simple demonstration of how Principal info can be accessed
      */

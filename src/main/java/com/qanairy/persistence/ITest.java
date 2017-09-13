@@ -68,7 +68,9 @@ public interface ITest  {
 	 * sets the domain for the current test
 	 */
 	@Adjacency(direction=Direction.IN, label="contains_test")
-	public void setDomain(IDomain domain);
+	public void addDomain(IDomain domain);
+	
+	
 	
 	/**
 	 * Gets the correctness value of the test

@@ -44,6 +44,10 @@ public class AccountService {
     
     @PreAuthorize("hasAuthority('qanairy')")
     public Account find(String key){
-    	return accountRepository.find(new OrientConnectionFactory(), key);
+    	OrientConnectionFactory conn = new OrientConnectionFactory();
+    	System.out.println("Orient connection acquired");
+    	Account acct = accountRepository.find(conn, key);
+    	conn.close();
+    	return acct;
     }
 }

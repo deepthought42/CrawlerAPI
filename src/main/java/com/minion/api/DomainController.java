@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
@@ -51,7 +52,7 @@ public class DomainController {
      */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Domain create(final @Validated @RequestBody String url, final Principal principal) throws UnknownUserException, UnknownAccountException {
+    public @ResponseBody Domain create(final @RequestParam String url, final Principal principal) throws UnknownUserException, UnknownAccountException {
         /*printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             

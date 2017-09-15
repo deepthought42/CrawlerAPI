@@ -163,12 +163,13 @@ public class TestController {
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-
+        System.out.println("getting account");
     	Account acct = accountService.find(currentUser.getUsername());
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	
+    	System.out.println("getting tests");
        /*	boolean owned_by_acct = false;
     	for(Domain domain_rec : acct.getDomains()){
     		if(domain_rec.getUrl().equals(url)){
@@ -184,20 +185,10 @@ public class TestController {
 		DomainRepository domain_repo = new DomainRepository();
 		IDomain idomain = domain_repo.find(url);
 
-    	Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
 		Iterator<ITest> tests = idomain.getTests().iterator();
 		TestRepository test_repo = new TestRepository();
 		
-		//	List<Test> tests = domain.getTests();
-    	//
 		List<Test> unverified_tests = new ArrayList<Test>();
-		/*for(Test test : tests){
-			//ITest test = test_records.next();
-			if(test.isCorrect() == null){
-				unverified_tests.add(test);
-			}
-		}
-*/
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() == null){

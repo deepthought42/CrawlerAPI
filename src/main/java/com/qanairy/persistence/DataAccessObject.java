@@ -16,7 +16,8 @@ public class DataAccessObject<V> {
 	 */
 	public static Iterable<?> findByKey(String generated_key, Class<?> clazz) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("key", generated_key, clazz);
+		Iterable<?> iter = orient_connection.getTransaction().getVertices("key", generated_key, clazz);
+		return iter;
 	}
 
 	
@@ -28,7 +29,9 @@ public class DataAccessObject<V> {
 	 * @return
 	 */
 	public static Iterable<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) {
-		return orient_connection.getTransaction().getVertices("key", generated_key, clazz);
+    	System.out.println("Orient connection acquired");
+    	
+		return orient_connection.current_tx.getVertices("key", generated_key, clazz);
 	}
 	
 	public static Iterable<?> findAll(OrientConnectionFactory conn, Class<?> clazz){

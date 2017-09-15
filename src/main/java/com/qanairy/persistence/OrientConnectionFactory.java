@@ -18,14 +18,16 @@ import com.tinkerpop.frames.FramedGraphFactory;
 public class OrientConnectionFactory {
     private static Logger log = LogManager.getLogger(OrientConnectionFactory.class);
         
-	FramedGraph<OrientGraphNoTx> current_tx;
-
+	FramedGraph<OrientGraphNoTx> current_tx = null;
+	OrientGraphFactory graphFactory;
 	//private static String username = ConfigService.getProperty("db.username");
 	//private static String password = ConfigService.getProperty("db.password");
 	//private static String db_path = ConfigService.getProperty("db.serverurl");
 	
 	public OrientConnectionFactory(){
-		this.current_tx = getConnection();
+		if(this.current_tx == null){
+			this.current_tx = getConnection();
+		}
 		log.info("Opened connection to OrientDB");
 	}
 	
@@ -35,7 +37,7 @@ public class OrientConnectionFactory {
 	 */
 	private FramedGraph<OrientGraphNoTx> getConnection(){
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		OrientGraphFactory graphFactory = new OrientGraphFactory("remote:67.205.165.64/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 50);
+		graphFactory = new OrientGraphFactory("remote:159.203.177.116/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 5);
 	    OrientGraphNoTx instance = graphFactory.getNoTx();
 	    log.info("Orientdb transaction created. returning instance");
 		return factory.create(instance);
@@ -58,7 +60,11 @@ public class OrientConnectionFactory {
 		}
 		return true;
 	}
-
+	
+	public void close(){
+		graphFactory.close();
+	}
+	
 	/**
 	 * @return current graph database transaction
 	 */

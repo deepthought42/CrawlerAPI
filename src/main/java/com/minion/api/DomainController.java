@@ -68,7 +68,7 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
-        Domain domain = new Domain(url.substring(url.indexOf("://")));
+        Domain domain = new Domain(url);
     	acct.addDomain(domain);
     	accountService.update(acct);
         return domainService.create(domain);

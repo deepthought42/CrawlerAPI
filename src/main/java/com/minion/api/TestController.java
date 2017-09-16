@@ -111,19 +111,7 @@ public class TestController {
 				verified_tests.add(test_repo.convertFromRecord(itest));
 			}
 		}
-
-		/*
-		Domain domain = domain_repo.find(new OrientConnectionFactory(), url);
-    	List<Test> tests = domain.getTests();
-    	
-		List<Test> verified_tests = new ArrayList<Test>();
-		for(Test test : tests){
-			//ITest test = test_records.next();
-			if(test.isCorrect() != null){
-				verified_tests.add(test);
-			}
-		}
-		*/
+		
 		return verified_tests;
     }
 	
@@ -218,7 +206,7 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/updateName/{key}", method=RequestMethod.PUT)
-	public @ResponseBody Test updatename(HttpServletRequest request, 
+	public @ResponseBody Test updateName(HttpServletRequest request, 
 										 @PathVariable(value="key") String key, 
 										 @RequestParam(value="name", required=true) String name){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();

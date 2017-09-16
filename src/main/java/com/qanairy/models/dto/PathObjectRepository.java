@@ -93,6 +93,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			//Page page_obj = new Page();
 			Page page_obj = null;
 			PageRepository page_record = new PageRepository();
+			@SuppressWarnings("unchecked")
 			Iterator<IPage> page_iter = ((Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class)).iterator();
 			if(page_iter.hasNext()){
 				page_obj = page_record.convertFromRecord(page_iter.next());
@@ -105,6 +106,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 
 			//IPageElement page_elem_record = ((IPageElement)data);
 			PageElement page_elem_obj = null;
+			@SuppressWarnings("unchecked")
 			Iterator<IPageElement> page_elem_record_iter = (Iterator<IPageElement>) DataAccessObject.findByKey(data.getKey(), IPageElement.class).iterator();
 
 			//List<PageElement> page_elem_records = new ArrayList<PageElement>();
@@ -124,6 +126,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		else if(type.equals("Action")){			
 			Action action = new Action();
 			
+			@SuppressWarnings("unchecked")
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
 			action.setType(type);
 			

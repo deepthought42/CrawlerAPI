@@ -71,7 +71,6 @@ public interface ITest  {
 	public void addDomain(IDomain domain);
 	
 	
-	
 	/**
 	 * Gets the correctness value of the test
 	 * 

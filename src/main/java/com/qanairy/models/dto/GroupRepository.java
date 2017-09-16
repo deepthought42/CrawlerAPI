@@ -1,16 +1,13 @@
 package com.qanairy.models.dto;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.models.Group;
-import com.qanairy.models.Test;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -54,7 +51,6 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 		
 		if(group_record == null){
 			convertToRecord(conn, group);
-			//conn.save();
 		}
 		group.setKey(generateKey(group));
 		return group;
@@ -97,16 +93,8 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	}
 
 	@Override
-	public Group convertFromRecord(IGroup obj) {
-		List<Test> tests = new ArrayList<Test>();
-		TestRepository test_repo = new TestRepository();
-		if(obj.getTests() != null){
-			Iterator<ITest> test_iter = obj.getTests().iterator();
-			while(test_iter.hasNext()){
-				tests.add(test_repo.convertFromRecord(test_iter.next()));
-			}
-		}
-		return new Group(obj.getKey(), obj.getName(), tests, obj.getDescription());
+	public Group convertFromRecord(IGroup obj) {		
+		return new Group(obj.getKey(), obj.getName(), obj.getDescription());
 	}
 
 	@Override

@@ -52,7 +52,7 @@ public class DomainController {
      */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Domain create(final @RequestParam String url, final Principal principal) throws UnknownUserException, UnknownAccountException {
+    public @ResponseBody Domain create(final @RequestBody String url, final Principal principal) throws UnknownUserException, UnknownAccountException {
         /*printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             

@@ -162,35 +162,26 @@ public class TestController {
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-        System.out.println("getting account");
     	Account acct = accountService.find(currentUser.getUsername());
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	
     	System.out.println("getting tests");
-       /*	boolean owned_by_acct = false;
-    	for(Domain domain_rec : acct.getDomains()){
-    		if(domain_rec.getUrl().equals(url)){
-    			owned_by_acct = true;
-    			break;
-    		}
-    	}
-    	if(!owned_by_acct){
-    		throw new DomainNotOwnedByAccountException();
-    	}
-        	*/
 
 		DomainRepository domain_repo = new DomainRepository();
 		IDomain idomain = domain_repo.find(url);
 
 		Iterator<ITest> tests = idomain.getTests().iterator();
 		TestRepository test_repo = new TestRepository();
-		
 		List<Test> unverified_tests = new ArrayList<Test>();
+		System.out.println("Test has next? :: "+tests.hasNext());
 		while(tests.hasNext()){
 			ITest itest = tests.next();
+			System.out.println("Checking verification status of test..Correct : "+itest.getCorrect());
+
 			if(itest.getCorrect() == null){
+				System.out.println("adding test to unverified");//////
 				unverified_tests.add(test_repo.convertFromRecord(itest));
 			}
 		}
@@ -326,7 +317,6 @@ public class TestController {
 	public @ResponseBody Test addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=true) String description,
 										@RequestParam(value="key", required=true) String key){
-		System.out.println("Adding GROUP to test  : " + name);
 		Group group = new Group(name, description);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
@@ -360,24 +350,21 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
-	public @ResponseBody Test addGroup(@RequestParam(value="name", required=true) String name,
+	public @ResponseBody Test removeGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="key", required=true) String key){
-		System.out.println("Adding GROUP to test  : " + name);
-		Group group = new Group(name);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		Iterator<IGroup> group_iter = itest.getGroups().iterator();
 		
-		GroupRepository group_repo = new GroupRepository();
 		IGroup igroup = null;
 		while(group_iter.hasNext()){
 			igroup = group_iter.next();
 		}
-		
+
 		itest.removeGroup(igroup);
-		
+
 		TestRepository test_record = new TestRepository();
 
 		return test_record.convertFromRecord(itest);

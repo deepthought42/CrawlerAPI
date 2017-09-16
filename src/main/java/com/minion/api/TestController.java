@@ -1,7 +1,6 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -207,7 +206,7 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/updateCorrectness/{key}", method=RequestMethod.PUT)
-	public @ResponseBody Test updateTest(HttpServletRequest request, 
+	public @ResponseBody Test updateCorrectness(HttpServletRequest request, 
 										 @PathVariable(value="key") String key, 
 										 @RequestParam(value="correct", required=true) boolean correct){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -219,7 +218,28 @@ public class TestController {
 		TestRepository test_record = new TestRepository();
 		return test_record.convertFromRecord(itest);
 	}
-	
+
+	/**
+	 * Updates the correctness of a test with the given test key
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+	@RequestMapping(path="/updateName/{key}", method=RequestMethod.PUT)
+	public @ResponseBody Test updatename(HttpServletRequest request, 
+										 @PathVariable(value="key") String key, 
+										 @RequestParam(value="name", required=true) String name){
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
+		ITest itest = itest_iter.next();
+		itest.setName(name);
+		orient_connection.save();
+
+		TestRepository test_record = new TestRepository();
+		return test_record.convertFromRecord(itest);
+	}
+    
 	/**
 	 * Runs test with a given key
 	 * 
@@ -313,21 +333,55 @@ public class TestController {
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		Iterator<IGroup> group_iter = itest.getGroups().iterator();
+		IGroup igroup = null;
+		GroupRepository group_repo = new GroupRepository();
+		while(group_iter.hasNext()){
+			igroup = group_iter.next();
+			if(igroup.getName().equals(name)){
+				return null;
+			}
+		}
+		
+		itest.addGroup(group_repo.convertToRecord(orient_connection, group));
+		orient_connection.save();
+
+		TestRepository test_record = new TestRepository();
+
+		return test_record.convertFromRecord(itest);
+	}
+
+    /**
+	 * Adds given group to test with given key
+	 * 
+	 * @param group String representing name of group to add to test
+	 * @param test_key key for test that will have group added to it
+	 * 	
+	 * @return the updated test
+	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
+	public @ResponseBody Test addGroup(@RequestParam(value="name", required=true) String name,
+										@RequestParam(value="key", required=true) String key){
+		System.out.println("Adding GROUP to test  : " + name);
+		Group group = new Group(name);
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+
+		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
+		ITest itest = itest_iter.next();
+		Iterator<IGroup> group_iter = itest.getGroups().iterator();
 		
 		GroupRepository group_repo = new GroupRepository();
-		while(itest_iter.hasNext()){
-			itest = itest_iter.next();
+		IGroup igroup = null;
+		while(group_iter.hasNext()){
+			igroup = group_iter.next();
 		}
-		//if(group_iter == null || !group_iter.hasNext()){
-			itest.addGroup(group_repo.convertToRecord(orient_connection, group));
-			orient_connection.save();
-		//}
+		
+		itest.removeGroup(igroup);
 		
 		TestRepository test_record = new TestRepository();
 
 		return test_record.convertFromRecord(itest);
 	}
-	
 
 	/**
 	 * Retrieves list of all tests from the database 

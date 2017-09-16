@@ -2,6 +2,7 @@ package com.qanairy.persistence;
 
 import java.util.Date;
 
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
@@ -29,11 +30,8 @@ public interface ITestRecord {
 	@Property("passes")
 	public void setPasses(boolean isPassing);
 	
-	@Adjacency(label="test")
+	@Adjacency(direction=Direction.IN, label="has_record")
 	public ITest getTest();
-	
-	@Adjacency(label="test")
-	public void setTest(ITest test);
 	
 	@Adjacency(label="has_result")
 	public void setResult(IPage page);

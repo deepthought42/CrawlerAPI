@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import com.qanairy.models.Page;
-import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.persistence.DataAccessObject;
 
@@ -26,7 +25,6 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		PageRepository page_repo = new PageRepository();
 		TestRepository test_repo = new TestRepository();
 		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));
-		testRecord.setTest(test_repo.convertToRecord(connection, record.getTest()));
 		testRecord.setPasses(record.getPasses());
 		testRecord.setRanAt(record.getRanAt());
 		testRecord.setKey(record.getKey());
@@ -83,7 +81,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	public TestRecord find(OrientConnectionFactory conn, String key){
 		@SuppressWarnings("unchecked")
 		Iterable<ITestRecord> testRecords = (Iterable<ITestRecord>) DataAccessObject.findByKey(key, conn, ITestRecord.class);
-		Iterator<ITestRecord> iter = testRecords.iterator();
+		Iterator<ITestRecord> iter = (Iterator<ITestRecord>)testRecords.iterator();
 		  
 		if(iter.hasNext()){
 			return convertFromRecord(iter.next());
@@ -97,10 +95,8 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		PageRepository page_repo = new PageRepository();
 		Page page = page_repo.convertFromRecord(obj.getResult());
 		
-		TestRepository test_repo = new TestRepository();
-		Test test = test_repo.convertFromRecord(obj.getTest());
-		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), page, test);
-
+		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), page);
+		
 		return record;
 	}
 

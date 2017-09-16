@@ -35,6 +35,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	@Override
 	public IAccount convertToRecord(OrientConnectionFactory connection, Account account) {
 		account.setKey(generateKey(account));
+		@SuppressWarnings("unchecked")
 		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
 		Iterator<IAccount> iter = svc_pkgs.iterator();
 		IAccount acct_record = null;  
@@ -61,6 +62,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		return acct_record;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Account convertFromRecord(IAccount account) {
 		List<QanairyUser> users = IteratorUtils.toList(account.getUsers().iterator());
@@ -68,7 +70,6 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		
 		List<Domain> domains = new ArrayList<Domain>();
 		DomainRepository domain_repo = new DomainRepository();
-		int idx=0;
 		for(IDomain domain : domain_records){
 			domains.add(domain_repo.convertFromRecord(domain));
 		}

@@ -154,7 +154,6 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		PageRepository page_record = new PageRepository();
 		PathRepository path_record = new PathRepository();
 		GroupRepository group_repo = new GroupRepository();
-		DomainRepository domain_repo = new DomainRepository();
 		Test test = new Test();
 		
 		//test.setDomain(domain_repo.convertFromRecord(itest.getDomain()));

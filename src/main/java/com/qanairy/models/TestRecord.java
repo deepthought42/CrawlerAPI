@@ -38,11 +38,10 @@ public class TestRecord {
 		this.setKey(null);
 	}
 	
-	public TestRecord(String key, Date ran_at, boolean passes, Page result, Test test){
+	public TestRecord(String key, Date ran_at, boolean passes, Page result){
 		this.setRanAt(ran_at);
 		this.setPasses(passes);
 		this.setPage(result);
-		this.setTest(test);
 		this.setKey(key);
 	}
 	

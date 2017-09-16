@@ -28,9 +28,7 @@ public class DataAccessObject<V> {
 	 * @param generated_key
 	 * @return
 	 */
-	public static Iterable<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) {
-    	System.out.println("Orient connection acquired");
-    	
+	public static Iterable<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) {    	
 		return orient_connection.current_tx.getVertices("key", generated_key, clazz);
 	}
 	

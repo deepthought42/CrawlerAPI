@@ -32,8 +32,7 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 */
 	public IGroup convertToRecord(OrientConnectionFactory connection, Group group) {
 		@SuppressWarnings("unchecked")
-		Iterable<IGroup> groups = (Iterable<IGroup>) DataAccessObject.findByKey(generateKey(group), connection, ITest.class);
-		Iterator<IGroup> iter = groups.iterator();
+		Iterator<IGroup> iter = (Iterator<IGroup>) ((Iterable<IGroup>) DataAccessObject.findByKey(generateKey(group), connection, IGroup.class)).iterator();
 		IGroup group_record= null;
 		if(iter.hasNext()){
 			group_record = iter.next();

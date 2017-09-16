@@ -97,9 +97,17 @@ public interface ITest  {
 	public void addGroup(IGroup group);
 	
 	/**
+	 * Sets correctness value of test
+	 * 
+	 * @param correctness value
+	 */
+	@Adjacency(direction=Direction.IN, label="test_group")
+	public void removeGroup(IGroup group);
+	
+	/**
 	 * Adds a record to this test connecting it via edge with label "has"
 	 */
-	@Adjacency(label="has_record")
+	@Adjacency(direction=Direction.OUT, label="has_record")
 	public void addRecord(ITestRecord testRecord);
 		
 	/**

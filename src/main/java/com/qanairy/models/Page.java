@@ -127,7 +127,6 @@ public class Page extends PathObject {
 		
 		Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
 		browser.getDriver().get(this.getUrl().toString());
-		String src = Browser.cleanSrc(browser.getDriver().getPageSource());
 		boolean landable = false;
 		if(this.equals(browser.getPage())){
 			log.info("Pages match in check for landability");

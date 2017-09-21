@@ -1,6 +1,5 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,7 +9,7 @@ public class Group {
 	private String key;
 	private String name;
 	private String description;
-	private List<Test> tests;
+
 	/**
 	 * Construct a new grouping	
 	 * 
@@ -22,47 +21,6 @@ public class Group {
 		this.setName(name);
 		this.setDescription("");
 		this.setKey(null);
-	}
-	
-	/**
-	 * Construct a new grouping	
-	 * 
-	 * @param name 		name of the group
-	 * @param test		{@link List} of {@link Test}s
-	 * @param description describes group
-	 */
-	public Group(String name, List<Test> tests){
-		this.setName(name);
-		this.setDescription("");
-		this.setKey(null);
-	}
-	
-	/**
-	 * Construct a new grouping	
-	 * 
-	 * @param name 		name of the group
-	 * @param test		{@link List} of {@link Test}s
-	 * @param description describes group
-	 */
-	@Deprecated
-	public Group(String name, List<Test> tests, String desc){
-		this.setName(name);
-		this.setDescription(desc);
-		this.setKey(null);
-	}
-
-	/**
-	 * Construct a new grouping	
-	 * 
-	 * @param name 		name of the group
-	 * @param test		{@link List} of {@link Test}s
-	 * @param description describes group
-	 */
-	@Deprecated
-	public Group(String key, String name, List<Test> tests, String desc){
-		this.setName(name);
-		this.setDescription(desc);
-		this.setKey(key);
 	}
 	
 	/**

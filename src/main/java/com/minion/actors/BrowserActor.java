@@ -188,11 +188,9 @@ public class BrowserActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			log.info("Browser actor received message");
 			Message<?> acct_msg = (Message<?>)message;
 			
 			if (acct_msg.getData() instanceof Path){
-				log.info("Path passed to BrowserActor");
 				Path path = (Path)acct_msg.getData();
 				
 				String browser = "";
@@ -231,14 +229,12 @@ public class BrowserActor extends UntypedActor {
 			  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					
 			  		path.setIsUseful(true);
-					//if(path.size() > 1){
-					//	path.add(result_page);
-					//}
 
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(acct_msg, getSelf() );
 					
-					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost()));
+					System.err.println("creating test with domain :::    " + result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost());
+					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
 					TestRepository test_repo = new TestRepository();
 					test.setKey(test_repo.generateKey(test));
 					

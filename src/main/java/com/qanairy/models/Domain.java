@@ -15,7 +15,6 @@ public class Domain {
 	private String domain;
 	private List<Account> accounts;
 	private List<Test> tests;
-	private List<Group> groups;
 	private String key;
 	
 	/**
@@ -27,7 +26,6 @@ public class Domain {
 	public Domain(){
 		this.setUrl(null);
 		this.setTests(new ArrayList<Test>());
-		this.setGroups(new ArrayList<Group>());
 		this.accounts = new ArrayList<Account>();
 	}
 	
@@ -40,7 +38,6 @@ public class Domain {
 	public Domain(String url){
 		this.setUrl(url);
 		this.setTests(new ArrayList<Test>());
-		this.setGroups(new ArrayList<Group>());
 	}
 	
 	/**
@@ -48,16 +45,13 @@ public class Domain {
 	 * 
 	 * @param domain_url 	- host url of the domain (eg. www.reddit.com)
 	 * @param tests			- tests that belong to this domain
-	 * @param groups		- groups that belong to this domain
 	 */
 	public Domain(	String key, 
 					String domain_url, 
-					List<Test> tests, 
-					List<Group> groups){
+					List<Test> tests){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
-		this.setGroups(groups);
 	}
 
 	public String getUrl() {
@@ -74,14 +68,6 @@ public class Domain {
 
 	public void setTests(List<Test> tests) {
 		this.tests = tests;
-	}
-
-	public List<Group> getGroups() {
-		return groups;
-	}
-
-	public void setGroups(List<Group> groups) {
-		this.groups = groups;
 	}
 	
 	public boolean addAccount(Account acct){

@@ -50,7 +50,6 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		
 		if(test_record == null){
 			convertToRecord(conn, test);
-			conn.save();
 		}
 		else{
 			test = test_record;
@@ -114,14 +113,21 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			
 			log.info("setting test_record path : "+test.getPath().size()); 
 			test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
-			log.info("setting test_record result");
 			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
 			
 			DomainRepository domain_record = new DomainRepository();
 			IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
-			idomain.addTest(test_record);
-
-			test_record.addDomain(idomain);
+			Iterator<ITest> test_iter = idomain.getTests().iterator();
+			boolean test_exists = false;
+			while(test_iter.hasNext()){
+				ITest itest = test_iter.next();
+				if(itest.getKey().equals(test_record.getKey())){
+					test_exists = true;
+				}
+			}
+			if(!test_exists){
+				test_record.addDomain(idomain);
+			}
 			
 			for(TestRecord record : test.getRecords()){
 				test_record.addRecord(test_record_record.convertToRecord(connection, record));

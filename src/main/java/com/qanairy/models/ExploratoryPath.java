@@ -107,13 +107,11 @@ public class ExploratoryPath extends Path{
 	 * @return
 	 */
 	public Page findLastPage(){
-		log.info("getting last page");
 		List<PathObject> path_obj_list = this.getPath();
 		Page page = null;
 
 		for(PathObject obj : path_obj_list){
 			if(obj instanceof Page){
-				log.info("last page acquired");
 				page = (Page)obj;
 			}
 		}
@@ -136,7 +134,6 @@ public class ExploratoryPath extends Path{
 		//iterate through pages to see if any match
 		List<Page> page_list = new ArrayList<Page>();
 		List<PathObject> path_obj_list = path.getPath();
-		Page page = null;
 		for(PathObject path_obj : path_obj_list){
 			if(path_obj instanceof Page){
 				page_list.add((Page)path_obj);
@@ -169,7 +166,6 @@ public class ExploratoryPath extends Path{
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		List<Page> page_list = new ArrayList<Page>();
 		List<PathObject> path_obj_list = path.getPath();
 		for(PathObject path_obj : path_obj_list){
 			if(path_obj instanceof Page){

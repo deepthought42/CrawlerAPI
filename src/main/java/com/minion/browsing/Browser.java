@@ -53,12 +53,12 @@ import com.qanairy.persistence.ISystemInfo;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
- * Handles the mnanagement of selenium browser instances and provides various methods for interacting with the browser 
+ * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
 public class Browser {
 	private static Logger log = LogManager.getLogger(Browser.class);
 
-	private WebDriver driver;
+	private WebDriver driver = null;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
 	private String url = "";
     private static final String HUB_IP_ADDRESS= "165.227.120.79";
@@ -70,24 +70,35 @@ public class Browser {
 	 * 			chrome = google chrome
 	 * 			firefox = Firefox
 	 * 			ie = internet explorer
-	 * 
+	 * 			phantomjs = phantomjs
 	 * @throws MalformedURLException
 	 */
-	public Browser(String url, String browser) throws MalformedURLException {
-		if(browser.equals("chrome")){
-			this.driver = openWithChrome(url);
-		}
-		else if(browser.equals("firefox")){
-			this.driver = openWithFirefox(url);
-		}
-		else if(browser.equals("ie")){
-			this.driver = openWithInternetExplorer(url);
-		}
-		else if(browser.equals("safari")){
-			this.driver = openWithSafari(url);
-		}
-		else if(browser.equals("phantomjs")){
-			this.driver = openWithPhantomjs(url);
+	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
+		int cnt = 0;
+		while(driver == null && cnt < 10){
+			try{
+				if(browser.equals("chrome")){
+					this.driver = openWithChrome(url);
+				}
+				else if(browser.equals("firefox")){
+					this.driver = openWithFirefox(url);
+				}
+				else if(browser.equals("ie")){
+					this.driver = openWithInternetExplorer(url);
+				}
+				else if(browser.equals("safari")){
+					this.driver = openWithSafari(url);
+				}
+				else if(browser.equals("phantomjs")){
+					this.driver = openWithPhantomjs(url);
+				}
+				
+			}
+			catch(UnreachableBrowserException e){}
+			catch(WebDriverException e){}
+			System.err.println("Attempt #"+cnt);
+			cnt++;
+
 		}
 		
 		if(this.driver != null){
@@ -100,9 +111,12 @@ public class Browser {
 			}
 			
 			SystemInfoRepository.save(new OrientConnectionFactory(), info);
+			this.url = url;
+			this.driver.get(url);
 		}
-		this.url = url;
-		this.driver.get(url);
+		else{
+			throw new NullPointerException();
+		}
 	}
 	
 	/**
@@ -169,19 +183,19 @@ public class Browser {
 	 * @return firefox web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithFirefox(String url) throws MalformedURLException{
-		String Node = "http://10.132.126.118:5555/wd/hub";
+	public static WebDriver openWithFirefox(String url) throws MalformedURLException, UnreachableBrowserException{
+		String Node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 	    DesiredCapabilities cap = DesiredCapabilities.firefox();
 	    cap.setBrowserName("firefox");
 	    
 	    WebDriver driver = new RemoteWebDriver(new URL(Node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-	    
+	     
 	    // Launch website
 	    driver.navigate().to(url);
 	    driver.manage().window().maximize();
-	    
+
 	    /*
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
@@ -204,12 +218,14 @@ public class Browser {
 	 * @param url
 	 * @return safari web driver
 	 */
-	public static WebDriver openWithSafari(String url){
+	public static WebDriver openWithSafari(String url) throws MalformedURLException, UnreachableBrowserException{
 		log.info("Opening Firefox WebDriver connection using URL : " +url);
 	    DesiredCapabilities capabilities = DesiredCapabilities.safari();
 
 		WebDriver driver = new SafariDriver(capabilities);
-		log.info("Safari opened");
+		
+		driver.get(url);
+
 		return driver;
 	}
 	
@@ -219,7 +235,7 @@ public class Browser {
 	 * @param url
 	 * @return internet explorer web driver
 	 */
-	public static WebDriver openWithInternetExplorer(String url){
+	public static WebDriver openWithInternetExplorer(String url) throws MalformedURLException, UnreachableBrowserException {
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
 		log.info("Opening Safari WebDriver connection using URL : " +url);
@@ -227,6 +243,9 @@ public class Browser {
 
 		WebDriver driver = new InternetExplorerDriver(capabilities);
 		log.info("Internet Explorer opened");
+		
+		driver.get(url);
+		
 		return driver;
 	}
 	
@@ -237,7 +256,7 @@ public class Browser {
 	 * @return Chrome web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithChrome(String url) throws MalformedURLException{
+	public static WebDriver openWithChrome(String url) throws MalformedURLException, UnreachableBrowserException, WebDriverException {
 		WebDriver driver = null;
 		int connectFailures = 0;
 		boolean connectSucceeded = false;
@@ -266,7 +285,6 @@ public class Browser {
 			    //driver.manage().window().maximize();
 			    
 			    connectSucceeded = true;
-				log.info("Chrome opened");
 			}
 			catch(WebDriverException e){
 				connectFailures++;
@@ -285,7 +303,7 @@ public class Browser {
 	 * @return
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithPhantomjs(String url) throws MalformedURLException{
+	public static WebDriver openWithPhantomjs(String url) throws MalformedURLException, UnreachableBrowserException{
 		
 		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 		cap.setJavascriptEnabled(true);
@@ -305,19 +323,8 @@ public class Browser {
 	    // Launch website
 	    driver.navigate().to(url);
 	    driver.manage().window().maximize();
-	    
-		//System.setProperty("webdriver.phantomjs.driver", "C:\\Users\\brand\\Dev\\browser_drivers\\phantomjs\\phantomjs-2.1.1-windows\\phantomjs.exe");
 
-		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
-	    //Create instance of PhantomJS driver
-		//DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
-		//capabilities.setCapability("phantomjs.binary.path","C:\\Users\\brand\\Dev\\browser_drivers\\phantomjs\\phantomjs-2.1.1-windows\\bin\\phantomjs.exe");
-
-	    //PhantomJSDriver driver = new PhantomJSDriver(capabilities);
-	    
-	  //  PhantomJsDriverManager.getInstance().setup();
-	   // PhantomJSDriver driver = new PhantomJSDriver();
-	    
+		System.out.println("Opening Phantomjs WebDriver Connection using URL : "+url);
 	    
 		return driver;
 	}

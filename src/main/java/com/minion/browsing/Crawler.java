@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -33,15 +35,16 @@ public class Crawler {
 		
 		//skip first node since we should have already loaded it during initialization
 		for(PathObject current_obj: path.getPath()){
-			System.err.println("Current path node of type :: "+current_obj.getType());
 
 			if(current_obj instanceof Page){
 				log.info("Current path node is a Page");
+
+			    new WebDriverWait(browser.getDriver(), 120).until(
+			            webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			    
 			}
 			else if(current_obj instanceof PageElement){
 				last_element = (PageElement) current_obj;
-				System.err.println("Current path node is a Page Element :: "+current_obj.getType() + " :: key : "+last_element.getKey());
-
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){

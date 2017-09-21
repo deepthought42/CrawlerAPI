@@ -112,7 +112,7 @@ public class PathExpansionActor extends UntypedActor {
 				
 				System.err.println("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains() );
 				System.err.println("PATH is useful? :: " +path.isUseful());
-				if(path.isUseful() && !path.getSpansMultipleDomains()){
+				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);
 					if(first_page == null){
@@ -125,9 +125,6 @@ public class PathExpansionActor extends UntypedActor {
 						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
 						path.getPath().add(last_page);
-						
-						PathRepository path_repo = new PathRepository();
-						//path_repo.generateKey(path);
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);

@@ -8,12 +8,9 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
-import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Group;
 import com.qanairy.models.Test;
 import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITest;
@@ -65,6 +62,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		TestRepository test_repo = new TestRepository();
 		List<ITest> tests = new ArrayList<ITest>();
 		for(Test test : domain.getTests()){
+			//check if test already exists
+			
 			tests.add(test_repo.convertToRecord(connection, test));
 		}
 		domain_record.setTests(tests);
@@ -98,8 +97,6 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 
 		if(iter.hasNext()){
 			IDomain domain_record = iter.next();
-			GroupRepository group_repo = new GroupRepository();
-			//domain_record.setGroups(domain.getGroups());
 			
 			TestRepository test_repo = new TestRepository();
 			//domain_record.setTests(domain.getTests());
@@ -153,12 +150,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			tests.add(test_repo.convertFromRecord(test_iter.next()));
 		}
 		
-		List<Group> groups = new ArrayList<Group>();
-		if(obj.getGroups() != null){
-			Lists.newArrayList(obj.getGroups());
-		}
-		
-		Domain domain = new Domain(obj.getKey(), obj.getUrl().toString(), tests, groups);
+		Domain domain = new Domain(obj.getKey(), obj.getUrl().toString(), tests);
 		return domain;
 	}
 	
@@ -168,9 +160,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			tests = Lists.newArrayList(obj.getProperty("tests"));
 		}
 		*/
-		List<Group> groups = new ArrayList<Group>();
 
-		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), tests, groups);
+		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), tests);
 		return domain;
 	}
 	

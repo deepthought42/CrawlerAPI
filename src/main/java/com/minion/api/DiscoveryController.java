@@ -1,6 +1,5 @@
 package com.minion.api;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -43,7 +42,6 @@ import akka.actor.Props;
  * REST controller that defines endpoints to access data for path's experienced in the past
  */
 @RestController
-@CrossOrigin(origins = "http://localhost:8001")
 @RequestMapping("/discovery")
 public class DiscoveryController {
 

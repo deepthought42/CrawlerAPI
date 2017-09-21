@@ -35,7 +35,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page update(OrientConnectionFactory connection, Page page) {
-		Page page2 = find(connection, generateKey(page));
+		if(page.getKey() == null || page.getKey().isEmpty()){
+			page.setKey(generateKey(page));
+		}
+		Page page2 = find(connection, page.getKey());
 		IPage page_record = null;
 		if(page2 != null){
 			page_record = convertToRecord(connection, page2);
@@ -81,7 +84,9 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setLandable(result.isLandable());
-		page.setSrc(result.getSrc());
+		
+		//NOTE :: SOURCE IS COMMENTED OUT DUE TO SIZE OF DATA AND LACK OF NECESSITY OUTSIDE OF GENERATING A KEY
+		//page.setSrc(result.getSrc());
 		page.setElementCounts(result.getElementCounts());
 		
 		try {
@@ -100,7 +105,9 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * @param page
 	 */
 	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
-		page.setKey(generateKey(page));
+		if(page.getKey() == null || page.getKey().isEmpty()){
+			page.setKey(generateKey(page));
+		}
 
 		@SuppressWarnings("unchecked")
 		Iterator<IPage> pages_iter = ((Iterable<IPage>) DataAccessObject.findByKey(page.getKey(), connection, IPage.class)).iterator();

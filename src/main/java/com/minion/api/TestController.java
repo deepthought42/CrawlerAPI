@@ -104,7 +104,6 @@ public class TestController {
 		TestRepository test_repo = new TestRepository();
 		List<Test> verified_tests = new ArrayList<Test>();
 		
-		
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() != null){
@@ -155,25 +154,18 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	
-    	System.out.println("getting tests");
-
 		DomainRepository domain_repo = new DomainRepository();
 		IDomain idomain = domain_repo.find(url);
 
 		Iterator<ITest> tests = idomain.getTests().iterator();
 		TestRepository test_repo = new TestRepository();
 		List<Test> unverified_tests = new ArrayList<Test>();
-		System.out.println("Test has next? :: "+tests.hasNext());
 		while(tests.hasNext()){
 			ITest itest = tests.next();
-			System.out.println("Checking verification status of test..Correct : "+itest.getCorrect());
-
 			if(itest.getCorrect() == null){
-				System.out.println("adding test to unverified");//////
 				unverified_tests.add(test_repo.convertFromRecord(itest));
 			}
 		}
-		System.out.println("# of unverified tests for domain" + unverified_tests.size());
 		return unverified_tests;
 	}
 
@@ -207,7 +199,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/updateName/{key}", method=RequestMethod.PUT)
 	public @ResponseBody Test updateName(HttpServletRequest request, 
-										 @PathVariable(value="key") String key, 
+										 @PathVariable(value="key", required=true) String key, 
 										 @RequestParam(value="name", required=true) String name){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
@@ -230,7 +222,6 @@ public class TestController {
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, 
 											@RequestParam("browser_type") String browser_type) throws MalformedURLException{
-		System.out.println("RUNNING TEST WITH KEY : " + key);
 		Iterator<ITest> itest_iter = Test.findByKey(key, new OrientConnectionFactory()).iterator();
 		ITest itest = itest_iter.next();
 		TestRepository test_record = new TestRepository();
@@ -257,9 +248,7 @@ public class TestController {
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
 														@RequestParam(value="url", required=true) String url,
-														@RequestParam(value="browser_type", required=true) String browser_type){
-		System.out.println("RUNNING TEST IN GROUP  : " + group);
-		
+														@RequestParam(value="browser_type", required=true) String browser_type){		
 		List<Test> test_list = new ArrayList<Test>();
 		List<Test> group_list = new ArrayList<Test>();
 		

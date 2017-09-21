@@ -19,7 +19,7 @@ public class GroupTests {
 	 */
 	@Test
 	public void groupCreateRecord(){
-		Group group = new Group("Regression", new ArrayList<com.qanairy.models.Test>());
+		Group group = new Group("Regression");
 		GroupRepository group_repo = new GroupRepository();
 
 		Group created_group = group_repo.create(new OrientConnectionFactory(), group);
@@ -35,7 +35,7 @@ public class GroupTests {
 	 */
 	@Test
 	public void groupUpdateRecord(){
-		Group group = new Group("Smoke", new ArrayList<com.qanairy.models.Test>());
+		Group group = new Group("Smoke");
 		GroupRepository group_repo = new GroupRepository();
 		group.setKey(group_repo.generateKey(group));
 
@@ -51,7 +51,7 @@ public class GroupTests {
 	 */
 	@Test
 	public void groupFindRecord(){
-		Group group = new Group("Smoke", new ArrayList<com.qanairy.models.Test>());
+		Group group = new Group("Smoke");
 		GroupRepository group_repo = new GroupRepository();
 		group.setKey(group_repo.generateKey(group));
 		Group group_record = group_repo.update(new OrientConnectionFactory(), group);

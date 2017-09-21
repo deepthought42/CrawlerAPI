@@ -5,8 +5,6 @@ import java.util.Map;
 
 /**
  * Manages work allowance statuses for accounts
- * 
- * @author Brandon Kindred
  *
  */
 public class WorkAllowanceStatus {

@@ -5,6 +5,8 @@ import com.pusher.rest.Pusher;
 import com.qanairy.models.Test;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +29,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @CrossOrigin(origins = "http://alpha.qanairy.com")
 @RestController
 public class PastPathExperienceController {
-	private static Logger log = LogManager.getLogger(PastPathExperienceController.class);
+	//private static Logger log = LogManager.getLogger(PastPathExperienceController.class);
 
     private static final Map<String, SseEmitter> emitters = new HashMap<String, SseEmitter>();
     
@@ -54,13 +56,18 @@ public class PastPathExperienceController {
      * @param test
      */
 	public static void broadcastTestExperience(Test test) {
-		Pusher pusher = new Pusher("384928", "5103e64528e1579e78e3", "33cc2853b73ba2d0befb");
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
 		Gson gson = new Gson();
         String test_json = gson.toJson(test);
-		pusher.trigger(test.getDomain().getUrl(), "test-discovered ", Collections.singletonMap("message", test_json));
-		
+        URL url;
+		try {
+			url = new URL(test.getDomain().getUrl());
+			pusher.trigger(url.getHost(), "test-discovered ", Collections.singletonMap("message", test_json));
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
 	}
 }

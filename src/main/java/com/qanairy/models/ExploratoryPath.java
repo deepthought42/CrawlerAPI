@@ -15,21 +15,13 @@ import com.qanairy.models.PathObject;
 public class ExploratoryPath extends Path{
 	private static Logger log = LogManager.getLogger(ExploratoryPath.class);
 	
-    private String key;
-	private boolean isUseful;
-	private boolean spansMultipleDomains = false;
-	
-	private List<PathObject> path = null;
 	private List<Action> possible_actions = null;
 	
 	/**
 	 * Creates new instance of Path
 	 */
 	public ExploratoryPath(){
-		this.isUseful = false;
-		this.spansMultipleDomains = false;
-		this.path = new ArrayList<PathObject>();
-		this.setPossibleActions(new ArrayList<Action>());
+		super();
 	}
 
 	/**
@@ -38,8 +30,7 @@ public class ExploratoryPath extends Path{
 	 * @param current_path
 	 */
 	public ExploratoryPath(List<PathObject> current_path, List<Action> actions){
-		this.isUseful = false;
-		this.path = current_path;
+		super(current_path);
 		this.setPossibleActions(actions);
 	}
 
@@ -52,25 +43,6 @@ public class ExploratoryPath extends Path{
 	 */
 	public boolean add(PathObject obj){
 		return this.getPath().add(obj);
-	}
-	
-	/**
-	 * @return The {@link List} of {@link PathObject}s that comprise a path
-	 */
-	public List<PathObject> getPath(){
-		return this.path;
-	}
-	
-	public void setPath( List<PathObject> path){
-		this.path = path;
-	}
-	
-	public void setIsUseful(boolean isUseful){
-		this.isUseful = isUseful;
-	}
-	
-	public boolean getIsUseful(){
-		return this.isUseful;
 	}
 	
 	public int size(){
@@ -198,17 +170,8 @@ public class ExploratoryPath extends Path{
 		return false;
 	}
 
-	public boolean getSpansMultipleDomains() {
-		return spansMultipleDomains;
-	}
-	
-	public void setSpansMultipleDomains(boolean isSpanningMultipleDomains) {
-		this.spansMultipleDomains= isSpanningMultipleDomains;
-	}
-
 	public boolean checkIfSpansMultipleDomains() {
-		log.info("checking path for domains :: "+path.getClass().getName());
-		log.info("Last page url :: " + this.findLastPage().getUrl());
+		log.debug("Last page url :: " + this.findLastPage().getUrl());
 		String domain = "";
 		
 		//iterate over path
@@ -230,14 +193,6 @@ public class ExploratoryPath extends Path{
 		//if path domains change then return true
 		return false;
 	}
-
-	
-	
-	public String getKey() {
-		return this.key;
-	}
-
-	
 
 	public Page firstPage() {
 		

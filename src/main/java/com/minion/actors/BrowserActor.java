@@ -285,7 +285,6 @@ public class BrowserActor extends UntypedActor {
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path crawl_path = new Path(exploratory_path.getPath());
-
 						result_page = Crawler.crawlPath(crawl_path, this.browser, action);
 						
 						System.err.println("Checking equality of page sources " + last_page.equals(result_page));

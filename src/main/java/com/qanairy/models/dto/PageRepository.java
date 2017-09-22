@@ -21,14 +21,9 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page create(OrientConnectionFactory connection, Page page) {
-		page.setKey(generateKey(page));
-		Page page_record = find(connection, generateKey(page));
-		if(page_record == null){
-			convertToRecord(connection, page);
-			connection.save();
-		}
+		IPage page_record = convertToRecord(connection, page);
 		
-		return page;
+		return convertFromRecord(page_record);
 	}
 
 	/**
@@ -49,7 +44,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
-			connection.save();
 		}
 		PageRepository page_repo = new PageRepository();
 		
@@ -84,6 +78,8 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setLandable(result.isLandable());
+		page.setImageWeight(result.getImageWeight());
+		page.setTotalWeight(result.getTotalWeight());
 		
 		//NOTE :: SOURCE IS COMMENTED OUT DUE TO SIZE OF DATA AND LACK OF NECESSITY OUTSIDE OF GENERATING A KEY
 		//page.setSrc(result.getSrc());
@@ -105,9 +101,14 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * @param page
 	 */
 	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
-		if(page.getKey() == null || page.getKey().isEmpty()){
+		
+		System.err.println("PAGE src = " + page.getSrc().length());
+		System.err.println("Page key = " + page.getKey());
+		if(page.getKey() == null || page.getKey().isEmpty() && page.getSrc() != null){
+			System.err.println("Page key is empty and page src is not null");
 			page.setKey(generateKey(page));
 		}
+		
 
 		@SuppressWarnings("unchecked")
 		Iterator<IPage> pages_iter = ((Iterable<IPage>) DataAccessObject.findByKey(page.getKey(), connection, IPage.class)).iterator();

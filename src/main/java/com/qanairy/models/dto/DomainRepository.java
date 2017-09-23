@@ -59,15 +59,16 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			domain_record = iter.next();
 		}
 		domain_record.setUrl(domain.getUrl());
-		TestRepository test_repo = new TestRepository();
+		/*TestRepository test_repo = new TestRepository();
 		List<ITest> tests = new ArrayList<ITest>();
 		for(Test test : domain.getTests()){
 			//check if test already exists
 			
 			tests.add(test_repo.convertToRecord(connection, test));
 		}
-		domain_record.setTests(tests);
 		
+		domain_record.setTests(tests);
+		*/
 		return domain_record;
 	}
 
@@ -141,8 +142,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	@Override
 	public Domain convertFromRecord(IDomain obj) {
 		List<Test> tests = new ArrayList<Test>();
-		TestRepository test_repo = new TestRepository();
-		/*Lists.newArrayList(obj.getTests());
+		/*TestRepository test_repo = new TestRepository();
+		Lists.newArrayList(obj.getTests());
 		Iterator<ITest> test_iter = obj.getTests().iterator();
 		
 		//NOTE:: TESTS SHOULD BE LAZY LOADED, AKA ONLY WHEN THEY ARE NEEDED

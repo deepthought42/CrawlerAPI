@@ -61,7 +61,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
 		this.convertToRecord(orient_connection, attr);
-		orient_connection.save();
+		orient_connection.close();
 		
 		return attr;
 	}
@@ -73,7 +73,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	public PathObject update(OrientConnectionFactory conn, PathObject attr) {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		convertToRecord(connection, attr);
-		connection.save();
+		connection.close();
 		
 		return attr;
 	}

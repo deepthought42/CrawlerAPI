@@ -29,16 +29,25 @@ public class DomainService {
 
     //@PreAuthorize("hasAuthority('ROLE_USER')")
     public Domain create(Domain domain) {
-        return domainRepository.create(new OrientConnectionFactory(), domain);
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+    	Domain domain_record = domainRepository.create(connection, domain);
+    	connection.close();
+        return domain_record;
     }
 
     @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     public Domain get(String key) {
-        return domainRepository.find(new OrientConnectionFactory(), key);
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+    	Domain domain = domainRepository.find(connection, key);
+    	connection.close();
+        return domain;
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public Domain update(Domain domain) {
-        return domainRepository.update(new OrientConnectionFactory(), domain);
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+    	Domain domain_record = domainRepository.update(connection, domain);
+    	connection.close();
+        return domain_record;
     }
 }

@@ -47,7 +47,8 @@ public class WorkAllocationActor extends UntypedActor {
 					if(acct_message.getData() instanceof Path){
 						path = (Path)acct_message.getData();
 						PathRepository repo = new PathRepository();
-						Path path_record = repo.find(new OrientConnectionFactory(), repo.generateKey(path));
+						OrientConnectionFactory connection = new OrientConnectionFactory();
+						Path path_record = repo.find(connection, repo.generateKey(path));
 						if(path_record != null){
 							record_exists = true;
 							path = path_record;
@@ -56,7 +57,9 @@ public class WorkAllocationActor extends UntypedActor {
 					else if(acct_message.getData() instanceof ExploratoryPath){
 						exp_path = (ExploratoryPath)acct_message.getData();
 						PathRepository repo = new PathRepository();
-						Path path_record = repo.find(new OrientConnectionFactory(), repo.generateKey(exp_path));
+						OrientConnectionFactory connection = new OrientConnectionFactory();
+
+						Path path_record = repo.find(connection, repo.generateKey(exp_path));
 						if(path_record != null){
 							record_exists = true;
 							path = path_record;

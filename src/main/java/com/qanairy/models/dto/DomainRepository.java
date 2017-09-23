@@ -108,8 +108,9 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	}
 	
 	public IDomain find(String key){
+		OrientConnectionFactory connection = new OrientConnectionFactory();
 		@SuppressWarnings("unchecked")
-		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(key, new OrientConnectionFactory(), IDomain.class);
+		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(key, connection, IDomain.class);
 		Iterator<IDomain> iter = domains.iterator();
 		  
 		if(iter.hasNext()){
@@ -141,7 +142,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	public Domain convertFromRecord(IDomain obj) {
 		List<Test> tests = new ArrayList<Test>();
 		TestRepository test_repo = new TestRepository();
-		Lists.newArrayList(obj.getTests());
+		/*Lists.newArrayList(obj.getTests());
 		Iterator<ITest> test_iter = obj.getTests().iterator();
 		
 		//NOTE:: TESTS SHOULD BE LAZY LOADED, AKA ONLY WHEN THEY ARE NEEDED
@@ -149,7 +150,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		while(test_iter.hasNext()){
 			tests.add(test_repo.convertFromRecord(test_iter.next()));
 		}
-		
+		*/
 		Domain domain = new Domain(obj.getKey(), obj.getUrl().toString(), tests);
 		return domain;
 	}

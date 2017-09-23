@@ -79,7 +79,8 @@ public class MemoryRegistryActor extends UntypedActor{
 				Path path = (Path)acct_msg.getData();
 				System.err.println("Saving Path : " +path + " : " + path.getKey() +" to memory Registry");
 				PathRepository path_repo = new PathRepository();
-				path_repo.create(new OrientConnectionFactory(), path);
+				OrientConnectionFactory connection = new OrientConnectionFactory();
+				path_repo.create(connection, path);
 			}
 		}
 		else unhandled(message);

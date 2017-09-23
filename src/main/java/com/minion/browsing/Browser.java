@@ -102,7 +102,8 @@ public class Browser {
 		}
 		
 		if(this.driver != null){
-			ISystemInfo info = SystemInfoRepository.find(new OrientConnectionFactory(), "system_info");
+			OrientConnectionFactory connection = new OrientConnectionFactory();
+			ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
 			if(info == null){
 				info = new SystemInfo();
 			}
@@ -110,7 +111,7 @@ public class Browser {
 				info.setBrowserCount(info.getBrowserCount()+1);
 			}
 			
-			SystemInfoRepository.save(new OrientConnectionFactory(), info);
+			SystemInfoRepository.save(connection, info);
 			this.url = url;
 			this.driver.get(url);
 		}
@@ -160,10 +161,11 @@ public class Browser {
 	public void close(){
 		try{
 			driver.quit();
-			ISystemInfo info = SystemInfoRepository.find(new OrientConnectionFactory(), "system_info");
+			OrientConnectionFactory connection = new OrientConnectionFactory();
+			ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
 			info.setBrowserCount(info.getBrowserCount()-1);
 			
-			SystemInfoRepository.save(new OrientConnectionFactory(), info);
+			SystemInfoRepository.save(connection, info);
 		}
 		catch(NullPointerException e){
 			log.error("Error closing driver. Driver is NULL");

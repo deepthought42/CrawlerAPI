@@ -94,8 +94,18 @@ public class Browser {
 				}
 				
 			}
-			catch(UnreachableBrowserException e){}
-			catch(WebDriverException e){}
+			catch(UnreachableBrowserException e){
+				cnt++;
+				try {
+					Thread.sleep(300000);
+				} catch (InterruptedException e1) {}
+			}
+			catch(WebDriverException e){
+				cnt++;
+				try {
+					Thread.sleep(300000);
+				} catch (InterruptedException e1) {}
+			}
 			System.err.println("Attempt #"+cnt);
 			cnt++;
 

@@ -77,10 +77,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				for(Path expanded : form_paths){
 					//send all paths to work allocator to be evaluated
 					Message<Path> expanded_path_msg = new Message<Path>(acct_message.getAccountKey(), expanded);
-
-					for(PathObject obj : expanded.getPath()){
-						System.err.println("Expanded Object Type :: " + obj.getType());
-					}
 					work_allocator.tell(expanded_path_msg, getSelf() );
 				}
 				

@@ -81,19 +81,15 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public PathObject convertFromRecord(IPathObject data){
 		String type = data.getType();
 		
 		//System.err.println("data type :: " + data.getType()+" :: "+data.getClass().getName());
 		if(type.equals("Page")){
-		//if(type.equals(Page.class.getName())){
-			log.debug("converting from page");
-			//IPage page_record = ((IPage)data);
-			//Page page_obj = new Page();
 			Page page_obj = null;
 			PageRepository page_record = new PageRepository();
-			@SuppressWarnings("unchecked")
 			Iterator<IPage> page_iter = ((Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class)).iterator();
 			if(page_iter.hasNext()){
 				page_obj = page_record.convertFromRecord(page_iter.next());
@@ -105,28 +101,24 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			log.debug("converting from page element");
 
 			//IPageElement page_elem_record = ((IPageElement)data);
-			PageElement page_elem_obj = null;
-			@SuppressWarnings("unchecked")
-			Iterator<IPageElement> page_elem_record_iter = (Iterator<IPageElement>) DataAccessObject.findByKey(data.getKey(), IPageElement.class).iterator();
+			PageElement page_elem_obj = new PageElement();
+			
+			Iterator<IPageElement> page_elem_record_iter = ((Iterable<IPageElement>) DataAccessObject.findByKey(data.getKey(), IPageElement.class)).iterator();
 
-			//List<PageElement> page_elem_records = new ArrayList<PageElement>();
-			//for(IPageElement elem_record : page_elem_record){
-				IPageElement page_elem_record = page_elem_record_iter.next();
-				if(page_elem_record != null){
-					PageElementRepository page_elem_repo = new PageElementRepository();
+		
+			IPageElement page_elem_record = page_elem_record_iter.next();
+			if(page_elem_record != null){
+				PageElementRepository page_elem_repo = new PageElementRepository();
 
-					page_elem_obj = page_elem_repo.convertFromRecord(page_elem_record);
-					page_elem_obj.setType(type);
-					//page_elem_records.add(page_elem_obj);
-				}
-			//}
+				page_elem_obj = page_elem_repo.convertFromRecord(page_elem_record);
+				page_elem_obj.setType(type);
+				//page_elem_records.add(page_elem_obj);
+			}
 			
 			return page_elem_obj;
 		}
 		else if(type.equals("Action")){			
 			Action action = new Action();
-			
-			@SuppressWarnings("unchecked")
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
 			action.setType(type);
 			

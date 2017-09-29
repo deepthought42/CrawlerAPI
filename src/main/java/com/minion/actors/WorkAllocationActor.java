@@ -44,10 +44,11 @@ public class WorkAllocationActor extends UntypedActor {
 					boolean record_exists = false;
 					Path path = null;
 					ExploratoryPath exp_path = null;
+					OrientConnectionFactory connection = new OrientConnectionFactory();
+
 					if(acct_message.getData() instanceof Path){
 						path = (Path)acct_message.getData();
 						PathRepository repo = new PathRepository();
-						OrientConnectionFactory connection = new OrientConnectionFactory();
 						Path path_record = repo.find(connection, repo.generateKey(path));
 						if(path_record != null){
 							record_exists = true;
@@ -57,7 +58,6 @@ public class WorkAllocationActor extends UntypedActor {
 					else if(acct_message.getData() instanceof ExploratoryPath){
 						exp_path = (ExploratoryPath)acct_message.getData();
 						PathRepository repo = new PathRepository();
-						OrientConnectionFactory connection = new OrientConnectionFactory();
 
 						Path path_record = repo.find(connection, repo.generateKey(exp_path));
 						if(path_record != null){
@@ -68,7 +68,8 @@ public class WorkAllocationActor extends UntypedActor {
 					else if(acct_message.getData() instanceof URL){
 						//THIS SHOULD STILL BE IMPLEMENTED, LEAVING EMPTY FOR NOW DUE TO NON TRIVIAL NATURE OF THIS PIECE
 					}
-					
+					connection.close();
+
 					//if record doesn't exist then send for exploration, else expand the record
 					if(!record_exists){
 						System.err.println("Data passed to work allocator is of type : "+acct_message.getData().getClass().getSimpleName());

@@ -23,7 +23,6 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		ITestRecord testRecord = connection.getTransaction().addVertex(UUID.randomUUID(), ITestRecord.class);
 
 		PageRepository page_repo = new PageRepository();
-		TestRepository test_repo = new TestRepository();
 		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));
 		testRecord.setPasses(record.getPasses());
 		testRecord.setRanAt(record.getRanAt());

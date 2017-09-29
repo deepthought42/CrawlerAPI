@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import com.qanairy.models.Action;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Test;
 import com.qanairy.persistence.DataAccessObject;
@@ -49,7 +49,6 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			page_elem.setCssValues(elem.getCssValues());
 			page_elem.setText(elem.getText());
 			page_elem.setXpath(elem.getXpath());
-			connection.save();
 		}
 	
 		return convertFromRecord(page_elem);
@@ -90,26 +89,25 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPageElement convertToRecord(OrientConnectionFactory framedGraph, PageElement elem) {
+	public IPageElement convertToRecord(OrientConnectionFactory connection, PageElement elem) {
 		elem.setKey(generateKey(elem));
 
 		@SuppressWarnings("unchecked")
-		Iterable<IPageElement> html_tags = (Iterable<IPageElement>) DataAccessObject.findByKey(elem.getKey(), framedGraph, IPageElement.class);
+		Iterable<IPageElement> html_tags = (Iterable<IPageElement>) DataAccessObject.findByKey(elem.getKey(), connection, IPageElement.class);
 		
 		Iterator<IPageElement> iter = html_tags.iterator();
 		IPageElement page_elem_record = null;
 
 		if(!iter.hasNext()){
-			page_elem_record = framedGraph.getTransaction().addVertex("class:"+IPageElement.class.getSimpleName()+","+UUID.randomUUID(), IPageElement.class);
+			page_elem_record = connection.getTransaction().addVertex("class:"+IPageElement.class.getSimpleName()+","+UUID.randomUUID(), IPageElement.class);
 			page_elem_record.setType("PageElement");
 			List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
-			/*for(Attribute attribute : this.attributes){
-				IAttribute attribute_persist = attribute.convertToRecord(framedGraph);
+			for(Attribute attribute : elem.getAttributes()){
+				AttributeRepository attribute_repo = new AttributeRepository();
+				IAttribute attribute_persist = attribute_repo.convertToRecord(connection, attribute);
 				attribute_persist_list.add(attribute_persist);
 			}
-			
-			html_tagpage_elem_recordibutes(attribute_persist_list);
-			*/
+						
 			/*List<IIPageElement> child_elements_persist = new ArrayList<IIPageElement>();
 			for(PageElement elem : this.child_elements){
 				IIPageElement child_element = elem.convertToRecord(framedGraph);

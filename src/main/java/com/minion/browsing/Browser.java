@@ -109,8 +109,9 @@ public class Browser {
 			else{
 				info.setBrowserCount(info.getBrowserCount()+1);
 			}
-			
-			SystemInfoRepository.save(new OrientConnectionFactory(), info);
+			OrientConnectionFactory connection = new OrientConnectionFactory();
+			SystemInfoRepository.save(connection, info);
+			connection.close();
 			this.url = url;
 			this.driver.get(url);
 		}

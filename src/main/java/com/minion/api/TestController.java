@@ -184,10 +184,11 @@ public class TestController {
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
-		orient_connection.save();
 
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		Test test = test_record.convertFromRecord(itest);
+		orient_connection.close();
+		return test;
 	}
 
 	/**
@@ -205,10 +206,11 @@ public class TestController {
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setName(name);
-		orient_connection.save();
-
+		
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		Test test = test_record.convertFromRecord(itest);
+		orient_connection.close();
+		return test;
 	}
     
 	/**
@@ -222,11 +224,13 @@ public class TestController {
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, 
 											@RequestParam("browser_type") String browser_type) throws MalformedURLException{
-		Iterator<ITest> itest_iter = Test.findByKey(key, new OrientConnectionFactory()).iterator();
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
 		TestRepository test_record = new TestRepository();
 
 		Test test = test_record.convertFromRecord(itest);
+		connection.close();
 		TestRecord record = null;
 		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 		log.info(" Test Received :: " + test);
@@ -310,11 +314,10 @@ public class TestController {
 		}
 		
 		itest.addGroup(group_repo.convertToRecord(orient_connection, group));
-		orient_connection.save();
-
 		TestRepository test_record = new TestRepository();
-
-		return test_record.convertFromRecord(itest);
+		Test test = test_record.convertFromRecord(itest);
+		orient_connection.close();
+		return test;
 	}
 
     /**

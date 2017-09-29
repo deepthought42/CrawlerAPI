@@ -40,14 +40,11 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 */
 	@Override
 	public Attribute create(OrientConnectionFactory conn, Attribute attr) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Attribute found_attr = find(conn, attr.getKey());
 		
 		if( found_attr == null ){
-			this.convertToRecord(orient_connection, attr);
-			//orient_connection.save();
+			this.convertToRecord(conn, attr);
 		}
-		
 		return attr;
 	}
 

@@ -33,10 +33,10 @@ public class WorkAllocationActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_message = (Message<?>)message;
-			
+
 			log.info("Checking status of account key...");
 			if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
-				
+
 				log.info("Approved account : "+acct_message.getAccountKey());
 				if(acct_message.getData() instanceof Path ||
 						acct_message.getData() instanceof ExploratoryPath ||
@@ -81,7 +81,7 @@ public class WorkAllocationActor extends UntypedActor {
 						System.err.println("path found in records. Skipping discovery. Expanding path now");
 						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 						path_expansion_actor.tell(acct_message, getSelf() );
-					}	
+					}
 				}
 				else if(acct_message.getData() instanceof Test){
 					log.info("Test passed to work allocator");

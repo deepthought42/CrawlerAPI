@@ -22,17 +22,17 @@ public class Crawler {
 
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
-	 * 
+	 *
 	 * @return
 	 * @throws java.util.NoSuchElementException
 	 * @throws UnhandledAlertException
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static Page crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, IOException{
 		assert path != null;
-		
+
 		PageElement last_element = null;
-		
+
 		//skip first node since we should have already loaded it during initialization
 		for(PathObject current_obj: path.getPath()){
 
@@ -41,7 +41,7 @@ public class Crawler {
 
 			    new WebDriverWait(browser.getDriver(), 120).until(
 			            webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			    
+
 			}
 			else if(current_obj instanceof PageElement){
 				last_element = (PageElement) current_obj;
@@ -50,10 +50,9 @@ public class Crawler {
 			else if(current_obj instanceof Action){
 				boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
-				
+
 				System.err.println("last element :: "+last_element);
-				System.err.println("path size :: "+path.getPath().size());
-				
+
 				int attempts = 0;
 				do{
 					actionPerformedSuccessfully = last_element.performAction(action, "String should be entered here", browser.getDriver());
@@ -66,24 +65,24 @@ public class Crawler {
 				alert.performChoice(browser.getDriver());
 			}
 		}
-		
+
 		return browser.getPage();
 	}
 
 	/**
 	 * Crawls the {@link Path path} using the given {@link Browser browser}
-	 * 
+	 *
 	 * @return
 	 * @throws java.util.NoSuchElementException
 	 * @throws UnhandledAlertException
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static Page crawlPath(Path path, Browser browser, Action final_action) throws java.util.NoSuchElementException, IOException{
 		assert path != null;
 		log.info("PATH :: "+path);
 
 		PageElement last_element = null;
-		
+
 		//skip first node since we should have already loaded it during initialization
 	  	log.info("crawling path...");
 		for(PathObject current_obj: path.getPath()){
@@ -114,7 +113,7 @@ public class Crawler {
 			}
 		}
 
-		
+
 		System.err.println("Lst element :: " + last_element.getXpath());
 		System.err.println("action to be performed :: " + final_action.getName());
 

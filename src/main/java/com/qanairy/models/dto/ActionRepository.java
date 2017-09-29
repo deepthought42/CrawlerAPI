@@ -90,8 +90,7 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	 * @return
 	 */
 	public Action convertFromRecord(IAction data) {
-		Action action = new Action(data.getName(), data.getValue());
-		return action;
+		return new Action(data.getName(), data.getValue());
 	}
 
 	/**

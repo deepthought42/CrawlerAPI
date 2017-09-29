@@ -108,7 +108,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			System.err.println("Page key is empty and page src is not null");
 			page.setKey(generateKey(page));
 		}
-		
 
 		@SuppressWarnings("unchecked")
 		Iterator<IPage> pages_iter = ((Iterable<IPage>) DataAccessObject.findByKey(page.getKey(), connection, IPage.class)).iterator();

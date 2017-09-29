@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.grizzly.Connection;
+
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.ITest;
@@ -128,7 +130,9 @@ public class Test {
 	 */
 	public static Iterable<ITest> findTestByGroup(String group) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		return orient_connection.getTransaction().getVertices("groups", group, ITest.class);
+		Iterable<ITest> tests = orient_connection.getTransaction().getVertices("groups", group, ITest.class);
+		orient_connection.close();
+		return tests;
 	}
 	
 	/**
@@ -167,6 +171,8 @@ public class Test {
 			list.add(test);
 			count++;
 		}
+		orient_connection.close();
+		
 		return list;
 	}
 	
@@ -187,6 +193,7 @@ public class Test {
 			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
 		}
+		orient_connection.close();
 		return list;
 	}
 	
@@ -207,6 +214,7 @@ public class Test {
 			list.add(test);
 		}
 		
+		orient_connection.close();
 		return list;
 	}
 	
@@ -228,7 +236,7 @@ public class Test {
 			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
 		}
-		
+		orient_connection.close();
 		return list;
 	}
 	

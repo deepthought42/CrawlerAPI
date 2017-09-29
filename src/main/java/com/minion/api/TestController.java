@@ -222,7 +222,8 @@ public class TestController {
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, 
 											@RequestParam("browser_type") String browser_type) throws MalformedURLException{
-		Iterator<ITest> itest_iter = Test.findByKey(key, new OrientConnectionFactory()).iterator();
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
 		TestRepository test_record = new TestRepository();
 

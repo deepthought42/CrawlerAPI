@@ -11,7 +11,7 @@ import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
- * 
+ *
  */
 public class AttributeRepository implements IPersistable<Attribute, IAttribute> {
 
@@ -31,7 +31,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		attribute_record.setName(attr.getName());
 		attribute_record.setVals(attr.getVals());
 		attribute_record.setKey(attr.getKey());
-		
+
 		return attribute_record;
 	}
 
@@ -40,14 +40,11 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 */
 	@Override
 	public Attribute create(OrientConnectionFactory conn, Attribute attr) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Attribute found_attr = find(conn, attr.getKey());
-		
+
 		if( found_attr == null ){
-			this.convertToRecord(orient_connection, attr);
-			//orient_connection.save();
+			this.convertToRecord(conn, attr);
 		}
-		
 		return attr;
 	}
 
@@ -60,12 +57,12 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		@SuppressWarnings("unchecked")
 		Iterable<IAttribute> svc_pkgs = (Iterable<IAttribute>) DataAccessObject.findByKey(attr.getKey(), conn, IAttribute.class);
 		Iterator<IAttribute> iter = svc_pkgs.iterator();
-		
+
 		if(iter.hasNext()){
 			convertToRecord(connection, attr);
 			connection.save();
 		}
-		
+
 		return attr;
 	}
 
@@ -79,11 +76,11 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		@SuppressWarnings("unchecked")
 		Iterable<IAttribute> svc_pkgs = (Iterable<IAttribute>) DataAccessObject.findByKey(key, connection, IAttribute.class);
 		Iterator<IAttribute> iter = svc_pkgs.iterator();
-		
+
 		if(iter.hasNext()){
 			return convertFromRecord(iter.next());
 		}
-		
+
 		return null;
 	}
 

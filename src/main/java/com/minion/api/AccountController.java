@@ -25,6 +25,7 @@ import com.auth0.spring.security.api.Auth0JWTToken;
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.minion.actors.PathExpansionActor;
 import com.qanairy.api.exception.Auth0ManagementApiException;
 import com.qanairy.api.exception.InvalidUserException;
 import com.qanairy.auth.Auth0Client;
@@ -42,7 +43,8 @@ import com.qanairy.services.UsernameService;
 @CrossOrigin(origins = "http://localhost:8001")
 @RequestMapping("/accounts")
 public class AccountController {
-	
+	private static Logger log = LogManager.getLogger(AccountController.class);
+
 	private final Logger logger = LogManager.getLogger(this.getClass());
 	
     @Autowired
@@ -78,7 +80,7 @@ public class AccountController {
        
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-        System.err.println("Current user accessed Admin secured resource: " + currentUser.getUsername());
+        System.out.println("Current user accessed Admin secured resource: " + currentUser.getUsername());
         
         if(currentUser.getUsername().equals("UNKNOWN_USER")){
         	throw new InvalidUserException();
@@ -102,10 +104,10 @@ public class AccountController {
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             final String username = usernameService.getUsername();
             // log username of user requesting account creation
-            System.err.println("User with email: " + username + " creating new account");
+            System.out.println("User with email: " + username + " creating new account");
             new_account = accountService.create(acct);
         }
-        System.err.println("so far so good!!");
+        System.out.println("so far so good!!");
 
         return ResponseEntity.accepted().body(new_account);
     }

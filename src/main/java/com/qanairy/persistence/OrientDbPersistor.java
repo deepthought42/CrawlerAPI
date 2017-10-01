@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import com.minion.actors.FormTestDiscoveryActor;
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.tinkerpop.blueprints.Edge;
@@ -20,7 +19,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
  *
  */
 public class OrientDbPersistor{
-	private static Logger log = LogManager.getLogger(FormTestDiscoveryActor.class);
+	private static Logger log = LogManager.getLogger(OrientDbPersistor.class);
 
 	public OrientGraph graph = null;
 	

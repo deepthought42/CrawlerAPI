@@ -58,24 +58,24 @@ public class ComplexField {
 				WebElement element = driver.findElement(By.xpath(elem.getInputElement().getXpath()));
 				actionFactory.execAction(element, value, action.getName());
 				
-				log.info("CRAWLER Performed action "+ action
+				System.out.println("CRAWLER Performed action "+ action
 						+ " On element with xpath :: "+elem.getInputElement().getXpath());
 			}
 			catch(StaleElementReferenceException e){
 				
-				log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+				System.out.println("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 						+ action + ". ");
 				wasPerformedSuccessfully = false;			
 			}
 			catch(ElementNotVisibleException e){
-				log.info("ELEMENT IS NOT CURRENTLY VISIBLE.");
+				System.out.println("ELEMENT IS NOT CURRENTLY VISIBLE.");
 			}
 			catch(NoSuchElementException e){
-				log.info(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+				System.out.println(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
 				wasPerformedSuccessfully = false;
 			}
 			catch(WebDriverException e){
-				log.info("Element can not have action performed on it at point performed");
+				System.out.println("Element can not have action performed on it at point performed");
 				wasPerformedSuccessfully = false;
 			}
 		}

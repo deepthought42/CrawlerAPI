@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
 import com.minion.browsing.Browser;
@@ -19,7 +21,8 @@ import com.qanairy.rules.formRules.SpecialCharacterRestriction;
  * A group of TestNG tests designed to verify the extraction of tests involving forms and rules on fields
  */
 public class FormTestExtractionTests {
-	
+	private static Logger log = LogManager.getLogger(FormTestExtractionTests.class);
+
 	/**
 	 * Tests if {@link RequirementRule} can be extracted on a required field
 	 */
@@ -30,16 +33,16 @@ public class FormTestExtractionTests {
 		try {
 			browser = new Browser(url,"chrome");
 			Page page = browser.getPage();
-			System.err.println("Extracting forms");
+			System.out.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
-			//System.err.println("Extracting rules");
+			//System.out.println("Extracting rules");
 			//List<FormRule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.out.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean rule_is_required = false;
 			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+				System.out.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(RequirementRule.class)){
 					rule_is_required = true;
 				}
@@ -65,19 +68,19 @@ public class FormTestExtractionTests {
 		try {
 			browser = new Browser(url,"chrome");
 			Page page = browser.getPage();
-			System.err.println("Extracting forms");
+			System.out.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
-			//System.err.println("Extracting rules");
+			//System.out.println("Extracting rules");
 			//List<FormRule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.out.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean alphabetic_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
 			
 			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+				System.out.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(AlphabeticRestrictionRule.class)){
 					alphabetic_restrict_rule = true;
 				}
@@ -106,18 +109,18 @@ public class FormTestExtractionTests {
 		try {
 			browser = new Browser(url, "chrome");
 			Page page = browser.getPage();
-			System.err.println("Extracting forms");
+			System.out.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
-			//System.err.println("Extracting rules");
+			//System.out.println("Extracting rules");
 			//List<FormRule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.out.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean numeric_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
 			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+				System.out.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRestrictionRule.class)){
 					numeric_restrict_rule = true;
 				}
@@ -151,7 +154,7 @@ public class FormTestExtractionTests {
 			boolean readonly_restrict_rule = false;
 
 			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+				System.out.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(ReadOnlyRule.class)){
 					readonly_restrict_rule = true;
 				}
@@ -179,11 +182,11 @@ public class FormTestExtractionTests {
 			Page page = browser.getPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.out.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean min_value_rule = false;
 
 			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+				System.out.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRule.class)){
 					min_value_rule = true;
 				}

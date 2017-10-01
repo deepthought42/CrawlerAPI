@@ -39,7 +39,7 @@ public class DisabledRule implements FormRule {
 		 */
 	
 		Attribute attr = field.getInputElement().getAttribute("disabled");
-		log.info("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
+		System.out.println("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
 		return attr.getVals().size() == 0;
 	}
 }

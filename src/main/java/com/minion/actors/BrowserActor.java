@@ -20,6 +20,7 @@ import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
+import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rl.learning.Brain;
 import com.qanairy.rl.memory.DataDecomposer;
@@ -39,6 +40,7 @@ import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
+import com.qanairy.models.PathObject;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -199,7 +201,7 @@ public class BrowserActor extends UntypedActor {
 				}
 			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
 
-				System.err.println("Creating new Browser");
+				System.out.println("Creating new Browser");
 				Page result_page = null;
 				
 				if(path.getPath() != null){
@@ -216,47 +218,46 @@ public class BrowserActor extends UntypedActor {
 				
 				PathRepository path_repo = new PathRepository();
 				path.setKey(path_repo.generateKey(path));
-				System.err.println("Browser Actor crawled path : "+path_repo.generateKey(path));
-				System.err.println("Path length of Path Message : "+path.getPath().size());
+				System.out.println("Browser Actor crawled path : "+path_repo.generateKey(path));
+				System.out.println("Path length of Path Message : "+path.getPath().size());
 				
-				System.err.println("Checking equality of page sources " + last_page.equals(result_page));
+				System.out.println("Checking equality of page sources " + last_page.equals(result_page));
 				if(last_page.equals(result_page) && path.getPath().size() > 1){
 					log.debug("Page sources match(Path Message)");
 			  		path.setIsUseful(false);
 			  	}
 			  	else{
 			  		log.debug("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
-			  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
+			  		System.out.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 					
 			  		path.setIsUseful(true);
 
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(acct_msg, getSelf() );
 					
-					System.err.println("creating test with domain :::    " + result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost());
+					System.out.println("creating test with domain :::    " + result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost());
 					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
 					TestRepository test_repo = new TestRepository();
 					test.setKey(test_repo.generateKey(test));
 					
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-					SessionTestTracker seqTracker = SessionTestTracker.getInstance();
-					TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
+					OrientConnectionFactory connection = new OrientConnectionFactory();
+					Test test_record = test_repo.find(connection, test.getKey());
 					
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-					if(testMap != null && !testMap.containsTest(test)){
+					if(test_record == null){
+						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						work_allocator.tell(test_msg, getSelf() );
-						testMap.addTest(test);
+						work_allocator.tell(test_msg, getSelf() );	
+						System.out.println("Sending test to Memory Actor");
+						//tell memory worker of path
+						final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+						
+						//tell memory worker of path
+						memory_actor.tell(test_msg, getSelf() );
+						
+						//broadcast test
+						PastPathExperienceController.broadcastTestExperience(test);
 					}
-
-					log.info("Sending test to Memory Actor");
-					//tell memory worker of path
-					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-					
-					//tell memory worker of path
-					memory_actor.tell(test_msg, getSelf() );
-					//broadcast test
-					PastPathExperienceController.broadcastTestExperience(test);
 			  	}
 			  	this.browser.close();
 	
@@ -267,7 +268,7 @@ public class BrowserActor extends UntypedActor {
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
 
-				System.err.println("Creating new Browser for exploratory path crawling");
+				System.out.println("Creating new Browser for exploratory path crawling");
 				Page result_page = null;
 
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
@@ -287,13 +288,13 @@ public class BrowserActor extends UntypedActor {
 						Path crawl_path = new Path(exploratory_path.getPath());
 						result_page = Crawler.crawlPath(crawl_path, this.browser, action);
 						
-						System.err.println("Checking equality of page sources " + last_page.equals(result_page));
+						System.out.println("Checking equality of page sources " + last_page.equals(result_page));
 						if(last_page.equals(result_page)){
-					  		System.err.println("Page sources match, marking not valuable, (Path Message)");
+					  		System.out.println("Page sources match, marking not valuable, (Path Message)");
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{
-					  		System.err.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
+					  		System.out.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 
 					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page)){
 					  			break;
@@ -310,17 +311,16 @@ public class BrowserActor extends UntypedActor {
 							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
 							TestRepository test_repo = new TestRepository();
 							test.setKey(test_repo.generateKey(test));
-							
-							
-							// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-							SessionTestTracker seqTracker = SessionTestTracker.getInstance();
-							TestMapper testMap = seqTracker.getSequencesForSession("SESSION_KEY_HERE");
-							
-							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-							if(!testMap.containsTest(test)){
+							OrientConnectionFactory connection = new OrientConnectionFactory();
+							Test test_record = test_repo.find(connection, test.getKey());
+							connection.close();
+
+							if(test_record == null){
+								Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 								final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 								work_allocator.tell(test_msg, getSelf() );
-								testMap.addTest(test);
+								
+								PastPathExperienceController.broadcastTestExperience(test);
 							}
 
 							//tell memory worker of path
@@ -329,7 +329,6 @@ public class BrowserActor extends UntypedActor {
 							//tell memory worker of path
 							//memory_actor.tell(test_msg, getSelf() );
 							//broadcast test
-							PastPathExperienceController.broadcastTestExperience(test);
 							
 							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), crawl_path);
 
@@ -359,9 +358,7 @@ public class BrowserActor extends UntypedActor {
 				
 				PathRepository path_repo = new PathRepository();
 				path.setKey(path_repo.generateKey(path));
-				
-				PastPathExperienceController.broadcastTestExperience(test);
-				
+								
 			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
 				memory_actor.tell(test_msg, getSelf() );
@@ -369,6 +366,8 @@ public class BrowserActor extends UntypedActor {
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 				path_expansion_actor.tell(path_msg, getSelf() );
+				
+				PastPathExperienceController.broadcastTestExperience(test);
 
 				browser.close();
 		   }

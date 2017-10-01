@@ -1,13 +1,16 @@
 package com.minion.tester;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import com.qanairy.models.PageElement;
 
 /**
  * Generates statements for finding an element
- * @author Brandon Kindred
  *
  */
 public class ElementStatement implements IStatementFactory {
+	private static Logger log = LogManager.getLogger(ElementStatement.class);
 
 	/**
 	 * {@inheritDoc}

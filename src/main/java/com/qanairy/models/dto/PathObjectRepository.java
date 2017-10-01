@@ -40,7 +40,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
 		path_object_record.setType(path_obj.getType());
 		path_object_record.setKey(generateKey(path_obj));
-		System.err.println("Converting path object to record");
+		System.out.println("Converting path object to record");
 		if(path_obj instanceof Page){
 			
 		}
@@ -86,7 +86,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	public PathObject convertFromRecord(IPathObject data){
 		String type = data.getType();
 		
-		//System.err.println("data type :: " + data.getType()+" :: "+data.getClass().getName());
+		//System.out.println("data type :: " + data.getType()+" :: "+data.getClass().getName());
 		if(type.equals("Page")){
 			Page page_obj = null;
 			PageRepository page_record = new PageRepository();

@@ -142,13 +142,13 @@ public class Path {
 	 * @return
 	 */
 	public Page findLastPage(){
-		log.info("getting last page");
+		System.out.println("getting last page");
 		List<PathObject> path_obj_list = this.getPath();
 		Page page = null;
 
 		for(PathObject obj : path_obj_list){
 			if(obj instanceof Page){
-				log.info("last page acquired");
+				System.out.println("last page acquired");
 				page = (Page)obj;
 			}
 		}
@@ -220,8 +220,8 @@ public class Path {
 	}
 
 	public boolean checkIfSpansMultipleDomains() {
-		log.info("checking path for domains :: "+path.getClass().getName());
-		log.info("Last page url :: " + this.findLastPage().getUrl());
+		System.out.println("checking path for domains :: "+path.getClass().getName());
+		System.out.println("Last page url :: " + this.findLastPage().getUrl());
 		String domain = "";
 		
 		//iterate over path

@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -13,6 +16,8 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 public class Auth0ManagementApi {
+	private static Logger log = LogManager.getLogger(Auth0Client.class);
+
 	private static String client_id = "d0YAPCQl5rk8YhsDI1U5GaEfqvMSC5Ea";
 	private static String client_secret = "kbHd7I5avP_d5jhofdhAcTGMJKYdNnnzgevoCddRSryv2EgLmrXvSz4aEqZBvfMp";
 	private static String base_url = "https://qanairy.auth0.com/";

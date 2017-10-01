@@ -1,20 +1,22 @@
 package com.qanairy.models;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
+import com.minion.actors.PathExpansionActor;
 import com.minion.browsing.IObjectValuationAccessor;
-import com.qanairy.persistence.IPathObject;
-import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  *
  */
 public class PageAlert extends PathObject implements IObjectValuationAccessor {
+	private static Logger log = LogManager.getLogger(PageAlert.class);
+
 	public Page page = null;
 	public String choice;
 	public String message;
@@ -49,7 +51,7 @@ public class PageAlert extends PathObject implements IObjectValuationAccessor {
 			}
 		}
 		catch(NoAlertPresentException nae){
-			System.err.println( "Alert not present");
+			System.out.println( "Alert not present");
 		}
 	}
 	

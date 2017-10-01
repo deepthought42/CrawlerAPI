@@ -1,5 +1,7 @@
 package models;
 import org.testng.annotations.Test;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.AssertJUnit;
 
@@ -25,7 +27,8 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathTests {
-	
+	private static Logger log = LogManager.getLogger(PathTests.class);
+
 	@Test(groups="Path")
 	public void pathDatabaseRecordConfirmation(){
 		Path path = new Path();
@@ -60,13 +63,13 @@ public class PathTests {
 		//look up path and verify all elements
 		Path path_record = path_repo.find(orient_connection, path.getKey());
 		
-		System.err.println("path object record type : "+path_record.getPath().get(0).getType());
+		System.out.println("path object record type : "+path_record.getPath().get(0).getType());
 		Assert.assertTrue(path_record.getPath().get(0).getType().equals("Page"));
 		
-		System.err.println("path object record type 1: "+path_record.getPath().get(1).getType());
+		System.out.println("path object record type 1: "+path_record.getPath().get(1).getType());
 		Assert.assertTrue(path_record.getPath().get(1).getType().equals("PageElement"));
 		
-		System.err.println("path object record type 2: "+path_record.getPath().get(2));
+		System.out.println("path object record type 2: "+path_record.getPath().get(2));
 		Assert.assertTrue(path_record.getPath().get(2).getType().equals("Action"));
 	}
 	

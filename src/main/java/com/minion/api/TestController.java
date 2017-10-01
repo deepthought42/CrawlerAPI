@@ -230,7 +230,7 @@ public class TestController {
 		Test test = test_record.convertFromRecord(itest);
 		TestRecord record = null;
 		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
-		log.info(" Test Received :: " + test);
+		System.out.println(" Test Received :: " + test);
 		record = TestingActor.runTest(test, browser);
 		browser.close();
 
@@ -262,7 +262,7 @@ public class TestController {
 				}
 			}
 		} catch (MalformedURLException e) {
-			log.info("ERROR GETTING TEST ");
+			System.out.println("ERROR GETTING TEST ");
 			e.printStackTrace();
 		}
 		
@@ -369,7 +369,7 @@ public class TestController {
 				}
 			}
 		} catch (MalformedURLException e) {
-			log.info("ERROR GETTING TEST ");
+			System.out.println("ERROR GETTING TEST ");
 			e.printStackTrace();
 		}
 		

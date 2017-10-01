@@ -3,12 +3,15 @@ package com.minion.browsing;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
+import com.minion.actors.PathExpansionActor;
 import com.qanairy.persistence.OrientDbPersistor;
 import com.qanairy.rl.memory.ObjectDefinition;
 
@@ -22,6 +25,8 @@ import com.tinkerpop.blueprints.Vertex;
  *
  */
 public class ActionFactory {
+	private static Logger log = LogManager.getLogger(ActionFactory.class);
+
 	private static String[] actions = {"click",
 								"doubleClick",
 								"mouseover",
@@ -135,7 +140,7 @@ public class ActionFactory {
 			int maxIdx = 0;
 		    for(int j = 0; j < action_weight.length; j++){
 		    	if(action_weight[j] > max){
-		    		System.err.println("MAX WEIGHT FOR NOW :: "+max);
+		    		System.out.println("MAX WEIGHT FOR NOW :: "+max);
 		    		max=action_weight[j];
 		    		maxIdx = j;
 		    	}
@@ -145,7 +150,7 @@ public class ActionFactory {
 		    return maxIdx;
 		}
 		else{
-			System.err.println("Coin was flipped and exploration was chosen. OH MY GOD I HAVE NO IDEA WHAT TO DO!");
+			System.out.println("Coin was flipped and exploration was chosen. OH MY GOD I HAVE NO IDEA WHAT TO DO!");
 			return 1;
 		}
 		//END PREDICT METHOD

@@ -1,7 +1,9 @@
 package com.minion.actors;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,6 +23,7 @@ import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.Page;
 import com.qanairy.models.Path;
+import com.qanairy.models.PathObject;
 
 /**
  * Handles retrieving tests
@@ -57,7 +60,7 @@ public class TestingActor extends UntypedActor {
 				resulting_page.setLandable(resulting_page.checkIfLandable());
 				
 				if(!resulting_page.equals(expected_page)){
-					log.info("Saving test, cuz it has changed");
+					System.out.println("Saving test, cuz it has changed");
 					
 					//Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
 					TestRecord record = new TestRecord(new Date(), false, resulting_page, test);
@@ -69,7 +72,7 @@ public class TestingActor extends UntypedActor {
 					memory_actor.tell(test_msg, getSelf() );
 				}
 				else{
-					log.info("Saving unchanged test");
+					System.out.println("Saving unchanged test");
 					
 					TestRecord record = null;
 					if(!test.isCorrect()){
@@ -85,19 +88,19 @@ public class TestingActor extends UntypedActor {
 					//tell memory worker of test record
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
+
+					PastPathExperienceController.broadcastTestExperience(test);
 				}
-				//memory_actor.tell(path_msg, getSelf() );
 
 				//broadcast path
-				PastPathExperienceController.broadcastTestExperience(test);
 			  	browser.close();
 			}
 			else{
-				log.info("ERROR : Message contains unknown format");
+				System.out.println("ERROR : Message contains unknown format");
 			}
 		}
 		else{
-			log.info("ERROR : Did not receive a Message object");
+			System.out.println("ERROR : Did not receive a Message object");
 		}
 	}
 
@@ -112,7 +115,7 @@ public class TestingActor extends UntypedActor {
 	 public static TestRecord runTest(Test test, Browser browser){				
 		 assert test != null;		
 	 			
-		 log.info("Running test...");		
+		 System.out.println("Running test...");		
 		 boolean passing = false;		
 		 Page page = null;
 		 TestRecord test_record = null;

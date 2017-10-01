@@ -113,7 +113,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			PageRepository page_record = new PageRepository();
 			TestRecordRepository test_record_record = new TestRecordRepository();
 			
-			log.info("setting test_record path : "+test.getPath().size()); 
+			System.out.println("setting test_record path : "+test.getPath().size()); 
 			test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
 			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
 			

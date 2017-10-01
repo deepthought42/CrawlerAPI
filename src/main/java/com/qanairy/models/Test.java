@@ -159,13 +159,13 @@ public class Test {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("domain", pageUrl, ITest.class).iterator();
 		
-		log.info("Looking up tests by url" );
+		System.out.println("Looking up tests by url" );
 		ArrayList<Test> list = new ArrayList<Test>();
 		int count = 0;
 		TestRepository test_record = new TestRepository();
 
 		while(test_iter.hasNext()){
-			log.info("Inspecting object " + count);
+			System.out.println("Inspecting object " + count);
 			ITest itest = test_iter.next();
 			Test test = test_record.convertFromRecord(itest);
 			list.add(test);

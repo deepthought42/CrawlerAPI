@@ -28,7 +28,7 @@ public class OrientConnectionFactory {
 		if(this.current_tx == null){
 			this.current_tx = getConnection();
 		}
-		log.info("Opened connection to OrientDB");
+		System.out.println("Opened connection to OrientDB");
 	}
 	
 	/**
@@ -39,7 +39,7 @@ public class OrientConnectionFactory {
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
 		graphFactory = new OrientGraphFactory("remote:159.203.177.116/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 1000);
 	    OrientGraphNoTx instance = graphFactory.getNoTx();
-	    log.info("Orientdb transaction created. returning instance");
+	    System.out.println("Orientdb transaction created. returning instance");
 		return factory.create(instance);
 	}
 
@@ -51,7 +51,7 @@ public class OrientConnectionFactory {
 	 * @return if save was successful
 	 */
 	public boolean save(){
-		log.info("Saving current transaction to orientDB");
+		System.out.println("Saving current transaction to orientDB");
 		try{
 			//current_tx.commit();
 		}catch(Exception e){

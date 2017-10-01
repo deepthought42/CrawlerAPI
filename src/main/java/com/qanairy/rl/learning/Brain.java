@@ -7,30 +7,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.minion.browsing.ActionFactory;
-import com.qanairy.models.Action;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
-//import com.minion.structs.Path;
-import com.qanairy.rl.memory.DataDecomposer;
-import com.qanairy.rl.memory.MemoryState;
 import com.qanairy.rl.memory.ObjectDefinition;
 import com.qanairy.rl.memory.Vocabulary;
 import com.qanairy.rl.memory.OrientDbPersistor;
-//import com.minion.browsing.Page;
-//import com.minion.browsing.PageElement;
-//import com.minion.browsing.PathObject;
-//import com.minion.browsing.actions.Action;
-import com.qanairy.rl.memory.OrientRLMemoryConnectionFactory;
-
-//import com.tinkerpop.blueprints.Edge;
 
 /**
  *
  */
 public class Brain {
-	
+	private static Logger log = LogManager.getLogger(Brain.class);
+
 	private static OrientDbPersistor persistor = null;
 	
 	public static double[] predict(List<ObjectDefinition> object_definitions, String[] actions){
@@ -164,13 +156,13 @@ public class Brain {
 				last_reward = action_map.get(last_action);
 			}
 			*/
-			System.err.println("last reward : "+last_reward);
-			System.err.println("actual_reward : "+actual_reward);
-			System.err.println("estimated_reward : "+estimated_reward);
+			System.out.println("last reward : "+last_reward);
+			System.out.println("actual_reward : "+actual_reward);
+			System.out.println("estimated_reward : "+estimated_reward);
 			
 			double q_learn_val = q_learn.calculate(last_reward, actual_reward, estimated_reward );
 			//action_map.put(last_action, q_learn_val);
-			//System.err.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
+			//System.out.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
 
 			//objDef.setActions(action_map);
 			//com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);
@@ -209,7 +201,7 @@ public class Brain {
 			
 			
 			
-			System.err.println("SAVING NOW...");
+			System.out.println("SAVING NOW...");
 			persistor.save();
 			*/
 							
@@ -289,7 +281,7 @@ public class Brain {
 			
 			
 			
-			System.err.println("SAVING NOW...");
+			System.out.println("SAVING NOW...");
 			persistor.save();
 			*/
 			
@@ -358,13 +350,13 @@ public class Brain {
 				last_reward = action_map.get(last_action);
 			}
 			
-			System.err.println("last reward : "+last_reward);
-			System.err.println("actual_reward : "+actual_reward);
-			System.err.println("estimated_reward : "+estimated_reward);
+			System.out.println("last reward : "+last_reward);
+			System.out.println("actual_reward : "+actual_reward);
+			System.out.println("estimated_reward : "+estimated_reward);
 			
 			double q_learn_val = q_learn.calculate(last_reward, actual_reward, estimated_reward );
 			action_map.put(last_action, q_learn_val);
-			System.err.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
+			System.out.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
 
 			objDef.setActions(action_map);
 			com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);

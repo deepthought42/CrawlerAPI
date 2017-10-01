@@ -14,7 +14,6 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
-import com.qanairy.models.dto.PathRepository;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.structs.Message;
@@ -51,7 +50,7 @@ public class PathExpansionActor extends UntypedActor {
 		String[] actions = ActionFactory.getActions();
 
 		List<PageElement> page_elements = page.getElements();
-		log.info("Expected number of exploratory paths : " + (page_elements.size()*actions.length) + " : # Elems : "+page.getElements().size()+ " ; # actions :: "+ActionFactory.getActions());
+		System.out.println("Expected number of exploratory paths : " + (page_elements.size()*actions.length) + " : # Elems : "+page.getElements().size()+ " ; # actions :: "+ActionFactory.getActions());
 		
 		//iterate over all elements
 		int path_count = 0;
@@ -76,14 +75,14 @@ public class PathExpansionActor extends UntypedActor {
 				ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
 				//Action action_obj = new Action(action);
 				
-				log.info("Constructing path object " + path_count + " for expand path");
+				System.out.println("Constructing path object " + path_count + " for expand path");
 
 				pathList.add(action_path);
 				path_count++;
 			}			
 		}
 		
-		System.err.println("# of Paths added : "+path_count);
+		System.out.println("# of Paths added : "+path_count);
 		
 		return pathList;
 	}
@@ -102,7 +101,7 @@ public class PathExpansionActor extends UntypedActor {
 			if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				
-				System.err.println("EXPANDING PATH WITH LENGTH : "+path.size());
+				System.out.println("EXPANDING PATH WITH LENGTH : "+path.size());
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
 				//Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
@@ -110,25 +109,25 @@ public class PathExpansionActor extends UntypedActor {
 				//final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
 				//memory_registry.tell(path_msg, getSelf());
 				
-				System.err.println("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains() );
-				System.err.println("PATH is useful? :: " +path.isUseful());
+				System.out.println("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains() );
+				System.out.println("PATH is useful? :: " +path.isUseful());
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);
 					if(first_page == null){
-						log.info("first page is null");
+						System.out.println("first page is null");
 					}
 					if(last_page == null){
-						log.info("last page is null");
+						System.out.println("last page is null");
 					}
 					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
-						log.info("Last page is landable...truncating path to start with last_page");
+						System.out.println("Last page is landable...truncating path to start with last_page");
 						path = new Path();
 						path.getPath().add(last_page);
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);
-					log.info("Path expansions found : " +pathExpansions.size());
+					System.out.println("Path expansions found : " +pathExpansions.size());
 					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 					for(ExploratoryPath expanded : pathExpansions){

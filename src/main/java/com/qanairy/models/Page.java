@@ -80,7 +80,7 @@ public class Page extends PathObject {
 		assert elements != null;
 		super.setType("Page");
 
-		log.info("setting source");
+		System.out.println("setting source");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
 		this.setScreenshot(screenshot);
@@ -89,7 +89,7 @@ public class Page extends PathObject {
 		this.setLandable(isLandable);
 		this.setKey(null);
 		
-		log.info("Page object created");
+		System.out.println("Page object created");
 	}
 	
 	/**
@@ -123,13 +123,13 @@ public class Page extends PathObject {
 	 * @throws IOException 
 	 */
 	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
-		log.info("Checking if page is landable");
+		System.out.println("Checking if page is landable");
 		
 		Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
 		browser.getDriver().get(this.getUrl().toString());
 		boolean landable = false;
 		if(this.equals(browser.getPage())){
-			log.info("Pages match in check for landability");
+			System.out.println("Pages match in check for landability");
 			landable = true;
 		}
 		browser.close();

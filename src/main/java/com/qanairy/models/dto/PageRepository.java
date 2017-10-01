@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.qanairy.models.Page;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IPage;
@@ -16,6 +19,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PageRepository implements IPersistable<Page, IPage> {
+	private static Logger log = LogManager.getLogger(PageRepository.class);
 
 	/**
 	 * {@inheritDoc}
@@ -102,10 +106,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 */
 	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
 		
-		System.err.println("PAGE src = " + page.getSrc().length());
-		System.err.println("Page key = " + page.getKey());
+		System.out.println("PAGE src = " + page.getSrc().length());
+		System.out.println("Page key = " + page.getKey());
 		if(page.getKey() == null || page.getKey().isEmpty() && page.getSrc() != null){
-			System.err.println("Page key is empty and page src is not null");
+			System.out.println("Page key is empty and page src is not null");
 			page.setKey(generateKey(page));
 		}
 

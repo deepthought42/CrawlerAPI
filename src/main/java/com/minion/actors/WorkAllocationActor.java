@@ -35,10 +35,7 @@ public class WorkAllocationActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_message = (Message<?>)message;
 
-			System.out.println("Checking status of account key...");
 			if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
-
-				System.out.println("Approved account : "+acct_message.getAccountKey());
 				if(acct_message.getData() instanceof Path ||
 						acct_message.getData() instanceof ExploratoryPath ||
 						acct_message.getData() instanceof URL){
@@ -55,6 +52,10 @@ public class WorkAllocationActor extends UntypedActor {
 							record_exists = true;
 							path = path_record;
 						}
+						else{
+							path.setKey(repo.generateKey(path));
+						}
+						
 					}
 					else if(acct_message.getData() instanceof ExploratoryPath){
 						exp_path = (ExploratoryPath)acct_message.getData();
@@ -65,7 +66,6 @@ public class WorkAllocationActor extends UntypedActor {
 							record_exists = true;
 							path = path_record;
 						}
-						System.out.println("Exploratory path passed to work allocator");
 					}
 					else if(acct_message.getData() instanceof URL){
 						//THIS SHOULD STILL BE IMPLEMENTED, LEAVING EMPTY FOR NOW DUE TO NON TRIVIAL NATURE OF THIS PIECE
@@ -74,20 +74,16 @@ public class WorkAllocationActor extends UntypedActor {
 
 					//if record doesn't exist then send for exploration, else expand the record
 					if(!record_exists){
-						System.out.println("Data passed to work allocator is of type : "+acct_message.getData().getClass().getSimpleName());
 						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
 						browser_actor.tell(acct_message, getSelf() );
 						getSender().tell("Status: ok", getSelf());
 					}
 					else if(!(acct_message.getData() instanceof ExploratoryPath)) {
-						System.out.println("path found in records. Skipping discovery. Expanding path now");
 						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 						path_expansion_actor.tell(acct_message, getSelf() );
 					}
 				}
-				else if(acct_message.getData() instanceof Test){
-					System.out.println("Test passed to work allocator");
-					
+				else if(acct_message.getData() instanceof Test){					
 					final ActorRef testing_actor = this.getContext().actorOf(Props.create(TestingActor.class), "TestingActor"+UUID.randomUUID());
 					testing_actor.tell(acct_message, getSelf() );
 					getSender().tell("Status: ok", getSelf());

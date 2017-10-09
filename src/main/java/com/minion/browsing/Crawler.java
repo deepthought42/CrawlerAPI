@@ -37,8 +37,6 @@ public class Crawler {
 		for(PathObject current_obj: path.getPath()){
 
 			if(current_obj instanceof Page){
-				System.out.println("Current path node is a Page");
-
 			    new WebDriverWait(browser.getDriver(), 120).until(
 			            webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 
@@ -50,9 +48,6 @@ public class Crawler {
 			else if(current_obj instanceof Action){
 				boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
-
-				System.out.println("last element :: "+last_element);
-
 				int attempts = 0;
 				do{
 					actionPerformedSuccessfully = last_element.performAction(action, "String should be entered here", browser.getDriver());

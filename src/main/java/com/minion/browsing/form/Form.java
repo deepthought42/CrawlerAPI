@@ -43,10 +43,8 @@ public class Form {
 	 */
 	private FormType determineFormType(){
 		List<Attribute> attributes = this.form_tag.getAttributes();
-		FormType type = null;
 		for(Attribute attr: attributes){
 			for(String val : attr.getVals()){
-				System.out.println("FORM TAG ATTRIBUTE :: "+val);
 				if(val.contains("register") || (val.contains("sign") && val.contains("up"))){
 					return FormType.REGISTER;
 				}

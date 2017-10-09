@@ -49,7 +49,7 @@ public class ActionFactory {
 			builder.click(elem);
 		}
 		else if(action.equals("clickAndHold")){
-			builder.clickAndHold(elem);
+			//builder.clickAndHold(elem);
 		}
 		//Context click clicks select/options box
 		else if(action.equals("contextClick")){

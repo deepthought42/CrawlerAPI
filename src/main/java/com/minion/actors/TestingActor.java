@@ -66,6 +66,7 @@ public class TestingActor extends UntypedActor {
 					TestRecord record = new TestRecord(new Date(), false, resulting_page, test);
 					test.addRecord(record);
 					
+					System.out.println("Test Actor -> Sending test record to be saved");
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 					//tell memory worker of path
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
@@ -86,6 +87,8 @@ public class TestingActor extends UntypedActor {
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 
 					//tell memory worker of test record
+					System.out.println("Test Actor -> Sending test record to be saved");
+
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
 

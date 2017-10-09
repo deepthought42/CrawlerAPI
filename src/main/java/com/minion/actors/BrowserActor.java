@@ -210,7 +210,7 @@ public class BrowserActor extends UntypedActor {
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
-						Path crawl_path = new Path(exploratory_path.getPath());
+						Path crawl_path = Path.clone(exploratory_path);
 						crawl_path.add(action);
 						result_page = Crawler.crawlPath(crawl_path, this.browser);
 						

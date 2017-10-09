@@ -41,7 +41,6 @@ public class MemoryRegistryActor extends UntypedActor{
 				Test test_record = test_repo.find(connection, test.getKey());
 				
 				if(test_record == null){
-					System.out.println("saving test : " + test + " with key : "+test.getKey());
 					test_repo.create(connection, test);
 					System.out.println("Test Created!");
 				}

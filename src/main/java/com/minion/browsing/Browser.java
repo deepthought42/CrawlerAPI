@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidSelectorException;
@@ -75,7 +76,7 @@ public class Browser {
 	 */
 	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
 		int cnt = 0;
-		while(driver == null && cnt < 10){
+		while(driver == null && cnt < 20){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome(url);
@@ -97,16 +98,21 @@ public class Browser {
 			catch(UnreachableBrowserException e){
 				cnt++;
 				try {
-					Thread.sleep(300000);
+					Thread.sleep(100000);
 				} catch (InterruptedException e1) {}
 			}
 			catch(WebDriverException e){
 				cnt++;
 				try {
-					Thread.sleep(300000);
+					Thread.sleep(100000);
 				} catch (InterruptedException e1) {}
 			}
-			System.out.println("Attempt #"+cnt);
+			catch(GridException e){
+				cnt++;
+				try {
+					Thread.sleep(100000);
+				} catch (InterruptedException e1) {}
+			}
 			cnt++;
 
 		}
@@ -121,7 +127,7 @@ public class Browser {
 				info.setBrowserCount(info.getBrowserCount()+1);
 			}
 			
-			SystemInfoRepository.save(connection, info);
+			//SystemInfoRepository.save(connection, info);
 			this.url = url;
 			this.driver.get(url);
 		}
@@ -145,11 +151,26 @@ public class Browser {
 	 */
 	public Page getPage() throws MalformedURLException, IOException{
 		URL page_url = new URL(url);
-
-		return new Page(this.driver.getPageSource(), 
+		String screenshot = "";
+		String src = null;
+		List<PageElement> visible_elements = null;
+		for(int i=0; i<10; i++){
+			try{
+				src = this.driver.getPageSource();
+				visible_elements = Browser.getVisibleElements(this.driver, "");
+				screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource()));
+				break;
+			}catch(Exception e){
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e1) {}
+			}
+		}
+		
+		return new Page(src, 
 						url, 
-						UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource())), 
-						Browser.getVisibleElements(this.driver, ""));
+						screenshot, 
+						visible_elements);
 	}
 	
 	/**
@@ -175,7 +196,7 @@ public class Browser {
 			ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
 			info.setBrowserCount(info.getBrowserCount()-1);
 			
-			SystemInfoRepository.save(connection, info);
+			//SystemInfoRepository.save(connection, info);
 		}
 		catch(NullPointerException e){
 			log.error("Error closing driver. Driver is NULL");
@@ -195,7 +216,7 @@ public class Browser {
 	 * @return firefox web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithFirefox(String url) throws MalformedURLException, UnreachableBrowserException{
+	public static WebDriver openWithFirefox(String url) throws MalformedURLException, UnreachableBrowserException, GridException{
 		String Node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 	    DesiredCapabilities cap = DesiredCapabilities.firefox();
 	    cap.setBrowserName("firefox");
@@ -230,7 +251,7 @@ public class Browser {
 	 * @param url
 	 * @return safari web driver
 	 */
-	public static WebDriver openWithSafari(String url) throws MalformedURLException, UnreachableBrowserException{
+	public static WebDriver openWithSafari(String url) throws MalformedURLException, UnreachableBrowserException, GridException{
 		System.out.println("Opening Firefox WebDriver connection using URL : " +url);
 	    DesiredCapabilities capabilities = DesiredCapabilities.safari();
 
@@ -247,7 +268,7 @@ public class Browser {
 	 * @param url
 	 * @return internet explorer web driver
 	 */
-	public static WebDriver openWithInternetExplorer(String url) throws MalformedURLException, UnreachableBrowserException {
+	public static WebDriver openWithInternetExplorer(String url) throws MalformedURLException, UnreachableBrowserException, GridException {
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
 		System.out.println("Opening Safari WebDriver connection using URL : " +url);
@@ -268,7 +289,7 @@ public class Browser {
 	 * @return Chrome web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithChrome(String url) throws MalformedURLException, UnreachableBrowserException, WebDriverException {
+	public static WebDriver openWithChrome(String url) throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		WebDriver driver = null;
 		int connectFailures = 0;
 		boolean connectSucceeded = false;
@@ -315,7 +336,7 @@ public class Browser {
 	 * @return
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithPhantomjs(String url) throws MalformedURLException, UnreachableBrowserException{
+	public static WebDriver openWithPhantomjs(String url) throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException{
 		
 		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 		cap.setJavascriptEnabled(true);
@@ -336,7 +357,7 @@ public class Browser {
 	    driver.navigate().to(url);
 	    driver.manage().window().maximize();
 
-		System.out.println("Opening Phantomjs WebDriver Connection using URL : "+url);
+		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
 	    
 		return driver;
 	}
@@ -373,11 +394,11 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static File getScreenshot(WebDriver driver) throws IOException{
-		try{
+	public static File getScreenshot(WebDriver driver) throws IOException, GridException{
+		/*try{
 			driver.manage().window().maximize();
 		}catch(Exception e){}
-		
+		*/
 		File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 		
 		return screenshot;
@@ -402,7 +423,7 @@ public class Browser {
 	 * @return list of webelements that are currently visible on the page
 	 */
 	public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
-															 throws WebDriverException {
+															 throws WebDriverException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
 		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
@@ -416,9 +437,9 @@ public class Browser {
 		for(WebElement elem : pageElements){
 			
 			try{
-				//System.out.println("checking visibily and extracting attributes for element " + counter++);
 				Date start = new Date();
-				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))){
+				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, "", xpath_map, driver); 
 					//PageElement pageElem = new PageElement(ActionFactory.getActions(), new PageElement(elem, this_xpath, "", loadAttributes(Browser.extractedAttributes(elem, (JavascriptExecutor)driver))));
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver));
@@ -426,8 +447,8 @@ public class Browser {
 						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));
 						elementList.add(tag);
 					}
-					catch(RasterFormatException e){
-						//e.printStackTrace();
+					catch(Exception e){
+						e.printStackTrace();
 					}
 
 				}
@@ -442,6 +463,9 @@ public class Browser {
 			}
 			catch(RasterFormatException e){
 				log.error(e.toString());
+			}
+			catch(GridException e){
+				e.printStackTrace();
 			}
 		}
 		log.debug("Total elements that are visible on page :: "
@@ -465,7 +489,7 @@ public class Browser {
 
 		List<Form> form_list = new ArrayList<Form>();
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
-		System.out.println("total forms found :: " + form_elements.size());
+		log.info("total forms found :: " + form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()));
@@ -474,7 +498,7 @@ public class Browser {
 			
 			List<PageElement> input_tags = new ArrayList<PageElement>(); 
 			for(WebElement input_elem : input_elements){
-				System.out.println("building form element input :: " + input_elem.getTagName());
+				log.info("building form element input :: " + input_elem.getTagName());
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()));
 				
 				boolean alreadySeen = false;
@@ -498,7 +522,7 @@ public class Browser {
 						input_field.setFieldLabel(label);
 					}
 					catch(NullPointerException e){
-						System.out.println("Error occurred while finding label for form input field");
+						log.info("Error occurred while finding label for form input field");
 					}
 				}
 				//combo_input.getElements().addAll(labels);
@@ -510,10 +534,9 @@ public class Browser {
 				input_tags.add(input_tag);
 			}
 			
-			System.out.println("Total inputs for form : "+form.getFormFields().size());
+			log.info("Total inputs for form : "+form.getFormFields().size());
 			
 			form_list.add(form);
-			System.out.println(form.getType() + " : Form discovered");
 		}
 		return form_list;
 	}
@@ -633,18 +656,14 @@ public class Browser {
 				}
 				
 				page_elem = parent;
-				System.out.println("All Children match and have been loaded into list");
 			}
 			else{
-				System.out.println("all children do not match for grouping. Has size :: "+child_inputs.size());
 				if(child_inputs.size() == 0){
 					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver));
 					FormField input_field = new FormField(input_tag);
 					child_inputs.add(input_field);
 				}
 			}
-			System.out.println("Total children discovered in current loop ... " + child_inputs.size());
-
 		}while(allChildrenMatch);
 		
 		return child_inputs;
@@ -663,10 +682,10 @@ public class Browser {
 	 */
 	public static List<PageElement> extractAllInputElements(Page page, WebDriver driver){
 		List<PageElement> choices = new ArrayList<PageElement>();
-		System.out.println("Searching elements for radio/checkbox inputs : "+page.getElements().size());
+		log.info("Searching elements for radio/checkbox inputs : "+page.getElements().size());
 		for(PageElement tag : page.getElements()){
 			//PageElement tag = (PageElement)elem;
-			System.out.println("Exampining tag element");
+			System.out.println("Examining tag element");
 			if(tag.getName().equalsIgnoreCase("input")){
 				//List<Attribute> attr_list = tag.getAttributes();
 				System.out.println("loaded attribute list ");

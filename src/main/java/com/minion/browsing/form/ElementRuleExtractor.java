@@ -24,7 +24,7 @@ public class ElementRuleExtractor {
 
 	public static List<FormRule> extractRules(PageElement elem){
 		List<FormRule> rules = new ArrayList<FormRule>();
-
+		System.out.println("Extracting rules using attributes :: "+elem.getAttributes().size());
 		for(Attribute attr : elem.getAttributes()){
 			if(attr.getName().trim().equalsIgnoreCase("required")){
 				FormRule required = new RequirementRule();
@@ -73,6 +73,8 @@ public class ElementRuleExtractor {
 				String email_regex_str = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
 				PatternRule email_rule = new PatternRule(Pattern.compile(email_regex_str, Pattern.CASE_INSENSITIVE));
 				rules.add(email_rule);
+				System.out.println("created email rule");
+
 			}
 			else if(attr.getName().equalsIgnoreCase("pattern")){
 				String regex_str = attr.getVals().get(0);

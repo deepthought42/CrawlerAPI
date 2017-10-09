@@ -85,8 +85,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		page.setImageWeight(result.getImageWeight());
 		page.setTotalWeight(result.getTotalWeight());
 		
-		//NOTE :: SOURCE IS COMMENTED OUT DUE TO SIZE OF DATA AND LACK OF NECESSITY OUTSIDE OF GENERATING A KEY
-		//page.setSrc(result.getSrc());
+		page.setSrc(result.getSrc());
 		page.setElementCounts(result.getElementCounts());
 		
 		try {
@@ -106,13 +105,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 */
 	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
 		
-		System.out.println("PAGE src = " + page.getSrc().length());
-		System.out.println("Page key = " + page.getKey());
 		if(page.getKey() == null || page.getKey().isEmpty() && page.getSrc() != null){
-			System.out.println("Page key is empty and page src is not null");
 			page.setKey(generateKey(page));
 		}
-
+		
 		@SuppressWarnings("unchecked")
 		Iterator<IPage> pages_iter = ((Iterable<IPage>) DataAccessObject.findByKey(page.getKey(), connection, IPage.class)).iterator();
 		

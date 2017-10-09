@@ -142,13 +142,11 @@ public class Path {
 	 * @return
 	 */
 	public Page findLastPage(){
-		System.out.println("getting last page");
 		List<PathObject> path_obj_list = this.getPath();
 		Page page = null;
 
 		for(PathObject obj : path_obj_list){
-			if(obj instanceof Page){
-				System.out.println("last page acquired");
+			if(obj.getType().equals("Page")){
 				page = (Page)obj;
 			}
 		}

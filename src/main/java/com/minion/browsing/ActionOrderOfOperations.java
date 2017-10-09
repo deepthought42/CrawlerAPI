@@ -42,7 +42,7 @@ public class ActionOrderOfOperations {
 		mouse_motion_actions.add(new Action("mouse_over"));
 		
 		List<Action> click_actions = new ArrayList<Action>();
-		click_actions.add(new Action("clickAndHold"));
+		//click_actions.add(new Action("clickAndHold"));
 		click_actions.add(new Action("click"));
 		click_actions.add(new Action("clickAt"));
 		//click_actions.add(new Action("clickAndWait"));
@@ -55,7 +55,7 @@ public class ActionOrderOfOperations {
 		
 		
 		List<Action> complex_actions = new ArrayList<Action>();
-		complex_actions.add(new Action("dragAndDrop"));
+		//complex_actions.add(new Action("dragAndDrop"));
 		
 		action_lists.add(mouse_motion_actions);
 		action_lists.add(click_actions);

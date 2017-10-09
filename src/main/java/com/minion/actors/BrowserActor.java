@@ -3,8 +3,6 @@ package com.minion.actors;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -20,20 +18,13 @@ import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
-import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.rl.learning.Brain;
-import com.qanairy.rl.memory.DataDecomposer;
-import com.qanairy.rl.memory.ObjectDefinition;
 import com.qanairy.rl.memory.Vocabulary;
-import com.minion.browsing.ActionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 
 
 import com.minion.structs.Message;
-import com.minion.structs.SessionTestTracker;
-import com.minion.structs.TestMapper;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
@@ -186,120 +177,54 @@ public class BrowserActor extends UntypedActor {
 
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * NOTE: Do not change the order of the checks for instance of below. These are in this order because ExploratoryPath
+	 * 		 is also a Path and thus if the order is reversed, then the ExploratoryPath code never runs when it should
 	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			
-			if (acct_msg.getData() instanceof Path){
-				Path path = (Path)acct_msg.getData();
-				
-				String browser = "";
-				if(acct_msg.getOptions().isEmpty()){
-					
-				}
-			  	this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
 
-				System.out.println("Creating new Browser");
-				Page result_page = null;
-				
-				if(path.getPath() != null){
-					result_page = Crawler.crawlPath(path, this.browser);
-				}
-				
-				Page last_page = path.findLastPage();
-				last_page.setLandable(last_page.checkIfLandable());
-				
-				if(last_page.isLandable()){
-					//clone path starting at last page in path
-					//Path shortened_path = path.clone());
-				}
-				
-				PathRepository path_repo = new PathRepository();
-				path.setKey(path_repo.generateKey(path));
-				System.out.println("Browser Actor crawled path : "+path_repo.generateKey(path));
-				System.out.println("Path length of Path Message : "+path.getPath().size());
-				
-				System.out.println("Checking equality of page sources " + last_page.equals(result_page));
-				if(last_page.equals(result_page) && path.getPath().size() > 1){
-					log.debug("Page sources match(Path Message)");
-			  		path.setIsUseful(false);
-			  	}
-			  	else{
-			  		log.debug("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
-			  		System.out.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
-					
-			  		path.setIsUseful(true);
-
-					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-					path_expansion_actor.tell(acct_msg, getSelf() );
-					
-					System.out.println("creating test with domain :::    " + result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost());
-					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
-					TestRepository test_repo = new TestRepository();
-					test.setKey(test_repo.generateKey(test));
-					
-					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-					OrientConnectionFactory connection = new OrientConnectionFactory();
-					Test test_record = test_repo.find(connection, test.getKey());
-					
-					if(test_record == null){
-						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						work_allocator.tell(test_msg, getSelf() );	
-						System.out.println("Sending test to Memory Actor");
-						//tell memory worker of path
-						final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-						
-						//tell memory worker of path
-						memory_actor.tell(test_msg, getSelf() );
-						
-						//broadcast test
-						PastPathExperienceController.broadcastTestExperience(test);
-					}
-			  	}
-			  	this.browser.close();
-	
-				//PLACE CALL TO LEARNING SYSTEM HERE
-				//Brain.learn(path, path.getIsUseful());
-			}
-			else if (acct_msg.getData() instanceof ExploratoryPath){
+			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
 
-				System.out.println("Creating new Browser for exploratory path crawling");
-				Page result_page = null;
+			  	Page result_page = null;
 
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
 				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
 				
 				Page last_page = exploratory_path.findLastPage();
-				last_page.setLandable(last_page.checkIfLandable());
+				try{
+					last_page.setLandable(last_page.checkIfLandable());
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 				if(last_page.isLandable()){
 					//clone path starting at last page in path
 					//Path shortened_path = path.clone());
 				}
-
+				
 				if(exploratory_path.getPath() != null){
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path crawl_path = new Path(exploratory_path.getPath());
-						result_page = Crawler.crawlPath(crawl_path, this.browser, action);
+						crawl_path.add(action);
+						result_page = Crawler.crawlPath(crawl_path, this.browser);
 						
-						System.out.println("Checking equality of page sources " + last_page.equals(result_page));
 						if(last_page.equals(result_page)){
-					  		System.out.println("Page sources match, marking not valuable, (Path Message)");
+					  		System.out.println("exploratory path -> Page sources match, marking not valuable, (Path Message)");
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{
-					  		System.out.println("PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
+					  		System.out.println("exploratory path -> PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 
 					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page)){
 					  			break;
 					  		}
-					  		crawl_path.add(action);
+					  		//crawl_path.add(action);
 					  		crawl_path.setIsUseful(true);
 							if(crawl_path.size() > 1){
 								crawl_path.add(result_page);
@@ -316,9 +241,9 @@ public class BrowserActor extends UntypedActor {
 							connection.close();
 
 							if(test_record == null){
-								Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-								final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-								work_allocator.tell(test_msg, getSelf() );
+								//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+								//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+								//work_allocator.tell(test_msg, getSelf() );
 								
 								PastPathExperienceController.broadcastTestExperience(test);
 							}
@@ -329,7 +254,7 @@ public class BrowserActor extends UntypedActor {
 							//tell memory worker of path
 							//memory_actor.tell(test_msg, getSelf() );
 							//broadcast test
-							
+							crawl_path.add(result_page);
 							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), crawl_path);
 
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
@@ -343,24 +268,91 @@ public class BrowserActor extends UntypedActor {
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
+			else if (acct_msg.getData() instanceof Path){
+				Path path = (Path)acct_msg.getData();
+				
+				if(acct_msg.getOptions().isEmpty()){
+					
+				}
+				
+				for(PathObject obj : path.getPath()){
+					System.err.println("FIRST PATH ELEMENT TYPE ::   ->   " +obj.getType());
+				}
+				
+				this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+				Page result_page = null;
+				
+				if(path.getPath() != null){
+					result_page = Crawler.crawlPath(path, this.browser);
+				}
+				
+				Page last_page = path.findLastPage();
+				last_page.setLandable(last_page.checkIfLandable());
+				
+				if(last_page.isLandable()){
+					//clone path starting at last page in path
+					//Path shortened_path = path.clone());
+				}
+				
+				PathRepository path_repo = new PathRepository();
+				path.setKey(path_repo.generateKey(path));
+				
+				if(last_page.equals(result_page) && path.getPath().size() > 1){
+			  		path.setIsUseful(false);
+			  	}
+			  	else{					
+			  		path.setIsUseful(true);
+					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
+					TestRepository test_repo = new TestRepository();
+					test.setKey(test_repo.generateKey(test));
+					
+					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
+					OrientConnectionFactory connection = new OrientConnectionFactory();
+					Test test_record = test_repo.find(connection, test.getKey());
+
+					if(test_record == null){
+						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+
+						//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+						//work_allocator.tell(test_msg, getSelf() );	
+						
+						//tell memory worker of path
+						final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+						
+						//tell memory worker of path
+						memory_actor.tell(test_msg, getSelf() );
+						//broadcast test
+						PastPathExperienceController.broadcastTestExperience(test);
+					}
+					
+					path.add(result_page);
+					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path, acct_msg.getOptions());
+					
+					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+					path_expansion_actor.tell(path_msg, getSelf() );
+			  	}
+			  	this.browser.close();
+	
+				//PLACE CALL TO LEARNING SYSTEM HERE
+				//Brain.learn(path, path.getIsUseful());
+			}
 			else if(acct_msg.getData() instanceof URL){
-				log.debug("URL PASSED TO BROWSER ACTOR : " +((URL)acct_msg.getData()).toString());
 			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
 			  	
 			  	Path path = new Path();
 			  	Page page_obj = browser.getPage();
 			  	path.getPath().add(page_obj);
-			  	Page current_page = Crawler.crawlPath(path, browser);
+			  	//Page current_page = Crawler.crawlPath(path, browser);
 
-				Test test = new Test(path, current_page, new Domain(current_page.getUrl().getHost()));
-				TestRepository test_repo = new TestRepository();
-				test.setKey(test_repo.generateKey(test));
-				
 				PathRepository path_repo = new PathRepository();
 				path.setKey(path_repo.generateKey(path));
+				
+				Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().toString()));
+				TestRepository test_repo = new TestRepository();
+				test.setKey(test_repo.generateKey(test));
 								
 			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
+			  	ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
 				memory_actor.tell(test_msg, getSelf() );
 				
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);

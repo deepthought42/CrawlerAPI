@@ -61,7 +61,9 @@ public class Page extends PathObject {
 		this.url = new URL(url.replace("/#",""));
 		this.screenshot = screenshot_url;
 		this.elements = elements;
-		this.element_counts = countTags(this.elements);
+		this.element_counts = countTags(elements);
+		this.setLandable(false);
+
 		this.setKey(null);
 	}
 	
@@ -80,12 +82,11 @@ public class Page extends PathObject {
 		assert elements != null;
 		super.setType("Page");
 
-		System.out.println("setting source");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
 		this.setScreenshot(screenshot);
 		this.setElements(elements);
-		this.setElementCounts(countTags(this.elements));
+		this.setElementCounts(countTags(elements));
 		this.setLandable(isLandable);
 		this.setKey(null);
 		
@@ -122,9 +123,7 @@ public class Page extends PathObject {
 	 * @throws UnhandledAlertException
 	 * @throws IOException 
 	 */
-	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{
-		System.out.println("Checking if page is landable");
-		
+	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{		
 		Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
 		browser.getDriver().get(this.getUrl().toString());
 		boolean landable = false;
@@ -151,9 +150,7 @@ public class Page extends PathObject {
         if (!(o instanceof Page)) return false;
         Page that = (Page)o;
         
-		return (this.getUrl().equals(that.getUrl()) 
-				&& this.getSrc().equals(that.getSrc())
-				&& this.getScreenshot().equals(that.getScreenshot()));
+		return (this.getSrc().equals(that.getSrc()));
 				
 	}
 	

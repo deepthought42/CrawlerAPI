@@ -233,10 +233,10 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			System.out.println("adding single character text string sendKeys action" );
 
 			//generate single character str test
-			path = new Path();
-			path.add(input);
-			path.add(new Action("sendKeys", "a"));
-			paths.add(path);
+			Path path_2 = new Path();
+			path_2.add(input);
+			path_2.add(new Action("sendKeys", "a"));
+			paths.add(path_2);
 		}
 		else if( input_type.equals("number")){
 			System.out.println("adding empty text string sendKeys action" );
@@ -250,10 +250,10 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			System.out.println("adding single digit text string sendKeys action" );
 
 			//generate single character str test
-			path = new Path();
-			path.add(input);
-			path.add(new Action("sendKeys", "0"));
-			paths.add(path);
+			Path path_2 = new Path();
+			path_2.add(input);
+			path_2.add(new Action("sendKeys", "0"));
+			paths.add(path_2);
 		}
 		return paths;
 	}
@@ -268,12 +268,12 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	public static List<Path> generateRuleTests(PageElement input_elem, FormRule rule){
 		assert rule != null;
 		
-		List<Path> tests = new ArrayList<Path>();
+		List<Path> path = new ArrayList<Path>();
 		System.out.println("generating rule test for rule " + rule.getType());
 		if(rule.getType().equals(FormRuleType.REQUIRED)){
-			//generate required tests for element type
+			//generate required path for element type
 			System.out.println("SHOULD BE GENERATING REQUIRED TESTS");
-			tests.addAll(generateRequirementChecks(input_elem, true));
+			path.addAll(generateRequirementChecks(input_elem, true));
 		}
 		else if(rule.getType().equals(FormRuleType.ALPHABETIC_RESTRICTION)){
 			System.out.println("SHOULD BE GENERATED ALPHABETIC ONLY RESTRICTION");
@@ -284,7 +284,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			generateNumericRestrictionTests(input_elem, rule);
 		}
 		else if(rule.getType().equals(FormRuleType.SPECIAL_CHARACTER_RESTRICTION)){
-			System.out.println("SHOULD BE GENERATING SPECIAL CHARACTER RESTRICTION TESTS");		
+			System.out.println("SHOULD BE GENERATING SPECIAL CHARACTER RESTRICTION path");		
 			generateSpecialCharacterRestrictionTests(input_elem, rule);
 		}
 		else if(rule.getType().equals(FormRuleType.DISABLED)){
@@ -297,24 +297,24 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		}
 		else if(rule.getType().equals(FormRuleType.MAX_LENGTH)){
 			System.out.println("SHOULD BE GENERATING MAX LENGTH TESTS ");
-			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+			path.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(FormRuleType.MIN_LENGTH)){
 			System.out.println("SHOULD BE GENERATING MIN LENGTH TESTS ");
-			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+			path.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(FormRuleType.MAX_VALUE)){
 			System.out.println("SHOULD BE GENERATING MAX VALUE TESTS ");
-			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+			path.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(FormRuleType.MIN_VALUE)){
 			System.out.println("SHOULD BE GENERATING MIN LENGTH TESTS ");
-			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+			path.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(FormRuleType.PATTERN)){
 			
 		}
-		return tests;
+		return path;
 	}
 	
 	private static List<Path> generateAlphabeticRestrictionTests(PageElement input_elem, FormRule rule) {
@@ -373,6 +373,22 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			for(FormField field : complex_field.getElements()){
 				PageElement input_elem = field.getInputElement();
 				
+				boolean field_exists = false;
+				
+				//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
+				for(PathObject path_obj : path.getPath()){
+					if(path_obj instanceof PageElement){
+						PageElement page_elem = (PageElement)path_obj;
+						if(page_elem.equals(input_elem)){
+							field_exists = true;
+						}
+					}
+				}
+				
+				if(field_exists){
+					continue;
+				}
+				
 				List<FormRule> rules = field.getRules();
 				System.out.println("field rules length " + rules.size());
 				for(FormRule rule : rules){
@@ -380,14 +396,9 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					List<Path> path_list = generateRuleTests(input_elem, rule);
 					System.out.println("# rule tests created : " + path_list.size());
 					for(Path curr_path : path_list){
-						Path clone_path = Path.clone(path);
-						
-						for(PathObject obj : curr_path.getPath()){
-							clone_path.add(obj);	
-						}
+						Path clone_path = Path.clone(curr_path);
+
 						System.out.println("loaded clone path for test");
-						//Test test = new Test(clone_path, null, ((Page)path.getPath().get(0)).getUrl().getHost());
-						//System.out.println("Test created for form path");
 						form_paths.add(clone_path);
 					}
 				}

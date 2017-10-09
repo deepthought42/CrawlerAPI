@@ -1,11 +1,8 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.collections.ListUtils;
-
-import com.minion.util.ArrayUtility;
 
 /**
  * A pairing of a name and a set of string values

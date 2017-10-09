@@ -203,11 +203,10 @@ public class PageElement extends PathObject{
 	}
 	
 	public List<String> getAttributeValues(String attr_name){
-		String id = "";
 		//get id for element
 		for(Attribute tag_attr : this.attributes){
 			if(tag_attr.getName().equals("id")){
-				System.out.println("ID FOUND ON CHECKBOX :: " + id);
+				System.out.println("ID FOUND ON CHECKBOX :: " + tag_attr.getVals());
 				return tag_attr.getVals();
 			}
 		}
@@ -216,11 +215,9 @@ public class PageElement extends PathObject{
 	}
 	
 	public Attribute getAttribute(String attr_name){
-		String id = "";
 		//get id for element
 		for(Attribute tag_attr : this.attributes){
 			if(tag_attr.getName().equals(attr_name)){
-				System.out.println("ID FOUND ON CHECKBOX :: " + id);
 				return tag_attr;
 			}
 		}

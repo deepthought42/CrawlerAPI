@@ -221,13 +221,13 @@ public class BrowserActor extends UntypedActor {
 					  	else{
 					  		System.out.println("exploratory path -> PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 
-					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page)){
+					  		if(ExploratoryPath.hasCycle(crawl_path, last_page)){
 					  			break;
 					  		}
 					  		//crawl_path.add(action);
 					  		crawl_path.setIsUseful(true);
 							if(crawl_path.size() > 1){
-								crawl_path.add(result_page);
+								//crawl_path.add(result_page);
 							}
 							
 							PathRepository path_repo = new PathRepository();

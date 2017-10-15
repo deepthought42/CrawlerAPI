@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -162,9 +161,8 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		PageRepository page_record = new PageRepository();
 		PathRepository path_record = new PathRepository();
 		GroupRepository group_repo = new GroupRepository();
+		
 		Test test = new Test();
-		//DomainRepository domain_repo = new DomainRepository();
-		//test.setDomain(domain_repo.convertFromRecord(itest.getDomain()));
 		test.setKey(itest.getKey());
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());

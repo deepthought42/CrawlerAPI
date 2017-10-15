@@ -32,6 +32,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.GroupRepository;
+import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.IDomain;
@@ -232,8 +233,13 @@ public class TestController {
 		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 		System.out.println(" Test Received :: " + test);
 		record = TestingActor.runTest(test, browser);
+		
+		TestRecordRepository test_record_record = new TestRecordRepository();
+		itest.addRecord(test_record_record.convertToRecord(connection, record));
+		itest.setCorrect(record.getPasses());
 		browser.close();
-
+		connection.close();
+		
 		return record;
 	}
 
@@ -292,7 +298,7 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
-	public @ResponseBody Test addGroup(@RequestParam(value="name", required=true) String name,
+	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=true) String description,
 										@RequestParam(value="key", required=true) String key){
 		Group group = new Group(name, description);
@@ -302,54 +308,59 @@ public class TestController {
 		ITest itest = itest_iter.next();
 		Iterator<IGroup> group_iter = itest.getGroups().iterator();
 		IGroup igroup = null;
-		GroupRepository group_repo = new GroupRepository();
+
 		while(group_iter.hasNext()){
 			igroup = group_iter.next();
 			if(igroup.getName().equals(name)){
 				return null;
+				//would be better to return an already exists status/error
 			}
 		}
 		
-		itest.addGroup(group_repo.convertToRecord(orient_connection, group));
-		orient_connection.save();
-
-		TestRepository test_record = new TestRepository();
-
-		return test_record.convertFromRecord(itest);
+		GroupRepository group_repo = new GroupRepository();
+		igroup = group_repo.convertToRecord(orient_connection, group);
+		itest.addGroup(igroup);
+		group.setKey(igroup.getKey());
+		
+		return group;
 	}
 
     /**
 	 * Adds given group to test with given key
 	 * 
-	 * @param group String representing name of group to add to test
+	 * @param group_key String key representing group to add to test
 	 * @param test_key key for test that will have group added to it
 	 * 	
 	 * @return the updated test
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
-	public @ResponseBody Test removeGroup(@RequestParam(value="name", required=true) String name,
-										@RequestParam(value="key", required=true) String key){
+	public @ResponseBody Boolean removeGroup(@RequestParam(value="group_key", required=true) String group_key,
+										  	 @RequestParam(value="test_key", required=true) String test_key){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
-		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
+		Iterator<ITest> itest_iter = Test.findByKey(test_key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		Iterator<IGroup> group_iter = itest.getGroups().iterator();
-		
+		boolean was_removed = false;
 		IGroup igroup = null;
 		while(group_iter.hasNext()){
+			System.out.println("Group iter has next");
 			igroup = group_iter.next();
+			if(igroup.getKey().equals(group_key)){
+				System.out.println("group is being removed");
+				itest.removeGroup(igroup);
+				was_removed=true;
+			}
 		}
 
-		itest.removeGroup(igroup);
-
-		TestRepository test_record = new TestRepository();
-
-		return test_record.convertFromRecord(itest);
+		orient_connection.close();
+		return was_removed;
 	}
 
 	/**
-	 * Retrieves list of all tests from the database 
+	 * Retrieves list of all tests from the database
+	 * 
 	 * @param url
 	 * 
 	 * @return
@@ -357,7 +368,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
-			   								 @RequestParam(value="url", required=true) String url) {
+			   								   @RequestParam(value="url", required=true) String url) {
 		List<Test> test_list = new ArrayList<Test>();
 		List<Group> groups = new ArrayList<Group>();
 		try {

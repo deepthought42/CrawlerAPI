@@ -124,8 +124,6 @@ public class TestingActor extends UntypedActor {
 		 TestRecord test_record = null;
 		 try {		
 			 page = Crawler.crawlPath(test.getPath(), browser);	
-		  	 browser.close();
-
 			 passing = test.isTestPassing(page);
 			 
 			 Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
@@ -138,12 +136,15 @@ public class TestingActor extends UntypedActor {
 			    
 		    test.setBrowserStatus(browserName, passing);
 			    
-			 if(passing){
-				 test_record = new TestRecord(new Date(), passing);	 
+		    
+			 /*if(passing){
+				 System.out.println("Test is passing");
+				 test_record = new TestRecord(new Date(), passing, page, test);	 
 			 }
-			 else{
+			 else{*/
+				 System.out.println("Test status :: "+passing);
 				 test_record = new TestRecord(new Date(), passing, page, test );
-			 }
+			 //}
 		 } catch (IOException e) {		
 			 e.printStackTrace();		
 		 }	

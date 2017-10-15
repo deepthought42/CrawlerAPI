@@ -7,8 +7,6 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
-import com.qanairy.models.Domain;
-import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 import com.qanairy.models.TestRecord;
 
@@ -137,12 +135,12 @@ public interface ITest  {
 	/**
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
 	 */
-	@Adjacency(label="has")
+	@Adjacency(direction=Direction.OUT, label="has_record")
 	public Iterable<ITestRecord> getRecords();
 	
 	/**
 	 * Sets the {@link TestRecord} that is the result of executing the path 
 	 */
-	@Adjacency(label="result")
+	@Adjacency(direction=Direction.OUT, label="has_record")
 	public void setRecords(List<TestRecord> page);
 }

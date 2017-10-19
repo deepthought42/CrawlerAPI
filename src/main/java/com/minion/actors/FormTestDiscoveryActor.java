@@ -85,30 +85,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		}
 	}
 	
-	/**
-	 * Runs an {@code Test} 
-	 * 
-	 * @param test test to be ran
-	 * 
-	 * @pre test != null
-	 * @return {@link TestRecord} containing analytics for test run. 
-	 * @throws IOException 
-	 */
-	public static TestRecord runTest(Test test, String browser_type) throws IOException{		
-		assert test != null;
-		
-		System.out.println("Running test...");
-		boolean passing = false;
-	  	Browser browser = new Browser(test.getPath().firstPage().getUrl().toString(), browser_type);
-		Page page = Crawler.crawlPath(test.getPath(), browser);
-	  	browser.close();
-
-		passing = test.isTestPassing(page);
-		
-		TestRecord test_record = new TestRecord(new Date(), passing );
-		return test_record;
-	}
-	
 	public static List<Path> generateBoundaryTests(PageElement input){
 		
 		return null;

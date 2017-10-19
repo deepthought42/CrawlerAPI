@@ -2,6 +2,7 @@ package com.qanairy.models;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -9,9 +10,8 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.grizzly.Connection;
+import org.joda.time.DateTime;
 
-import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -37,7 +37,7 @@ public class Test {
 	private boolean spansMultipleDomains = false;
 	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	private List<Group> groups;
-	
+	private Date last_run_time;
 	/**
 	 * Construct a test with defaults of useful set to fault and 
 	 * spansMultipleDomains set to false
@@ -46,6 +46,7 @@ public class Test {
 		this.setRecords(new ArrayList<TestRecord>());
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
+		this.setLastRunTime(null);
 	}
 	
 	/**
@@ -67,6 +68,7 @@ public class Test {
 		this.correct = null;
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
+		this.setLastRunTime(null);
 		this.setKey(null);
 	}
 	
@@ -79,7 +81,36 @@ public class Test {
 	 * 
 	 * @pre path != null
 	 */
-	public Test(String key, Path path, Page result, Domain domain, boolean correct, boolean isUseful, boolean doesSpanMultipleDomains){
+	public Test(String key, Path path, Page result, Domain domain){
+		assert path != null;
+		
+		this.path = path;
+		this.result = result;
+		this.setRecords(new ArrayList<TestRecord>());
+		this.domain = domain;
+		this.correct = null;
+		this.setSpansMultipleDomains(false);
+		this.setGroups(new ArrayList<Group>());
+		this.setLastRunTime(null);
+		this.setKey(key);
+	}
+	
+	/**
+	 * Constructs a test object
+	 * 
+	 * @param path {@link Path} that will be used to determine what the expected path should be
+ 	 * @param result
+	 * @param domain
+	 * 
+	 * @pre path != null
+	 */
+	public Test(String key, 
+				Path path, 
+				Page result, 
+				Domain domain, 
+				boolean correct, 
+				boolean isUseful, 
+				boolean doesSpanMultipleDomains){
 		assert path != null;
 		
 		this.setPath(path);
@@ -90,6 +121,7 @@ public class Test {
 		this.setUseful(isUseful);
 		this.setSpansMultipleDomains(doesSpanMultipleDomains);
 		this.setGroups(new ArrayList<Group>());
+		this.setLastRunTime(null);
 		this.setKey(key);
 	}
 	
@@ -99,8 +131,27 @@ public class Test {
 	 * @param record
 	 * @return
 	 */
-	public boolean isTestPassing(Page page){
-		return this.getResult().equals(page);
+	public Boolean isTestPassing(Page page, boolean last_test_passing_status){
+		Boolean passing = null;
+		System.out.println("determining passing status..");
+		if(!last_test_passing_status && this.getResult().equals(page)){
+			System.out.println("Pages are equal and test is NOT already passing");
+			passing = false; 
+		}
+		else if(!last_test_passing_status && !this.getResult().equals(page)){
+			System.out.println("Pages are NOT equal and test is NOT already passing");
+			passing = null;
+		}
+		else if(last_test_passing_status && this.getResult().equals(page)){
+			System.out.println("pages are equal and test is already marked as passing");
+			passing = true;
+		}
+		else if(last_test_passing_status && !this.getResult().equals(page)){
+			System.out.println("pages are NOT equal and test is already passing");
+			passing = false;
+		}
+		
+		return passing;
 	}
 	
 	/**
@@ -274,7 +325,7 @@ public class Test {
 		this.domain = domain;
 	}
 	
-	public void setBrowserStatus(String browser_name, boolean status){
+	public void setBrowserStatus(String browser_name, Boolean status){
 		this.browser_statuses.put(browser_name, status);
 	}
 	
@@ -340,4 +391,21 @@ public class Test {
 	public boolean addGroup(Group group){
 		return this.groups.add(group);
 	}
+	
+	/**
+	 * @return date timestamp of when test was last ran
+	 */
+	public Date getLastRunTime(){
+		return this.last_run_time;
+	}
+	
+	/**
+	 * sets date timestamp of when test was last ran
+	 * 
+	 * @param timestamp of last run as a {@link DateTime}
+	 */
+	public void setLastRunTime(Date timestamp){
+		this.last_run_time = timestamp;
+	}
+	
 }

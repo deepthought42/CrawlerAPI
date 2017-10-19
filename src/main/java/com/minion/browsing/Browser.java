@@ -167,6 +167,10 @@ public class Browser {
 			}
 		}
 		
+		if(visible_elements == null){
+			visible_elements = new ArrayList<PageElement>();
+		}
+		
 		return new Page(src, 
 						url, 
 						screenshot, 
@@ -190,22 +194,31 @@ public class Browser {
 	 * Closes the browser opened by the current driver.
 	 */
 	public void close(){
-		try{
-			driver.quit();
-			OrientConnectionFactory connection = new OrientConnectionFactory();
-			ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
-			info.setBrowserCount(info.getBrowserCount()-1);
-			
-			//SystemInfoRepository.save(connection, info);
-		}
-		catch(NullPointerException e){
-			log.error("Error closing driver. Driver is NULL");
-		}
-		catch(UnreachableBrowserException e){
-			log.error("Error: browser unreachable while closing driver");
-		}
-		catch(NoSuchSessionException e){
-			log.error("Error finding session for closing driver");			
+		boolean connection_closed = false;
+		int attempt_count = 0;
+		while(!connection_closed && attempt_count < 20){
+			try{
+				driver.quit();
+				OrientConnectionFactory connection = new OrientConnectionFactory();
+				ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
+				info.setBrowserCount(info.getBrowserCount()-1);
+				connection.close();
+				connection_closed = true;
+				break;
+			}
+			catch(NullPointerException e){
+				log.error("Error closing driver. Driver is NULL");
+			}
+			catch(UnreachableBrowserException e){
+				log.error("Error: browser unreachable while closing driver");
+			}
+			catch(NoSuchSessionException e){
+				log.error("Error finding session for closing driver");			
+			}
+			attempt_count++;
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e1) {}
 		}
 	}
 	

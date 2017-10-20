@@ -235,7 +235,6 @@ public class TestController {
 	
 			Test test = test_record.convertFromRecord(itest);
 			Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
-			System.out.println(" Test Received :: " + test.getKey());
 			record = TestingActor.runTest(test, browser);
 			
 			TestRecordRepository test_record_record = new TestRecordRepository();
@@ -268,23 +267,18 @@ public class TestController {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		
     	Map<String, Boolean> test_results = new HashMap<String, Boolean>();
-    	System.out.println("Beginning running tests "+test_keys.size());
     	for(String key : test_keys){
-    		System.out.println("running test with key "+ key);
     		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
     		
     		while(itest_iter.hasNext()){
-    			System.out.println("looking for matching test in iterator");
     			ITest itest = itest_iter.next();
         		TestRecord record = null;
         		
 	    		if(itest.getKey().equals(key)){
-	    			System.out.println("test key matches key provided");
 	    			TestRepository test_record = new TestRepository();
 	    	
 	    			Test test = test_record.convertFromRecord(itest);
-	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString(), browser_type);
-	    			System.out.println(" Test Received :: " + test.getKey());
+	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
 	    			record = TestingActor.runTest(test, browser);
 	    			
 	    			TestRecordRepository test_record_record = new TestRecordRepository();

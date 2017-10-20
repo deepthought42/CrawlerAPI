@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -260,37 +262,47 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runAll", method = RequestMethod.POST)
-	public @ResponseBody List<Test> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
+	public @ResponseBody Map<String, Boolean> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
 												@RequestParam(value="browser_type", required=true) String browser_type) 
 														throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		
-    	/*Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
-		ITest itest = itest_iter.next();
-		TestRecord record = null;
-
-		if(itest.getKey().equals(key)){
-			TestRepository test_record = new TestRepository();
-	
-			Test test = test_record.convertFromRecord(itest);
-			Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
-			System.out.println(" Test Received :: " + test.getKey());
-			record = TestingActor.runTest(test, browser);
-			
-			TestRecordRepository test_record_record = new TestRecordRepository();
-			itest.addRecord(test_record_record.convertToRecord(connection, record));
-			itest.setCorrect(record.getPasses());
-			itest.setLastRunTime(new Date());
-			
-			browser.close();
-		}
-		else{
-			System.out.println("test found does not match key :: " + key);
-		}
-		*/
+    	Map<String, Boolean> test_results = new HashMap<String, Boolean>();
+    	System.out.println("Beginning running tests "+test_keys.size());
+    	for(String key : test_keys){
+    		System.out.println("running test with key "+ key);
+    		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
+    		
+    		while(itest_iter.hasNext()){
+    			System.out.println("looking for matching test in iterator");
+    			ITest itest = itest_iter.next();
+        		TestRecord record = null;
+        		
+	    		if(itest.getKey().equals(key)){
+	    			System.out.println("test key matches key provided");
+	    			TestRepository test_record = new TestRepository();
+	    	
+	    			Test test = test_record.convertFromRecord(itest);
+	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString(), browser_type);
+	    			System.out.println(" Test Received :: " + test.getKey());
+	    			record = TestingActor.runTest(test, browser);
+	    			
+	    			TestRecordRepository test_record_record = new TestRecordRepository();
+	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
+	    			itest.setCorrect(record.getPasses());
+	    			itest.setLastRunTime(new Date());
+	    			
+	    			test_results.put(test.getKey(), record.getPasses());
+	    			browser.close();
+	    		}
+	    		else{
+	    			System.out.println("test found does not match key :: " + key);
+	    		}
+    		}
+    	}
 		connection.close();
 		
-		return null;
+		return test_results;
 	}
 
 	/**

@@ -93,7 +93,7 @@ public class Browser {
 				else if(browser.equals("phantomjs")){
 					this.driver = openWithPhantomjs(url);
 				}
-				
+				break;
 			}
 			catch(UnreachableBrowserException e){
 				cnt++;
@@ -129,7 +129,9 @@ public class Browser {
 			
 			//SystemInfoRepository.save(connection, info);
 			this.url = url;
-			this.driver.get(url);
+			this.driver.navigate().to(url);
+		    this.driver.manage().window().maximize();
+			//this.driver.get(url);
 		}
 		else{
 			throw new NullPointerException();
@@ -167,6 +169,10 @@ public class Browser {
 			}
 		}
 		
+		if(visible_elements == null){
+			visible_elements = new ArrayList<PageElement>();
+		}
+		
 		return new Page(src, 
 						url, 
 						screenshot, 
@@ -190,22 +196,31 @@ public class Browser {
 	 * Closes the browser opened by the current driver.
 	 */
 	public void close(){
-		try{
-			driver.quit();
-			OrientConnectionFactory connection = new OrientConnectionFactory();
-			ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
-			info.setBrowserCount(info.getBrowserCount()-1);
-			
-			//SystemInfoRepository.save(connection, info);
-		}
-		catch(NullPointerException e){
-			log.error("Error closing driver. Driver is NULL");
-		}
-		catch(UnreachableBrowserException e){
-			log.error("Error: browser unreachable while closing driver");
-		}
-		catch(NoSuchSessionException e){
-			log.error("Error finding session for closing driver");			
+		boolean connection_closed = false;
+		int attempt_count = 0;
+		while(!connection_closed && attempt_count < 20){
+			try{
+				driver.quit();
+				OrientConnectionFactory connection = new OrientConnectionFactory();
+				ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
+				info.setBrowserCount(info.getBrowserCount()-1);
+				connection.close();
+				connection_closed = true;
+				break;
+			}
+			catch(NullPointerException e){
+				log.error("Error closing driver. Driver is NULL");
+			}
+			catch(UnreachableBrowserException e){
+				log.error("Error: browser unreachable while closing driver");
+			}
+			catch(NoSuchSessionException e){
+				log.error("Error finding session for closing driver");			
+			}
+			attempt_count++;
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e1) {}
 		}
 	}
 	
@@ -349,15 +364,7 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-        
-        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);
-	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    
-	    // Launch website
-	    driver.navigate().to(url);
-	    driver.manage().window().maximize();
-
-		log.info("Opening Phantomjs WebDriver Connection using URL : "+url);
+        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);	    
 	    
 		return driver;
 	}

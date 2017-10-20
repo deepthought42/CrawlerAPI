@@ -19,9 +19,8 @@ public class TestRecord {
 
 	private String key;
 	private Date ran_at;
-	private boolean passes;
+	private Boolean passes;
 	private Page result;
-	private Test test;
 	
 	public TestRecord(Date ran_at, boolean passes){
 		this.setRanAt(ran_at);
@@ -30,11 +29,10 @@ public class TestRecord {
 		this.setKey(null);
 	}
 	
-	public TestRecord(Date ran_at, boolean passes, Page result, Test test){
+	public TestRecord(Date ran_at, Boolean passes, Page result){
 		this.setRanAt(ran_at);
 		this.setPasses(passes);
 		this.setPage(result);
-		this.setTest(test);
 		this.setKey(null);
 	}
 	
@@ -70,14 +68,14 @@ public class TestRecord {
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public boolean getPasses(){
+	public Boolean getPasses(){
 		return this.passes;
 	}
 	
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public void setPasses(boolean passing){
+	public void setPasses(Boolean passing){
 		this.passes = passing;
 	}
 	
@@ -88,12 +86,4 @@ public class TestRecord {
 	public void setKey(String key) {
 		this.key = key;
 	}
-
-	public Test getTest() {
-		return test;
-	}
-
-	public void setTest(Test test) {
-		this.test = test;
-	}	
 }

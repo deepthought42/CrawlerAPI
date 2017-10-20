@@ -10,6 +10,7 @@ import com.qanairy.persistence.DataAccessObject;
 
 import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -20,7 +21,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 * {@inheritDoc}
 	 */
 	public ITestRecord convertToRecord(OrientConnectionFactory connection, TestRecord record){
-		ITestRecord testRecord = connection.getTransaction().addVertex(UUID.randomUUID(), ITestRecord.class);
+		ITestRecord testRecord = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITestRecord.class);
 
 		PageRepository page_repo = new PageRepository();
 		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));
@@ -36,7 +37,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 * @return generated key
 	 */
 	public String generateKey(TestRecord record) {
-		return record.getTest().getKey()+":"+record.getRanAt();
+		return record.getRanAt().toString()+"::"+record.getPasses();
 	}
 
 	/**

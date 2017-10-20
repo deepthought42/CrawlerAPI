@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -32,6 +35,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.GroupRepository;
+import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.IDomain;
@@ -144,7 +148,8 @@ public class TestController {
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getUnverifiedTests(HttpServletRequest request, 
-			   								 @RequestParam(value="url", required=true) String url) throws DomainNotOwnedByAccountException, UnknownAccountException {
+														@RequestParam(value="url", required=true) String url) 
+																throws DomainNotOwnedByAccountException, UnknownAccountException {
 		
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -176,15 +181,13 @@ public class TestController {
 	 * @return
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
-	@RequestMapping(path="/updateCorrectness/{key}", method=RequestMethod.PUT)
-	public @ResponseBody Test updateCorrectness(HttpServletRequest request, 
-										 @PathVariable(value="key") String key, 
-										 @RequestParam(value="correct", required=true) boolean correct){
+	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
+	public @ResponseBody Test updateCorrectness(@RequestParam(value="key", required=true) String key, 
+										 		@RequestParam(value="correct", required=true) boolean correct){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
-		orient_connection.save();
 
 		TestRepository test_record = new TestRepository();
 		return test_record.convertFromRecord(itest);
@@ -220,21 +223,80 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTest(@PathVariable("key") String key, 
-											@RequestParam("browser_type") String browser_type) throws MalformedURLException{
+	public @ResponseBody TestRecord runTest(@PathVariable(value="key", required=true) String key, 
+											@RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
-		TestRepository test_record = new TestRepository();
-
-		Test test = test_record.convertFromRecord(itest);
 		TestRecord record = null;
-		Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
-		System.out.println(" Test Received :: " + test);
-		record = TestingActor.runTest(test, browser);
-		browser.close();
 
+		if(itest.getKey().equals(key)){
+			TestRepository test_record = new TestRepository();
+	
+			Test test = test_record.convertFromRecord(itest);
+			Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
+			record = TestingActor.runTest(test, browser);
+			
+			TestRecordRepository test_record_record = new TestRecordRepository();
+			itest.addRecord(test_record_record.convertToRecord(connection, record));
+			itest.setCorrect(record.getPasses());
+			itest.setLastRunTime(new Date());
+			
+			browser.close();
+		}
+		else{
+			System.out.println("test found does not match key :: " + key);
+		}
+		connection.close();
+		
 		return record;
+	}
+
+    /**
+	 * Runs test with a given key
+	 * 
+	 * @param key
+	 * @return
+	 * @throws MalformedURLException 
+	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+	@RequestMapping(path="/runAll", method = RequestMethod.POST)
+	public @ResponseBody Map<String, Boolean> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
+												@RequestParam(value="browser_type", required=true) String browser_type) 
+														throws MalformedURLException{
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+		
+    	Map<String, Boolean> test_results = new HashMap<String, Boolean>();
+    	for(String key : test_keys){
+    		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
+    		
+    		while(itest_iter.hasNext()){
+    			ITest itest = itest_iter.next();
+        		TestRecord record = null;
+        		
+	    		if(itest.getKey().equals(key)){
+	    			TestRepository test_record = new TestRepository();
+	    	
+	    			Test test = test_record.convertFromRecord(itest);
+	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
+	    			record = TestingActor.runTest(test, browser);
+	    			
+	    			TestRecordRepository test_record_record = new TestRecordRepository();
+	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
+	    			itest.setCorrect(record.getPasses());
+	    			itest.setLastRunTime(new Date());
+	    			
+	    			test_results.put(test.getKey(), record.getPasses());
+	    			browser.close();
+	    		}
+	    		else{
+	    			System.out.println("test found does not match key :: " + key);
+	    		}
+    		}
+    	}
+		connection.close();
+		
+		return test_results;
 	}
 
 	/**
@@ -292,7 +354,7 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
-	public @ResponseBody Test addGroup(@RequestParam(value="name", required=true) String name,
+	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=true) String description,
 										@RequestParam(value="key", required=true) String key){
 		Group group = new Group(name, description);
@@ -302,54 +364,59 @@ public class TestController {
 		ITest itest = itest_iter.next();
 		Iterator<IGroup> group_iter = itest.getGroups().iterator();
 		IGroup igroup = null;
-		GroupRepository group_repo = new GroupRepository();
+
 		while(group_iter.hasNext()){
 			igroup = group_iter.next();
 			if(igroup.getName().equals(name)){
 				return null;
+				//would be better to return an already exists status/error
 			}
 		}
 		
-		itest.addGroup(group_repo.convertToRecord(orient_connection, group));
-		orient_connection.save();
-
-		TestRepository test_record = new TestRepository();
-
-		return test_record.convertFromRecord(itest);
+		GroupRepository group_repo = new GroupRepository();
+		igroup = group_repo.convertToRecord(orient_connection, group);
+		itest.addGroup(igroup);
+		group.setKey(igroup.getKey());
+		
+		return group;
 	}
 
     /**
 	 * Adds given group to test with given key
 	 * 
-	 * @param group String representing name of group to add to test
+	 * @param group_key String key representing group to add to test
 	 * @param test_key key for test that will have group added to it
 	 * 	
 	 * @return the updated test
 	 */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
-	public @ResponseBody Test removeGroup(@RequestParam(value="name", required=true) String name,
-										@RequestParam(value="key", required=true) String key){
+	public @ResponseBody Boolean removeGroup(@RequestParam(value="group_key", required=true) String group_key,
+										  	 @RequestParam(value="test_key", required=true) String test_key){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
-		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
+		Iterator<ITest> itest_iter = Test.findByKey(test_key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		Iterator<IGroup> group_iter = itest.getGroups().iterator();
-		
+		boolean was_removed = false;
 		IGroup igroup = null;
 		while(group_iter.hasNext()){
+			System.out.println("Group iter has next");
 			igroup = group_iter.next();
+			if(igroup.getKey().equals(group_key)){
+				System.out.println("group is being removed");
+				itest.removeGroup(igroup);
+				was_removed=true;
+			}
 		}
 
-		itest.removeGroup(igroup);
-
-		TestRepository test_record = new TestRepository();
-
-		return test_record.convertFromRecord(itest);
+		orient_connection.close();
+		return was_removed;
 	}
 
 	/**
-	 * Retrieves list of all tests from the database 
+	 * Retrieves list of all tests from the database
+	 * 
 	 * @param url
 	 * 
 	 * @return
@@ -357,7 +424,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
-			   								 @RequestParam(value="url", required=true) String url) {
+			   								   @RequestParam(value="url", required=true) String url) {
 		List<Test> test_list = new ArrayList<Test>();
 		List<Group> groups = new ArrayList<Group>();
 		try {

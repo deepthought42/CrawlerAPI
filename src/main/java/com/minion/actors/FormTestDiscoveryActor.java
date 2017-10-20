@@ -53,6 +53,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			}
 			
 			//get first page in path
+			System.out.println("Form Test discovering using path with first object of type :: "+path.getPath().get(0).getType());
 			Page page = (Page)path.getPath().get(0);
 			//if(path_obj instanceof Page){
 				//Page page = (Page)path_obj;
@@ -82,30 +83,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				
 			  	browser.close();
 		}
-	}
-	
-	/**
-	 * Runs an {@code Test} 
-	 * 
-	 * @param test test to be ran
-	 * 
-	 * @pre test != null
-	 * @return {@link TestRecord} containing analytics for test run. 
-	 * @throws IOException 
-	 */
-	public static TestRecord runTest(Test test, String browser_type) throws IOException{		
-		assert test != null;
-		
-		System.out.println("Running test...");
-		boolean passing = false;
-	  	Browser browser = new Browser(test.getPath().firstPage().getUrl().toString(), browser_type);
-		Page page = Crawler.crawlPath(test.getPath(), browser);
-	  	browser.close();
-
-		passing = test.isTestPassing(page);
-		
-		TestRecord test_record = new TestRecord(new Date(), passing );
-		return test_record;
 	}
 	
 	public static List<Path> generateBoundaryTests(PageElement input){
@@ -396,7 +373,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					List<Path> path_list = generateRuleTests(input_elem, rule);
 					System.out.println("# rule tests created : " + path_list.size());
 					for(Path curr_path : path_list){
-						Path clone_path = Path.clone(curr_path);
+						Path clone_path = Path.clone(path);
+						clone_path.getPath().addAll(curr_path.getPath());
 
 						System.out.println("loaded clone path for test");
 						form_paths.add(clone_path);

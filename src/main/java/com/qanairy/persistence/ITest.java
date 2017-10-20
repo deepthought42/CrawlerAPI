@@ -1,16 +1,14 @@
 package com.qanairy.persistence;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import com.qanairy.models.TestRecord;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
-import com.qanairy.models.Domain;
-import com.qanairy.models.Group;
-import com.qanairy.models.Page;
-import com.qanairy.models.TestRecord;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
@@ -57,6 +55,18 @@ public interface ITest  {
 	 */
 	@Property("correct")
 	public void setCorrect(Boolean correct);
+	
+	/**
+	 * @return date timestamp of when test was last ran
+	 */
+	@Property("last_ran")
+	public Date getLastRunTime();
+	
+	/**
+	 * sets date timestamp of when test was last ran
+	 */
+	@Property("last_ran")
+	public void setLastRunTime(Date timestamp);
 	
 	/**
 	 * @return the domain for the current test
@@ -137,12 +147,12 @@ public interface ITest  {
 	/**
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
 	 */
-	@Adjacency(label="has")
+	@Adjacency(direction=Direction.OUT, label="has_record")
 	public Iterable<ITestRecord> getRecords();
 	
 	/**
 	 * Sets the {@link TestRecord} that is the result of executing the path 
 	 */
-	@Adjacency(label="result")
+	@Adjacency(direction=Direction.OUT, label="has_record")
 	public void setRecords(List<TestRecord> page);
 }

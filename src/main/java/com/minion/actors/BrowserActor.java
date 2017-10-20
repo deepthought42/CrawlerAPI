@@ -188,8 +188,12 @@ public class BrowserActor extends UntypedActor {
 
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-			  	this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
-
+				try{
+					this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
+				}
+				catch(NullPointerException e){
+					System.out.println("Failed to open connection to browser");
+				}
 			  	Page result_page = null;
 
 				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
@@ -210,7 +214,7 @@ public class BrowserActor extends UntypedActor {
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
-						Path crawl_path = new Path(exploratory_path.getPath());
+						Path crawl_path = Path.clone(exploratory_path);
 						crawl_path.add(action);
 						result_page = Crawler.crawlPath(crawl_path, this.browser);
 						
@@ -221,14 +225,11 @@ public class BrowserActor extends UntypedActor {
 					  	else{
 					  		System.out.println("exploratory path -> PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
 
-					  		if(ExploratoryPath.hasCycle(exploratory_path, last_page)){
+					  		if(ExploratoryPath.hasCycle(crawl_path, last_page)){
 					  			break;
 					  		}
-					  		//crawl_path.add(action);
+
 					  		crawl_path.setIsUseful(true);
-							if(crawl_path.size() > 1){
-								crawl_path.add(result_page);
-							}
 							
 							PathRepository path_repo = new PathRepository();
 							crawl_path.setKey(path_repo.generateKey(crawl_path));
@@ -254,8 +255,9 @@ public class BrowserActor extends UntypedActor {
 							//tell memory worker of path
 							//memory_actor.tell(test_msg, getSelf() );
 							//broadcast test
-							crawl_path.add(result_page);
-							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), crawl_path);
+							Path new_crawl_path = Path.clone(crawl_path);
+							new_crawl_path.add(result_page);
+							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_crawl_path);
 
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 							path_expansion_actor.tell(path_msg, getSelf() );
@@ -279,7 +281,12 @@ public class BrowserActor extends UntypedActor {
 					System.err.println("FIRST PATH ELEMENT TYPE ::   ->   " +obj.getType());
 				}
 				
-				this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+				try{
+					this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+				}
+				catch(NullPointerException e){
+					System.out.println("Failed to open connection to browser");
+				}
 				Page result_page = null;
 				
 				if(path.getPath() != null){
@@ -325,8 +332,9 @@ public class BrowserActor extends UntypedActor {
 						PastPathExperienceController.broadcastTestExperience(test);
 					}
 					
-					path.add(result_page);
-					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path, acct_msg.getOptions());
+					Path new_crawl_path = Path.clone(path);
+					new_crawl_path.add(result_page);
+					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_crawl_path, acct_msg.getOptions());
 					
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
@@ -337,8 +345,14 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
-			  	Browser browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
-			  	
+				Browser browser = null;
+				try{
+					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
+				}
+				catch(NullPointerException e){
+					System.out.println("Failed to open connection to browser");
+				}
+				
 			  	Path path = new Path();
 			  	Page page_obj = browser.getPage();
 			  	path.getPath().add(page_obj);

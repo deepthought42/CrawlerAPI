@@ -63,7 +63,7 @@ public class TestingActor extends UntypedActor {
 					System.out.println("Saving test, cuz it has changed");
 					
 					//Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
-					TestRecord record = new TestRecord(new Date(), false, resulting_page, test);
+					TestRecord record = new TestRecord(new Date(), false, resulting_page);
 					test.addRecord(record);
 					
 					System.out.println("Test Actor -> Sending test record to be saved");
@@ -77,7 +77,7 @@ public class TestingActor extends UntypedActor {
 					
 					TestRecord record = null;
 					if(!test.isCorrect()){
-						record = new TestRecord(new Date(), false, resulting_page, test);
+						record = new TestRecord(new Date(), false, resulting_page);
 					}
 					else{
 						record = new TestRecord(new Date(), true);
@@ -118,15 +118,13 @@ public class TestingActor extends UntypedActor {
 	 public static TestRecord runTest(Test test, Browser browser){				
 		 assert test != null;		
 	 			
-		 System.out.println("Running test...");		
-		 boolean passing = false;		
+		 System.out.println("Running test...expecting status :: "+test.isCorrect());		
+		 Boolean passing = false;		
 		 Page page = null;
 		 TestRecord test_record = null;
 		 try {		
 			 page = Crawler.crawlPath(test.getPath(), browser);	
-		  	 browser.close();
-
-			 passing = test.isTestPassing(page);
+			 passing = test.isTestPassing(page, test.isCorrect());
 			 
 			 Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();
@@ -138,12 +136,8 @@ public class TestingActor extends UntypedActor {
 			    
 		    test.setBrowserStatus(browserName, passing);
 			    
-			 if(passing){
-				 test_record = new TestRecord(new Date(), passing);	 
-			 }
-			 else{
-				 test_record = new TestRecord(new Date(), passing, page, test );
-			 }
+			 System.out.println("Test status :: "+passing);
+			 test_record = new TestRecord(new Date(), passing, page);
 		 } catch (IOException e) {		
 			 e.printStackTrace();		
 		 }	

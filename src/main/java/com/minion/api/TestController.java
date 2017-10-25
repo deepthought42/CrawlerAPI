@@ -117,7 +117,62 @@ public class TestController {
 		
 		return verified_tests;
     }
-	
+
+    /**
+	 * Retrieves list of all tests from the database 
+	 * @param url
+	 * 
+	 * @return list of tests previously discovered for given url
+	 * @throws UnknownAccountException 
+	 * @throws DomainNotOwnedByAccountException 
+	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+	@RequestMapping(path="/failing", method = RequestMethod.GET)
+	public @ResponseBody Map<String, Integer> getFailingTestByDomain(HttpServletRequest request, 
+			   								 	 	@RequestParam(value="url", required=true) String url) 
+			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
+    	//make sure domain belongs to user account first
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+       	boolean owned_by_acct = false;
+
+    	for(Domain domain_rec : acct.getDomains()){
+    		if(domain_rec.getUrl().equals(url)){
+    			owned_by_acct = true;
+    			break;
+    		}
+    	}
+    	
+    	if(!owned_by_acct){
+    		throw new DomainNotOwnedByAccountException();
+    	}
+    	
+		DomainRepository domain_repo = new DomainRepository();
+    	
+		IDomain idomain = domain_repo.find(url);
+		Iterator<ITest> tests = idomain.getTests().iterator();
+		int failed_tests = 0;
+		
+		while(tests.hasNext()){
+			ITest itest = tests.next();
+			if(itest.getCorrect() != null && itest.getCorrect() == false){
+				failed_tests++;
+			}
+		}
+		
+		System.out.println("Running tests");
+		
+        Map<String, Integer> result = new HashMap<String, Integer>();
+        result.put("failing", failed_tests);
+		return result;
+    }
+
 	/**
 	 * Retrieves list of all tests from the database 
 	 * 
@@ -240,7 +295,7 @@ public class TestController {
 			TestRecordRepository test_record_record = new TestRecordRepository();
 			itest.addRecord(test_record_record.convertToRecord(connection, record));
 			itest.setCorrect(record.getPasses());
-			itest.setLastRunTime(new Date());
+			itest.setLastRunTimestamp(new Date());
 			
 			browser.close();
 		}
@@ -284,7 +339,7 @@ public class TestController {
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
 	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
 	    			itest.setCorrect(record.getPasses());
-	    			itest.setLastRunTime(new Date());
+	    			itest.setLastRunTimestamp(new Date());
 	    			
 	    			test_results.put(test.getKey(), record.getPasses());
 	    			browser.close();

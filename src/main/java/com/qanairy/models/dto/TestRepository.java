@@ -140,7 +140,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 				igroups.add(group_repo.convertToRecord(connection, group));
 			}
 			test_record.setGroups(igroups);
-			
+			test_record.setLastRunTimestamp(test.getLastRunTimestamp());
 			test_record.setName(test.getName());
 			test_record.setCorrect(test.isCorrect());
 		}	
@@ -167,7 +167,13 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
 		test.setPath(path_record.convertFromRecord(itest.getPath()));
-		test.setLastRunTime(itest.getLastRunTime());
+		test.setLastRunTimestamp(itest.getLastRunTimestamp());
+		
+		try{
+			test.setRunTime(itest.getRunTime());
+		}catch(NullPointerException e){
+			test.setRunTime(0L);
+		}
 		Iterator<ITestRecord> test_record_iter = itest.getRecords().iterator();
 		List<TestRecord> test_records = new ArrayList<TestRecord>();
 		while(test_record_iter != null && test_record_iter.hasNext()){

@@ -186,6 +186,8 @@ public class BrowserActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
+			final long browserActorStartTime = System.currentTimeMillis();
+			
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 				try{
@@ -216,8 +218,16 @@ public class BrowserActor extends UntypedActor {
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path crawl_path = Path.clone(exploratory_path);
 						crawl_path.add(action);
+
+						final long pathCrawlStartTime = System.currentTimeMillis();
+
 						result_page = Crawler.crawlPath(crawl_path, this.browser);
 						
+						final long pathCrawlEndTime = System.currentTimeMillis();
+
+						long pathCrawlRunTime = pathCrawlStartTime - pathCrawlEndTime;
+						
+						System.out.println("Total exploratory path crawl execution time: " + (pathCrawlStartTime - pathCrawlEndTime) );
 						if(last_page.equals(result_page)){
 					  		System.out.println("exploratory path -> Page sources match, marking not valuable, (Path Message)");
 					  		crawl_path.setIsUseful(false);
@@ -235,6 +245,8 @@ public class BrowserActor extends UntypedActor {
 							crawl_path.setKey(path_repo.generateKey(crawl_path));
 							
 							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
+							test.setRunTime(pathCrawlRunTime);
+							
 							TestRepository test_repo = new TestRepository();
 							test.setKey(test_repo.generateKey(test));
 							OrientConnectionFactory connection = new OrientConnectionFactory();
@@ -242,18 +254,18 @@ public class BrowserActor extends UntypedActor {
 							connection.close();
 
 							if(test_record == null){
-								//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+								Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 								//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 								//work_allocator.tell(test_msg, getSelf() );
+								//tell memory worker of path
+								final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+															
+								//tell memory worker of path
+								memory_actor.tell(test_msg, getSelf() );
 								
 								PastPathExperienceController.broadcastTestExperience(test);
 							}
 
-							//tell memory worker of path
-							//final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-														
-							//tell memory worker of path
-							//memory_actor.tell(test_msg, getSelf() );
 							//broadcast test
 							Path new_crawl_path = Path.clone(crawl_path);
 							new_crawl_path.add(result_page);
@@ -290,7 +302,10 @@ public class BrowserActor extends UntypedActor {
 				Page result_page = null;
 				
 				if(path.getPath() != null){
+					final long pathCrawlStartTime = System.currentTimeMillis();
 					result_page = Crawler.crawlPath(path, this.browser);
+					final long pathCrawlEndTime = System.currentTimeMillis();
+					System.out.println("Path crawled in : " + (pathCrawlEndTime - pathCrawlStartTime));
 				}
 				
 				Page last_page = path.findLastPage();
@@ -377,6 +392,11 @@ public class BrowserActor extends UntypedActor {
 
 				browser.close();
 		   }
+			final long browserActorEndTime = System.currentTimeMillis();
+
+			long browserActorRunTime = browserActorStartTime - browserActorEndTime;
+			System.out.println("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
+
 		}else unhandled(message);
 	}
 }

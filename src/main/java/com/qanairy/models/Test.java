@@ -38,6 +38,8 @@ public class Test {
 	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	private List<Group> groups;
 	private Date last_run_time;
+
+	private long run_time_length;
 	/**
 	 * Construct a test with defaults of useful set to fault and 
 	 * spansMultipleDomains set to false
@@ -46,7 +48,7 @@ public class Test {
 		this.setRecords(new ArrayList<TestRecord>());
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTime(null);
+		this.setLastRunTimestamp(null);
 	}
 	
 	/**
@@ -68,7 +70,7 @@ public class Test {
 		this.correct = null;
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTime(null);
+		this.setLastRunTimestamp(null);
 		this.setKey(null);
 	}
 	
@@ -91,7 +93,7 @@ public class Test {
 		this.correct = null;
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTime(null);
+		this.setLastRunTimestamp(null);
 		this.setKey(key);
 	}
 	
@@ -121,7 +123,7 @@ public class Test {
 		this.setUseful(isUseful);
 		this.setSpansMultipleDomains(doesSpanMultipleDomains);
 		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTime(null);
+		this.setLastRunTimestamp(null);
 		this.setKey(key);
 	}
 	
@@ -395,7 +397,7 @@ public class Test {
 	/**
 	 * @return date timestamp of when test was last ran
 	 */
-	public Date getLastRunTime(){
+	public Date getLastRunTimestamp(){
 		return this.last_run_time;
 	}
 	
@@ -404,8 +406,16 @@ public class Test {
 	 * 
 	 * @param timestamp of last run as a {@link DateTime}
 	 */
-	public void setLastRunTime(Date timestamp){
+	public void setLastRunTimestamp(Date timestamp){
 		this.last_run_time = timestamp;
 	}
+
+	public void setRunTime(long pathCrawlRunTime) {
+		this.run_time_length = pathCrawlRunTime;
+		
+	}
 	
+	public long getRunTime(long pathCrawlRunTime) {
+		return this.run_time_length;
+	}
 }

@@ -81,7 +81,8 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		elem.setText(data.getText());
 		elem.setName(data.getName());
 		elem.setType(data.getType());
-
+		elem.setAttributes(data.getAttributes());
+		elem.setCssValues(data.getCssValues());
 		return elem;
 	}
 
@@ -116,6 +117,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			*/
 			//page_elem_record.setChildElements(child_elements_persist);
 			
+			page_elem_record.setAttributes(elem.getAttributes());
 			page_elem_record.setCssValues(elem.getCssValues());
 			page_elem_record.setName(elem.getName());
 			page_elem_record.setText(elem.getText());

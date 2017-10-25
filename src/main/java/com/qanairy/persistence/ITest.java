@@ -60,13 +60,26 @@ public interface ITest  {
 	 * @return date timestamp of when test was last ran
 	 */
 	@Property("last_ran")
-	public Date getLastRunTime();
+	public Date getLastRunTimestamp();
 	
 	/**
 	 * sets date timestamp of when test was last ran
 	 */
 	@Property("last_ran")
-	public void setLastRunTime(Date timestamp);
+	public void setLastRunTimestamp(Date timestamp);
+	
+	/**
+	 * @return date timestamp of when test was last ran
+	 */
+	@Property("run_time")
+	public long getRunTime();
+	
+	/**
+	 * sets date timestamp of when test was last ran
+	 */
+	@Property("run_time")
+	public void setRunTime(long timestamp);
+	
 	
 	/**
 	 * @return the domain for the current test

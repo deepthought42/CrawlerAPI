@@ -21,7 +21,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 * {@inheritDoc}
 	 */
 	public ITestRecord convertToRecord(OrientConnectionFactory connection, TestRecord record){
-		ITestRecord testRecord = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITestRecord.class);
+		ITestRecord testRecord = connection.getTransaction().addVertex("class:"+ITestRecord.class.getSimpleName()+","+UUID.randomUUID(), ITestRecord.class);
 
 		PageRepository page_repo = new PageRepository();
 		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));

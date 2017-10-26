@@ -415,7 +415,7 @@ public class Test {
 		
 	}
 	
-	public long getRunTime(long pathCrawlRunTime) {
+	public long getRunTime() {
 		return this.run_time_length;
 	}
 }

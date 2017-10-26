@@ -46,13 +46,22 @@ public class TestingActor extends UntypedActor {
 			if(acct_msg.getData() instanceof Test){
 				Test test = (Test)acct_msg.getData();
 				Path path = test.getPath();
+
+				final long pathCrawlStartTime = System.currentTimeMillis();
+
 			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
 
 				Page resulting_page = null;
 				if(path.getPath() != null){
 					resulting_page = Crawler.crawlPath(path, browser );
 				}
-				
+				final long pathCrawlEndTime = System.currentTimeMillis();
+
+				long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
+				System.out.println("Path crawl time :: "+pathCrawlRunTime);
+
+				test.setRunTime(pathCrawlRunTime);
+
 				//get current page of browser
 				Page expected_page = test.getResult();
 				//Page last_page = path.findLastPage();
@@ -64,6 +73,7 @@ public class TestingActor extends UntypedActor {
 					
 					//Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
 					TestRecord record = new TestRecord(new Date(), false, resulting_page);
+					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 					
 					System.out.println("Test Actor -> Sending test record to be saved");
@@ -122,6 +132,8 @@ public class TestingActor extends UntypedActor {
 		 Boolean passing = false;		
 		 Page page = null;
 		 TestRecord test_record = null;
+		 final long pathCrawlStartTime = System.currentTimeMillis();
+
 		 try {		
 			 page = Crawler.crawlPath(test.getPath(), browser);	
 			 passing = test.isTestPassing(page, test.isCorrect());
@@ -142,6 +154,13 @@ public class TestingActor extends UntypedActor {
 			 e.printStackTrace();		
 		 }	
 		
+		 final long pathCrawlEndTime = System.currentTimeMillis();
+
+		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
+		 System.out.println("test Path crawl time :: "+pathCrawlRunTime);
+
+		 test_record.setRunTime(pathCrawlRunTime);
+
 		 return test_record;		
 	 }
 }

@@ -340,8 +340,8 @@ public class TestController {
 	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
 	    			itest.setCorrect(record.getPasses());
 	    			itest.setLastRunTimestamp(new Date());
-	    			
 	    			test_results.put(test.getKey(), record.getPasses());
+	    			itest.setRunTime(record.getRunTime());
 	    			browser.close();
 	    		}
 	    		else{

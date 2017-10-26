@@ -78,7 +78,7 @@ public interface ITest  {
 	 * sets date timestamp of when test was last ran
 	 */
 	@Property("run_time")
-	public void setRunTime(long timestamp);
+	public void setRunTime(long milliseconds);
 	
 	
 	/**

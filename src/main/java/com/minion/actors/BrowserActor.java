@@ -225,7 +225,7 @@ public class BrowserActor extends UntypedActor {
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
-						long pathCrawlRunTime = pathCrawlStartTime - pathCrawlEndTime;
+						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 						
 						System.out.println("Total exploratory path crawl execution time: " + (pathCrawlStartTime - pathCrawlEndTime) );
 						if(last_page.equals(result_page)){
@@ -249,22 +249,19 @@ public class BrowserActor extends UntypedActor {
 							
 							TestRepository test_repo = new TestRepository();
 							test.setKey(test_repo.generateKey(test));
-							OrientConnectionFactory connection = new OrientConnectionFactory();
-							Test test_record = test_repo.find(connection, test.getKey());
-							connection.close();
-
-							if(test_record == null){
-								Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-								//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-								//work_allocator.tell(test_msg, getSelf() );
-								//tell memory worker of path
-								final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-															
-								//tell memory worker of path
-								memory_actor.tell(test_msg, getSelf() );
-								
-								PastPathExperienceController.broadcastTestExperience(test);
-							}
+							
+							
+							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+							//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+							//work_allocator.tell(test_msg, getSelf() );
+							//tell memory worker of path
+							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+														
+							//tell memory worker of path
+							memory_actor.tell(test_msg, getSelf() );
+							
+							PastPathExperienceController.broadcastTestExperience(test);
+							
 
 							//broadcast test
 							Path new_crawl_path = Path.clone(crawl_path);
@@ -300,14 +297,16 @@ public class BrowserActor extends UntypedActor {
 					System.out.println("Failed to open connection to browser");
 				}
 				Page result_page = null;
-				
+				final long pathCrawlStartTime = System.currentTimeMillis();
+
 				if(path.getPath() != null){
-					final long pathCrawlStartTime = System.currentTimeMillis();
-					result_page = Crawler.crawlPath(path, this.browser);
-					final long pathCrawlEndTime = System.currentTimeMillis();
-					System.out.println("Path crawled in : " + (pathCrawlEndTime - pathCrawlStartTime));
+					result_page = Crawler.crawlPath(path, this.browser);	
 				}
 				
+				final long pathCrawlEndTime = System.currentTimeMillis();
+				System.out.println("Path crawled in : " + (pathCrawlEndTime - pathCrawlStartTime));
+				
+
 				Page last_page = path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
 				
@@ -327,25 +326,24 @@ public class BrowserActor extends UntypedActor {
 					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
 					TestRepository test_repo = new TestRepository();
 					test.setKey(test_repo.generateKey(test));
-					
+					long pathCrawlTime = pathCrawlEndTime - pathCrawlStartTime;
+					System.out.println("Path crawl time :: "+pathCrawlTime);
+					test.setRunTime(pathCrawlTime);
+
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-					OrientConnectionFactory connection = new OrientConnectionFactory();
-					Test test_record = test_repo.find(connection, test.getKey());
 
-					if(test_record == null){
-						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-						//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						//work_allocator.tell(test_msg, getSelf() );	
-						
-						//tell memory worker of path
-						final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-						
-						//tell memory worker of path
-						memory_actor.tell(test_msg, getSelf() );
-						//broadcast test
-						PastPathExperienceController.broadcastTestExperience(test);
-					}
+					//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+					//work_allocator.tell(test_msg, getSelf() );	
+					
+					//tell memory worker of path
+					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+					
+					//tell memory worker of path
+					memory_actor.tell(test_msg, getSelf() );
+					//broadcast test
+					PastPathExperienceController.broadcastTestExperience(test);
 					
 					Path new_crawl_path = Path.clone(path);
 					new_crawl_path.add(result_page);

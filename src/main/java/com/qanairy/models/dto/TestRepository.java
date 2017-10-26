@@ -141,6 +141,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			}
 			test_record.setGroups(igroups);
 			test_record.setLastRunTimestamp(test.getLastRunTimestamp());
+			test_record.setRunTime(test.getRunTime());
 			test_record.setName(test.getName());
 			test_record.setCorrect(test.isCorrect());
 		}	
@@ -168,7 +169,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setCorrect(itest.getCorrect());
 		test.setPath(path_record.convertFromRecord(itest.getPath()));
 		test.setLastRunTimestamp(itest.getLastRunTimestamp());
-		
+
 		try{
 			test.setRunTime(itest.getRunTime());
 		}catch(NullPointerException e){

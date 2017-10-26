@@ -21,12 +21,14 @@ public class TestRecord {
 	private Date ran_at;
 	private Boolean passes;
 	private Page result;
-	
+	private long run_time_length;
+
 	public TestRecord(Date ran_at, boolean passes){
 		this.setRanAt(ran_at);
 		this.setPasses(passes);
 		this.setPage(null);
 		this.setKey(null);
+		this.setRunTime(-1L);
 	}
 	
 	public TestRecord(Date ran_at, Boolean passes, Page result){
@@ -34,6 +36,7 @@ public class TestRecord {
 		this.setPasses(passes);
 		this.setPage(result);
 		this.setKey(null);
+		this.setRunTime(-1L);
 	}
 	
 	public TestRecord(String key, Date ran_at, boolean passes, Page result){
@@ -41,6 +44,7 @@ public class TestRecord {
 		this.setPasses(passes);
 		this.setPage(result);
 		this.setKey(key);
+		this.setRunTime(-1L);
 	}
 	
 	/**
@@ -85,5 +89,13 @@ public class TestRecord {
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public void setRunTime(long pathCrawlRunTime) {
+		this.run_time_length = pathCrawlRunTime;
+	}
+	
+	public long getRunTime() {
+		return this.run_time_length;
 	}
 }

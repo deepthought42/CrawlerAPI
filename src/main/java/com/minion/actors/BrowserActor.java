@@ -305,7 +305,8 @@ public class BrowserActor extends UntypedActor {
 				
 				final long pathCrawlEndTime = System.currentTimeMillis();
 				System.out.println("Path crawled in : " + (pathCrawlEndTime - pathCrawlStartTime));
-				
+				long pathCrawlTime = pathCrawlEndTime - pathCrawlStartTime;
+
 
 				Page last_page = path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
@@ -326,7 +327,6 @@ public class BrowserActor extends UntypedActor {
 					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
 					TestRepository test_repo = new TestRepository();
 					test.setKey(test_repo.generateKey(test));
-					long pathCrawlTime = pathCrawlEndTime - pathCrawlStartTime;
 					System.out.println("Path crawl time :: "+pathCrawlTime);
 					test.setRunTime(pathCrawlTime);
 
@@ -392,7 +392,7 @@ public class BrowserActor extends UntypedActor {
 		   }
 			final long browserActorEndTime = System.currentTimeMillis();
 
-			long browserActorRunTime = browserActorStartTime - browserActorEndTime;
+			long browserActorRunTime = browserActorEndTime - browserActorStartTime;
 			System.out.println("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 
 		}else unhandled(message);

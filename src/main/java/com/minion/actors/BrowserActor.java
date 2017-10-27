@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.minion.actors.MemoryRegistryActor;
 
 import akka.actor.ActorRef;
@@ -18,7 +18,6 @@ import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rl.memory.Vocabulary;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -38,7 +37,7 @@ import com.qanairy.models.PathObject;
  *
  */
 public class BrowserActor extends UntypedActor {
-	private static Logger log = LogManager.getLogger(BrowserActor.class.getName());
+	private static Logger log = LoggerFactory.getLogger(BrowserActor.class.getName());
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -65,7 +64,7 @@ public class BrowserActor extends UntypedActor {
 	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
 		/*List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
 
-		System.out.println(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
+		log.info(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
 		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
 		
 		for(Object obj : definitions){
@@ -194,7 +193,7 @@ public class BrowserActor extends UntypedActor {
 					this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
 				}
 				catch(NullPointerException e){
-					System.out.println("Failed to open connection to browser");
+					log.warn("Failed to open connection to browser");
 				}
 			  	Page result_page = null;
 
@@ -227,14 +226,11 @@ public class BrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 						
-						System.out.println("Total exploratory path crawl execution time: " + (pathCrawlStartTime - pathCrawlEndTime) );
+						log.info("Total exploratory path crawl execution time: " + (pathCrawlStartTime - pathCrawlEndTime) );
 						if(last_page.equals(result_page)){
-					  		System.out.println("exploratory path -> Page sources match, marking not valuable, (Path Message)");
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{
-					  		System.out.println("exploratory path -> PAGES ARE DIFFERENT, PATH IS VALUABLE (Path Message)");
-
 					  		if(ExploratoryPath.hasCycle(crawl_path, last_page)){
 					  			break;
 					  		}
@@ -294,7 +290,7 @@ public class BrowserActor extends UntypedActor {
 					this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
 				}
 				catch(NullPointerException e){
-					System.out.println("Failed to open connection to browser");
+					log.warn("Failed to open connection to browser");
 				}
 				Page result_page = null;
 				final long pathCrawlStartTime = System.currentTimeMillis();
@@ -304,9 +300,8 @@ public class BrowserActor extends UntypedActor {
 				}
 				
 				final long pathCrawlEndTime = System.currentTimeMillis();
-				System.out.println("Path crawled in : " + (pathCrawlEndTime - pathCrawlStartTime));
+				log.warn("Path crawled in : " + (pathCrawlEndTime - pathCrawlStartTime));
 				long pathCrawlTime = pathCrawlEndTime - pathCrawlStartTime;
-
 
 				Page last_page = path.findLastPage();
 				last_page.setLandable(last_page.checkIfLandable());
@@ -327,11 +322,10 @@ public class BrowserActor extends UntypedActor {
 					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
 					TestRepository test_repo = new TestRepository();
 					test.setKey(test_repo.generateKey(test));
-					System.out.println("Path crawl time :: "+pathCrawlTime);
+
 					test.setRunTime(pathCrawlTime);
 
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
 					//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
@@ -363,7 +357,7 @@ public class BrowserActor extends UntypedActor {
 					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
 				}
 				catch(NullPointerException e){
-					System.out.println("Failed to open connection to browser");
+					log.warn("Failed to open connection to browser");
 				}
 				
 			  	Path path = new Path();
@@ -393,7 +387,7 @@ public class BrowserActor extends UntypedActor {
 			final long browserActorEndTime = System.currentTimeMillis();
 
 			long browserActorRunTime = browserActorEndTime - browserActorStartTime;
-			System.out.println("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
+			log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 
 		}else unhandled(message);
 	}

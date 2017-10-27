@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.Group;
 import com.qanairy.models.Test;
@@ -23,7 +23,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class TestRepository implements IPersistable<Test, ITest> {
-	private static Logger log = LogManager.getLogger(Test.class);
+	private static Logger log = LoggerFactory.getLogger(Test.class);
 
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
@@ -112,7 +112,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			PageRepository page_record = new PageRepository();
 			TestRecordRepository test_record_record = new TestRecordRepository();
 			
-			System.out.println("setting test_record path : "+test.getPath().size()); 
+			log.info("setting test_record path : "+test.getPath().size()); 
 			test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
 			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
 			

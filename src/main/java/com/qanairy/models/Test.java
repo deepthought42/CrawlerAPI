@@ -8,8 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
 import com.qanairy.models.dto.TestRepository;
@@ -24,7 +24,7 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  *
  */
 public class Test {
-    private static Logger log = LogManager.getLogger(Test.class);
+    private static Logger log = LoggerFactory.getLogger(Test.class);
     
 	private String key; 
 	private String name;
@@ -135,21 +135,20 @@ public class Test {
 	 */
 	public Boolean isTestPassing(Page page, boolean last_test_passing_status){
 		Boolean passing = null;
-		System.out.println("determining passing status..");
 		if(!last_test_passing_status && this.getResult().equals(page)){
-			System.out.println("Pages are equal and test is NOT already passing");
+			log.debug("Pages are equal and test is NOT already passing");
 			passing = false; 
 		}
 		else if(!last_test_passing_status && !this.getResult().equals(page)){
-			System.out.println("Pages are NOT equal and test is NOT already passing");
+			log.debug("Pages are NOT equal and test is NOT already passing");
 			passing = null;
 		}
 		else if(last_test_passing_status && this.getResult().equals(page)){
-			System.out.println("pages are equal and test is already marked as passing");
+			log.debug("pages are equal and test is already marked as passing");
 			passing = true;
 		}
 		else if(last_test_passing_status && !this.getResult().equals(page)){
-			System.out.println("pages are NOT equal and test is already passing");
+			log.debug("pages are NOT equal and test is already passing");
 			passing = false;
 		}
 		
@@ -212,17 +211,13 @@ public class Test {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("domain", pageUrl, ITest.class).iterator();
 		
-		System.out.println("Looking up tests by url" );
 		ArrayList<Test> list = new ArrayList<Test>();
-		int count = 0;
 		TestRepository test_record = new TestRepository();
 
 		while(test_iter.hasNext()){
-			System.out.println("Inspecting object " + count);
 			ITest itest = test_iter.next();
 			Test test = test_record.convertFromRecord(itest);
 			list.add(test);
-			count++;
 		}
 		orient_connection.close();
 		

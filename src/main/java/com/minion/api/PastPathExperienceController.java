@@ -11,22 +11,17 @@ import com.qanairy.models.Test;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.Principal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 /**
  * Defines methods for emitting data to subscribed clients
  */
 public class PastPathExperienceController {
-	private static Logger log = LogManager.getLogger(PastPathExperienceController.class);
+	private static Logger log = LoggerFactory.getLogger(PastPathExperienceController.class);
 	
     /**
      * Message emitter that sends {@link Test} to all registered clients
@@ -50,7 +45,6 @@ public class PastPathExperienceController {
 				}
 			}
 			else{
-				log.info("Adding pathobject to broadcast path : "+path_clone.getKey());
 				path_list.add(obj);
 			}
 		}

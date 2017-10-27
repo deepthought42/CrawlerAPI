@@ -4,8 +4,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.qanairy.models.Action;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAction;
@@ -18,7 +18,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 public class ActionRepository implements IPersistable<Action, IAction>{
 
 	@SuppressWarnings("unused")
-	private static Logger log = LogManager.getLogger(Action.class);
+	private static Logger log = LoggerFactory.getLogger(Action.class);
 
 	/**
 	 * {@inheritDoc}

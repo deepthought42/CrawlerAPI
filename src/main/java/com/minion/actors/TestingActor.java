@@ -6,8 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -30,7 +30,7 @@ import com.qanairy.models.PathObject;
  *
  */
 public class TestingActor extends UntypedActor {
-	private static Logger log = LogManager.getLogger(TestingActor.class);
+	private static Logger log = LoggerFactory.getLogger(TestingActor.class);
 
     /**
      * Inputs
@@ -58,7 +58,7 @@ public class TestingActor extends UntypedActor {
 				final long pathCrawlEndTime = System.currentTimeMillis();
 
 				long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-				System.out.println("Path crawl time :: "+pathCrawlRunTime);
+				//log.info("Path crawl time :: "+pathCrawlRunTime);
 
 				test.setRunTime(pathCrawlRunTime);
 
@@ -69,21 +69,21 @@ public class TestingActor extends UntypedActor {
 				resulting_page.setLandable(resulting_page.checkIfLandable());
 				
 				if(!resulting_page.equals(expected_page)){
-					System.out.println("Saving test, cuz it has changed");
+					//log.info("Saving test, cuz it has changed");
 					
 					//Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
 					TestRecord record = new TestRecord(new Date(), false, resulting_page);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 					
-					System.out.println("Test Actor -> Sending test record to be saved");
+					//log.info("Test Actor -> Sending test record to be saved");
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 					//tell memory worker of path
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
 				}
 				else{
-					System.out.println("Saving unchanged test");
+					//log.info("Saving unchanged test");
 					
 					TestRecord record = null;
 					if(!test.isCorrect()){
@@ -97,7 +97,7 @@ public class TestingActor extends UntypedActor {
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 
 					//tell memory worker of test record
-					System.out.println("Test Actor -> Sending test record to be saved");
+					//log.info("Test Actor -> Sending test record to be saved");
 
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
@@ -109,11 +109,11 @@ public class TestingActor extends UntypedActor {
 			  	browser.close();
 			}
 			else{
-				System.out.println("ERROR : Message contains unknown format");
+				log.warn("ERROR : Message contains unknown format");
 			}
 		}
 		else{
-			System.out.println("ERROR : Did not receive a Message object");
+			log.warn("ERROR : Did not receive a Message object");
 		}
 	}
 
@@ -128,7 +128,6 @@ public class TestingActor extends UntypedActor {
 	 public static TestRecord runTest(Test test, Browser browser){				
 		 assert test != null;		
 	 			
-		 System.out.println("Running test...expecting status :: "+test.isCorrect());		
 		 Boolean passing = false;		
 		 Page page = null;
 		 TestRecord test_record = null;
@@ -140,15 +139,14 @@ public class TestingActor extends UntypedActor {
 			 
 			 Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();
-			    System.out.println(browserName);
+			    //log.info(browserName);
 			    String os = cap.getPlatform().toString();
-			    System.out.println(os);
+			    //log.info(os);
 			    String v = cap.getVersion().toString();
-			    System.out.println(v);
+			    //log.info(v);
 			    
 		    test.setBrowserStatus(browserName, passing);
 			    
-			 System.out.println("Test status :: "+passing);
 			 test_record = new TestRecord(new Date(), passing, page);
 		 } catch (IOException e) {		
 			 e.printStackTrace();		
@@ -157,7 +155,6 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 System.out.println("test Path crawl time :: "+pathCrawlRunTime);
 
 		 test_record.setRunTime(pathCrawlRunTime);
 

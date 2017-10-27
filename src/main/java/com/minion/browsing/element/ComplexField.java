@@ -2,8 +2,8 @@ package com.minion.browsing.element;
 
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
@@ -22,7 +22,7 @@ import com.qanairy.models.PageElement;
  * Represents a container with an input field as well as label
  */
 public class ComplexField {
-	private static Logger log = LogManager.getLogger(ComplexField.class);
+	private static Logger log = LoggerFactory.getLogger(ComplexField.class);
 
 	private List<FormField> elements;
 	
@@ -58,24 +58,24 @@ public class ComplexField {
 				WebElement element = driver.findElement(By.xpath(elem.getInputElement().getXpath()));
 				actionFactory.execAction(element, value, action.getName());
 				
-				System.out.println("CRAWLER Performed action "+ action
+				log.info("CRAWLER Performed action "+ action
 						+ " On element with xpath :: "+elem.getInputElement().getXpath());
 			}
 			catch(StaleElementReferenceException e){
 				
-				System.out.println("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+				log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 						+ action + ". ");
 				wasPerformedSuccessfully = false;			
 			}
 			catch(ElementNotVisibleException e){
-				System.out.println("ELEMENT IS NOT CURRENTLY VISIBLE.");
+				log.info("ELEMENT IS NOT CURRENTLY VISIBLE.");
 			}
 			catch(NoSuchElementException e){
-				System.out.println(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+				log.info(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
 				wasPerformedSuccessfully = false;
 			}
 			catch(WebDriverException e){
-				System.out.println("Element can not have action performed on it at point performed");
+				log.info("Element can not have action performed on it at point performed");
 				wasPerformedSuccessfully = false;
 			}
 		}

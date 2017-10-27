@@ -20,8 +20,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
@@ -58,7 +58,7 @@ import com.qanairy.models.Page;
 @Scope("session")
 @RequestMapping("/tests")
 public class TestController {
-	private static Logger log = LogManager.getLogger(TestController.class);
+	private static Logger log = LoggerFactory.getLogger(TestController.class);
 
     @Autowired
     protected AccountService accountService;
@@ -165,9 +165,7 @@ public class TestController {
 				failed_tests++;
 			}
 		}
-		
-		System.out.println("Running tests");
-		
+				
         Map<String, Integer> result = new HashMap<String, Integer>();
         result.put("failing", failed_tests);
 		return result;
@@ -300,7 +298,7 @@ public class TestController {
 			browser.close();
 		}
 		else{
-			System.out.println("test found does not match key :: " + key);
+			log.warn("test found does not match key :: " + key);
 		}
 		connection.close();
 		
@@ -345,7 +343,7 @@ public class TestController {
 	    			browser.close();
 	    		}
 	    		else{
-	    			System.out.println("test found does not match key :: " + key);
+	    			log.warn("test found does not match key :: " + key);
 	    		}
     		}
     	}
@@ -379,8 +377,7 @@ public class TestController {
 				}
 			}
 		} catch (MalformedURLException e) {
-			System.out.println("ERROR GETTING TEST ");
-			e.printStackTrace();
+			log.warn(e.getMessage());
 		}
 		
 		List<TestRecord> group_records = new ArrayList<TestRecord>();
@@ -456,10 +453,8 @@ public class TestController {
 		boolean was_removed = false;
 		IGroup igroup = null;
 		while(group_iter.hasNext()){
-			System.out.println("Group iter has next");
 			igroup = group_iter.next();
 			if(igroup.getKey().equals(group_key)){
-				System.out.println("group is being removed");
 				itest.removeGroup(igroup);
 				was_removed=true;
 			}
@@ -491,7 +486,7 @@ public class TestController {
 				}
 			}
 		} catch (MalformedURLException e) {
-			System.out.println("ERROR GETTING TEST ");
+			log.warn(e.getMessage());
 			e.printStackTrace();
 		}
 		

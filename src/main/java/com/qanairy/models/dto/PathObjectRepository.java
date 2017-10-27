@@ -4,8 +4,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -22,7 +22,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathObjectRepository implements IPersistable<PathObject, IPathObject> {
-	private static Logger log = LogManager.getLogger(PathObject.class);
+	private static Logger log = LoggerFactory.getLogger(PathObject.class);
 
 	/**
 	 * {@inheritDoc}
@@ -40,7 +40,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
 		path_object_record.setType(path_obj.getType());
 		path_object_record.setKey(generateKey(path_obj));
-		System.out.println("Converting path object to record");
+		log.info("Converting path object to record");
 		if(path_obj instanceof Page){
 			
 		}
@@ -86,7 +86,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	public PathObject convertFromRecord(IPathObject data){
 		String type = data.getType();
 		
-		//System.out.println("data type :: " + data.getType()+" :: "+data.getClass().getName());
+		//log.info("data type :: " + data.getType()+" :: "+data.getClass().getName());
 		if(type.equals("Page")){
 			Page page_obj = null;
 			PageRepository page_record = new PageRepository();

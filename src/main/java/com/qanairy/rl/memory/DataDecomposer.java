@@ -21,8 +21,8 @@ public class DataDecomposer {
 		
 		Class<?> objClass = obj.getClass();
 	    Field[] fields = objClass.getFields();
-        //System.out.println("LIST CLASS:: "+ objClass);
-	   // System.out.println("FIELD COUNT : "+ fields.length);
+        //log.info("LIST CLASS:: "+ objClass);
+	   // log.info("FIELD COUNT : "+ fields.length);
 	    for(Field field : fields) {
 	        Object value = field.get(obj);
 	        if(value!=null){

@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import akka.actor.ActorSystem;
 
 
+
 /**
  * Initializes the system and launches it. 
  *
@@ -27,10 +28,10 @@ import akka.actor.ActorSystem;
 	@PropertySource("classpath:auth0.properties")
 })
 public class EntryPoint {
-	
+
 	public static void main(String[] args){
         SpringApplication.run(EntryPoint.class, args);
-        
+
         final ActorSystem system = ActorSystem.create("Qanairy-api");
    	}
 	

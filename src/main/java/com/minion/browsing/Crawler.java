@@ -2,10 +2,11 @@ package com.minion.browsing;
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -18,7 +19,7 @@ import com.qanairy.models.PathObject;
  * Provides methods for crawling webpages using selenium
  */
 public class Crawler {
-	private static Logger log = LogManager.getLogger(Crawler.class);
+	private static Logger log = LoggerFactory.getLogger(Crawler.class);
 
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
@@ -74,23 +75,21 @@ public class Crawler {
 	 */
 	public static Page crawlPath(Path path, Browser browser, Action final_action) throws java.util.NoSuchElementException, IOException{
 		assert path != null;
-		System.out.println("PATH :: "+path);
 
 		PageElement last_element = null;
 
 		//skip first node since we should have already loaded it during initialization
-	  	System.out.println("crawling path...");
 		for(PathObject current_obj: path.getPath()){
 			if(current_obj instanceof Page){
-				System.out.println("Current path node is a Page");
+				log.debug("Current path node is a Page");
 			}
 			else if(current_obj instanceof PageElement){
-				System.out.println("Current path node is a WebElement");
+				log.debug("Current path node is a WebElement");
 				last_element = (PageElement) current_obj;
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
-				System.out.println("Current path node is an Action");
+				log.debug("Current path node is an Action");
 				boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
 				//browser.updatePage( DateFormat.getDateInstance());
@@ -102,18 +101,13 @@ public class Crawler {
 				}while(!actionPerformedSuccessfully && attempts < 50);
 			}
 			else if(current_obj instanceof PageAlert){
-				System.out.println("Current path node is a PageAlert");
+				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
 			}
 		}
 
-
-		System.out.println("Lst element :: " + last_element.getXpath());
-		System.out.println("action to be performed :: " + final_action.getName());
-
 		last_element.performAction(final_action, browser.getDriver());
-	  	System.out.println("Path crawl completed");
 	  	Page page = browser.getPage();
 	  	return page;
 	}

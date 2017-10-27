@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.openqa.selenium.UnhandledAlertException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
@@ -17,7 +17,7 @@ import com.minion.browsing.Browser;
  *
  */
 public class Page extends PathObject {
-	private static Logger log = LogManager.getLogger(Page.class);
+	private static Logger log = LoggerFactory.getLogger(Page.class);
 
     private String key;
     private boolean landable = false;
@@ -89,8 +89,6 @@ public class Page extends PathObject {
 		this.setElementCounts(countTags(elements));
 		this.setLandable(isLandable);
 		this.setKey(null);
-		
-		System.out.println("Page object created");
 	}
 	
 	/**
@@ -128,7 +126,6 @@ public class Page extends PathObject {
 		browser.getDriver().get(this.getUrl().toString());
 		boolean landable = false;
 		if(this.equals(browser.getPage())){
-			System.out.println("Pages match in check for landability");
 			landable = true;
 		}
 		browser.close();

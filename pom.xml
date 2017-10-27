@@ -280,10 +280,12 @@
 		  <version>1.0.0</version>
 		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/com.getsentry.raven/raven-logback -->
 		<dependency>
-		    <groupId>io.sentry</groupId>
-		    <artifactId>sentry</artifactId>
-		    <version>1.6.1</version>
+		    <groupId>com.getsentry.raven</groupId>
+		    <artifactId>raven-logback</artifactId>
+		    <version>8.0.3</version>
 		</dependency>
+				
 	</dependencies>
 </project>

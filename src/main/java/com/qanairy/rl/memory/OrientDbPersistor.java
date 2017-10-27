@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
@@ -18,7 +18,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraph;
  * Persists data of various sorts into orientDB
  */
 public class OrientDbPersistor{
-	private static Logger log = LogManager.getLogger(OrientDbPersistor.class);
+	private static Logger log = LoggerFactory.getLogger(OrientDbPersistor.class);
 
 	public OrientGraph graph = null;
 	
@@ -53,7 +53,7 @@ public class OrientDbPersistor{
 		if (graph.getVertexType(obj.getClass().getSimpleName().toString()) == null){
             OClass vt = graph.createVertexType(obj.getClass().getSimpleName().toString());
             vt.createIndex(obj.getClass().getSimpleName(), OClass.INDEX_TYPE.UNIQUE, properties);
-            System.out.println("Created objectDefinition vertex type");
+            log.info("Created objectDefinition vertex type");
         }
 		return this.graph.addVertex("class:"+obj.getClass().getSimpleName().toString());
 	}
@@ -84,7 +84,7 @@ public class OrientDbPersistor{
 		}
 		catch(OConcurrentModificationException e){
 			graph.rollback();
-			//System.out.println("Concurrent Modification EXCEPTION Error thrown");
+			//log.info("Concurrent Modification EXCEPTION Error thrown");
 			e.printStackTrace();
 		}
 	}
@@ -116,7 +116,7 @@ public class OrientDbPersistor{
 	 */
 	public Iterable<Vertex> findVertices(Object obj) throws IllegalArgumentException, IllegalAccessException{
 		Field[] fieldArray = obj.getClass().getFields();
-		//System.out.println("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
+		//log.info("Retrieving object of type = ( " + obj.getType() + " ) from orientdb with value :: " + obj.getValue());
 		
 		Object fieldValue = 0;
 		for(Field field : fieldArray){
@@ -171,11 +171,11 @@ public class OrientDbPersistor{
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 
-			//System.out.println("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
+			//log.info("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
 			v = memory_iterator.next();
 		}
 		else{
-			System.out.println("Creating new vertex in OrientDB...");
+			log.info("Creating new vertex in OrientDB...");
 			v = this.addVertexType(obj, getProperties(obj));
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 			for(Field field : obj.getClass().getFields()){
@@ -215,15 +215,15 @@ public class OrientDbPersistor{
 		if(memory_iterator != null && memory_iterator.hasNext()){
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 
-			//System.out.println("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
+			//log.info("Finding and updating OBJECT DEFINITION with probability :: "+this.getProbability());
 			v = memory_iterator.next();
 			if(actions.length != 0){
-				System.out.println("......Actions : "+actions.length);
+				log.info("......Actions : "+actions.length);
 				v.setProperty("actions", actions);
 			}
 		}
 		else{
-			System.out.println("Creating new vertex in OrientDB...");
+			log.info("Creating new vertex in OrientDB...");
 			v = this.addVertexType(obj, getProperties(obj));
 			//find objDef in memory. If it exists then use value for memory, otherwise choose random value
 			for(Field field : obj.getClass().getFields()){
@@ -247,7 +247,7 @@ public class OrientDbPersistor{
 	}
 	
 	public void createVertex(Object obj){
-		System.out.println("Creating new vertex in OrientDB...");
+		log.info("Creating new vertex in OrientDB...");
 		
 		 Vertex v = this.addVertexType(obj, getProperties(obj));
 		 

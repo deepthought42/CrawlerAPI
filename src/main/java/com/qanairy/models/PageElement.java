@@ -14,8 +14,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
 
@@ -25,7 +25,7 @@ import com.minion.browsing.ActionFactory;
  *  maintained by PageElement though. 
  */
 public class PageElement extends PathObject{
-	private static Logger log = LogManager.getLogger(PageElement.class);
+	private static Logger log = LoggerFactory.getLogger(PageElement.class);
 
     private String key;
     private String screenshot;
@@ -63,14 +63,14 @@ public class PageElement extends PathObject{
 	 * Print Attributes for this element in a prettyish format
 	 */
 	public void printAttributes(){
-		System.out.println("+++++++++++++++++++++++++++++++++++++++");
+		log.info("+++++++++++++++++++++++++++++++++++++++");
 		for(int j=0; j < this.attributes.size(); j++){
 			System.out.print(this.attributes.get(j).getName() + " : ");
 			for(int i=0; i < attributes.get(j).getVals().size(); i++){
 				System.out.print( this.attributes.get(j).getVals().get(i) + " ");
 			}
 		}
-		System.out.println("\n+++++++++++++++++++++++++++++++++++++++");
+		log.info("\n+++++++++++++++++++++++++++++++++++++++");
 	}
 	
 	/**
@@ -84,9 +84,7 @@ public class PageElement extends PathObject{
 		//HashMap<String, String> cssValues = new HashMap<String,String>();
 		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
 		
-		Date start = new Date();
-		System.out.println("Loading " + cssList.length+ "  css properties for for page element...");
-		
+		Date start = new Date();		
 		for(String propertyName : cssList){
 			String element_value = element.getCssValue(propertyName);
 			if(element_value != null){
@@ -96,7 +94,7 @@ public class PageElement extends PathObject{
 		
 		Date end = new Date();
 		
-		System.out.println("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
+		log.info("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
 	}
 
 	/**
@@ -206,7 +204,6 @@ public class PageElement extends PathObject{
 		//get id for element
 		for(Attribute tag_attr : this.attributes){
 			if(tag_attr.getName().equals("id")){
-				System.out.println("ID FOUND ON CHECKBOX :: " + tag_attr.getVals());
 				return tag_attr.getVals();
 			}
 		}
@@ -300,24 +297,24 @@ public class PageElement extends PathObject{
 			WebElement element = driver.findElement(By.xpath(this.getXpath()));
 			actionFactory.execAction(element, value, action.getName());
 			
-			System.out.println("CRAWLER Performed action "+ action
+			log.info("CRAWLER Performed action "+ action
 					+ " On element with xpath :: "+this.getXpath());
 		}
 		catch(StaleElementReferenceException e){
 			
-			 System.out.println("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+			log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 					+ action + ". ");
 			wasPerformedSuccessfully = false;			
 		}
 		catch(ElementNotVisibleException e){
-			System.out.println("ELEMENT IS NOT CURRENTLY VISIBLE.");
+			//log.debug("ELEMENT IS NOT CURRENTLY VISIBLE.");
 		}
 		catch(NoSuchElementException e){
-			System.out.println(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+			//log.debug(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
 			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
-			System.out.println("Element can not have action performed on it at point performed");
+			log.info("Element can not have action performed on it at point performed");
 			wasPerformedSuccessfully = false;
 		}
 		

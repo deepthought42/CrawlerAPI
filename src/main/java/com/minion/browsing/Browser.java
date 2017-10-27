@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -57,7 +57,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
 public class Browser {
-	private static Logger log = LogManager.getLogger(Browser.class);
+	private static Logger log = LoggerFactory.getLogger(Browser.class);
 
 	private WebDriver driver = null;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
@@ -247,7 +247,7 @@ public class Browser {
 	    /*
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
-		System.out.println("Opening Firefox WebDriver connection using URL : " +url);
+		log.info("Opening Firefox WebDriver connection using URL : " +url);
 		//FirefoxProfile firefoxProfile = new FirefoxProfile();
 	    DesiredCapabilities capabilities = DesiredCapabilities.firefox();
 
@@ -267,7 +267,7 @@ public class Browser {
 	 * @return safari web driver
 	 */
 	public static WebDriver openWithSafari(String url) throws MalformedURLException, UnreachableBrowserException, GridException{
-		System.out.println("Opening Firefox WebDriver connection using URL : " +url);
+		log.info("Opening Firefox WebDriver connection using URL : " +url);
 	    DesiredCapabilities capabilities = DesiredCapabilities.safari();
 
 		WebDriver driver = new SafariDriver(capabilities);
@@ -286,11 +286,11 @@ public class Browser {
 	public static WebDriver openWithInternetExplorer(String url) throws MalformedURLException, UnreachableBrowserException, GridException {
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
-		System.out.println("Opening Safari WebDriver connection using URL : " +url);
+		log.info("Opening Safari WebDriver connection using URL : " +url);
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
 		WebDriver driver = new InternetExplorerDriver(capabilities);
-		System.out.println("Internet Explorer opened");
+		log.info("Internet Explorer opened");
 		
 		driver.get(url);
 		
@@ -566,8 +566,8 @@ public class Browser {
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
-				System.out.println("checking labels for id association");
-				System.out.println(label_elem.getAttribute("for") + " == " + id);
+				log.info("checking labels for id association");
+				log.info(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
 					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver));
@@ -576,7 +576,7 @@ public class Browser {
 			}
 		}
 		
-		System.out.println("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
+		log.info("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
 		
 		return null;
 	}
@@ -596,8 +596,8 @@ public class Browser {
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
-				System.out.println("checking labels for id association");
-				System.out.println(label_elem.getAttribute("for") + " == " + id);
+				log.info("checking labels for id association");
+				log.info(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
 					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver));
@@ -607,7 +607,7 @@ public class Browser {
 			}
 		}
 		
-		System.out.println("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
+		log.info("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
 		
 		return label_tags;
 	}
@@ -692,16 +692,16 @@ public class Browser {
 		log.info("Searching elements for radio/checkbox inputs : "+page.getElements().size());
 		for(PageElement tag : page.getElements()){
 			//PageElement tag = (PageElement)elem;
-			System.out.println("Examining tag element");
+			log.info("Examining tag element");
 			if(tag.getName().equalsIgnoreCase("input")){
 				//List<Attribute> attr_list = tag.getAttributes();
-				System.out.println("loaded attribute list ");
+				log.info("loaded attribute list ");
 				Attribute attr = tag.getAttribute("type");
 				if(attr != null){
 					for(String attr_val : attr.getVals()){
 						if(attr_val.equalsIgnoreCase("checkbox")){
 							/*CheckboxField field = new CheckboxField(tag);
-							System.out.println("identified checkbox :: "+tag.getText());
+							log.info("identified checkbox :: "+tag.getText());
 							
 							String[] id_vals = tag.getAttributeValues("id");
 							
@@ -715,7 +715,7 @@ public class Browser {
 						}
 						else if(attr_val.equalsIgnoreCase("radio")){
 							/*RadioField field = new RadioField(tag);
-							System.out.println("identified radio");
+							log.info("identified radio");
 							
 							String[] id_vals = tag.getAttributeValues("id");
 							
@@ -730,69 +730,69 @@ public class Browser {
 							break;
 						}
 						else if(attr_val.equalsIgnoreCase("text")){
-							System.out.println("text input encountered");
+							log.info("text input encountered");
 						}
 						else if(attr_val.equalsIgnoreCase("textarea")){
-							System.out.println("text area input encountered");
+							log.info("text area input encountered");
 						}
 						else if(attr_val.equalsIgnoreCase("color")){
-							System.out.println("color input encountered");
+							log.info("color input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("email")){
-							System.out.println("email input encountered");
+							log.info("email input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("file")){
-							System.out.println("file input encountered");
+							log.info("file input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("image")){
-							System.out.println("image input button encountered");
+							log.info("image input button encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("month")){
-							System.out.println("month and year input encountered");
+							log.info("month and year input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("number")){
-							System.out.println("number input encountered");
+							log.info("number input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("password")){
-							System.out.println("password input encountered");
+							log.info("password input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("range")){
-							System.out.println("range input encountered");
+							log.info("range input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("reset")){
-							System.out.println("reset input encountered");
+							log.info("reset input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("search")){
-							System.out.println("search input encountered");
+							log.info("search input encountered");
 		
 						}
 						else if(attr_val.equalsIgnoreCase("submit")){
-							System.out.println("submit input encountered");
+							log.info("submit input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("tel")){
-							System.out.println("telephone input encountered");
+							log.info("telephone input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("time")){
-							System.out.println("time input encountered");
+							log.info("time input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("url")){
-							System.out.println("url input encountered");
+							log.info("url input encountered");
 	
 						}
 						else if(attr_val.equalsIgnoreCase("week")){
-							System.out.println("week input encountered");
+							log.info("week input encountered");
 	
 						}
 					}
@@ -808,11 +808,11 @@ public class Browser {
 			//PageElement tag = (PageElement)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
-					System.out.println("Getting Attributes for label");
+					log.info("Getting Attributes for label");
 					if(attr.getName().equals("for")){
 						for(String val : attr.getVals()){
 							if(val.equals(for_id)){
-								System.out.println("LABEL FOUND FOR : " + for_id);
+								log.info("LABEL FOUND FOR : " + for_id);
 								return elem;
 							}
 						}
@@ -837,13 +837,13 @@ public class Browser {
 			//PageElement tag = (PageElement)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
-					System.out.println("Getting Attributes for label");
+					log.info("Getting Attributes for label");
 					if(attr.getName().equals("for")){
 						
 						for(String val : attr.getVals()){
 							for(String id : for_ids){
 								if(val.equals(id)){
-									System.out.println("LABEL FOUND FOR : " + id);
+									log.info("LABEL FOUND FOR : " + id);
 									labels.add(elem);
 								}
 							}
@@ -879,7 +879,7 @@ public class Browser {
 			}
 			
 		}catch(InvalidSelectorException e){
-			System.out.println("invalid selector");
+			log.info("invalid selector");
 			
 		}
 

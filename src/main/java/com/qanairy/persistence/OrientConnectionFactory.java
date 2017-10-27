@@ -1,7 +1,7 @@
 package com.qanairy.persistence;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.config.ConfigService;
@@ -16,7 +16,7 @@ import com.tinkerpop.frames.FramedGraphFactory;
  */
 @Component
 public class OrientConnectionFactory {
-    private static Logger log = LogManager.getLogger(OrientConnectionFactory.class);
+    private static Logger log = LoggerFactory.getLogger(OrientConnectionFactory.class);
         
 	FramedGraph<OrientGraphNoTx> current_tx = null;
 	OrientGraphFactory graphFactory;

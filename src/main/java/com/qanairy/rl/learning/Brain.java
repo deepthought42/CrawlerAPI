@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
 import com.qanairy.models.Path;
@@ -21,7 +21,7 @@ import com.qanairy.rl.memory.OrientDbPersistor;
  *
  */
 public class Brain {
-	private static Logger log = LogManager.getLogger(Brain.class);
+	private static Logger log = LoggerFactory.getLogger(Brain.class);
 
 	private static OrientDbPersistor persistor = null;
 	
@@ -84,7 +84,7 @@ public class Brain {
 						  throws IllegalArgumentException, IllegalAccessException, 
 							  NullPointerException, IOException{
 		//REINFORCEMENT LEARNING
-		System.out.println( " Initiating learning");
+		log.info( " Initiating learning");
 		
 		//learning model
 		// 1. identify vocabulary (NOTE: This is currently hard coded since we only currently care about 1 context)
@@ -152,17 +152,17 @@ public class Brain {
 
 			/*
 			if(action_map.containsKey(last_action)){
-				System.out.println("Last action : "+last_action + " exists in action_map for object");
+				log.info("Last action : "+last_action + " exists in action_map for object");
 				last_reward = action_map.get(last_action);
 			}
 			*/
-			System.out.println("last reward : "+last_reward);
-			System.out.println("actual_reward : "+actual_reward);
-			System.out.println("estimated_reward : "+estimated_reward);
+			log.info("last reward : "+last_reward);
+			log.info("actual_reward : "+actual_reward);
+			log.info("estimated_reward : "+estimated_reward);
 			
 			double q_learn_val = q_learn.calculate(last_reward, actual_reward, estimated_reward );
 			//action_map.put(last_action, q_learn_val);
-			//System.out.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
+			//log.info(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
 
 			//objDef.setActions(action_map);
 			//com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);
@@ -185,7 +185,7 @@ public class Brain {
 				Vertex current_vertex = persistor.find(obj);
 				ArrayList<Integer> path_ids = new ArrayList<Integer>();
 				path_ids.add(path.hashCode());
-				System.out.println("Adding GOES_TO transition");
+				log.info("Adding GOES_TO transition");
 				Edge e = persistor.addEdge(prev_vertex, current_vertex, "Component", "GOES_TO");
 				e.setProperty("path_ids", path_ids);
 			}
@@ -194,14 +194,14 @@ public class Brain {
 				Vertex current_vertex = persistor.find(obj);
 				ArrayList<Integer> path_ids = new ArrayList<Integer>();
 				path_ids.add(path.hashCode());
-				System.out.println("Adding GOES_TO transition");
+				log.info("Adding GOES_TO transition");
 				Edge e = persistor.addEdge(prev_vertex, current_vertex, "Transition", "GOES_TO");
 				e.setProperty("path_ids", path_ids);
 			}
 			
 			
 			
-			System.out.println("SAVING NOW...");
+			log.info("SAVING NOW...");
 			persistor.save();
 			*/
 							
@@ -233,7 +233,7 @@ public class Brain {
 						  throws IllegalArgumentException, IllegalAccessException, 
 							  NullPointerException, IOException{
 		//REINFORCEMENT LEARNING
-		System.out.println( " Initiating learning");
+		log.info( " Initiating learning");
 
 		//DUE TO CHANGES IN ARCHITECTURE THE WAY THAT LEARNING WILL OCCUR WILL BE DIFFERENT THAN THE ORIGINAL LOGIC
 		
@@ -265,7 +265,7 @@ public class Brain {
 				Vertex current_vertex = persistor.find(obj);
 				ArrayList<Integer> path_ids = new ArrayList<Integer>();
 				path_ids.add(path.hashCode());
-				System.out.println("Adding GOES_TO transition");
+				log.info("Adding GOES_TO transition");
 				Edge e = persistor.addEdge(prev_vertex, current_vertex, "Component", "GOES_TO");
 				e.setProperty("path_ids", path_ids);
 			}
@@ -274,14 +274,14 @@ public class Brain {
 				Vertex current_vertex = persistor.find(obj);
 				ArrayList<Integer> path_ids = new ArrayList<Integer>();
 				path_ids.add(path.hashCode());
-				System.out.println("Adding GOES_TO transition");
+				log.info("Adding GOES_TO transition");
 				Edge e = persistor.addEdge(prev_vertex, current_vertex, "Transition", "GOES_TO");
 				e.setProperty("path_ids", path_ids);
 			}
 			
 			
 			
-			System.out.println("SAVING NOW...");
+			log.info("SAVING NOW...");
 			persistor.save();
 			*/
 			
@@ -346,17 +346,17 @@ public class Brain {
 			double last_reward = 0.0;
 
 			if(action_map.containsKey(last_action)){
-				System.out.println("Last action : "+last_action + " exists in action_map for object");
+				log.info("Last action : "+last_action + " exists in action_map for object");
 				last_reward = action_map.get(last_action);
 			}
 			
-			System.out.println("last reward : "+last_reward);
-			System.out.println("actual_reward : "+actual_reward);
-			System.out.println("estimated_reward : "+estimated_reward);
+			log.info("last reward : "+last_reward);
+			log.info("actual_reward : "+actual_reward);
+			log.info("estimated_reward : "+estimated_reward);
 			
 			double q_learn_val = q_learn.calculate(last_reward, actual_reward, estimated_reward );
 			action_map.put(last_action, q_learn_val);
-			System.out.println(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
+			log.info(" -> ADDED LAST ACTION TO ACTION MAP :: "+last_action+"...Q LEARN VAL : "+q_learn_val);
 
 			objDef.setActions(action_map);
 			com.tinkerpop.blueprints.Vertex v = objDef.findAndUpdateOrCreate(persistor);
@@ -452,7 +452,7 @@ public class Brain {
 					
 					
 					//for(int weight_idx = 0 ; weight_idx < action_weights.size(); weight_idx++){
-						//System.out.println("SETTING ACTION WIGHT : "+rand.nextFloat());
+						//log.info("SETTING ACTION WIGHT : "+rand.nextFloat());
 					//	action_weights.set(weight_idx, rand.nextFloat());
 					//}
 =======

@@ -1,7 +1,7 @@
 package com.qanairy.models;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 /**
  * An object wrapper that allows data to be dynamically placed in data structures
@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
  *
  */
 public abstract class PathObject{
-    private static Logger log = LogManager.getLogger(PathObject.class);
+    private static Logger log = LoggerFactory.getLogger(PathObject.class);
     private String type = null;
     
     public String getType(){

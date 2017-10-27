@@ -3,8 +3,8 @@ package com.minion.browsing;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -24,7 +24,7 @@ import com.tinkerpop.blueprints.Vertex;
  *
  */
 public class ActionFactory {
-	private static Logger log = LogManager.getLogger(ActionFactory.class);
+	private static Logger log = LoggerFactory.getLogger(ActionFactory.class);
 
 	private static String[] actions = {"click",
 								"doubleClick",
@@ -117,12 +117,12 @@ public class ActionFactory {
 						String label = edge.getLabel();
 						int action_count = edge.getProperty("count");
 						int probability = edge.getProperty("probability");
-						System.out.println("Label :: "+label+" ; count :: "+ action_count + " ; P() :: " + probability + "%");	
+						log.info("Label :: "+label+" ; count :: "+ action_count + " ; P() :: " + probability + "%");	
 					}
 				}
 			}
 			else{
-				System.out.println("+++   No edges found. Setting weight randomly ++");
+				log.info("+++   No edges found. Setting weight randomly ++");
 				action_weight[index] = rand.nextDouble();
 			}
 		}
@@ -139,17 +139,17 @@ public class ActionFactory {
 			int maxIdx = 0;
 		    for(int j = 0; j < action_weight.length; j++){
 		    	if(action_weight[j] > max){
-		    		System.out.println("MAX WEIGHT FOR NOW :: "+max);
+		    		log.info("MAX WEIGHT FOR NOW :: "+max);
 		    		max=action_weight[j];
 		    		maxIdx = j;
 		    	}
 		    }
 		    
-		    System.out.println("-----------    max computed action is ....." + actions[maxIdx]);
+		    log.info("-----------    max computed action is ....." + actions[maxIdx]);
 		    return maxIdx;
 		}
 		else{
-			System.out.println("Coin was flipped and exploration was chosen. OH MY GOD I HAVE NO IDEA WHAT TO DO!");
+			log.info("Coin was flipped and exploration was chosen. OH MY GOD I HAVE NO IDEA WHAT TO DO!");
 			return 1;
 		}
 		//END PREDICT METHOD

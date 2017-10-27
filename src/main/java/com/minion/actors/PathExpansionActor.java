@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
 
@@ -28,7 +28,7 @@ import com.qanairy.models.Path;
  *
  */
 public class PathExpansionActor extends UntypedActor {
-	private static Logger log = LogManager.getLogger(PathExpansionActor.class);
+	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
     /**
 	 * Produces all possible element, action combinations that can be produced from the given path
@@ -49,7 +49,6 @@ public class PathExpansionActor extends UntypedActor {
 		String[] actions = ActionFactory.getActions();
 
 		List<PageElement> page_elements = page.getElements();
-		System.out.println("Expected number of exploratory paths : " + (page_elements.size()*actions.length) + " : # Elems : "+page.getElements().size()+ " ; # actions :: "+ActionFactory.getActions());
 		
 		//iterate over all elements
 		int path_count = 0;
@@ -78,7 +77,7 @@ public class PathExpansionActor extends UntypedActor {
 			}			
 		}
 		
-		System.out.println("# of Paths added : "+path_count);
+		log.info("# of Paths added : "+path_count);
 		
 		return pathList;
 	}
@@ -97,7 +96,7 @@ public class PathExpansionActor extends UntypedActor {
 			if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				
-				System.out.println("EXPANDING PATH WITH LENGTH : "+path.size());
+				log.info("EXPANDING PATH WITH LENGTH : "+path.size());
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
 				//Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
@@ -105,25 +104,18 @@ public class PathExpansionActor extends UntypedActor {
 				//final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
 				//memory_registry.tell(path_msg, getSelf());
 				
-				System.out.println("PATH SPANS MULTIPLE DOMAINS? :: " +path.getSpansMultipleDomains() );
-				System.out.println("PATH is useful? :: " +path.isUseful());
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);
-					if(first_page == null){
-						System.out.println("first page is null");
-					}
-					if(last_page == null){
-						System.out.println("last page is null");
-					}
+					
 					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
-						System.out.println("Last page is landable...truncating path to start with last_page");
+						log.info("Last page is landable...truncating path to start with last_page");
 						path = new Path();
 						path.getPath().add(last_page);
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);
-					System.out.println("Path expansions found : " +pathExpansions.size());
+					log.info("Path expansions found : " +pathExpansions.size());
 					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 					for(ExploratoryPath expanded : pathExpansions){

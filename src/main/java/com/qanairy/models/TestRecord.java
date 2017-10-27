@@ -2,8 +2,8 @@ package com.qanairy.models;
 
 import java.util.Date;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 
@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class TestRecord {
 	@SuppressWarnings("unused")
-	private static Logger log = LogManager.getLogger(TestRecord.class);
+	private static Logger log = LoggerFactory.getLogger(TestRecord.class);
 
 	private String key;
 	private Date ran_at;

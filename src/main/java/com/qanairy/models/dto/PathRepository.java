@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.minion.persistence.edges.IPathEdge;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
@@ -26,7 +26,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathRepository implements IPersistable<Path, IPath> {
-	private static Logger log = LogManager.getLogger(PathRepository.class);
+	private static Logger log = LoggerFactory.getLogger(PathRepository.class);
 
 	public IPath convertToRecord(OrientConnectionFactory connection, Path path) {
 		String path_key = generateKey(path);
@@ -36,7 +36,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		Iterator<IPath> path_iter = ((Iterable<IPath>) DataAccessObject.findByKey(path_key, connection, IPath.class)).iterator();
 
 		IPath path_record = null;
-		System.out.println("# of existing Path records with key "+path.getKey() + " :: " + path.getPath().size());
+		log.info("# of existing Path records with key "+path.getKey() + " :: " + path.getPath().size());
 		
 		if(!path_iter.hasNext()){
 			path_record = connection.getTransaction().addVertex("class:"+IPath.class.getSimpleName()+","+UUID.randomUUID(), IPath.class);
@@ -54,11 +54,11 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				IPage persistablePathObj = page_repo.convertToRecord(connection, (Page)obj);
 				
 				if(last_path_obj == null){
-					System.out.println("First object detected : "+persistablePathObj.getType());
+					log.info("First object detected : "+persistablePathObj.getType());
 					path_record.setPath(persistablePathObj);
 				}
 				else{
-					System.out.println("setting Page next object in path using IPathEdge");
+					log.info("setting Page next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
 					path_edge.setPathKey(path_key);
@@ -71,11 +71,11 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				IPageElement persistablePathObj = page_elem_repo.convertToRecord(connection, (PageElement)obj);
 
 				if(last_path_obj == null){
-					System.out.println("First object detected : "+persistablePathObj.getClass());
+					log.info("First object detected : "+persistablePathObj.getClass());
 					path_record.setPath(persistablePathObj);
 				}
 				else{
-					System.out.println("setting PageElement as next object in path using IPathEdge");
+					log.info("setting PageElement as next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					path_edge.setPathKey(path_key);
 				}
@@ -86,11 +86,11 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				IAction persistablePathObj = action_repo.convertToRecord(connection, (Action)obj);
 
 				if(last_path_obj == null){
-					System.out.println("First object detected : "+persistablePathObj.getClass());
+					log.info("First object detected : "+persistablePathObj.getClass());
 					path_record.setPath(persistablePathObj);
 				}
 				else{
-					System.out.println("setting Action as next object in path using IPathEdge");
+					log.info("setting Action as next object in path using IPathEdge");
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
 					path_edge.setPathKey(path_key);
@@ -102,7 +102,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		
 		path_record.setIsUseful(path.isUseful());
 		
-		System.out.println("Is spans multiple domains set : " + path.getSpansMultipleDomains());
+		log.info("Is spans multiple domains set : " + path.getSpansMultipleDomains());
 		path_record.setSpansMultipleDomains(path.getSpansMultipleDomains());
 		return path_record;
 	}

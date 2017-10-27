@@ -1,7 +1,7 @@
 package com.minion.actors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import akka.actor.UntypedActor;
 
@@ -19,7 +19,7 @@ import com.qanairy.models.Path;
  *
  */
 public class MemoryRegistryActor extends UntypedActor{
-    private static Logger log = LogManager.getLogger(MemoryRegistryActor.class);
+    private static Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
 
 
 	/**
@@ -34,7 +34,7 @@ public class MemoryRegistryActor extends UntypedActor{
 			if(acct_msg.getData() instanceof Test){
 				Test test = (Test)acct_msg.getData();
 				if(test.equals(null)){
-					System.out.println("Test object is null");
+					log.info("MemoryRegistry recieved null test object");
 				}
 				
 				TestRepository test_repo = new TestRepository();
@@ -43,12 +43,10 @@ public class MemoryRegistryActor extends UntypedActor{
 				
 				if(test_record == null){
 					test_repo.create(connection, test);
-					System.out.println("Test Created!");
 				}
 			}
 			else if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
-				System.out.println("Saving Path : " +path + " : " + path.getKey() +" to memory Registry");
 				
 				PathRepository path_repo = new PathRepository();
 				Path path_record = path_repo.find(connection, path_repo.generateKey(path));

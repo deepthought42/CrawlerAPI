@@ -279,5 +279,13 @@
 		  <artifactId>pusher-http-java</artifactId>
 		  <version>1.0.0</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.getsentry.raven/raven-logback -->
+		<dependency>
+		    <groupId>com.getsentry.raven</groupId>
+		    <artifactId>raven-logback</artifactId>
+		    <version>8.0.3</version>
+		</dependency>
+				
 	</dependencies>
 </project>

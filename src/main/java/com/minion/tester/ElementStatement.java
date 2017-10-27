@@ -1,7 +1,7 @@
 package com.minion.tester;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import com.qanairy.models.PageElement;
 
@@ -10,7 +10,7 @@ import com.qanairy.models.PageElement;
  *
  */
 public class ElementStatement implements IStatementFactory {
-	private static Logger log = LogManager.getLogger(ElementStatement.class);
+	private static Logger log = LoggerFactory.getLogger(ElementStatement.class);
 
 	/**
 	 * {@inheritDoc}
@@ -18,7 +18,7 @@ public class ElementStatement implements IStatementFactory {
 	public String generateStatement(Object o) {
 		if(o instanceof PageElement){
 			PageElement element = (PageElement)o;
-			System.out.println("I SHOULD BE GENERATING AN ELEMENT TEST...");
+			log.info("I SHOULD BE GENERATING AN ELEMENT TEST...");
 			return "document.evaluate("+ element.getXpath() +", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue";
 		}
 		return null;

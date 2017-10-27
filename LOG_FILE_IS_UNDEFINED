@@ -1,0 +1,10 @@
+2017-10-26 17:15:29.159  INFO   --- [main] com.qanairy.models.Page                  : Page object created
+2017-10-26 17:15:29.184  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2017-10-26 17:15:31.166  INFO   --- [main] com.qanairy.models.Page                  : Page object created
+2017-10-26 17:15:31.386  INFO   --- [main] com.qanairy.models.Page                  : Page object created
+2017-10-26 17:15:31.883  INFO   --- [main] com.qanairy.models.Page                  : Page object created
+2017-10-26 17:15:32.579  INFO   --- [main] com.qanairy.models.Page                  : Page object created
+2017-10-26 17:15:33.154  INFO   --- [main] com.qanairy.models.Page                  : Page object created
+2017-10-26 17:15:34.484  INFO   --- [Thread-0] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2017-10-26 17:15:34.494  INFO   --- [Thread-0] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2017-10-26 17:15:34.587  INFO   --- [Thread-0] c.g.raven.connection.AsyncConnection     : Shutdown finished.

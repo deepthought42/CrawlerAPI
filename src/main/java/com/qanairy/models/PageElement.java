@@ -296,9 +296,6 @@ public class PageElement extends PathObject{
 		try{
 			WebElement element = driver.findElement(By.xpath(this.getXpath()));
 			actionFactory.execAction(element, value, action.getName());
-			
-			log.info("CRAWLER Performed action "+ action
-					+ " On element with xpath :: "+this.getXpath());
 		}
 		catch(StaleElementReferenceException e){
 			

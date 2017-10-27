@@ -2,6 +2,7 @@ package com.minion.browsing;
 
 import java.io.IOException;
 
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -38,9 +39,12 @@ public class Crawler {
 		for(PathObject current_obj: path.getPath()){
 
 			if(current_obj instanceof Page){
-			    new WebDriverWait(browser.getDriver(), 120).until(
-			            webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-
+				try{
+					new WebDriverWait(browser.getDriver(), 360).until(
+							webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+				}catch(GridException e){
+					log.warn(e.getMessage());
+				}
 			}
 			else if(current_obj instanceof PageElement){
 				last_element = (PageElement) current_obj;

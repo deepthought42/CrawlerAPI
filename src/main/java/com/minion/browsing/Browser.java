@@ -184,8 +184,11 @@ public class Browser {
 	 * 
 	 * @param src
 	 * @return
+	 * 
+	 * @precondition src != null
 	 */
-	public static String cleanSrc(String src){
+	public static String cleanSrc(String src) throws NullPointerException{
+		assert src != null;
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 

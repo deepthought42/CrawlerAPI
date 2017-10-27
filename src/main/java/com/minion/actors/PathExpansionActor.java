@@ -96,7 +96,6 @@ public class PathExpansionActor extends UntypedActor {
 			if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				
-				log.info("EXPANDING PATH WITH LENGTH : "+path.size());
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
 				//Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);

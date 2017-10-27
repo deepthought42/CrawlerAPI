@@ -36,13 +36,17 @@ public class MemoryRegistryActor extends UntypedActor{
 				if(test.equals(null)){
 					log.info("MemoryRegistry recieved null test object");
 				}
-				
+				log.info("MemoryRegistry saving test");
+
 				TestRepository test_repo = new TestRepository();
 				test.setKey(test_repo.generateKey(test));
 				Test test_record = test_repo.find(connection, test.getKey());
 				
 				if(test_record == null){
 					test_repo.create(connection, test);
+				}
+				else{
+					log.info("Test already exists. memory registry cannot save");
 				}
 			}
 			else if(acct_msg.getData() instanceof Path){

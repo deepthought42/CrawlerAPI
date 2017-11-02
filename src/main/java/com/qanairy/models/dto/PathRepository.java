@@ -168,7 +168,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	}
 
 	@Override
-	public Path convertFromRecord(IPath obj) {
+	public Path convertFromRecord(IPath obj) throws NullPointerException {
 		IPathObject path_obj = obj.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
 
@@ -192,7 +192,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				continue;
 			}
 		}
-		return new Path(obj.getKey(), obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);
+		
+		String key = obj.getKey();
+		return new Path(key, obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);
 	}
 
 	@Override

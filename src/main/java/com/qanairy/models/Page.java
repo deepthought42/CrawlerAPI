@@ -121,7 +121,7 @@ public class Page extends PathObject {
 	 * @throws UnhandledAlertException
 	 * @throws IOException 
 	 */
-	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException{		
+	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException, NullPointerException{		
 		Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
 		browser.getDriver().get(this.getUrl().toString());
 		boolean landable = false;
@@ -218,7 +218,7 @@ public class Page extends PathObject {
 	
 	@JsonIgnore
 	public void setSrc(String src) {
-		if(src.length() > 0){
+		if(src != null && src.length() > 0){
 			this.src = Browser.cleanSrc(src);
 		}
 		else{

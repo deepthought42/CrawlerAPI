@@ -53,7 +53,16 @@ public class TestingActor extends UntypedActor {
 
 				Page resulting_page = null;
 				if(path.getPath() != null){
-					resulting_page = Crawler.crawlPath(path, browser );
+					int cnt = 0;
+					while(browser == null && cnt < 5){
+						try{
+							resulting_page = Crawler.crawlPath(path, browser );
+							break;
+						}catch(NullPointerException e){
+							log.error(e.getMessage());
+						}
+						cnt++;
+					}
 				}
 				final long pathCrawlEndTime = System.currentTimeMillis();
 
@@ -66,8 +75,12 @@ public class TestingActor extends UntypedActor {
 				Page expected_page = test.getResult();
 				//Page last_page = path.findLastPage();
 				
-				resulting_page.setLandable(resulting_page.checkIfLandable());
-				
+				try{
+					resulting_page.setLandable(resulting_page.checkIfLandable());
+				}catch(Exception e){
+					log.error(e.getMessage());
+					resulting_page.setLandable(false);
+				}
 				if(!resulting_page.equals(expected_page)){
 					//log.info("Saving test, cuz it has changed");
 					
@@ -102,7 +115,7 @@ public class TestingActor extends UntypedActor {
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
 
-					PastPathExperienceController.broadcastTestExperience(test);
+					//PastPathExperienceController.broadcastTestExperience(test);
 				}
 
 				//broadcast path
@@ -134,7 +147,17 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 
 		 try {		
-			 page = Crawler.crawlPath(test.getPath(), browser);	
+		
+			int cnt = 0;
+			while(browser == null && cnt < 5){
+				try{
+					page = Crawler.crawlPath(test.getPath(), browser);
+					break;
+				}catch(NullPointerException e){
+					log.error(e.getMessage());
+				}
+				cnt++;
+			 }
 			 passing = test.isTestPassing(page, test.isCorrect());
 			 
 			 Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();

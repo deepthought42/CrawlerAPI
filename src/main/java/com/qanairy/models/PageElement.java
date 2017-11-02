@@ -39,23 +39,23 @@ public class PageElement extends PathObject{
 		
 	}
 	
-	public PageElement(String text, String xpath, String name, List<Attribute> attributes){
+	public PageElement(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
 		super.setType("PageElement");
 		this.name = name;
 		this.xpath = xpath;
 		this.attributes = attributes;
 		this.text = text;
-		this.cssValues = this.getCssValues();
+		this.cssValues = css_map;
 		this.setKey(null);
 	}
 	
-	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes){
+	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
 		super.setType("PageElement");
 		this.setName(name);
 		this.setXpath(xpath);
 		this.setAttributes(attributes);
 		this.setText(text);
-		this.setCssValues(this.getCssValues());
+		this.setCssValues(css_map);
 		this.setKey(key);
 	}
 	
@@ -80,21 +80,24 @@ public class PageElement extends PathObject{
 	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
 	 * @param element the element to for which css styles should be loaded.
 	 */
-	public void loadCssProperties(WebElement element){
+	public static Map<String, String> loadCssProperties(WebElement element){
 		//HashMap<String, String> cssValues = new HashMap<String,String>();
 		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
+		Map<String, String> css_map = new HashMap<String, String>();
 		
 		Date start = new Date();		
 		for(String propertyName : cssList){
 			String element_value = element.getCssValue(propertyName);
 			if(element_value != null){
-				this.cssValues.put(propertyName, element_value);
+				css_map.put(propertyName, element_value);
 			}
 		}
 		
 		Date end = new Date();
 		
-		log.info("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
+		//log.info("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
+		
+		return css_map;
 	}
 
 	/**

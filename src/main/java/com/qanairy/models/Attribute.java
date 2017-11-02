@@ -27,11 +27,11 @@ public class Attribute {
 		
 		this.name = attrName;
 		this.vals = vals;
-		this.key = getKey();
+		setKey(null);
 	}
 	
 	public Attribute(String key, String attrName, List<String> vals){
-		this.key = key;
+		setKey(key);
 		this.name = attrName;
 		this.vals = vals;
 	}
@@ -100,8 +100,12 @@ public class Attribute {
         return hash;
     }
 
+	public void setKey(String key) {
+		this.key = key;
+	}
+
 	public String getKey() {
-		return hashCode()+"";
+		return this.key;
 	}
 
 	public String getName(){

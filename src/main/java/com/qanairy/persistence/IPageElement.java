@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.qanairy.models.Attribute;
+import com.qanairy.models.PathObject;
+import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 
 public interface IPageElement extends IPathObject{
@@ -31,11 +33,20 @@ public interface IPageElement extends IPathObject{
 	@Property("xpath")
 	public void setXpath(String xpath);
 	
-	@Property("attributes")
-	public List<Attribute> getAttributes();
+	@Adjacency(label="has_attribute")
+	public Iterable<IAttribute> getAttributes();
 	
-	@Property("attributes")
-	public void setAttributes(List<Attribute> attributes);
+	/**
+	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 */
+	@Adjacency(label="has_attribute")
+	public void setAttributes(List<IAttribute> attributes);
+	
+	/**
+	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 */
+	@Adjacency(label="has_attribute")
+	public void addAttributes(IAttribute attribute);
 	
 	@Property("cssValues")
 	public Map<String, String> getCssValues();

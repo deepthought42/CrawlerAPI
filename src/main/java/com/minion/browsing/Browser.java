@@ -96,25 +96,20 @@ public class Browser {
 				break;
 			}
 			catch(UnreachableBrowserException e){
-				cnt++;
-				try {
-					Thread.sleep(100000);
-				} catch (InterruptedException e1) {}
+				log.error(e.getMessage());
 			}
 			catch(WebDriverException e){
-				cnt++;
-				try {
-					Thread.sleep(100000);
-				} catch (InterruptedException e1) {}
+				log.error(e.getMessage());
 			}
 			catch(GridException e){
-				cnt++;
-				try {
-					Thread.sleep(100000);
-				} catch (InterruptedException e1) {}
+				log.error(e.getMessage());
 			}
+			
 			cnt++;
 
+			try {
+				Thread.sleep(300000);
+			} catch (InterruptedException e1) {}
 		}
 		
 		if(this.driver != null){
@@ -129,9 +124,10 @@ public class Browser {
 			
 			//SystemInfoRepository.save(connection, info);
 			this.url = url;
-			this.driver.navigate().to(url);
-		    this.driver.manage().window().maximize();
-			//this.driver.get(url);
+			//this.driver.navigate().to(url);
+		    //
+			this.driver.get(url);
+			this.driver.manage().window().maximize();
 		}
 		else{
 			throw new NullPointerException();
@@ -199,20 +195,15 @@ public class Browser {
 	 * Closes the browser opened by the current driver.
 	 */
 	public void close(){
-		boolean connection_closed = false;
 		int attempt_count = 0;
-		while(!connection_closed && attempt_count < 20){
+		while(attempt_count < 20){
 			try{
 				driver.quit();
-				OrientConnectionFactory connection = new OrientConnectionFactory();
-				ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
-				info.setBrowserCount(info.getBrowserCount()-1);
-				connection.close();
-				connection_closed = true;
 				break;
 			}
 			catch(NullPointerException e){
-				log.error("Error closing driver. Driver is NULL");
+				//log.error("Error closing driver. Driver is NULL");
+				break;
 			}
 			catch(UnreachableBrowserException e){
 				log.error("Error: browser unreachable while closing driver");
@@ -220,9 +211,12 @@ public class Browser {
 			catch(NoSuchSessionException e){
 				log.error("Error finding session for closing driver");			
 			}
+			catch(GridException e){
+				log.error(e.getMessage());
+			}
 			attempt_count++;
 			try {
-				Thread.sleep(10000);
+				Thread.sleep(20000);
 			} catch (InterruptedException e1) {}
 		}
 	}
@@ -451,8 +445,7 @@ public class Browser {
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, "", xpath_map, driver); 
-					//PageElement pageElem = new PageElement(ActionFactory.getActions(), new PageElement(elem, this_xpath, "", loadAttributes(Browser.extractedAttributes(elem, (JavascriptExecutor)driver))));
-					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver));
+					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
 					try{
 						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));
 						elementList.add(tag);
@@ -502,14 +495,14 @@ public class Browser {
 		log.info("total forms found :: " + form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()));
+			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(form_elem) );
 			Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 			
 			List<PageElement> input_tags = new ArrayList<PageElement>(); 
 			for(WebElement input_elem : input_elements){
 				log.info("building form element input :: " + input_elem.getTagName());
-				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()));
+				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(input_elem) );
 				
 				boolean alreadySeen = false;
 				for(String path : form_xpath_list){
@@ -573,7 +566,7 @@ public class Browser {
 				log.info(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver));
+					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
 					return label_tag;
 				}
 			}
@@ -603,7 +596,7 @@ public class Browser {
 				log.info(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver));
+					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
 					label_tags.add(label_tag);
 					break;
 				}
@@ -660,7 +653,7 @@ public class Browser {
 				child_inputs = new ArrayList<FormField>();
 
 				for(WebElement child : children){
-					PageElement elem = new PageElement(child.getText(), Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), Browser.extractedAttributes(child, (JavascriptExecutor)driver));
+					PageElement elem = new PageElement(child.getText(), Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), Browser.extractedAttributes(child, (JavascriptExecutor)driver), PageElement.loadCssProperties(child) );
 					FormField input_field = new FormField(elem);
 					child_inputs.add(input_field);
 				}
@@ -669,7 +662,7 @@ public class Browser {
 			}
 			else{
 				if(child_inputs.size() == 0){
-					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver));
+					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(page_elem) );
 					FormField input_field = new FormField(input_tag);
 					child_inputs.add(input_field);
 				}

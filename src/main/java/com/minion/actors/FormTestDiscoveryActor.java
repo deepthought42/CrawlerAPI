@@ -56,8 +56,19 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	Browser browser = new Browser(page.getUrl().toString(), "phantomjs");
 			  	
 			  	//clone path
-			  	//Path new_path = Path.clone(path);			  	
-			  	Page current_page = Crawler.crawlPath(path, browser);
+			  	//Path new_path = Path.clone(path);		
+
+				int cnt = 0;
+				Page current_page = null;
+				while(browser == null && cnt < 5){
+					try{
+						current_page = Crawler.crawlPath(path, browser);
+						break;
+					}catch(NullPointerException e){
+						log.error(e.getMessage());
+					}
+					cnt++;
+				}
 			  				  	
 			  	List<Form> forms = Browser.extractAllForms(current_page, browser);
 			  	log.debug("Total Choice fields in form : " + forms.size());

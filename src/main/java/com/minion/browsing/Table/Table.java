@@ -42,12 +42,12 @@ public class Table {
 			Row row = new Row();
 			String row_xpath = "//tr["+ cnt + "]";
 			for(WebElement elem : header_cells){
-				PageElement page_elem = new PageElement(elem.getText(), Browser.generateXpath(elem, row_xpath, null, driver), elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver));
+				PageElement page_elem = new PageElement(elem.getText(), Browser.generateXpath(elem, row_xpath, null, driver), elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
 				PageElementNode<PageElement> node = new PageElementNode<PageElement>(page_elem);
 				//load all child elements into tree
 				List<WebElement> children = Browser.getChildElements(elem);
 				for(WebElement child_elem : children){
-					PageElement child_page_elem = new PageElement(child_elem.getText(), Browser.generateXpath(child_elem, row_xpath, null, driver), child_elem.getTagName(), Browser.extractedAttributes(child_elem, (JavascriptExecutor)driver));
+					PageElement child_page_elem = new PageElement(child_elem.getText(), Browser.generateXpath(child_elem, row_xpath, null, driver), child_elem.getTagName(), Browser.extractedAttributes(child_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(child_elem));
 					node.addChild(child_page_elem);
 				}
 				

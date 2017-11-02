@@ -9,12 +9,16 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.testng.annotations.Test;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Action;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
@@ -35,6 +39,11 @@ public class PathTests {
 		path.setIsUseful(false);
 		path.setSpansMultipleDomains(false);
 		
+		List<Attribute> attributes = new ArrayList<Attribute>();
+		List<String> attr_strings = new ArrayList<String>();
+		attr_strings.add("spacejam");
+		attributes.add(new Attribute("class", attr_strings));
+		
 		Page page = new Page();
 		page.setLandable(true);
 		page.setScreenshot("Test screenshot url");
@@ -47,8 +56,11 @@ public class PathTests {
 		}
 
 		path.add(page);
-
-		PageElement page_element = new PageElement("test element", "//div", "div", null);
+		
+		Map<String, String> css_map = new HashMap<String, String>();
+		css_map.put("color", "purple");
+		
+		PageElement page_element = new PageElement("test element", "//div", "div", attributes, css_map);
 		path.add(page_element);
 		
 		Action action = new Action("click");

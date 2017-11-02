@@ -45,7 +45,6 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			page_elem = convertToRecord(connection, page_elem_record);
 
 			page_elem.setName(elem.getName());
-			page_elem.setAttributes(elem.getAttributes());
 			page_elem.setCssValues(elem.getCssValues());
 			page_elem.setText(elem.getText());
 			page_elem.setXpath(elem.getXpath());
@@ -81,7 +80,13 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		elem.setText(data.getText());
 		elem.setName(data.getName());
 		elem.setType(data.getType());
-		elem.setAttributes(data.getAttributes());
+		
+		List<Attribute> attr_list = new ArrayList<Attribute>();
+		AttributeRepository attr_repo = new AttributeRepository();
+		for(IAttribute attr: data.getAttributes()){
+			attr_list.add(attr_repo.convertFromRecord(attr));
+		}
+		elem.setAttributes(attr_list);
 		elem.setCssValues(data.getCssValues());
 		return elem;
 	}
@@ -103,8 +108,9 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			page_elem_record = connection.getTransaction().addVertex("class:"+IPageElement.class.getSimpleName()+","+UUID.randomUUID(), IPageElement.class);
 			page_elem_record.setType("PageElement");
 			List<IAttribute> attribute_persist_list = new ArrayList<IAttribute>();
+			AttributeRepository attribute_repo = new AttributeRepository();
+
 			for(Attribute attribute : elem.getAttributes()){
-				AttributeRepository attribute_repo = new AttributeRepository();
 				IAttribute attribute_persist = attribute_repo.convertToRecord(connection, attribute);
 				attribute_persist_list.add(attribute_persist);
 			}
@@ -116,8 +122,13 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			}
 			*/
 			//page_elem_record.setChildElements(child_elements_persist);
+			AttributeRepository attr_repo = new AttributeRepository();
+			for(Attribute attr : elem.getAttributes()){
+				if(attr != null){
+					page_elem_record.addAttributes(attr_repo.convertToRecord(connection, attr));
+				}
+			}
 			
-			page_elem_record.setAttributes(elem.getAttributes());
 			page_elem_record.setCssValues(elem.getCssValues());
 			page_elem_record.setName(elem.getName());
 			page_elem_record.setText(elem.getText());
@@ -139,8 +150,6 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	@Override
 	public String generateKey(PageElement page_elem) {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page_elem.getXpath());   
-
-		//return obj.getXpath();
 	}
 
 	@Override

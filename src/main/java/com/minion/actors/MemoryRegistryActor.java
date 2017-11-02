@@ -9,7 +9,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
-
+import com.minion.api.PastPathExperienceController;
 import com.minion.structs.Message;
 import com.qanairy.models.Path;
 
@@ -44,6 +44,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				
 				if(test_record == null){
 					test_repo.create(connection, test);
+					PastPathExperienceController.broadcastTestExperience(test);
 				}
 				else{
 					log.info("Test already exists. memory registry cannot save");

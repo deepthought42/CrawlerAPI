@@ -48,9 +48,9 @@ public class Path {
 	 * @param current_path
 	 */
 	public Path(String key, boolean isUseful, boolean spansMultipleDomains, List<PathObject> current_path){
-		this.isUseful = false;
+		this.isUseful = isUseful;
 		this.path = current_path;
-		this.key = null;
+		this.key = key;
 		this.spansMultipleDomains = spansMultipleDomains;
 	}
 		

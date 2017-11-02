@@ -186,14 +186,20 @@ public class BrowserActor extends UntypedActor {
 			Message<?> acct_msg = (Message<?>)message;
 
 			final long browserActorStartTime = System.currentTimeMillis();
-			
+			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-				try{
-					this.browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
-				}
-				catch(NullPointerException e){
-					log.warn("Failed to open connection to browser");
+				
+				int cnt = 0;
+				while(browser == null && cnt < 5){
+					try{
+						browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
+						break;
+					}
+					catch(NullPointerException e){
+						log.warn("Failed to open connection to browser");
+					}
+					cnt++;
 				}
 			  	Page result_page = null;
 
@@ -203,7 +209,8 @@ public class BrowserActor extends UntypedActor {
 				Page last_page = exploratory_path.findLastPage();
 				try{
 					last_page.setLandable(last_page.checkIfLandable());
-				}catch(Exception e){
+				}catch(NullPointerException e){
+					log.error(e.getMessage());
 					e.printStackTrace();
 				}
 				if(last_page.isLandable()){
@@ -220,7 +227,7 @@ public class BrowserActor extends UntypedActor {
 
 						final long pathCrawlStartTime = System.currentTimeMillis();
 
-						result_page = Crawler.crawlPath(crawl_path, this.browser);
+						result_page = Crawler.crawlPath(crawl_path, browser);
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
@@ -256,7 +263,6 @@ public class BrowserActor extends UntypedActor {
 							//tell memory worker of path
 							memory_actor.tell(test_msg, getSelf() );
 							
-							PastPathExperienceController.broadcastTestExperience(test);
 							
 
 							//broadcast test
@@ -270,7 +276,7 @@ public class BrowserActor extends UntypedActor {
 					}
 				}
 
-			  	this.browser.close();
+			  	browser.close();
 				
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
@@ -286,17 +292,21 @@ public class BrowserActor extends UntypedActor {
 					System.err.println("FIRST PATH ELEMENT TYPE ::   ->   " +obj.getType());
 				}
 				
-				try{
-					this.browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
-				}
-				catch(NullPointerException e){
-					log.warn("Failed to open connection to browser");
+
+				int cnt = 0;
+				while(browser == null && cnt < 5){
+					try{
+						browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+					}
+					catch(NullPointerException e){
+						log.warn("Failed to open connection to browser");
+					}
 				}
 				Page result_page = null;
 				final long pathCrawlStartTime = System.currentTimeMillis();
 
 				if(path.getPath() != null){
-					result_page = Crawler.crawlPath(path, this.browser);	
+					result_page = Crawler.crawlPath(path, browser);	
 				}
 				
 				final long pathCrawlEndTime = System.currentTimeMillis();
@@ -304,8 +314,12 @@ public class BrowserActor extends UntypedActor {
 				long pathCrawlTime = pathCrawlEndTime - pathCrawlStartTime;
 
 				Page last_page = path.findLastPage();
-				last_page.setLandable(last_page.checkIfLandable());
-				
+				try{
+					last_page.setLandable(last_page.checkIfLandable());
+				}catch(NullPointerException e){
+					log.error(e.getMessage());
+					last_page.setLandable(false);
+				}
 				if(last_page.isLandable()){
 					//clone path starting at last page in path
 					//Path shortened_path = path.clone());
@@ -336,8 +350,6 @@ public class BrowserActor extends UntypedActor {
 					
 					//tell memory worker of path
 					memory_actor.tell(test_msg, getSelf() );
-					//broadcast test
-					PastPathExperienceController.broadcastTestExperience(test);
 					
 					Path new_crawl_path = Path.clone(path);
 					new_crawl_path.add(result_page);
@@ -346,13 +358,12 @@ public class BrowserActor extends UntypedActor {
 					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 					path_expansion_actor.tell(path_msg, getSelf() );
 			  	}
-			  	this.browser.close();
+			  	browser.close();
 	
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
-				Browser browser = null;
 				try{
 					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
 				}
@@ -387,7 +398,7 @@ public class BrowserActor extends UntypedActor {
 			final long browserActorEndTime = System.currentTimeMillis();
 
 			long browserActorRunTime = browserActorEndTime - browserActorStartTime;
-			log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
+			//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 
 		}else unhandled(message);
 	}

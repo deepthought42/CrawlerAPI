@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.qanairy.models.Attribute;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAttribute;
+import com.qanairy.persistence.IPageElement;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -19,7 +20,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 * {@inheritDoc}
 	 */
 	public String generateKey(Attribute attr) {
-		return attr.getName().hashCode()+":";
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(attr.getName());
 	}
 
 	/**
@@ -27,12 +28,24 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 */
 	@Override
 	public IAttribute convertToRecord(OrientConnectionFactory connection, Attribute attr) {
-		IAttribute attribute_record = connection.getTransaction().addVertex("class:"+Attribute.class.getSimpleName()+","+UUID.randomUUID(), IAttribute.class);
-		attribute_record.setName(attr.getName());
-		attribute_record.setVals(attr.getVals());
-		attribute_record.setKey(attr.getKey());
+		if((attr.getKey() == null || attr.getKey().isEmpty()) && attr.getName() != null){
+			attr.setKey(generateKey(attr));
+		}
+		@SuppressWarnings("unchecked")
+		Iterable<IAttribute> attribute_records = (Iterable<IAttribute>) DataAccessObject.findByKey(attr.getKey(), connection, IAttribute.class);
 
-		return attribute_record;
+		Iterator<IAttribute> iter = attribute_records.iterator();
+		
+		IAttribute attribute_record = null;
+		if( !iter.hasNext()){
+			attribute_record = connection.getTransaction().addVertex("class:"+Attribute.class.getSimpleName()+","+UUID.randomUUID(), IAttribute.class);
+			attribute_record.setName(attr.getName());
+			attribute_record.setVals(attr.getVals());
+			attribute_record.setKey(attr.getKey());
+			return attribute_record;
+		}
+		
+		return iter.next();
 	}
 
 	/**

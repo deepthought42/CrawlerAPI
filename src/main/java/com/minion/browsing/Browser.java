@@ -195,29 +195,20 @@ public class Browser {
 	 * Closes the browser opened by the current driver.
 	 */
 	public void close(){
-		int attempt_count = 0;
-		while(attempt_count < 20){
-			try{
-				driver.quit();
-				break;
-			}
-			catch(NullPointerException e){
-				//log.error("Error closing driver. Driver is NULL");
-				break;
-			}
-			catch(UnreachableBrowserException e){
-				log.error("Error: browser unreachable while closing driver");
-			}
-			catch(NoSuchSessionException e){
-				log.error("Error finding session for closing driver");			
-			}
-			catch(GridException e){
-				log.error(e.getMessage());
-			}
-			attempt_count++;
-			try {
-				Thread.sleep(20000);
-			} catch (InterruptedException e1) {}
+		try{
+			driver.quit();
+		}
+		catch(NullPointerException e){
+			//log.error("Error closing driver. Driver is NULL");
+		}
+		catch(UnreachableBrowserException e){
+			log.error(e.getMessage());
+		}
+		catch(NoSuchSessionException e){
+			log.error(e.getMessage());			
+		}
+		catch(GridException e){
+			log.error(e.getMessage());
 		}
 	}
 	
@@ -505,8 +496,8 @@ public class Browser {
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(input_elem) );
 				
 				boolean alreadySeen = false;
-				for(String path : form_xpath_list){
-					if(path.equals(input_tag.getXpath())){
+				for(String xpath : form_xpath_list){
+					if(xpath.equals(input_tag.getXpath())){
 						alreadySeen = true;
 					}
 				}
@@ -519,7 +510,7 @@ public class Browser {
 				ComplexField combo_input = new ComplexField(group_inputs);
 				
 				//List<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, browser.getDriver());
-				for(FormField input_field : group_inputs){
+				/*for(FormField input_field : group_inputs){
 					try{
 						PageElement label = findLabelForInput(form_elem, input_field, browser.getDriver());
 						input_field.setFieldLabel(label);
@@ -528,12 +519,13 @@ public class Browser {
 						log.info("Error occurred while finding label for form input field");
 					}
 				}
+				*/
+				
+				for(FormField input_field : group_inputs){
+					input_field.addRules(ElementRuleExtractor.extractRules(input_field.getInputElement()));
+				}
 				//combo_input.getElements().addAll(labels);
 				form.addFormField(combo_input);
-				for(FormField input : group_inputs){
-					input.addRules(ElementRuleExtractor.extractRules(input.getInputElement()));
-				}
-
 				input_tags.add(input_tag);
 			}
 			

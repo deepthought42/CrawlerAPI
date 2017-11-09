@@ -1,5 +1,6 @@
 package com.qanairy.persistence;
 
+import java.util.Date;
 import java.util.List;
 
 import com.tinkerpop.blueprints.Direction;
@@ -10,6 +11,7 @@ import com.tinkerpop.frames.Property;
  * Represents an {@link Domain} record in OrientDB database
  */
 public interface IDomain {
+
 	@Property("key")
 	String getKey();
 	
@@ -21,6 +23,19 @@ public interface IDomain {
 	
 	@Property("url")
 	void setUrl(String url);
+
+	@Property("protocol")
+	String getProtocol();
+	
+	@Property("protocol")
+	void setProtocol(String protocol);
+
+	
+	@Property("last_discovery_path_ran_at")
+	Date getLastDiscoveryPathRanAt();
+
+	@Property("last_discovery_path_ran_at")
+	void setLastDiscoveryPathRanAt(Date timestamp);
 
 	@Adjacency(label="contains_test")
 	Iterable<ITest> getTests();

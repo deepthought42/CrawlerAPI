@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
@@ -16,8 +17,10 @@ import akka.actor.UntypedActor;
 
 import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.rl.memory.Vocabulary;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -219,6 +222,13 @@ public class BrowserActor extends UntypedActor {
 				}
 				
 				if(exploratory_path.getPath() != null){
+					
+					// increment total paths being explored for domain
+					String domain_url = last_page.getUrl().getHost();
+					DomainRepository domain_repo = new DomainRepository();
+					IDomain idomain = domain_repo.find(domain_url);
+					idomain.setLastDiscoveryPathRanAt(new Date());
+					
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
@@ -247,7 +257,7 @@ public class BrowserActor extends UntypedActor {
 							PathRepository path_repo = new PathRepository();
 							crawl_path.setKey(path_repo.generateKey(crawl_path));
 							
-							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost()));
+							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost(), result_page.getUrl().getProtocol()));
 							test.setRunTime(pathCrawlRunTime);
 							
 							TestRepository test_repo = new TestRepository();
@@ -263,8 +273,6 @@ public class BrowserActor extends UntypedActor {
 							//tell memory worker of path
 							memory_actor.tell(test_msg, getSelf() );
 							
-							
-
 							//broadcast test
 							Path new_crawl_path = Path.clone(crawl_path);
 							new_crawl_path.add(result_page);
@@ -333,7 +341,7 @@ public class BrowserActor extends UntypedActor {
 			  	}
 			  	else{					
 			  		path.setIsUseful(true);
-					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getProtocol()+"://"+result_page.getUrl().getHost()));
+					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), result_page.getUrl().getProtocol()));
 					TestRepository test_repo = new TestRepository();
 					test.setKey(test_repo.generateKey(test));
 
@@ -379,7 +387,7 @@ public class BrowserActor extends UntypedActor {
 				PathRepository path_repo = new PathRepository();
 				path.setKey(path_repo.generateKey(path));
 				
-				Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().toString()));
+				Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), page_obj.getUrl().getProtocol()));
 				TestRepository test_repo = new TestRepository();
 				test.setKey(test_repo.generateKey(test));
 								

@@ -167,7 +167,12 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setKey(itest.getKey());
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
-		test.setPath(path_record.convertFromRecord(itest.getPath()));
+		try{
+			test.setPath(path_record.convertFromRecord(itest.getPath()));
+		}
+		catch(NullPointerException e){
+			log.error(e.getMessage());
+		}
 		test.setLastRunTimestamp(itest.getLastRunTimestamp());
 
 		try{

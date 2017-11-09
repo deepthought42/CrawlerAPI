@@ -28,7 +28,7 @@ public class BrowserTest {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost()));
+		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost(), page.getUrl().getProtocol()));
 		Assert.assertTrue(test.getDomain().getUrl().toString().equals(page.getUrl().getHost()));
 	}
 }

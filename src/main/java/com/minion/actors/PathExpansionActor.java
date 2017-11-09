@@ -63,7 +63,13 @@ public class PathExpansionActor extends UntypedActor {
 				e.printStackTrace();
 			}
 			*/
-			//END OF PRECTION CODE
+			//END OF PREDICTION CODE
+			
+			
+			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
+			if(page_element.getXpath().contains("form")){
+				continue;
+			}
 			
 			//iterate over all actions
 			Path new_path = Path.clone(path);

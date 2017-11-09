@@ -1,6 +1,7 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -16,6 +17,8 @@ public class Domain {
 	private List<Account> accounts;
 	private List<Test> tests;
 	private String key;
+	private String protocol;
+	private Date last_discovery_path_ran_at;
 	
 	/**
 	 * 
@@ -27,6 +30,7 @@ public class Domain {
 		this.setUrl(null);
 		this.setTests(new ArrayList<Test>());
 		this.accounts = new ArrayList<Account>();
+		this.setProtocol("http");
 	}
 	
 	/**
@@ -35,9 +39,10 @@ public class Domain {
 	 * @param domain
 	 * @param organization
 	 */
-	public Domain(String url){
+	public Domain(String url, String protocol){
 		this.setUrl(url);
 		this.setTests(new ArrayList<Test>());
+		this.setProtocol(protocol);
 	}
 	
 	/**
@@ -48,10 +53,14 @@ public class Domain {
 	 */
 	public Domain(	String key, 
 					String domain_url, 
-					List<Test> tests){
+					List<Test> tests,
+					String protocol,
+					Date timestamp){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
+		this.setProtocol(protocol);
+		this.setLastDiscoveryPathRanAt(timestamp);
 	}
 
 	public String getUrl() {
@@ -72,6 +81,14 @@ public class Domain {
 	
 	public boolean addAccount(Account acct){
 		return this.accounts.add(acct);
+	}
+	
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
+	}
+
+	public String getProtocol() {
+		return this.protocol;
 	}
 
 
@@ -102,5 +119,13 @@ public class Domain {
 	 */
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public Date getLastDiscoveryPathRanAt() {
+		return this.last_discovery_path_ran_at;
+	}
+	
+	public void setLastDiscoveryPathRanAt(Date timestamp) {
+		this.last_discovery_path_ran_at = timestamp;
 	}
 }

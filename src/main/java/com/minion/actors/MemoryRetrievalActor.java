@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import java.util.Iterator;
 
-import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Vertex;
 
 import akka.actor.UntypedActor;
@@ -11,9 +10,7 @@ import com.qanairy.models.Test;
 import com.qanairy.persistence.OrientDbPersistor;
 import com.minion.structs.Message;
 import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
 
 /**
  * Retains lists of productive, unproductive, and unknown value {@link Path}s.

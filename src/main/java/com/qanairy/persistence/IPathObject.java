@@ -2,7 +2,7 @@ package com.qanairy.persistence;
 
 import java.util.List;
 
-import com.minion.persistence.edges.IPathEdge;
+import com.qanairy.persistence.edges.IPathEdge;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Incidence;

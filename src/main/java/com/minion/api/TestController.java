@@ -182,7 +182,6 @@ public class TestController {
 	@RequestMapping(path="/name", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
 			   								 		@RequestParam(value="name", required=true) String name) {
-		//session.setAttribute(Constants.FOO, new Domain());
 		List<Test> test_list = new ArrayList<Test>();
 		test_list = Test.findByName(name);
 		

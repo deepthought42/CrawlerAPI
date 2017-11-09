@@ -66,7 +66,7 @@ public class Test {
 		this.path = path;
 		this.result = result;
 		this.setRecords(new ArrayList<TestRecord>());
-		this.domain = domain;
+		this.setDomain(domain);
 		this.correct = null;
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
@@ -89,39 +89,9 @@ public class Test {
 		this.path = path;
 		this.result = result;
 		this.setRecords(new ArrayList<TestRecord>());
-		this.domain = domain;
+		this.setDomain(domain);
 		this.correct = null;
 		this.setSpansMultipleDomains(false);
-		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTimestamp(null);
-		this.setKey(key);
-	}
-	
-	/**
-	 * Constructs a test object
-	 * 
-	 * @param path {@link Path} that will be used to determine what the expected path should be
- 	 * @param result
-	 * @param domain
-	 * 
-	 * @pre path != null
-	 */
-	public Test(String key, 
-				Path path, 
-				Page result, 
-				Domain domain, 
-				boolean correct, 
-				boolean isUseful, 
-				boolean doesSpanMultipleDomains){
-		assert path != null;
-		
-		this.setPath(path);
-		this.setResult(result);
-		this.setRecords(new ArrayList<TestRecord>());
-		this.setDomain(domain);
-		this.setCorrect(correct);
-		this.setUseful(isUseful);
-		this.setSpansMultipleDomains(doesSpanMultipleDomains);
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(key);

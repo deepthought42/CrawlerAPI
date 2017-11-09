@@ -24,7 +24,7 @@ public class ElementRuleExtractor {
 
 	public static List<FormRule> extractRules(PageElement elem){
 		List<FormRule> rules = new ArrayList<FormRule>();
-		log.info("Extracting rules using attributes :: "+elem.getAttributes().size());
+
 		for(Attribute attr : elem.getAttributes()){
 			if(attr.getName().trim().equalsIgnoreCase("required")){
 				FormRule required = new RequirementRule();

@@ -1,4 +1,4 @@
-package com.minion.persistence.edges;
+package com.qanairy.persistence.edges;
 
 import com.qanairy.persistence.IPathObject;
 import com.tinkerpop.frames.InVertex;

@@ -218,7 +218,7 @@ public class Page extends PathObject {
 	
 	@JsonIgnore
 	public void setSrc(String src) {
-		if(src != null && src.length() > 0){
+		if(src.length() > 0){
 			this.src = Browser.cleanSrc(src);
 		}
 		else{

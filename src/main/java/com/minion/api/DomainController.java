@@ -1,5 +1,7 @@
 package com.minion.api;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.Principal;
 import java.util.List;
 
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
@@ -49,10 +50,11 @@ public class DomainController {
      * 
      * @throws UnknownUserException 
      * @throws UnknownAccountException 
+     * @throws MalformedURLException 
      */
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Domain create(final @RequestBody String url, final Principal principal) throws UnknownUserException, UnknownAccountException {
+    public @ResponseBody Domain create(final @RequestBody String url, final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
         /*printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
@@ -68,7 +70,8 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
-        Domain domain = new Domain(url);
+    	URL url_obj = new URL(url);
+        Domain domain = new Domain(url_obj.getHost(), url_obj.getProtocol());
     	acct.addDomain(domain);
     	accountService.update(acct);
         return domainService.create(domain);

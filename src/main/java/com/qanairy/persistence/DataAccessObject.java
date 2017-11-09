@@ -2,6 +2,7 @@ package com.qanairy.persistence;
 
 import org.mortbay.log.Log;
 
+import com.orientechnologies.common.io.OIOException;
 import com.tinkerpop.blueprints.Vertex;
 
 public class DataAccessObject<V> {
@@ -28,7 +29,7 @@ public class DataAccessObject<V> {
 	 * @param generated_key
 	 * @return
 	 */
-	public static Iterable<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) {    	
+	public static Iterable<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) throws OIOException {    	
 		return orient_connection.current_tx.getVertices("key", generated_key, clazz);
 	}
 	

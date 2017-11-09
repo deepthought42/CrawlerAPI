@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Test;
 import com.qanairy.persistence.DataAccessObject;
@@ -59,6 +58,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			domain_record = iter.next();
 		}
 		domain_record.setUrl(domain.getUrl());
+		domain_record.setProtocol(domain.getProtocol());
+		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 		/*TestRepository test_repo = new TestRepository();
 		List<ITest> tests = new ArrayList<ITest>();
 		for(Test test : domain.getTests()){
@@ -98,9 +99,6 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 
 		if(iter.hasNext()){
 			IDomain domain_record = iter.next();
-			
-			TestRepository test_repo = new TestRepository();
-			//domain_record.setTests(domain.getTests());
 			domain_record.setUrl(domain.getUrl());
 			connection.save();
 		}
@@ -152,7 +150,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			tests.add(test_repo.convertFromRecord(test_iter.next()));
 		}
 		*/
-		Domain domain = new Domain(obj.getKey(), obj.getUrl().toString(), tests);
+		Domain domain = new Domain(obj.getKey(), obj.getUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt());
 		return domain;
 	}
 	
@@ -163,7 +161,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		}
 		*/
 
-		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), tests);
+		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), tests, obj.getProperty("protocol"), null);
 		return domain;
 	}
 	

@@ -7,7 +7,8 @@ import java.util.UUID;
 
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-import com.minion.persistence.edges.IPathEdge;
+import com.qanairy.persistence.edges.IPathEdge;
+import com.orientechnologies.common.io.OIOException;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -58,10 +59,23 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					path_record.setPath(persistablePathObj);
 				}
 				else{
-					log.info("setting Page next object in path using IPathEdge");
-					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
+					Iterable<IPathEdge> edges = last_path_obj.getPathEdges();
+					boolean path_edge_exists = false;
+					for(IPathEdge edge : edges){
+						System.out.println("Checking path edge ....");
+						if(edge.getPathKey().equals(path.getKey())){
+							System.out.println("PATH EDGE KEY Matches PATH KEY");
+							path_edge_exists = true;
+							break;
+						}
+					}
 					
-					path_edge.setPathKey(path_key);
+					if(!path_edge_exists){
+						log.info("setting Page next object in path using IPathEdge");
+						IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
+						
+						path_edge.setPathKey(path_key);
+					}
 				}
 				
 				last_path_obj = persistablePathObj;
@@ -199,13 +213,23 @@ public class PathRepository implements IPersistable<Path, IPath> {
 
 	@Override
 	public Path find(OrientConnectionFactory connection, String key) {
-			Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(key, connection, IPath.class);
-			Iterator<IPath> iter = paths.iterator();
-			
-			if(iter.hasNext()){
-				return convertFromRecord(iter.next());
+		int cnt = 0;
+		while(cnt < 5){
+			try{
+				Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(key, connection, IPath.class);
+				Iterator<IPath> iter = paths.iterator();
+				
+				if(iter.hasNext()){
+					return convertFromRecord(iter.next());
+				}
 			}
-			return null;
+			catch(OIOException e){
+				log.error(e.getMessage());
+			}
+			cnt++;
+		}
+		
+		return null;
 	}
 
 	@Override

@@ -32,7 +32,6 @@ public class PastPathExperienceController {
 		List<PathObject> path_list = new ArrayList<PathObject>();
 		Path path_clone = Path.clone(test.getPath());
 		for(PathObject obj : path_clone.getPath()){
-
 			if(obj.getType().equals("Page")){
 				Page page_obj = (Page)obj;
 								
@@ -66,12 +65,7 @@ public class PastPathExperienceController {
 		Gson gson = new Gson();
         String test_json = gson.toJson(new_test);
         String host = null;
-        try {
-			host = new URL(test.getDomain().getUrl()).getHost();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			host = test.getDomain().getUrl();
-		}
+        host = test.getDomain().getUrl();
 		pusher.trigger(host, "test-discovered", test_json);
 	}
 }

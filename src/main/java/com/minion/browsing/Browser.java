@@ -48,6 +48,7 @@ import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.PageSource;
 import com.qanairy.models.SystemInfo;
 import com.qanairy.models.dto.SystemInfoRepository;
 import com.qanairy.persistence.ISystemInfo;
@@ -169,7 +170,7 @@ public class Browser {
 			visible_elements = new ArrayList<PageElement>();
 		}
 		
-		return new Page(src, 
+		return new Page(new PageSource(src), 
 						url, 
 						screenshot, 
 						visible_elements);
@@ -188,7 +189,7 @@ public class Browser {
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
-	    return p.matcher(src).replaceAll("");
+		return p.matcher(src).replaceAll("");
 	}
 	
 	/**

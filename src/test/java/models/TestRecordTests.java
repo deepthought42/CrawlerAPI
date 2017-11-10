@@ -1,7 +1,5 @@
 package models;
 
-import static org.junit.Assert.assertFalse;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,6 +9,7 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.TestRecordRepository;
@@ -29,7 +28,8 @@ public class TestRecordTests {
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
-			page = new Page("<html><body></body></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			page = new Page(new PageSource("<html><body></body></html>"),
+							"http://www.test.test", "", new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -38,7 +38,7 @@ public class TestRecordTests {
 		
 		test.setPath(path);
 		test.setResult(page);
-		TestRecord test_record = new TestRecord(new Date(), true, page);		
+		TestRecord test_record = new TestRecord(new Date(), true, page);	
 		TestRecord test_record_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
 		
 		Assert.assertTrue(test_record_record.getKey().equals(test_record_repo.generateKey(test_record)));
@@ -52,7 +52,8 @@ public class TestRecordTests {
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
-			page = new Page("<html><body></body></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			page = new Page(new PageSource("<html><body></body></html>"),
+							"http://www.test.test", "", new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -77,7 +78,8 @@ public class TestRecordTests {
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
-			page = new Page("<html><body></body></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			page = new Page(new PageSource("<html><body></body></html>"),
+							"http://www.test.test", "", new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}

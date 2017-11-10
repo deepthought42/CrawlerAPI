@@ -8,6 +8,11 @@ public class PageSource {
 	private String key;
 	private String src;
 	
+	public PageSource(){
+		this.setKey(null);
+		this.setSrc("");
+	}
+	
 	public PageSource(String src){
 		this.setKey(null);
 		this.src = src;
@@ -22,6 +27,10 @@ public class PageSource {
 		return src;
 	}
 
+	public void setSrc(String src) {
+		this.src = src;
+	}
+	
 	public String getKey() {
 		return key;
 	}

@@ -24,10 +24,10 @@ public class Page extends PathObject {
 	private String screenshot = null; 
 	
 	@JsonIgnore
-	private String src = "";
+	private PageSource src;
 	private URL url;
-	private int total_weight;
-	private int image_weight;
+	private Integer total_weight;
+	private Integer image_weight;
 	
 	@JsonIgnore
 	private List<PageElement> elements;
@@ -37,7 +37,9 @@ public class Page extends PathObject {
 	 * instantiate an empty page instance
 	 */
 	public Page(){
+		this.setSrc(new PageSource());
 		this.setType(Page.class.getSimpleName());
+		this.setImageWeight(0);
 	}
 
 	/**
@@ -51,7 +53,7 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null
 	 */
-	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
+	public Page(PageSource html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
 		super.setType("Page");
@@ -63,7 +65,7 @@ public class Page extends PathObject {
 		this.elements = elements;
 		this.element_counts = countTags(elements);
 		this.setLandable(false);
-
+		this.setImageWeight(0);
 		this.setKey(null);
 	}
 	
@@ -78,16 +80,16 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null;
 	 */
-	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
+	public Page(PageSource html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		super.setType("Page");
-
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
 		this.setScreenshot(screenshot);
 		this.setElements(elements);
 		this.setElementCounts(countTags(elements));
 		this.setLandable(isLandable);
+		this.setImageWeight(0);
 		this.setKey(null);
 	}
 	
@@ -156,7 +158,7 @@ public class Page extends PathObject {
 	 */
 	@Override
 	public String toString(){
-		return this.getSrc();
+		return this.getUrl()+"++"+this.getScreenshot();
 	}
 	
 	
@@ -212,14 +214,15 @@ public class Page extends PathObject {
 	 * @return the page of the source
 	 */
 	@JsonIgnore
-	public String getSrc() {
+	public PageSource getSrc() {
 		return this.src;
 	}
 	
 	@JsonIgnore
-	public void setSrc(String src) {
-		if(src.length() > 0){
-			this.src = Browser.cleanSrc(src);
+	public void setSrc(PageSource src) {
+		if(src.getSrc().length() > 0){
+			String cleaned_src = Browser.cleanSrc(src.getSrc());
+			this.src = new PageSource(cleaned_src);
 		}
 		else{
 			this.src = src;
@@ -260,11 +263,11 @@ public class Page extends PathObject {
 		this.url = url;
 	}
 
-	public int getTotalWeight() {
+	public Integer getTotalWeight() {
 		return total_weight;
 	}
 
-	public void setTotalWeight(int total_weight) {
+	public void setTotalWeight(Integer total_weight) {
 		this.total_weight = total_weight;
 	}
 
@@ -276,11 +279,11 @@ public class Page extends PathObject {
 		this.element_counts = element_counts;
 	}
 
-	public int getImageWeight() {
+	public Integer getImageWeight() {
 		return image_weight;
 	}
 
-	public void setImageWeight(int image_weight) {
+	public void setImageWeight(Integer image_weight) {
 		this.image_weight = image_weight;
 	}
 }

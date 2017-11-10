@@ -1,13 +1,12 @@
 package com.qanairy.persistence;
 
 import com.tinkerpop.frames.Property;
-import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 /**
  * Tinkerpop/frames interface implementation of {@link PageSource}
  *
  */
-@TypeValue("PageSource") public interface IPageSource extends IPathObject{
+public interface IPageSource extends IPathObject{
 	@Property("key")
 	public String getKey();
 	

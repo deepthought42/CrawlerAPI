@@ -19,7 +19,7 @@ public class PageSourceRepository implements IPersistable<PageSource, IPageSourc
 
 	@Override
 	public String generateKey(PageSource page_src) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page_src.getSrc());   
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page_src.getSrc())+":1";   
 	}
 
 	@Override
@@ -32,7 +32,6 @@ public class PageSourceRepository implements IPersistable<PageSource, IPageSourc
 		Iterator<IPageSource> pages_iter = ((Iterable<IPageSource>) DataAccessObject.findByKey(page_src.getKey(), connection, IPageSource.class)).iterator();
 		
 		IPageSource page_src_record = null;
-		
 		if(pages_iter.hasNext()){
 			page_src_record = pages_iter.next();
 		}

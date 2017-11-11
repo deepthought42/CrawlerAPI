@@ -202,7 +202,7 @@ public class TestController {
 	public @ResponseBody List<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-		
+    	Date start = new Date();
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
@@ -223,6 +223,9 @@ public class TestController {
 				unverified_tests.add(test_repo.convertFromRecord(itest));
 			}
 		}
+    	Date end = new Date();
+    	long diff = end.getTime() - start.getTime();
+    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
 		return unverified_tests;
 	}
 

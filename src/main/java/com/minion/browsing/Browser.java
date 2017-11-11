@@ -63,7 +63,8 @@ public class Browser {
 	private WebDriver driver = null;
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
 	private String url = "";
-    private static final String HUB_IP_ADDRESS= "165.227.120.79";
+    //private static final String HUB_IP_ADDRESS= "165.227.120.79";
+    private static final String HUB_IP_ADDRESS= "104.131.30.168";
 
 	/**
 	 * 

@@ -149,7 +149,7 @@ public class Page extends PathObject {
         if (!(o instanceof Page)) return false;
         Page that = (Page)o;
         
-		return (this.getSrc().equals(that.getSrc()));
+		return (this.getSrc().getSrc().equals(that.getSrc().getSrc()));
 				
 	}
 	

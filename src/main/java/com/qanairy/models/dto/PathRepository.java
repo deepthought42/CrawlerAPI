@@ -185,16 +185,17 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	public Path convertFromRecord(IPath obj) throws NullPointerException {
 		IPathObject path_obj = obj.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
-
+		String key = obj.getKey();
 		IPathObject last_path_obj = null;
-		while(path_obj != null && (last_path_obj == null || !last_path_obj.getKey().equals(path_obj.getKey()))){
+		while((path_obj != null && path_obj.getPathEdges() != null) 
+				&& (last_path_obj == null || !last_path_obj.getKey().equals(path_obj.getKey()))){
 			Iterator<IPathEdge> path_edges = path_obj.getPathEdges().iterator();
 			last_path_obj = path_obj;
 			PathObjectRepository path_obj_repo = new PathObjectRepository();
 			path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
 			while(path_edges.hasNext()){
 				IPathEdge edge = path_edges.next();
-				if(edge != null && edge.getPathKey().equals(obj.getKey()) ){
+				if(edge != null && edge.getPathKey().equals(key) ){
 					path_obj = edge.getPathObjectIn();
 					break;
 				}
@@ -207,7 +208,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			}
 		}
 		
-		String key = obj.getKey();
 		return new Path(key, obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);
 	}
 

@@ -9,9 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +25,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.WorkManagement.WorkAllowanceStatus;
+import com.minion.actors.MemoryRetrievalActor;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.models.Account;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IDomain;
+import com.qanairy.persistence.IPage;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 
 import akka.pattern.Patterns;
@@ -44,6 +53,7 @@ import akka.actor.Props;
 @RestController
 @RequestMapping("/discovery")
 public class DiscoveryController {
+	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
 
     @Autowired
     protected AccountService accountService;
@@ -73,23 +83,45 @@ public class DiscoveryController {
     		throw new UnknownAccountException();
     	}
 		
-		WorkAllowanceStatus.register(acct.getKey()); 
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
 
-		ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-		Message<URL> message = new Message<URL>(acct.getKey(), new URL(url));
-		ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-		//workAllocationActor.tell(message, ActorRef.noSender());
+    	@SuppressWarnings("unchecked")
+		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
+    	IDomain domain = domains_iter.next();
+    	
+    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+    	String domain_url = domain.getUrl();
+    	String protocol = domain.getProtocol();
+    	Date now = new Date();
+    	long diffInMinutes = (int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) );
+		connection.close();
+        
+        if(diffInMinutes > 60){
+			WorkAllowanceStatus.register(acct.getKey()); 
 	
-		Timeout timeout = new Timeout(Duration.create(10, "seconds"));
-		Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
-		try {
-			Await.result(future, timeout.duration());
-			return new ResponseEntity<String>(HttpStatus.OK);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url));
+			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
+			//workAllocationActor.tell(message, ActorRef.noSender());
+		
+			Timeout timeout = new Timeout(Duration.create(10, "seconds"));
+			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
+			try {
+				Await.result(future, timeout.duration());
+				return new ResponseEntity<String>(HttpStatus.OK);
+	
+			} catch (Exception e) {
+				e.printStackTrace();
+				return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
 		}
+        else{
+        	//Throw error indicating discovery has been or is running
+        	log.info("Account: " + acct.getKey() + " attempted to run discovery within 60 minutes of last discovery" );
+        	return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        
+
 	}
 
 	/**

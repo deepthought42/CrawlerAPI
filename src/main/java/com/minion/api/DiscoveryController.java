@@ -93,7 +93,11 @@ public class DiscoveryController {
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
     	Date now = new Date();
-    	long diffInMinutes = (int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) );
+    	long diffInMinutes = 1000;
+    	if(last_ran_date != null){
+    		diffInMinutes = (int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) );
+    	}
+    	
 		connection.close();
         
         if(diffInMinutes > 60){

@@ -10,8 +10,6 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -48,7 +48,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		TestRecord test_record_record = find(connection, generateKey(record));
 		if(test_record_record == null){
 			convertToRecord(connection, record);
-			connection.save();
+			//connection.save();
 		}
 		else{
 			record = test_record_record;

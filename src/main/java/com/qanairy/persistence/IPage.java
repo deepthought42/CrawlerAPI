@@ -1,6 +1,7 @@
 package com.qanairy.persistence;
 
 import com.qanairy.models.Page;
+import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
@@ -11,7 +12,8 @@ import java.util.Map;
  * @author brandon
  *
  */
-@TypeValue("Page") public interface IPage extends IPathObject{
+@TypeValue("Page") 
+public interface IPage extends IPathObject{
 	@Property("key")
 	public String getKey();
 	
@@ -29,12 +31,6 @@ import java.util.Map;
 	
 	@Property("screenshot")
 	public void setScreenshot(String screenshotUrl);
-	
-	@Property("src")
-	public String getSrc();
-
-	@Property("src")
-	public void setSrc(String src);
 	
 	@Property("url")
 	public String getUrl();
@@ -56,14 +52,20 @@ import java.util.Map;
 	*/
 
 	@Property("total_weight")
-	public void setTotalWeight(int totalWeight);
+	public void setTotalWeight(Integer totalWeight);
 	
 	@Property("total_weight")
-	public int getTotalWeight();
+	public Integer getTotalWeight();
 
 	@Property("img_weight")
-	public void setImageWeight(int imageWeight);
+	public void setImageWeight(Integer imageWeight);
 	
 	@Property("img_weight")
-	public int getImageWeight();
+	public Integer getImageWeight();
+	
+	@Adjacency(label="src")
+	public IPageSource getSrc();
+
+	@Adjacency(label="src")
+	public void setSrc(IPageSource src);
 }

@@ -4,13 +4,12 @@ import com.google.gson.Gson;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +36,7 @@ public class PastPathExperienceController {
 								
 				Page page;
 				try {
-					page = new Page("", page_obj.getUrl().toString(), page_obj.getScreenshot(), new ArrayList<PageElement>());
+					page = new Page(new PageSource(""), page_obj.getUrl().toString(), page_obj.getScreenshot(), new ArrayList<PageElement>());
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -52,7 +51,7 @@ public class PastPathExperienceController {
 		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain());
 
 		try {
-			Page result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getScreenshot(), new ArrayList<PageElement>());
+			Page result_page = new Page(new PageSource(""), test.getResult().getUrl().toString(), test.getResult().getScreenshot(), new ArrayList<PageElement>());
 			new_test.setResult(result_page);
 		} catch (IOException e1) {
 			e1.printStackTrace();

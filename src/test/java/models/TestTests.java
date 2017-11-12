@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -27,7 +28,8 @@ public class TestTests {
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
-			Page page = new Page("<html></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			Page page = new Page(new PageSource("<html></html>"),
+								 "http://www.test.test", "", new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
 			test = new com.qanairy.models.Test(path, page, new Domain("www.test.test", "http"));
@@ -49,7 +51,8 @@ public class TestTests {
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
-			Page page = new Page("<html><body></body></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			Page page = new Page(new PageSource("<html><body></body></html>"),
+								 "http://www.test.test", "", new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
 			test = new com.qanairy.models.Test(path, page, new Domain("www.test.test", "http"));
@@ -73,7 +76,8 @@ public class TestTests {
 
 		com.qanairy.models.Test test;
 		try {
-			Page page = new Page("<html></html>","http://www.test.test", "", new ArrayList<PageElement>(), true);
+			Page page = new Page(new PageSource("<html></html>"),
+								 "http://www.test.test", "", new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
 			TestRepository test_repo = new TestRepository();

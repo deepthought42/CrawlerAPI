@@ -3,9 +3,7 @@ import org.testng.annotations.Test;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.testng.Assert;
-import org.testng.AssertJUnit;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,18 +11,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.testng.annotations.Test;
-
-import com.minion.aws.UploadObjectSingleOperation;
-import com.minion.browsing.Browser;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.dto.PathRepository;
-import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -47,7 +40,7 @@ public class PathTests {
 		Page page = new Page();
 		page.setLandable(true);
 		page.setScreenshot("Test screenshot url");
-		page.setSrc("src goes here 1");
+		page.setSrc(new PageSource("src goes here 1"));
 		page.setElements(new ArrayList<PageElement>());
 		try {
 			page.setUrl(new URL("http://www.test.com/test1"));

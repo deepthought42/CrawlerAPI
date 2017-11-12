@@ -40,14 +40,16 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Page page2 = find(connection, page.getKey());
 		IPage page_record = null;
 		if(page2 != null){
+			
+			PageSourceRepository page_src_repo = new PageSourceRepository();
 			page_record = convertToRecord(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
 			page_record.setScreenshot(page.getScreenshot());
-			page_record.setSrc(page.getSrc());
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
+			page_record.setSrc(page_src_repo.convertToRecord(connection, page.getSrc()));
 		}
 		PageRepository page_repo = new PageRepository();
 		
@@ -84,8 +86,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		page.setLandable(result.isLandable());
 		page.setImageWeight(result.getImageWeight());
 		page.setTotalWeight(result.getTotalWeight());
-		
-		page.setSrc(result.getSrc());
 		page.setElementCounts(result.getElementCounts());
 		
 		try {
@@ -123,11 +123,14 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
 			page_record.setScreenshot(page.getScreenshot());
-			page_record.setSrc(page.getSrc());
+			
+			
 			page_record.setType((Page.class.getSimpleName()));
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
+			PageSourceRepository page_src_repo = new PageSourceRepository();
+			page_record.setSrc(page_src_repo.convertToRecord(connection, page.getSrc()));
 		}
 
 		return page_record;
@@ -138,7 +141,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 */
 	@Override
 	public String generateKey(Page page) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc().getSrc());   
 	}
 
 	@Override

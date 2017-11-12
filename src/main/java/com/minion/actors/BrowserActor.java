@@ -188,7 +188,6 @@ public class BrowserActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
-			final long browserActorStartTime = System.currentTimeMillis();
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
@@ -398,14 +397,9 @@ public class BrowserActor extends UntypedActor {
 				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
 				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 				path_expansion_actor.tell(path_msg, getSelf() );
-				
-				PastPathExperienceController.broadcastTestExperience(test);
 
 				browser.close();
 		   }
-			final long browserActorEndTime = System.currentTimeMillis();
-
-			long browserActorRunTime = browserActorEndTime - browserActorStartTime;
 			//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 
 		}else unhandled(message);

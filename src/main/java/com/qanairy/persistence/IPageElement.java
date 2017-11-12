@@ -3,7 +3,6 @@ package com.qanairy.persistence;
 import java.util.List;
 import java.util.Map;
 
-import com.qanairy.models.Attribute;
 import com.qanairy.models.PathObject;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;

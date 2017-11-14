@@ -35,11 +35,13 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.GroupRepository;
+import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IGroup;
+import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
@@ -50,6 +52,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
+import com.qanairy.models.Path;
 
 /**
  * REST controller that defines endpoints to access tests
@@ -248,6 +251,26 @@ public class TestController {
 		return test_record.convertFromRecord(itest);
 	}
 
+	/**
+	 * gets {@link Path} for a given test key
+	 * 
+	 * @param key key for test that path is to be found for
+	 * @return path {@link Path} for given test
+	 */
+    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+	@RequestMapping(path="/tests/paths", method=RequestMethod.GET)
+	public @ResponseBody Path getTestPath(@RequestParam(value="key", required=true) String key){
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
+		ITest itest = itest_iter.next();
+		IPath path_record = itest.getPath();
+		
+		PathRepository path_repo = new PathRepository();
+		Path path = path_repo.convertFromRecord(path_record);
+
+		return path;
+	}
+    
 	/**
 	 * Updates the correctness of a test with the given test key
 	 * 

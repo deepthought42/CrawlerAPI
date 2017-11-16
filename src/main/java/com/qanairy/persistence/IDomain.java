@@ -30,6 +30,11 @@ public interface IDomain {
 	@Property("protocol")
 	void setProtocol(String protocol);
 
+	@Property("discovery_started_at")
+	Date getDiscoveryStartTime();
+
+	@Property("discovery_started_at")
+	void setDiscoveryStartTime(Date timestamp);
 	
 	@Property("last_discovery_path_ran_at")
 	Date getLastDiscoveryPathRanAt();

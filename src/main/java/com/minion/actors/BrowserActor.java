@@ -15,7 +15,6 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.minion.api.PastPathExperienceController;
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
@@ -375,7 +374,8 @@ public class BrowserActor extends UntypedActor {
 					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
 				}
 				catch(NullPointerException e){
-					log.warn("Failed to open connection to browser");
+					log.error("Failed to open connection to browser");
+					return;
 				}
 				
 			  	Path path = new Path();

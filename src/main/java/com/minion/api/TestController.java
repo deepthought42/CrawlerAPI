@@ -21,7 +21,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
@@ -58,7 +59,6 @@ import com.qanairy.models.Path;
  * REST controller that defines endpoints to access tests
  */
 @Controller
-@Scope("session")
 @RequestMapping("/tests")
 public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
@@ -77,7 +77,7 @@ public class TestController {
 	 * @throws UnknownAccountException 
 	 * @throws DomainNotOwnedByAccountException 
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestByDomain(HttpServletRequest request, 
 			   								 @RequestParam(value="url", required=true) String url) throws UnknownAccountException, DomainNotOwnedByAccountException {
@@ -102,8 +102,6 @@ public class TestController {
     	if(!owned_by_acct){
     		throw new DomainNotOwnedByAccountException();
     	}
-    	
-    	
 		DomainRepository domain_repo = new DomainRepository();
     	
 		IDomain idomain = domain_repo.find(url);
@@ -129,7 +127,7 @@ public class TestController {
 	 * @throws UnknownAccountException 
 	 * @throws DomainNotOwnedByAccountException 
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/failing", method = RequestMethod.GET)
 	public @ResponseBody Map<String, Integer> getFailingTestByDomain(HttpServletRequest request, 
 			   								 	 	@RequestParam(value="url", required=true) String url) 
@@ -181,7 +179,7 @@ public class TestController {
 	 * 
 	 * @return all tests matching name passed
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/name", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
 			   								 		@RequestParam(value="name", required=true) String name) {
@@ -200,7 +198,7 @@ public class TestController {
 	 * @throws DomainNotOwnedByAccountException 
 	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    //@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
@@ -238,7 +236,7 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
 	public @ResponseBody Test updateCorrectness(@RequestParam(value="key", required=true) String key, 
 										 		@RequestParam(value="correct", required=true) boolean correct){
@@ -257,7 +255,7 @@ public class TestController {
 	 * @param key key for test that path is to be found for
 	 * @return path {@link Path} for given test
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/tests/paths", method=RequestMethod.GET)
 	public @ResponseBody Path getTestPath(@RequestParam(value="key", required=true) String key){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -277,7 +275,7 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/updateName/{key}", method=RequestMethod.PUT)
 	public @ResponseBody Test updateName(HttpServletRequest request, 
 										 @PathVariable(value="key", required=true) String key, 
@@ -299,7 +297,7 @@ public class TestController {
 	 * @return
 	 * @throws MalformedURLException 
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody TestRecord runTest(@PathVariable(value="key", required=true) String key, 
 											@RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
@@ -337,7 +335,7 @@ public class TestController {
 	 * @return
 	 * @throws MalformedURLException 
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runAll", method = RequestMethod.POST)
 	public @ResponseBody Map<String, Boolean> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
 												@RequestParam(value="browser_type", required=true) String browser_type) 
@@ -385,7 +383,7 @@ public class TestController {
 	 * 
 	 * @return {@link TestRecord records} that define the results of the tests. 
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
 														@RequestParam(value="url", required=true) String url,
@@ -429,7 +427,7 @@ public class TestController {
 	 * 	
 	 * @return the updated test
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=true) String description,
@@ -466,7 +464,7 @@ public class TestController {
 	 * 	
 	 * @return the updated test
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
 	public @ResponseBody Boolean removeGroup(@RequestParam(value="group_key", required=true) String group_key,
 										  	 @RequestParam(value="test_key", required=true) String test_key){
@@ -496,7 +494,7 @@ public class TestController {
 	 * 
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {

@@ -49,7 +49,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		}
 
 		IPathObject last_path_obj = null;
-		
+		int idx = 0;
 		for(PathObject obj: path.getPath()){
 			if(obj instanceof Page){
 				PageRepository page_repo = new PageRepository();
@@ -73,6 +73,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 						IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 						
 						path_edge.setPathKey(path.getKey());
+						path_edge.setTransitionIndex(idx);
 					}
 				}
 				
@@ -88,6 +89,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				else{
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					path_edge.setPathKey(path.getKey());
+					path_edge.setTransitionIndex(idx);
 				}
 				last_path_obj = persistablePathObj;
 			}
@@ -102,10 +104,13 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					IPathEdge path_edge = last_path_obj.addPathEdge(persistablePathObj);
 					
 					path_edge.setPathKey(path.getKey());
+					path_edge.setTransitionIndex(idx);
 				}
 				
 				last_path_obj = persistablePathObj;
 			}
+			
+			idx++;
 		}
 		
 		path_record.setIsUseful(path.isUseful());
@@ -176,25 +181,26 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	}
 
 	@Override
-	public Path convertFromRecord(IPath obj) throws NullPointerException {
-		IPathObject path_obj = obj.getPath();
+	public Path convertFromRecord(IPath path) throws NullPointerException {
+		IPathObject path_obj = path.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
-		String key = obj.getKey();
+		String key = path.getKey();
 		String last_path_obj_key = null;
-		while(path_obj != null && path_obj.getPathEdges() != null && path_obj.getPathEdges().iterator().hasNext()
+		int idx = 1;
+		
+		while(path_obj != null && path_obj.getPathEdges() != null
 				&& (last_path_obj_key == null || !last_path_obj_key.equals(path_obj.getKey()))){
-			System.out.println("getting all path edges for path node :: "+path_obj.getKey());
 			Iterator<IPathEdge> path_edges = path_obj.getPathEdges().iterator();
 			last_path_obj_key = path_obj.getKey();
 			PathObjectRepository path_obj_repo = new PathObjectRepository();
-			System.out.println("converting path object record");
 			path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
 			while(path_edges.hasNext()){
-				System.out.println("Examining edges");
 				IPathEdge edge = path_edges.next();
-				if(edge != null && edge.getPathKey().equals(key) ){
-					System.out.println("path edge with matching key found");
+				System.out.println("Transition Idx : "+edge.getTransitionIndex());
+				System.out.println("Current idx : "+idx);
+				if(edge != null && edge.getPathKey().equals(key) && edge.getTransitionIndex()==idx){
 					path_obj = edge.getPathObjectIn();
+					idx++;
 					break;
 				}
 			}
@@ -206,7 +212,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			}
 		}
 		
-		return new Path(key, obj.isUseful(), obj.isSpansMultipleDomains(), path_obj_list);
+		return new Path(key, path.isUseful(), path.isSpansMultipleDomains(), path_obj_list);
 	}
 
 	@Override

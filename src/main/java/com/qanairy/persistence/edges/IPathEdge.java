@@ -17,6 +17,11 @@ public interface IPathEdge {
     @Property("pathKey")
     public void setPathKey(String pathKey);
 
+    @Property("transition_index")
+    public Integer getTransitionIndex();
+    
+    @Property("transition_index")
+    public void setTransitionIndex(int idx);
     @OutVertex
     IPathObject getPathObjectOut();
 

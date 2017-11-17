@@ -70,8 +70,15 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
+    	
     	URL url_obj = new URL(url);
-        Domain domain = new Domain(url_obj.getHost(), url_obj.getProtocol());
+    	String host = "";
+    	if(!url_obj.getHost().contains("www.")){
+    		host = url_obj.getHost();
+    		host = "www." + host;
+    	}
+    	
+        Domain domain = new Domain(host, url_obj.getProtocol());
     	acct.addDomain(domain);
     	
     	accountService.update(acct);

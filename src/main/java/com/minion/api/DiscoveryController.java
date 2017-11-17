@@ -25,14 +25,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.WorkManagement.WorkAllowanceStatus;
-import com.minion.actors.MemoryRetrievalActor;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.models.Account;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
-import com.qanairy.persistence.IPage;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 
@@ -66,6 +64,7 @@ public class DiscoveryController {
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
 	 */
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
 													   @RequestParam(value="url", required=true) String url) 
@@ -88,6 +87,7 @@ public class DiscoveryController {
     	@SuppressWarnings("unchecked")
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
+    	domain.setDiscoveryStartTime(new Date());
     	
     	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
     	String domain_url = domain.getUrl();
@@ -97,7 +97,7 @@ public class DiscoveryController {
     	if(last_ran_date != null){
     		diffInMinutes = (int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) );
     	}
-    	
+    	System.err.println("Last discovery ran :: "+diffInMinutes + " minutes ago ");
 		connection.close();
         
         if(diffInMinutes > 60){
@@ -107,7 +107,7 @@ public class DiscoveryController {
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url));
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 			//workAllocationActor.tell(message, ActorRef.noSender());
-		
+			System.err.println("Sending url message to work allocation actor");
 			Timeout timeout = new Timeout(Duration.create(10, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
 			try {
@@ -136,7 +136,7 @@ public class DiscoveryController {
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('qanairy')")
 	@RequestMapping("/stop")
 	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request) 
 			throws MalformedURLException, UnknownAccountException {

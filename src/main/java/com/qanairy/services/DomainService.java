@@ -27,7 +27,7 @@ public class DomainService {
     }
 
 
-    //@PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Domain create(Domain domain) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
     	Domain domain_record = domainRepository.create(connection, domain);
@@ -35,7 +35,7 @@ public class DomainService {
         return domain_record;
     }
 
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Domain get(String key) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
     	Domain domain = domainRepository.find(connection, key);
@@ -43,7 +43,7 @@ public class DomainService {
         return domain;
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Domain update(Domain domain) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
     	Domain domain_record = domainRepository.update(connection, domain);

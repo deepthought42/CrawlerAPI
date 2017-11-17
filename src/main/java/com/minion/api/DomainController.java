@@ -52,7 +52,7 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(final @RequestBody String url, final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
         /*printGrantedAuthorities((Auth0JWTToken) principal);
@@ -61,24 +61,32 @@ public class DomainController {
             // log username of user requesting domain creation
             logger.info("creating new domain in domain");
         }*/
-
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	
+
     	Account acct = accountService.find(currentUser.getUsername());
+
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	
+    	
     	URL url_obj = new URL(url);
-        Domain domain = new Domain(url_obj.getHost(), url_obj.getProtocol());
+    	String host = "";
+    	if(!url_obj.getHost().contains("www.")){
+    		host = url_obj.getHost();
+    		host = "www." + host;
+    	}
+    	
+        Domain domain = new Domain(host, url_obj.getProtocol());
     	acct.addDomain(domain);
+    	
     	accountService.update(acct);
         return domainService.create(domain);
     }
 
 
-    @PreAuthorize("hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.GET)
     public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -98,7 +106,7 @@ public class DomainController {
         return domainService.get(key);
     }
 */
-    @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     @RequestMapping(value ="/domains/{id}", method = RequestMethod.PUT)
     public @ResponseBody Domain update(final @PathVariable String key, final @Validated @RequestBody Domain domain) {
         logger.info("update invoked");

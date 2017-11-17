@@ -32,6 +32,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -49,10 +50,6 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageSource;
-import com.qanairy.models.SystemInfo;
-import com.qanairy.models.dto.SystemInfoRepository;
-import com.qanairy.persistence.ISystemInfo;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -61,7 +58,8 @@ public class Browser {
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
 
 	private WebDriver driver = null;
-	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required"};	
+	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
+	private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
 	private String url = "";
     //private static final String HUB_IP_ADDRESS= "165.227.120.79";
     private static final String HUB_IP_ADDRESS= "104.131.30.168";
@@ -95,6 +93,8 @@ public class Browser {
 				else if(browser.equals("phantomjs")){
 					this.driver = openWithPhantomjs(url);
 				}
+				WebDriverWait wait = new WebDriverWait(driver, 120);
+				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				break;
 			}
 			catch(UnreachableBrowserException e){
@@ -114,21 +114,12 @@ public class Browser {
 			} catch (InterruptedException e1) {}
 		}
 		
-		if(this.driver != null){
-			OrientConnectionFactory connection = new OrientConnectionFactory();
-			ISystemInfo info = SystemInfoRepository.find(connection, "system_info");
-			if(info == null){
-				info = new SystemInfo();
-			}
-			else{
-				info.setBrowserCount(info.getBrowserCount()+1);
-			}
-			
+		if(this.driver != null){			
 			//SystemInfoRepository.save(connection, info);
 			this.url = url;
-			//this.driver.navigate().to(url);
+			this.driver.navigate().to(url);
 		    //
-			this.driver.get(url);
+			//this.driver.get(url);
 			this.driver.manage().window().maximize();
 		}
 		else{
@@ -230,10 +221,6 @@ public class Browser {
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 	     
-	    // Launch website
-	    driver.navigate().to(url);
-	    driver.manage().window().maximize();
-
 	    /*
 		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
 
@@ -302,9 +289,9 @@ public class Browser {
 			try{
 				DesiredCapabilities cap = DesiredCapabilities.chrome();
 				cap.setJavascriptEnabled(true);
-				cap.setCapability("screenshot", true);
-				cap.setPlatform(Platform.LINUX);
-				cap.setCapability("maxInstances", 5);
+				//cap.setCapability("screenshot", true);
+				//cap.setPlatform(Platform.LINUX);
+				//cap.setCapability("maxInstances", 5);
 				// optional video recording
 				/*String record_video = "True";
 				// video record
@@ -318,11 +305,8 @@ public class Browser {
 			    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 			    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
 			    
-			    // Launch website
-			    driver.get(url);
-			    //driver.manage().window().maximize();
-			    
 			    connectSucceeded = true;
+			    break;
 			}
 			catch(WebDriverException e){
 				connectFailures++;
@@ -345,6 +329,12 @@ public class Browser {
 		
 		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 		cap.setJavascriptEnabled(true);
+		cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--ssl-protocol=tlsv1"});
+
+		//cap.setCapability("web-security","true");
+		//cap.setCapability("ssl-protocol","any");
+		//cap.setCapability("ignore-ssl-errors","true");
+		//cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--web-security=false","--ssl-protocol=any", "--ignore-ssl-errors=true"});//,"--webdriver-loglevel=NONE"});
 
 		// optional video recording
 		/*String record_video = "True";
@@ -423,18 +413,17 @@ public class Browser {
 															 throws WebDriverException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-		//TO MAKE BETTER TIME ON THIS PIECE IT WOULD BE BETTER TO PARALELLIZE THIS PART
+
 		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
 		if(pageElements.size() == 0){
 			return elementList;
 		}
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-		log.debug("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
+		//log.info("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
 		for(WebElement elem : pageElements){
 			
 			try{
-				Date start = new Date();
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, "", xpath_map, driver); 
@@ -444,24 +433,18 @@ public class Browser {
 						elementList.add(tag);
 					}
 					catch(Exception e){
-						e.printStackTrace();
+						log.error(e.getMessage());
 					}
 
 				}
-				
-				Date end = new Date();
-				double execution_time = (end.getTime() - start.getTime())/1000.0;
-				if( execution_time > 1.0){
-					log.debug("All attributes extracted in " + execution_time + " seconds");
-				}
 			}catch(StaleElementReferenceException e){
-				log.error(e.toString());
+				log.error(e.getMessage());
 			}
 			catch(RasterFormatException e){
-				log.error(e.toString());
+				log.error(e.getMessage());
 			}
 			catch(GridException e){
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 		}
 		log.debug("Total elements that are visible on page :: "
@@ -869,8 +852,7 @@ public class Browser {
 			}
 			
 		}catch(InvalidSelectorException e){
-			log.info("invalid selector");
-			
+			log.error(e.getMessage());
 		}
 
 		return xpath;

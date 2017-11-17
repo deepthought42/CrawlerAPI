@@ -30,22 +30,29 @@ public class AccountService {
    // @PreAuthorize("hasAuthority('qanairy')")
     public Account create(Account account) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
-        return accountRepository.create(connection, account);
+        Account acct = accountRepository.create(connection, account);
+        connection.close();
+        return acct;
     }
 
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Account get(String key) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
-        return accountRepository.find(connection, key);
+        Account acct = accountRepository.find(connection, key);
+        connection.close();
+        return acct;
     }
 
-    @PreAuthorize("hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Account update(Account account) {
+    	System.err.println("updating account");
     	OrientConnectionFactory connection = new OrientConnectionFactory();
-        return accountRepository.update(connection, account);
+        Account acct = accountRepository.update(connection, account);
+        connection.close();
+        return acct;
     }
     
-    @PreAuthorize("hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Account find(String key){
     	OrientConnectionFactory conn = new OrientConnectionFactory();
     	Account acct = accountRepository.find(conn, key);

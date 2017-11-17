@@ -14,12 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
- * 
- * @author Brandon Kindred
  */
 @Controller
 @RequestMapping("/tests/records")
@@ -31,6 +30,7 @@ public class TestRecordController {
 	 * @param url
 	 * @return
 	 */
+    @PreAuthorize("hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<TestRecord> getTestRecords(@RequestParam(value="url", required=true) Test test) {
 		ArrayList<TestRecord> test_records = new ArrayList<TestRecord>();
@@ -43,6 +43,8 @@ public class TestRecordController {
 	 * @param test
 	 * @return
 	 */
+    @PreAuthorize("hasAuthority('qanairy')")
+
 	@RequestMapping(method = RequestMethod.PUT)
 	public @ResponseBody TestRecord updateTest(@RequestParam(value="test", required=true) TestRecord test_record){
 		

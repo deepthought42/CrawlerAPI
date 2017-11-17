@@ -124,8 +124,8 @@ public class Path {
 		List<PathObject> path_obj = path.getPath();
 		List<PathObject> clone_list = new ArrayList<PathObject>();
 		for(PathObject obj : path_obj){
-			PathObject path_obj_clone = obj.clone();
-			clone_list.add(path_obj_clone);
+			//PathObject path_obj_clone = obj.clone();
+			clone_list.add(obj);
 		}
 		
 		clonePath.setPath(clone_list);

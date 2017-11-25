@@ -24,7 +24,7 @@ public class Page extends PathObject {
 	private String screenshot = null; 
 	
 	@JsonIgnore
-	private PageSource src;
+	private String src;
 	private URL url;
 	private Integer total_weight;
 	private Integer image_weight;
@@ -37,7 +37,7 @@ public class Page extends PathObject {
 	 * instantiate an empty page instance
 	 */
 	public Page(){
-		this.setSrc(new PageSource());
+		this.setSrc(null);
 		this.setType(Page.class.getSimpleName());
 		this.setImageWeight(0);
 	}
@@ -53,7 +53,7 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null
 	 */
-	public Page(PageSource html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
+	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
 		super.setType("Page");
@@ -80,7 +80,7 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null;
 	 */
-	public Page(PageSource html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
+	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		super.setType("Page");
 		this.setSrc(html);
@@ -149,7 +149,7 @@ public class Page extends PathObject {
         if (!(o instanceof Page)) return false;
         Page that = (Page)o;
         
-		return (this.getSrc().getSrc().equals(that.getSrc().getSrc()));
+		return (this.getSrc().equals(that.getSrc()));
 				
 	}
 	
@@ -214,15 +214,15 @@ public class Page extends PathObject {
 	 * @return the page of the source
 	 */
 	@JsonIgnore
-	public PageSource getSrc() {
+	public String getSrc() {
 		return this.src;
 	}
 	
 	@JsonIgnore
-	public void setSrc(PageSource src) {
-		if(src.getSrc() != null && src.getSrc().length() > 0){
-			String cleaned_src = Browser.cleanSrc(src.getSrc());
-			this.src = new PageSource(cleaned_src);
+	public void setSrc(String src) {
+		if(src != null && src.length() > 0){
+			String cleaned_src = Browser.cleanSrc(src);
+			this.src = cleaned_src;
 		}
 		else{
 			this.src = src;

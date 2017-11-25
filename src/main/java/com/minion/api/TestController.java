@@ -141,30 +141,21 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	
-       	boolean owned_by_acct = false;
-
-    	for(Domain domain_rec : acct.getDomains()){
-    		if(domain_rec.getUrl().equals(url)){
-    			owned_by_acct = true;
-    			break;
-    		}
-    	}
-    	
-    	if(!owned_by_acct){
-    		throw new DomainNotOwnedByAccountException();
-    	}
-    	
 		DomainRepository domain_repo = new DomainRepository();
     	
-		IDomain idomain = domain_repo.find(url);
-		Iterator<ITest> tests = idomain.getTests().iterator();
 		int failed_tests = 0;
-		
-		while(tests.hasNext()){
-			ITest itest = tests.next();
-			if(itest.getCorrect() != null && itest.getCorrect() == false){
-				failed_tests++;
+		IDomain idomain = domain_repo.find(url);
+		try{
+			Iterator<ITest> tests = idomain.getTests().iterator();
+			
+			while(tests.hasNext()){
+				ITest itest = tests.next();
+				if(itest.getCorrect() != null && itest.getCorrect() == false){
+					failed_tests++;
+				}
 			}
+		}catch(NullPointerException e){
+			log.error(e.getMessage());
 		}
 				
         Map<String, Integer> result = new HashMap<String, Integer>();
@@ -299,21 +290,21 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTest(@PathVariable(value="key", required=true) String key, 
+	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
 											@RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
 		TestRecord record = null;
+		TestRepository test_record = new TestRepository();
 
 		if(itest.getKey().equals(key)){
-			TestRepository test_record = new TestRepository();
-	
 			Test test = test_record.convertFromRecord(itest);
 			Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 			record = TestingActor.runTest(test, browser);
 			
 			TestRecordRepository test_record_record = new TestRecordRepository();
+			System.out.println("Record created with result page :: "+record.getPage());
 			itest.addRecord(test_record_record.convertToRecord(connection, record));
 			itest.setCorrect(record.getPasses());
 			itest.setLastRunTimestamp(new Date());
@@ -325,7 +316,7 @@ public class TestController {
 		}
 		connection.close();
 		
-		return record;
+		return test_record.convertFromRecord(itest);
 	}
 
     /**

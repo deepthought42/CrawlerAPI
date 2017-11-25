@@ -14,25 +14,26 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.minion.actors.PathExpansionActor;
 import com.qanairy.api.exception.Auth0ManagementApiException;
 import com.qanairy.api.exception.InvalidUserException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
+import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.UsernameService;
 
@@ -40,7 +41,6 @@ import com.qanairy.services.UsernameService;
  *	API endpoints for interacting with {@link User} data
  */
 @RestController
-@CrossOrigin(origins = "http://localhost:8001")
 @RequestMapping("/accounts")
 public class AccountController {
 	private static Logger log = LoggerFactory.getLogger(AccountController.class);
@@ -124,12 +124,13 @@ public class AccountController {
         return accountService.get(key);
     }
 
+	@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     @RequestMapping(value ="/{id}", method = RequestMethod.PUT)
-    public Account update(final @PathVariable String key, final @Validated @RequestBody Account account) {
+    public Account update(final @PathVariable String key, 
+    					  final @Validated @RequestBody Account account) {
         logger.info("update invoked");
         return accountService.update(account);
     }
-    
     
 
     /**

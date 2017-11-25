@@ -1,9 +1,7 @@
 package com.minion.actors;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 
@@ -17,13 +15,11 @@ import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.minion.api.PastPathExperienceController;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.Page;
 import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
 
 /**
  * Handles retrieving tests
@@ -147,32 +143,24 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 
 		 try {		
-		
-			int cnt = 0;
-			while(browser == null && cnt < 5){
-				try{
-					page = Crawler.crawlPath(test.getPath(), browser);
-					break;
-				}catch(NullPointerException e){
-					log.error(e.getMessage());
-				}
-				cnt++;
-			 }
-			 passing = test.isTestPassing(page, test.isCorrect());
-			 
-			 Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
+			System.err.println("Test path :: "+test.getPath());
+			page = Crawler.crawlPath(test.getPath(), browser);
+			System.out.println("Result page from crawl :: "+page);
+			passing = test.isTestPassing(page, test.isCorrect());
+			test_record = new TestRecord(new Date(), passing, page);
+			
+			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();
-			    //log.info(browserName);
+			    System.out.println("browser name :: " + browserName);
 			    String os = cap.getPlatform().toString();
-			    //log.info(os);
+			    System.out.println("OS : " + os);
 			    String v = cap.getVersion().toString();
-			    //log.info(v);
+			    System.out.println("Version :: " +v);
 			    
 		    test.setBrowserStatus(browserName, passing);
 			    
-			 test_record = new TestRecord(new Date(), passing, page);
 		 } catch (IOException e) {		
-			 e.printStackTrace();		
+			 log.error(e.getMessage());		
 		 }	
 		
 		 final long pathCrawlEndTime = System.currentTimeMillis();

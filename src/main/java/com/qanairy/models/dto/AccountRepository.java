@@ -53,11 +53,12 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		
 		acct_record.setOrgName(account.getOrgName());
 
-		for(QanairyUser user : account.getUsers()){
+		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
 			acct_record.addUser(repo.convertToRecord(connection, user));
 		}
+		*/
 		
 		return acct_record;
 	}
@@ -65,7 +66,6 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Account convertFromRecord(IAccount account) {
-		List<QanairyUser> users = IteratorUtils.toList(account.getUsers().iterator());
 		List<IDomain> domain_records = IteratorUtils.toList(account.getDomains().iterator());
 		
 		List<Domain> domains = new ArrayList<Domain>();
@@ -73,7 +73,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		for(IDomain domain : domain_records){
 			domains.add(domain_repo.convertFromRecord(domain));
 		}
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), users, domains);
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), null, domains);
 	}
 	
 	/**
@@ -137,8 +137,6 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 					}
 				}
 			}
-			
-			connection.save();
 		}
 		return convertFromRecord(acct);
 	}
@@ -172,5 +170,12 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		
 		return accounts;
+	}
+
+	public Account deleteDomain(OrientConnectionFactory conn, Account acct, Domain domain) {
+		IAccount account = convertToRecord(conn, acct);
+		DomainRepository domain_repo = new DomainRepository();
+		account.removeDomain(domain_repo.convertToRecord(conn, domain));
+		return convertFromRecord(account);
 	} 
 }

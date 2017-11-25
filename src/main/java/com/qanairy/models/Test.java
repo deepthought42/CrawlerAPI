@@ -106,19 +106,19 @@ public class Test {
 	public Boolean isTestPassing(Page page, boolean last_test_passing_status){
 		Boolean passing = null;
 		if(!last_test_passing_status && this.getResult().equals(page)){
-			log.debug("Pages are equal and test is NOT already passing");
+			log.info("Pages are equal and test is NOT already passing");
 			passing = false; 
 		}
 		else if(!last_test_passing_status && !this.getResult().equals(page)){
-			log.debug("Pages are NOT equal and test is NOT already passing");
+			log.info("Pages are NOT equal and test is NOT already passing");
 			passing = null;
 		}
 		else if(last_test_passing_status && this.getResult().equals(page)){
-			log.debug("pages are equal and test is already marked as passing");
+			log.info("pages are equal and test is already marked as passing");
 			passing = true;
 		}
 		else if(last_test_passing_status && !this.getResult().equals(page)){
-			log.debug("pages are NOT equal and test is already passing");
+			log.info("pages are NOT equal and test is already passing");
 			passing = false;
 		}
 		

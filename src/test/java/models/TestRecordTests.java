@@ -28,7 +28,7 @@ public class TestRecordTests {
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
-			page = new Page(new PageSource("<html><body></body></html>"),
+			page = new Page("<html><body></body></html>",
 							"http://www.test.test", "", new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
@@ -52,7 +52,7 @@ public class TestRecordTests {
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
-			page = new Page(new PageSource("<html><body></body></html>"),
+			page = new Page("<html><body></body></html>",
 							"http://www.test.test", "", new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
@@ -78,7 +78,7 @@ public class TestRecordTests {
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
-			page = new Page(new PageSource("<html><body></body></html>"),
+			page = new Page("<html><body></body></html>",
 							"http://www.test.test", "", new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);

@@ -63,9 +63,9 @@ public interface IPage extends IPathObject{
 	@Property("img_weight")
 	public Integer getImageWeight();
 	
-	@Adjacency(label="src")
-	public IPageSource getSrc();
+	@Property("src")
+	public String getSrc();
 
-	@Adjacency(label="src")
-	public void setSrc(IPageSource src);
+	@Property("src")
+	public void setSrc(String src);
 }

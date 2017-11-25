@@ -161,8 +161,7 @@ public class Browser {
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();
 		}
-		
-		return new Page(new PageSource(src), 
+		return new Page(src, 
 						url, 
 						screenshot, 
 						visible_elements);
@@ -704,69 +703,72 @@ public class Browser {
 						}
 						else if(attr_val.equalsIgnoreCase("text")){
 							log.info("text input encountered");
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("textarea")){
 							log.info("text area input encountered");
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("color")){
 							log.info("color input encountered");
+							choices.add(tag);
 	
 						}
 						else if(attr_val.equalsIgnoreCase("email")){
 							log.info("email input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("file")){
 							log.info("file input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("image")){
 							log.info("image input button encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("month")){
 							log.info("month and year input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("number")){
 							log.info("number input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("password")){
 							log.info("password input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("range")){
 							log.info("range input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("reset")){
 							log.info("reset input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("search")){
 							log.info("search input encountered");
-		
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("submit")){
 							log.info("submit input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("tel")){
 							log.info("telephone input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("time")){
 							log.info("time input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("url")){
 							log.info("url input encountered");
-	
+							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("week")){
 							log.info("week input encountered");
-	
+							choices.add(tag);
 						}
 					}
 				}

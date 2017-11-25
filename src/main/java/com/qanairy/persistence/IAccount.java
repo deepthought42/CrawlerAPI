@@ -45,4 +45,7 @@ public interface IAccount {
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public void addDomain(IDomain domain);
+	
+	@Adjacency(direction=Direction.OUT, label="has_domain")
+	public void removeDomain(IDomain domain);
 }

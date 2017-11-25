@@ -122,7 +122,8 @@ public class DiscoveryController {
         else{
         	//Throw error indicating discovery has been or is running
         	log.info("Account: " + acct.getKey() + " attempted to run discovery within 60 minutes of last discovery" );
-        	return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+        	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
+        	throw new ExistingDiscoveryFoundException();
         }
         
 
@@ -166,5 +167,17 @@ class WorkAllocatorNotFoundException extends RuntimeException {
 
 	public WorkAllocatorNotFoundException() {
 		super("could not find user .");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class ExistingDiscoveryFoundException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public ExistingDiscoveryFoundException() {
+		super("Discovery is already running");
 	}
 }

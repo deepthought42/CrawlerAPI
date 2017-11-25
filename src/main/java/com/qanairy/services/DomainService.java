@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.auth.Auth0Client;
+import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -27,7 +28,6 @@ public class DomainService {
     }
 
 
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Domain create(Domain domain) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
     	Domain domain_record = domainRepository.create(connection, domain);
@@ -35,7 +35,6 @@ public class DomainService {
         return domain_record;
     }
 
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Domain get(String key) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
     	Domain domain = domainRepository.find(connection, key);
@@ -43,7 +42,6 @@ public class DomainService {
         return domain;
     }
 
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Domain update(Domain domain) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
     	Domain domain_record = domainRepository.update(connection, domain);

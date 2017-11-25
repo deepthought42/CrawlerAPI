@@ -18,6 +18,7 @@ import com.qanairy.rules.formRules.PatternRule;
 import com.qanairy.rules.formRules.ReadOnlyRule;
 import com.qanairy.rules.formRules.RequirementRule;
 import com.qanairy.rules.formRules.SpecialCharacterRestriction;
+import com.qanairy.rules.formRules.patterns.EmailPatternRule;
 
 public class ElementRuleExtractor {
 	private static Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);
@@ -70,8 +71,9 @@ public class ElementRuleExtractor {
 				log.info("form field has a maximum length of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().get(0).equalsIgnoreCase("email")){
-				String email_regex_str = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
-				PatternRule email_rule = new PatternRule(Pattern.compile(email_regex_str, Pattern.CASE_INSENSITIVE));
+				//String email_regex_str = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
+				//PatternRule email_rule = new PatternRule(Pattern.compile(email_regex_str, Pattern.CASE_INSENSITIVE));
+				EmailPatternRule email_rule = new EmailPatternRule();
 				rules.add(email_rule);
 				log.info("created email rule");
 

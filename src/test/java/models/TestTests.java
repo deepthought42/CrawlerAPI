@@ -28,7 +28,7 @@ public class TestTests {
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
-			Page page = new Page(new PageSource("<html></html>"),
+			Page page = new Page("<html></html>",
 								 "http://www.test.test", "", new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
@@ -51,7 +51,7 @@ public class TestTests {
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
-			Page page = new Page(new PageSource("<html><body></body></html>"),
+			Page page = new Page("<html><body></body></html>",
 								 "http://www.test.test", "", new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
@@ -76,7 +76,7 @@ public class TestTests {
 
 		com.qanairy.models.Test test;
 		try {
-			Page page = new Page(new PageSource("<html></html>"),
+			Page page = new Page("<html></html>",
 								 "http://www.test.test", "", new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);

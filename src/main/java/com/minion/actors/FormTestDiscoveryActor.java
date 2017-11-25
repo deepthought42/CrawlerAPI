@@ -143,7 +143,12 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(FormRuleType.PATTERN)){
-			
+			log.info("SHOULD BE GENERATING PATTERN TESTS ");
+			path.addAll(generatePatternTests(input_elem, rule));	
+		}
+		else if(rule.getType().equals(FormRuleType.EMAIL_PATTERN)){
+			log.info("SHOULD BE GENERATING EMAIL PATTERN TESTS ");
+			path.addAll(generateEmailTests(input_elem, rule));	
 		}
 		return path;
 	}
@@ -289,6 +294,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			//generate single character str test
 			Path path_2 = new Path();
+			path.add(input);
+			path.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("sendKeys", "a"));
 			paths.add(path_2);
@@ -360,14 +367,46 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return paths;
 	}
 
-	private static void generateEnabledTests(PageElement input_elem, FormRule rule) {
+	private static List<Path> generateEnabledTests(PageElement input_elem, FormRule rule) {
 		// TODO Auto-generated method stub
+		return null;
 	}
 
-	private static void generateReadOnlyTests(PageElement input_elem, FormRule rule) {
+	private static List<Path> generateReadOnlyTests(PageElement input_elem, FormRule rule) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	private static List<Path> generatePatternTests(PageElement input_elem, FormRule rule) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
+	private static List<Path> generateEmailTests(PageElement input_elem, FormRule rule) {
+		List<Path> paths = new ArrayList<Path>();
+		Path path = new Path();
+		path.add(input_elem);
+		path.add(new Action("click", ""));
+		path.add(input_elem);
+		path.add(new Action("sendKeys", "!test@test.com"));
+		paths.add(path);		
+
+		//generate single character str test	
+		Path path1 = new Path();
+		path1.add(input_elem);
+		path1.add(new Action("click", ""));
+		path1.add(input_elem);
+		path1.add(new Action("sendKeys", "test!test.com"));
+		paths.add(path1);
+
+		Path path2 = new Path();
+		path2.add(input_elem);
+		path2.add(new Action("click", ""));
+		path2.add(input_elem);
+		path2.add(new Action("sendKeys", "test@test"));
+		paths.add(path2);
+		return paths;
+	}
 	/**
 	 * 
 	 * @param path

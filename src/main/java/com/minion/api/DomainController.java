@@ -15,10 +15,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
@@ -100,18 +100,32 @@ public class DomainController {
 	    return acct.getDomains();
     }
     
-   /* @RequestMapping(value ="/domains/{id}", method = RequestMethod.GET)
-    public Domain get(final @PathVariable String key) {
-        logger.info("get invoked");
-        return domainService.get(key);
-    }
-*/
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
-    @RequestMapping(value ="/domains/{id}", method = RequestMethod.PUT)
-    public @ResponseBody Domain update(final @PathVariable String key, final @Validated @RequestBody Domain domain) {
-        logger.info("update invoked");
-        return domainService.update(domain);
-    }
+	/**
+	 * Removes domain from the current users account
+	 * 
+	 * @param key
+	 * @param domain
+	 * @return
+	 * @throws UnknownAccountException 
+	 */
+	@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+	@RequestMapping(method = RequestMethod.DELETE)
+	public @ResponseBody Domain remove(@RequestParam(value="key", required=true) String key) 
+			throws UnknownAccountException {
+		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	    final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+	
+		Account acct = accountService.find(currentUser.getUsername());
+	
+		if(acct == null){
+			throw new UnknownAccountException();
+		}
+		
+		Domain domain = domainService.get(key);
+		acct = accountService.deleteDomain(acct, domain);
+		
+	    return domain;
+	}
     
     /**
      * Simple demonstration of how Principal info can be accessed

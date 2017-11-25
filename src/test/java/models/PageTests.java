@@ -22,7 +22,7 @@ public class PageTests {
 	public void pageCreateRecord(){
 		Page page;
 		try {
-			page = new Page(new PageSource("<html></html>"),
+			page = new Page("<html></html>",
 							"http://www.test.test", 
 							null,
 							new ArrayList<PageElement>(), 
@@ -49,7 +49,7 @@ public class PageTests {
 	@Test
 	public void pageUpdateRecord(){
 		try {
-			Page page = new Page(new PageSource("<html></html>"),
+			Page page = new Page("<html></html>",
 								 "http://www.test.test", 
 								 null, 
 								 new ArrayList<PageElement>(), 
@@ -79,7 +79,7 @@ public class PageTests {
 
 		Page page;
 		try {
-			page = new Page(new PageSource("<html><body></body></html>"),
+			page = new Page("<html><body></body></html>",
 							"http://www.test11.test", 
 							null, 
 							new ArrayList<PageElement>(), 
@@ -97,7 +97,7 @@ public class PageTests {
 			Assert.assertTrue(page_record.getType().equals(page.getType()));
 			Assert.assertTrue(page_record.isLandable() == page.isLandable());
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
-			Assert.assertTrue(page_record.getSrc().getSrc().equals(page.getSrc().getSrc()));
+			Assert.assertTrue(page_record.getSrc().equals(page.getSrc()));
 		} catch (IOException e) {
 			e.printStackTrace();
 			Assert.fail();

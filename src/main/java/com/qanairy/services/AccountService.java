@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.Domain;
 import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -27,7 +28,6 @@ public class AccountService {
     }
 
 
-   // @PreAuthorize("hasAuthority('qanairy')")
     public Account create(Account account) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
         Account acct = accountRepository.create(connection, account);
@@ -35,7 +35,6 @@ public class AccountService {
         return acct;
     }
 
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Account get(String key) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
         Account acct = accountRepository.find(connection, key);
@@ -43,7 +42,6 @@ public class AccountService {
         return acct;
     }
 
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Account update(Account account) {
     	System.err.println("updating account");
     	OrientConnectionFactory connection = new OrientConnectionFactory();
@@ -52,11 +50,18 @@ public class AccountService {
         return acct;
     }
     
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     public Account find(String key){
     	OrientConnectionFactory conn = new OrientConnectionFactory();
     	Account acct = accountRepository.find(conn, key);
     	conn.close();
     	return acct;
     }
+
+	public Account deleteDomain(Account account, Domain domain) {
+		OrientConnectionFactory conn = new OrientConnectionFactory();
+    	Account acct = accountRepository.deleteDomain(conn, account, domain);
+    	conn.save();
+    	conn.close();
+    	return acct;
+	}
 }

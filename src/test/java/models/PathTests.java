@@ -40,7 +40,7 @@ public class PathTests {
 		Page page = new Page();
 		page.setLandable(true);
 		page.setScreenshot("Test screenshot url");
-		page.setSrc(new PageSource("src goes here 1"));
+		page.setSrc("src goes here 1");
 		page.setElements(new ArrayList<PageElement>());
 		try {
 			page.setUrl(new URL("http://www.test.com/test1"));

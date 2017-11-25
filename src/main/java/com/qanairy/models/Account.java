@@ -119,4 +119,21 @@ public class Account {
 	public boolean addDomain(Domain domain) {
 		return this.domains.add(domain);
 	}
+	
+	public Domain removeDomain(Domain domain) {
+		int idx = -1;
+		boolean domain_found = false;
+		for(Domain curr_domain : domains){
+			if(curr_domain.getKey().equals(domain.getKey())){
+				domain_found = true;
+				break;
+			}
+			idx++;
+		}
+		
+		if(domain_found){
+			return this.domains.remove(idx);
+		}
+		return null;
+	}
 }

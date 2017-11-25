@@ -18,6 +18,11 @@ public class PatternRule implements ValueBasedFormRule<Pattern> {
 		this.pattern = pattern;
 	}
 	
+	public PatternRule(Pattern pattern, FormRuleType type){
+		this.type = type;
+		this.pattern = pattern;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */

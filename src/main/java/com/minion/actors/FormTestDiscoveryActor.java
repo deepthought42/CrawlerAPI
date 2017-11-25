@@ -147,7 +147,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.addAll(generatePatternTests(input_elem, rule));	
 		}
 		else if(rule.getType().equals(FormRuleType.EMAIL_PATTERN)){
-			log.info("SHOULD BE GENERATING EMAIL PATTERN TESTS ");
+			System.out.println("SHOULD BE GENERATING EMAIL PATTERN TESTS ");
 			path.addAll(generateEmailTests(input_elem, rule));	
 		}
 		return path;
@@ -409,6 +409,20 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		path2.add(input_elem);
 		path2.add(new Action("sendKeys", "test@test"));
 		paths.add(path2);
+		
+		Path path3 = new Path();
+		path3.add(input_elem);
+		path3.add(new Action("click", ""));
+		path3.add(input_elem);
+		path3.add(new Action("sendKeys", "test.test@test"));
+		paths.add(path3);
+		
+		Path path4 = new Path();
+		path4.add(input_elem);
+		path4.add(new Action("click", ""));
+		path4.add(input_elem);
+		path4.add(new Action("sendKeys", "test_test@test"));
+		paths.add(path4);
 		return paths;
 	}
 	/**
@@ -444,9 +458,9 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				
 				List<FormRule> rules = field.getRules();
 				for(FormRule rule : rules){
-					log.info("RULE :: " +rule +" of " + rules.size());
+					System.err.println("RULE :: " +rule +" of " + rules.size());
 					List<Path> path_list = generateRuleTests(input_elem, rule);
-					log.info("# rule tests created : " + path_list.size());
+					System.err.println("# rule tests created : " + path_list.size());
 					for(Path curr_path : path_list){
 						Path clone_path = Path.clone(path);
 						clone_path.getPath().addAll(curr_path.getPath());

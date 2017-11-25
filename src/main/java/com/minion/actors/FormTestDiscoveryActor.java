@@ -297,6 +297,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			path.add(new Action("click", ""));
 			path_2.add(input);
+			path_2.add(new Action("click", ""));
+			path_2.add(input);
 			path_2.add(new Action("sendKeys", "a"));
 			paths.add(path_2);
 		}
@@ -315,6 +317,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			//generate single character str test
 			Path path_2 = new Path();
+			path_2.add(input);
+			path_2.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("sendKeys", "0"));
 			paths.add(path_2);

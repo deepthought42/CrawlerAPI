@@ -5,7 +5,6 @@ import java.util.Random;
 
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -20,7 +19,6 @@ import com.tinkerpop.blueprints.Vertex;
 
 /**
  * 
- * @author Brandon Kindred
  *
  */
 public class ActionFactory {
@@ -70,8 +68,8 @@ public class ActionFactory {
 			builder.release(elem);
 		}
 		else if(action.equals("sendKeys")){
-			builder.sendKeys(elem, Keys.chord(Keys.CONTROL, input, Keys.DELETE));
-			builder.sendKeys(elem, "Some src Val");
+			//builder.sendKeys(elem, Keys.chord(Keys.CONTROL, Keys.ALT, Keys.DELETE));
+			builder.sendKeys(elem, input);
 		}
 		else if(action.equals("mouseover")){
 			builder.moveToElement(elem);

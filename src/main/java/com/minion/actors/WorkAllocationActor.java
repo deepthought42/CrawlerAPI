@@ -2,24 +2,17 @@ package com.minion.actors;
 
 import java.net.URL;
 import java.util.UUID;
-
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Path;
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.PathRepository;
-import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-
 import com.minion.structs.Message;
-
 
 
 /**
@@ -68,6 +61,7 @@ public class WorkAllocationActor extends UntypedActor {
 						}
 					}
 					else if(acct_message.getData() instanceof URL){
+						System.err.println("url needs to be implemented");
 						//THIS SHOULD STILL BE IMPLEMENTED, LEAVING EMPTY FOR NOW DUE TO NON TRIVIAL NATURE OF THIS PIECE
 					}
 					connection.close();

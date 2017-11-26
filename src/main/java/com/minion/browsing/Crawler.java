@@ -17,7 +17,7 @@ import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 
 /**
- * Provides methods for crawling webpages using selenium
+ * Provides methods for crawling web pages using Selenium
  */
 public class Crawler {
 	private static Logger log = LoggerFactory.getLogger(Crawler.class);
@@ -61,7 +61,7 @@ public class Crawler {
 				Action action = (Action)current_obj;
 				int attempts = 0;
 				do{
-					actionPerformedSuccessfully = last_element.performAction(action, "String should be entered here", browser.getDriver());
+					actionPerformedSuccessfully = last_element.performAction(action, browser.getDriver());
 					attempts++;
 				}while(!actionPerformedSuccessfully && attempts < 50);
 			}

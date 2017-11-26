@@ -472,8 +472,10 @@ public class Browser {
 			List<String> form_xpath_list = new ArrayList<String>();
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(form_elem) );
 			Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
+			log.info("FORM PATH : " + form_tag.getXpath());
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
-			
+			log.info("total form elements found :: " + input_elements.size());
+
 			List<PageElement> input_tags = new ArrayList<PageElement>(); 
 			for(WebElement input_elem : input_elements){
 				log.info("building form element input :: " + input_elem.getTagName());

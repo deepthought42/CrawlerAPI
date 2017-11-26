@@ -24,7 +24,6 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -423,6 +422,9 @@ public class TestController {
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=true) String description,
 										@RequestParam(value="key", required=true) String key){
+    	if(name == null || name.isEmpty()){
+    		throw new EmptyGroupNameException();
+    	}
 		Group group = new Group(name, description);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
@@ -510,13 +512,18 @@ public class TestController {
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 class TestControllerNotFoundException extends RuntimeException {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public TestControllerNotFoundException() {
 		super("An error occurred accessing tests endpoint.");
+	}
+}
+
+@ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+class EmptyGroupNameException extends RuntimeException {
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public EmptyGroupNameException() {
+		super("");
 	}
 }

@@ -1,5 +1,7 @@
 package com.minion.actors;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,6 +31,7 @@ import com.minion.structs.Message;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
+import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
@@ -43,7 +46,6 @@ public class BrowserActor extends UntypedActor {
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
-	private Browser browser = null;
 
 		
 	/**
@@ -185,6 +187,7 @@ public class BrowserActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
+			log.info("Browser actor received message");
 			Message<?> acct_msg = (Message<?>)message;
 
 			Browser browser = null;
@@ -260,7 +263,16 @@ public class BrowserActor extends UntypedActor {
 							
 							TestRepository test_repo = new TestRepository();
 							test.setKey(test_repo.generateKey(test));
-							
+							//check if test has any form elements
+							for(PathObject path_obj: exploratory_path.getPath()){
+								if(path_obj.getClass().equals(PageElement.class)){
+									PageElement elem = (PageElement)path_obj;
+									if(elem.getXpath().contains("form")){
+										test.addGroup(new Group("form"));
+										break;
+									}
+								}
+							}
 							
 							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 							//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
@@ -291,14 +303,8 @@ public class BrowserActor extends UntypedActor {
 				Path path = (Path)acct_msg.getData();
 				
 				if(acct_msg.getOptions().isEmpty()){
-					
 				}
 				
-				for(PathObject obj : path.getPath()){
-					System.err.println("FIRST PATH ELEMENT TYPE ::   ->   " +obj.getType());
-				}
-				
-
 				int cnt = 0;
 				while(browser == null && cnt < 5){
 					try{
@@ -316,7 +322,6 @@ public class BrowserActor extends UntypedActor {
 				}
 				
 				final long pathCrawlEndTime = System.currentTimeMillis();
-				log.warn("Path crawled in : " + (pathCrawlEndTime - pathCrawlStartTime));
 				long pathCrawlTime = pathCrawlEndTime - pathCrawlStartTime;
 
 				Page last_page = path.findLastPage();
@@ -344,6 +349,16 @@ public class BrowserActor extends UntypedActor {
 					test.setKey(test_repo.generateKey(test));
 
 					test.setRunTime(pathCrawlTime);
+					//check if test has any form elements
+					for(PathObject path_obj: path.getPath()){
+						if(path_obj.getClass().equals(PageElement.class)){
+							PageElement elem = (PageElement)path_obj;
+							if(elem.getXpath().contains("form")){
+								test.addGroup(new Group("form"));
+								break;
+							}
+						}
+					}
 
 					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
@@ -377,31 +392,50 @@ public class BrowserActor extends UntypedActor {
 					log.error("Failed to open connection to browser");
 					return;
 				}
-				
-			  	Path path = new Path();
-			  	Page page_obj = browser.getPage();
-			  	path.getPath().add(page_obj);
-			  	//Page current_page = Crawler.crawlPath(path, browser);
-
-				PathRepository path_repo = new PathRepository();
-				path.setKey(path_repo.generateKey(path));
-				
-				Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), page_obj.getUrl().getProtocol()));
-				TestRepository test_repo = new TestRepository();
-				test.setKey(test_repo.generateKey(test));
-								
-			  	Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
-			  	ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-				memory_actor.tell(test_msg, getSelf() );
-				
-				Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
-				final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-				path_expansion_actor.tell(path_msg, getSelf() );
+				generate_landing_page_test(browser, acct_msg);
 
 				browser.close();
 		   }
 			//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 
 		}else unhandled(message);
+	}
+	
+	/**
+	 * Generates a landing page test based on a given URL
+	 * 
+	 * @param browser
+	 * @param msg
+	 * 
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 * 
+	 * @pre browser != null
+	 * @pre msg != null
+	 */
+	public void generate_landing_page_test(Browser browser, Message<?> msg) throws MalformedURLException, IOException{
+		assert browser != null;
+		assert msg != null;
+		
+		log.info("Generting landing page");
+	  	Path path = new Path();
+	  	Page page_obj = browser.getPage();
+	  	path.getPath().add(page_obj);
+	  	//Page current_page = Crawler.crawlPath(path, browser);
+
+		PathRepository path_repo = new PathRepository();
+		path.setKey(path_repo.generateKey(path));
+		
+		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), page_obj.getUrl().getProtocol()));
+		TestRepository test_repo = new TestRepository();
+		test.setKey(test_repo.generateKey(test));
+						
+	  	Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), test);
+	  	ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
+		memory_actor.tell(test_msg, getSelf() );
+		
+		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), path);
+		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		path_expansion_actor.tell(path_msg, getSelf() );
 	}
 }

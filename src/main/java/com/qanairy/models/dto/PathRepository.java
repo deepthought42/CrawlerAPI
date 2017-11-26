@@ -128,6 +128,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		String path_key = "";
 		
 		for(PathObject obj : path.getPath()){
+			if(obj == null){
+				continue;
+			}
 			if(obj.getType().equals("Page")){
 				PageRepository page_record = new PageRepository();
 				path_key += page_record.generateKey((Page)obj) + "::";

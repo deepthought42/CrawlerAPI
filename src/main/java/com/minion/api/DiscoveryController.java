@@ -97,7 +97,6 @@ public class DiscoveryController {
     	if(last_ran_date != null){
     		diffInMinutes = (int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) );
     	}
-    	System.err.println("Last discovery ran :: "+diffInMinutes + " minutes ago ");
 		connection.close();
         
         if(diffInMinutes > 60){
@@ -107,7 +106,6 @@ public class DiscoveryController {
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url));
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 			//workAllocationActor.tell(message, ActorRef.noSender());
-			System.err.println("Sending url message to work allocation actor");
 			Timeout timeout = new Timeout(Duration.create(10, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
 			try {

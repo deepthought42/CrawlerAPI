@@ -146,7 +146,7 @@ public class Path {
 		Page page = null;
 
 		for(PathObject obj : path_obj_list){
-			if(obj.getType().equals("Page")){
+			if(obj != null && obj.getType().equals("Page")){
 				page = (Page)obj;
 			}
 		}

@@ -81,21 +81,15 @@ public class PageElement extends PathObject{
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element){
-		//HashMap<String, String> cssValues = new HashMap<String,String>();
 		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
-		Date start = new Date();		
 		for(String propertyName : cssList){
 			String element_value = element.getCssValue(propertyName);
 			if(element_value != null){
 				css_map.put(propertyName, element_value);
 			}
 		}
-		
-		Date end = new Date();
-		
-		//log.info("All Css properties extracted in " + ((end.getTime() - start.getTime())/1000.0) + " seconds");
 		
 		return css_map;
 	}
@@ -292,13 +286,13 @@ public class PageElement extends PathObject{
 	 * @param elemAction ElementAction pair
 	 * @return whether action was able to be performed on element or not
 	 */
-	public boolean performAction(Action action, String value, WebDriver driver) throws UnreachableBrowserException {
+	public boolean performAction(Action action, WebDriver driver) throws UnreachableBrowserException {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 		
 		try{
 			WebElement element = driver.findElement(By.xpath(this.getXpath()));
-			actionFactory.execAction(element, value, action.getName());
+			actionFactory.execAction(element, action.getValue(), action.getName());
 		}
 		catch(StaleElementReferenceException e){
 			
@@ -319,9 +313,5 @@ public class PageElement extends PathObject{
 		}
 		
 		return wasPerformedSuccessfully;
-	}
-
-	public boolean performAction(Action action, WebDriver driver) throws UnreachableBrowserException {
-		return false;
 	}
 }

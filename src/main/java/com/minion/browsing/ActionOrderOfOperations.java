@@ -53,14 +53,9 @@ public class ActionOrderOfOperations {
 		List<Action> keyboard_actions = new ArrayList<Action>();
 		keyboard_actions.add(new Action("sendKeys"));
 		
-		
-		List<Action> complex_actions = new ArrayList<Action>();
-		//complex_actions.add(new Action("dragAndDrop"));
-		
 		action_lists.add(mouse_motion_actions);
 		action_lists.add(click_actions);
 		action_lists.add(keyboard_actions);
-		action_lists.add(complex_actions);
 	}
 	
 	public static Integer getOrderOfOperationForAction(String actionName){

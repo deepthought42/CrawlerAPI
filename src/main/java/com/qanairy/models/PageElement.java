@@ -18,6 +18,7 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
+import com.qanairy.rules.Rule;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement
@@ -34,28 +35,31 @@ public class PageElement extends PathObject{
 	private String xpath;
 	private Map<String, String> cssValues = new HashMap<String,String>();
 	private List<Attribute> attributes = new ArrayList<Attribute>();
-
+	private List<Rule> rules;
+			
 	public PageElement(){
 		
 	}
 	
 	public PageElement(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
 		super.setType("PageElement");
-		this.name = name;
-		this.xpath = xpath;
-		this.attributes = attributes;
-		this.text = text;
-		this.cssValues = css_map;
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setText(text);
+		setCssValues(css_map);
+		setRules(new ArrayList<Rule>());
 		this.setKey(null);
 	}
 	
 	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
 		super.setType("PageElement");
-		this.setName(name);
-		this.setXpath(xpath);
-		this.setAttributes(attributes);
-		this.setText(text);
-		this.setCssValues(css_map);
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setText(text);
+		setCssValues(css_map);
+		setRules(rules);
 		this.setKey(key);
 	}
 	
@@ -167,6 +171,13 @@ public class PageElement extends PathObject{
 		this.attributes = attribute_persist_list;
 	}
 	
+	public List<Rule> getRules(){
+		return this.rules;
+	}
+	
+	public void setRules(List<Rule> rules){
+		this.rules = rules;
+	}
 	
 	/**
 	 * Converts to string with following format:

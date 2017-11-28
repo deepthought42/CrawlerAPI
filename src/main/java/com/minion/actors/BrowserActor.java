@@ -244,8 +244,26 @@ public class BrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 						
-						log.info("Total exploratory path crawl execution time: " + (pathCrawlStartTime - pathCrawlEndTime) );
-						if(last_page.equals(result_page)){
+						int last_idx = exploratory_path.getPath().size()-1;
+						if(last_idx < 0){
+							last_idx = 0;
+						}
+						int clicks = 0;
+						
+						while(exploratory_path.getPath().get(last_idx).equals(last_page) || last_idx>0){
+							PathObject obj = exploratory_path.getPath().get(last_idx);
+							if(obj.getType().equals("Action")){
+								log.info("checking action in exploratory path");
+								Action path_action = (Action)obj;
+								if(path_action.getName().equals("click") || path_action.getName().equals("doubleclick")){
+									log.info("incrementing click count");
+									clicks++;
+								}
+							}
+							last_idx--;
+						}
+						if(clicks >= 3 && last_page.equals(result_page)){
+							//check if test has 3 or more consecutive click events since last page
 					  		crawl_path.setIsUseful(false);
 					  	}
 					  	else{
@@ -338,8 +356,24 @@ public class BrowserActor extends UntypedActor {
 				
 				PathRepository path_repo = new PathRepository();
 				path.setKey(path_repo.generateKey(path));
-				
-				if(last_page.equals(result_page) && path.getPath().size() > 1){
+				int last_idx = path.getPath().size()-1;
+				if(last_idx < 0){
+					last_idx = 0;
+				}
+				int clicks = 0;
+				while(path.getPath().get(last_idx).equals(last_page) || last_idx > 0){
+					PathObject obj = path.getPath().get(last_idx);
+					if(obj.getType().equals("Action")){
+						log.info("checking action in path : "+obj.getType());
+						Action action = (Action)obj;
+						if(action.getName().equals("click") || action.getName().equals("doubleclick")){
+							log.info("incrementing click count");
+							clicks++;
+						}
+					}
+					last_idx--;
+				}
+				if(clicks >= 3 && last_page.equals(result_page) && path.getPath().size() > 1){
 			  		path.setIsUseful(false);
 			  	}
 			  	else{					

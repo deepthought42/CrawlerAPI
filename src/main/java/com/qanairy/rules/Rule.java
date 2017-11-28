@@ -9,8 +9,7 @@ import com.minion.browsing.form.FormField;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
-@Deprecated
-public interface FormRule {
+public interface Rule {
 	
 	/**
 	 * @return the {@link RuleType} of this rule

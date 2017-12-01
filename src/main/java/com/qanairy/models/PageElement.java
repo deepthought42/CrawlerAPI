@@ -1,7 +1,6 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +48,7 @@ public class PageElement extends PathObject{
 		setText(text);
 		setCssValues(css_map);
 		setRules(new ArrayList<Rule>());
-		this.setKey(null);
+		setKey(null);
 	}
 	
 	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
@@ -59,8 +58,19 @@ public class PageElement extends PathObject{
 		setAttributes(attributes);
 		setText(text);
 		setCssValues(css_map);
+		setRules(new ArrayList<Rule>());
+		setKey(key);
+	}
+	
+	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
+		super.setType("PageElement");
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setText(text);
+		setCssValues(css_map);
 		setRules(rules);
-		this.setKey(key);
+		setKey(key);
 	}
 	
 	/**
@@ -174,15 +184,21 @@ public class PageElement extends PathObject{
 	public List<Rule> getRules(){
 		return this.rules;
 	}
-	
-	public void setRules(List<Rule> rules){
+
+	public void setRules(List<Rule> rules) {
 		this.rules = rules;
 	}
 	
+	public void addRules(List<Rule> rules) {
+		this.rules.addAll(rules);
+	}
+	
+	public void addRule(Rule rule) {
+		this.rules.add(rule);
+	}
+	
 	/**
-	 * Converts to string with following format:
-	 * {tagName}:{innertext of tag}
-	 * 
+	 * Prints this elements xpath
 	 */
 	public String toString(){
 		return this.xpath;

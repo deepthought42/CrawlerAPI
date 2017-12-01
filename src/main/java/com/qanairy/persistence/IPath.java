@@ -11,7 +11,8 @@ import com.tinkerpop.frames.modules.typedgraph.TypeValue;
  * Test object data access interface for use with tinkerpop/frames
  *
  */
-@TypeValue("Path") public interface IPath{
+@TypeValue("Path") 
+public interface IPath{
 	/**
 	 * @return the key for the current test
 	 */

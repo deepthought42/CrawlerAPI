@@ -12,7 +12,9 @@ import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAttribute;
 import com.qanairy.persistence.IPageElement;
 import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.IRule;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.rules.Rule;
 
 /**
  * 
@@ -53,6 +55,9 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		return convertFromRecord(page_elem);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public PageElement find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
@@ -69,9 +74,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	}
 	
 	/**
-	 * 
-	 * @param data
-	 * @return
+	 * {@inheritDoc}
 	 */
 	public PageElement convertFromRecord(IPageElement data) {
 		PageElement elem = new PageElement();
@@ -86,6 +89,15 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		for(IAttribute attr: data.getAttributes()){
 			attr_list.add(attr_repo.convertFromRecord(attr));
 		}
+		
+		List<Rule> rules = new ArrayList<Rule>();
+		Iterator<IRule> iterator = data.getRules().iterator();
+		while(iterator.hasNext()){
+			RuleRepository rule_repo = new RuleRepository();
+			rules.add(rule_repo.convertFromRecord(iterator.next()));
+		}
+		elem.addRules(rules);
+
 		elem.setAttributes(attr_list);
 		elem.setCssValues(data.getCssValues());
 		return elem;
@@ -122,18 +134,18 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			}
 			*/
 			//page_elem_record.setChildElements(child_elements_persist);
-			AttributeRepository attr_repo = new AttributeRepository();
-			for(Attribute attr : elem.getAttributes()){
-				if(attr != null){
-					page_elem_record.addAttributes(attr_repo.convertToRecord(connection, attr));
-				}
-			}
 			
 			page_elem_record.setCssValues(elem.getCssValues());
 			page_elem_record.setName(elem.getName());
 			page_elem_record.setText(elem.getText());
 			page_elem_record.setXpath(elem.getXpath());
 			page_elem_record.setKey(elem.getKey());
+			
+			RuleRepository rule_repo = new RuleRepository();
+			for(Rule rule : elem.getRules()){
+				page_elem_record.addRule(rule_repo.convertToRecord(connection, rule));	
+			}
+			
 		}
 		else{
 			page_elem_record = iter.next();

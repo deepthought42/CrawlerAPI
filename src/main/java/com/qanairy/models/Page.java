@@ -119,18 +119,21 @@ public class Page extends PathObject {
 	 * Checks if the page is able to be accessed directly as a landing page
 	 * 
 	 * @return
-	 * @throws java.util.NoSuchElementException
-	 * @throws UnhandledAlertException
-	 * @throws IOException 
 	 */
-	public boolean checkIfLandable() throws java.util.NoSuchElementException, UnhandledAlertException, IOException, NullPointerException{		
-		Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
-		browser.getDriver().get(this.getUrl().toString());
+	public boolean checkIfLandable(){		
 		boolean landable = false;
-		if(this.equals(browser.getPage())){
-			landable = true;
+
+		try{
+			Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
+			browser.getDriver().get(this.getUrl().toString());
+			if(this.equals(browser.getPage())){
+				landable = true;
+			}
+			browser.close();
+		}catch(Exception e){
+			log.warn(e.getMessage());
 		}
-		browser.close();
+		
 		return landable;
 	}
 		

@@ -508,7 +508,7 @@ public class Browser {
 				*/
 				
 				for(FormField input_field : group_inputs){
-					input_field.addRules(ElementRuleExtractor.extractRules(input_field.getInputElement()));
+					input_field.getInputElement().addRules(ElementRuleExtractor.extractRules(input_field.getInputElement()));
 				}
 				//combo_input.getElements().addAll(labels);
 				form.addFormField(combo_input);

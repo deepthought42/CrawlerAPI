@@ -58,19 +58,18 @@ public class ComplexField {
 				actionFactory.execAction(element, value, action.getName());				
 			}
 			catch(StaleElementReferenceException e){
-				log.warn("complex field STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
-						+ action + ". ");
+				log.warn(e.getMessage());
 				wasPerformedSuccessfully = false;			
 			}
 			catch(ElementNotVisibleException e){
-				log.warn("Complex field ELEMENT IS NOT CURRENTLY VISIBLE.");
+				log.warn(e.getMessage());
 			}
 			catch(NoSuchElementException e){
-				//log.info(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+				log.info(e.getMessage());
 				wasPerformedSuccessfully = false;
 			}
 			catch(WebDriverException e){
-				log.warn("Element can not have action performed on it at point performed");
+				log.warn(e.getMessage());
 				wasPerformedSuccessfully = false;
 			}
 		}

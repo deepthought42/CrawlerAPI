@@ -45,7 +45,19 @@ public interface IPageElement extends IPathObject{
 	 * @return {@link List} of {@link PathObject}s representing a path sequence
 	 */
 	@Adjacency(label="has_attribute")
-	public void addAttributes(IAttribute attribute);
+	public void addAttribute(IAttribute attribute);
+	
+	/**
+	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 */
+	@Adjacency(label="has_rule")
+	public void setRules(List<IRule> rules);
+	
+	@Adjacency(label="has_rule")
+	public void addRule(IRule rules);
+	
+	@Adjacency(label="has_rule")
+	public Iterable<IRule> getRules();
 	
 	@Property("cssValues")
 	public Map<String, String> getCssValues();

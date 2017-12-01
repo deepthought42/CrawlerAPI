@@ -16,6 +16,7 @@ import akka.actor.UntypedActor;
 import com.qanairy.models.Test;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
+import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
@@ -70,7 +71,8 @@ public class PathExpansionActor extends UntypedActor {
 			if(page_element.getXpath().contains("form")){
 				continue;
 			}
-			
+			page_element.addRules(ElementRuleExtractor.extractRules(page_element));
+
 			//iterate over all actions
 			Path new_path = Path.clone(path);
 			new_path.add(page_element);

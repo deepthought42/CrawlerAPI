@@ -2,6 +2,7 @@ package com.qanairy.rules;
 
 
 import com.minion.browsing.form.FormField;
+import com.qanairy.models.PageElement;
 
 /**
  * Defines rule to be used to evaluate if a {@link FormField} has a value that satisfies the 
@@ -16,13 +17,17 @@ public interface Rule {
 	 */
 	RuleType getType();
 	
+	/**
+	 * @return the value as a string
+	 */
+	String getValue();
 	
 	/**
 	 * evaluates the rule to determine if it is satisfied
 	 * 
-	 * @return boolean value indicating the rule is satisfied(true) or not satisfied(false)
+	 * @return boolean value indicating the rule is satisfied or not
 	 */
-	Boolean evaluate(FormField val);	
+	Boolean evaluate(PageElement val);	
 
 	
 	/**

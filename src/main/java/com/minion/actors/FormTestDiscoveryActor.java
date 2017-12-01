@@ -19,9 +19,9 @@ import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
-import com.qanairy.rules.FormRule;
-import com.qanairy.rules.formRules.FormRuleType;
-import com.qanairy.rules.formRules.NumericRule;
+import com.qanairy.rules.Rule;
+import com.qanairy.rules.NumericRule;
+import com.qanairy.rules.RuleType;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -96,56 +96,56 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param rule
 	 * @return
 	 */
-	public static List<Path> generateRuleTests(PageElement input_elem, FormRule rule, PageElement submitField){
+	public static List<Path> generateRuleTests(PageElement input_elem, Rule rule, PageElement submitField){
 		assert rule != null;
 		
 		List<Path> paths = new ArrayList<Path>();
-		if(rule.getType().equals(FormRuleType.REQUIRED)){
+		if(rule.getType().equals(RuleType.REQUIRED)){
 			//generate required path for element type
 			log.info("SHOULD BE GENERATING REQUIRED TESTS");
 			paths.addAll(generateRequirementChecks(input_elem, true, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.ALPHABETIC_RESTRICTION)){
+		else if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
 			log.info("SHOULD BE GENERATED ALPHABETIC ONLY RESTRICTION");
 			paths.addAll(generateAlphabeticRestrictionTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.NUMERIC_RESTRICTION)){
+		else if(rule.getType().equals(RuleType.NUMERIC_RESTRICTION)){
 			log.info("SHOULD BE GENERATING NUMBER RESTRICTION TESTS ");
 			paths.addAll(generateNumericRestrictionTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.SPECIAL_CHARACTER_RESTRICTION)){
+		else if(rule.getType().equals(RuleType.SPECIAL_CHARACTER_RESTRICTION)){
 			log.info("SHOULD BE GENERATING SPECIAL CHARACTER RESTRICTION path");		
 			paths.addAll(generateSpecialCharacterRestrictionTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.DISABLED)){
+		else if(rule.getType().equals(RuleType.DISABLED)){
 			log.info("SHOULD BE GENERATING DISABLED FIELD TESTS ");
 			//path.addAll(generateEnabledTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(FormRuleType.READ_ONLY)){
+		else if(rule.getType().equals(RuleType.READ_ONLY)){
 			log.info("SHOULD BE GENERATING READ-ONLY FIELD TESTS ");
 			//path.addAll(generateReadOnlyTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(FormRuleType.MAX_LENGTH)){
+		else if(rule.getType().equals(RuleType.MAX_LENGTH)){
 			log.info("SHOULD BE GENERATING MAX LENGTH TESTS ");
 			paths.addAll(generateLengthBoundaryTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.MIN_LENGTH)){
+		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
 			log.info("SHOULD BE GENERATING MIN LENGTH TESTS ");
 			paths.addAll(generateLengthBoundaryTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.MAX_VALUE)){
+		else if(rule.getType().equals(RuleType.MAX_VALUE)){
 			log.info("SHOULD BE GENERATING MAX VALUE TESTS ");
 			paths.addAll(generateLengthBoundaryTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.MIN_VALUE)){
+		else if(rule.getType().equals(RuleType.MIN_VALUE)){
 			log.info("SHOULD BE GENERATING MIN LENGTH TESTS ");
 			paths.addAll(generateLengthBoundaryTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.PATTERN)){
+		else if(rule.getType().equals(RuleType.PATTERN)){
 			log.info("SHOULD BE GENERATING PATTERN TESTS ");
 			paths.addAll(generatePatternTests(input_elem, rule, submitField));
 		}
-		else if(rule.getType().equals(FormRuleType.EMAIL_PATTERN)){
+		else if(rule.getType().equals(RuleType.EMAIL_PATTERN)){
 			log.info("SHOULD BE GENERATING EMAIL PATTERN TESTS ");
 			paths.addAll(generateEmailTests(input_elem, rule, submitField));	
 		}
@@ -158,12 +158,12 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		
 	}
 	
-	public static List<Path> generateLengthBoundaryTests(PageElement input, FormRule rule, PageElement submit){
+	public static List<Path> generateLengthBoundaryTests(PageElement input, Rule rule, PageElement submit){
 		log.info("generating length boundary test paths");
 
 		List<Path> paths = new ArrayList<Path>();
 
-		if(rule.getType().equals(FormRuleType.MAX_LENGTH)){
+		if(rule.getType().equals(RuleType.MAX_LENGTH)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
@@ -171,7 +171,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			String short_str = NumericRule.generateRandomAlphabeticString((Integer)((NumericRule)rule).getValue());
+			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 			log.info("Generated string of length : " + short_str.length());
 			
 			path.add(new Action("sendKeys", short_str));
@@ -186,14 +186,14 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)((NumericRule)rule).getValue())+1);
+			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())+1);
 			log.info("Generated string of length : " + large_str.length());
 			path.add(new Action("sendKeys", large_str));
 			path.add(submit);
 			path.add(new Action("click", ""));
 			paths.add(path);
 		}
-		else if(rule.getType().equals(FormRuleType.MIN_LENGTH)){
+		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
@@ -201,7 +201,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			String short_str = NumericRule.generateRandomAlphabeticString((Integer)((NumericRule)rule).getValue());
+			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 			log.info("Generated string of length : " + short_str.length());
 
 			path.add(new Action("sendKeys", short_str));
@@ -218,7 +218,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			String large_str = NumericRule.generateRandomAlphabeticString(((Integer)((NumericRule)rule).getValue())-1);
+			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())-1);
 			log.info("Generated string of length : " + large_str.length());
 
 			path.add(new Action("sendKeys", large_str));
@@ -226,7 +226,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(new Action("click", ""));
 			paths.add(path);
 		}
-		else if(rule.getType().equals(FormRuleType.MAX_VALUE)){
+		else if(rule.getType().equals(RuleType.MAX_VALUE)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
@@ -234,7 +234,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString((Integer)((NumericRule)rule).getValue())));
+			path.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
 			path.add(submit);
 			path.add(new Action("click", ""));
 			paths.add(path);
@@ -248,12 +248,12 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString(((Integer)((NumericRule)rule).getValue())+1)));
+			path.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
 			path.add(submit);
 			path.add(new Action("click", ""));
 			paths.add(path);
 		}
-		else if(rule.getType().equals(FormRuleType.MIN_VALUE)){
+		else if(rule.getType().equals(RuleType.MIN_VALUE)){
 			//generate empty string test
 			Path path = new Path();
 			path.add(input);
@@ -261,7 +261,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString((Integer)((NumericRule)rule).getValue())));
+			path.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
 			path.add(submit);
 			path.add(new Action("click", ""));
 			paths.add(path);
@@ -275,7 +275,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.add(new Action("sendKeys", Integer.toString(((Integer)((NumericRule)rule).getValue())-1)));
+			path.add(new Action("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
 			path.add(submit);
 			path.add(new Action("click", ""));
 			paths.add(path);
@@ -356,7 +356,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param rule
 	 * @return
 	 */
-	private static List<Path> generateAlphabeticRestrictionTests(PageElement input_elem, FormRule rule, PageElement submit) {
+	private static List<Path> generateAlphabeticRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		//generate single character str test		
 		List<Path> paths = new ArrayList<Path>();
 		Path path = new Path();
@@ -370,7 +370,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return paths;
 	}
 
-	private static List<Path> generateNumericRestrictionTests(PageElement input_elem, FormRule rule, PageElement submit) {
+	private static List<Path> generateNumericRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		List<Path> paths = new ArrayList<Path>();
 
 		Path path = new Path();
@@ -386,7 +386,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return paths;
 	}
 
-	private static List<Path> generateSpecialCharacterRestrictionTests(PageElement input_elem, FormRule rule, PageElement submit) {
+	private static List<Path> generateSpecialCharacterRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		//generate single character str test
 		List<Path> paths = new ArrayList<Path>();
 		Path path = new Path();
@@ -401,22 +401,22 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return paths;
 	}
 
-	private static List<Path> generateEnabledTests(PageElement input_elem, FormRule rule, PageElement submit) {
+	private static List<Path> generateEnabledTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<Path> generateReadOnlyTests(PageElement input_elem, FormRule rule, PageElement submit) {
+	private static List<Path> generateReadOnlyTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<Path> generatePatternTests(PageElement input_elem, FormRule rule, PageElement submit) {
+	private static List<Path> generatePatternTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<Path> generateEmailTests(PageElement input_elem, FormRule rule, PageElement submit) {
+	private static List<Path> generateEmailTests(PageElement input_elem, Rule rule, PageElement submit) {
 		List<Path> paths = new ArrayList<Path>();
 		
 		Path path = new Path();
@@ -498,8 +498,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					continue;
 				}
 				
-				List<FormRule> rules = field.getRules();
-				for(FormRule rule : rules){
+				List<Rule> rules = field.getInputElement().getRules();
+				for(Rule rule : rules){
 					List<Path> path_list = generateRuleTests(input_elem, rule, form.getSubmitField());
 					log.info("# rule tests created : " + path_list.size());
 					for(Path curr_path : path_list){

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -31,7 +30,8 @@ public class PastPathExperienceController {
 		List<PathObject> path_list = new ArrayList<PathObject>();
 		Path path_clone = Path.clone(test.getPath());
 		for(PathObject obj : path_clone.getPath()){
-			if(obj.getType().equals("Page")){
+			if(obj != null && obj.getType().equals("Page")){
+				log.info("TYPE : " + obj.getType());
 				Page page_obj = (Page)obj;
 								
 				Page page;
@@ -42,7 +42,7 @@ public class PastPathExperienceController {
 					e.printStackTrace();
 				}
 			}
-			else{
+			else if(obj != null){
 				path_list.add(obj);
 			}
 		}

@@ -14,6 +14,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.rules.Rule;
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -71,18 +72,24 @@ public class PathExpansionActor extends UntypedActor {
 			if(page_element.getXpath().contains("form")){
 				continue;
 			}
-			page_element.addRules(ElementRuleExtractor.extractRules(page_element));
-
-			//iterate over all actions
-			Path new_path = Path.clone(path);
-			new_path.add(page_element);
-			
-			for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-				ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
-				//Action action_obj = new Action(action);
-				pathList.add(action_path);
-				path_count++;
-			}			
+			page_element.addRules(ElementRuleExtractor.extractInputRules(page_element));
+			page_element.addRules(ElementRuleExtractor.extractMouseRules(browser, page_element));
+			for(Rule rule : page_element.getRules()){
+				List<Path> paths = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+				
+				for(Path form_path: paths){
+					log.info("constructing new path");
+					//iterate over all actions
+					Path new_path = Path.clone(path);
+					new_path.getPath().addAll(form_path.getPath());
+					for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+						ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+						//Action action_obj = new Action(action);
+						pathList.add(action_path);
+						path_count++;
+					}
+				}
+			}
 		}
 		
 		log.info("# of Paths added : "+path_count);

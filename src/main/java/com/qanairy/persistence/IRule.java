@@ -1,6 +1,5 @@
 package com.qanairy.persistence;
 
-import com.qanairy.rules.RuleType;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
@@ -8,13 +7,13 @@ import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 public interface IRule {
 
 	@Property("key")
-	void setKey(RuleType type);
+	void setKey(String key);
 	
-	@Property("type")
-	RuleType getType();
+	@Property("rule_type")
+	String getType();
 
-	@Property("type")
-	void setType(RuleType type);
+	@Property("rule_type")
+	void setType(String type);
 	
 	@Property("value")
 	String getValue();

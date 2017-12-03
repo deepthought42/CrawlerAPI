@@ -233,13 +233,10 @@ public class BrowserActor extends UntypedActor {
 						
 						int clicks = getLastClicksSequenceCount(last_idx, exploratory_path, last_page);
 						if(clicks >= 3 && last_page.equals(result_page)){
-							log.info("Not Useful exploratory path ");
 							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
 					  	}
 					  	else{
-							log.info("Useful exploratory path ");
-
 					  		if(ExploratoryPath.hasCycle(path, last_page)){
 					  			log.info("exploratory path has cycle; exiting");
 					  			break;
@@ -256,6 +253,8 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if (acct_msg.getData() instanceof Path){
+				log.info("Path started");
+
 				Path path = (Path)acct_msg.getData();
 				assert(path.getPath() != null);
 				if(acct_msg.getOptions().isEmpty()){
@@ -298,6 +297,8 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
+				log.info("Url provided");
+
 				try{
 					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
 				}
@@ -371,7 +372,10 @@ public class BrowserActor extends UntypedActor {
 	private int getLastClicksSequenceCount(int last_idx, Path path, Page last_page) {
 		int clicks = 0;
 		
-		while(path.getPath().get(last_idx).equals(last_page) || last_idx>0){
+		while(last_idx>=0){
+			if(path.getPath().get(last_idx).equals(last_page)){
+				break;
+			}
 			PathObject obj = path.getPath().get(last_idx);
 			if(obj.getType().equals("Action")){
 				log.info("checking action in exploratory path");

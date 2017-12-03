@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,6 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Platform;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
@@ -49,7 +47,6 @@ import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.PageSource;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -508,7 +505,7 @@ public class Browser {
 				*/
 				
 				for(FormField input_field : group_inputs){
-					input_field.getInputElement().addRules(ElementRuleExtractor.extractRules(input_field.getInputElement()));
+					input_field.getInputElement().addRules(ElementRuleExtractor.extractInputRules(input_field.getInputElement()));
 				}
 				//combo_input.getElements().addAll(labels);
 				form.addFormField(combo_input);
@@ -522,9 +519,15 @@ public class Browser {
 		return form_list;
 	}
 	
+	/**
+	 * locates and returns the form submit button 
+	 * @param form_elem
+	 * @return
+	 */
 	private PageElement findFormSubmitButton(WebElement form_elem) {
-		// TODO Auto-generated method stub
-		return null;
+		assert false;
+		WebElement submit_element = form_elem.findElement(By.xpath("//input[@type='submit']"));
+		return new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), driver), submit_element.getTagName(), Browser.extractedAttributes(submit_element, (JavascriptExecutor)driver), PageElement.loadCssProperties(submit_element) );
 	}
 
 	/**
@@ -785,7 +788,6 @@ public class Browser {
 			//PageElement tag = (PageElement)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
-					log.info("Getting Attributes for label");
 					if(attr.getName().equals("for")){
 						for(String val : attr.getVals()){
 							if(val.equals(for_id)){

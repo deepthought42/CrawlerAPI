@@ -95,13 +95,12 @@ public class DiscoveryController {
     	Date now = new Date();
     	long diffInMinutes = 1000;
     	if(last_ran_date != null){
-    		diffInMinutes = (int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) );
+    		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
     	}
 		connection.close();
         
         if(diffInMinutes > 60){
 			WorkAllowanceStatus.register(acct.getKey()); 
-	
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url));
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
@@ -119,7 +118,7 @@ public class DiscoveryController {
 		}
         else{
         	//Throw error indicating discovery has been or is running
-        	log.info("Account: " + acct.getKey() + " attempted to run discovery within 60 minutes of last discovery" );
+        	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
         	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
         	throw new ExistingDiscoveryFoundException();
         }

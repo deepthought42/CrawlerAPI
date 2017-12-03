@@ -3,9 +3,12 @@ package com.minion.browsing.form;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+
+import com.minion.browsing.Browser;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 import com.qanairy.rules.DisabledRule;
+import com.qanairy.rules.EmailPatternRule;
 import com.qanairy.rules.Rule;
 import com.qanairy.rules.NumericRule;
 import com.qanairy.rules.PatternRule;
@@ -14,12 +17,11 @@ import com.qanairy.rules.RequirementRule;
 import com.qanairy.rules.SpecialCharacterRestriction;
 import com.qanairy.rules.AlphabeticRestrictionRule;
 import com.qanairy.rules.RuleType;
-import com.qanairy.rules.patterns.EmailPatternRule;
 
 public class ElementRuleExtractor {
 	private static Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);
 
-	public static List<Rule> extractRules(PageElement elem){
+	public static List<Rule> extractInputRules(PageElement elem){
 		List<Rule> rules = new ArrayList<Rule>();
 
 		for(Attribute attr : elem.getAttributes()){
@@ -79,5 +81,13 @@ public class ElementRuleExtractor {
 		}
 		
 		return rules;
+	}
+
+	public static List<Rule> extractMouseRules(Browser browser, PageElement page_element) {
+		//iterate over possible mouse actions. 
+		//if an element action interaction causes change
+			//then add the appropriate rule to the list
+		
+		return new ArrayList<Rule>();
 	}
 }

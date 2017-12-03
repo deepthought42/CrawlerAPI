@@ -2,8 +2,6 @@ package com.qanairy.rules;
 
 import java.util.regex.Pattern;
 
-import com.qanairy.rules.patterns.EmailPatternRule;
-
 public class RuleFactory {
 	
 	/**
@@ -12,7 +10,7 @@ public class RuleFactory {
 	 * @param value
 	 * @return
 	 */
-	public static Rule build(RuleType type, String value){
+	public static Rule build(String type, String value){
 		if(type.equals(RuleType.ALPHABETIC_RESTRICTION.toString())){
 			return new AlphabeticRestrictionRule();
 		}

@@ -30,14 +30,14 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 	public IRule convertToRecord(OrientConnectionFactory connection, Rule rule) {
 		@SuppressWarnings("unchecked")
 		Iterable<IRule> rule_records = (Iterable<IRule>) DataAccessObject.findByKey(rule.getType().toString(), connection, IRule.class);
-
 		Iterator<IRule> iter = rule_records.iterator();
 		
 		IRule rule_record = null;
 		if( !iter.hasNext()){
 			rule_record = connection.getTransaction().addVertex("class:"+Rule.class.getSimpleName()+","+UUID.randomUUID(), IRule.class);
-			rule_record.setType(rule.getType());
-			rule_record.setKey(rule.getType());
+			rule_record.setKey(rule.getType().toString());
+			rule_record.setType(rule.getType().toString());
+			rule_record.setValue(rule.getValue());
 			return rule_record;
 		}
 		

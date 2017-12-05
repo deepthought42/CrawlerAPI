@@ -294,9 +294,10 @@ public class TestController {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
+		itest.setRunStatus(true);
 		TestRecord record = null;
 		TestRepository test_record = new TestRepository();
-
+		
 		if(itest.getKey().equals(key)){
 			Test test = test_record.convertFromRecord(itest);
 			Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
@@ -307,7 +308,7 @@ public class TestController {
 			itest.addRecord(test_record_record.convertToRecord(connection, record));
 			itest.setCorrect(record.getPasses());
 			itest.setLastRunTimestamp(new Date());
-			
+			itest.setRunStatus(false);
 			browser.close();
 		}
 		else{

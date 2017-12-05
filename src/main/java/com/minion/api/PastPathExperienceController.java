@@ -29,6 +29,7 @@ public class PastPathExperienceController {
 	public static void broadcastTestExperience(Test test) {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
 		Path path_clone = Path.clone(test.getPath());
+		
 		for(PathObject obj : path_clone.getPath()){
 			if(obj != null && obj.getType().equals("Page")){
 				log.info("TYPE : " + obj.getType());
@@ -49,7 +50,7 @@ public class PastPathExperienceController {
 
 		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
 		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain());
-
+		
 		try {
 			Page result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getScreenshot(), new ArrayList<PageElement>());
 			new_test.setResult(result_page);

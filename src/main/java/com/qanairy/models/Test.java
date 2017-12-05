@@ -38,6 +38,7 @@ public class Test {
 	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	private List<Group> groups;
 	private Date last_run_time;
+	private boolean run_status;
 
 	private long run_time_length;
 	/**
@@ -49,6 +50,7 @@ public class Test {
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
+		this.set_run_status(false);
 	}
 	
 	/**
@@ -72,6 +74,7 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(null);
+		this.set_run_status(false);
 	}
 	
 	/**
@@ -95,6 +98,7 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(key);
+		this.set_run_status(false);
 	}
 	
 	/**
@@ -382,5 +386,13 @@ public class Test {
 	
 	public long getRunTime() {
 		return this.run_time_length;
+	}
+
+	public boolean is_run_status() {
+		return run_status;
+	}
+
+	public void set_run_status(boolean run_status) {
+		this.run_status = run_status;
 	}
 }

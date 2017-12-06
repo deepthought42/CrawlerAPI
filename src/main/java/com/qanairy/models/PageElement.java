@@ -32,12 +32,15 @@ public class PageElement extends PathObject{
 	private String name;
 	private String text;
 	private String xpath;
-	private Map<String, String> cssValues = new HashMap<String,String>();
-	private List<Attribute> attributes = new ArrayList<Attribute>();
+	private Map<String, String> cssValues;
+	private List<Attribute> attributes;
 	private List<Rule> rules;
 			
 	public PageElement(){
-		
+		super.setType("PageElement");
+		setCssValues(new HashMap<String,String>());
+		setAttributes(new ArrayList<Attribute>());
+		setRules(new ArrayList<Rule>());
 	}
 	
 	public PageElement(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
@@ -77,14 +80,14 @@ public class PageElement extends PathObject{
 	 * Print Attributes for this element in a prettyish format
 	 */
 	public void printAttributes(){
-		log.info("+++++++++++++++++++++++++++++++++++++++");
+		System.out.print("+++++++++++++++++++++++++++++++++++++++");
 		for(int j=0; j < this.attributes.size(); j++){
 			System.out.print(this.attributes.get(j).getName() + " : ");
 			for(int i=0; i < attributes.get(j).getVals().size(); i++){
 				System.out.print( this.attributes.get(j).getVals().get(i) + " ");
 			}
 		}
-		log.info("\n+++++++++++++++++++++++++++++++++++++++");
+		System.out.print("\n+++++++++++++++++++++++++++++++++++++++");
 	}
 	
 	/**
@@ -323,19 +326,19 @@ public class PageElement extends PathObject{
 		}
 		catch(StaleElementReferenceException e){
 			
-			log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
-					+ action + ". ");
+			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+					+ action + ". ", e.getMessage());
 			wasPerformedSuccessfully = false;			
 		}
 		catch(ElementNotVisibleException e){
-			//log.debug("ELEMENT IS NOT CURRENTLY VISIBLE.");
+			log.warn("ELEMENT IS NOT CURRENTLY VISIBLE.", e.getMessage());
 		}
 		catch(NoSuchElementException e){
-			//log.debug(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+			log.warn(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action, e.getMessage());
 			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
-			log.info("Element can not have action performed on it at point performed");
+			log.warn("Element can not have action performed on it at point performed", e.getMessage());
 			wasPerformedSuccessfully = false;
 		}
 		

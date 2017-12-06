@@ -3,10 +3,9 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.Iterator;
 import java.util.List;
-
 import org.omg.CORBA.UnknownUserException;
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,18 +13,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 import com.auth0.spring.security.api.Auth0JWTToken;
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 
@@ -54,7 +53,8 @@ public class DomainController {
      */
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Domain create(final @RequestBody String url, final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    public @ResponseBody Domain create(@RequestBody Domain domain,
+		  	 			 			   final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
         /*printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
@@ -71,18 +71,24 @@ public class DomainController {
     	}
     	
     	
-    	URL url_obj = new URL(url);
-    	String host = "";
-    	if(!url_obj.getHost().contains("www.")){
+    	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
+    	String host = url_obj.getHost();
+    	if(!host.contains("www.")){
     		host = url_obj.getHost();
     		host = "www." + host;
     	}
-    	
-        Domain domain = new Domain(host, url_obj.getProtocol());
-    	acct.addDomain(domain);
-    	
-    	accountService.update(acct);
-        return domainService.create(domain);
+    	domain.setUrl(host);
+    	//check if domain exists before adding it to account
+    	Iterator<IDomain> domain_iter = (Iterator<IDomain>) DataAccessObject.findByKey(domain.getKey(), IDomain.class).iterator();
+        //Domain new_domain = new Domain(host, domain.getLogoUrl(), url_obj.getProtocol());
+    	if(!domain_iter.hasNext()){
+    		acct.addDomain(domain);
+        	accountService.update(acct);
+        	return domainService.create(domain);
+    	}
+    	else{
+    		return domainService.update(domain);
+    	}
     }
 
 

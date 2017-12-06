@@ -154,7 +154,7 @@ public class TestController {
 				}
 			}
 		}catch(NullPointerException e){
-			log.error(e.getMessage());
+			log.error("Null pointer exception occurred while getting failing test count", e.getMessage());
 		}
 				
         Map<String, Integer> result = new HashMap<String, Integer>();
@@ -294,29 +294,31 @@ public class TestController {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
-		itest.setRunStatus(true);
-		TestRecord record = null;
-		TestRepository test_record = new TestRepository();
-		
-		if(itest.getKey().equals(key)){
-			Test test = test_record.convertFromRecord(itest);
-			Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
-			record = TestingActor.runTest(test, browser);
+		if(!itest.getRunStatus()){
+			itest.setRunStatus(true);
+			TestRecord record = null;
+			TestRepository test_record = new TestRepository();
 			
-			TestRecordRepository test_record_record = new TestRecordRepository();
-			System.out.println("Record created with result page :: "+record.getPage());
-			itest.addRecord(test_record_record.convertToRecord(connection, record));
-			itest.setCorrect(record.getPasses());
-			itest.setLastRunTimestamp(new Date());
-			itest.setRunStatus(false);
-			browser.close();
+			if(itest.getKey().equals(key)){
+				Test test = test_record.convertFromRecord(itest);
+				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
+				record = TestingActor.runTest(test, browser);
+				
+				TestRecordRepository test_record_record = new TestRecordRepository();
+				itest.addRecord(test_record_record.convertToRecord(connection, record));
+				itest.setCorrect(record.getPasses());
+				itest.setLastRunTimestamp(new Date());
+				itest.setRunStatus(false);
+				browser.close();
+			}
+			else{
+				log.warn("test found does not match key :: " + key);
+			}
+			connection.close();
+			return test_record.convertFromRecord(itest);
 		}
-		else{
-			log.warn("test found does not match key :: " + key);
-		}
-		connection.close();
 		
-		return test_record.convertFromRecord(itest);
+		throw new TestAlreadyRunningException();
 	}
 
     /**
@@ -391,7 +393,7 @@ public class TestController {
 				}
 			}
 		} catch (MalformedURLException e) {
-			log.warn(e.getMessage());
+			log.warn("Malformed URL received", e.getMessage());
 		}
 		
 		List<TestRecord> group_records = new ArrayList<TestRecord>();
@@ -503,8 +505,7 @@ public class TestController {
 				}
 			}
 		} catch (MalformedURLException e) {
-			log.warn(e.getMessage());
-			e.printStackTrace();
+			log.warn("Malformed url exception thrown", e.getMessage());
 		}
 		
 		return groups;
@@ -517,6 +518,15 @@ class TestControllerNotFoundException extends RuntimeException {
 
 	public TestControllerNotFoundException() {
 		super("An error occurred accessing tests endpoint.");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+class TestAlreadyRunningException extends RuntimeException {
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public TestAlreadyRunningException() {
+		super("Test is already running");
 	}
 }
 

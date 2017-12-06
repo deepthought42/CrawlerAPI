@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Test;
@@ -20,6 +21,7 @@ import com.qanairy.rules.Rule;
  * 
  */
 public class PageElementRepository implements IPersistable<PageElement, IPageElement> {
+	private static Logger log = LoggerFactory.getLogger(PageElement.class);
 
 	/**
 	 * {@inheritDoc}
@@ -90,14 +92,18 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			attr_list.add(attr_repo.convertFromRecord(attr));
 		}
 		
-		List<Rule> rules = new ArrayList<Rule>();
-		Iterator<IRule> iterator = data.getRules().iterator();
-		while(iterator.hasNext()){
+		Iterator<IRule> rule_iter = data.getRules().iterator();
+		while(rule_iter.hasNext()){
+			IRule irule = rule_iter.next();
+			if(irule == null){
+				continue;
+			}
 			RuleRepository rule_repo = new RuleRepository();
-			rules.add(rule_repo.convertFromRecord(iterator.next()));
+			//rules.add(rule_repo.convertFromRecord(iterator.next()));
+			Rule rule = rule_repo.convertFromRecord(irule);
+			elem.addRule(rule);
 		}
-		elem.addRules(rules);
-
+		//elem.addRules(rules);
 		elem.setAttributes(attr_list);
 		elem.setCssValues(data.getCssValues());
 		return elem;
@@ -145,7 +151,6 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			for(Rule rule : elem.getRules()){
 				page_elem_record.addRule(rule_repo.convertToRecord(connection, rule));	
 			}
-			
 		}
 		else{
 			page_elem_record = iter.next();

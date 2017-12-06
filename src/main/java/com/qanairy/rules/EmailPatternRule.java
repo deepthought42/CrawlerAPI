@@ -8,12 +8,8 @@ import com.qanairy.models.PageElement;
 public class EmailPatternRule implements Rule {
 
 	private static String email_regex_str = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
-	private RuleType type;
-	private String value;
 	
 	public EmailPatternRule() {
-		this.value = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
-		this.type = RuleType.EMAIL_PATTERN;
 	}
 	
 	/**
@@ -33,7 +29,7 @@ public class EmailPatternRule implements Rule {
 	@Override
 	public Boolean evaluate(PageElement page_element) {
 		String pattern = "/^" + page_element.getAttribute("vals").getVals().toString() + " $/";
-		Matcher matcher = Pattern.compile(this.value).matcher(pattern);
+		Matcher matcher = Pattern.compile(getValue()).matcher(pattern);
 	    return matcher.matches();
 	}
 }

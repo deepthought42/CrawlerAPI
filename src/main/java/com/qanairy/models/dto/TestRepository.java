@@ -107,12 +107,11 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		else{
 			test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
 			test_record.setKey(generateKey(test));
-			
+
 			PathRepository path_record = new PathRepository();
 			PageRepository page_record = new PageRepository();
 			TestRecordRepository test_record_record = new TestRecordRepository();
 			
-			log.info("setting test_record path : "+test.getPath().size()); 
 			test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
 			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
 			
@@ -144,6 +143,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			test_record.setRunTime(test.getRunTime());
 			test_record.setName(test.getName());
 			test_record.setCorrect(test.isCorrect());
+			test_record.setRunStatus(test.getRunStatus());
 		}	
 		
 		
@@ -167,11 +167,13 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setKey(itest.getKey());
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
+		test.setRunStatus(itest.getRunStatus());
+		
 		try{
 			test.setPath(path_record.convertFromRecord(itest.getPath()));
 		}
 		catch(NullPointerException e){
-			log.error(e.getMessage());
+			log.error("Null pointer exception occurred while setting path.\n", e.getMessage());
 		}
 		test.setLastRunTimestamp(itest.getLastRunTimestamp());
 
@@ -180,6 +182,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		}catch(NullPointerException e){
 			test.setRunTime(0L);
 		}
+		
 		Iterator<ITestRecord> test_record_iter = itest.getRecords().iterator();
 		List<TestRecord> test_records = new ArrayList<TestRecord>();
 		while(test_record_iter != null && test_record_iter.hasNext()){

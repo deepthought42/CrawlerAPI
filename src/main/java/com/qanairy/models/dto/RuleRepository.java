@@ -3,7 +3,9 @@ package com.qanairy.models.dto;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.qanairy.models.PageElement;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IRule;
 import com.qanairy.persistence.IPersistable;
@@ -15,6 +17,7 @@ import com.qanairy.rules.RuleFactory;
  *
  */
 public class RuleRepository implements IPersistable<Rule, IRule> {
+	private static Logger log = LoggerFactory.getLogger(PageElement.class);
 
 	/**
 	 * {@inheritDoc}
@@ -32,9 +35,8 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 		Iterable<IRule> rule_records = (Iterable<IRule>) DataAccessObject.findByKey(rule.getType().toString(), connection, IRule.class);
 		Iterator<IRule> iter = rule_records.iterator();
 		
-		IRule rule_record = null;
 		if( !iter.hasNext()){
-			rule_record = connection.getTransaction().addVertex("class:"+Rule.class.getSimpleName()+","+UUID.randomUUID(), IRule.class);
+			IRule rule_record = connection.getTransaction().addVertex("class:"+IRule.class.getSimpleName()+","+UUID.randomUUID(), IRule.class);
 			rule_record.setKey(rule.getType().toString());
 			rule_record.setType(rule.getType().toString());
 			rule_record.setValue(rule.getValue());

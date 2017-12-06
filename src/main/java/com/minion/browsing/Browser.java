@@ -525,8 +525,7 @@ public class Browser {
 	 * @return
 	 */
 	private PageElement findFormSubmitButton(WebElement form_elem) {
-		assert false;
-		WebElement submit_element = form_elem.findElement(By.xpath("//input[@type='submit']"));
+		WebElement submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
 		return new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), driver), submit_element.getTagName(), Browser.extractedAttributes(submit_element, (JavascriptExecutor)driver), PageElement.loadCssProperties(submit_element) );
 	}
 

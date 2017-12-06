@@ -323,7 +323,7 @@ public class BrowserActor extends UntypedActor {
 	private void createTest(Path path, Page result_page, long crawl_time, Message<?> acct_msg ) {
 		path.setIsUseful(true);
 		log.info("usefulness set on path");
-		Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), result_page.getUrl().getProtocol()));							
+		Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), "", result_page.getUrl().getProtocol()));							
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
 		test.setRunTime(crawl_time);
@@ -416,7 +416,7 @@ public class BrowserActor extends UntypedActor {
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
-		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), page_obj.getUrl().getProtocol()));
+		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), "", page_obj.getUrl().getProtocol()));
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
 						

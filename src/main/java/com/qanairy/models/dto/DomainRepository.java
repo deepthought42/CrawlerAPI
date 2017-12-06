@@ -58,6 +58,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			domain_record = iter.next();
 		}
 		domain_record.setUrl(domain.getUrl());
+		domain_record.setLogoUrl(domain.getLogoUrl());
 		domain_record.setProtocol(domain.getProtocol());
 		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 		/*TestRepository test_repo = new TestRepository();
@@ -100,6 +101,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		if(iter.hasNext()){
 			IDomain domain_record = iter.next();
 			domain_record.setUrl(domain.getUrl());
+			domain_record.setLogoUrl(domain.getLogoUrl());
 			connection.save();
 		}
 		
@@ -150,8 +152,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			tests.add(test_repo.convertFromRecord(test_iter.next()));
 		}
 		*/
-		Domain domain = new Domain(obj.getKey(), obj.getUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt());
-		return domain;
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt());
 	}
 	
 	public Domain convertFromRecord(OrientVertex obj) {
@@ -161,7 +162,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		}
 		*/
 
-		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), tests, obj.getProperty("protocol"), null);
+		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), obj.getProperty("logo_url"), tests, obj.getProperty("protocol"), null);
 		return domain;
 	}
 	

@@ -1,9 +1,7 @@
 package com.qanairy.persistence;
 
 import org.mortbay.log.Log;
-
 import com.orientechnologies.common.io.OIOException;
-import com.tinkerpop.blueprints.Vertex;
 
 public class DataAccessObject<V> {
 

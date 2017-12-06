@@ -114,8 +114,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		}
 		
 		path_record.setIsUseful(path.isUseful());
-		
-		log.info("Is spans multiple domains set : " + path.getSpansMultipleDomains());
 		path_record.setSpansMultipleDomains(path.getSpansMultipleDomains());
 		return path_record;
 	}
@@ -183,8 +181,13 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		return path;
 	}
 
+	/**
+	 * @pre path != null
+	 */
 	@Override
 	public Path convertFromRecord(IPath path) throws NullPointerException {
+		assert(path != null);
+		
 		IPathObject path_obj = path.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
 		String key = path.getKey();
@@ -207,12 +210,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			}
 		}
 		
-		for(PathObject path_obj2 : path_obj_list){
-			if(path_obj2 == null){
-				continue;
-			}
-		}
-		
 		return new Path(key, path.isUseful(), path.isSpansMultipleDomains(), path_obj_list);
 	}
 
@@ -229,7 +226,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 				}
 			}
 			catch(OIOException e){
-				log.error(e.getMessage());
+				log.error("Error finding path by key", e.getMessage());
 			}
 			cnt++;
 		}

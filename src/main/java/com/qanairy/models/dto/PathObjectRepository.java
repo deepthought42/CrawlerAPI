@@ -86,7 +86,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	public PathObject convertFromRecord(IPathObject data){
 		String type = data.getType();
 		
-		//log.info("data type :: " + data.getType()+" :: "+data.getClass().getName());
+		log.info("data type :: " + data.getType()+" :: "+data.getClass().getName());
 		if(type.equals("Page")){
 			Page page_obj = null;
 			PageRepository page_record = new PageRepository();
@@ -95,37 +95,42 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 				page_obj = page_record.convertFromRecord(page_iter.next());
 			}
 			page_obj.setType(type);
+			log.info("return page path object");
 			return page_obj;
 		}
 		else if(type.equals("PageElement")){
-			log.debug("converting from page element");
+			log.info("converting from page element");
 
 			//IPageElement page_elem_record = ((IPageElement)data);
 			PageElement page_elem_obj = new PageElement();
 			
 			Iterator<IPageElement> page_elem_record_iter = ((Iterable<IPageElement>) DataAccessObject.findByKey(data.getKey(), IPageElement.class)).iterator();
 
-		
-			IPageElement page_elem_record = page_elem_record_iter.next();
-			if(page_elem_record != null){
+			log.info("iterating over page element records. Does it have next? "+page_elem_record_iter.hasNext());
+			if(page_elem_record_iter.hasNext()){
 				PageElementRepository page_elem_repo = new PageElementRepository();
-
-				page_elem_obj = page_elem_repo.convertFromRecord(page_elem_record);
+				IPageElement page_elem = page_elem_record_iter.next();
+				log.info("Page element record :: " +page_elem);
+				page_elem_obj = page_elem_repo.convertFromRecord(page_elem);
 				page_elem_obj.setType(type);
-				//page_elem_records.add(page_elem_obj);
+				log.info("type set on page element object");
 			}
-			
+			log.info("return page element path object");
+
 			return page_elem_obj;
 		}
 		else if(type.equals("Action")){			
+			log.info("converting action path object");
 			Action action = new Action();
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
 			action.setType(type);
 			
 			ActionRepository action_record = new ActionRepository();
+			log.info("return action path object");
 			return action_record.convertFromRecord(iaction.iterator().next());
 		}
-
+		
+		log.info("Returning null path object");
 		return null;
 	}
 

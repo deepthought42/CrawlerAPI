@@ -24,6 +24,12 @@ public interface IDomain {
 	@Property("url")
 	void setUrl(String url);
 
+	@Property("logo_url")
+	String getLogoUrl();
+	
+	@Property("logo_url")
+	void setLogoUrl(String logo_url);
+	
 	@Property("protocol")
 	String getProtocol();
 	

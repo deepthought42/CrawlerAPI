@@ -73,7 +73,7 @@ public class PathExpansionActor extends UntypedActor {
 				continue;
 			}
 			page_element.addRules(ElementRuleExtractor.extractInputRules(page_element));
-			page_element.addRules(ElementRuleExtractor.extractMouseRules(browser, page_element));
+			//page_element.addRules(ElementRuleExtractor.extractMouseRules(browser, page_element));
 			for(Rule rule : page_element.getRules()){
 				List<Path> paths = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 				

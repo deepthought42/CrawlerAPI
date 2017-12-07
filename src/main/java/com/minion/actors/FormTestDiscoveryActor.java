@@ -376,8 +376,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			//generate single character str test
 			Path path_2 = new Path();
-			path.add(input);
-			path.add(new Action("click", ""));
+			path_2.add(input);
+			path_2.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("click", ""));
 			path_2.add(input);
@@ -407,8 +407,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path_2.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("sendKeys", "0"));
-			path.add(submit);
-			path.add(new Action("click", ""));
+			path_2.add(submit);
+			path_2.add(new Action("click", ""));
 			paths.add(path_2);
 		}
 		return paths;
@@ -498,8 +498,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		path1.add(new Action("click", ""));
 		path1.add(input_elem);
 		path1.add(new Action("sendKeys", "test!test.com"));
-		path.add(submit);
-		path.add(new Action("click", ""));
+		path1.add(submit);
+		path1.add(new Action("click", ""));
 		paths.add(path1);
 
 		Path path2 = new Path();
@@ -507,8 +507,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		path2.add(new Action("click", ""));
 		path2.add(input_elem);
 		path2.add(new Action("sendKeys", "test@test"));
-		path.add(submit);
-		path.add(new Action("click", ""));
+		path2.add(submit);
+		path2.add(new Action("click", ""));
 		paths.add(path2);
 		
 		Path path3 = new Path();
@@ -516,8 +516,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		path3.add(new Action("click", ""));
 		path3.add(input_elem);
 		path3.add(new Action("sendKeys", "test.test@test"));
-		path.add(submit);
-		path.add(new Action("click", ""));
+		path3.add(submit);
+		path3.add(new Action("click", ""));
 		paths.add(path3);
 		
 		Path path4 = new Path();
@@ -525,8 +525,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		path4.add(new Action("click", ""));
 		path4.add(input_elem);
 		path4.add(new Action("sendKeys", "test_test@test"));
-		path.add(submit);
-		path.add(new Action("click", ""));
+		path4.add(submit);
+		path4.add(new Action("click", ""));
 		paths.add(path4);
 		
 		return paths;
@@ -564,7 +564,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				
 				List<Rule> rules = field.getInputElement().getRules();
 				for(Rule rule : rules){
-					List<Path> path_list = generateRuleTests(input_elem, rule, form.getSubmitField());
+					List<Path> path_list = generateInputRuleTests(input_elem, rule);
 					log.info("# rule tests created : " + path_list.size());
 					for(Path curr_path : path_list){
 						Path clone_path = Path.clone(path);
@@ -581,7 +581,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 	public static List<Path> generateLengthBoundaryTests(PageElement input, Rule rule){
 		log.info("generating length boundary test paths");
-
 		List<Path> paths = new ArrayList<Path>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
@@ -590,20 +589,20 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path.add(input);
 			path.add(new Action("click", ""));
 			path.add(input);
-			
+
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 			log.info("Generated string of length : " + short_str.length());
 			
 			path.add(new Action("sendKeys", short_str));
 			paths.add(path);
-	
+
 			//generate single character str test
 			path = new Path();
 			path.add(input);
 			path.add(new Action("click", ""));
 			path.add(input);
-			
+
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())+1);
 			log.info("Generated string of length : " + large_str.length());
@@ -625,7 +624,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			paths.add(path);
 			
 			log.info("adding single character text string sendKeys action For MIN LENGTH" );
-
 			//generate single character str test
 			path = new Path();
 			path.add(input);
@@ -651,7 +649,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			paths.add(path);
 			
 			log.info("adding single character text string sendKeys action" );
-
 			//generate single character str test
 			path = new Path();
 			path.add(input);
@@ -674,7 +671,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			paths.add(path);
 			
 			log.info("adding single character text string sendKeys action" );
-
 			//generate single character str test
 			path = new Path();
 			path.add(input);
@@ -711,8 +707,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			//generate single character str test
 			Path path_2 = new Path();
-			path.add(input);
-			path.add(new Action("click", ""));
+			path_2.add(input);
+			path_2.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("click", ""));
 			path_2.add(input);
@@ -805,7 +801,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 	private static List<Path> generateEmailTests(PageElement input_elem, Rule rule) {
 		List<Path> paths = new ArrayList<Path>();
-		
+
 		Path path = new Path();
 		path.add(input_elem);
 		path.add(new Action("click", ""));

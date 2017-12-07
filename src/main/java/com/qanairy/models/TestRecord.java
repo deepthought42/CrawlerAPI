@@ -23,7 +23,7 @@ public class TestRecord {
 	private Page result;
 	private long run_time_length;
 
-	public TestRecord(Date ran_at, boolean passes){
+	public TestRecord(Date ran_at, Boolean passes){
 		this.setRanAt(ran_at);
 		this.setPasses(passes);
 		this.setPage(null);

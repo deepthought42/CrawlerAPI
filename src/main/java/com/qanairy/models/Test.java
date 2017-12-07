@@ -38,8 +38,9 @@ public class Test {
 	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	private List<Group> groups;
 	private Date last_run_time;
-
+	private boolean run_status;
 	private long run_time_length;
+	
 	/**
 	 * Construct a test with defaults of useful set to fault and 
 	 * spansMultipleDomains set to false
@@ -49,6 +50,7 @@ public class Test {
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
+		this.setRunStatus(false);
 	}
 	
 	/**
@@ -72,6 +74,7 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(null);
+		this.setRunStatus(false);
 	}
 	
 	/**
@@ -95,6 +98,7 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(key);
+		this.setRunStatus(false);
 	}
 	
 	/**
@@ -163,6 +167,7 @@ public class Test {
 	public static Iterable<ITest> findByDomain(String domain) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		//return orient_connection.getTransaction().getBaseGraph().getRawGraph().query(new OSQLSynchQuery<ITest>("SELECT FROM V WHERE color = 'red'"));
+		orient_connection.close();
 		return null;
 	}
 	
@@ -382,5 +387,13 @@ public class Test {
 	
 	public long getRunTime() {
 		return this.run_time_length;
+	}
+
+	public boolean getRunStatus() {
+		return run_status;
+	}
+
+	public void setRunStatus(boolean run_status) {
+		this.run_status = run_status;
 	}
 }

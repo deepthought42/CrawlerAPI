@@ -9,13 +9,13 @@ import org.testng.annotations.Test;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.Form;
 import com.qanairy.models.Page;
-import com.qanairy.rules.FormRule;
-import com.qanairy.rules.formRules.AlphabeticRestrictionRule;
-import com.qanairy.rules.formRules.NumericRule;
-import com.qanairy.rules.formRules.NumericRestrictionRule;
-import com.qanairy.rules.formRules.ReadOnlyRule;
-import com.qanairy.rules.formRules.RequirementRule;
-import com.qanairy.rules.formRules.SpecialCharacterRestriction;
+import com.qanairy.rules.Rule;
+import com.qanairy.rules.NumericRestrictionRule;
+import com.qanairy.rules.NumericRule;
+import com.qanairy.rules.ReadOnlyRule;
+import com.qanairy.rules.RequirementRule;
+import com.qanairy.rules.SpecialCharacterRestriction;
+import com.qanairy.rules.AlphabeticRestrictionRule;
 
 /**
  * A group of TestNG tests designed to verify the extraction of tests involving forms and rules on fields
@@ -37,11 +37,11 @@ public class FormTestExtractionTests {
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
 			//log.info("Extracting rules");
-			//List<FormRule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
+			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
 			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean rule_is_required = false;
-			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
+			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
 				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(RequirementRule.class)){
 					rule_is_required = true;
@@ -72,14 +72,14 @@ public class FormTestExtractionTests {
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
 			//log.info("Extracting rules");
-			//List<FormRule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
+			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
 			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean alphabetic_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
 			
-			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
+			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
 				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(AlphabeticRestrictionRule.class)){
 					alphabetic_restrict_rule = true;
@@ -113,13 +113,13 @@ public class FormTestExtractionTests {
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
 			//log.info("Extracting rules");
-			//List<FormRule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
+			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
 			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean numeric_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
-			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
+			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
 				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRestrictionRule.class)){
 					numeric_restrict_rule = true;
@@ -153,7 +153,7 @@ public class FormTestExtractionTests {
 
 			boolean readonly_restrict_rule = false;
 
-			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
+			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
 				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(ReadOnlyRule.class)){
 					readonly_restrict_rule = true;
@@ -185,7 +185,7 @@ public class FormTestExtractionTests {
 			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean min_value_rule = false;
 
-			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
+			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
 				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRule.class)){
 					min_value_rule = true;
@@ -216,7 +216,7 @@ public class FormTestExtractionTests {
 
 			boolean max_value_rule = false;
 
-			for(FormRule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
+			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
 				if(rule.getClass().equals(NumericRule.class)){
 					max_value_rule = true;
 				}

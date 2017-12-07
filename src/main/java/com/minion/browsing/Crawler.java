@@ -32,7 +32,7 @@ public class Crawler {
 	 */
 	public static Page crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, IOException{
 		assert path != null;
-
+		
 		PageElement last_element = null;
 
 		//skip first node since we should have already loaded it during initialization
@@ -63,7 +63,7 @@ public class Crawler {
 				do{
 					actionPerformedSuccessfully = last_element.performAction(action, browser.getDriver());
 					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 50);
+				}while(!actionPerformedSuccessfully && attempts < 5);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");

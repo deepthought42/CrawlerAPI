@@ -1,7 +1,6 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +17,7 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.ActionFactory;
+import com.qanairy.rules.Rule;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement
@@ -32,45 +32,62 @@ public class PageElement extends PathObject{
 	private String name;
 	private String text;
 	private String xpath;
-	private Map<String, String> cssValues = new HashMap<String,String>();
-	private List<Attribute> attributes = new ArrayList<Attribute>();
-
+	private Map<String, String> cssValues;
+	private List<Attribute> attributes;
+	private List<Rule> rules;
+			
 	public PageElement(){
-		
+		super.setType("PageElement");
+		setCssValues(new HashMap<String,String>());
+		setAttributes(new ArrayList<Attribute>());
+		setRules(new ArrayList<Rule>());
 	}
 	
 	public PageElement(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
 		super.setType("PageElement");
-		this.name = name;
-		this.xpath = xpath;
-		this.attributes = attributes;
-		this.text = text;
-		this.cssValues = css_map;
-		this.setKey(null);
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setText(text);
+		setCssValues(css_map);
+		setRules(new ArrayList<Rule>());
+		setKey(null);
 	}
 	
 	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
 		super.setType("PageElement");
-		this.setName(name);
-		this.setXpath(xpath);
-		this.setAttributes(attributes);
-		this.setText(text);
-		this.setCssValues(css_map);
-		this.setKey(key);
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setText(text);
+		setCssValues(css_map);
+		setRules(new ArrayList<Rule>());
+		setKey(key);
+	}
+	
+	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
+		super.setType("PageElement");
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setText(text);
+		setCssValues(css_map);
+		setRules(rules);
+		setKey(key);
 	}
 	
 	/**
 	 * Print Attributes for this element in a prettyish format
 	 */
 	public void printAttributes(){
-		log.info("+++++++++++++++++++++++++++++++++++++++");
+		System.out.print("+++++++++++++++++++++++++++++++++++++++");
 		for(int j=0; j < this.attributes.size(); j++){
 			System.out.print(this.attributes.get(j).getName() + " : ");
 			for(int i=0; i < attributes.get(j).getVals().size(); i++){
 				System.out.print( this.attributes.get(j).getVals().get(i) + " ");
 			}
 		}
-		log.info("\n+++++++++++++++++++++++++++++++++++++++");
+		System.out.print("\n+++++++++++++++++++++++++++++++++++++++");
 	}
 	
 	/**
@@ -167,11 +184,24 @@ public class PageElement extends PathObject{
 		this.attributes = attribute_persist_list;
 	}
 	
+	public List<Rule> getRules(){
+		return this.rules;
+	}
+
+	public void setRules(List<Rule> rules) {
+		this.rules = rules;
+	}
+	
+	public void addRules(List<Rule> rules) {
+		this.rules.addAll(rules);
+	}
+	
+	public void addRule(Rule rule) {
+		this.rules.add(rule);
+	}
 	
 	/**
-	 * Converts to string with following format:
-	 * {tagName}:{innertext of tag}
-	 * 
+	 * Prints this elements xpath
 	 */
 	public String toString(){
 		return this.xpath;
@@ -296,19 +326,19 @@ public class PageElement extends PathObject{
 		}
 		catch(StaleElementReferenceException e){
 			
-			log.info("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
-					+ action + ". ");
+			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
+					+ action + ". ", e.getMessage());
 			wasPerformedSuccessfully = false;			
 		}
 		catch(ElementNotVisibleException e){
-			//log.debug("ELEMENT IS NOT CURRENTLY VISIBLE.");
+			log.warn("ELEMENT IS NOT CURRENTLY VISIBLE.", e.getMessage());
 		}
 		catch(NoSuchElementException e){
-			//log.debug(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action);
+			log.warn(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action, e.getMessage());
 			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
-			log.info("Element can not have action performed on it at point performed");
+			log.warn("Element can not have action performed on it at point performed", e.getMessage());
 			wasPerformedSuccessfully = false;
 		}
 		

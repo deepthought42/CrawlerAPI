@@ -19,7 +19,7 @@ public class DomainTests {
 	 */
 	@Test
 	public void domainCreateRecord(){
-		Domain domain = new Domain("Test.test", "http");
+		Domain domain = new Domain("Test.test", "", "http");
 		DomainRepository domain_repo = new DomainRepository();
 
 		Domain created_domain = domain_repo.create(new OrientConnectionFactory(), domain);
@@ -36,7 +36,7 @@ public class DomainTests {
 	 */
 	@Test
 	public void accountUpdateRecord(){
-		Domain domain = new Domain("Test.test", "Test.test", new ArrayList<com.qanairy.models.Test>(), "http", null);
+		Domain domain = new Domain("Test.test", "Test.test", "", new ArrayList<com.qanairy.models.Test>(), "http", null);
 		DomainRepository domain_repo = new DomainRepository();
 		domain.setKey(domain_repo.generateKey(domain));
 
@@ -54,7 +54,7 @@ public class DomainTests {
 	 */
 	@Test
 	public void accountFindRecord(){
-		Domain domain = new Domain("Test Domain", "http");
+		Domain domain = new Domain("Test Domain", "", "http");
 		DomainRepository domain_repo = new DomainRepository();
 		domain.setKey(domain_repo.generateKey(domain));
 		Domain domain_record = domain_repo.update(new OrientConnectionFactory(), domain);

@@ -80,6 +80,11 @@ public interface ITest  {
 	@Property("run_time")
 	public void setRunTime(long milliseconds);
 	
+	@Property("run_status")
+	public void setRunStatus(boolean status);
+	
+	@Property("run_status")
+	public boolean getRunStatus();
 	
 	/**
 	 * @return the domain for the current test
@@ -168,4 +173,6 @@ public interface ITest  {
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
 	public void setRecords(List<TestRecord> page);
+
+	
 }

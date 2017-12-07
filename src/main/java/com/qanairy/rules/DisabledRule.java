@@ -1,35 +1,39 @@
-package com.qanairy.rules.formRules;
+package com.qanairy.rules;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import com.minion.actors.FormTestDiscoveryActor;
-import com.minion.browsing.form.FormField;
 import com.qanairy.models.Attribute;
-import com.qanairy.rules.FormRule;
+import com.qanairy.models.PageElement;
 
-public class DisabledRule implements FormRule {
+public class DisabledRule implements Rule{
 	private static Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
 
-	private FormRuleType type;
+	private String value;
 	
 	public DisabledRule() {
-		this.type = FormRuleType.DISABLED;
+		this.value = null;
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FormRuleType getType() {
-		return this.type;
+	public RuleType getType() {
+		return RuleType.DISABLED;
 	}
 
+	@Override
+	public String getValue() {
+		return null;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(FormField field) {
+	public Boolean evaluate(PageElement elem) {
 		/* 
 		 * Also check for 
 		 * 
@@ -38,7 +42,7 @@ public class DisabledRule implements FormRule {
 		 * 
 		 */
 	
-		Attribute attr = field.getInputElement().getAttribute("disabled");
+		Attribute attr = elem.getAttribute("disabled");
 		log.info("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
 		return attr.getVals().size() == 0;
 	}

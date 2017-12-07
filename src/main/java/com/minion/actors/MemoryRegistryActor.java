@@ -41,7 +41,6 @@ public class MemoryRegistryActor extends UntypedActor{
 				TestRepository test_repo = new TestRepository();
 				test.setKey(test_repo.generateKey(test));
 				Test test_record = test_repo.find(connection, test.getKey());
-				
 				if(test_record == null){
 					test_repo.create(connection, test);
 					PastPathExperienceController.broadcastTestExperience(test);

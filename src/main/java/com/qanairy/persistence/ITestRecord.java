@@ -24,10 +24,10 @@ public interface ITestRecord {
 	public void setRanAt(Date date);
 	
 	@Property("passes")
-	public boolean getPasses();
+	public Boolean getPasses();
 	
 	@Property("passes")
-	public void setPasses(boolean isPassing);
+	public void setPasses(Boolean isPassing);
 	
 	@Adjacency(label="has_result")
 	public void setResult(IPage page);

@@ -18,6 +18,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
@@ -193,37 +194,21 @@ public class BrowserActor extends UntypedActor {
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-				
-				int cnt = 0;
-				while(browser == null && cnt < 5){
-					try{
-						browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
-						break;
-					}
-					catch(NullPointerException e){
-						log.warn("Failed to open connection to browser");
-					}
-					cnt++;
-				}
-			  	Page result_page = null;
-
-				// IF PAGES ARE DIFFERENT THEN DEFINE NEW TEST THAT HAS PATH WITH PAGE
-				// 	ELSE DEFINE NEW TEST THAT HAS PATH WITH NULL PAGE
+				log.info("exploratory path started");
+				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
 				
 				Page last_page = exploratory_path.findLastPage();
-				try{
-					last_page.setLandable(last_page.checkIfLandable());
-				}catch(NullPointerException e){
-					log.error(e.getMessage());
-					e.printStackTrace();
-				}
+				last_page.setLandable(last_page.checkIfLandable());
+
 				if(last_page.isLandable()){
 					//clone path starting at last page in path
 					//Path shortened_path = path.clone());
 				}
+
 				
 				if(exploratory_path.getPath() != null){
-					
+					Page result_page = null;
+
 					// increment total paths being explored for domain
 					String domain_url = last_page.getUrl().getHost();
 					DomainRepository domain_repo = new DomainRepository();
@@ -233,63 +218,32 @@ public class BrowserActor extends UntypedActor {
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
-						Path crawl_path = Path.clone(exploratory_path);
-						crawl_path.add(action);
-
+						Path path = Path.clone(exploratory_path);
+						path.add(action);
+						log.info("Crawling exploratory path with length : " + path.size());
 						final long pathCrawlStartTime = System.currentTimeMillis();
-
-						result_page = Crawler.crawlPath(crawl_path, browser);
-						
+						result_page = Crawler.crawlPath(path, browser);
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 						
-						log.info("Total exploratory path crawl execution time: " + (pathCrawlStartTime - pathCrawlEndTime) );
-						if(last_page.equals(result_page)){
-					  		crawl_path.setIsUseful(false);
+						int last_idx = exploratory_path.getPath().size()-1;
+						if(last_idx < 0){
+							last_idx = 0;
+						}
+						
+						int clicks = getLastClicksSequenceCount(last_idx, exploratory_path, last_page);
+						if(clicks >= 3 && last_page.equals(result_page)){
+							//check if test has 3 or more consecutive click events since last page
+					  		path.setIsUseful(false);
 					  	}
 					  	else{
-					  		if(ExploratoryPath.hasCycle(crawl_path, last_page)){
+					  		if(ExploratoryPath.hasCycle(path, last_page)){
+					  			log.info("exploratory path has cycle; exiting");
 					  			break;
 					  		}
 
-					  		crawl_path.setIsUseful(true);
-							
-							PathRepository path_repo = new PathRepository();
-							crawl_path.setKey(path_repo.generateKey(crawl_path));
-							
-							Test test = new Test(crawl_path, result_page, new Domain(result_page.getUrl().getHost(), result_page.getUrl().getProtocol()));
-							test.setRunTime(pathCrawlRunTime);
-							
-							TestRepository test_repo = new TestRepository();
-							test.setKey(test_repo.generateKey(test));
-							//check if test has any form elements
-							for(PathObject path_obj: exploratory_path.getPath()){
-								if(path_obj.getClass().equals(PageElement.class)){
-									PageElement elem = (PageElement)path_obj;
-									if(elem.getXpath().contains("form")){
-										test.addGroup(new Group("form"));
-										break;
-									}
-								}
-							}
-							
-							Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-							//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-							//work_allocator.tell(test_msg, getSelf() );
-							//tell memory worker of path
-							final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-														
-							//tell memory worker of path
-							memory_actor.tell(test_msg, getSelf() );
-							
-							//broadcast test
-							Path new_crawl_path = Path.clone(crawl_path);
-							new_crawl_path.add(result_page);
-							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_crawl_path);
-
-							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-							path_expansion_actor.tell(path_msg, getSelf() );
+					  		createTest(path, result_page, pathCrawlRunTime, acct_msg);
 					  	}
 					}
 				}
@@ -300,37 +254,26 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if (acct_msg.getData() instanceof Path){
+				log.info("Path started");
+
 				Path path = (Path)acct_msg.getData();
-				
+				assert(path.getPath() != null);
 				if(acct_msg.getOptions().isEmpty()){
 				}
 				
-				int cnt = 0;
-				while(browser == null && cnt < 5){
-					try{
-						browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
-					}
-					catch(NullPointerException e){
-						log.warn("Failed to open connection to browser");
-					}
-				}
-				Page result_page = null;
-				final long pathCrawlStartTime = System.currentTimeMillis();
-
-				if(path.getPath() != null){
-					result_page = Crawler.crawlPath(path, browser);	
-				}
+				browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
 				
+				Page result_page = null;
+				long crawl_time_in_ms = -1L;
+				final long pathCrawlStartTime = System.currentTimeMillis();
+				result_page = Crawler.crawlPath(path, browser);	
 				final long pathCrawlEndTime = System.currentTimeMillis();
-				long pathCrawlTime = pathCrawlEndTime - pathCrawlStartTime;
-
+				
+				crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
+				
 				Page last_page = path.findLastPage();
-				try{
-					last_page.setLandable(last_page.checkIfLandable());
-				}catch(NullPointerException e){
-					log.error(e.getMessage());
-					last_page.setLandable(false);
-				}
+
+				last_page.setLandable(last_page.checkIfLandable());
 				if(last_page.isLandable()){
 					//clone path starting at last page in path
 					//Path shortened_path = path.clone());
@@ -338,46 +281,16 @@ public class BrowserActor extends UntypedActor {
 				
 				PathRepository path_repo = new PathRepository();
 				path.setKey(path_repo.generateKey(path));
-				
-				if(last_page.equals(result_page) && path.getPath().size() > 1){
+				int last_idx = path.getPath().size()-1;
+				if(last_idx < 0){
+					last_idx = 0;
+				}
+				int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
+				if(clicks >= 3 && last_page.equals(result_page) && path.getPath().size() > 1){
 			  		path.setIsUseful(false);
 			  	}
 			  	else{					
-			  		path.setIsUseful(true);
-					Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), result_page.getUrl().getProtocol()));
-					TestRepository test_repo = new TestRepository();
-					test.setKey(test_repo.generateKey(test));
-
-					test.setRunTime(pathCrawlTime);
-					//check if test has any form elements
-					for(PathObject path_obj: path.getPath()){
-						if(path_obj.getClass().equals(PageElement.class)){
-							PageElement elem = (PageElement)path_obj;
-							if(elem.getXpath().contains("form")){
-								test.addGroup(new Group("form"));
-								break;
-							}
-						}
-					}
-
-					// CHECK THAT TEST HAS NOT YET BEEN EXPERIENCED RECENTLY
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-
-					//final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-					//work_allocator.tell(test_msg, getSelf() );	
-					
-					//tell memory worker of path
-					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-					
-					//tell memory worker of path
-					memory_actor.tell(test_msg, getSelf() );
-					
-					Path new_crawl_path = Path.clone(path);
-					new_crawl_path.add(result_page);
-					Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_crawl_path, acct_msg.getOptions());
-					
-					final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-					path_expansion_actor.tell(path_msg, getSelf() );
+			  		createTest(path, result_page, crawl_time_in_ms, acct_msg);
 			  	}
 			  	browser.close();
 	
@@ -385,6 +298,8 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
+				log.info("Url provided");
+
 				try{
 					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
 				}
@@ -401,6 +316,85 @@ public class BrowserActor extends UntypedActor {
 		}else unhandled(message);
 	}
 	
+	/**
+	 * Generates {@link Test Tests} for path
+	 * @param path
+	 * @param result_page
+	 */
+	private void createTest(Path path, Page result_page, long crawl_time, Message<?> acct_msg ) {
+		path.setIsUseful(true);
+		log.info("usefulness set on path");
+		Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), "", result_page.getUrl().getProtocol()));							
+		TestRepository test_repo = new TestRepository();
+		test.setKey(test_repo.generateKey(test));
+		test.setRunTime(crawl_time);
+		addFormGroupsToPath(test);
+		
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
+		test.addRecord(test_record);
+		log.info("sending test message out");
+		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+		
+		//tell memory worker of test
+		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+		memory_actor.tell(test_msg, getSelf() );
+		
+		Path new_path = Path.clone(path);
+		new_path.add(result_page);
+		Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
+
+		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		path_expansion_actor.tell(path_msg, getSelf() );
+	}
+
+	/**
+	 * Adds Group labeled "form" to test if the test has any elements in it that have form in the xpath
+	 * 
+	 * @param test {@linkplain Test} that you want to label
+	 */
+	private void addFormGroupsToPath(Test test) {
+		//check if test has any form elements
+		for(PathObject path_obj: test.getPath().getPath()){
+			if(path_obj.getClass().equals(PageElement.class)){
+				PageElement elem = (PageElement)path_obj;
+				if(elem.getXpath().contains("form")){
+					test.addGroup(new Group("form"));
+					break;
+				}
+			}
+		}
+	}
+
+	/**
+	 * counts how many clicks have happened in a sequence since last page change
+	 * 
+	 * @param last_idx
+	 * @param path
+	 * @param last_page
+	 * @return
+	 */
+	private int getLastClicksSequenceCount(int last_idx, Path path, Page last_page) {
+		int clicks = 0;
+		
+		while(last_idx>=0){
+			if(path.getPath().get(last_idx).equals(last_page)){
+				break;
+			}
+			PathObject obj = path.getPath().get(last_idx);
+			if(obj.getType().equals("Action")){
+				log.info("checking action in exploratory path");
+				Action path_action = (Action)obj;
+				if(path_action.getName().equals("click") || path_action.getName().equals("doubleclick")){
+					log.info("incrementing click count");
+					clicks++;
+				}
+			}
+			last_idx--;
+		};
+		
+		return clicks;
+	}
+
 	/**
 	 * Generates a landing page test based on a given URL
 	 * 
@@ -426,10 +420,13 @@ public class BrowserActor extends UntypedActor {
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
-		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), page_obj.getUrl().getProtocol()));
+		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), "", page_obj.getUrl().getProtocol()));
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
-						
+
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
+		test.addRecord(test_record);
+		
 	  	Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), test);
 	  	ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf() );

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
@@ -80,7 +79,6 @@ public class AccountController {
        
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-        log.info("Current user accessed Admin secured resource: " + currentUser.getUsername());
         
         if(currentUser.getUsername().equals("UNKNOWN_USER")){
         	throw new InvalidUserException();

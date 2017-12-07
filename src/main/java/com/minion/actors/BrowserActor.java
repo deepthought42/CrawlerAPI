@@ -23,7 +23,6 @@ import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.IDomain;
-import com.qanairy.rl.memory.Vocabulary;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 
@@ -163,21 +162,6 @@ public class BrowserActor extends UntypedActor {
 	public UUID getActorId(){
 		return uuid;
 	}
-	
-	/**
-	 * Retrieves all {@linkplain Vocabulary vocabularies} that are required by the agent 
-	 * 
-	 * @param vocabLabels
-	 * @return
-	 */
-	public ArrayList<Vocabulary> loadVocabularies(String[] vocabLabels){
-		ArrayList<Vocabulary> vocabularies = new ArrayList<Vocabulary>();
-		for(String label : vocabLabels){			
-			vocabularies.add(Vocabulary.load(label));
-		}
-		return vocabularies;		
-	}
-	
 
 	/**
 	 * {@inheritDoc}

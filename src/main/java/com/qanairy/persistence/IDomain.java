@@ -71,4 +71,13 @@ public interface IDomain {
 
 	@Adjacency(direction=Direction.IN, label="has_domain")
 	void addAccount(IAccount account);
+	
+	@Adjacency(label="has_test_user")
+	Iterable<ITestUser> getTestUsers();
+
+	@Adjacency(label="has_test_user")
+	void setTestUsers(List<ITestUser> test_users);
+
+	@Adjacency(label="has_test_user")
+	void addTestUser(ITestUser test_user);
 }

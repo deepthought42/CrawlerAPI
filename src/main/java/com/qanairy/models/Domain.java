@@ -20,6 +20,7 @@ public class Domain {
 	private String protocol;
 	private String logo_url;
 	private Date last_discovery_path_ran_at;
+	private List<TestUser> test_users;
 	
 	/**
 	 * 
@@ -32,6 +33,7 @@ public class Domain {
 		this.setTests(new ArrayList<Test>());
 		this.accounts = new ArrayList<Account>();
 		this.setProtocol("http");
+		this.setTestUsers(new ArrayList<TestUser>());
 	}
 	
 	/**
@@ -45,6 +47,7 @@ public class Domain {
 		this.setUrl(url);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
+		this.setTestUsers(new ArrayList<TestUser>());
 	}
 	
 	/**
@@ -58,6 +61,7 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
+		this.setTestUsers(new ArrayList<TestUser>());
 	}
 	
 	/**
@@ -78,6 +82,7 @@ public class Domain {
 		this.setProtocol(protocol);
 		this.setLastDiscoveryPathRanAt(timestamp);
 		this.setLogoUrl(logo_url);
+		this.setTestUsers(new ArrayList<TestUser>());
 	}
 	
 	/**
@@ -101,6 +106,32 @@ public class Domain {
 		this.setProtocol(protocol);
 		this.setLastDiscoveryPathRanAt(timestamp);
 		this.setLogoUrl(logo_url);
+		this.setTestUsers(new ArrayList<TestUser>());
+	}
+	
+	/**
+	 * 
+	 * @param key
+	 * @param domain_url
+	 * @param logo_url
+	 * @param tests
+	 * @param protocol
+	 * @param timestamp
+	 */
+	public Domain(	String key, 
+					String domain_url,
+					String logo_url,
+					List<Test> tests,
+					String protocol,
+					Date timestamp,
+					List<TestUser> test_users){
+		this.setKey(key);
+		this.setUrl(domain_url);
+		this.setTests(tests);
+		this.setProtocol(protocol);
+		this.setLastDiscoveryPathRanAt(timestamp);
+		this.setLogoUrl(logo_url);
+		this.setTestUsers(test_users);
 	}
 	
 	public String getUrl() {
@@ -175,5 +206,17 @@ public class Domain {
 
 	public void setLogoUrl(String logo_url) {
 		this.logo_url = logo_url;
+	}
+
+	public List<TestUser> getTestUsers() {
+		return test_users;
+	}
+
+	public void setTestUsers(List<TestUser> test_users) {
+		this.test_users = test_users;
+	}
+	
+	public void addTestUsers(TestUser test_user) {
+		this.test_users.add(test_user);
 	}
 }

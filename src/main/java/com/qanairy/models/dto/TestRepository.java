@@ -143,9 +143,9 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			test_record.setRunTime(test.getRunTime());
 			test_record.setName(test.getName());
 			test_record.setCorrect(test.isCorrect());
+			log.info("Run status being saved as " + test.getRunStatus());
 			test_record.setRunStatus(test.getRunStatus());
 		}	
-		
 		
 		return test_record;
 	}

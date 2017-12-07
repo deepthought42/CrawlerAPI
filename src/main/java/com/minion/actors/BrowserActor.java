@@ -18,6 +18,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
@@ -328,6 +329,9 @@ public class BrowserActor extends UntypedActor {
 		test.setKey(test_repo.generateKey(test));
 		test.setRunTime(crawl_time);
 		addFormGroupsToPath(test);
+		
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
+		test.addRecord(test_record);
 		log.info("sending test message out");
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 		
@@ -419,7 +423,10 @@ public class BrowserActor extends UntypedActor {
 		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), "", page_obj.getUrl().getProtocol()));
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
-						
+
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
+		test.addRecord(test_record);
+		
 	  	Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), test);
 	  	ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf() );

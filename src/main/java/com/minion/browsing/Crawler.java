@@ -63,7 +63,7 @@ public class Crawler {
 				do{
 					actionPerformedSuccessfully = last_element.performAction(action, browser.getDriver());
 					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 50);
+				}while(!actionPerformedSuccessfully && attempts < 5);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");

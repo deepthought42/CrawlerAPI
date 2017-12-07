@@ -78,22 +78,16 @@ public class TestingActor extends UntypedActor {
 					resulting_page.setLandable(false);
 				}
 				if(!resulting_page.equals(expected_page)){
-					//log.info("Saving test, cuz it has changed");
-					
-					//Test test_new = new Test(path, expected_page, expected_page.getUrl().getHost());
 					TestRecord record = new TestRecord(new Date(), false, resulting_page);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
-					
-					//log.info("Test Actor -> Sending test record to be saved");
+
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 					//tell memory worker of path
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
 				}
 				else{
-					//log.info("Saving unchanged test");
-					
 					TestRecord record = null;
 					if(!test.isCorrect()){
 						record = new TestRecord(new Date(), false, resulting_page);
@@ -106,15 +100,12 @@ public class TestingActor extends UntypedActor {
 					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
 
 					//tell memory worker of test record
-					//log.info("Test Actor -> Sending test record to be saved");
-
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
 
 					//PastPathExperienceController.broadcastTestExperience(test);
 				}
 
-				//broadcast path
 			  	browser.close();
 			}
 			else{

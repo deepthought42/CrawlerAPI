@@ -49,7 +49,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		}
 
 		IPathObject last_path_obj = null;
-		int idx = 0;
+		int idx = -1;
 		for(PathObject obj: path.getPath()){
 			if(obj instanceof Page){
 				PageRepository page_repo = new PageRepository();
@@ -187,6 +187,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	@Override
 	public Path convertFromRecord(IPath path) throws NullPointerException {
 		assert(path != null);
+		
+		//count path nodes
+		int cnt = 0;
 		
 		IPathObject path_obj = path.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();

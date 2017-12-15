@@ -23,13 +23,10 @@ public interface IPathObject {
 	public void setType(String type);
 	
 	@Adjacency(label="goes_to")
-	public Iterable<IPathObject> getNext();
+	public Iterable<IPathObject> getInitialPathObject();
 	
 	@Adjacency(label="goes_to")
-	public void setNext(IPathObject path_obj);
-	
-	@Adjacency(label="goes_to")
-	public void setNext(List<IPathObject> path_obj);
+	public void addInitialPathObject(IPathObject path_obj);
 	
 	@Incidence(direction=Direction.OUT, label="goes_to")
 	public Iterable<IPathEdge> getPathEdges();

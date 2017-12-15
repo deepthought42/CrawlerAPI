@@ -93,7 +93,6 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	public TestRecord convertFromRecord(ITestRecord obj) {
 		PageRepository page_repo = new PageRepository();
 		Page page = page_repo.convertFromRecord(obj.getResult());
-		
 		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), page);
 		
 		return record;

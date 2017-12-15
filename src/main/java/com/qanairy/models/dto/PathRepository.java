@@ -38,7 +38,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		Iterator<IPath> path_iter = ((Iterable<IPath>) DataAccessObject.findByKey(path.getKey(), connection, IPath.class)).iterator();
 
 		IPath path_record = null;
-		System.out.println("# of existing Path records with key "+path.getKey() + " :: " + path.getPath().size());
 		
 		if(!path_iter.hasNext()){
 			path_record = connection.getTransaction().addVertex("class:"+IPath.class.getSimpleName()+","+UUID.randomUUID(), IPath.class);
@@ -63,7 +62,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					boolean path_edge_exists = false;
 					for(IPathEdge edge : edges){
 						if(edge.getPathKey().equals(path.getKey())){
-							System.out.println("PATH EDGE KEY Matches PATH KEY");
 							path_edge_exists = true;
 							break;
 						}

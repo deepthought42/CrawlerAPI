@@ -136,17 +136,13 @@ public class TestingActor extends UntypedActor {
 		 try {		
 			System.err.println("Test path :: "+test.getPath());
 			page = Crawler.crawlPath(test.getPath(), browser);
-			System.out.println("Result page from crawl :: "+page);
 			passing = test.isTestPassing(page, test.isCorrect());
 			test_record = new TestRecord(new Date(), passing, page);
 			
 			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();
-			    System.out.println("browser name :: " + browserName);
 			    String os = cap.getPlatform().toString();
-			    System.out.println("OS : " + os);
 			    String v = cap.getVersion().toString();
-			    System.out.println("Version :: " +v);
 			    
 		    test.setBrowserStatus(browserName, passing);
 			    

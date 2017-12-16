@@ -38,7 +38,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		Iterator<IPath> path_iter = ((Iterable<IPath>) DataAccessObject.findByKey(path.getKey(), connection, IPath.class)).iterator();
 
 		IPath path_record = null;
-		System.out.println("# of existing Path records with key "+path.getKey() + " :: " + path.getPath().size());
 		
 		if(!path_iter.hasNext()){
 			path_record = connection.getTransaction().addVertex("class:"+IPath.class.getSimpleName()+","+UUID.randomUUID(), IPath.class);
@@ -49,7 +48,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		}
 
 		IPathObject last_path_obj = null;
-		int idx = 0;
+		int idx = -1;
 		for(PathObject obj: path.getPath()){
 			if(obj instanceof Page){
 				PageRepository page_repo = new PageRepository();
@@ -63,7 +62,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 					boolean path_edge_exists = false;
 					for(IPathEdge edge : edges){
 						if(edge.getPathKey().equals(path.getKey())){
-							System.out.println("PATH EDGE KEY Matches PATH KEY");
 							path_edge_exists = true;
 							break;
 						}
@@ -187,6 +185,9 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	@Override
 	public Path convertFromRecord(IPath path) throws NullPointerException {
 		assert(path != null);
+		
+		//count path nodes
+		int cnt = 0;
 		
 		IPathObject path_obj = path.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();

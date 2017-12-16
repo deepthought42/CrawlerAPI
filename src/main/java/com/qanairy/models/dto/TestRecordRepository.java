@@ -21,8 +21,6 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		ITestRecord testRecord = connection.getTransaction().addVertex("class:"+ITestRecord.class.getSimpleName()+","+UUID.randomUUID(), ITestRecord.class);
 
 		PageRepository page_repo = new PageRepository();
-		System.out.println("Retrieving Record :: "+record);
-		System.out.println("Retrieving page :: "+record.getPage());
 		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));
 		testRecord.setPasses(record.getPasses());
 		testRecord.setRanAt(record.getRanAt());
@@ -93,7 +91,6 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	public TestRecord convertFromRecord(ITestRecord obj) {
 		PageRepository page_repo = new PageRepository();
 		Page page = page_repo.convertFromRecord(obj.getResult());
-		
 		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), page);
 		
 		return record;

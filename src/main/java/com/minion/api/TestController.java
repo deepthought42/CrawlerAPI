@@ -43,6 +43,7 @@ import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.ITest;
+import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
@@ -235,8 +236,22 @@ public class TestController {
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
 
+		//update last TestRecord passes value
+		updateLastTestRecordPassingStatus(itest);
+		
 		TestRepository test_record = new TestRepository();
 		return test_record.convertFromRecord(itest);
+	}
+
+	private void updateLastTestRecordPassingStatus(ITest itest) {
+		Iterator<ITestRecord> itest_records = itest.getRecords().iterator();
+		ITestRecord record = null;
+		while(itest_records.hasNext()){
+			record = itest_records.next();
+		}
+		if(record != null){
+			record.setPasses(itest.getCorrect());
+		}
 	}
 
 	/**

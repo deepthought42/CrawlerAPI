@@ -229,6 +229,13 @@ public class BrowserActor extends UntypedActor {
 
 					  		createTest(path, result_page, pathCrawlRunTime, acct_msg);
 					  	}
+						
+						Path new_path = Path.clone(path);
+						new_path.add(result_page);
+						Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
+
+						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+						path_expansion_actor.tell(path_msg, getSelf() );
 					}
 				}
 
@@ -312,8 +319,12 @@ public class BrowserActor extends UntypedActor {
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
 		test.setRunTime(crawl_time);
+		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
+		System.err.println("Setting last run time to :: "+test.getLastRunTimestamp());
+		System.err.println("setting passes to null");
+		System.err.println("Setting result to :: "+test.getResult());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
 		test.addRecord(test_record);
 		log.info("sending test message out");
@@ -322,13 +333,6 @@ public class BrowserActor extends UntypedActor {
 		//tell memory worker of test
 		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf() );
-		
-		Path new_path = Path.clone(path);
-		new_path.add(result_page);
-		Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
-
-		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-		path_expansion_actor.tell(path_msg, getSelf() );
 	}
 
 	/**
@@ -395,7 +399,7 @@ public class BrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
-		log.info("Generting landing page");
+		log.info("Generating landing page");
 	  	Path path = new Path();
 	  	Page page_obj = browser.getPage();
 	  	path.getPath().add(page_obj);
@@ -404,10 +408,13 @@ public class BrowserActor extends UntypedActor {
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
+		createTest(path, page_obj, 1L, msg);
+		
+		/*
 		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), "", page_obj.getUrl().getProtocol()));
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
-
+		
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
 		test.addRecord(test_record);
 		
@@ -416,6 +423,14 @@ public class BrowserActor extends UntypedActor {
 		memory_actor.tell(test_msg, getSelf() );
 		
 		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), path);
+		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		path_expansion_actor.tell(path_msg, getSelf() );
+		*/
+		
+		Path new_path = Path.clone(path);
+		new_path.add(page_obj);
+		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_path, msg.getOptions());
+
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );
 	}

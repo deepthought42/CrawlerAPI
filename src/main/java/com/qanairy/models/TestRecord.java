@@ -39,7 +39,7 @@ public class TestRecord {
 		this.setRunTime(-1L);
 	}
 	
-	public TestRecord(String key, Date ran_at, boolean passes, Page result){
+	public TestRecord(String key, Date ran_at, Boolean passes, Page result){
 		this.setRanAt(ran_at);
 		this.setPasses(passes);
 		this.setPage(result);

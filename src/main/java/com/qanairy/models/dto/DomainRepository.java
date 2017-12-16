@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITest;
+import com.qanairy.persistence.ITestUser;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
@@ -61,6 +63,13 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		domain_record.setLogoUrl(domain.getLogoUrl());
 		domain_record.setProtocol(domain.getProtocol());
 		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
+		
+		TestUserRepository test_user_repo = new TestUserRepository();
+		List<ITestUser> test_users = new ArrayList<ITestUser>();
+		for(TestUser test_user : domain.getTestUsers()){
+			test_users.add(test_user_repo.convertToRecord(connection, test_user));
+		}
+		domain_record.setTestUsers(test_users);
 		/*TestRepository test_repo = new TestRepository();
 		List<ITest> tests = new ArrayList<ITest>();
 		for(Test test : domain.getTests()){
@@ -152,7 +161,13 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			tests.add(test_repo.convertFromRecord(test_iter.next()));
 		}
 		*/
-		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt());
+		TestUserRepository test_user_repo = new TestUserRepository();
+		List<TestUser> test_users = new ArrayList<TestUser>();
+		for(ITestUser test_user : obj.getTestUsers()){
+			test_users.add(test_user_repo.convertFromRecord(test_user));
+		}
+		
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users);
 	}
 	
 	public Domain convertFromRecord(OrientVertex obj) {

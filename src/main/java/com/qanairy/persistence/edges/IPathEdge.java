@@ -22,6 +22,7 @@ public interface IPathEdge {
     
     @Property("transition_index")
     public void setTransitionIndex(int idx);
+    
     @OutVertex
     IPathObject getPathObjectOut();
 

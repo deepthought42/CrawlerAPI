@@ -9,9 +9,12 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.Path;
 
+/**
+ * 
+ */
 public class BrowserTest {
 
-	@Test
+	@Test(groups="Regression")
 	public void verifyCleanSrc(){
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
 		
@@ -20,7 +23,7 @@ public class BrowserTest {
 		Assert.assertTrue(clean_src.equals("<html><head></head></html>"));
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void verifyTestConstructor(){
 		Page page  = new Page();
 		try {

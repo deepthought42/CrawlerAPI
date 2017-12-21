@@ -27,15 +27,9 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * {@inheritDoc}
 	 */
 	public PageElement create(OrientConnectionFactory connection, PageElement elem) {
-		PageElement page_elem = find(connection, generateKey(elem));
-		if(page_elem == null){
-			convertToRecord(connection, elem);
-			connection.save();
-		}
-		else{
-			elem = page_elem;
-		}
-		return elem;
+		IPageElement ielem = convertToRecord(connection, elem);
+		
+		return convertFromRecord(ielem);
 	}
 
 	/**
@@ -130,7 +124,8 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 
 			for(Attribute attribute : elem.getAttributes()){
 				IAttribute attribute_persist = attribute_repo.convertToRecord(connection, attribute);
-				attribute_persist_list.add(attribute_persist);
+				//attribute_persist_list.add(attribute_persist);
+				page_elem_record.addAttribute(attribute_persist);
 			}
 						
 			/*List<IIPageElement> child_elements_persist = new ArrayList<IIPageElement>();

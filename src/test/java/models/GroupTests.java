@@ -1,10 +1,7 @@
 package models;
 
-import java.util.ArrayList;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.Group;
 import com.qanairy.models.dto.GroupRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -17,7 +14,7 @@ public class GroupTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void groupCreateRecord(){
 		Group group = new Group("Regression");
 		GroupRepository group_repo = new GroupRepository();
@@ -33,7 +30,7 @@ public class GroupTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void groupUpdateRecord(){
 		Group group = new Group("Smoke");
 		GroupRepository group_repo = new GroupRepository();
@@ -49,7 +46,7 @@ public class GroupTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void groupFindRecord(){
 		Group group = new Group("Smoke");
 		GroupRepository group_repo = new GroupRepository();

@@ -2,14 +2,11 @@ package models;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -23,7 +20,7 @@ public class TestTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testCreateRecord(){
 		com.qanairy.models.Test test;
 		try {
@@ -46,7 +43,7 @@ public class TestTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testUpdateRecord(){
 		com.qanairy.models.Test test;
 		try {
@@ -70,7 +67,7 @@ public class TestTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testFindRecord(){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 

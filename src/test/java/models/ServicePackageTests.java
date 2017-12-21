@@ -2,7 +2,6 @@ package models;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.ServicePackage;
 import com.qanairy.models.dto.ServicePackageRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -15,7 +14,7 @@ public class ServicePackageTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void servicePackageCreateRecord(){
 		ServicePackage svc_pkg = new ServicePackage("Test Package", 100, 5);
 
@@ -31,7 +30,7 @@ public class ServicePackageTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void servicePackageUpdateRecord(){
 		ServicePackage svc_pkg = new ServicePackage("Update Test Package", 100, 10);
 		ServicePackageRepository sp_repo = new ServicePackageRepository();
@@ -49,7 +48,7 @@ public class ServicePackageTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void servicePackageFindRecord(){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		ServicePackageRepository sp_repo = new ServicePackageRepository();

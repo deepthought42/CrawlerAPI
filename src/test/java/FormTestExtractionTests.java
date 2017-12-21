@@ -26,12 +26,12 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if {@link RequirementRule} can be extracted on a required field
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testRequirementRuleExtractions(){
-		String url = "C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
+		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser(url,"phantomjs");
 			Page page = browser.getPage();
 			log.info("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
@@ -61,12 +61,12 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testNumericRestrictionRuleExtractions(){
-		String url = "C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
+		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser(url,"phantomjs");
 			Page page = browser.getPage();
 			log.info("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
@@ -102,12 +102,12 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testAlphabeticRestrictionRuleExtractions(){
-		String url = "C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
+		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url, "chrome");
+			browser = new Browser(url, "phantomjs");
 			Page page = browser.getPage();
 			log.info("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
@@ -142,12 +142,12 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testReadonlyRestrictionRuleExtractions(){
-		String url = "C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
+		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser(url,"phantomjs");
 			Page page = browser.getPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
@@ -173,12 +173,12 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testMinValueRuleExtractions(){
-		String url = "C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
+		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser(url,"phantomjs");
 			Page page = browser.getPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
@@ -205,12 +205,12 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void testMaxValueRuleExtractions(){
-		String url = "C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
+		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser(url,"phantomjs");
 			Page page = browser.getPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 

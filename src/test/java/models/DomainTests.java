@@ -17,7 +17,7 @@ public class DomainTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void domainCreateRecord(){
 		Domain domain = new Domain("Test.test", "", "http");
 		DomainRepository domain_repo = new DomainRepository();
@@ -34,7 +34,7 @@ public class DomainTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void accountUpdateRecord(){
 		Domain domain = new Domain("Test.test", "Test.test", "", new ArrayList<com.qanairy.models.Test>(), "http", null);
 		DomainRepository domain_repo = new DomainRepository();
@@ -52,7 +52,7 @@ public class DomainTests {
 	/**
 	 * 
 	 */
-	@Test
+	@Test(groups="Regression")
 	public void accountFindRecord(){
 		Domain domain = new Domain("Test Domain", "", "http");
 		DomainRepository domain_repo = new DomainRepository();

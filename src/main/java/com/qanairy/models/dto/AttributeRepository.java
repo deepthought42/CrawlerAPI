@@ -53,12 +53,8 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 */
 	@Override
 	public Attribute create(OrientConnectionFactory conn, Attribute attr) {
-		Attribute found_attr = find(conn, attr.getKey());
-
-		if( found_attr == null ){
-			this.convertToRecord(conn, attr);
-		}
-		return attr;
+		IAttribute iattr = this.convertToRecord(conn, attr);
+		return this.convertFromRecord(iattr);
 	}
 
 	/**
@@ -87,8 +83,8 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	@Override
 	public Attribute find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
-		Iterable<IAttribute> svc_pkgs = (Iterable<IAttribute>) DataAccessObject.findByKey(key, connection, IAttribute.class);
-		Iterator<IAttribute> iter = svc_pkgs.iterator();
+		Iterable<IAttribute> attributes = (Iterable<IAttribute>) DataAccessObject.findByKey(key, connection, IAttribute.class);
+		Iterator<IAttribute> iter = attributes.iterator();
 
 		if(iter.hasNext()){
 			return convertFromRecord(iter.next());

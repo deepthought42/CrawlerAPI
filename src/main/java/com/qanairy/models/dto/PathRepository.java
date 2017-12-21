@@ -154,13 +154,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	 */
 	@Override
 	public Path create(OrientConnectionFactory connection, Path path) {
-		
-		Path path_tmp = find(connection, path.getKey());
-		
-		if(path_tmp == null){
-			this.convertToRecord(connection, path);
-			connection.save();
-		}
+		this.convertToRecord(connection, path);
 		return path;
 	}
 
@@ -186,14 +180,11 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	public Path convertFromRecord(IPath path) throws NullPointerException {
 		assert(path != null);
 		
-		//count path nodes
-		int cnt = 0;
-		
 		IPathObject path_obj = path.getPath();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
 		String key = path.getKey();
 		String last_path_obj_key = null;
-		int idx = 1;
+		int idx = 0;
 		
 		while(path_obj != null && path_obj.getPathEdges() != null
 				&& (last_path_obj_key == null || !last_path_obj_key.equals(path_obj.getKey()))){
@@ -202,6 +193,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			PathObjectRepository path_obj_repo = new PathObjectRepository();
 			path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
 			while(path_edges.hasNext()){
+
 				IPathEdge edge = path_edges.next();
 				if(edge != null && edge.getPathKey().equals(key) && edge.getTransitionIndex()==idx){
 					path_obj = edge.getPathObjectIn();
@@ -216,20 +208,12 @@ public class PathRepository implements IPersistable<Path, IPath> {
 
 	@Override
 	public Path find(OrientConnectionFactory connection, String key) {
-		int cnt = 0;
-		while(cnt < 5){
-			try{
-				Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(key, connection, IPath.class);
-				Iterator<IPath> iter = paths.iterator();
-				
-				if(iter.hasNext()){
-					return convertFromRecord(iter.next());
-				}
-			}
-			catch(OIOException e){
-				log.error("Error finding path by key", e.getMessage());
-			}
-			cnt++;
+		@SuppressWarnings("unchecked")
+		Iterable<IPath> paths = (Iterable<IPath>) DataAccessObject.findByKey(key, connection, IPath.class);
+		Iterator<IPath> iter = paths.iterator();
+		
+		if(iter.hasNext()){
+			return convertFromRecord(iter.next());
 		}
 		
 		return null;

@@ -60,7 +60,6 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.setUsers(users);
-
 		this.setDomains(domains);
 	}
 

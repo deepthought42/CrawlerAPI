@@ -1,8 +1,6 @@
 package actors;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
-
 
 /**
  * 
@@ -10,7 +8,7 @@ import org.testng.annotations.Test;
  */
 public class BrowserActorTest {
 	
-	@Test
+	@Test(groups="Regression")
 	public void verifyCleanSrc(){
 
 	}

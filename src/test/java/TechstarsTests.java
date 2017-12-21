@@ -1,15 +1,14 @@
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.remote.server.FirefoxDriverProvider;
 import org.testng.annotations.Test;
 
+/**
+ * 
+ *
+ */
 public class TechstarsTests {
 
 		@Test

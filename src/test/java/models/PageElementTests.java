@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.dto.PageElementRepository;
@@ -20,7 +18,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class PageElementTests {
 	
-	@Test
+	@Test(groups="Regression")
 	public void pageElementCreateRecord(){
 		List<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> attr_strings = new ArrayList<String>();
@@ -43,7 +41,7 @@ public class PageElementTests {
 		Assert.assertTrue(page_element_record.getXpath().equals(page_element.getXpath()));
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void pageElementUpdateRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		
@@ -70,7 +68,7 @@ public class PageElementTests {
 		Assert.assertTrue(page_element_record.getXpath().equals(page_element.getXpath()));
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void pageElementFindRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 

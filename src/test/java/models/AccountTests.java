@@ -2,10 +2,8 @@ package models;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.models.dto.AccountRepository;
@@ -16,7 +14,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class AccountTests {
 	
-	@Test
+	@Test(groups="Regression")
 	public void accountCreateRecordWithoutUsers(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		Account acct = new Account("Test Org", "Test Package", "#00000012SD", new ArrayList<QanairyUser>());
@@ -31,7 +29,7 @@ public class AccountTests {
 		Assert.assertTrue(acct_record.getServicePackage().equals(created_acct.getServicePackage()));
 	}
 	
-	@Test
+	@Test(groups={"Account","Regression"})
 	public void accountCreateRecordWithUsers(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		
@@ -51,7 +49,7 @@ public class AccountTests {
 		Assert.assertTrue(acct_record.getServicePackage().equals(created_acct.getServicePackage()));
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void accountUpdateRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		Account acct = new Account("Test Org2", "Test Package", "acct_test1", new ArrayList<QanairyUser>());
@@ -72,7 +70,7 @@ public class AccountTests {
 	}
 	
 	
-	@Test
+	@Test(groups="Regression")
 	public void accountFindRecord(){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		AccountRepository acct_repo = new AccountRepository();

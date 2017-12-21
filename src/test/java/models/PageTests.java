@@ -2,13 +2,10 @@ package models;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.PageSource;
 import com.qanairy.models.dto.PageRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -18,7 +15,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class PageTests {
 	
-	@Test
+	@Test(groups="Regression")
 	public void pageCreateRecord(){
 		Page page;
 		try {
@@ -34,7 +31,7 @@ public class PageTests {
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());
 			Assert.assertTrue(page_record.getImageWeight() == page.getImageWeight());
-			Assert.assertTrue(page_record.getTotalWeight() == page_record.getTotalWeight());
+			Assert.assertTrue(page_record.getTotalWeight() == page.getTotalWeight());
 			//Assert.assertTrue(page_record.getScreenshot().equals(page.getScreenshot().toString()));
 			Assert.assertTrue(page_record.getType().equals(page.getType()));
 			Assert.assertTrue(page_record.isLandable() == page.isLandable());
@@ -46,7 +43,7 @@ public class PageTests {
 		}
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void pageUpdateRecord(){
 		try {
 			Page page = new Page("<html></html>",
@@ -73,7 +70,7 @@ public class PageTests {
 		
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void pageFindRecord(){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 

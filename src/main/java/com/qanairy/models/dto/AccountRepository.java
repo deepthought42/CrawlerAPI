@@ -15,6 +15,7 @@ import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.IQanairyUser;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
@@ -73,7 +74,15 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		for(IDomain domain : domain_records){
 			domains.add(domain_repo.convertFromRecord(domain));
 		}
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), null, domains);
+		
+		List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
+		List<QanairyUser> users = new ArrayList<QanairyUser>();
+		QanairyUserRepository user_repo = new QanairyUserRepository();
+		for(IQanairyUser user : user_records){
+			users.add(user_repo.convertFromRecord(user));
+		}
+		
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains);
 	}
 	
 	/**

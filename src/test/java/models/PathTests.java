@@ -1,23 +1,22 @@
 package models;
+
 import org.testng.annotations.Test;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.testng.Assert;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
 import com.qanairy.models.dto.PathRepository;
+import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -26,8 +25,8 @@ import com.qanairy.persistence.OrientConnectionFactory;
 public class PathTests {
 	private static Logger log = LoggerFactory.getLogger(PathTests.class);
 
-	@Test(groups="Path")
-	public void pathDatabaseRecordConfirmation(){
+	@Test(groups="Regression")
+	public void pathRecordDatabaseConfirmation(){
 		Path path = new Path();
 		path.setIsUseful(false);
 		path.setSpansMultipleDomains(false);
@@ -57,16 +56,17 @@ public class PathTests {
 		path.add(page_element);
 		
 		Action action = new Action("click");
-				
 		path.add(action);
 		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		PathRepository path_repo = new PathRepository();
-		path_repo.convertToRecord(orient_connection, path);
-		orient_connection.save();
+		Path new_path = path_repo.create(orient_connection, path);
 		
 		//look up path and verify all elements
-		Path path_record = path_repo.find(orient_connection, path.getKey());
+		Path path_record = path_repo.find(orient_connection, new_path.getKey());
+		orient_connection.close();
+		log.info("Path record size :: " + path_record.getPath().size());
+		log.info("Path size :: " + new_path.getPath().size());
 		
 		log.info("path object record type : "+path_record.getPath().get(0).getType());
 		Assert.assertTrue(path_record.getPath().get(0).getType().equals("Page"));
@@ -101,17 +101,17 @@ public class PathTests {
 	}
 	*/
 	
-	@Test
+	@Test(groups="Regression")
 	public void testPathClone(){
 		assert true;
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void testPathCorrectnessUpdate(){
 		
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void testDeleteRecord(){
 		
 	}

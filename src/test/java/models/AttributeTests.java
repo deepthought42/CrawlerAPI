@@ -16,7 +16,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class AttributeTests {
 	
-	@Test
+	@Test(groups="Regression")
 	public void attributeCreateRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		List<String> attributes = new ArrayList<String>();
@@ -35,7 +35,7 @@ public class AttributeTests {
 	}
 	
 	
-	@Test
+	@Test(groups="Regression")
 	public void attributeUpdateRecord(){
 		/** 
 		 * EMPTY BECAUSE YOU CANNOT UPDATE AN ATTRIBUTE. Once it is set it is set forever
@@ -44,7 +44,7 @@ public class AttributeTests {
 	}
 	
 	
-	@Test
+	@Test(groups="Regression")
 	public void attributeFindRecord(){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		AttributeRepository attr_repo = new AttributeRepository();

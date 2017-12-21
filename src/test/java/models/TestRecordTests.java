@@ -3,13 +3,10 @@ package models;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.PageSource;
 import com.qanairy.models.Path;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.TestRecordRepository;
@@ -21,7 +18,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class TestRecordTests {
 	
-	@Test
+	@Test(groups="Regression")
 	public void testRecordCreateRecord(){
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 		com.qanairy.models.Test test = new com.qanairy.models.Test();
@@ -44,7 +41,7 @@ public class TestRecordTests {
 		Assert.assertTrue(test_record_record.getKey().equals(test_record_repo.generateKey(test_record)));
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void testRecordUpdateRecord(){
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 
@@ -69,7 +66,7 @@ public class TestRecordTests {
 		Assert.assertTrue(test_record_record.getKey().equals(test_record.getKey()));
 	}
 	
-	@Test
+	@Test(groups="Regression")
 	public void testRecordFindRecord(){
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 

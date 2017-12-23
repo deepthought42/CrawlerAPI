@@ -30,11 +30,8 @@ import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
-import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
-import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.UsernameService;
 
 /**
  *	API endpoints for interacting with {@link User} data
@@ -55,8 +52,9 @@ public class AccountController {
     @Autowired
     protected AccountService accountService;
 
-    @Autowired
+    /*@Autowired
     protected UsernameService usernameService;
+    */
     
     /**
      * Create new account
@@ -100,9 +98,9 @@ public class AccountController {
         printGrantedAuthorities((Auth0JWTToken) principal);
         Account new_account = null;
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
-            final String username = usernameService.getUsername();
+            //final String username = usernameService.getUsername();
             // log username of user requesting account creation
-            log.info("User with email: " + username + " creating new account");
+            log.info("User with email: " + user.getEmail() + " creating new account");
             new_account = accountService.create(acct);
         }
 

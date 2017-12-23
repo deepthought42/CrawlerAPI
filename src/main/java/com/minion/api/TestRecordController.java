@@ -44,7 +44,6 @@ public class TestRecordController {
 	 * @return
 	 */
     @PreAuthorize("hasAuthority('qanairy')")
-
 	@RequestMapping(method = RequestMethod.PUT)
 	public @ResponseBody TestRecord updateTest(@RequestParam(value="test", required=true) TestRecord test_record){
 		

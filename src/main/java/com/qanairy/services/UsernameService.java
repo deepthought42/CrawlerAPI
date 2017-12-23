@@ -3,11 +3,11 @@ package com.qanairy.services;
 import com.auth0.spring.security.api.Auth0JWTToken;
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.qanairy.auth.Auth0Client;
+import com.qanairy.models.dto.DomainRepository;
 
-
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,12 @@ public class UsernameService {
 
     @Autowired
     private Auth0Client auth0Client;
+    
+    @Autowired
+    public UsernameService(final Auth0Client auth0Client) {
+        this.auth0Client = auth0Client;
+    }
+
 
    // @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String getUsername() {

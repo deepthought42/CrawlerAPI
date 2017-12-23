@@ -54,7 +54,7 @@ public class DomainController {
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(@RequestBody Domain domain,
-		  	 			 			   final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    									final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
         /*printGrantedAuthorities((Auth0JWTToken) principal);
         if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
@@ -70,25 +70,17 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
-    	
     	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
-    	String host = url_obj.getHost();
+    	String host = domain.getUrl();
     	if(!host.contains("www.")){
     		host = url_obj.getHost();
     		host = "www." + host;
+    		domain.setUrl(host);
     	}
-    	domain.setUrl(host);
-    	//check if domain exists before adding it to account
-    	Iterator<IDomain> domain_iter = (Iterator<IDomain>) DataAccessObject.findByKey(domain.getKey(), IDomain.class).iterator();
-        //Domain new_domain = new Domain(host, domain.getLogoUrl(), url_obj.getProtocol());
-    	if(!domain_iter.hasNext()){
-    		acct.addDomain(domain);
-        	accountService.update(acct);
-        	return domainService.create(domain);
-    	}
-    	else{
-    		return domainService.update(domain);
-    	}
+    	
+    	acct.addDomain(domain);
+    	accountService.update(acct);
+    	return domainService.create(domain);
     }
 
 

@@ -22,7 +22,6 @@ import akka.actor.ActorSystem;
  */
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.minion","com.qanairy"})
-@EnableAutoConfiguration
 @PropertySources({
 	@PropertySource("classpath:application.properties"),
 	@PropertySource("classpath:auth0.properties")
@@ -35,7 +34,7 @@ public class EntryPoint {
         final ActorSystem system = ActorSystem.create("Qanairy-api");
    	}
 	
-
+/*
     @Bean
     public RequestContextListener requestContextListener() {
         return new RequestContextListener();
@@ -50,6 +49,7 @@ public class EntryPoint {
             }
         };
     }
+    */
 }
 
 

@@ -26,7 +26,7 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if {@link RequirementRule} can be extracted on a required field
 	 */
-	@Test(groups="Regression")
+	@Test
 	public void testRequirementRuleExtractions(){
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
@@ -61,7 +61,7 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
 	 */
-	@Test(groups="Regression")
+	@Test
 	public void testNumericRestrictionRuleExtractions(){
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
@@ -102,7 +102,7 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
 	 */
-	@Test(groups="Regression")
+	@Test
 	public void testAlphabeticRestrictionRuleExtractions(){
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
@@ -142,7 +142,7 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
 	 */
-	@Test(groups="Regression")
+	@Test
 	public void testReadonlyRestrictionRuleExtractions(){
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
@@ -173,7 +173,7 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
 	 */
-	@Test(groups="Regression")
+	@Test
 	public void testMinValueRuleExtractions(){
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
@@ -205,7 +205,7 @@ public class FormTestExtractionTests {
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
 	 */
-	@Test(groups="Regression")
+	@Test
 	public void testMaxValueRuleExtractions(){
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;

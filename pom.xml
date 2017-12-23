@@ -14,7 +14,7 @@
 	    <selenium-version>3.7.1</selenium-version>
 	    <spring.version>4.3.4.RELEASE</spring.version>
 	    <java.version>1.8</java.version>
-	    <springboot.version>1.5.5.RELEASE</springboot.version>
+	    <springboot.version>1.5.9.RELEASE</springboot.version>
 	</properties>
 
   <build>
@@ -77,14 +77,9 @@
 	  	<dependency>
 	    	<groupId>org.testng</groupId>
 	    	<artifactId>testng</artifactId>
-	    	<version>6.13.1</version>
+	    	<version>6.8.8</version>
 	    	<scope>test</scope>
 	    </dependency>
-	    <dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
 		    
 	    <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-server -->
 		<dependency>

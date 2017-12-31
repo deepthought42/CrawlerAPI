@@ -41,6 +41,12 @@ public interface IDomain {
 
 	@Property("discovery_started_at")
 	void setDiscoveryStartTime(Date timestamp);
+
+	@Property("discovered_test_count")
+	int getDiscoveryTestCount();
+
+	@Property("discovered_test_count")
+	void setDiscoveryTestCount(int count);
 	
 	@Property("last_discovery_path_ran_at")
 	Date getLastDiscoveryPathRanAt();

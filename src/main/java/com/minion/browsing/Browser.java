@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
@@ -37,7 +35,6 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -74,6 +71,7 @@ public class Browser {
 	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
 		int cnt = 0;
 		while(driver == null && cnt < 20){
+			log.info("Opening browser attempt #"+cnt);
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome(url);

@@ -32,7 +32,6 @@ public class PastPathExperienceController {
 		
 		for(PathObject obj : path_clone.getPath()){
 			if(obj != null && obj.getType().equals("Page")){
-				log.info("TYPE : " + obj.getType());
 				Page page_obj = (Page)obj;
 								
 				Page page;
@@ -49,7 +48,7 @@ public class PastPathExperienceController {
 		}
 
 		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
-		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain());
+		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain(), test.getName());
 		
 		try {
 			Page result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getScreenshot(), new ArrayList<PageElement>());

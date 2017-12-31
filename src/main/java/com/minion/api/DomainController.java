@@ -3,7 +3,6 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
-import java.util.Iterator;
 import java.util.List;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -23,8 +22,6 @@ import com.auth0.spring.security.api.Auth0UserDetails;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IDomain;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 
@@ -55,8 +52,8 @@ public class DomainController {
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(@RequestBody Domain domain,
     									final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
-        /*printGrantedAuthorities((Auth0JWTToken) principal);
-        if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
+        //printGrantedAuthorities((Auth0JWTToken) principal);
+        /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
             // log username of user requesting domain creation
             logger.info("creating new domain in domain");

@@ -41,7 +41,6 @@ public class AccountService {
     }
 
     public Account update(Account account) {
-    	System.err.println("updating account");
     	OrientConnectionFactory connection = new OrientConnectionFactory();
         Account acct = accountRepository.update(connection, account);
         connection.close();

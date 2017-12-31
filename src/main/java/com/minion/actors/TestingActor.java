@@ -134,7 +134,6 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 
 		 try {		
-			System.err.println("Test path :: "+test.getPath());
 			page = Crawler.crawlPath(test.getPath(), browser);
 			passing = test.isTestPassing(page, test.isCorrect());
 			test_record = new TestRecord(new Date(), passing, page);

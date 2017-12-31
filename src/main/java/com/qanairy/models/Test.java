@@ -62,19 +62,20 @@ public class Test {
 	 * 
 	 * @pre path != null
 	 */
-	public Test(Path path, Page result, Domain domain){
+	public Test(Path path, Page result, Domain domain, String name){
 		assert path != null;
 		
-		this.path = path;
-		this.result = result;
+		this.setPath(path);
+		this.setResult(result);
 		this.setRecords(new ArrayList<TestRecord>());
 		this.setDomain(domain);
-		this.correct = null;
+		this.setCorrect(null);
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(null);
 		this.setRunStatus(false);
+		this.setName(name);
 	}
 	
 	/**
@@ -86,19 +87,20 @@ public class Test {
 	 * 
 	 * @pre path != null
 	 */
-	public Test(String key, Path path, Page result, Domain domain){
+	public Test(String key, Path path, Page result, Domain domain, String name){
 		assert path != null;
 		
-		this.path = path;
-		this.result = result;
+		this.setPath(path);
+		this.setResult(result);
 		this.setRecords(new ArrayList<TestRecord>());
 		this.setDomain(domain);
-		this.correct = null;
+		this.setCorrect(null);
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(key);
 		this.setRunStatus(false);
+		this.setName(name);
 	}
 	
 	/**

@@ -57,7 +57,6 @@ public class Page extends PathObject {
 		assert elements != null;
 		
 		super.setType("Page");
-		
 		this.setSrc(html);
 		this.setType("Page");
 		this.url = new URL(url.replace("/#",""));
@@ -124,9 +123,12 @@ public class Page extends PathObject {
 		boolean landable = false;
 
 		try{
-			Browser browser = new Browser(this.getUrl().toString(), "phantomjs");
-			browser.getDriver().get(this.getUrl().toString());
+			Browser browser = new Browser(this.getUrl().getHost(), "phantomjs");
+			//log.info("navigating to url to check for landability");
+			//browser.getDriver().get(this.getUrl().toString());
+
 			if(this.equals(browser.getPage())){
+				log.info("page is landable");
 				landable = true;
 			}
 			browser.close();
@@ -151,8 +153,7 @@ public class Page extends PathObject {
 		if (this == o) return true;
         if (!(o instanceof Page)) return false;
         Page that = (Page)o;
-        
-		return (this.getSrc().equals(that.getSrc()));
+        return (this.getSrc().equals(that.getSrc()));
 				
 	}
 	

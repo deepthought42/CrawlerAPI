@@ -7,7 +7,6 @@ import com.tinkerpop.frames.Property;
 
 /**
  * 
- * @author Brandon Kindred
  *
  */
 public interface IPathEdge {

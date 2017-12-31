@@ -6,11 +6,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.getsentry.raven.connection.Connection;
 import com.minion.actors.MemoryRegistryActor;
 
 import akka.actor.ActorRef;
@@ -23,6 +26,7 @@ import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.IDomain;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 
@@ -182,14 +186,15 @@ public class BrowserActor extends UntypedActor {
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
 				
 				Page last_page = exploratory_path.findLastPage();
-				last_page.setLandable(last_page.checkIfLandable());
-
+				boolean landable_status = last_page.checkIfLandable();
+				log.info("landable status: " +landable_status);
+				last_page.setLandable(landable_status);
+							
 				if(last_page.isLandable()){
 					//clone path starting at last page in path
 					//Path shortened_path = path.clone());
 				}
 
-				
 				if(exploratory_path.getPath() != null){
 					Page result_page = null;
 
@@ -226,8 +231,15 @@ public class BrowserActor extends UntypedActor {
 					  			log.info("exploratory path has cycle; exiting");
 					  			break;
 					  		}
-
-					  		createTest(path, result_page, pathCrawlRunTime, acct_msg);
+					  		OrientConnectionFactory conn = new OrientConnectionFactory();
+							Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
+							domain.setLastDiscoveryPathRanAt(new Date());
+							int cnt = domain.getDiscoveredTestCount()+1;
+							System.out.println("landing page test Count :: "+cnt);
+							domain.setDiscoveredTestCount(cnt);
+					  		System.out.println("Count :: "+cnt);
+					  		
+					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg);
 					  	}
 						
 						Path new_path = Path.clone(path);
@@ -253,36 +265,7 @@ public class BrowserActor extends UntypedActor {
 				}
 				
 				browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
-				
-				Page result_page = null;
-				long crawl_time_in_ms = -1L;
-				final long pathCrawlStartTime = System.currentTimeMillis();
-				result_page = Crawler.crawlPath(path, browser);	
-				final long pathCrawlEndTime = System.currentTimeMillis();
-				
-				crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-				
-				Page last_page = path.findLastPage();
-
-				last_page.setLandable(last_page.checkIfLandable());
-				if(last_page.isLandable()){
-					//clone path starting at last page in path
-					//Path shortened_path = path.clone());
-				}
-				
-				PathRepository path_repo = new PathRepository();
-				path.setKey(path_repo.generateKey(path));
-				int last_idx = path.getPath().size()-1;
-				if(last_idx < 0){
-					last_idx = 0;
-				}
-				int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
-				if(clicks >= 3 && last_page.equals(result_page) && path.getPath().size() > 1){
-			  		path.setIsUseful(false);
-			  	}
-			  	else{					
-			  		createTest(path, result_page, crawl_time_in_ms, acct_msg);
-			  	}
+				traverse_path_and_create_test(browser, path, acct_msg);
 			  	browser.close();
 	
 				//PLACE CALL TO LEARNING SYSTEM HERE
@@ -298,6 +281,7 @@ public class BrowserActor extends UntypedActor {
 					log.error("Failed to open connection to browser");
 					return;
 				}
+				log.info("preparting to generate landing page test");
 				generate_landing_page_test(browser, acct_msg);
 
 				browser.close();
@@ -312,19 +296,15 @@ public class BrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(Path path, Page result_page, long crawl_time, Message<?> acct_msg ) {
+	private void createTest(Path path, Page result_page, long crawl_time, Domain domain, Message<?> acct_msg ) {
 		path.setIsUseful(true);
-		log.info("usefulness set on path");
-		Test test = new Test(path, result_page, new Domain(result_page.getUrl().getHost(), "", result_page.getUrl().getProtocol()));							
+		Test test = new Test(path, result_page, domain, "Test #"+domain.getDiscoveredTestCount());							
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		System.err.println("Setting last run time to :: "+test.getLastRunTimestamp());
-		System.err.println("setting passes to null");
-		System.err.println("Setting result to :: "+test.getResult());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
 		test.addRecord(test_record);
 		log.info("sending test message out");
@@ -332,7 +312,7 @@ public class BrowserActor extends UntypedActor {
 		
 		//tell memory worker of test
 		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-		memory_actor.tell(test_msg, getSelf() );
+		memory_actor.tell(test_msg, getSelf());
 	}
 
 	/**
@@ -408,7 +388,17 @@ public class BrowserActor extends UntypedActor {
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
-		createTest(path, page_obj, 1L, msg);
+		DomainRepository domain_repo = new DomainRepository();
+		System.out.println("Page Object :: "+page_obj.getUrl().getHost());
+		OrientConnectionFactory conn = new OrientConnectionFactory();
+		Domain domain = domain_repo.find(conn, page_obj.getUrl().getHost());
+		domain.setLastDiscoveryPathRanAt(new Date());
+		int cnt = domain.getDiscoveredTestCount()+1;
+		System.out.println("landing page test Count :: "+cnt);
+		domain.setDiscoveredTestCount(cnt);
+		domain_repo.update(conn, domain);
+		
+		createTest(path, page_obj, 1L, domain, msg);
 		
 		/*
 		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), "", page_obj.getUrl().getProtocol()));
@@ -433,5 +423,56 @@ public class BrowserActor extends UntypedActor {
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param browser
+	 * @param path
+	 * @param acct_msg
+	 * @throws NoSuchElementException
+	 * @throws IOException
+	 */
+	public void traverse_path_and_create_test(Browser browser, Path path, Message<?> acct_msg) throws NoSuchElementException, IOException{
+
+		Page result_page = null;
+		long crawl_time_in_ms = -1L;
+		final long pathCrawlStartTime = System.currentTimeMillis();
+		result_page = Crawler.crawlPath(path, browser);	
+		final long pathCrawlEndTime = System.currentTimeMillis();
+		
+		crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
+		
+		Page last_page = path.findLastPage();
+
+		last_page.setLandable(last_page.checkIfLandable());
+		if(last_page.isLandable()){
+			//clone path starting at last page in path
+			//Path shortened_path = path.clone());
+		}
+		
+		PathRepository path_repo = new PathRepository();
+		path.setKey(path_repo.generateKey(path));
+		int last_idx = path.getPath().size()-1;
+		if(last_idx < 0){
+			last_idx = 0;
+		}
+		int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
+		if(clicks >= 3 && last_page.equals(result_page) && path.getPath().size() > 1){
+	  		path.setIsUseful(false);
+	  	}
+	  	else{				
+	  		DomainRepository domain_repo = new DomainRepository();
+	  		OrientConnectionFactory conn = new OrientConnectionFactory();
+			Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
+			domain.setLastDiscoveryPathRanAt(new Date());
+			int cnt = domain.getDiscoveredTestCount()+1;
+			System.out.println("landing page test Count :: "+cnt);
+			domain.setDiscoveredTestCount(cnt);
+			domain_repo.update(conn, domain);
+			
+	  		createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);
+	  	}
 	}
 }

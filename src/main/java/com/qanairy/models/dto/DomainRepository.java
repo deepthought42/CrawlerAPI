@@ -63,7 +63,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		domain_record.setLogoUrl(domain.getLogoUrl());
 		domain_record.setProtocol(domain.getProtocol());
 		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
-		
+		domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<ITestUser> test_users = new ArrayList<ITestUser>();
 		for(TestUser test_user : domain.getTestUsers()){
@@ -93,7 +93,6 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		
 		if(domain_record == null){
 			convertToRecord(connection, domain);
-			connection.save();
 		}
 		return domain;
 	}
@@ -111,7 +110,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			IDomain domain_record = iter.next();
 			domain_record.setUrl(domain.getUrl());
 			domain_record.setLogoUrl(domain.getLogoUrl());
-			connection.save();
+			domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
+			domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
 		}
 		
 		return domain;
@@ -127,7 +127,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			//figure out throwing exception because domain already exists
 			return iter.next();
 		}
-		
+		connection.close();
 		return null;
 	}
 	
@@ -166,8 +166,9 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		for(ITestUser test_user : obj.getTestUsers()){
 			test_users.add(test_user_repo.convertFromRecord(test_user));
 		}
+		int test_cnt = obj.getDiscoveryTestCount();
 		
-		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users);
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users, test_cnt);
 	}
 	
 	public Domain convertFromRecord(OrientVertex obj) {

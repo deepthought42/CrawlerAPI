@@ -20,6 +20,7 @@ public class Domain {
 	private String protocol;
 	private String logo_url;
 	private Date last_discovery_path_ran_at;
+	private int discovered_test_count;
 	private List<TestUser> test_users;
 	
 	/**
@@ -34,6 +35,7 @@ public class Domain {
 		this.accounts = new ArrayList<Account>();
 		this.setProtocol("http");
 		this.setTestUsers(new ArrayList<TestUser>());
+		this.setDiscoveredTestCount(0);
 	}
 	
 	/**
@@ -48,6 +50,7 @@ public class Domain {
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
+		this.setDiscoveredTestCount(0);
 	}
 	
 	/**
@@ -62,6 +65,7 @@ public class Domain {
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
+		this.setDiscoveredTestCount(0);
 	}
 	
 	/**
@@ -83,6 +87,7 @@ public class Domain {
 		this.setLastDiscoveryPathRanAt(timestamp);
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(new ArrayList<TestUser>());
+		this.setDiscoveredTestCount(0);
 	}
 	
 	/**
@@ -107,6 +112,7 @@ public class Domain {
 		this.setLastDiscoveryPathRanAt(timestamp);
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(new ArrayList<TestUser>());
+		this.setDiscoveredTestCount(0);
 	}
 	
 	/**
@@ -132,8 +138,35 @@ public class Domain {
 		this.setLastDiscoveryPathRanAt(timestamp);
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
+		this.setDiscoveredTestCount(0);
 	}
 	
+	/**
+	 * 
+	 * @param key
+	 * @param domain_url
+	 * @param logo_url
+	 * @param tests
+	 * @param protocol
+	 * @param timestamp
+	 */
+	public Domain(	String key, 
+					String domain_url,
+					String logo_url,
+					List<Test> tests,
+					String protocol,
+					Date timestamp,
+					List<TestUser> test_users,
+					int discovered_test_count){
+		this.setKey(key);
+		this.setUrl(domain_url);
+		this.setTests(tests);
+		this.setProtocol(protocol);
+		this.setLastDiscoveryPathRanAt(timestamp);
+		this.setLogoUrl(logo_url);
+		this.setTestUsers(test_users);
+		this.setDiscoveredTestCount(discovered_test_count);
+	}
 	public String getUrl() {
 		return domain;
 	}
@@ -218,5 +251,13 @@ public class Domain {
 	
 	public void addTestUsers(TestUser test_user) {
 		this.test_users.add(test_user);
+	}
+
+	public int getDiscoveredTestCount() {
+		return discovered_test_count;
+	}
+
+	public void setDiscoveredTestCount(int discovered_test_count) {
+		this.discovered_test_count = discovered_test_count;
 	}
 }

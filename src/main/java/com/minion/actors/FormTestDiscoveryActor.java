@@ -39,14 +39,14 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			Message<?> acct_message = (Message<?>)message;
+			Message<?> acct_msg = (Message<?>)message;
 			log.info("Starting form tester");
 			Path path = null;
-			if(acct_message.getData() instanceof Path){
-				path = (Path)acct_message.getData();
+			if(acct_msg.getData() instanceof Path){
+				path = (Path)acct_msg.getData();
 			}
-			else if(acct_message.getData() instanceof Test){
-				path = ((Test)acct_message.getData()).getPath();
+			else if(acct_msg.getData() instanceof Test){
+				path = ((Test)acct_msg.getData()).getPath();
 			}
 			
 			//get first page in path
@@ -81,7 +81,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 				for(Path expanded : form_paths){
 					//send all paths to work allocator to be evaluated
-					Message<Path> expanded_path_msg = new Message<Path>(acct_message.getAccountKey(), expanded);
+					Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded);
 					work_allocator.tell(expanded_path_msg, getSelf() );
 				}
 				

@@ -111,7 +111,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			return page_elem_obj;
 		}
 		else if(type.equals("Action")){			
-			log.info("converting action path object");
+			//log.info("converting action path object");
 			Action action = new Action();
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
 			action.setType(type);

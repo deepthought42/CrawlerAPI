@@ -158,7 +158,7 @@ public class BrowserActor extends UntypedActor {
 				if(acct_msg.getOptions().isEmpty()){
 				}
 				
-				browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+				browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				traverse_path_and_create_test(browser, path, acct_msg);
 			  	browser.close();
 	
@@ -169,7 +169,7 @@ public class BrowserActor extends UntypedActor {
 				log.info("Url provided");
 
 				try{
-					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
+					browser = new Browser(((URL)acct_msg.getData()).toString(), (String)acct_msg.getOptions().get("browser"));
 				}
 				catch(NullPointerException e){
 					log.error("Failed to open connection to browser");

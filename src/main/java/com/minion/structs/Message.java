@@ -1,7 +1,9 @@
 package com.minion.structs;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A data wrapper for messages to be passed around between actors. This wrapper includes in the account
@@ -12,15 +14,15 @@ import java.util.List;
 public class Message<T> {
 	private final String account_key;
 	private final T datum;
-	private final List<Object> options;
+	private final Map<String, Object> options;
 	
 	public Message(String account_key, T data){
 		this.account_key = account_key;
 		this.datum = data;
-		this.options = new ArrayList<Object>();
+		this.options = new HashMap<String, Object>();
 	}
 	
-	public Message(String account_key, T data, List<Object> options){
+	public Message(String account_key, T data, Map<String, Object> options){
 		this.account_key = account_key;
 		this.datum = data;
 		this.options = options;
@@ -34,7 +36,7 @@ public class Message<T> {
 		return this.datum;
 	}
 
-	public List<Object> getOptions() {
+	public Map<String, Object> getOptions() {
 		return options;
 	}
 }

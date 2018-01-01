@@ -58,7 +58,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	
 			  	while(browser == null && cnt < 5){
 			  		try{
-				  		browser = new Browser(page.getUrl().toString(), "phantomjs");
+				  		browser = new Browser(page.getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 						break;
 					}catch(NullPointerException e){
 						log.error(e.getMessage());

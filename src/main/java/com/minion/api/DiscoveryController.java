@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -67,7 +69,8 @@ public class DiscoveryController {
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
-													   @RequestParam(value="url", required=true) String url) 
+													   	  @RequestParam(value="url", required=true) String url,
+													   	  @RequestParam(value="browser", required=true) String browser) 
 															   throws MalformedURLException, UnknownAccountException {
 		
 		//ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
@@ -99,10 +102,12 @@ public class DiscoveryController {
     	}
 		connection.close();
         
+		Map<String, Object> options = new HashMap<String, Object>();
+		options.put("browser", browser);
         if(diffInMinutes > 60){
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url));
+			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 			//workAllocationActor.tell(message, ActorRef.noSender());
 			Timeout timeout = new Timeout(Duration.create(10, "seconds"));

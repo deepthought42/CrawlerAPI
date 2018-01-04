@@ -286,5 +286,13 @@
 		    <artifactId>raven-logback</artifactId>
 		    <version>8.0.3</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.stripe/stripe-java -->
+		<dependency>
+		    <groupId>com.stripe</groupId>
+		    <artifactId>stripe-java</artifactId>
+		    <version>5.27.0</version>
+		</dependency>
+
 	</dependencies>
 </project>

@@ -6,14 +6,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.Iterator;
-
 import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
@@ -33,7 +29,6 @@ import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
-
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;

@@ -12,6 +12,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,6 +69,7 @@ public class DiscoveryController {
 	 */
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
+    @Deprecated
 	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
 													   	  @RequestParam(value="url", required=true) String url,
 													   	  @RequestParam(value="browser", required=true) String browser) 
@@ -104,6 +106,79 @@ public class DiscoveryController {
         
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", browser);
+        if(diffInMinutes > 60){
+			WorkAllowanceStatus.register(acct.getKey()); 
+			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
+			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
+			//workAllocationActor.tell(message, ActorRef.noSender());
+			Timeout timeout = new Timeout(Duration.create(10, "seconds"));
+			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
+			try {
+				Await.result(future, timeout.duration());
+				return new ResponseEntity<String>(HttpStatus.OK);
+	
+			} catch (Exception e) {
+				e.printStackTrace();
+				return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		}
+        else{
+        	//Throw error indicating discovery has been or is running
+        	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
+        	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
+        	throw new ExistingDiscoveryFoundException();
+        }
+        
+
+	}
+
+    /**
+	 * 
+	 * @param request
+	 * @param url
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws UnknownAccountException 
+	 */
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+	@RequestMapping(path="/start", method = RequestMethod.GET)
+	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
+													   	  @RequestParam(value="url", required=true) String url,
+													   	  @RequestParam(value="browser", required=true) List<String> browsers) 
+															   throws MalformedURLException, UnknownAccountException {
+		
+		//ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
+		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
+		//String account_key = ""+UUID.randomUUID().toString();
+		
+		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+		
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+
+    	@SuppressWarnings("unchecked")
+		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
+    	IDomain domain = domains_iter.next();
+    	domain.setDiscoveryStartTime(new Date());
+    	
+    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+    	String domain_url = domain.getUrl();
+    	String protocol = domain.getProtocol();
+    	Date now = new Date();
+    	long diffInMinutes = 1000;
+    	if(last_ran_date != null){
+    		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
+    	}
+		connection.close();
+        
+		Map<String, Object> options = new HashMap<String, Object>();
+		options.put("browsers", browsers);
         if(diffInMinutes > 60){
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");

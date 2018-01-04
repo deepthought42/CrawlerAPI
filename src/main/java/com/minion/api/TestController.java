@@ -80,7 +80,8 @@ public class TestController {
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestByDomain(HttpServletRequest request, 
-			   								 @RequestParam(value="url", required=true) String url) throws UnknownAccountException, DomainNotOwnedByAccountException {
+													@RequestParam(value="url", required=true) String url) 
+															throws UnknownAccountException, DomainNotOwnedByAccountException {
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
@@ -305,7 +306,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
-											@RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
+									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
@@ -346,8 +347,8 @@ public class TestController {
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runAll", method = RequestMethod.POST)
 	public @ResponseBody Map<String, Boolean> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
-												@RequestParam(value="browser_type", required=true) String browser_type) 
-														throws MalformedURLException{
+														  @RequestParam(value="browser_type", required=true) String browser_type) 
+																  throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		
     	Map<String, Boolean> test_results = new HashMap<String, Boolean>();

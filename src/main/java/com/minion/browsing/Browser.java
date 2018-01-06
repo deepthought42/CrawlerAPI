@@ -27,12 +27,10 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import com.minion.aws.UploadObjectSingleOperation;
@@ -71,22 +69,25 @@ public class Browser {
 	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
 		int cnt = 0;
 		while(driver == null && cnt < 20){
-			log.info("Opening browser attempt #"+cnt);
+			log.info("Opening "+ browser +" browser attempt #"+ cnt);
 			try{
 				if(browser.equals("chrome")){
-					this.driver = openWithChrome(url);
+					this.driver = openWithChrome();
 				}
 				else if(browser.equals("firefox")){
-					this.driver = openWithFirefox(url);
+					this.driver = openWithFirefox();
 				}
-				else if(browser.equals("ie")){
-					this.driver = openWithInternetExplorer(url);
+				else if(browser.equals("internet_explorer")){
+					this.driver = openWithInternetExplorer();
 				}
 				else if(browser.equals("safari")){
-					this.driver = openWithSafari(url);
+					this.driver = openWithSafari();
 				}
 				else if(browser.equals("phantomjs")){
-					this.driver = openWithPhantomjs(url);
+					this.driver = openWithPhantomjs();
+				}
+				else if(browser.equals("opera")){
+					this.driver = openWithOpera();
 				}
 				WebDriverWait wait = new WebDriverWait(driver, 120);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
@@ -113,8 +114,6 @@ public class Browser {
 			//SystemInfoRepository.save(connection, info);
 			this.url = url;
 			this.driver.navigate().to(url);
-		    //
-			//this.driver.get(url);
 			this.driver.manage().window().maximize();
 		}
 		else{
@@ -206,28 +205,36 @@ public class Browser {
 	 * @return firefox web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithFirefox(String url) throws MalformedURLException, UnreachableBrowserException, GridException{
-		String Node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+	public static WebDriver openWithFirefox() throws MalformedURLException, UnreachableBrowserException, GridException{
+		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 	    DesiredCapabilities cap = DesiredCapabilities.firefox();
 	    cap.setBrowserName("firefox");
-	    
-	    WebDriver driver = new RemoteWebDriver(new URL(Node), cap);
+		cap.setJavascriptEnabled(true);
+
+	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-	     
-	    /*
-		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
+	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    
+		return driver;
+	}
 
-		log.info("Opening Firefox WebDriver connection using URL : " +url);
-		//FirefoxProfile firefoxProfile = new FirefoxProfile();
-	    DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+	/**
+	 * open new opera browser
+	 * 
+	 * @param url
+	 * @return Opera web driver
+	 * @throws MalformedURLException 
+	 */
+	public static WebDriver openWithOpera() throws MalformedURLException, UnreachableBrowserException, GridException{
+		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+	    DesiredCapabilities cap = DesiredCapabilities.opera();
+	    cap.setBrowserName("opera");
+		cap.setJavascriptEnabled(true);
 
-	    //capabilities.setBrowserName("firefox");
-	    //capabilities.setPlatform(Platform.LINUX);
-	    //capabilities.setVersion("3.6");
-		WebDriver driver = new FirefoxDriver(capabilities);
-		*/
-		//WebDriver driver = new RemoteWebDriver(new URL("http://localhost:4444"), capabilities);
+	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
+	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    
 		return driver;
 	}
 	
@@ -237,13 +244,14 @@ public class Browser {
 	 * @param url
 	 * @return safari web driver
 	 */
-	public static WebDriver openWithSafari(String url) throws MalformedURLException, UnreachableBrowserException, GridException{
-		log.info("Opening Firefox WebDriver connection using URL : " +url);
-	    DesiredCapabilities capabilities = DesiredCapabilities.safari();
+	public static WebDriver openWithSafari() throws MalformedURLException, UnreachableBrowserException, GridException{
+		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 
-		WebDriver driver = new SafariDriver(capabilities);
-		
-		driver.get(url);
+		log.info("Opening Firefox WebDriver connection using");
+	    DesiredCapabilities cap = DesiredCapabilities.safari();
+
+		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 
 		return driver;
 	}
@@ -254,16 +262,13 @@ public class Browser {
 	 * @param url
 	 * @return internet explorer web driver
 	 */
-	public static WebDriver openWithInternetExplorer(String url) throws MalformedURLException, UnreachableBrowserException, GridException {
-		System.setProperty("webdriver.gecko.driver", "C:\\Users\\brand\\Dev\\geckodriver-v0.9.0-win64\\geckodriver.exe");
+	public static WebDriver openWithInternetExplorer() throws MalformedURLException, UnreachableBrowserException, GridException {
+		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 
-		log.info("Opening Safari WebDriver connection using URL : " +url);
+		log.info("Opening IE WebDriver connection");
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
-		WebDriver driver = new InternetExplorerDriver(capabilities);
-		log.info("Internet Explorer opened");
-		
-		driver.get(url);
+		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), capabilities);
 		
 		return driver;
 	}
@@ -275,51 +280,37 @@ public class Browser {
 	 * @return Chrome web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithChrome(String url) throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
-		WebDriver driver = null;
-		int connectFailures = 0;
-		boolean connectSucceeded = false;
-		do{
-			try{
-				DesiredCapabilities cap = DesiredCapabilities.chrome();
-				cap.setJavascriptEnabled(true);
-				//cap.setCapability("screenshot", true);
-				//cap.setPlatform(Platform.LINUX);
-				//cap.setCapability("maxInstances", 5);
-				// optional video recording
-				/*String record_video = "True";
-				// video record
-				if (record_video.equalsIgnoreCase("True")) {
-					cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
-				} else {
-					cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
-				}*/
-		        
-		        driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);
-			    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-			    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
-			    
-			    connectSucceeded = true;
-			    break;
-			}
-			catch(WebDriverException e){
-				connectFailures++;
-				try {
-					Thread.sleep(30000);
-				} catch (InterruptedException e1) {}
-			}
-		}while(connectFailures < 10 && !connectSucceeded);
+	public static WebDriver openWithChrome() 
+			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
+		DesiredCapabilities cap = DesiredCapabilities.chrome();
+		cap.setJavascriptEnabled(true);
+		//cap.setCapability("screenshot", true);
+		//cap.setPlatform(Platform.LINUX);
+		//cap.setCapability("maxInstances", 5);
+		// optional video recording
+		/*String record_video = "True";
+		// video record
+		if (record_video.equalsIgnoreCase("True")) {
+			cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
+		} else {
+			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
+		}*/
+        String hub_node_url = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
+	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
+	    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
 		return driver;
 	}
 	
 	/**
-	 * open new firefox browser
+	 * open new phantomjs browser
 	 * 
 	 * @param url 
 	 * @return
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithPhantomjs(String url) throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException{
+	public static WebDriver openWithPhantomjs() 
+			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException{
 		
 		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 		cap.setJavascriptEnabled(true);

@@ -45,7 +45,7 @@ public class TestingActor extends UntypedActor {
 
 				final long pathCrawlStartTime = System.currentTimeMillis();
 
-			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 
 				Page resulting_page = null;
 				if(path.getPath() != null){

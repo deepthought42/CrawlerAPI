@@ -18,7 +18,6 @@ public class RuleFactory {
 	 * @return
 	 */
 	public static Rule build(String type, String value){
-		log.info("Rule type : "+type);
 		if(type.equals(RuleType.ALPHABETIC_RESTRICTION.toString())){
 			return new AlphabeticRestrictionRule();
 		}
@@ -26,7 +25,7 @@ public class RuleFactory {
 			return new DisabledRule();
 		}
 		else if(type.equals(RuleType.EMAIL_PATTERN.toString())){
-			log.info("Creating email pattern rule");
+			//log.info("Creating email pattern rule");
 			return new EmailPatternRule();
 		}
 		else if(type.equals(RuleType.MAX_LENGTH.toString())){
@@ -56,7 +55,7 @@ public class RuleFactory {
 		else if(type.equals(RuleType.SPECIAL_CHARACTER_RESTRICTION.toString())){
 			return new SpecialCharacterRestriction();
 		}
-		log.info("returning null rule");
+		//log.info("returning null rule");
 		return null;
 	}
 }

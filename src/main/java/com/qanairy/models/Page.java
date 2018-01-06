@@ -5,13 +5,11 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.openqa.selenium.UnhandledAlertException;
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
 import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
 import com.minion.browsing.Browser;
+import com.qanairy.utils.CompareImages;
+
 /**
  * A reference to a web page 
  *
@@ -153,7 +151,7 @@ public class Page extends PathObject {
 		if (this == o) return true;
         if (!(o instanceof Page)) return false;
         Page that = (Page)o;
-        return (this.getSrc().equals(that.getSrc()));
+        return (this.getSrc().equals(that.getSrc()) && CompareImages.imagesMatch(this.getScreenshot(), that.getScreenshot()));
 				
 	}
 	

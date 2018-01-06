@@ -39,4 +39,10 @@ public class Message<T> {
 	public Map<String, Object> getOptions() {
 		return options;
 	}
+	
+	public Message<T> clone(){
+		Message<T> msg = new Message<T>(this.getAccountKey(), this.getData(), this.getOptions());
+		return msg;
+		
+	}
 }

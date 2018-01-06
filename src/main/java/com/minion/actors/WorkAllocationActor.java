@@ -33,9 +33,11 @@ public class WorkAllocationActor extends UntypedActor {
 				if(acct_message.getData() instanceof Path ||
 						acct_message.getData() instanceof ExploratoryPath ||
 						acct_message.getData() instanceof URL){
-					;
-					for(String browser : ((List<String>)acct_message.getOptions().get("domains"))){
-						acct_message.getOptions().put("browser", browser);
+					System.out.println("Object type for browsers key :: "+acct_message.getOptions().get("browsers").getClass().getSimpleName());
+					for(String browser : ((List<String>)acct_message.getOptions().get("browsers"))){
+						Message<?> msg = acct_message.clone();	
+						System.out.println("Browser being put in message :: "+browser);
+						msg.getOptions().put("browser", browser);
 						boolean record_exists = false;
 						Path path = null;
 						ExploratoryPath exp_path = null;
@@ -73,12 +75,12 @@ public class WorkAllocationActor extends UntypedActor {
 						//if record doesn't exist then send for exploration, else expand the record
 						if(!record_exists){
 							final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
-							browser_actor.tell(acct_message, getSelf() );
+							browser_actor.tell(msg, getSelf() );
 							getSender().tell("Status: ok", getSelf());
 						}
 						else if(!(acct_message.getData() instanceof ExploratoryPath)) {
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-							path_expansion_actor.tell(acct_message, getSelf() );
+							path_expansion_actor.tell(msg, getSelf() );
 						}
 					}
 				}

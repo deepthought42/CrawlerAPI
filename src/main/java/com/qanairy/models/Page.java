@@ -19,7 +19,6 @@ public class Page extends PathObject {
 
     private String key;
     private boolean landable = false;
-	private String screenshot = null; 
 	private Map<String, String> browser_screenshot;
 	
 	@JsonIgnore
@@ -41,60 +40,6 @@ public class Page extends PathObject {
 		this.setImageWeight(0);
 		this.element_counts = new HashMap<String, Integer>();
 		this.setBrowserScreenshot(new HashMap<String, String>());
-	}
-
-	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null
-	 */
-	@Deprecated
-	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
-		assert elements != null;
-		
-		super.setType("Page");
-		this.setSrc(html);
-		this.setType("Page");
-		this.setUrl(new URL(url.replace("/#","")));
-		this.setScreenshot(screenshot_url);
-		this.setBrowserScreenshot(new HashMap<String, String>());
-		this.setElements(elements);
-		this.setElementCounts(countTags(elements));
-		this.setLandable(false);
-		this.setImageWeight(0);
-		this.setKey(null);
-	}
-	
-	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null;
-	 */
-	@Deprecated
-	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
-		assert elements != null;
-		super.setType("Page");
-		this.setSrc(html);
-		this.setUrl(new URL(url.replace("/#","")));
-		this.setScreenshot(screenshot);
-		this.setBrowserScreenshot(new HashMap<String, String>());
-		this.setElements(elements);
-		this.setElementCounts(countTags(elements));
-		this.setLandable(isLandable);
-		this.setImageWeight(0);
-		this.setKey(null);
 	}
 	
 	/**

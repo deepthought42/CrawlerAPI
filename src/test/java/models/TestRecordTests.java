@@ -3,6 +3,9 @@ package models;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.qanairy.models.Page;
@@ -20,13 +23,17 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordCreateRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 		com.qanairy.models.Test test = new com.qanairy.models.Test();
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", "", new ArrayList<PageElement>(), true);
+							"http://www.test.test", browser_screenshots, 
+							new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -43,6 +50,9 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordUpdateRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 
 		com.qanairy.models.Test test = new com.qanairy.models.Test();
@@ -50,7 +60,7 @@ public class TestRecordTests {
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", "", new ArrayList<PageElement>(), true);
+							"http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -68,6 +78,9 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordFindRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -76,7 +89,7 @@ public class TestRecordTests {
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", "", new ArrayList<PageElement>(), true);
+							"http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}

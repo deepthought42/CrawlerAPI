@@ -77,6 +77,8 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	@Override
 	public Page convertFromRecord(IPage result) {
 		Page page = new Page();
+		
+		//Set browser screenshots
 		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());

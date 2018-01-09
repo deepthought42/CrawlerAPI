@@ -53,6 +53,7 @@ public class Browser {
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
 	private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
 	private String url = "";
+	private String browser_name; 
     //private static final String HUB_IP_ADDRESS= "165.227.120.79";
     private static final String HUB_IP_ADDRESS= "104.131.30.168";
 
@@ -63,11 +64,13 @@ public class Browser {
 	 * 			chrome = google chrome
 	 * 			firefox = Firefox
 	 * 			ie = internet explorer
+	 * 			safari = safari
 	 * 			phantomjs = phantomjs
 	 * @throws MalformedURLException
 	 */
 	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
 		int cnt = 0;
+		this.setBrowserName(browser);
 		while(driver == null && cnt < 20){
 			log.info("Opening "+ browser +" browser attempt #"+ cnt);
 			try{
@@ -155,9 +158,12 @@ public class Browser {
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();
 		}
+		
+		Map<String, String> browser_screenshot = new HashMap<String, String>();
+		browser_screenshot.put(browser_name, screenshot);
 		return new Page(src, 
-						url, 
-						screenshot, 
+						url,
+						browser_screenshot, 
 						visible_elements);
 	}
 	
@@ -931,5 +937,13 @@ public class Browser {
 	public static List<Attribute> extractedAttributes(WebElement element, JavascriptExecutor javascriptDriver) {
 		List<String> attribute_strings = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		return loadAttributes(attribute_strings);
+	}
+
+	public String getBrowserName() {
+		return browser_name;
+	}
+
+	public void setBrowserName(String browser_name) {
+		this.browser_name = browser_name;
 	}
 }

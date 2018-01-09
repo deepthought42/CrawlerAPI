@@ -169,10 +169,8 @@ public interface ITest  {
 	public Iterable<ITestRecord> getRecords();
 	
 	/**
-	 * Sets the {@link TestRecord} that is the result of executing the path 
+	 * Sets the {@link TestRecord} that is the result of executing the path
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
 	public void setRecords(List<TestRecord> page);
-
-	
 }

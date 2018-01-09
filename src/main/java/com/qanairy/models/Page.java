@@ -20,6 +20,7 @@ public class Page extends PathObject {
     private String key;
     private boolean landable = false;
 	private String screenshot = null; 
+	private Map<String, String> browser_screenshot;
 	
 	@JsonIgnore
 	private String src;
@@ -29,7 +30,7 @@ public class Page extends PathObject {
 	
 	@JsonIgnore
 	private List<PageElement> elements;
-	private Map<String, Integer> element_counts = new HashMap<String, Integer>();
+	private Map<String, Integer> element_counts;
 	
 	/**
 	 * instantiate an empty page instance
@@ -38,6 +39,8 @@ public class Page extends PathObject {
 		this.setSrc(null);
 		this.setType(Page.class.getSimpleName());
 		this.setImageWeight(0);
+		this.element_counts = new HashMap<String, Integer>();
+		this.setBrowserScreenshot(new HashMap<String, String>());
 	}
 
 	/**
@@ -51,16 +54,18 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null
 	 */
+	@Deprecated
 	public Page(String html, String url, String screenshot_url, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
 		super.setType("Page");
 		this.setSrc(html);
 		this.setType("Page");
-		this.url = new URL(url.replace("/#",""));
-		this.screenshot = screenshot_url;
-		this.elements = elements;
-		this.element_counts = countTags(elements);
+		this.setUrl(new URL(url.replace("/#","")));
+		this.setScreenshot(screenshot_url);
+		this.setBrowserScreenshot(new HashMap<String, String>());
+		this.setElements(elements);
+		this.setElementCounts(countTags(elements));
 		this.setLandable(false);
 		this.setImageWeight(0);
 		this.setKey(null);
@@ -77,18 +82,71 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null;
 	 */
+	@Deprecated
 	public Page(String html, String url, String screenshot, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		super.setType("Page");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
 		this.setScreenshot(screenshot);
+		this.setBrowserScreenshot(new HashMap<String, String>());
 		this.setElements(elements);
 		this.setElementCounts(countTags(elements));
 		this.setLandable(isLandable);
 		this.setImageWeight(0);
 		this.setKey(null);
 	}
+	
+	/**
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null
+	 */
+	public Page(String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements) throws IOException {
+		assert elements != null;
+		
+		super.setType("Page");
+		this.setSrc(html);
+		this.setType("Page");
+		this.setUrl(new URL(url.replace("/#","")));
+		this.setBrowserScreenshot(new HashMap<String, String>());
+		this.setElements(elements);
+		this.setElementCounts(countTags(elements));
+		this.setLandable(false);
+		this.setImageWeight(0);
+		this.setKey(null);
+	}
+	
+	/**
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null;
+	 */
+	public Page(String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
+		assert elements != null;
+		super.setType("Page");
+		this.setSrc(html);
+		this.setUrl(new URL(url.replace("/#","")));
+		this.setBrowserScreenshot(new HashMap<String, String>());
+		this.setElements(elements);
+		this.setElementCounts(countTags(elements));
+		this.setLandable(isLandable);
+		this.setImageWeight(0);
+		this.setKey(null);
+	}
+	
 	
 	/**
 	 * Gets counts for all tags based on {@link PageElement}s passed
@@ -287,5 +345,17 @@ public class Page extends PathObject {
 
 	public void setImageWeight(Integer image_weight) {
 		this.image_weight = image_weight;
+	}
+
+	public Map<String, String> getBrowserScreenshot() {
+		return browser_screenshot;
+	}
+
+	public void setBrowserScreenshot(Map<String, String> browser_screenshot) {
+		this.browser_screenshot = browser_screenshot;
+	}
+	
+	public void setBrowserScreenshot(String browser, String screenshot_url) {
+		this.browser_screenshot.put(browser, screenshot_url);
 	}
 }

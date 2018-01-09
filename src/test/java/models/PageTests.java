@@ -37,7 +37,12 @@ public class PageTests {
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());
 			Assert.assertTrue(page_record.getImageWeight() == page.getImageWeight());
 			Assert.assertTrue(page_record.getTotalWeight() == page.getTotalWeight());
-			Assert.assertTrue(page_record.getScreenshot().equals(page.getScreenshot().toString()));
+			
+			//assert each element matches
+			for(String browser : page_record.getBrowserScreenshots().keySet()){
+				Assert.assertTrue(page.getBrowserScreenshots().containsKey(browser));	
+			}
+			
 			Assert.assertTrue(page_record.getType().equals(page.getType()));
 			Assert.assertTrue(page_record.isLandable() == page.isLandable());
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));

@@ -60,7 +60,7 @@ public class Page extends PathObject {
 		this.setSrc(html);
 		this.setType("Page");
 		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshots(new HashMap<String, String>());
+		this.setBrowserScreenshots(browsers_screenshots);
 		this.setElements(elements);
 		this.setElementCounts(countTags(elements));
 		this.setLandable(false);
@@ -84,7 +84,7 @@ public class Page extends PathObject {
 		super.setType("Page");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshots(new HashMap<String, String>());
+		this.setBrowserScreenshots(browsers_screenshots);
 		this.setElements(elements);
 		this.setElementCounts(countTags(elements));
 		this.setLandable(isLandable);

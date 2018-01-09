@@ -43,7 +43,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record = convertToRecord(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
-			page_record.setScreenshot(page.getScreenshot());
+			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
@@ -85,13 +85,13 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		for(String browser : browser_screenshots.keySet()){
 			System.out.println("Setting browser "+browser+" with screenshot from record on page object");
 		}
-		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());
 		page.setLandable(result.isLandable());
 		page.setImageWeight(result.getImageWeight());
 		page.setTotalWeight(result.getTotalWeight());
 		page.setElementCounts(result.getElementCounts());
+		page.setBrowserScreenshots(browser_screenshots);
 		
 		try {
 			page.setUrl(new URL(result.getUrl()));
@@ -130,7 +130,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setKey(page.getKey());
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
-			page_record.setScreenshot(page.getScreenshot());
 			page_record.setType((Page.class.getSimpleName()));
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());

@@ -25,11 +25,14 @@ public class TestTests {
 	 */
 	@Test(groups="Regression")
 	public void testCreateRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
 			Page page = new Page("<html></html>",
-								 "http://www.test.test", "", new ArrayList<PageElement>(), true);
+								 "http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
 			test = new com.qanairy.models.Test(path, page, new Domain("www.test.test", "", "http"), "Testing Test 2");

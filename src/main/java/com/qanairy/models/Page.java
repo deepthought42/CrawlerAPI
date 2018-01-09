@@ -292,7 +292,7 @@ public class Page extends PathObject {
 		this.image_weight = image_weight;
 	}
 
-	public Map<String, String> getBrowserScreenshot() {
+	public Map<String, String> getBrowserScreenshots() {
 		return browser_screenshot;
 	}
 

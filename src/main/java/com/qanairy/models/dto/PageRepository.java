@@ -2,8 +2,10 @@ package com.qanairy.models.dto;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +81,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Page page = new Page();
 		
 		//Set browser screenshots
+		Map<String, String> browser_screenshots = page.getBrowserScreenshots();
+		for(String browser : browser_screenshots.keySet()){
+			System.out.println("Setting browser "+browser+" with screenshot from record on page object");
+		}
 		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());
@@ -130,6 +136,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
 			page_record.setSrc(page.getSrc());
+			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
 		}
 
 		return page_record;

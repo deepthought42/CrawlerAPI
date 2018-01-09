@@ -36,7 +36,7 @@ public class PastPathExperienceController {
 								
 				Page page;
 				try {
-					page = new Page("", page_obj.getBrowserScreenshot(), page_obj.getScreenshot(), new ArrayList<PageElement>());
+					page = new Page("", page_obj.getBrowserScreenshots(), page_obj.getScreenshot(), new ArrayList<PageElement>());
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();

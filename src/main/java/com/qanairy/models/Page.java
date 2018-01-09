@@ -39,7 +39,7 @@ public class Page extends PathObject {
 		this.setType(Page.class.getSimpleName());
 		this.setImageWeight(0);
 		this.element_counts = new HashMap<String, Integer>();
-		this.setBrowserScreenshot(new HashMap<String, String>());
+		this.setBrowserScreenshots(new HashMap<String, String>());
 	}
 	
 	/**
@@ -60,7 +60,7 @@ public class Page extends PathObject {
 		this.setSrc(html);
 		this.setType("Page");
 		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshot(new HashMap<String, String>());
+		this.setBrowserScreenshots(new HashMap<String, String>());
 		this.setElements(elements);
 		this.setElementCounts(countTags(elements));
 		this.setLandable(false);
@@ -84,7 +84,7 @@ public class Page extends PathObject {
 		super.setType("Page");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshot(new HashMap<String, String>());
+		this.setBrowserScreenshots(new HashMap<String, String>());
 		this.setElements(elements);
 		this.setElementCounts(countTags(elements));
 		this.setLandable(isLandable);
@@ -154,7 +154,7 @@ public class Page extends PathObject {
 		if (this == o) return true;
         if (!(o instanceof Page)) return false;
         Page that = (Page)o;
-        return (this.getSrc().equals(that.getSrc()) && CompareImages.imagesMatch(this.getScreenshot(), that.getScreenshot()));
+        return (this.getSrc().equals(that.getSrc()));
 				
 	}
 	
@@ -163,7 +163,7 @@ public class Page extends PathObject {
 	 */
 	@Override
 	public String toString(){
-		return this.getUrl()+"++"+this.getScreenshot();
+		return this.getUrl().toString();
 	}
 	
 	
@@ -176,9 +176,6 @@ public class Page extends PathObject {
         int hash = 1;
         hash = hash * 5 + url.hashCode();
         hash = hash * 17 + src.hashCode();
-        if(this.screenshot != null){
-        	hash = hash * 31 + screenshot.hashCode();
-        }
         
         if(elements != null){
 	        for(PageElement element : elements){
@@ -198,7 +195,7 @@ public class Page extends PathObject {
 		page.setElements(this.getElements());
 		page.setKey(this.getKey());
 		page.setLandable(this.isLandable());
-		page.setScreenshot(this.getScreenshot());
+		page.setBrowserScreenshots(this.getBrowserScreenshots());
 		page.setSrc(this.getSrc());
 		page.setUrl(this.getUrl());
 
@@ -247,14 +244,6 @@ public class Page extends PathObject {
 	public void setLandable(boolean isLandable){
 		this.landable = isLandable;
 	}
-	
-	public String getScreenshot(){
-		return this.screenshot;
-	}
-	
-	public void setScreenshot(String url){
-		this.screenshot = url;
-	}
 		
 	public boolean isLandable(){
 		return this.landable;
@@ -296,7 +285,7 @@ public class Page extends PathObject {
 		return browser_screenshot;
 	}
 
-	public void setBrowserScreenshot(Map<String, String> browser_screenshot) {
+	public void setBrowserScreenshots(Map<String, String> browser_screenshot) {
 		this.browser_screenshot = browser_screenshot;
 	}
 	

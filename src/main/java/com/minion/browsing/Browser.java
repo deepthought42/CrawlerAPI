@@ -116,8 +116,7 @@ public class Browser {
 		if(this.driver != null){			
 			//SystemInfoRepository.save(connection, info);
 			this.url = url;
-			this.driver.navigate().to(url);
-			this.driver.manage().window().maximize();
+			this.driver.get(url);
 		}
 		else{
 			throw new NullPointerException();

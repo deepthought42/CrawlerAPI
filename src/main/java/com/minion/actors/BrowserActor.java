@@ -294,23 +294,6 @@ public class BrowserActor extends UntypedActor {
 		
 		createTest(path, page_obj, 1L, domain, msg);
 		
-		/*
-		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), "", page_obj.getUrl().getProtocol()));
-		TestRepository test_repo = new TestRepository();
-		test.setKey(test_repo.generateKey(test));
-		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
-		test.addRecord(test_record);
-		
-	  	Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), test);
-	  	ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-		memory_actor.tell(test_msg, getSelf() );
-		
-		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), path);
-		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-		path_expansion_actor.tell(path_msg, getSelf() );
-		*/
-		
 		Path new_path = Path.clone(path);
 		new_path.add(page_obj);
 		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_path, msg.getOptions());

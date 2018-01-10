@@ -82,7 +82,7 @@ public class TestingActor extends UntypedActor {
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 					//tell memory worker of path
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
@@ -97,7 +97,7 @@ public class TestingActor extends UntypedActor {
 					}
 
 					test.addRecord(record);
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
 					//tell memory worker of test record
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());

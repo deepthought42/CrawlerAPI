@@ -87,7 +87,7 @@ public class PathTests {
 		Path path = new Path(null);
 		Page page = null;
 		try {
-			Browser browser = new Browser("http://localhost", "phantomjs");
+			Browser browser = new Browser("http://localhost", "chrome");
 			URL page_url = new URL(browser.getDriver().getCurrentUrl());
 			page = new Page(browser.getDriver().getPageSource(), 
 							browser.getDriver().getCurrentUrl(), 

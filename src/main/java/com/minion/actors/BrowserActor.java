@@ -80,7 +80,7 @@ public class BrowserActor extends UntypedActor {
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				
 				Page last_page = exploratory_path.findLastPage();
-				boolean landable_status = last_page.checkIfLandable();
+				boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
 				log.info("landable status: " +landable_status);
 				last_page.setLandable(landable_status);
 							
@@ -277,8 +277,6 @@ public class BrowserActor extends UntypedActor {
 	  	Path path = new Path();
 	  	Page page_obj = browser.getPage();
 	  	path.getPath().add(page_obj);
-	  	//Page current_page = Crawler.crawlPath(path, browser);
-
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
@@ -323,7 +321,7 @@ public class BrowserActor extends UntypedActor {
 		
 		Page last_page = path.findLastPage();
 
-		last_page.setLandable(last_page.checkIfLandable());
+		last_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
 		if(last_page.isLandable()){
 			//clone path starting at last page in path
 			//Path shortened_path = path.clone());

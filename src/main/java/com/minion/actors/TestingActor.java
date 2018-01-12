@@ -72,7 +72,7 @@ public class TestingActor extends UntypedActor {
 				//Page last_page = path.findLastPage();
 				
 				try{
-					resulting_page.setLandable(resulting_page.checkIfLandable());
+					resulting_page.setLandable(resulting_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
 				}catch(Exception e){
 					log.error(e.getMessage());
 					resulting_page.setLandable(false);

@@ -13,12 +13,12 @@ public class TechstarsTests {
 
 		@Test
 		public void testHttpsSettingsInPhantomjs(){
-			DesiredCapabilities cap = DesiredCapabilities.phantomjs();
+			DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setJavascriptEnabled(true);
 			cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--ssl-protocol=tlsv1"});
 
 			/*
-			DesiredCapabilities cap = DesiredCapabilities.phantomjs();
+			DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setJavascriptEnabled(true);
 			cap.setCapability("web-security","true");
 			cap.setCapability("ssl-protocol","any");

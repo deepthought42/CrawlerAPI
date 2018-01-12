@@ -82,9 +82,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		
 		//Set browser screenshots
 		Map<String, String> browser_screenshots = page.getBrowserScreenshots();
-		for(String browser : browser_screenshots.keySet()){
-			System.out.println("Setting browser "+browser+" with screenshot from record on page object");
-		}
+
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());
 		page.setLandable(result.isLandable());
@@ -143,9 +141,13 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * @pre page != null
 	 */
 	@Override
 	public String generateKey(Page page) {
+		assert page != null;
+		log.info("generating key for page ::   "+page.getSrc());
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
 	}
 

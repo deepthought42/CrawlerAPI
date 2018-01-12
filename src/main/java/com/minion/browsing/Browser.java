@@ -143,7 +143,9 @@ public class Browser {
 		List<PageElement> visible_elements = null;
 		for(int i=0; i<10; i++){
 			try{
+				System.err.println("Getting page source");
 				src = this.driver.getPageSource();
+				System.err.println("Page source length :: " + src.length());
 				visible_elements = Browser.getVisibleElements(this.driver, "");
 				screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource()));
 				break;

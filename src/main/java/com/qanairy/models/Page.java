@@ -120,11 +120,11 @@ public class Page extends PathObject {
 	 * 
 	 * @return
 	 */
-	public boolean checkIfLandable(){		
+	public boolean checkIfLandable(String browser_name){		
 		boolean landable = false;
 
 		try{
-			Browser browser = new Browser(this.getUrl().getHost(), "phantomjs");
+			Browser browser = new Browser(this.getUrl().getHost(), browser_name);
 			//log.info("navigating to url to check for landability");
 			//browser.getDriver().get(this.getUrl().toString());
 

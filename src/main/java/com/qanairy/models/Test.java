@@ -35,12 +35,13 @@ public class Test {
 	private Boolean correct;
 	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
-	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	private List<Group> groups;
 	private Date last_run_time;
 	private boolean run_status;
 	private long run_time_length;
-	
+	private Map<String, Boolean> browser_passing_statuses;
+	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
+
 	/**
 	 * Construct a test with defaults of useful set to fault and 
 	 * spansMultipleDomains set to false
@@ -51,6 +52,7 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setRunStatus(false);
+		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
 	}
 	
 	/**
@@ -76,6 +78,7 @@ public class Test {
 		this.setKey(null);
 		this.setRunStatus(false);
 		this.setName(name);
+		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
 	}
 	
 	/**
@@ -101,6 +104,7 @@ public class Test {
 		this.setKey(key);
 		this.setRunStatus(false);
 		this.setName(name);
+		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
 	}
 	
 	/**
@@ -397,5 +401,13 @@ public class Test {
 
 	public void setRunStatus(boolean run_status) {
 		this.run_status = run_status;
+	}
+
+	public Map<String, Boolean> getBrowserPassingStatuses() {
+		return browser_passing_statuses;
+	}
+
+	public void setBrowserPassingStatuses(Map<String, Boolean> browser_passing_statuses) {
+		this.browser_passing_statuses = browser_passing_statuses;
 	}
 }

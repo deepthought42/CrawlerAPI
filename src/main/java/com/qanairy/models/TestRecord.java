@@ -1,9 +1,10 @@
 package com.qanairy.models;
 
 import java.util.Date;
-
-
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 
@@ -22,29 +23,30 @@ public class TestRecord {
 	private Boolean passes;
 	private Page result;
 	private long run_time_length;
-
-	public TestRecord(Date ran_at, Boolean passes){
+	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
+	
+	public TestRecord(Date ran_at, Map<String,Boolean> passes){
 		this.setRanAt(ran_at);
-		this.setPasses(passes);
 		this.setPage(null);
 		this.setKey(null);
 		this.setRunTime(-1L);
+		this.setBrowserStatuses(passes);
 	}
 	
-	public TestRecord(Date ran_at, Boolean passes, Page result){
+	public TestRecord(Date ran_at, Map<String,Boolean> passes, Page result){
 		this.setRanAt(ran_at);
-		this.setPasses(passes);
 		this.setPage(result);
 		this.setKey(null);
 		this.setRunTime(-1L);
+		this.setBrowserStatuses(passes);
 	}
 	
-	public TestRecord(String key, Date ran_at, Boolean passes, Page result){
+	public TestRecord(String key, Date ran_at, Map<String, Boolean> passes, Page result){
 		this.setRanAt(ran_at);
-		this.setPasses(passes);
 		this.setPage(result);
 		this.setKey(key);
 		this.setRunTime(-1L);
+		this.setBrowserStatuses(passes);
 	}
 	
 	/**
@@ -97,5 +99,13 @@ public class TestRecord {
 	
 	public long getRunTime() {
 		return this.run_time_length;
+	}
+
+	public Map<String, Boolean> getBrowserStatuses() {
+		return browser_statuses;
+	}
+
+	public void setBrowserStatuses(Map<String, Boolean> browser_statuses) {
+		this.browser_statuses = browser_statuses;
 	}
 }

@@ -3,9 +3,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.UUID;
@@ -158,7 +156,7 @@ public class BrowserActor extends UntypedActor {
 				if(acct_msg.getOptions().isEmpty()){
 				}
 				
-				browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
+				browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), acct_msg.getOptions().get("browser").toString());
 				traverse_path_and_create_test(browser, path, acct_msg);
 			  	browser.close();
 	
@@ -199,6 +197,7 @@ public class BrowserActor extends UntypedActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
+		log.info("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult());
 		test.addRecord(test_record);
 		log.info("sending test message out");

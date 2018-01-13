@@ -23,6 +23,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		PageRepository page_repo = new PageRepository();
 		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));
 		testRecord.setPasses(record.getPasses());
+		testRecord.setBrowser(record.getBrowser());
 		testRecord.setRanAt(record.getRanAt());
 		testRecord.setKey(record.getKey());
 		

@@ -40,7 +40,6 @@ public class Test {
 	private boolean run_status;
 	private long run_time_length;
 	private Map<String, Boolean> browser_passing_statuses;
-	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 
 	/**
 	 * Construct a test with defaults of useful set to fault and 
@@ -304,7 +303,7 @@ public class Test {
 	}
 	
 	public void setBrowserStatus(String browser_name, Boolean status){
-		this.browser_statuses.put(browser_name, status);
+		this.browser_passing_statuses.put(browser_name, status);
 	}
 	
 	public Path getPath(){

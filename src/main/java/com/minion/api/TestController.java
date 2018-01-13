@@ -323,7 +323,7 @@ public class TestController {
 				TestRecordRepository test_record_record = new TestRecordRepository();
 				itest.addRecord(test_record_record.convertToRecord(connection, record));
 				itest.setCorrect(record.getPasses());
-				itest.setLastRunTimestamp(new Date());
+				itest.setBrowserStatuses(record.getBrowserStatuses());
 				itest.setRunStatus(false);
 				browser.close();
 			}

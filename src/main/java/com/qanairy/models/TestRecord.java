@@ -108,4 +108,8 @@ public class TestRecord {
 	public void setBrowserStatuses(Map<String, Boolean> browser_statuses) {
 		this.browser_statuses = browser_statuses;
 	}
+	
+	public void setBrowserStatus(String browser, Boolean passing) {
+		this.browser_statuses.put(browser, passing);
+	}
 }

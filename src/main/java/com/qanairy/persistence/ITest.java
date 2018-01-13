@@ -3,6 +3,7 @@ package com.qanairy.persistence;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.qanairy.models.TestRecord;
 import com.tinkerpop.blueprints.Direction;
@@ -173,4 +174,10 @@ public interface ITest  {
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
 	public void setRecords(List<TestRecord> page);
+	
+	@Property("browser_run_statuses")
+	public Map<String, Boolean> getBrowserStatuses();
+
+	@Property("browser_run_statuses")
+	public void setBrowserStatuses(Map<String, Boolean> browser_statuses);
 }

@@ -1,6 +1,5 @@
 import java.net.MalformedURLException;
 import java.net.URL;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testng.annotations.Test;
@@ -15,7 +14,6 @@ public class TechstarsTests {
 		public void testHttpsSettingsInPhantomjs(){
 			DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setJavascriptEnabled(true);
-			cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--ssl-protocol=tlsv1"});
 
 			/*
 			DesiredCapabilities cap = DesiredCapabilities.chrome();

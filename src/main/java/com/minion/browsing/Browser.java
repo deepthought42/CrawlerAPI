@@ -27,7 +27,6 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -65,7 +64,6 @@ public class Browser {
 	 * 			firefox = Firefox
 	 * 			ie = internet explorer
 	 * 			safari = safari
-	 * 			phantomjs = phantomjs
 	 * @throws MalformedURLException
 	 */
 	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
@@ -85,9 +83,6 @@ public class Browser {
 				}
 				else if(browser.equals("safari")){
 					this.driver = openWithSafari();
-				}
-				else if(browser.equals("phantomjs")){
-					this.driver = openWithPhantomjs();
 				}
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
@@ -306,38 +301,6 @@ public class Browser {
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
-		return driver;
-	}
-	
-	/**
-	 * open new phantomjs browser
-	 * 
-	 * @param url 
-	 * @return
-	 * @throws MalformedURLException 
-	 */
-	public static WebDriver openWithPhantomjs() 
-			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException{
-		
-		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
-		cap.setJavascriptEnabled(true);
-		cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--ssl-protocol=tlsv1"});
-
-		//cap.setCapability("web-security","true");
-		//cap.setCapability("ssl-protocol","any");
-		//cap.setCapability("ignore-ssl-errors","true");
-		//cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--web-security=false","--ssl-protocol=any", "--ignore-ssl-errors=true"});//,"--webdriver-loglevel=NONE"});
-
-		// optional video recording
-		/*String record_video = "True";
-		// video record
-		if (record_video.equalsIgnoreCase("True")) {
-			cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
-		} else {
-			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
-		}*/
-        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);	    
-	    
 		return driver;
 	}
 	

@@ -20,33 +20,36 @@ public class TestRecord {
 
 	private String key;
 	private Date ran_at;
+	private String browser;
 	private Boolean passes;
 	private Page result;
 	private long run_time_length;
-	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	
-	public TestRecord(Date ran_at, Map<String,Boolean> passes){
+	public TestRecord(Date ran_at, Boolean passes, String browser_name){
 		this.setRanAt(ran_at);
 		this.setPage(null);
 		this.setKey(null);
 		this.setRunTime(-1L);
-		this.setBrowserStatuses(passes);
+		this.setPasses(passes);
+		this.setBrowser(browser_name);
 	}
 	
-	public TestRecord(Date ran_at, Map<String,Boolean> passes, Page result){
+	public TestRecord(Date ran_at, Boolean passes, String browser_name, Page result){
 		this.setRanAt(ran_at);
 		this.setPage(result);
 		this.setKey(null);
 		this.setRunTime(-1L);
-		this.setBrowserStatuses(passes);
+		this.setPasses(passes);
+		this.setBrowser(browser_name);
 	}
 	
-	public TestRecord(String key, Date ran_at, Map<String, Boolean> passes, Page result){
+	public TestRecord(String key, Date ran_at, Boolean passes, String browser_name, Page result){
 		this.setRanAt(ran_at);
 		this.setPage(result);
 		this.setKey(key);
 		this.setRunTime(-1L);
-		this.setBrowserStatuses(passes);
+		this.setPasses(passes);
+		this.setBrowser(browser_name);
 	}
 	
 	/**
@@ -101,15 +104,11 @@ public class TestRecord {
 		return this.run_time_length;
 	}
 
-	public Map<String, Boolean> getBrowserStatuses() {
-		return browser_statuses;
+	public String getBrowser() {
+		return browser;
 	}
 
-	public void setBrowserStatuses(Map<String, Boolean> browser_statuses) {
-		this.browser_statuses = browser_statuses;
-	}
-	
-	public void setBrowserStatus(String browser, Boolean passing) {
-		this.browser_statuses.put(browser, passing);
+	public void setBrowser(String browser) {
+		this.browser = browser;
 	}
 }

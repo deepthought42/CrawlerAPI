@@ -29,6 +29,12 @@ public interface ITestRecord {
 	@Property("passes")
 	public void setPasses(Boolean isPassing);
 	
+	@Property("browser_name")
+	public String getBrowser();
+	
+	@Property("browser_name")
+	public void setBrowser(String browser_name);
+	
 	@Adjacency(label="has_result")
 	public void setResult(IPage page);
 	

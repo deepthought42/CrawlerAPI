@@ -2,6 +2,8 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -78,7 +80,7 @@ public class TestingActor extends UntypedActor {
 					resulting_page.setLandable(false);
 				}
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecord(new Date(), false, resulting_page);
+					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 
@@ -89,11 +91,13 @@ public class TestingActor extends UntypedActor {
 				}
 				else{
 					TestRecord record = null;
+					Map<String, Boolean> results = new HashMap<String, Boolean>();
+
 					if(!test.isCorrect()){
-						record = new TestRecord(new Date(), false, resulting_page);
+						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page);
 					}
 					else{
-						record = new TestRecord(new Date(), true);
+						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page);
 					}
 
 					test.addRecord(record);
@@ -136,7 +140,7 @@ public class TestingActor extends UntypedActor {
 		 try {		
 			page = Crawler.crawlPath(test.getPath(), browser);
 			passing = test.isTestPassing(page, test.isCorrect());
-			test_record = new TestRecord(new Date(), passing, page);
+			test_record = new TestRecord(new Date(), null, browser.getBrowserName(), page);
 			
 			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();

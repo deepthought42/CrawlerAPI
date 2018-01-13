@@ -2,7 +2,6 @@ package com.qanairy.models.dto;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -147,7 +146,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	@Override
 	public String generateKey(Page page) {
 		assert page != null;
-		log.info("generating key for page ::   "+page.getSrc());
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
 	}
 

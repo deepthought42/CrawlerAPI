@@ -167,15 +167,19 @@ public class BrowserActor extends UntypedActor {
 				log.info("Url provided");
 
 				try{
-					browser = new Browser(((URL)acct_msg.getData()).toString(), (String)acct_msg.getOptions().get("browser"));
+					browser = new Browser(((URL)acct_msg.getData()).toString(), acct_msg.getOptions().get("browser").toString());
 				}
 				catch(NullPointerException e){
 					log.error("Failed to open connection to browser");
 					return;
 				}
 				log.info("preparting to generate landing page test");
-				generate_landing_page_test(browser, acct_msg);
-
+				
+				try{
+					generate_landing_page_test(browser, acct_msg);
+				}catch(Exception e){
+					log.info(e.getMessage(), "Error occurred while generating landing page test");
+				}
 				browser.close();
 		   }
 			//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
@@ -268,13 +272,17 @@ public class BrowserActor extends UntypedActor {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public void generate_landing_page_test(Browser browser, Message<?> msg) throws MalformedURLException, IOException{
+	public void generate_landing_page_test(Browser browser, Message<?> msg) throws MalformedURLException, IOException, NullPointerException{
 		assert browser != null;
 		assert msg != null;
 		
 		log.info("Generating landing page");
 	  	Path path = new Path();
+	  	System.out.println("Getting browser page...");
 	  	Page page_obj = browser.getPage();
+	  	System.out.println("Add page obj to path : "+page_obj);
+	  	System.out.println("Add page obj src to path : "+page_obj.getSrc());
+
 	  	path.getPath().add(page_obj);
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));

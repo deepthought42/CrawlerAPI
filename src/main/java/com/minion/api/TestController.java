@@ -227,6 +227,45 @@ public class TestController {
 	 * 
 	 * @param test
 	 * @return
+	 * @throws UnknownAccountException 
+	 */
+    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
+	public @ResponseBody Test setInitialCorrectness(@RequestParam(value="key", required=true) String key, 
+														@RequestParam(value="correct", required=true) boolean correct) throws UnknownAccountException{
+    	
+    	//make sure domain belongs to user account first
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
+		ITest itest = itest_iter.next();
+		itest.setCorrect(correct);
+		
+		IDomain idomain = itest.getDomain();
+		
+ 		String browser_name = idomain.getDiscoveryBrowserName();
+		Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+		browser_statuses.put(browser_name, correct);
+		itest.setBrowserStatuses(browser_statuses);
+		
+		//update last TestRecord passes value
+		updateLastTestRecordPassingStatus(itest);
+		
+		TestRepository test_record = new TestRepository();
+		return test_record.convertFromRecord(itest);
+	}
+    
+	/**
+	 * Updates the correctness of a test for a specific browser with the given test key
+	 * 
+	 * @param test
+	 * @return
 	 */
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)

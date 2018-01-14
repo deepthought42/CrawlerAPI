@@ -109,7 +109,7 @@ public class Browser {
 		}
 		
 		if(this.driver != null){			
-			//SystemInfoRepository.save(connection, info);
+			System.err.println("Driver isn't null! Getting url "+url);
 			this.url = url;
 			this.driver.get(url);
 		}
@@ -138,15 +138,13 @@ public class Browser {
 		List<PageElement> visible_elements = null;
 		for(int i=0; i<10; i++){
 			try{
-				System.err.println("Getting page source");
 				src = this.driver.getPageSource();
-				System.err.println("Page source length :: " + src.length());
 				visible_elements = Browser.getVisibleElements(this.driver, "");
 				screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource()));
 				break;
 			}catch(Exception e){
 				try {
-					Thread.sleep(10000);
+					Thread.sleep(1000);
 				} catch (InterruptedException e1) {}
 			}
 		}
@@ -381,7 +379,7 @@ public class Browser {
 			try{
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
-					String this_xpath = Browser.generateXpath(elem, "", xpath_map, driver); 
+					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
 					try{
 						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));

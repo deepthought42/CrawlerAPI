@@ -27,6 +27,7 @@ import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
@@ -69,7 +70,6 @@ public class DiscoveryController {
 													   	  @RequestParam(value="browser", required=true) String browser) 
 															   throws MalformedURLException, UnknownAccountException {
 		
-		//ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
 		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
 		//String account_key = ""+UUID.randomUUID().toString();
 		
@@ -141,11 +141,7 @@ public class DiscoveryController {
 													   	  @RequestParam(value="url", required=true) String url,
 													   	  @RequestParam(value="browsers", required=true) List<String> browsers) 
 															   throws MalformedURLException, UnknownAccountException {
-		
-		//ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
-		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
-		//String account_key = ""+UUID.randomUUID().toString();
-		
+    	
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
     	
@@ -160,10 +156,10 @@ public class DiscoveryController {
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
     	domain.setDiscoveryStartTime(new Date());
-    	
     	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
+    	
     	Date now = new Date();
     	long diffInMinutes = 1000;
     	if(last_ran_date != null){
@@ -174,6 +170,9 @@ public class DiscoveryController {
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browsers", browsers);
         if(diffInMinutes > 60){
+        	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome");
+        	acct.getDiscoveryRecords().add(discovery_record);
+        	
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);

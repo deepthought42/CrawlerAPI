@@ -30,6 +30,7 @@ import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.services.AccountService;
 
@@ -83,7 +84,7 @@ public class AccountController {
         }
         
         //create account
-        Account acct = new Account(currentUser.getUsername(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>());
+        Account acct = new Account(currentUser.getUsername(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>());
         
         //Create user
         QanairyUser user = new QanairyUser(currentUser.getUsername());

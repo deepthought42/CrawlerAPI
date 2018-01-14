@@ -48,4 +48,10 @@ public interface IAccount {
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public void removeDomain(IDomain domain);
+	
+	@Adjacency(direction=Direction.OUT, label="discovery_record")
+	public void addDiscoveryRecord(IDiscoveryRecord discovery_record);
+	
+	@Adjacency(direction=Direction.OUT, label="discovery_record")
+	public void removeDiscoveryRecord(IDiscoveryRecord discovery_record);
 }

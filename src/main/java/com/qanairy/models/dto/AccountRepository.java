@@ -9,10 +9,12 @@ import org.apache.commons.collections.IteratorUtils;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
+import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.IQanairyUser;
@@ -61,6 +63,11 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		*/
 		
+		for(DiscoveryRecord record : account.getDiscoveryRecords()){
+			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
+			acct_record.addDiscoveryRecord(repo.convertToRecord(connection, record));
+		}
+		
 		return acct_record;
 	}
 
@@ -80,6 +87,13 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		QanairyUserRepository user_repo = new QanairyUserRepository();
 		for(IQanairyUser user : user_records){
 			users.add(user_repo.convertFromRecord(user));
+		}
+		
+		List<IDiscoveryRecord> discovery_db_records = IteratorUtils.toList(account.getUsers().iterator());
+		List<DiscoveryRecord> discovery_records = new ArrayList<DiscoveryRecord>();
+		DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+		for(IDiscoveryRecord record : discovery_db_records){
+			discovery_records.add(discovery_repo.convertFromRecord(record));
 		}
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains);

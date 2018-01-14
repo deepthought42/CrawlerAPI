@@ -17,11 +17,11 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	/**
 	 * {@inheritDoc}
 	 */
-	public ITestRecord convertToRecord(OrientConnectionFactory connection, TestRecord record){
+	public ITestRecord save(OrientConnectionFactory connection, TestRecord record){
 		ITestRecord testRecord = connection.getTransaction().addVertex("class:"+ITestRecord.class.getSimpleName()+","+UUID.randomUUID(), ITestRecord.class);
 
 		PageRepository page_repo = new PageRepository();
-		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));
+		testRecord.setResult(page_repo.save(connection, record.getPage()));
 		testRecord.setPasses(record.getPasses());
 		testRecord.setRanAt(record.getRanAt());
 		testRecord.setKey(record.getKey());
@@ -44,7 +44,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		record.setKey(generateKey(record));
 		TestRecord test_record_record = find(connection, generateKey(record));
 		if(test_record_record == null){
-			convertToRecord(connection, record);
+			save(connection, record);
 			//connection.save();
 		}
 		else{

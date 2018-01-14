@@ -27,7 +27,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * {@inheritDoc}
 	 */
 	public PageElement create(OrientConnectionFactory connection, PageElement elem) {
-		IPageElement ielem = convertToRecord(connection, elem);
+		IPageElement ielem = save(connection, elem);
 		
 		return convertFromRecord(ielem);
 	}
@@ -40,7 +40,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		IPageElement page_elem = null;
 		
 		if(page_elem_record != null){
-			page_elem = convertToRecord(connection, page_elem_record);
+			page_elem = save(connection, page_elem_record);
 
 			page_elem.setName(elem.getName());
 			page_elem.setCssValues(elem.getCssValues());
@@ -107,7 +107,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPageElement convertToRecord(OrientConnectionFactory connection, PageElement elem) {
+	public IPageElement save(OrientConnectionFactory connection, PageElement elem) {
 		elem.setKey(generateKey(elem));
 
 		@SuppressWarnings("unchecked")
@@ -123,14 +123,14 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			AttributeRepository attribute_repo = new AttributeRepository();
 
 			for(Attribute attribute : elem.getAttributes()){
-				IAttribute attribute_persist = attribute_repo.convertToRecord(connection, attribute);
+				IAttribute attribute_persist = attribute_repo.save(connection, attribute);
 				//attribute_persist_list.add(attribute_persist);
 				page_elem_record.addAttribute(attribute_persist);
 			}
 						
 			/*List<IIPageElement> child_elements_persist = new ArrayList<IIPageElement>();
 			for(PageElement elem : this.child_elements){
-				IIPageElement child_element = elem.convertToRecord(framedGraph);
+				IIPageElement child_element = elem.save(framedGraph);
 				child_elements_persist.add(child_element);
 			}
 			*/
@@ -144,7 +144,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			
 			RuleRepository rule_repo = new RuleRepository();
 			for(Rule rule : elem.getRules()){
-				page_elem_record.addRule(rule_repo.convertToRecord(connection, rule));	
+				page_elem_record.addRule(rule_repo.save(connection, rule));	
 			}
 		}
 		else{

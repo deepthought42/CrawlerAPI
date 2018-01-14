@@ -29,7 +29,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 	/**
 	 * {@inheritDoc}
 	 */
-	public IDiscoveryRecord convertToRecord(OrientConnectionFactory connection, DiscoveryRecord discovery_record) {
+	public IDiscoveryRecord save(OrientConnectionFactory connection, DiscoveryRecord discovery_record) {
 		discovery_record.setKey(generateKey(discovery_record));
 		@SuppressWarnings("unchecked")
 		Iterable<IDiscoveryRecord> discovery_records = (Iterable<IDiscoveryRecord>) DataAccessObject.findByKey(generateKey(discovery_record), connection, IDiscoveryRecord.class);
@@ -37,15 +37,17 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		IDiscoveryRecord discovery_record_record = null;
 
 		if(!iter.hasNext()){
+			System.out.println("Converting discovery record obj to db record");
 			discovery_record_record = connection.getTransaction().addVertex("class:"+IDiscoveryRecord.class.getSimpleName()+","+UUID.randomUUID(), IDiscoveryRecord.class);
 			discovery_record_record.setKey(discovery_record.getKey());
 		}
 		else{
+			System.out.println("Discovery record found in db. Getting from db");
 			discovery_record_record = iter.next();
 		}
 		discovery_record_record.setStartTime(discovery_record.getStartedAt());
 		discovery_record_record.setBrowserName(discovery_record.getBrowserName());
-
+		System.out.println("Updated discovery record");
 		return discovery_record_record;
 	}
 
@@ -58,7 +60,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		DiscoveryRecord discovery_record_record = find(connection, generateKey(discovery_record));
 		
 		if(discovery_record_record == null){
-			convertToRecord(connection, discovery_record);
+			save(connection, discovery_record);
 		}
 		return discovery_record;
 	}
@@ -68,7 +70,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 	 */
 	@Override
 	public DiscoveryRecord update(OrientConnectionFactory connection, DiscoveryRecord discovery_record) {
-		convertToRecord(connection, discovery_record);
+		save(connection, discovery_record);
 		@SuppressWarnings("unchecked")
 		Iterable<IDiscoveryRecord> discovery_records = (Iterable<IDiscoveryRecord>) DataAccessObject.findByKey(discovery_record.getKey(), connection, IDiscoveryRecord.class);
 		Iterator<IDiscoveryRecord> iter = discovery_records.iterator();

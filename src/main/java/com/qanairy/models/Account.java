@@ -22,7 +22,7 @@ public class Account {
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.setDomains(new ArrayList<Domain>());
+		this.domains = new ArrayList<Domain>();
 		this.setUsers(new ArrayList<QanairyUser>());
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
@@ -43,7 +43,7 @@ public class Account {
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.setDomains(new ArrayList<Domain>());
+		this.domains = new ArrayList<Domain>();
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 		this.setUsers(users);
 	}
@@ -63,7 +63,7 @@ public class Account {
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.setDomains(new ArrayList<Domain>());
+		this.domains = new ArrayList<Domain>();
 		this.setUsers(users);
 		this.setDiscoveryRecords(discovery_records);
 	}
@@ -86,7 +86,7 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.setUsers(users);
-		this.setDomains(domains);
+		this.domains = domains;
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
 

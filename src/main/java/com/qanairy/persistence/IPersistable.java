@@ -20,7 +20,7 @@ public interface IPersistable<V, Z> {
 	 * @param obj
 	 * @return
 	 */
-	Z convertToRecord(OrientConnectionFactory connection, V obj);
+	Z save(OrientConnectionFactory connection, V obj);
 	
 	/**
 	 * 

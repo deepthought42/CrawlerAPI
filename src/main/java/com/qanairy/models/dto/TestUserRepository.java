@@ -25,7 +25,7 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 	}
 
 	@Override
-	public ITestUser convertToRecord(OrientConnectionFactory connection, TestUser test_user) {
+	public ITestUser save(OrientConnectionFactory connection, TestUser test_user) {
 		test_user.setKey(generateKey(test_user));
 
 		@SuppressWarnings("unchecked")
@@ -63,7 +63,7 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 		Iterator<ITestUser> iter = test_users.iterator();
 		  
 		if(!iter.hasNext()){
-			convertToRecord(connection, test_user);
+			save(connection, test_user);
 			connection.save();
 		}
 		return test_user;

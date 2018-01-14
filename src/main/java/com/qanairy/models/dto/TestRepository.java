@@ -50,7 +50,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		Test test_record = find(conn, test.getKey());
 		
 		if(test_record == null){
-			convertToRecord(conn, test);
+			save(conn, test);
 		}
 		else{
 			test = test_record;
@@ -80,12 +80,12 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			List<IGroup> igroups = new ArrayList<IGroup>();
 			GroupRepository group_repo = new GroupRepository();
 			for(Group group : test.getGroups()){
-				group_repo.convertToRecord(conn, group);
+				group_repo.save(conn, group);
 			}
 			test_record.setGroups(igroups);
 			test_record.setName(test.getName());
 			test_record.setRecords(test.getRecords());
-			test_record.setResult(page_record.convertToRecord(conn, test.getResult()));
+			test_record.setResult(page_record.save(conn, test.getResult()));
 			conn.save();
 		}
 		
@@ -95,7 +95,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public ITest convertToRecord(OrientConnectionFactory connection, Test test){
+	public ITest save(OrientConnectionFactory connection, Test test){
 		
 		@SuppressWarnings("unchecked")
 		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(generateKey(test), connection, ITest.class);
@@ -112,11 +112,11 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			PageRepository page_record = new PageRepository();
 			TestRecordRepository test_record_record = new TestRecordRepository();
 			
-			test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
-			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
+			test_record.setPath(path_record.save(connection, test.getPath()));
+			test_record.setResult(page_record.save(connection, test.getResult()));
 			
 			DomainRepository domain_record = new DomainRepository();
-			IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
+			IDomain idomain = domain_record.save(connection, test.getDomain());
 			Iterator<ITest> test_iter = idomain.getTests().iterator();
 			boolean test_exists = false;
 			while(test_iter.hasNext()){
@@ -130,13 +130,13 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			}
 			
 			for(TestRecord record : test.getRecords()){
-				test_record.addRecord(test_record_record.convertToRecord(connection, record));
+				test_record.addRecord(test_record_record.save(connection, record));
 			}
 			
 			List<IGroup> igroups = new ArrayList<IGroup>();
 			GroupRepository group_repo = new GroupRepository();
 			for(Group group : test.getGroups()){
-				igroups.add(group_repo.convertToRecord(connection, group));
+				igroups.add(group_repo.save(connection, group));
 			}
 			test_record.setGroups(igroups);
 			test_record.setLastRunTimestamp(test.getLastRunTimestamp());

@@ -23,7 +23,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page create(OrientConnectionFactory connection, Page page) {
-		IPage page_record = convertToRecord(connection, page);
+		IPage page_record = save(connection, page);
 		
 		return convertFromRecord(page_record);
 	}
@@ -38,7 +38,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Page page2 = find(connection, page.getKey());
 		IPage page_record = null;
 		if(page2 != null){
-			page_record = convertToRecord(connection, page2);
+			page_record = save(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
 			page_record.setScreenshot(page.getScreenshot());
@@ -102,7 +102,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * 
 	 * @pre page != null
 	 */
-	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
+	public IPage save(OrientConnectionFactory connection, Page page){
 		assert(page != null);
 		
 		if(page.getKey() == null || page.getKey().isEmpty() && page.getSrc() != null){

@@ -30,7 +30,7 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 	}
 
 	@Override
-	public IQanairyUser convertToRecord(OrientConnectionFactory connection, QanairyUser qanairyUser) {
+	public IQanairyUser save(OrientConnectionFactory connection, QanairyUser qanairyUser) {
 		qanairyUser.setKey(generateKey(qanairyUser));
 
 		@SuppressWarnings("unchecked")
@@ -67,7 +67,7 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 		Iterator<IQanairyUser> iter = qanairyUsers.iterator();
 		  
 		if(!iter.hasNext()){
-			convertToRecord(connection, qanairyUser);
+			save(connection, qanairyUser);
 			connection.save();
 		}
 		return qanairyUser;

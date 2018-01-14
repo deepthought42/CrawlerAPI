@@ -36,7 +36,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	@Override
-	public IAccount convertToRecord(OrientConnectionFactory connection, Account account) {
+	public IAccount save(OrientConnectionFactory connection, Account account) {
 		account.setKey(generateKey(account));
 		@SuppressWarnings("unchecked")
 		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
@@ -59,13 +59,13 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
-			acct_record.addUser(repo.convertToRecord(connection, user));
+			acct_record.addUser(repo.save(connection, user));
 		}
 		*/
 		
 		for(DiscoveryRecord record : account.getDiscoveryRecords()){
 			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
-			acct_record.addDiscoveryRecord(repo.convertToRecord(connection, record));
+			acct_record.addDiscoveryRecord(repo.save(connection, record));
 		}
 		
 		return acct_record;
@@ -111,7 +111,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		Iterator<IAccount> iter = accounts.iterator();
 		  
 		if(!iter.hasNext()){
-			convertToRecord(connection, account);
+			save(connection, account);
 			connection.save();
 		}
 		return account;
@@ -142,7 +142,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 				
 				Domain domain_record = repo.find(connection, domain.getUrl());
 				if(domain_record == null){
-					acct.addDomain(repo.convertToRecord(connection, domain));	
+					acct.addDomain(repo.save(connection, domain));	
 				}
 				else{
 					//check if domain is part of account before adding it to the account
@@ -156,7 +156,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 					}
 					
 					if(!domain_account_linked){
-						acct.addDomain(repo.convertToRecord(connection, domain_record));
+						acct.addDomain(repo.save(connection, domain_record));
 					}
 				}
 			}
@@ -196,9 +196,9 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	public Account deleteDomain(OrientConnectionFactory conn, Account acct, Domain domain) {
-		IAccount account = convertToRecord(conn, acct);
+		IAccount account = save(conn, acct);
 		DomainRepository domain_repo = new DomainRepository();
-		account.removeDomain(domain_repo.convertToRecord(conn, domain));
+		account.removeDomain(domain_repo.save(conn, domain));
 		return convertFromRecord(account);
 	} 
 }

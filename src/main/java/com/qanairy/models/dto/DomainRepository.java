@@ -44,7 +44,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public IDomain convertToRecord(OrientConnectionFactory connection, Domain domain) {
+	public IDomain save(OrientConnectionFactory connection, Domain domain) {
 		domain.setKey(generateKey(domain));
 		@SuppressWarnings("unchecked")
 		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(generateKey(domain), connection, IDomain.class);
@@ -67,7 +67,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<ITestUser> test_users = new ArrayList<ITestUser>();
 		for(TestUser test_user : domain.getTestUsers()){
-			test_users.add(test_user_repo.convertToRecord(connection, test_user));
+			test_users.add(test_user_repo.save(connection, test_user));
 		}
 		domain_record.setTestUsers(test_users);
 		/*TestRepository test_repo = new TestRepository();
@@ -75,7 +75,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		for(Test test : domain.getTests()){
 			//check if test already exists
 			
-			tests.add(test_repo.convertToRecord(connection, test));
+			tests.add(test_repo.save(connection, test));
 		}
 		
 		domain_record.setTests(tests);
@@ -92,7 +92,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		Domain domain_record = find(connection, generateKey(domain));
 		
 		if(domain_record == null){
-			convertToRecord(connection, domain);
+			save(connection, domain);
 		}
 		return domain;
 	}

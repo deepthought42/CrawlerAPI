@@ -30,7 +30,7 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	/**
 	 * {@inheritDoc}
 	 */
-	public IAction convertToRecord(OrientConnectionFactory conn, Action action) {
+	public IAction save(OrientConnectionFactory conn, Action action) {
 		action.setKey(generateKey(action));
 		
 		@SuppressWarnings("unchecked")
@@ -58,7 +58,7 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 		Action action_record = find(connection, action.getKey());
 		
 		if(action_record != null){
-			this.convertToRecord(connection, action);
+			this.save(connection, action);
 			//connection.save();
 		}
 		return action;

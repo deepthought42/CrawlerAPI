@@ -29,7 +29,7 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 	 * @PRE service_package.getKey() != null
 	 */
 	@Override
-	public IServicePackage convertToRecord(OrientConnectionFactory connection, ServicePackage service_package) {
+	public IServicePackage save(OrientConnectionFactory connection, ServicePackage service_package) {
 		service_package.setKey(generateKey(service_package));
 
 		@SuppressWarnings("unchecked")
@@ -62,7 +62,7 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 		ServicePackage svc_pkg = find(connection, generateKey(service_package));
 		
 		if(svc_pkg == null){
-			IServicePackage pkg_record = convertToRecord(connection, service_package);
+			IServicePackage pkg_record = save(connection, service_package);
 			svc_pkg = convertFromRecord(pkg_record);
 			connection.save();
 		}

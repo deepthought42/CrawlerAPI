@@ -1,7 +1,6 @@
 package com.qanairy.persistence;
 
 import com.qanairy.models.Page;
-import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 

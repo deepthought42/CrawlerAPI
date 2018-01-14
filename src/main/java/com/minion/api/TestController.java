@@ -321,7 +321,7 @@ public class TestController {
 				record = TestingActor.runTest(test, browser);
 				
 				TestRecordRepository test_record_record = new TestRecordRepository();
-				itest.addRecord(test_record_record.convertToRecord(connection, record));
+				itest.addRecord(test_record_record.save(connection, record));
 				itest.setCorrect(record.getPasses());
 				itest.setLastRunTimestamp(new Date());
 				itest.setRunStatus(false);
@@ -367,7 +367,7 @@ public class TestController {
 	    			record = TestingActor.runTest(test, browser);
 	    			
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
+	    			itest.addRecord(test_record_record.save(connection, record));
 	    			itest.setCorrect(record.getPasses());
 	    			itest.setLastRunTimestamp(new Date());
 	    			test_results.put(test.getKey(), record.getPasses());
@@ -461,7 +461,7 @@ public class TestController {
 		}
 		
 		GroupRepository group_repo = new GroupRepository();
-		igroup = group_repo.convertToRecord(orient_connection, group);
+		igroup = group_repo.save(orient_connection, group);
 		itest.addGroup(igroup);
 		group.setKey(igroup.getKey());
 		

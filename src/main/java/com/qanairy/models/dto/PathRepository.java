@@ -29,7 +29,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 public class PathRepository implements IPersistable<Path, IPath> {
 	private static Logger log = LoggerFactory.getLogger(PathRepository.class);
 
-	public IPath convertToRecord(OrientConnectionFactory connection, Path path) {
+	public IPath save(OrientConnectionFactory connection, Path path) {
 		if(path.getKey() == null || path.getKey().length()==0){
 			String path_key = generateKey(path);
 			path.setKey(path_key);
@@ -52,7 +52,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		for(PathObject obj: path.getPath()){
 			if(obj instanceof Page){
 				PageRepository page_repo = new PageRepository();
-				IPage persistablePathObj = page_repo.convertToRecord(connection, (Page)obj);
+				IPage persistablePathObj = page_repo.save(connection, (Page)obj);
 				
 				if(last_path_obj == null){
 					path_record.setPath(persistablePathObj);
@@ -78,7 +78,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			}
 			else if(obj instanceof PageElement){
 				PageElementRepository page_elem_repo = new PageElementRepository();
-				IPageElement persistablePathObj = page_elem_repo.convertToRecord(connection, (PageElement)obj);
+				IPageElement persistablePathObj = page_elem_repo.save(connection, (PageElement)obj);
 
 				if(last_path_obj == null){
 					path_record.setPath(persistablePathObj);
@@ -92,7 +92,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			}
 			else if(obj instanceof Action){
 				ActionRepository action_repo = new ActionRepository();
-				IAction persistablePathObj = action_repo.convertToRecord(connection, (Action)obj);
+				IAction persistablePathObj = action_repo.save(connection, (Action)obj);
 
 				if(last_path_obj == null){
 					path_record.setPath(persistablePathObj);
@@ -152,7 +152,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	 */
 	@Override
 	public Path create(OrientConnectionFactory connection, Path path) {
-		this.convertToRecord(connection, path);
+		this.save(connection, path);
 		return path;
 	}
 

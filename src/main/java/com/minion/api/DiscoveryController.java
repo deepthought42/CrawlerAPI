@@ -28,6 +28,7 @@ import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
@@ -172,6 +173,8 @@ public class DiscoveryController {
         if(diffInMinutes > 60){
         	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome");
         	acct.getDiscoveryRecords().add(discovery_record);
+        	AccountRepository acct_repo = new AccountRepository();
+        	acct_repo.save(connection, acct);
         	
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
@@ -192,7 +195,6 @@ public class DiscoveryController {
         else{
         	//Throw error indicating discovery has been or is running
         	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
-        	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
         	throw new ExistingDiscoveryFoundException();
         }
         

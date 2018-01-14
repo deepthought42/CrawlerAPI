@@ -22,6 +22,7 @@ public class Domain {
 	private Date last_discovery_path_ran_at;
 	private int discovered_test_count;
 	private List<TestUser> test_users;
+	private String discovery_browser;
 	
 	/**
 	 * 
@@ -36,6 +37,7 @@ public class Domain {
 		this.setProtocol("http");
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryBrowser("");
 	}
 	
 	/**
@@ -51,6 +53,7 @@ public class Domain {
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryBrowser("");
 	}
 	
 	/**
@@ -66,28 +69,7 @@ public class Domain {
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
-	}
-	
-	/**
-	 * Construct a new Domain object
-	 * 
-	 * @param domain_url 	- host url of the domain (eg. www.reddit.com)
-	 * @param tests			- tests that belong to this domain
-	 */
-	@Deprecated
-	public Domain(	String key, 
-					String domain_url, 
-					List<Test> tests,
-					String protocol,
-					Date timestamp){
-		this.setKey(key);
-		this.setUrl(domain_url);
-		this.setTests(tests);
-		this.setProtocol(protocol);
-		this.setLastDiscoveryPathRanAt(timestamp);
-		this.setLogoUrl(logo_url);
-		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveredTestCount(0);
+		this.setDiscoveryBrowser("");
 	}
 	
 	/**
@@ -113,6 +95,7 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryBrowser("");
 	}
 	
 	/**
@@ -139,6 +122,7 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryBrowser("");
 	}
 	
 	/**
@@ -157,7 +141,8 @@ public class Domain {
 					String protocol,
 					Date timestamp,
 					List<TestUser> test_users,
-					int discovered_test_count){
+					int discovered_test_count,
+					String browser_name){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
@@ -166,7 +151,9 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
 		this.setDiscoveredTestCount(discovered_test_count);
+		this.setDiscoveryBrowser(browser_name);
 	}
+	
 	public String getUrl() {
 		return domain;
 	}
@@ -259,5 +246,13 @@ public class Domain {
 
 	public void setDiscoveredTestCount(int discovered_test_count) {
 		this.discovered_test_count = discovered_test_count;
+	}
+
+	public String getDiscoveryBrowser() {
+		return discovery_browser;
+	}
+
+	public void setDiscoveryBrowser(String discovery_browser) {
+		this.discovery_browser = discovery_browser;
 	}
 }

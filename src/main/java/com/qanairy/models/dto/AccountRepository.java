@@ -73,27 +73,27 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Account convertFromRecord(IAccount account) {
+	public Account load(IAccount account) {
 		List<IDomain> domain_records = IteratorUtils.toList(account.getDomains().iterator());
 		
 		List<Domain> domains = new ArrayList<Domain>();
 		DomainRepository domain_repo = new DomainRepository();
 		for(IDomain domain : domain_records){
-			domains.add(domain_repo.convertFromRecord(domain));
+			domains.add(domain_repo.load(domain));
 		}
 		
 		List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
 		List<QanairyUser> users = new ArrayList<QanairyUser>();
 		QanairyUserRepository user_repo = new QanairyUserRepository();
 		for(IQanairyUser user : user_records){
-			users.add(user_repo.convertFromRecord(user));
+			users.add(user_repo.load(user));
 		}
 		
 		List<IDiscoveryRecord> discovery_db_records = IteratorUtils.toList(account.getUsers().iterator());
 		List<DiscoveryRecord> discovery_records = new ArrayList<DiscoveryRecord>();
 		DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
 		for(IDiscoveryRecord record : discovery_db_records){
-			discovery_records.add(discovery_repo.convertFromRecord(record));
+			discovery_records.add(discovery_repo.load(record));
 		}
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains);
@@ -161,7 +161,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 				}
 			}
 		}
-		return convertFromRecord(acct);
+		return load(acct);
 	}
 
 
@@ -175,7 +175,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		Iterator<IAccount> iter = svc_pkgs.iterator();
 		
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
@@ -189,7 +189,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		List<Account> accounts = new ArrayList<Account>();
 		while(iter.hasNext()){
 			OrientVertex v = iter.next();
-			accounts.add(convertFromRecord((IAccount)v));
+			accounts.add(load((IAccount)v));
 		}
 		
 		return accounts;
@@ -199,6 +199,6 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		IAccount account = save(conn, acct);
 		DomainRepository domain_repo = new DomainRepository();
 		account.removeDomain(domain_repo.save(conn, domain));
-		return convertFromRecord(account);
+		return load(account);
 	} 
 }

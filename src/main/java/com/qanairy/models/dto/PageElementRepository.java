@@ -29,7 +29,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	public PageElement create(OrientConnectionFactory connection, PageElement elem) {
 		IPageElement ielem = save(connection, elem);
 		
-		return convertFromRecord(ielem);
+		return load(ielem);
 	}
 
 	/**
@@ -48,7 +48,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			page_elem.setXpath(elem.getXpath());
 		}
 	
-		return convertFromRecord(page_elem);
+		return load(page_elem);
 	}
 	
 	/**
@@ -63,7 +63,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		
 		PageElement page_element = null;
 		if(iter.hasNext()){
-			page_element = page_elem_repo.convertFromRecord(iter.next());
+			page_element = page_elem_repo.load(iter.next());
 		}
 		
 		return page_element;
@@ -72,7 +72,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	/**
 	 * {@inheritDoc}
 	 */
-	public PageElement convertFromRecord(IPageElement data) {
+	public PageElement load(IPageElement data) {
 		PageElement elem = new PageElement();
 		elem.setKey(data.getKey());
 		elem.setXpath(data.getXpath());
@@ -83,7 +83,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		List<Attribute> attr_list = new ArrayList<Attribute>();
 		AttributeRepository attr_repo = new AttributeRepository();
 		for(IAttribute attr: data.getAttributes()){
-			attr_list.add(attr_repo.convertFromRecord(attr));
+			attr_list.add(attr_repo.load(attr));
 		}
 		
 		Iterator<IRule> rule_iter = data.getRules().iterator();
@@ -93,8 +93,8 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 				continue;
 			}
 			RuleRepository rule_repo = new RuleRepository();
-			//rules.add(rule_repo.convertFromRecord(iterator.next()));
-			Rule rule = rule_repo.convertFromRecord(irule);
+			//rules.add(rule_repo.load(iterator.next()));
+			Rule rule = rule_repo.load(irule);
 			elem.addRule(rule);
 		}
 		//elem.addRules(rules);

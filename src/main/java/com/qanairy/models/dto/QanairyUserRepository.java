@@ -51,7 +51,7 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 	}
 
 	@Override
-	public QanairyUser convertFromRecord(IQanairyUser qanairyUser) {
+	public QanairyUser load(IQanairyUser qanairyUser) {
 		return new QanairyUser(qanairyUser.getKey(), qanairyUser.getEmail());
 	}
 	
@@ -90,7 +90,7 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 			
 			connection.save();
 		}
-		return convertFromRecord(qanairy_user);
+		return load(qanairy_user);
 	}
 
 
@@ -104,7 +104,7 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 		Iterator<IQanairyUser> iter = svc_pkgs.iterator();
 		
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
@@ -130,7 +130,7 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 			
 			while(account_iter.hasNext()){
 				IAccount account = account_iter.next();
-				account_list.add(repo.convertFromRecord(account));
+				account_list.add(repo.load(account));
 			}
 		}
 		return account_list;

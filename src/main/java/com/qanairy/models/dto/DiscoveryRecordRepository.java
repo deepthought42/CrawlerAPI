@@ -110,14 +110,14 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because discovery_record already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public DiscoveryRecord convertFromRecord(IDiscoveryRecord obj) {
+	public DiscoveryRecord load(IDiscoveryRecord obj) {
 		return new DiscoveryRecord(obj.getKey(), obj.getStartTime(), obj.getBrowserName());
 	}
 	
@@ -130,7 +130,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		List<DiscoveryRecord> discovery_record = new ArrayList<DiscoveryRecord>();
 		while(iter.hasNext()){
 			IDiscoveryRecord v = iter.next();
-			discovery_record.add(convertFromRecord(v));
+			discovery_record.add(load(v));
 		}
 		
 		return discovery_record;

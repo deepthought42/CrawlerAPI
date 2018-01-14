@@ -28,7 +28,7 @@ public interface IPersistable<V, Z> {
 	 * @param obj
 	 * @return
 	 */
-	V convertFromRecord(Z obj);
+	V load(Z obj);
 	
 	/**
 	 * 

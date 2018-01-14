@@ -113,7 +113,7 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() != null){
-				verified_tests.add(test_repo.convertFromRecord(itest));
+				verified_tests.add(test_repo.load(itest));
 			}
 		}
 		
@@ -213,7 +213,7 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() == null){
-				unverified_tests.add(test_repo.convertFromRecord(itest));
+				unverified_tests.add(test_repo.load(itest));
 			}
 		}
     	Date end = new Date();
@@ -241,7 +241,7 @@ public class TestController {
 		updateLastTestRecordPassingStatus(itest);
 		
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
 
 	private void updateLastTestRecordPassingStatus(ITest itest) {
@@ -270,7 +270,7 @@ public class TestController {
 		IPath path_record = itest.getPath();
 		
 		PathRepository path_repo = new PathRepository();
-		Path path = path_repo.convertFromRecord(path_record);
+		Path path = path_repo.load(path_record);
 
 		return path;
 	}
@@ -293,7 +293,7 @@ public class TestController {
 		orient_connection.save();
 
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
     
 	/**
@@ -316,7 +316,7 @@ public class TestController {
 			TestRepository test_record = new TestRepository();
 			
 			if(itest.getKey().equals(key)){
-				Test test = test_record.convertFromRecord(itest);
+				Test test = test_record.load(itest);
 				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				record = TestingActor.runTest(test, browser);
 				
@@ -331,7 +331,7 @@ public class TestController {
 				log.warn("test found does not match key :: " + key);
 			}
 			connection.close();
-			return test_record.convertFromRecord(itest);
+			return test_record.load(itest);
 		}
 		
 		throw new TestAlreadyRunningException();
@@ -362,7 +362,7 @@ public class TestController {
 	    		if(itest.getKey().equals(key)){
 	    			TestRepository test_record = new TestRepository();
 	    	
-	    			Test test = test_record.convertFromRecord(itest);
+	    			Test test = test_record.load(itest);
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
 	    			record = TestingActor.runTest(test, browser);
 	    			

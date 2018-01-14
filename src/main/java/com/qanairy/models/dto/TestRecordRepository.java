@@ -81,16 +81,16 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		Iterator<ITestRecord> iter = (Iterator<ITestRecord>)testRecords.iterator();
 		  
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public TestRecord convertFromRecord(ITestRecord obj) {
+	public TestRecord load(ITestRecord obj) {
 		PageRepository page_repo = new PageRepository();
-		Page page = page_repo.convertFromRecord(obj.getResult());
+		Page page = page_repo.load(obj.getResult());
 		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), page);
 		
 		return record;

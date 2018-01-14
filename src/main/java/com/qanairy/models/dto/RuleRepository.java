@@ -78,7 +78,7 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 	}
 
 	@Override
-	public Rule convertFromRecord(IRule rule_record) {
+	public Rule load(IRule rule_record) {
 		/**  call rule factory to get rule built */
 		return RuleFactory.build(rule_record.getType(), rule_record.getValue());
 	}
@@ -90,7 +90,7 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 		Iterator<IRule> iter = svc_pkgs.iterator();
 
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 
 		return null;

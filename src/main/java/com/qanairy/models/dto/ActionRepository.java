@@ -89,7 +89,7 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 	 * @param data
 	 * @return
 	 */
-	public Action convertFromRecord(IAction data) {
+	public Action load(IAction data) {
 		return new Action(data.getName(), data.getValue());
 	}
 
@@ -104,7 +104,7 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			convertFromRecord(iter.next());
+			load(iter.next());
 		}
 		
 		return null;

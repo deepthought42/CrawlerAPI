@@ -53,7 +53,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	@Override
 	public Attribute create(OrientConnectionFactory conn, Attribute attr) {
 		IAttribute iattr = this.save(conn, attr);
-		return this.convertFromRecord(iattr);
+		return this.load(iattr);
 	}
 
 	/**
@@ -75,7 +75,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	}
 
 	@Override
-	public Attribute convertFromRecord(IAttribute attr_record) {
+	public Attribute load(IAttribute attr_record) {
 		return new Attribute(attr_record.getKey(), attr_record.getName(),  attr_record.getVals());
 	}
 
@@ -86,7 +86,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		Iterator<IAttribute> iter = attributes.iterator();
 
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 
 		return null;

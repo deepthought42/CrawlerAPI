@@ -63,7 +63,7 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 		
 		if(svc_pkg == null){
 			IServicePackage pkg_record = save(connection, service_package);
-			svc_pkg = convertFromRecord(pkg_record);
+			svc_pkg = load(pkg_record);
 			connection.save();
 		}
 
@@ -102,14 +102,14 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 		Iterator<IServicePackage> iter = svc_pkgs.iterator();
 		
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public ServicePackage convertFromRecord(IServicePackage obj) {		
+	public ServicePackage load(IServicePackage obj) {		
 		ServicePackage pkg = new ServicePackage(obj.getKey(), obj.getName(), obj.getPrice(), obj.getMaxUsers());
 
 		return pkg;

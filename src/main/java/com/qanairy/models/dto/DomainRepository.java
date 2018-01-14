@@ -142,14 +142,14 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public Domain convertFromRecord(IDomain obj) {
+	public Domain load(IDomain obj) {
 		List<Test> tests = new ArrayList<Test>();
 		/*TestRepository test_repo = new TestRepository();
 		Lists.newArrayList(obj.getTests());
@@ -158,20 +158,20 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		//NOTE:: TESTS SHOULD BE LAZY LOADED, AKA ONLY WHEN THEY ARE NEEDED
 		
 		while(test_iter.hasNext()){
-			tests.add(test_repo.convertFromRecord(test_iter.next()));
+			tests.add(test_repo.load(test_iter.next()));
 		}
 		*/
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<TestUser> test_users = new ArrayList<TestUser>();
 		for(ITestUser test_user : obj.getTestUsers()){
-			test_users.add(test_user_repo.convertFromRecord(test_user));
+			test_users.add(test_user_repo.load(test_user));
 		}
 		int test_cnt = obj.getDiscoveryTestCount();
 		
 		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users, test_cnt);
 	}
 	
-	public Domain convertFromRecord(OrientVertex obj) {
+	public Domain load(OrientVertex obj) {
 		List<Test> tests = new ArrayList<Test>();
 		/*if(obj.getTests() != null){
 			tests = Lists.newArrayList(obj.getProperty("tests"));
@@ -191,7 +191,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		List<Domain> domain = new ArrayList<Domain>();
 		while(iter.hasNext()){
 			OrientVertex v = iter.next();
-			domain.add(convertFromRecord(v));
+			domain.add(load(v));
 		}
 		
 		return domain;

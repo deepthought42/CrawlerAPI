@@ -83,7 +83,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public PathObject convertFromRecord(IPathObject data){
+	public PathObject load(IPathObject data){
 		String type = data.getType();
 		
 		if(type.equals("Page")){
@@ -91,7 +91,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			PageRepository page_record = new PageRepository();
 			Iterator<IPage> page_iter = ((Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class)).iterator();
 			if(page_iter.hasNext()){
-				page_obj = page_record.convertFromRecord(page_iter.next());
+				page_obj = page_record.load(page_iter.next());
 			}
 			page_obj.setType(type);
 			return page_obj;
@@ -104,7 +104,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			if(page_elem_record_iter.hasNext()){
 				PageElementRepository page_elem_repo = new PageElementRepository();
 				IPageElement page_elem = page_elem_record_iter.next();
-				page_elem_obj = page_elem_repo.convertFromRecord(page_elem);
+				page_elem_obj = page_elem_repo.load(page_elem);
 				page_elem_obj.setType(type);
 			}
 
@@ -118,7 +118,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			
 			ActionRepository action_record = new ActionRepository();
 			log.info("return action path object");
-			return action_record.convertFromRecord(iaction.iterator().next());
+			return action_record.load(iaction.iterator().next());
 		}
 		
 		log.info("Returning null path object");
@@ -136,7 +136,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		
 		PathObject path_obj = null; 
 		if(iter.hasNext()){
-			path_obj = convertFromRecord(iter.next());
+			path_obj = load(iter.next());
 		}
 		
 		return path_obj;

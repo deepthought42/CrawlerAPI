@@ -25,7 +25,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	public Page create(OrientConnectionFactory connection, Page page) {
 		IPage page_record = save(connection, page);
 		
-		return convertFromRecord(page_record);
+		return load(page_record);
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		}
 		PageRepository page_repo = new PageRepository();
 		
-		return page_repo.convertFromRecord(page_record);
+		return page_repo.load(page_record);
 	}
 
 	/**
@@ -63,7 +63,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
@@ -75,7 +75,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * @return
 	 */
 	@Override
-	public Page convertFromRecord(IPage result) {
+	public Page load(IPage result) {
 		Page page = new Page();
 		page.setScreenshot(result.getScreenshot());
 		page.setKey(result.getKey());

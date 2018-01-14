@@ -86,14 +86,14 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public Group convertFromRecord(IGroup obj) {		
+	public Group load(IGroup obj) {		
 		return new Group(obj.getKey(), obj.getName(), obj.getDescription());
 	}
 

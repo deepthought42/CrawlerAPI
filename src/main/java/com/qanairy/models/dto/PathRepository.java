@@ -175,7 +175,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	 * @pre path != null
 	 */
 	@Override
-	public Path convertFromRecord(IPath path) throws NullPointerException {
+	public Path load(IPath path) throws NullPointerException {
 		assert(path != null);
 		
 		IPathObject path_obj = path.getPath();
@@ -190,7 +190,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 			Iterator<IPathEdge> path_edges = path_obj.getPathEdges().iterator();
 			last_path_obj_key = path_obj.getKey();
 			PathObjectRepository path_obj_repo = new PathObjectRepository();
-			path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
+			path_obj_list.add(path_obj_repo.load(path_obj));
 			while(path_edges.hasNext()){
 				
 				IPathEdge edge = path_edges.next();
@@ -213,7 +213,7 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		Iterator<IPath> iter = paths.iterator();
 		
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;

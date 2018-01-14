@@ -157,7 +157,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 	 * @return
 	 */
 	@Override
-	public Test convertFromRecord(ITest itest){
+	public Test load(ITest itest){
 		TestRecordRepository test_record = new TestRecordRepository();
 		PageRepository page_record = new PageRepository();
 		PathRepository path_record = new PathRepository();
@@ -170,7 +170,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setRunStatus(itest.getRunStatus());
 		
 		try{
-			test.setPath(path_record.convertFromRecord(itest.getPath()));
+			test.setPath(path_record.load(itest.getPath()));
 		}
 		catch(NullPointerException e){
 			log.error("Null pointer exception occurred while setting path.\n", e.getMessage());
@@ -186,16 +186,16 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		Iterator<ITestRecord> test_record_iter = itest.getRecords().iterator();
 		List<TestRecord> test_records = new ArrayList<TestRecord>();
 		while(test_record_iter != null && test_record_iter.hasNext()){
-			test_records.add(test_record.convertFromRecord(test_record_iter.next()));
+			test_records.add(test_record.load(test_record_iter.next()));
 		}
 		test.setRecords(test_records);
 				
-		test.setResult(page_record.convertFromRecord(itest.getResult()));
+		test.setResult(page_record.load(itest.getResult()));
 		Iterator<IGroup> group_records_iter = itest.getGroups().iterator();
 		List<Group> group_records = new ArrayList<Group>();
 		
 		while(group_records_iter != null && group_records_iter.hasNext()){
-			group_records.add(group_repo.convertFromRecord(group_records_iter.next()));
+			group_records.add(group_repo.load(group_records_iter.next()));
 		}
 		
 		test.setGroups(group_records);
@@ -216,7 +216,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		
 		Test test_record = null; 
 		if(iter.hasNext()){
-			test_record = convertFromRecord(iter.next());
+			test_record = load(iter.next());
 		}
 		
 		return test_record;

@@ -170,11 +170,18 @@ public class DiscoveryController {
         
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browsers", browsers);
+		
+		//get how many discoveries an account is allowed
+		//if account has used all discoveries
+		//	then throw account exceeded discoveries exception
+		//  else run discovery
         if(diffInMinutes > 60){
         	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome");
         	acct.getDiscoveryRecords().add(discovery_record);
+        	
         	AccountRepository acct_repo = new AccountRepository();
         	acct_repo.save(connection, acct);
+        
         	
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");

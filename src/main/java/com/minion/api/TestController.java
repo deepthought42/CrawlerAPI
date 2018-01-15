@@ -244,6 +244,10 @@ public class TestController {
 		return test_record.load(itest);
 	}
 
+    /**
+     * 
+     * @param itest
+     */
 	private void updateLastTestRecordPassingStatus(ITest itest) {
 		Iterator<ITestRecord> itest_records = itest.getRecords().iterator();
 		ITestRecord record = null;

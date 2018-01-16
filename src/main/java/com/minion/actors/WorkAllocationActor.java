@@ -33,7 +33,7 @@ public class WorkAllocationActor extends UntypedActor {
 				if(acct_message.getData() instanceof Path ||
 						acct_message.getData() instanceof ExploratoryPath ||
 						acct_message.getData() instanceof URL){
-					System.out.println("Object type for browsers key :: "+acct_message.getOptions().get("browsers").getClass().getSimpleName());
+					System.out.println("Object type for browsers key :: "+acct_message.getOptions().get("browser").getClass().getSimpleName());
 					String browser_name = acct_message.getOptions().get("browser").toString();
 					Message<?> msg = acct_message.clone();	
 					System.out.println("Browser being put in message :: "+browser_name);

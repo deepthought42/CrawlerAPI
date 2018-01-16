@@ -1,3 +1,4 @@
 /target/
 /test-output/
 *.log
+LOG_FILE_IS_UNDEFINED

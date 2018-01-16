@@ -65,13 +65,8 @@ public class DiscoveryController {
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
 													   	  @RequestParam(value="url", required=true) String url,
-													   	  @RequestParam(value="browsers", required=true) List<String> browsers) 
+													   	  @RequestParam(value="browser", required=true) String browser) 
 															   throws MalformedURLException, UnknownAccountException {
-		
-		//ObservableHash<Integer, Path> hashQueue = new ObservableHash<Integer, Path>();
-		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
-		//String account_key = ""+UUID.randomUUID().toString();
-		
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
     	
@@ -98,7 +93,7 @@ public class DiscoveryController {
 		connection.close();
         
 		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browsers", browsers);
+		options.put("browser", browser);
         if(diffInMinutes > 60){
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");

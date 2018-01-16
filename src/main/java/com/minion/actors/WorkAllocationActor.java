@@ -34,54 +34,53 @@ public class WorkAllocationActor extends UntypedActor {
 						acct_message.getData() instanceof ExploratoryPath ||
 						acct_message.getData() instanceof URL){
 					System.out.println("Object type for browsers key :: "+acct_message.getOptions().get("browsers").getClass().getSimpleName());
-					for(String browser : ((List<String>)acct_message.getOptions().get("browsers"))){
-						Message<?> msg = acct_message.clone();	
-						System.out.println("Browser being put in message :: "+browser);
-						msg.getOptions().put("browser", browser);
-						boolean record_exists = false;
-						Path path = null;
-						ExploratoryPath exp_path = null;
-						OrientConnectionFactory connection = new OrientConnectionFactory();
-	
-						if(acct_message.getData() instanceof Path){
-							path = (Path)acct_message.getData();
-							PathRepository repo = new PathRepository();
-							Path path_record = repo.find(connection, repo.generateKey(path));
-							if(path_record != null){
-								record_exists = true;
-								path = path_record;
-							}
-							else{
-								path.setKey(repo.generateKey(path));
-							}
-							
+					String browser_name = acct_message.getOptions().get("browser").toString();
+					Message<?> msg = acct_message.clone();	
+					System.out.println("Browser being put in message :: "+browser_name);
+					msg.getOptions().put("browser", browser_name);
+					boolean record_exists = false;
+					Path path = null;
+					ExploratoryPath exp_path = null;
+					OrientConnectionFactory connection = new OrientConnectionFactory();
+
+					if(acct_message.getData() instanceof Path){
+						path = (Path)acct_message.getData();
+						PathRepository repo = new PathRepository();
+						Path path_record = repo.find(connection, repo.generateKey(path));
+						if(path_record != null){
+							record_exists = true;
+							path = path_record;
 						}
-						else if(acct_message.getData() instanceof ExploratoryPath){
-							exp_path = (ExploratoryPath)acct_message.getData();
-							PathRepository repo = new PathRepository();
-	
-							Path path_record = repo.find(connection, repo.generateKey(exp_path));
-							if(path_record != null){
-								record_exists = true;
-								path = path_record;
-							}
+						else{
+							path.setKey(repo.generateKey(path));
 						}
-						else if(acct_message.getData() instanceof URL){
-							System.err.println("url needs to be implemented");
-							//THIS SHOULD STILL BE IMPLEMENTED, LEAVING EMPTY FOR NOW DUE TO NON TRIVIAL NATURE OF THIS PIECE
+						
+					}
+					else if(acct_message.getData() instanceof ExploratoryPath){
+						exp_path = (ExploratoryPath)acct_message.getData();
+						PathRepository repo = new PathRepository();
+
+						Path path_record = repo.find(connection, repo.generateKey(exp_path));
+						if(path_record != null){
+							record_exists = true;
+							path = path_record;
 						}
-						connection.close();
-	
-						//if record doesn't exist then send for exploration, else expand the record
-						if(!record_exists){
-							final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
-							browser_actor.tell(msg, getSelf() );
-							getSender().tell("Status: ok", getSelf());
-						}
-						else if(!(acct_message.getData() instanceof ExploratoryPath)) {
-							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-							path_expansion_actor.tell(msg, getSelf() );
-						}
+					}
+					else if(acct_message.getData() instanceof URL){
+						System.err.println("url needs to be implemented");
+						//THIS SHOULD STILL BE IMPLEMENTED, LEAVING EMPTY FOR NOW DUE TO NON TRIVIAL NATURE OF THIS PIECE
+					}
+					connection.close();
+
+					//if record doesn't exist then send for exploration, else expand the record
+					if(!record_exists){
+						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
+						browser_actor.tell(msg, getSelf() );
+						getSender().tell("Status: ok", getSelf());
+					}
+					else if(!(acct_message.getData() instanceof ExploratoryPath)) {
+						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+						path_expansion_actor.tell(msg, getSelf() );
 					}
 				}
 				else if(acct_message.getData() instanceof Test){					

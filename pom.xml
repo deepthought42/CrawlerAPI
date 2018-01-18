@@ -232,7 +232,6 @@
 		    <artifactId>spring-boot-starter-security</artifactId>
 		    <version>${springboot.version}</version>
 		</dependency>
-
 		
 		<!-- http://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
 		<dependency>
@@ -286,5 +285,20 @@
 		    <artifactId>raven-logback</artifactId>
 		    <version>8.0.3</version>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.segment.analytics.java/analytics -->
+		<dependency>
+		    <groupId>com.segment.analytics.java</groupId>
+		    <artifactId>analytics</artifactId>
+		    <version>2.1.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp/okhttp -->
+		<dependency>
+		    <groupId>com.squareup.okhttp</groupId>
+		    <artifactId>okhttp</artifactId>
+		    <version>2.7.5</version>
+		</dependency>
+		
 	</dependencies>
 </project>

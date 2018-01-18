@@ -232,7 +232,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
 	public @ResponseBody Test setInitialCorrectness(@RequestParam(value="key", required=true) String key, 
-														@RequestParam(value="correct", required=true) boolean correct) throws UnknownAccountException{
+													@RequestParam(value="correct", required=true) boolean correct) throws UnknownAccountException{
     	
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -168,7 +169,13 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setKey(itest.getKey());
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
-		test.setBrowserPassingStatuses(itest.getBrowserStatuses());
+		if(itest.getBrowserStatuses() == null){
+			itest.setBrowserStatuses(new HashMap<String, Boolean>());
+		}
+		else{
+			test.setBrowserPassingStatuses(itest.getBrowserStatuses());
+		}
+		
 		test.setRunStatus(itest.getRunStatus());
 		
 		try{

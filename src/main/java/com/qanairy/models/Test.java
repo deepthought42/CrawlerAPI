@@ -112,26 +112,29 @@ public class Test {
 	 * @param record
 	 * @return
 	 */
-	public Boolean isTestPassing(Page page, boolean last_test_passing_status){
-		Boolean passing = null;
-		if(!last_test_passing_status && this.getResult().equals(page)){
-			log.info("Pages are equal and test is NOT already passing");
-			passing = false; 
+	public Boolean isTestPassing(Page page, Boolean last_test_passing_status){
+		System.err.println("last test passing status :: "+ last_test_passing_status);
+		System.err.println("Page obj : "+page);
+		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
+			log.info("Pages are equal and test is NOT marked as passing");
+			last_test_passing_status = false; 
 		}
-		else if(!last_test_passing_status && !this.getResult().equals(page)){
-			log.info("Pages are NOT equal and test is NOT already passing");
-			passing = null;
+		else if((last_test_passing_status == null || !last_test_passing_status) && !this.getResult().equals(page)){
+			log.info("Pages are NOT equal and test is NOT marked as passing");
+			last_test_passing_status = null;
 		}
-		else if(last_test_passing_status && this.getResult().equals(page)){
-			log.info("pages are equal and test is already marked as passing");
-			passing = true;
+		else if((last_test_passing_status != null && last_test_passing_status) && this.getResult().equals(page)){
+			log.info("pages are equal and test is marked as passing");
+			last_test_passing_status = true;
 		}
-		else if(last_test_passing_status && !this.getResult().equals(page)){
-			log.info("pages are NOT equal and test is already passing");
-			passing = false;
+		else if((last_test_passing_status != null && last_test_passing_status) && !this.getResult().equals(page)){
+			log.info("pages are NOT equal and test is marked as passing");
+			last_test_passing_status = false;
 		}
+
+		System.err.println("passing status:: "+ last_test_passing_status);
 		
-		return passing;
+		return last_test_passing_status;
 	}
 	
 	/**
@@ -268,8 +271,6 @@ public class Test {
 		return list;
 	}
 	
-	
-	
 	public Boolean isCorrect(){
 		return this.correct;
 	}
@@ -302,7 +303,18 @@ public class Test {
 		this.domain = domain;
 	}
 	
+	/**
+	 * 
+	 * @param browser_name name of browser (ie 'chrome', 'firefox')
+	 * @param status boolean indicating passing or failing
+	 * 
+	 * @pre browser_name != null
+	 */
 	public void setBrowserStatus(String browser_name, Boolean status){
+		assert browser_name != null;
+		System.err.println("Browser name :: "+browser_name);
+		System.err.println("Status :: "+status);
+		System.err.println("browser passing status :: "+this.browser_passing_statuses);
 		this.browser_passing_statuses.put(browser_name, status);
 	}
 	

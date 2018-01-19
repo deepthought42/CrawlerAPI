@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +33,10 @@ import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.IdentifyMessage;
+import com.segment.analytics.messages.TrackMessage;
+
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;
@@ -65,7 +70,8 @@ public class DiscoveryController {
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
 													   	  @RequestParam(value="url", required=true) String url,
-													   	  @RequestParam(value="browser", required=true) String browser) 
+													   	  @RequestParam(value="browser", required=true) String browser,
+													   	  final Principal principal) 
 															   throws MalformedURLException, UnknownAccountException {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
@@ -74,7 +80,15 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-		
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("name", principal.getName());
+        traits.put("email", currentUser.getUsername());        
+    	analytics.enqueue(IdentifyMessage.builder()
+    		    .userId(acct.getKey())
+    		    .traits(traits)
+    		);
+    	
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 
     	@SuppressWarnings("unchecked")
@@ -99,7 +113,17 @@ public class DiscoveryController {
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-			//workAllocationActor.tell(message, ActorRef.noSender());
+			
+			 
+		    //Fire discovery started event	
+	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
+	    	discovery_started_props.put("url", url);
+	    	discovery_started_props.put("browser", browser);
+	    	analytics.enqueue(TrackMessage.builder("Started Discovery")
+	    		    .userId(acct.getKey())
+	    		    .properties(discovery_started_props)
+	    		);
+			
 			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
 			try {
@@ -115,6 +139,17 @@ public class DiscoveryController {
         	//Throw error indicating discovery has been or is running
         	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
         	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
+        	//Fire discovery started event	
+	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
+	    	discovery_started_props.put("url", url);
+	    	discovery_started_props.put("browser", browser);
+	    	discovery_started_props.put("already_running", "true");
+	    	
+	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")
+	    		    .userId(acct.getKey())
+	    		    .properties(discovery_started_props)
+	    		);
+			
         	throw new ExistingDiscoveryFoundException();
         }
         

@@ -80,7 +80,6 @@ public class AccountController {
     										final Principal principal) 
     				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
        
-    	System.err.println("Service package :: "+service_package);
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
         

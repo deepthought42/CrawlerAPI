@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -47,6 +48,9 @@ import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.IdentifyMessage;
+import com.segment.analytics.messages.TrackMessage;
 import com.minion.browsing.Browser;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.models.Account;
@@ -232,7 +236,8 @@ public class TestController {
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
 	public @ResponseBody Test setInitialCorrectness(@RequestParam(value="key", required=true) String key, 
-													@RequestParam(value="correct", required=true) boolean correct) throws UnknownAccountException{
+													@RequestParam(value="correct", required=true) boolean correct,
+													final Principal principal) throws UnknownAccountException{
     	
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -241,6 +246,14 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("name", principal.getName());
+        traits.put("email", currentUser.getUsername());        
+    	analytics.enqueue(IdentifyMessage.builder()
+    		    .userId(acct.getKey())
+    		    .traits(traits)
+    		);
     	
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
@@ -257,6 +270,14 @@ public class TestController {
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(itest);
 		
+	   	//Fire discovery started event	
+	   	Map<String, String> set_initial_correctness_props= new HashMap<String, String>();
+	   	set_initial_correctness_props.put("test_key", itest.getKey());
+	   	analytics.enqueue(TrackMessage.builder("Set initial test status")
+	   		    .userId(acct.getKey())
+	   		    .properties(set_initial_correctness_props)
+	   		);
+   	
 		TestRepository test_record = new TestRepository();
 		return test_record.convertFromRecord(itest);
 	}
@@ -388,15 +409,42 @@ public class TestController {
 	 * @param key
 	 * @return
 	 * @throws MalformedURLException 
+     * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
 	@RequestMapping(path="/runAll", method = RequestMethod.POST)
 	public @ResponseBody Map<String, Boolean> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_type", required=true) String browser_type) 
-																  throws MalformedURLException{
+														  @RequestParam(value="browser_type", required=true) String browser_type,
+														  final Principal principal) 
+																  throws MalformedURLException, UnknownAccountException{
+    	
+    	//make sure domain belongs to user account first
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	Account acct = accountService.find(currentUser.getUsername());
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("name", principal.getName());
+        traits.put("email", currentUser.getUsername());        
+    	analytics.enqueue(IdentifyMessage.builder()
+    		    .userId(acct.getKey())
+    		    .traits(traits)
+    		);
+    	
+    	//Fire discovery started event	
+	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
+	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
+	   	analytics.enqueue(TrackMessage.builder("Running tests")
+	   		    .userId(acct.getKey())
+	   		    .properties(run_test_batch_props)
+	   		);
+	   	
     	OrientConnectionFactory connection = new OrientConnectionFactory();
-		
     	Map<String, Boolean> test_results = new HashMap<String, Boolean>();
+    	
     	for(String key : test_keys){
     		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
     		
@@ -409,11 +457,14 @@ public class TestController {
 	    	
 	    			Test test = test_record.convertFromRecord(itest);
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
+				    System.out.println("test controller -> Browser name : "+browser);
+
 	    			record = TestingActor.runTest(test, browser);
 	    			
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
 	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
 	    			itest.setCorrect(record.getPasses());
+	    			
 	    			Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
 					browser_statuses.put(record.getBrowser(), record.getPasses());
 					itest.setBrowserStatuses(browser_statuses);

@@ -157,7 +157,7 @@ public class Browser {
 		browser_screenshot.put(browser_name, screenshot);
 		return new Page(src, 
 						url,
-						browser_screenshot, 
+						browser_screenshot,
 						visible_elements);
 	}
 	

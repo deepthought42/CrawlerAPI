@@ -80,7 +80,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Page page = new Page();
 		
 		//Set browser screenshots
-		Map<String, String> browser_screenshots = page.getBrowserScreenshots();
+		Map<String, String> browser_screenshots = result.getBrowserScreeshots();
 
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());

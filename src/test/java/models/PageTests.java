@@ -2,6 +2,9 @@ package models;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.qanairy.models.Page;
@@ -17,11 +20,13 @@ public class PageTests {
 	
 	@Test(groups="Regression")
 	public void pageCreateRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
 		Page page;
 		try {
 			page = new Page("<html></html>",
 							"http://www.test.test", 
-							null,
+							browser_screenshots,
 							new ArrayList<PageElement>(), 
 							false);
 			PageRepository page_repo = new PageRepository();
@@ -32,7 +37,12 @@ public class PageTests {
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());
 			Assert.assertTrue(page_record.getImageWeight() == page.getImageWeight());
 			Assert.assertTrue(page_record.getTotalWeight() == page.getTotalWeight());
-			//Assert.assertTrue(page_record.getScreenshot().equals(page.getScreenshot().toString()));
+			
+			//assert each element matches
+			for(String browser : page_record.getBrowserScreenshots().keySet()){
+				Assert.assertTrue(page.getBrowserScreenshots().containsKey(browser));	
+			}
+			
 			Assert.assertTrue(page_record.getType().equals(page.getType()));
 			Assert.assertTrue(page_record.isLandable() == page.isLandable());
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
@@ -45,10 +55,12 @@ public class PageTests {
 	
 	@Test(groups="Regression")
 	public void pageUpdateRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
 		try {
 			Page page = new Page("<html></html>",
 								 "http://www.test.test", 
-								 null, 
+								 browser_screenshots, 
 								 new ArrayList<PageElement>(), 
 								 false);
 			PageRepository page_repo = new PageRepository();
@@ -72,13 +84,16 @@ public class PageTests {
 	
 	@Test(groups="Regression")
 	public void pageFindRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
 		Page page;
 		try {
 			page = new Page("<html><body></body></html>",
 							"http://www.test11.test", 
-							null, 
+							browser_screenshots, 
 							new ArrayList<PageElement>(), 
 							true);
 			PageRepository page_repo = new PageRepository();

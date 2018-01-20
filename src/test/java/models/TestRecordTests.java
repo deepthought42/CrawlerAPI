@@ -3,6 +3,9 @@ package models;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.qanairy.models.Page;
@@ -20,13 +23,19 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordCreateRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		String browser_name = "chrome";
+
+		browser_screenshots.put(browser_name, "testscreenshoturl.com");
+		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 		com.qanairy.models.Test test = new com.qanairy.models.Test();
 		test.setKey("TempTestKey");
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", "", new ArrayList<PageElement>(), true);
+							"http://www.test.test", browser_screenshots, 
+							new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -35,7 +44,7 @@ public class TestRecordTests {
 		
 		test.setPath(path);
 		test.setResult(page);
-		TestRecord test_record = new TestRecord(new Date(), true, page);	
+		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page);	
 		TestRecord test_record_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
 		
 		Assert.assertTrue(test_record_record.getKey().equals(test_record_repo.generateKey(test_record)));
@@ -43,6 +52,10 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordUpdateRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		String browser_name = "chrome";
+		browser_screenshots.put(browser_name, "testscreenshoturl.com");
+		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 
 		com.qanairy.models.Test test = new com.qanairy.models.Test();
@@ -50,7 +63,7 @@ public class TestRecordTests {
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", "", new ArrayList<PageElement>(), true);
+							"http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -59,7 +72,7 @@ public class TestRecordTests {
 		
 		test.setPath(path);
 		test.setResult(page);
-		TestRecord test_record = new TestRecord(new Date(), true, page);
+		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page);
 		test_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
 		TestRecord test_record_record = test_record_repo.update(new OrientConnectionFactory(), test_record);
 		
@@ -68,6 +81,11 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordFindRecord(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		String browser_name = "chrome";
+
+		browser_screenshots.put(browser_name, "testscreenshoturl.com");
+		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -76,7 +94,7 @@ public class TestRecordTests {
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", "", new ArrayList<PageElement>(), true);
+							"http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -85,7 +103,7 @@ public class TestRecordTests {
 		
 		test.setPath(path);
 		test.setResult(page);
-		TestRecord test_record = new TestRecord(new Date(), true, page);
+		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page);
 		
 		test_record = test_record_repo.create(orient_connection, test_record);
 		TestRecord test_record_record = test_record_repo.find(orient_connection, test_record.getKey());

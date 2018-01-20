@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record = convertToRecord(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
-			page_record.setScreenshot(page.getScreenshot());
+			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
@@ -77,13 +78,17 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	@Override
 	public Page convertFromRecord(IPage result) {
 		Page page = new Page();
-		page.setScreenshot(result.getScreenshot());
+		
+		//Set browser screenshots
+		Map<String, String> browser_screenshots = result.getBrowserScreeshots();
+
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());
 		page.setLandable(result.isLandable());
 		page.setImageWeight(result.getImageWeight());
 		page.setTotalWeight(result.getTotalWeight());
 		page.setElementCounts(result.getElementCounts());
+		page.setBrowserScreenshots(browser_screenshots);
 		
 		try {
 			page.setUrl(new URL(result.getUrl()));
@@ -122,12 +127,12 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setKey(page.getKey());
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
-			page_record.setScreenshot(page.getScreenshot());
 			page_record.setType((Page.class.getSimpleName()));
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
 			page_record.setSrc(page.getSrc());
+			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
 		}
 
 		return page_record;
@@ -135,9 +140,12 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * @pre page != null
 	 */
 	@Override
 	public String generateKey(Page page) {
+		assert page != null;
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
 	}
 

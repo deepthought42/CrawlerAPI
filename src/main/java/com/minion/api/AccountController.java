@@ -2,7 +2,8 @@ package com.minion.api;
 
 import java.security.Principal;
 import java.util.ArrayList;
-
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.auth0.spring.security.api.Auth0JWTToken;
@@ -32,6 +34,9 @@ import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.services.AccountService;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.IdentifyMessage;
+import com.segment.analytics.messages.TrackMessage;
 
 /**
  *	API endpoints for interacting with {@link User} data
@@ -71,7 +76,7 @@ public class AccountController {
      */
     //@PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Account> create(@RequestBody Account account,
+    public ResponseEntity<Account> create(@RequestParam(value="service_package", required=true) String service_package,
     										final Principal principal) 
     				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
        
@@ -81,10 +86,10 @@ public class AccountController {
         if(currentUser.getUsername().equals("UNKNOWN_USER")){
         	throw new InvalidUserException();
         }
-        
+       
         //create account
-        Account acct = new Account(currentUser.getUsername(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>());
-        
+        Account acct = new Account(currentUser.getUsername(), service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
+    	
         //Create user
         QanairyUser user = new QanairyUser(currentUser.getUsername());
         acct.addUser(user);
@@ -95,15 +100,30 @@ public class AccountController {
         	throw new Auth0ManagementApiException();
         }
         
-        printGrantedAuthorities((Auth0JWTToken) principal);
+        //printGrantedAuthorities((Auth0JWTToken) principal);
         Account new_account = null;
-        if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
-            //final String username = usernameService.getUsername();
-            // log username of user requesting account creation
-            log.info("User with email: " + user.getEmail() + " creating new account");
-            new_account = accountService.create(acct);
-        }
-
+        //final String username = usernameService.getUsername();
+        // log username of user requesting account creation
+        log.info("User with email: " + user.getEmail() + " creating new account");
+        new_account = accountService.create(acct);
+        
+        
+        Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("name", principal.getName());
+        traits.put("email", currentUser.getUsername());        
+    	analytics.enqueue(IdentifyMessage.builder()
+    		    .userId(new_account.getKey())
+    		    .traits(traits)
+    		);
+    	
+    	Map<String, String> account_signup_properties = new HashMap<String, String>();
+    	account_signup_properties.put("plan", new_account.getServicePackage());
+    	analytics.enqueue(TrackMessage.builder("Signed Up")
+    		    .userId(new_account.getKey())
+    		    .properties(account_signup_properties)
+    		);
+    	
         return ResponseEntity.accepted().body(new_account);
     }
 

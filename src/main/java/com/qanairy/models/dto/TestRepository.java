@@ -1,6 +1,7 @@
 package com.qanairy.models.dto;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -142,7 +143,8 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			test_record.setLastRunTimestamp(test.getLastRunTimestamp());
 			test_record.setRunTime(test.getRunTime());
 			test_record.setName(test.getName());
-			test_record.setCorrect(test.isCorrect());
+			//test_record.setCorrect(test.isCorrect());
+			test_record.setBrowserStatuses(test.getBrowserPassingStatuses());
 			log.info("Run status being saved as " + test.getRunStatus());
 			test_record.setRunStatus(test.getRunStatus());
 		}	
@@ -167,6 +169,13 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setKey(itest.getKey());
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
+		if(itest.getBrowserStatuses() == null){
+			itest.setBrowserStatuses(new HashMap<String, Boolean>());
+		}
+		else{
+			test.setBrowserPassingStatuses(itest.getBrowserStatuses());
+		}
+		
 		test.setRunStatus(itest.getRunStatus());
 		
 		try{

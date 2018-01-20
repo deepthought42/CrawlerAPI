@@ -64,6 +64,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		domain_record.setProtocol(domain.getProtocol());
 		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 		domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
+		domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
+		
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<ITestUser> test_users = new ArrayList<ITestUser>();
 		for(TestUser test_user : domain.getTestUsers()){
@@ -168,7 +170,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		}
 		int test_cnt = obj.getDiscoveryTestCount();
 		
-		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users, test_cnt);
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users, test_cnt, obj.getDiscoveryBrowserName());
 	}
 	
 	public Domain convertFromRecord(OrientVertex obj) {

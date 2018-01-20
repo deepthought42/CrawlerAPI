@@ -12,16 +12,12 @@ import com.qanairy.persistence.OrientConnectionFactory;
 
 @Service
 public class AccountService {
-
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected AccountRepository accountRepository;
 
-    private Auth0Client auth0Client;
-
     @Autowired
     public AccountService(final Auth0Client auth0Client, final AccountRepository accountRepository) {
-        this.auth0Client = auth0Client;
         this.accountRepository = accountRepository;
     }
 

@@ -70,7 +70,6 @@ public class DiscoveryController {
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
 													   	  @RequestParam(value="url", required=true) String url,
-													   	  @RequestParam(value="browser", required=true) String browser,
 													   	  final Principal principal) 
 															   throws MalformedURLException, UnknownAccountException {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -107,7 +106,7 @@ public class DiscoveryController {
 		connection.close();
         
 		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browser", browser);
+		options.put("browser", domain.getDiscoveryBrowserName());
         if(diffInMinutes > 60){
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
@@ -118,7 +117,7 @@ public class DiscoveryController {
 		    //Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
 	    	discovery_started_props.put("url", url);
-	    	discovery_started_props.put("browser", browser);
+	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
 	    	analytics.enqueue(TrackMessage.builder("Started Discovery")
 	    		    .userId(acct.getKey())
 	    		    .properties(discovery_started_props)
@@ -142,7 +141,7 @@ public class DiscoveryController {
         	//Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
 	    	discovery_started_props.put("url", url);
-	    	discovery_started_props.put("browser", browser);
+	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
 	    	discovery_started_props.put("already_running", "true");
 	    	
 	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")

@@ -7,14 +7,17 @@ public class TestUser {
 	private String key;
 	private String username;
 	private String password;
+	private String role;
 	
-	public TestUser(String username, String password){
+	public TestUser(){}
+	
+	public TestUser(String username, String password, String role){
 		this.setKey(null);
 		this.username = username;
 		this.password = password;
 	}
 	
-	public TestUser(String key, String username, String password){
+	public TestUser(String key, String username, String password, String role){
 		this.setKey(key);
 		this.username = username;
 		this.password = password;
@@ -34,5 +37,13 @@ public class TestUser {
 	
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
 	}
 }

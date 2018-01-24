@@ -68,12 +68,7 @@ public class DomainController {
     	}
     	
     	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
-    	String host = domain.getUrl();
-    	if(!host.contains("www.")){
-    		host = url_obj.getHost();
-    		host = "www." + host;
-    		domain.setUrl(host);
-    	}
+		domain.setUrl(url_obj.getHost());
     	
     	acct.addDomain(domain);
     	accountService.update(acct);

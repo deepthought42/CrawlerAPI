@@ -48,7 +48,7 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 
 	@Override
 	public TestUser convertFromRecord(ITestUser test_user) {
-		return new TestUser(test_user.getKey(), test_user.getUsername(), test_user.getPassword());
+		return new TestUser(test_user.getKey(), test_user.getUsername(), test_user.getPassword(), test_user.getRole());
 	}
 	
 	/**

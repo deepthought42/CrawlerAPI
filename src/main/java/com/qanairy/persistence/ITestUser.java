@@ -24,4 +24,10 @@ public interface ITestUser {
 	
 	@Property("password")
 	public void setPassword(String password);
+
+	@Property("role")
+	public String getRole();
+
+	@Property("role")
+	public String setRole();
 }

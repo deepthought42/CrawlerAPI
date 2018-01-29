@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.minion.browsing.Browser;
 import com.qanairy.utils.CompareImages;
 
@@ -281,6 +282,7 @@ public class Page extends PathObject {
 		this.image_weight = image_weight;
 	}
 
+	@JsonProperty("browser_screenshot")
 	public Map<String, String> getBrowserScreenshots() {
 		return browser_screenshot;
 	}

@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -87,8 +89,16 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
+
 				WebDriverWait wait = new WebDriverWait(driver, 120);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+				
+				try {
+					System.err.println("Waiting 30 seconds ::   "+(new Date()).toString());
+					Thread.sleep(30000);
+				} catch (InterruptedException e) {
+					System.err.println("Done waiting : "+(new Date()).toString());
+				}
 				break;
 			}
 			catch(UnreachableBrowserException e){
@@ -282,7 +292,10 @@ public class Browser {
 	 */
 	public static WebDriver openWithChrome() 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
+		ChromeOptions options = new ChromeOptions();
 		DesiredCapabilities cap = DesiredCapabilities.chrome();
+		cap.setCapability(ChromeOptions.CAPABILITY, options);
+
 		cap.setJavascriptEnabled(true);
 		//cap.setCapability("screenshot", true);
 		//cap.setPlatform(Platform.LINUX);

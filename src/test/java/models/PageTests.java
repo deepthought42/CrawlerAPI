@@ -7,6 +7,9 @@ import java.util.Map;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.minion.browsing.Browser;
+import com.minion.browsing.Crawler;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.dto.PageRepository;
@@ -114,6 +117,5 @@ public class PageTests {
 			e.printStackTrace();
 			Assert.fail();
 		}
-		
 	}
 }

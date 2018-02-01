@@ -1,8 +1,6 @@
 package com.qanairy.auth;
 
-
 import org.springframework.stereotype.Component;
-
 import com.auth0.Auth0;
 import com.auth0.authentication.AuthenticationAPIClient;
 import com.auth0.authentication.result.UserProfile;

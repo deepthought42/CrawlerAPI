@@ -16,7 +16,7 @@ import com.qanairy.auth.Auth0Client;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class WebSecurityConfig extends Auth0SecurityConfig {
-
+	
     /**
      * Provides Auth0 API access
      */

@@ -127,7 +127,7 @@ public class BrowserActor extends UntypedActor {
 							Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 							domain.setLastDiscoveryPathRanAt(new Date());
 							int cnt = domain.getDiscoveredTestCount()+1;
-							System.out.println("landing page test Count :: "+cnt);
+							System.out.println("landing page discovered test Count :: "+cnt);
 							domain.setDiscoveredTestCount(cnt);
 					  		System.out.println("Count :: "+cnt);
 					  		
@@ -276,24 +276,20 @@ public class BrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
-		log.info("Generating landing page");
+		log.info("Generating landing page test");
 	  	Path path = new Path();
-	  	System.out.println("Getting browser page...");
 	  	Page page_obj = browser.getPage();
-	  	System.out.println("Add page obj to path : "+page_obj);
-	  	System.out.println("Add page obj src to path : "+page_obj.getSrc());
 
 	  	path.getPath().add(page_obj);
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
 		DomainRepository domain_repo = new DomainRepository();
-		System.out.println("Page Object :: "+page_obj.getUrl().getHost());
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 		Domain domain = domain_repo.find(conn, page_obj.getUrl().getHost());
 		domain.setLastDiscoveryPathRanAt(new Date());
 		int cnt = domain.getDiscoveredTestCount()+1;
-		System.out.println("landing page test Count :: "+cnt);
+		System.out.println("landing page discovered test Count :: "+cnt);
 		domain.setDiscoveredTestCount(cnt);
 		domain_repo.update(conn, domain);
 		
@@ -350,7 +346,7 @@ public class BrowserActor extends UntypedActor {
 			Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 			domain.setLastDiscoveryPathRanAt(new Date());
 			int cnt = domain.getDiscoveredTestCount()+1;
-			System.out.println("landing page test Count :: "+cnt);
+			System.out.println("landing page discovered test Count :: "+cnt);
 			domain.setDiscoveredTestCount(cnt);
 			domain_repo.update(conn, domain);
 			

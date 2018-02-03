@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.stereotype.Component;
+
 import com.qanairy.models.ApplicationUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IPersistable;
@@ -16,10 +18,9 @@ import com.tinkerpop.blueprints.impls.orient.OrientVertex;
  * 
  * 
  */
+@Component
 public class ApplicationUserRepository implements IPersistable<ApplicationUser, IApplicationUser>{
-	
-	public ApplicationUserRepository() {}
-	
+		
 	/**
 	 * {@inheritDoc}
 	 */

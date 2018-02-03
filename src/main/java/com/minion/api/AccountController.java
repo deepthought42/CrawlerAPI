@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.api.exception.Auth0ManagementApiException;
 import com.qanairy.api.exception.InvalidUserException;
-import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.services.AccountService;
@@ -39,9 +38,6 @@ import com.segment.analytics.messages.TrackMessage;
 @RequestMapping("/accounts")
 public class AccountController {
 	private static Logger log = LoggerFactory.getLogger(AccountController.class);
-    
-    @Autowired
-    protected WebSecurityConfig appConfig;
 
     @Autowired
     protected AccountService accountService;

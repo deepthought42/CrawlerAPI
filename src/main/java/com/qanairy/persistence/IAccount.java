@@ -32,13 +32,13 @@ public interface IAccount {
 	public void setPaymentAcctNum(String payment_acct_num);
 	
 	@Adjacency(direction=Direction.OUT, label="has_user")
-	public Iterable<IQanairyUser> getUsers();
+	public Iterable<IApplicationUser> getUsers();
 	
 	@Adjacency(direction=Direction.OUT, label="has_user")
-	public void addUser(IQanairyUser user);
+	public void addUser(IApplicationUser user);
 	
 	@Adjacency(direction=Direction.OUT, label="has_user")
-	public void setUsers(List<IQanairyUser> user);
+	public void setUsers(List<IApplicationUser> user);
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public Iterable<IDomain> getDomains();

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.AccountRepository;
@@ -17,7 +16,7 @@ public class AccountService {
     protected AccountRepository accountRepository;
 
     @Autowired
-    public AccountService(final Auth0Client auth0Client, final AccountRepository accountRepository) {
+    public AccountService(final AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
     }
 

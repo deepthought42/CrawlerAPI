@@ -22,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
@@ -73,16 +71,16 @@ public class DiscoveryController {
 													   	  final Principal principal) 
 															   throws MalformedURLException, UnknownAccountException {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
     	
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("brandon.kindred@gmail.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        traits.put("email", "brandon.kindred@gmail.com");        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -169,9 +167,9 @@ public class DiscoveryController {
 			throws MalformedURLException, UnknownAccountException {
 		
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
     	
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("brandon.kindred@gmail.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}

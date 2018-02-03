@@ -1,25 +1,33 @@
 package com.minion.api;
 
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- *	API endpoints for interacting with {@link User} data
- */
-@Controller
-@RequestMapping("/user")
+import com.qanairy.models.ApplicationUser;
+import com.qanairy.models.dto.ApplicationUserRepository;
+import com.qanairy.persistence.OrientConnectionFactory;
+
+@RestController
+@RequestMapping("/users")
 public class UserController {
 
-	
-	/*private User createUserAccount(UserDto accountDto, BindingResult result) {
-	    User registered = null;
-	    try {
-	        registered = service.registerNewUserAccount(accountDto);
-	    } catch (EmailExistsException e) {
-	        return null;
-	    }    
-	    return registered;
-	}
-	*/
+    private ApplicationUserRepository applicationUserRepository;
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    public UserController(ApplicationUserRepository applicationUserRepository,
+                          BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.applicationUserRepository = applicationUserRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
+
+    @PostMapping("/sign-up")
+    public void signUp(@RequestBody ApplicationUser user) {
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        
+        OrientConnectionFactory connection = new OrientConnectionFactory();
+        applicationUserRepository.convertToRecord(connection, user);
+    }
 }

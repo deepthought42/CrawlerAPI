@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -16,11 +15,11 @@ public class DomainService {
 
     protected DomainRepository domainRepository;
 
-    private Auth0Client auth0Client;
+//    private Auth0Client auth0Client;
 
     @Autowired
-    public DomainService(final Auth0Client auth0Client, final DomainRepository domainRepository) {
-        this.auth0Client = auth0Client;
+    public DomainService(final DomainRepository domainRepository) {
+        //this.auth0Client = auth0Client;
         this.domainRepository = domainRepository;
     }
 

@@ -21,15 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.auth0.spring.security.api.Auth0JWTToken;
-import com.auth0.spring.security.api.Auth0UserDetails;
-import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.api.exception.Auth0ManagementApiException;
 import com.qanairy.api.exception.InvalidUserException;
-import com.qanairy.auth.Auth0Client;
-import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
@@ -45,11 +39,6 @@ import com.segment.analytics.messages.TrackMessage;
 @RequestMapping("/accounts")
 public class AccountController {
 	private static Logger log = LoggerFactory.getLogger(AccountController.class);
-
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-    @Autowired
-    private Auth0Client auth0Client;
     
     @Autowired
     protected WebSecurityConfig appConfig;
@@ -76,29 +65,30 @@ public class AccountController {
      */
     //@PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Account> create(@RequestParam(value="service_package", required=true) String service_package,
-    										final Principal principal) 
-    				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
+    //@PreAuthorize("hasAuthority('create:account')")
+    public ResponseEntity<Account> create(@RequestParam(value="service_package", required=true) String service_package) 
+    				throws InvalidUserException, UnirestException{        
        
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
         
-        if(currentUser.getUsername().equals("UNKNOWN_USER")){
+        if("brandon.kindred@gmail.com".equals("UNKNOWN_USER")){
         	throw new InvalidUserException();
         }
        
         //create account
-        Account acct = new Account(currentUser.getUsername(), service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
+        Account acct = new Account("brandon.kindred@gmail.com", service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
     	
         //Create user
-        QanairyUser user = new QanairyUser(currentUser.getUsername());
+        QanairyUser user = new QanairyUser("brandon.kindred@gmail.com");
         acct.addUser(user);
 
         // Connect to Auth0 API and update user metadata
-        HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
-        if(api_resp.getStatus() != 200){
+        //HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
+        /*if(api_resp.getStatus() != 200){
         	throw new Auth0ManagementApiException();
         }
+        */
         
         //printGrantedAuthorities((Auth0JWTToken) principal);
         Account new_account = null;
@@ -110,8 +100,8 @@ public class AccountController {
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        //traits.put("name", principal.getName());
+        traits.put("email", "brandon.kindred@gmail.com");        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(new_account.getKey())
     		    .traits(traits)
@@ -136,7 +126,7 @@ public class AccountController {
     @PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
     @RequestMapping(value ="/{id}", method = RequestMethod.GET)
     public Account get(final @PathVariable String key) {
-        logger.info("get invoked");
+        log.info("get invoked");
         return accountService.get(key);
     }
 
@@ -144,20 +134,7 @@ public class AccountController {
     @RequestMapping(value ="/{id}", method = RequestMethod.PUT)
     public Account update(final @PathVariable String key, 
     					  final @Validated @RequestBody Account account) {
-        logger.info("update invoked");
+        log.info("update invoked");
         return accountService.update(account);
-    }
-    
-
-    /**
-     * Simple demonstration of how Principal info can be accessed
-     * 
-     * @param principal
-     */
-    private void printGrantedAuthorities(final Auth0JWTToken principal) {
-        for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
-            final String authority = grantedAuthority.getAuthority();
-            logger.info(authority);
-        }
     }
 }

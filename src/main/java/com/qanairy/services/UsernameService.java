@@ -1,8 +1,5 @@
 package com.qanairy.services;
 
-import com.auth0.spring.security.api.Auth0JWTToken;
-import com.auth0.spring.security.api.Auth0UserDetails;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.dto.DomainRepository;
 
 import org.slf4j.Logger;
@@ -28,21 +25,18 @@ public class UsernameService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    private Auth0Client auth0Client;
-    
-    @Autowired
-    public UsernameService(final Auth0Client auth0Client) {
-        this.auth0Client = auth0Client;
+    public UsernameService() {
+        //this.auth0Client = auth0Client;
     }
 
 
    // @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String getUsername() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails principal = (Auth0UserDetails) authentication.getPrincipal();
-        logger.info("Current user accessed Admin secured resource: " + principal.getUsername());
+        //final Auth0UserDetails principal = (Auth0UserDetails) authentication.getPrincipal();
+        //logger.info("Current user accessed Admin secured resource: " + principal.getUsername());
         // we already have the username.. but for this sample lets call Auth0 service anyway..
-        return auth0Client.getUsername((Auth0JWTToken) authentication);
+        return "brandon.kindred@gmail.com"; //auth0Client.getUsername((Auth0JWTToken) authentication);
     }
 }
 

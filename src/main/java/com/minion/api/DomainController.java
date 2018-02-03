@@ -5,7 +5,8 @@ import java.net.URL;
 import java.security.Principal;
 import java.util.List;
 import org.omg.CORBA.UnknownUserException;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.auth0.spring.security.api.Auth0JWTToken;
-import com.auth0.spring.security.api.Auth0UserDetails;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -59,9 +58,9 @@ public class DomainController {
             logger.info("creating new domain in domain");
         }*/
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("brandon.kindred@gmail.com");
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -85,9 +84,9 @@ public class DomainController {
     @RequestMapping(method = RequestMethod.GET)
     public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("brandon.kindred@gmail.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -108,9 +107,9 @@ public class DomainController {
 	public @ResponseBody Domain remove(@RequestParam(value="key", required=true) String key) 
 			throws UnknownAccountException {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-	    final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+	    //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 	
-		Account acct = accountService.find(currentUser.getUsername());
+		Account acct = accountService.find("brandon.kindred@gmail.com");
 	
 		if(acct == null){
 			throw new UnknownAccountException();
@@ -120,15 +119,5 @@ public class DomainController {
 		acct = accountService.deleteDomain(acct, domain);
 		
 	    return domain;
-	}
-    
-    /**
-     * Simple demonstration of how Principal info can be accessed
-     */
-    private void printGrantedAuthorities(final Auth0JWTToken principal) {
-        for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
-            final String authority = grantedAuthority.getAuthority();
-            logger.info(authority);
-        }
-    }	
+	}	
 }

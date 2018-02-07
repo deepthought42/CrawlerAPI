@@ -76,8 +76,8 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public  @ResponseBody List<Domain> getAll(final Principal principal) throws UnknownAccountException {
+    	//final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
     	Account acct = accountService.find("bkindred@qanairy.com");

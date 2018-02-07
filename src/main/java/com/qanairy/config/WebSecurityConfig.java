@@ -1,5 +1,6 @@
 package com.qanairy.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,22 +8,32 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import com.auth0.spring.security.api.Auth0CORSFilter;
-import com.auth0.spring.security.api.Auth0SecurityConfig;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+import com.auth0.spring.security.api.JwtWebSecurityConfigurer;
 import com.qanairy.auth.Auth0Client;
 
 @Configuration
 @EnableWebSecurity(debug = true)
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
-public class WebSecurityConfig extends Auth0SecurityConfig {
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
 
+	@Value(value = "${auth0.apiAudience}")
+    private String audience;
+    @Value(value = "${auth0.issuer}")
+    private String issuer;
+    @Value(value = "${auth0.secret}")
+    private String secret;
+    @Value(value = "${auth0.clientId}")
+    private String clientId;
+    
     /**
      * Provides Auth0 API access
      */
     @Bean
     public Auth0Client auth0Client() {
-        return new Auth0Client(clientId, issuer);
+        return new Auth0Client(clientId, secret, issuer);
     }
     
     /**
@@ -32,18 +43,13 @@ public class WebSecurityConfig extends Auth0SecurityConfig {
      *  and instead ensure any unlisted endpoint in our config is secured by default
      */
     @Override
-    protected void authorizeRequests(final HttpSecurity http) throws Exception {
-    	http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
+    protected void configure(final HttpSecurity http) throws Exception {
+    	 JwtWebSecurityConfigurer
+    	 .forHS256(audience, issuer, secret.getBytes())
+         .configure(http).cors();
+    	/*http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
     		.antMatchers("/realtime/**").permitAll()
     		.anyRequest().authenticated();
+    		*/
     }
-
-    /*
-     * Only required for sample purposes..
-     */
-    public String getAuthorityStrategy() {
-       return super.authorityStrategy;
-    }
-    
-    
 }

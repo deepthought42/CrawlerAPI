@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.auth0.spring.security.api.Auth0JWTToken;
-import com.auth0.spring.security.api.Auth0UserDetails;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -59,9 +57,9 @@ public class DomainController {
             logger.info("creating new domain in domain");
         }*/
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("bkindred@qanairy.com");
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -80,9 +78,9 @@ public class DomainController {
     @RequestMapping(method = RequestMethod.GET)
     public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("bkindred@qanairy.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -103,9 +101,9 @@ public class DomainController {
 	public @ResponseBody Domain remove(@RequestParam(value="key", required=true) String key) 
 			throws UnknownAccountException {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-	    final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+	    //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 	
-		Account acct = accountService.find(currentUser.getUsername());
+		Account acct = accountService.find("bkindred@qanairy.com");
 	
 		if(acct == null){
 			throw new UnknownAccountException();
@@ -120,10 +118,11 @@ public class DomainController {
     /**
      * Simple demonstration of how Principal info can be accessed
      */
-    private void printGrantedAuthorities(final Auth0JWTToken principal) {
+    /*private void printGrantedAuthorities(final Auth0JWTToken principal) {
         for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
             final String authority = grantedAuthority.getAuthority();
             logger.info(authority);
         }
-    }	
+    }
+    */	
 }

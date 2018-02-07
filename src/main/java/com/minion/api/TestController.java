@@ -30,7 +30,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -88,9 +87,9 @@ public class TestController {
 															throws UnknownAccountException, DomainNotOwnedByAccountException {
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("bkindred@qanairy.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -139,9 +138,9 @@ public class TestController {
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find("bkindred@qanairy.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -202,8 +201,8 @@ public class TestController {
     	Date start = new Date();
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	Account acct = accountService.find(currentUser.getUsername());
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	Account acct = accountService.find("bkindred@qanairy.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -241,15 +240,15 @@ public class TestController {
     	
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	Account acct = accountService.find(currentUser.getUsername());
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	Account acct = accountService.find("bkindred@qanairy.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        traits.put("email", "bkindred@qanairy.com");        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -420,15 +419,15 @@ public class TestController {
     	
     	//make sure domain belongs to user account first
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	Account acct = accountService.find(currentUser.getUsername());
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	Account acct = accountService.find("bkindred@qanairy.com");
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        traits.put("email", "bkindred@qanairy.com");        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)

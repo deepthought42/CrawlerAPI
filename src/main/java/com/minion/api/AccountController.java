@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.auth0.spring.security.api.Auth0JWTToken;
-import com.auth0.spring.security.api.Auth0UserDetails;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.api.exception.Auth0ManagementApiException;
@@ -81,25 +79,25 @@ public class AccountController {
     				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
        
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
         
-        if(currentUser.getUsername().equals("UNKNOWN_USER")){
+        if("bkindred@qanairy.com".equals("UNKNOWN_USER")){
         	throw new InvalidUserException();
         }
        
         //create account
-        Account acct = new Account(currentUser.getUsername(), service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
+        Account acct = new Account("bkindred@qanairy.com", service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
     	
         //Create user
-        QanairyUser user = new QanairyUser(currentUser.getUsername());
+        QanairyUser user = new QanairyUser("bkindred@qanairy.com");
         acct.addUser(user);
 
         // Connect to Auth0 API and update user metadata
-        HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
+        /*HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
         if(api_resp.getStatus() != 200){
         	throw new Auth0ManagementApiException();
         }
-        
+        */
         //printGrantedAuthorities((Auth0JWTToken) principal);
         Account new_account = null;
         //final String username = usernameService.getUsername();
@@ -111,7 +109,7 @@ public class AccountController {
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        traits.put("email", "bkindred@qanairy.com");        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(new_account.getKey())
     		    .traits(traits)
@@ -154,10 +152,11 @@ public class AccountController {
      * 
      * @param principal
      */
-    private void printGrantedAuthorities(final Auth0JWTToken principal) {
+    /*private void printGrantedAuthorities(final Auth0JWTToken principal) {
         for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
             final String authority = grantedAuthority.getAuthority();
             logger.info(authority);
         }
     }
+    */
 }

@@ -250,7 +250,7 @@
 		<dependency>
 		    <groupId>com.auth0</groupId>
 		    <artifactId>auth0-spring-security-api</artifactId>
-		    <version>0.4.0</version>
+		    <version>1.0.0</version>
 		</dependency>
 
 		<dependency>
@@ -292,13 +292,13 @@
 		    <artifactId>analytics</artifactId>
 		    <version>2.1.0</version>
 		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp/okhttp -->
-		<dependency>
-		    <groupId>com.squareup.okhttp</groupId>
-		    <artifactId>okhttp</artifactId>
-		    <version>2.7.5</version>
-		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/com.auth0/auth0 -->
+		<dependency>
+		    <groupId>com.auth0</groupId>
+		    <artifactId>auth0</artifactId>
+		    <version>1.5.0</version>
+		</dependency>
+				
 	</dependencies>
 </project>

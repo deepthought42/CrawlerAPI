@@ -46,7 +46,7 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(@RequestBody Domain domain,
     									final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
@@ -74,7 +74,7 @@ public class DomainController {
     }
 
 
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
     public  @ResponseBody List<Domain> getAll(final Principal principal) throws UnknownAccountException {
     	//final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

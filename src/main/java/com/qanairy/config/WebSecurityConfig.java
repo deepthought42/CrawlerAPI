@@ -49,7 +49,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
     protected void configure(final HttpSecurity http) throws Exception {
     	 JwtWebSecurityConfigurer
     	 .forHS256(audience, issuer, secret.getBytes())
-         .configure(http).cors().and().authorizeRequests().anyRequest().permitAll();
+         .configure(http).cors().and().csrf().disable().authorizeRequests().anyRequest().permitAll();
     	/*http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
     		.antMatchers("/realtime/**").permitAll()
     		.anyRequest().authenticated();

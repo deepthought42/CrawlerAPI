@@ -27,7 +27,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.api.exception.Auth0ManagementApiException;
 import com.qanairy.api.exception.InvalidUserException;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
@@ -72,7 +71,7 @@ public class AccountController {
      * @throws UnirestException
      * @throws Auth0ManagementApiException 
      */
-    //@PreAuthorize("hasAuthority('trial') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create(@RequestParam(value="service_package", required=true) String service_package,
     										final Principal principal) 

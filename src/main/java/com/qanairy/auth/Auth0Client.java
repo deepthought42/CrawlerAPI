@@ -1,19 +1,24 @@
 package com.qanairy.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.auth0.client.auth.AuthAPI;
+import com.auth0.exception.APIException;
+import com.auth0.exception.Auth0Exception;
 import com.auth0.json.auth.UserInfo;
 import com.auth0.net.Request;
 
 @Component
 public class Auth0Client {
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private AuthAPI auth0;
     //private final AuthenticationAPIClient client;
 
     public Auth0Client() {
-        this.auth0 = new AuthAPI("qanairy.auth0.com", "wT7Phjs9BpwEfnZeFLvK1hwHWP2kU7LV", "8hk4R5YJ4gO5xPZdjjMdy7YtUF8eA22F");//Auth0(clientid, domain);
+        this.auth0 = new AuthAPI("qanairy.auth0.com", "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH", "EFXS4rxXk6a036e7DOLKXkh4gYs9nSdL93wzWcRvUUGAuL4Bxh9OmMDL-ZQ-VbnR");//Auth0(clientid, domain);
         //this.client = this.auth0.newAuthenticationAPIClient();
     }
 
@@ -23,6 +28,49 @@ public class Auth0Client {
 	public AuthAPI getApi() {
 		return auth0;
 	}
+
+	public String getUsername(String auth_access_token) {
+		Request<UserInfo> user_info_request = auth0.userInfo(auth_access_token);
+    	String username = null;
+    	try {
+    	    UserInfo info = user_info_request.execute();
+    	    username = info.getValues().get("name").toString();
+    	    System.err.println("Getting user Info ... "+username);
+    	} catch (APIException exception) {
+    	    // api error
+    		log.error(exception.getError() + " \n "+
+    						exception.getMessage());
+    		exception.printStackTrace();
+
+    	} catch (Auth0Exception exception) {
+    	    // request error
+    		exception.printStackTrace();
+    		log.error(exception.getMessage());
+    	}
+    	
+    	return username;
+	}
+
+	public String getNickname(String auth_access_token) {
+		Request<UserInfo> user_info_request = auth0.userInfo(auth_access_token);
+    	String nickname = null;
+    	try {
+    	    UserInfo info = user_info_request.execute();
+    	    nickname = info.getValues().get("nickname").toString();
+    	    System.err.println("Getting user Info ... "+nickname);
+    	} catch (APIException exception) {
+    	    // api error
+    		log.error(exception.getError() + " \n "+
+    						exception.getMessage());
+    		exception.printStackTrace();
+
+    	} catch (Auth0Exception exception) {
+    	    // request error
+    		exception.printStackTrace();
+    		log.error(exception.getMessage());
+    	}
+    	
+    	return nickname;	}
 
     /*public String getUsername(Auth0JWTToken token) {
         final Request<UserInfo> request = this.auth0.tokenInfo(token.getJwt());

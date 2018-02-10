@@ -28,8 +28,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
     private String audience;
     @Value(value = "${auth0.issuer}")
     private String issuer;
-    @Value(value = "${auth0.secret}")
-    private String secret;
     @Value(value = "${auth0.clientId}")
     private String clientId;
     
@@ -42,7 +40,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
     	 JwtWebSecurityConfigurer
-    	 .forHS256(audience, issuer, secret.getBytes())
+    	 .forRS256(audience, issuer)
+    	 //.forHS256(audience, issuer, secret.getBytes())
          .configure(http).cors().and().csrf().disable().authorizeRequests().anyRequest().permitAll();
     	/*http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
     		.antMatchers("/realtime/**").permitAll()

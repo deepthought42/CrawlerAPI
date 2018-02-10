@@ -3,19 +3,14 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
-import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
-
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,11 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.auth0.exception.APIException;
-import com.auth0.exception.Auth0Exception;
-import com.auth0.json.auth.UserInfo;
-import com.auth0.net.Request;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -42,7 +32,7 @@ import com.qanairy.services.DomainService;
 @RequestMapping("/domains")
 public class DomainController {
 	
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     protected AccountService accountService;
@@ -59,20 +49,22 @@ public class DomainController {
      */
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Domain create(@RequestBody Domain domain,
-    									final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    public @ResponseBody Domain create(HttpServletRequest request,
+    									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
         //printGrantedAuthorities((Auth0JWTToken) principal);
         /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
             // log username of user requesting domain creation
             logger.info("creating new domain in domain");
         }*/
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    	String username = authentication.getName();
-        System.err.println("username :: "+username);
-        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	System.err.println("Auth Access token :: "+auth_access_token);
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
 
-    	Account acct = accountService.find("bkindred@qanairy.com");
+    	Account acct = accountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -89,31 +81,14 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {
-    	
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    	System.err.println("header key :: "+request.getHeader("Authorization"));
-    	System.out.println("Authentication name :: " + authentication.getName());
-    	System.out.println("Authentication details :: " + authentication.getDetails());
-    	System.out.println("Authentication principal :: " + authentication.getPrincipal());
-    	
+    public  @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	System.err.println("Auth Access token :: "+auth_access_token);
     	
-    	//String access_token = Auth0ManagementApi.getToken();
-    	//final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
     	Auth0Client auth = new Auth0Client();
-    	Request<UserInfo> user_info_request = auth.getApi().userInfo(auth_access_token);
-    	try {
-    	    UserInfo info = user_info_request.execute();
-    	    // info.getValues();
-    	} catch (APIException exception) {
-    	    // api error
-    	} catch (Auth0Exception exception) {
-    	    // request error
-    	}
+    	String username = auth.getUsername(auth_access_token);
     	
-    	Account acct = accountService.find("bkindred@qanairy.com");
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -129,14 +104,17 @@ public class DomainController {
 	 * @return
 	 * @throws UnknownAccountException 
 	 */
-	@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+	@PreAuthorize("hasAuthority('delete:domains')")
 	@RequestMapping(method = RequestMethod.DELETE)
-	public @ResponseBody Domain remove(@RequestParam(value="key", required=true) String key) 
-			throws UnknownAccountException {
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-	    //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-	
-		Account acct = accountService.find("bkindred@qanairy.com");
+	public @ResponseBody Domain remove(HttpServletRequest request,
+									   @RequestParam(value="key", required=true) String key) 
+								   throws UnknownAccountException {
+
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+		Account acct = accountService.find(username);
 	
 		if(acct == null){
 			throw new UnknownAccountException();

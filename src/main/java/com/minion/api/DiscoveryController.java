@@ -12,7 +12,6 @@ import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -23,10 +22,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
+import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
@@ -66,23 +65,25 @@ public class DiscoveryController {
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
 													   	  @RequestParam(value="url", required=true) String url,
 													   	  final Principal principal) 
 															   throws MalformedURLException, UnknownAccountException {
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	
-    	Account acct = accountService.find(currentUser.getUsername());
+
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -163,15 +164,16 @@ public class DiscoveryController {
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping("/stop")
 	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request) 
 			throws MalformedURLException, UnknownAccountException {
 		
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}

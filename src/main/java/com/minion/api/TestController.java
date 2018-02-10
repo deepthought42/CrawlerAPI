@@ -30,7 +30,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.auth0.spring.security.api.Auth0UserDetails;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -53,6 +52,7 @@ import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 import com.minion.browsing.Browser;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
+import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
@@ -81,16 +81,17 @@ public class TestController {
 	 * @throws UnknownAccountException 
 	 * @throws DomainNotOwnedByAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestByDomain(HttpServletRequest request, 
 													@RequestParam(value="url", required=true) String url) 
 															throws UnknownAccountException, DomainNotOwnedByAccountException {
-    	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -132,16 +133,17 @@ public class TestController {
 	 * @throws UnknownAccountException 
 	 * @throws DomainNotOwnedByAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/failing", method = RequestMethod.GET)
 	public @ResponseBody Map<String, Integer> getFailingTestByDomain(HttpServletRequest request, 
 			   								 	 	@RequestParam(value="url", required=true) String url) 
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
-    	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -175,7 +177,7 @@ public class TestController {
 	 * 
 	 * @return all tests matching name passed
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/name", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
 			   								 		@RequestParam(value="name", required=true) String name) {
@@ -194,16 +196,19 @@ public class TestController {
 	 * @throws DomainNotOwnedByAccountException 
 	 * @throws UnknownAccountException 
 	 */
-    //@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
     	Date start = new Date();
     	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	Account acct = accountService.find(currentUser.getUsername());
+
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -233,23 +238,26 @@ public class TestController {
 	 * @return
 	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
-	public @ResponseBody Test setInitialCorrectness(@RequestParam(value="key", required=true) String key, 
+	public @ResponseBody Test setInitialCorrectness(HttpServletRequest request, 
+													@RequestParam(value="key", required=true) String key, 
 													@RequestParam(value="correct", required=true) boolean correct,
 													final Principal principal) throws UnknownAccountException{
     	
     	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -288,7 +296,7 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
 	public @ResponseBody Test updateBrowserCorrectness(@RequestParam(value="key", required=true) String key, 
 														@RequestParam(value="browser_name", required=true) String browser_name, 
@@ -325,7 +333,7 @@ public class TestController {
 	 * @param key key for test that path is to be found for
 	 * @return path {@link Path} for given test
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/tests/paths", method=RequestMethod.GET)
 	public @ResponseBody Path getTestPath(@RequestParam(value="key", required=true) String key){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -345,7 +353,7 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/updateName/{key}", method=RequestMethod.PUT)
 	public @ResponseBody Test updateName(HttpServletRequest request, 
 										 @PathVariable(value="key", required=true) String key, 
@@ -367,7 +375,7 @@ public class TestController {
 	 * @return
 	 * @throws MalformedURLException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
 	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
 									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
@@ -411,24 +419,26 @@ public class TestController {
 	 * @throws MalformedURLException 
      * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/runAll", method = RequestMethod.POST)
-	public @ResponseBody Map<String, Boolean> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
+	public @ResponseBody Map<String, Boolean> runAllTests(HttpServletRequest request,
+														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser_type", required=true) String browser_type,
 														  final Principal principal) 
 																  throws MalformedURLException, UnknownAccountException{
     	
-    	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", principal.getName());
-        traits.put("email", currentUser.getUsername());        
+        traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -491,7 +501,7 @@ public class TestController {
 	 * 
 	 * @return {@link TestRecord records} that define the results of the tests. 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
 														@RequestParam(value="url", required=true) String url,
@@ -535,7 +545,7 @@ public class TestController {
 	 * 	
 	 * @return the updated test
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('create:groups')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=true) String description,
@@ -575,7 +585,7 @@ public class TestController {
 	 * 	
 	 * @return the updated test
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('delete:groups')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
 	public @ResponseBody Boolean removeGroup(@RequestParam(value="group_key", required=true) String group_key,
 										  	 @RequestParam(value="test_key", required=true) String test_key){
@@ -605,7 +615,7 @@ public class TestController {
 	 * 
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:groups')")
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {

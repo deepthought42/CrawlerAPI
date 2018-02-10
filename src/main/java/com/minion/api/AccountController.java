@@ -78,6 +78,8 @@ public class AccountController {
     				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
        
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        System.err.println("username :: "+username);
         //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
         
         if("bkindred@qanairy.com".equals("UNKNOWN_USER")){

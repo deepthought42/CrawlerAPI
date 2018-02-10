@@ -17,7 +17,7 @@ public class AccountService {
     protected AccountRepository accountRepository;
 
     @Autowired
-    public AccountService(final Auth0Client auth0Client, final AccountRepository accountRepository) {
+    public AccountService(final AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
     }
 

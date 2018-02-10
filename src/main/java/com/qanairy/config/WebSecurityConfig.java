@@ -21,7 +21,9 @@ import com.qanairy.auth.Auth0Client;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
-
+	
+	@Value(value = "${auth0.domain}")
+	private String domain;
 	@Value(value = "${auth0.apiAudience}")
     private String audience;
     @Value(value = "${auth0.issuer}")
@@ -30,14 +32,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
     private String secret;
     @Value(value = "${auth0.clientId}")
     private String clientId;
-    
-    /**
-     * Provides Auth0 API access
-     */
-    @Bean
-    public Auth0Client auth0Client() {
-        return new Auth0Client(clientId, secret, issuer);
-    }
     
     /**
      *  Our API Configuration - for Profile CRUD operations

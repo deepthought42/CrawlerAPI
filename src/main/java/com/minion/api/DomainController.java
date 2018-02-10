@@ -3,10 +3,12 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.Iterator;
 import java.util.List;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +19,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.auth0.exception.APIException;
+import com.auth0.exception.Auth0Exception;
+import com.auth0.json.auth.UserInfo;
+import com.auth0.net.Request;
+import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -38,7 +46,6 @@ public class DomainController {
     @Autowired
     protected DomainService domainService;
 
-    
     /**
      * Create a new {@link Domain domain}
      * 
@@ -57,6 +64,8 @@ public class DomainController {
             logger.info("creating new domain in domain");
         }*/
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    	String username = authentication.getName();
+        System.err.println("username :: "+username);
         //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
     	Account acct = accountService.find("bkindred@qanairy.com");
@@ -76,10 +85,26 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll(final Principal principal) throws UnknownAccountException {
-    	//final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        //final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-
+    public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
+    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Iterator<? extends GrantedAuthority> iter = authentication.getAuthorities().iterator();
+        while(iter.hasNext()){
+        	System.out.println("Authority :: " + iter.next().getAuthority());
+        }
+        System.err.println("Authenticaiton Name :: " + authentication.getName());
+        System.err.println("Authentication " + authentication.getPrincipal().toString());
+    	//final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	Auth0Client auth = new Auth0Client();
+    	Request<UserInfo> request = auth.getApi().userInfo("");
+    	try {
+    	    UserInfo info = request.execute();
+    	    // info.getValues();
+    	} catch (APIException exception) {
+    	    // api error
+    	} catch (Auth0Exception exception) {
+    	    // request error
+    	}
+    	
     	Account acct = accountService.find("bkindred@qanairy.com");
     	if(acct == null){
     		throw new UnknownAccountException();

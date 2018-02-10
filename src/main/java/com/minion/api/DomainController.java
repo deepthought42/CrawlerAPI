@@ -5,6 +5,9 @@ import java.net.URL;
 import java.security.Principal;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.servlet.ServletRequest;
+
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,14 +88,18 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
+    public  @ResponseBody List<Domain> getAll(ServletRequest request) throws UnknownAccountException {
+    	
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Iterator<? extends GrantedAuthority> iter = authentication.getAuthorities().iterator();
-        while(iter.hasNext()){
-        	System.out.println("Authority :: " + iter.next().getAuthority());
-        }
-        System.err.println("Authenticaiton Name :: " + authentication.getName());
-        System.err.println("Authentication " + authentication.getPrincipal().toString());
+    	System.err.println("header key :: "+request.getHeader("Authorization"));
+    	System.out.println("Authentication name :: " + authentication.getName());
+    	System.out.println("Authentication details :: " + authentication.getDetails());
+    	System.out.println("Authentication principal :: " + authentication.getPrincipal());
+    	
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	System.err.println("Auth Access token :: "+auth_access_token);
+    	
+    	String access_token = Auth0ManagementApi.getToken();
     	//final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
     	Auth0Client auth = new Auth0Client();
     	Request<UserInfo> request = auth.getApi().userInfo("");

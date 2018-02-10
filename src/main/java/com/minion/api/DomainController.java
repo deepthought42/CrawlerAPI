@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -88,7 +89,7 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll(ServletRequest request) throws UnknownAccountException {
+    public  @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {
     	
     	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     	System.err.println("header key :: "+request.getHeader("Authorization"));
@@ -99,12 +100,12 @@ public class DomainController {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	System.err.println("Auth Access token :: "+auth_access_token);
     	
-    	String access_token = Auth0ManagementApi.getToken();
+    	//String access_token = Auth0ManagementApi.getToken();
     	//final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
     	Auth0Client auth = new Auth0Client();
-    	Request<UserInfo> request = auth.getApi().userInfo("");
+    	Request<UserInfo> user_info_request = auth.getApi().userInfo(auth_access_token);
     	try {
-    	    UserInfo info = request.execute();
+    	    UserInfo info = user_info_request.execute();
     	    // info.getValues();
     	} catch (APIException exception) {
     	    // api error

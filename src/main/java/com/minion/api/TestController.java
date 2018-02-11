@@ -1,6 +1,7 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -27,8 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
@@ -242,8 +241,8 @@ public class TestController {
 	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
 	public @ResponseBody Test setInitialCorrectness(HttpServletRequest request, 
 													@RequestParam(value="key", required=true) String key, 
-													@RequestParam(value="correct", required=true) boolean correct,
-													final Principal principal) throws UnknownAccountException{
+													@RequestParam(value="correct", required=true) boolean correct)
+															throws UnknownAccountException{
     	
     	//make sure domain belongs to user account first
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -256,7 +255,7 @@ public class TestController {
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", principal.getName());
+        traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
@@ -437,7 +436,7 @@ public class TestController {
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", principal.getName());
+        traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())

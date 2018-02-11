@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,7 +15,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.auth0.spring.security.api.JwtWebSecurityConfigurer;
-import com.qanairy.auth.Auth0Client;
 
 @Configuration
 @EnableWebSecurity
@@ -42,7 +42,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
     	 JwtWebSecurityConfigurer
     	 .forRS256(audience, issuer)
     	 //.forHS256(audience, issuer, secret.getBytes())
-         .configure(http).cors().and().csrf().disable().authorizeRequests().anyRequest().permitAll();
+         .configure(http).cors().and().csrf().disable().authorizeRequests().anyRequest().authenticated();
     	/*http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
     		.antMatchers("/realtime/**").permitAll()
     		.anyRequest().authenticated();
@@ -53,6 +53,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
 	CorsConfigurationSource corsConfigurationSource() {
     	final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     	source.registerCorsConfiguration("/**", new CorsConfiguration().applyPermitDefaultValues());
+
     	return source;
     }
 }

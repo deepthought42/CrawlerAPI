@@ -55,7 +55,6 @@ public class DomainController {
             logger.info("creating new domain in domain");
         }*/
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	System.err.println("Auth Access token :: "+auth_access_token);
     	
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);

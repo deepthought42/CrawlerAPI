@@ -67,13 +67,13 @@ public class DiscoveryController {
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
-													   	  @RequestParam(value="url", required=true) String url,
-													   	  final Principal principal) 
+													   	  @RequestParam(value="url", required=true) String url) 
 															   throws MalformedURLException, UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
+    	String nickname = auth.getNickname(auth_access_token);
 
     	Account acct = accountService.find(username);
     	if(acct == null){
@@ -81,7 +81,7 @@ public class DiscoveryController {
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", principal.getName());
+        traits.put("name", nickname);
         traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())

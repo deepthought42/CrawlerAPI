@@ -1,7 +1,6 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -298,15 +297,22 @@ public class TestController {
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
 	public @ResponseBody Test updateBrowserCorrectness(@RequestParam(value="key", required=true) String key, 
-														@RequestParam(value="browser_name", required=true) String browser_name, 
+														@RequestParam(value="browser", required=true) String browser, 
 														@RequestParam(value="correct", required=true) boolean correct){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
-		Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
-		browser_statuses.put(browser_name, correct);
-		itest.setBrowserStatuses(browser_statuses);
+		itest.getBrowserStatuses().put(browser, correct);
+		
+		boolean is_passing = true;
+		//update overall passing status based on all browser passing statuses
+		for(Boolean status : itest.getBrowserStatuses().values()){
+			if(status != null && !status){
+				is_passing = false;
+			}
+		}
+		itest.setCorrect(is_passing);
 		
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(itest);
@@ -393,11 +399,18 @@ public class TestController {
 				
 				TestRecordRepository test_record_record = new TestRecordRepository();
 				itest.addRecord(test_record_record.convertToRecord(connection, record));
-				itest.setCorrect(record.getPasses());
-				Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
-				browser_statuses.put(record.getBrowser(), record.getPasses());
-				itest.setBrowserStatuses(browser_statuses);
+
+				itest.getBrowserStatuses().put(record.getBrowser(), record.getPasses());
 				itest.setRunStatus(false);
+				boolean is_passing = true;
+				//update overall passing status based on all browser passing statuses
+				for(Boolean status : itest.getBrowserStatuses().values()){
+					if(status != null && !status){
+						is_passing = false;
+					}
+				}
+				itest.setCorrect(is_passing);
+				
 				browser.close();
 			}
 			else{

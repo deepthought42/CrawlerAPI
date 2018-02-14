@@ -312,9 +312,6 @@ public class Test {
 	 */
 	public void setBrowserStatus(String browser_name, Boolean status){
 		assert browser_name != null;
-		System.err.println("Browser name :: "+browser_name);
-		System.err.println("Status :: "+status);
-		System.err.println("browser passing status :: "+this.browser_passing_statuses);
 		this.browser_passing_statuses.put(browser_name, status);
 	}
 	

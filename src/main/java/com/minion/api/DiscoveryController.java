@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;

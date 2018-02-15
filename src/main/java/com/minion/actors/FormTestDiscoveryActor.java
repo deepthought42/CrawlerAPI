@@ -81,7 +81,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 				for(Path expanded : form_paths){
 					//send all paths to work allocator to be evaluated
-					Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded);
+					Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
 					work_allocator.tell(expanded_path_msg, getSelf() );
 				}
 				

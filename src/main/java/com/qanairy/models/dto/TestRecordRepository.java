@@ -23,6 +23,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		PageRepository page_repo = new PageRepository();
 		testRecord.setResult(page_repo.save(connection, record.getPage()));
 		testRecord.setPasses(record.getPasses());
+		testRecord.setBrowser(record.getBrowser());
 		testRecord.setRanAt(record.getRanAt());
 		testRecord.setKey(record.getKey());
 		
@@ -91,7 +92,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	public TestRecord load(ITestRecord obj) {
 		PageRepository page_repo = new PageRepository();
 		Page page = page_repo.load(obj.getResult());
-		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), page);
+		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), obj.getBrowser(), page);
 		
 		return record;
 	}

@@ -5,13 +5,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -20,12 +18,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import com.auth0.spring.security.api.Auth0UserDetails;
+import org.springframework.stereotype.Controller;
+
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
+import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.dto.AccountRepository;
@@ -34,6 +32,10 @@ import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.IdentifyMessage;
+import com.segment.analytics.messages.TrackMessage;
+
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;
@@ -47,7 +49,7 @@ import akka.actor.Props;
 /**
  * REST controller that defines endpoints to access data for path's experienced in the past
  */
-@RestController
+@Controller
 @RequestMapping("/discovery")
 public class DiscoveryController {
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
@@ -55,79 +57,6 @@ public class DiscoveryController {
     @Autowired
     protected AccountService accountService;
     
-	/**
-	 * 
-	 * @param request
-	 * @param url
-	 * @return
-	 * @throws MalformedURLException
-	 * @throws UnknownAccountException 
-	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
-	@RequestMapping(method = RequestMethod.GET)
-    @Deprecated
-	public @ResponseBody ResponseEntity<String> startWork(HttpServletRequest request, 
-													   	  @RequestParam(value="url", required=true) String url,
-													   	  @RequestParam(value="browser", required=true) String browser) 
-															   throws MalformedURLException, UnknownAccountException {
-		
-		//THIS SHOULD BE REPLACED WITH AN ACTUAL ACCOUNT ID ONCE AUTHENTICATION IS IMPLEMENTED
-		//String account_key = ""+UUID.randomUUID().toString();
-		
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	
-    	Account acct = accountService.find(currentUser.getUsername());
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-		
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-
-    	@SuppressWarnings("unchecked")
-		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
-    	IDomain domain = domains_iter.next();
-    	domain.setDiscoveryStartTime(new Date());
-    	
-    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
-    	String domain_url = domain.getUrl();
-    	String protocol = domain.getProtocol();
-    	Date now = new Date();
-    	long diffInMinutes = 1000;
-    	if(last_ran_date != null){
-    		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
-    	}
-		connection.close();
-        
-		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browser", browser);
-        if(diffInMinutes > 60){
-			WorkAllowanceStatus.register(acct.getKey()); 
-			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
-			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-			//workAllocationActor.tell(message, ActorRef.noSender());
-			Timeout timeout = new Timeout(Duration.create(10, "seconds"));
-			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
-			try {
-				Await.result(future, timeout.duration());
-				return new ResponseEntity<String>(HttpStatus.OK);
-	
-			} catch (Exception e) {
-				e.printStackTrace();
-				return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
-			}
-		}
-        else{
-        	//Throw error indicating discovery has been or is running
-        	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
-        	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
-        	throw new ExistingDiscoveryFoundException();
-        }
-        
-
-	}
-
     /**
 	 * 
 	 * @param request
@@ -136,21 +65,31 @@ public class DiscoveryController {
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
-													   	  @RequestParam(value="url", required=true) String url,
-													   	  @RequestParam(value="browsers", required=true) List<String> browsers) 
+													   	  @RequestParam(value="url", required=true) String url) 
 															   throws MalformedURLException, UnknownAccountException {
-    	
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	
-    	Account acct = accountService.find(currentUser.getUsername());
+
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	String nickname = auth.getNickname(auth_access_token);
+
+    	Account acct = accountService.find(username);
+
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-		
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("name", nickname);
+        traits.put("email", username);        
+    	analytics.enqueue(IdentifyMessage.builder()
+    		    .userId(acct.getKey())
+    		    .traits(traits)
+    		);
+    	
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 
     	@SuppressWarnings("unchecked")
@@ -169,12 +108,8 @@ public class DiscoveryController {
 		connection.close();
         
 		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browsers", browsers);
-		
-		//get how many discoveries an account is allowed
-		//if account has used all discoveries
-		//	then throw account exceeded discoveries exception
-		//  else run discovery
+
+		options.put("browser", domain.getDiscoveryBrowserName());
         if(diffInMinutes > 60){
         	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome");
         	acct.getDiscoveryRecords().add(discovery_record);
@@ -187,7 +122,17 @@ public class DiscoveryController {
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
-			//workAllocationActor.tell(message, ActorRef.noSender());
+			
+			 
+		    //Fire discovery started event	
+	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
+	    	discovery_started_props.put("url", url);
+	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
+	    	analytics.enqueue(TrackMessage.builder("Started Discovery")
+	    		    .userId(acct.getKey())
+	    		    .properties(discovery_started_props)
+	    		);
+			
 			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
 			try {
@@ -202,6 +147,19 @@ public class DiscoveryController {
         else{
         	//Throw error indicating discovery has been or is running
         	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
+
+        	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
+        	//Fire discovery started event	
+	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
+	    	discovery_started_props.put("url", url);
+	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
+	    	discovery_started_props.put("already_running", "true");
+	    	
+	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")
+	    		    .userId(acct.getKey())
+	    		    .properties(discovery_started_props)
+	    		);
+			
         	throw new ExistingDiscoveryFoundException();
         }
         
@@ -216,15 +174,16 @@ public class DiscoveryController {
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping("/stop")
 	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request) 
 			throws MalformedURLException, UnknownAccountException {
 		
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}

@@ -2,23 +2,20 @@ package com.minion.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.Principal;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.auth0.spring.security.api.Auth0JWTToken;
-import com.auth0.spring.security.api.Auth0UserDetails;
+import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -32,7 +29,7 @@ import com.qanairy.services.DomainService;
 @RequestMapping("/domains")
 public class DomainController {
 	
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     protected AccountService accountService;
@@ -40,7 +37,6 @@ public class DomainController {
     @Autowired
     protected DomainService domainService;
 
-    
     /**
      * Create a new {@link Domain domain}
      * 
@@ -48,32 +44,29 @@ public class DomainController {
      * @throws UnknownAccountException 
      * @throws MalformedURLException 
      */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
-    public @ResponseBody Domain create(@RequestBody Domain domain,
-    									final Principal principal) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    public @ResponseBody Domain create(HttpServletRequest request,
+    									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
         //printGrantedAuthorities((Auth0JWTToken) principal);
         /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
             // log username of user requesting domain creation
             logger.info("creating new domain in domain");
         }*/
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	Account acct = accountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	
     	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
-    	String host = domain.getUrl();
-    	if(!host.contains("www.")){
-    		host = url_obj.getHost();
-    		host = "www." + host;
-    		domain.setUrl(host);
-    	}
+		domain.setUrl(url_obj.getHost());
     	
     	acct.addDomain(domain);
     	accountService.update(acct);
@@ -81,13 +74,16 @@ public class DomainController {
     }
 
 
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll() throws UnknownAccountException {
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-
-    	Account acct = accountService.find(currentUser.getUsername());
+    public  @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	System.err.println("Auth Access token :: "+auth_access_token);
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -103,14 +99,17 @@ public class DomainController {
 	 * @return
 	 * @throws UnknownAccountException 
 	 */
-	@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+	@PreAuthorize("hasAuthority('delete:domains')")
 	@RequestMapping(method = RequestMethod.DELETE)
-	public @ResponseBody Domain remove(@RequestParam(value="key", required=true) String key) 
-			throws UnknownAccountException {
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-	    final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-	
-		Account acct = accountService.find(currentUser.getUsername());
+	public @ResponseBody Domain remove(HttpServletRequest request,
+									   @RequestParam(value="key", required=true) String key) 
+								   throws UnknownAccountException {
+
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+		Account acct = accountService.find(username);
 	
 		if(acct == null){
 			throw new UnknownAccountException();
@@ -125,10 +124,11 @@ public class DomainController {
     /**
      * Simple demonstration of how Principal info can be accessed
      */
-    private void printGrantedAuthorities(final Auth0JWTToken principal) {
+    /*private void printGrantedAuthorities(final Auth0JWTToken principal) {
         for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
             final String authority = grantedAuthority.getAuthority();
             logger.info(authority);
         }
-    }	
+    }
+    */	
 }

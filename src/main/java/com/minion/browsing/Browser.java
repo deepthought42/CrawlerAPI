@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -53,6 +54,7 @@ public class Browser {
 	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
 	private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
 	private String url = "";
+	private String browser_name; 
     //private static final String HUB_IP_ADDRESS= "165.227.120.79";
     private static final String HUB_IP_ADDRESS= "104.131.30.168";
 
@@ -63,11 +65,12 @@ public class Browser {
 	 * 			chrome = google chrome
 	 * 			firefox = Firefox
 	 * 			ie = internet explorer
-	 * 			phantomjs = phantomjs
+	 * 			safari = safari
 	 * @throws MalformedURLException
 	 */
 	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
 		int cnt = 0;
+		this.setBrowserName(browser);
 		while(driver == null && cnt < 20){
 			log.info("Opening "+ browser +" browser attempt #"+ cnt);
 			try{
@@ -83,14 +86,19 @@ public class Browser {
 				else if(browser.equals("safari")){
 					this.driver = openWithSafari();
 				}
-				else if(browser.equals("phantomjs")){
-					this.driver = openWithPhantomjs();
-				}
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
+
 				WebDriverWait wait = new WebDriverWait(driver, 120);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+				
+				try {
+					System.err.println("Waiting 30 seconds ::   "+(new Date()).toString());
+					Thread.sleep(30000);
+				} catch (InterruptedException e) {
+					System.err.println("Done waiting : "+(new Date()).toString());
+				}
 				break;
 			}
 			catch(UnreachableBrowserException e){
@@ -111,7 +119,7 @@ public class Browser {
 		}
 		
 		if(this.driver != null){			
-			//SystemInfoRepository.save(connection, info);
+			System.err.println("Driver isn't null! Getting url "+url);
 			this.url = url;
 			this.driver.get(url);
 		}
@@ -146,7 +154,7 @@ public class Browser {
 				break;
 			}catch(Exception e){
 				try {
-					Thread.sleep(10000);
+					Thread.sleep(1000);
 				} catch (InterruptedException e1) {}
 			}
 		}
@@ -154,9 +162,12 @@ public class Browser {
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();
 		}
+		
+		Map<String, String> browser_screenshot = new HashMap<String, String>();
+		browser_screenshot.put(browser_name, screenshot);
 		return new Page(src, 
-						url, 
-						screenshot, 
+						url,
+						browser_screenshot,
 						visible_elements);
 	}
 	
@@ -281,7 +292,10 @@ public class Browser {
 	 */
 	public static WebDriver openWithChrome() 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
+		ChromeOptions options = new ChromeOptions();
 		DesiredCapabilities cap = DesiredCapabilities.chrome();
+		cap.setCapability(ChromeOptions.CAPABILITY, options);
+
 		cap.setJavascriptEnabled(true);
 		//cap.setCapability("screenshot", true);
 		//cap.setPlatform(Platform.LINUX);
@@ -298,38 +312,6 @@ public class Browser {
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
-		return driver;
-	}
-	
-	/**
-	 * open new phantomjs browser
-	 * 
-	 * @param url 
-	 * @return
-	 * @throws MalformedURLException 
-	 */
-	public static WebDriver openWithPhantomjs() 
-			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException{
-		
-		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
-		cap.setJavascriptEnabled(true);
-		cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--ssl-protocol=tlsv1"});
-
-		//cap.setCapability("web-security","true");
-		//cap.setCapability("ssl-protocol","any");
-		//cap.setCapability("ignore-ssl-errors","true");
-		//cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--web-security=false","--ssl-protocol=any", "--ignore-ssl-errors=true"});//,"--webdriver-loglevel=NONE"});
-
-		// optional video recording
-		/*String record_video = "True";
-		// video record
-		if (record_video.equalsIgnoreCase("True")) {
-			cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
-		} else {
-			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
-		}*/
-        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);	    
-	    
 		return driver;
 	}
 	
@@ -410,7 +392,7 @@ public class Browser {
 			try{
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
-					String this_xpath = Browser.generateXpath(elem, "", xpath_map, driver); 
+					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
 					try{
 						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));
@@ -930,5 +912,13 @@ public class Browser {
 	public static List<Attribute> extractedAttributes(WebElement element, JavascriptExecutor javascriptDriver) {
 		List<String> attribute_strings = (ArrayList<String>)javascriptDriver.executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
 		return loadAttributes(attribute_strings);
+	}
+
+	public String getBrowserName() {
+		return browser_name;
+	}
+
+	public void setBrowserName(String browser_name) {
+		this.browser_name = browser_name;
 	}
 }

@@ -35,12 +35,12 @@ public class Test {
 	private Boolean correct;
 	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
-	private Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 	private List<Group> groups;
 	private Date last_run_time;
 	private boolean run_status;
 	private long run_time_length;
-	
+	private Map<String, Boolean> browser_passing_statuses;
+
 	/**
 	 * Construct a test with defaults of useful set to fault and 
 	 * spansMultipleDomains set to false
@@ -51,6 +51,7 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setRunStatus(false);
+		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
 	}
 	
 	/**
@@ -76,6 +77,7 @@ public class Test {
 		this.setKey(null);
 		this.setRunStatus(false);
 		this.setName(name);
+		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
 	}
 	
 	/**
@@ -101,6 +103,7 @@ public class Test {
 		this.setKey(key);
 		this.setRunStatus(false);
 		this.setName(name);
+		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
 	}
 	
 	/**
@@ -109,26 +112,29 @@ public class Test {
 	 * @param record
 	 * @return
 	 */
-	public Boolean isTestPassing(Page page, boolean last_test_passing_status){
-		Boolean passing = null;
-		if(!last_test_passing_status && this.getResult().equals(page)){
-			log.info("Pages are equal and test is NOT already passing");
-			passing = false; 
+	public Boolean isTestPassing(Page page, Boolean last_test_passing_status){
+		System.err.println("last test passing status :: "+ last_test_passing_status);
+		System.err.println("Page obj : "+page);
+		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
+			log.info("Pages are equal and test is NOT marked as passing");
+			last_test_passing_status = false; 
 		}
-		else if(!last_test_passing_status && !this.getResult().equals(page)){
-			log.info("Pages are NOT equal and test is NOT already passing");
-			passing = null;
+		else if((last_test_passing_status == null || !last_test_passing_status) && !this.getResult().equals(page)){
+			log.info("Pages are NOT equal and test is NOT marked as passing");
+			last_test_passing_status = null;
 		}
-		else if(last_test_passing_status && this.getResult().equals(page)){
-			log.info("pages are equal and test is already marked as passing");
-			passing = true;
+		else if((last_test_passing_status != null && last_test_passing_status) && this.getResult().equals(page)){
+			log.info("pages are equal and test is marked as passing");
+			last_test_passing_status = true;
 		}
-		else if(last_test_passing_status && !this.getResult().equals(page)){
-			log.info("pages are NOT equal and test is already passing");
-			passing = false;
+		else if((last_test_passing_status != null && last_test_passing_status) && !this.getResult().equals(page)){
+			log.info("pages are NOT equal and test is marked as passing");
+			last_test_passing_status = false;
 		}
+
+		System.err.println("passing status:: "+ last_test_passing_status);
 		
-		return passing;
+		return last_test_passing_status;
 	}
 	
 	/**
@@ -265,8 +271,6 @@ public class Test {
 		return list;
 	}
 	
-	
-	
 	public Boolean isCorrect(){
 		return this.correct;
 	}
@@ -299,8 +303,16 @@ public class Test {
 		this.domain = domain;
 	}
 	
+	/**
+	 * 
+	 * @param browser_name name of browser (ie 'chrome', 'firefox')
+	 * @param status boolean indicating passing or failing
+	 * 
+	 * @pre browser_name != null
+	 */
 	public void setBrowserStatus(String browser_name, Boolean status){
-		this.browser_statuses.put(browser_name, status);
+		assert browser_name != null;
+		this.browser_passing_statuses.put(browser_name, status);
 	}
 	
 	public Path getPath(){
@@ -397,5 +409,13 @@ public class Test {
 
 	public void setRunStatus(boolean run_status) {
 		this.run_status = run_status;
+	}
+
+	public Map<String, Boolean> getBrowserPassingStatuses() {
+		return browser_passing_statuses;
+	}
+
+	public void setBrowserPassingStatuses(Map<String, Boolean> browser_passing_statuses) {
+		this.browser_passing_statuses = browser_passing_statuses;
 	}
 }

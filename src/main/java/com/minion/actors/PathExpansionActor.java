@@ -113,11 +113,6 @@ public class PathExpansionActor extends UntypedActor {
 				
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 
-				//Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), path);
-
-				//final ActorRef memory_registry = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "memoryRegistry"+UUID.randomUUID());
-				//memory_registry.tell(path_msg, getSelf());
-				
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);
@@ -133,7 +128,7 @@ public class PathExpansionActor extends UntypedActor {
 					
 					final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 					for(ExploratoryPath expanded : pathExpansions){
-						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded);
+						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
 						
 						work_allocator.tell(expanded_path_msg, getSelf() );
 					}

@@ -67,4 +67,10 @@ public interface IPage extends IPathObject{
 
 	@Property("src")
 	public void setSrc(String src);
+	
+	@Property("browser_screenshots")
+	public Map<String, String> getBrowserScreeshots();
+	
+	@Property("browser_screenshots")
+	public void setBrowserScreenshots(Map<String, String> browser_screenshots);
 }

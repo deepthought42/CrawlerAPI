@@ -2,6 +2,8 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -72,32 +74,34 @@ public class TestingActor extends UntypedActor {
 				//Page last_page = path.findLastPage();
 				
 				try{
-					resulting_page.setLandable(resulting_page.checkIfLandable());
+					resulting_page.setLandable(resulting_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
 				}catch(Exception e){
 					log.error(e.getMessage());
 					resulting_page.setLandable(false);
 				}
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecord(new Date(), false, resulting_page);
+					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 					//tell memory worker of path
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
 				}
 				else{
 					TestRecord record = null;
+					Map<String, Boolean> results = new HashMap<String, Boolean>();
+
 					if(!test.isCorrect()){
-						record = new TestRecord(new Date(), false, resulting_page);
+						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page);
 					}
 					else{
-						record = new TestRecord(new Date(), true);
+						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page);
 					}
 
 					test.addRecord(record);
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
 					//tell memory worker of test record
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
@@ -136,7 +140,7 @@ public class TestingActor extends UntypedActor {
 		 try {		
 			page = Crawler.crawlPath(test.getPath(), browser);
 			passing = test.isTestPassing(page, test.isCorrect());
-			test_record = new TestRecord(new Date(), passing, page);
+			test_record = new TestRecord(new Date(), null, browser.getBrowserName(), page);
 			
 			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();

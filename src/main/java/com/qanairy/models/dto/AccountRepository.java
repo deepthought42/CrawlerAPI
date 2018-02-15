@@ -39,14 +39,14 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	public IAccount save(OrientConnectionFactory connection, Account account) {
 		account.setKey(generateKey(account));
 		@SuppressWarnings("unchecked")
-		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
-		Iterator<IAccount> iter = svc_pkgs.iterator();
+		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
+		Iterator<IAccount> iter = accounts.iterator();
 		IAccount acct_record = null;  
 
 		if(!iter.hasNext()){
 			acct_record = connection.getTransaction().addVertex("class:"+IAccount.class.getSimpleName()+","+UUID.randomUUID(), IAccount.class);
 			acct_record.setKey(account.getKey());
-			
+			System.err.println("Service package :: "+account.getServicePackage());
 			acct_record.setServicePackage(account.getServicePackage());
 			acct_record.setPaymentAcctNum(account.getPaymentAcctNum());
 		}
@@ -114,6 +114,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			save(connection, account);
 			connection.save();
 		}
+		
 		return account;
 
 	}

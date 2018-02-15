@@ -27,6 +27,9 @@ public class PathTests {
 
 	@Test(groups="Regression")
 	public void pathRecordDatabaseConfirmation(){
+		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		
 		Path path = new Path();
 		path.setIsUseful(false);
 		path.setSpansMultipleDomains(false);
@@ -38,7 +41,7 @@ public class PathTests {
 		
 		Page page = new Page();
 		page.setLandable(true);
-		page.setScreenshot("Test screenshot url");
+		page.setBrowserScreenshots(browser_screenshots);
 		page.setSrc("src goes here 1");
 		page.setElements(new ArrayList<PageElement>());
 		try {
@@ -84,7 +87,7 @@ public class PathTests {
 		Path path = new Path(null);
 		Page page = null;
 		try {
-			Browser browser = new Browser("http://localhost", "phantomjs");
+			Browser browser = new Browser("http://localhost", "chrome");
 			URL page_url = new URL(browser.getDriver().getCurrentUrl());
 			page = new Page(browser.getDriver().getPageSource(), 
 							browser.getDriver().getCurrentUrl(), 
@@ -109,11 +112,11 @@ public class PathTests {
 	
 	@Test(groups="Regression")
 	public void testPathCorrectnessUpdate(){
-		
+		assert true;
 	}
 	
 	@Test(groups="Regression")
 	public void testDeleteRecord(){
-		
+		assert true;
 	}
 }

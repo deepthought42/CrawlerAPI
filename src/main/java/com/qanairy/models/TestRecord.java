@@ -1,9 +1,10 @@
 package com.qanairy.models;
 
 import java.util.Date;
-
-
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 
@@ -19,32 +20,36 @@ public class TestRecord {
 
 	private String key;
 	private Date ran_at;
+	private String browser;
 	private Boolean passes;
 	private Page result;
 	private long run_time_length;
-
-	public TestRecord(Date ran_at, Boolean passes){
+	
+	public TestRecord(Date ran_at, Boolean passes, String browser_name){
 		this.setRanAt(ran_at);
-		this.setPasses(passes);
 		this.setPage(null);
 		this.setKey(null);
 		this.setRunTime(-1L);
+		this.setPasses(passes);
+		this.setBrowser(browser_name);
 	}
 	
-	public TestRecord(Date ran_at, Boolean passes, Page result){
+	public TestRecord(Date ran_at, Boolean passes, String browser_name, Page result){
 		this.setRanAt(ran_at);
-		this.setPasses(passes);
 		this.setPage(result);
 		this.setKey(null);
 		this.setRunTime(-1L);
+		this.setPasses(passes);
+		this.setBrowser(browser_name);
 	}
 	
-	public TestRecord(String key, Date ran_at, Boolean passes, Page result){
+	public TestRecord(String key, Date ran_at, Boolean passes, String browser_name, Page result){
 		this.setRanAt(ran_at);
-		this.setPasses(passes);
 		this.setPage(result);
 		this.setKey(key);
 		this.setRunTime(-1L);
+		this.setPasses(passes);
+		this.setBrowser(browser_name);
 	}
 	
 	/**
@@ -97,5 +102,13 @@ public class TestRecord {
 	
 	public long getRunTime() {
 		return this.run_time_length;
+	}
+
+	public String getBrowser() {
+		return browser;
+	}
+
+	public void setBrowser(String browser) {
+		this.browser = browser;
 	}
 }

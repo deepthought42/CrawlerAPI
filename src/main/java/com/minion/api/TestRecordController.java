@@ -30,29 +30,11 @@ public class TestRecordController {
 	 * @param url
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:test_records')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<TestRecord> getTestRecords(@RequestParam(value="url", required=true) Test test) {
 		ArrayList<TestRecord> test_records = new ArrayList<TestRecord>();
 		return test_records;
-	}
-
-	/**
-	 * Updates a {@link TestRecord}
-	 * 
-	 * @param test
-	 * @return
-	 */
-    @PreAuthorize("hasAuthority('qanairy')")
-	@RequestMapping(method = RequestMethod.PUT)
-	public @ResponseBody TestRecord updateTest(@RequestParam(value="test", required=true) TestRecord test_record){
-		
-		
-		//Memory
-		//Find test
-		//update test correctness
-		// return test
-		return test_record;
 	}
 
 }

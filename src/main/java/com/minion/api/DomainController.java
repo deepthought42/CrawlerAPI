@@ -76,7 +76,7 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    public @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	System.err.println("Auth Access token :: "+auth_access_token);
     	

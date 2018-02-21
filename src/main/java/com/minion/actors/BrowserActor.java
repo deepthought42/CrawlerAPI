@@ -202,7 +202,7 @@ public class BrowserActor extends UntypedActor {
 		addFormGroupsToPath(test);
 		
 		log.info("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult());
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		log.info("sending test message out");
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());

@@ -140,7 +140,13 @@ public class TestingActor extends UntypedActor {
 		 try {		
 			page = Crawler.crawlPath(test.getPath(), browser);
 			passing = test.isTestPassing(page, test.isCorrect());
-			test_record = new TestRecord(new Date(), null, browser.getBrowserName(), page);
+			boolean all_passing = true;
+			for(Boolean status : test.getBrowserPassingStatuses().values()){
+				if(status != null && !status){
+					all_passing = false;
+				}
+			}
+			test_record = new TestRecord(new Date(), all_passing, browser.getBrowserName(), page);
 			
 			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();

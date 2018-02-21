@@ -21,7 +21,7 @@ public class Page extends PathObject {
 
     private String key;
     private boolean landable = false;
-	private Map<String, String> browser_screenshot;
+	private Map<String, String> browser_screenshots;
 	
 	@JsonIgnore
 	private String src;
@@ -285,14 +285,14 @@ public class Page extends PathObject {
 
 	@JsonProperty("browser_screenshot")
 	public Map<String, String> getBrowserScreenshots() {
-		return browser_screenshot;
+		return browser_screenshots;
 	}
 
-	public void setBrowserScreenshots(Map<String, String> browser_screenshot) {
-		this.browser_screenshot = browser_screenshot;
+	public void setBrowserScreenshots(Map<String, String> browser_screenshots) {
+		this.browser_screenshots = browser_screenshots;
 	}
 	
 	public void setBrowserScreenshot(String browser, String screenshot_url) {
-		this.browser_screenshot.put(browser, screenshot_url);
+		this.browser_screenshots.put(browser, screenshot_url);
 	}
 }

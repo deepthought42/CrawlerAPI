@@ -35,10 +35,10 @@ public interface ITestRecord {
 	@Property("browser_name")
 	public void setBrowser(String browser_name);
 	
-	@Property("ran_time")
+	@Property("run_time")
 	public long getRunTime();
 	
-	@Property("ran_time")
+	@Property("run_time")
 	public void setRunTime(long run_time);
 	
 	@Adjacency(label="has_result")

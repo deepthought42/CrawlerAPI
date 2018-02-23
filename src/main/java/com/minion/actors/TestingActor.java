@@ -2,10 +2,7 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.selenium.Capabilities;
@@ -80,7 +77,7 @@ public class TestingActor extends UntypedActor {
 					resulting_page.setLandable(false);
 				}
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page);
+					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 
@@ -91,13 +88,12 @@ public class TestingActor extends UntypedActor {
 				}
 				else{
 					TestRecord record = null;
-					Map<String, Boolean> results = new HashMap<String, Boolean>();
 
 					if(!test.isCorrect()){
-						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page);
+						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 					else{
-						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page);
+						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 
 					test.addRecord(record);
@@ -136,17 +132,16 @@ public class TestingActor extends UntypedActor {
 		 Page page = null;
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
+		 boolean all_passing = true;
 
 		 try {		
 			page = Crawler.crawlPath(test.getPath(), browser);
 			passing = test.isTestPassing(page, test.isCorrect());
-			boolean all_passing = true;
 			for(Boolean status : test.getBrowserPassingStatuses().values()){
 				if(status != null && !status){
 					all_passing = false;
 				}
 			}
-			test_record = new TestRecord(new Date(), all_passing, browser.getBrowserName(), page);
 			
 			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();
@@ -162,8 +157,7 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-
-		 test_record.setRunTime(pathCrawlRunTime);
+		test_record = new TestRecord(new Date(), all_passing, browser.getBrowserName(), page, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

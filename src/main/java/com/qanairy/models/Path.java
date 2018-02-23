@@ -123,7 +123,8 @@ public class Path {
 		List<PathObject> path_obj = path.getPath();
 		List<PathObject> clone_list = new ArrayList<PathObject>();
 		for(PathObject obj : path_obj){
-			//PathObject path_obj_clone = obj.clone();
+			System.err.println("adding path object of TYPE to clone list :: "+obj.getType());
+			System.err.println("adding path object with CLASS to clone list :: "+obj.getClass());
 			clone_list.add(obj);
 		}
 		

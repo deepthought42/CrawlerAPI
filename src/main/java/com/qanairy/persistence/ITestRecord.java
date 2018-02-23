@@ -35,6 +35,12 @@ public interface ITestRecord {
 	@Property("browser_name")
 	public void setBrowser(String browser_name);
 	
+	@Property("run_time")
+	public long getRunTime();
+	
+	@Property("run_time")
+	public void setRunTime(long run_time);
+	
 	@Adjacency(label="has_result")
 	public void setResult(IPage page);
 	

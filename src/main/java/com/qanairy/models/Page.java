@@ -10,7 +10,6 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.minion.browsing.Browser;
-import com.qanairy.utils.CompareImages;
 
 /**
  * A reference to a web page 
@@ -68,6 +67,32 @@ public class Page extends PathObject {
 		this.setLandable(false);
 		this.setImageWeight(0);
 		this.setKey(null);
+	}
+	
+	/**
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null
+	 */
+	public Page(String key, String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements) throws IOException {
+		assert elements != null;
+		
+		super.setType("Page");
+		this.setSrc(html);
+		this.setType("Page");
+		this.setUrl(new URL(url.replace("/#","")));
+		this.setBrowserScreenshots(browsers_screenshots);
+		this.setElements(elements);
+		this.setElementCounts(countTags(elements));
+		this.setLandable(false);
+		this.setImageWeight(0);
+		this.setKey(key);
 	}
 	
 	/**
@@ -283,7 +308,7 @@ public class Page extends PathObject {
 		this.image_weight = image_weight;
 	}
 
-	@JsonProperty("browser_screenshot")
+	@JsonProperty("browser_screenshots")
 	public Map<String, String> getBrowserScreenshots() {
 		return browser_screenshots;
 	}

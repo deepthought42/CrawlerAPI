@@ -48,8 +48,6 @@ public class PathExpansionActor extends UntypedActor {
 			return null;
 		}
 
-		String[] actions = ActionFactory.getActions();
-
 		List<PageElement> page_elements = page.getElements();
 		
 		//iterate over all elements

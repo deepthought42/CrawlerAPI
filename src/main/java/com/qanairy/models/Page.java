@@ -180,9 +180,9 @@ public class Page extends PathObject {
 	public boolean equals(Object o){
 		if (this == o) return true;
         if (!(o instanceof Page)) return false;
+        
         Page that = (Page)o;
         return (this.getSrc().equals(that.getSrc()));
-				
 	}
 	
 	/**

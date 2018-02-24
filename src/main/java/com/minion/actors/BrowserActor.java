@@ -300,6 +300,7 @@ public class BrowserActor extends UntypedActor {
 		createTest(path, page_obj, 1L, domain, msg);
 		
 		Path new_path = Path.clone(path);
+		new_path.add(page_obj);
 		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_path, msg.getOptions());
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());

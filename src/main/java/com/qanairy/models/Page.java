@@ -151,18 +151,14 @@ public class Page extends PathObject {
 		boolean landable = false;
 
 		try{
-			System.err.println("checking landability of page at "+this.getUrl().getHost());
 			Browser browser = new Browser(this.getUrl().toString(), browser_name);
-			//browser.getDriver().get(this.getUrl().toString());
 
 			if(this.equals(browser.getPage())){
-				System.err.println("page is landable");
 				landable = true;
 			}
 			browser.close();
 		}catch(Exception e){
-			System.err.println("ERROR VISITING PAGE AT :: "+this.getUrl().getHost()+" ::: "+this.getUrl().toString());
-			log.error(e.getMessage());
+			log.error("ERROR VISITING PAGE AT :: "+this.getUrl().getHost()+" ::: "+this.getUrl().toString(), e.getMessage());
 		}
 		
 		return landable;

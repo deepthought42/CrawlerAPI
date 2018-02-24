@@ -94,10 +94,9 @@ public class Browser {
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				
 				try {
-					System.err.println("Waiting 30 seconds ::   "+(new Date()).toString());
 					Thread.sleep(30000);
 				} catch (InterruptedException e) {
-					System.err.println("Done waiting : "+(new Date()).toString());
+					log.info("Done waiting for process...retrying now : "+(new Date()).toString());
 				}
 				break;
 			}
@@ -119,7 +118,6 @@ public class Browser {
 		}
 		
 		if(this.driver != null){			
-			System.err.println("Driver isn't null! Getting url "+url);
 			this.url = url;
 			this.driver.get(url);
 		}

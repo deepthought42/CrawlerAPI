@@ -182,17 +182,14 @@ public class PathRepository implements IPersistable<Path, IPath> {
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
 		String key = path.getKey();
 		String last_path_obj_key = null;
-		int idx = 1;
-		
+		int idx = 0;
 		while(path_obj != null && path_obj.getPathEdges() != null
 				&& (last_path_obj_key == null || !last_path_obj_key.equals(path_obj.getKey()))){
-			
 			Iterator<IPathEdge> path_edges = path_obj.getPathEdges().iterator();
 			last_path_obj_key = path_obj.getKey();
 			PathObjectRepository path_obj_repo = new PathObjectRepository();
 			path_obj_list.add(path_obj_repo.convertFromRecord(path_obj));
 			while(path_edges.hasNext()){
-				
 				IPathEdge edge = path_edges.next();
 				if(edge != null && edge.getPathKey().equals(key) && edge.getTransitionIndex()==idx){
 					path_obj = edge.getPathObjectIn();

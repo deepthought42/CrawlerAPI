@@ -201,7 +201,6 @@ public class BrowserActor extends UntypedActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		log.info("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		log.info("sending test message out");
@@ -276,32 +275,26 @@ public class BrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
-		log.info("Generating landing page");
 	  	Path path = new Path();
 	  	System.out.println("Getting browser page...");
 	  	Page page_obj = browser.getPage();
-	  	System.out.println("Add page obj to path : "+page_obj);
-	  	System.out.println("Add page obj src to path : "+page_obj.getSrc());
-
-	  	path.getPath().add(page_obj);
+		boolean landable_status = page_obj.checkIfLandable(browser.getBrowserName());
+		page_obj.setLandable(landable_status);
+	  	path.add(page_obj);
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
 		DomainRepository domain_repo = new DomainRepository();
-		System.out.println("Page Object :: "+page_obj.getUrl().getHost());
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 		Domain domain = domain_repo.find(conn, page_obj.getUrl().getHost());
 		domain.setLastDiscoveryPathRanAt(new Date());
 		int cnt = domain.getDiscoveredTestCount()+1;
-		System.out.println("landing page test Count :: "+cnt);
 		domain.setDiscoveredTestCount(cnt);
 		domain_repo.update(conn, domain);
 		
 		createTest(path, page_obj, 1L, domain, msg);
 		
-		Path new_path = Path.clone(path);
-		new_path.add(page_obj);
-		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_path, msg.getOptions());
+		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), path, msg.getOptions());
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );

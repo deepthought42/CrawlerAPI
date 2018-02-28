@@ -35,7 +35,6 @@ public class Auth0Client {
     	try {
     	    UserInfo info = user_info_request.execute();
     	    username = info.getValues().get("name").toString();
-    	    System.err.println("Getting user Info ... "+username);
     	} catch (APIException exception) {
     	    // api error
     		log.error(exception.getError() + " \n "+
@@ -57,7 +56,6 @@ public class Auth0Client {
     	try {
     	    UserInfo info = user_info_request.execute();
     	    nickname = info.getValues().get("nickname").toString();
-    	    System.err.println("Getting user Info ... "+nickname);
     	} catch (APIException exception) {
     	    // api error
     		log.error(exception.getError() + " \n "+

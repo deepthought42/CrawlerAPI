@@ -16,6 +16,7 @@ import com.qanairy.rules.ReadOnlyRule;
 import com.qanairy.rules.RequirementRule;
 import com.qanairy.rules.SpecialCharacterRestriction;
 import com.qanairy.rules.AlphabeticRestrictionRule;
+import com.qanairy.rules.Clickable;
 import com.qanairy.rules.RuleType;
 
 public class ElementRuleExtractor {
@@ -83,11 +84,14 @@ public class ElementRuleExtractor {
 		return rules;
 	}
 
-	public static List<Rule> extractMouseRules(Browser browser, PageElement page_element) {
+	public static List<Rule> extractMouseRules(PageElement page_element) {
+		List<Rule> rules = new ArrayList<Rule>();
+
 		//iterate over possible mouse actions. 
 		//if an element action interaction causes change
 			//then add the appropriate rule to the list
-		
-		return new ArrayList<Rule>();
+		Rule clickable = new Clickable();
+		rules.add(clickable);
+		return rules;
 	}
 }

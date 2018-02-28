@@ -67,7 +67,7 @@ public class WorkAllocationActor extends UntypedActor {
 						}
 					}
 					else if(acct_message.getData() instanceof URL){
-						System.err.println("url needs to be implemented");
+						//System.err.println("url needs to be implemented");
 						//THIS SHOULD STILL BE IMPLEMENTED, LEAVING EMPTY FOR NOW DUE TO NON TRIVIAL NATURE OF THIS PIECE
 					}
 					connection.close();

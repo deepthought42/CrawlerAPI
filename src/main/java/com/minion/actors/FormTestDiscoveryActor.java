@@ -72,7 +72,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			  	List<Form> forms = Browser.extractAllForms(current_page, browser);
 			  	List<Path> form_paths = new ArrayList<Path>();
-			  	log.info("Total Choice fields in form : " + forms.get(0).getFormFields().size());
 			  	log.info("Generating tests for " + forms.size() + " forms");
 			  	for(Form form : forms){
 			  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));

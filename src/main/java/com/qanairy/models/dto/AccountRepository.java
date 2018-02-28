@@ -76,11 +76,11 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		
 		List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
-		List<QanairyUser> users = new ArrayList<QanairyUser>();
+		/*List<QanairyUser> users = new ArrayList<QanairyUser>();
 		QanairyUserRepository user_repo = new QanairyUserRepository();
 		for(IQanairyUser user : user_records){
 			users.add(user_repo.convertFromRecord(user));
-		}
+		}*/
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains);
 	}

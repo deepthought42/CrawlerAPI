@@ -119,6 +119,30 @@ public class Page extends PathObject {
 		this.setKey(null);
 	}
 	
+	/**
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null;
+	 */
+	public Page(String key, String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
+		assert elements != null;
+		super.setType("Page");
+		this.setSrc(html);
+		this.setUrl(new URL(url.replace("/#","")));
+		this.setBrowserScreenshots(browsers_screenshots);
+		this.setElements(elements);
+		this.setElementCounts(countTags(elements));
+		this.setLandable(isLandable);
+		this.setImageWeight(0);
+		this.setKey(key);
+	}
+	
 	
 	/**
 	 * Gets counts for all tags based on {@link PageElement}s passed
@@ -151,17 +175,14 @@ public class Page extends PathObject {
 		boolean landable = false;
 
 		try{
-			Browser browser = new Browser(this.getUrl().getHost(), browser_name);
-			//log.info("navigating to url to check for landability");
-			//browser.getDriver().get(this.getUrl().toString());
+			Browser browser = new Browser(this.getUrl().toString(), browser_name);
 
 			if(this.equals(browser.getPage())){
-				log.info("page is landable");
 				landable = true;
 			}
 			browser.close();
 		}catch(Exception e){
-			log.warn(e.getMessage());
+			log.error("ERROR VISITING PAGE AT :: "+this.getUrl().getHost()+" ::: "+this.getUrl().toString(), e.getMessage());
 		}
 		
 		return landable;

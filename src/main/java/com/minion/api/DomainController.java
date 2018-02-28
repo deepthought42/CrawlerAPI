@@ -73,12 +73,41 @@ public class DomainController {
     	return domainService.create(domain);
     }
 
+    /**
+     * Create a new {@link Domain domain}
+     * 
+     * @throws UnknownUserException 
+     * @throws UnknownAccountException 
+     * @throws MalformedURLException 
+     */
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(method = RequestMethod.PUT)
+    public @ResponseBody Domain update(HttpServletRequest request,
+    									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+        //printGrantedAuthorities((Auth0JWTToken) principal);
+        /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
+            
+            // log username of user requesting domain creation
+            logger.info("creating new domain in domain");
+        }*/
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+    	return domainService.update(domain);
+    }
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
     public  @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	System.err.println("Auth Access token :: "+auth_access_token);
     	
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);

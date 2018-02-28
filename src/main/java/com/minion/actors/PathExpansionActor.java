@@ -68,24 +68,36 @@ public class PathExpansionActor extends UntypedActor {
 			
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
 			if(page_element.getXpath().contains("form")){
+				System.err.println("Path contains 'form' string :: "+page_element.getXpath());
 				continue;
 			}
-			page_element.addRules(ElementRuleExtractor.extractInputRules(page_element));
-			//page_element.addRules(ElementRuleExtractor.extractMouseRules(browser, page_element));
-			for(Rule rule : page_element.getRules()){
-				List<Path> paths = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
-				
-				for(Path form_path: paths){
-					log.info("constructing new path");
-					//iterate over all actions
-					Path new_path = Path.clone(path);
-					new_path.getPath().addAll(form_path.getPath());
-					for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-						ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
-						//Action action_obj = new Action(action);
-						pathList.add(action_path);
-						path_count++;
+			//check if page element is an input
+			if(page_element.getName().equals("input")){
+				page_element.addRules(ElementRuleExtractor.extractInputRules(page_element));
+				for(Rule rule : page_element.getRules()){
+					List<Path> paths = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+					//paths.addAll(generateMouseRulePaths(page_element, rule)
+					for(Path form_path: paths){
+						log.info("constructing new path");
+						//iterate over all actions
+						Path new_path = Path.clone(path);
+						new_path.getPath().addAll(form_path.getPath());
+						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+							ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+							pathList.add(action_path);
+							path_count++;
+						}
 					}
+				}
+			}
+			else{
+				Path new_path = Path.clone(path);
+				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
+
+				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+					ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+					pathList.add(action_path);
+					path_count++;
 				}
 			}
 		}
@@ -110,7 +122,6 @@ public class PathExpansionActor extends UntypedActor {
 				Path path = (Path)acct_msg.getData();
 				
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
-
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);

@@ -19,6 +19,7 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
  * Defines methods for emitting data to subscribed clients
  */
 public class PastPathExperienceController {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PastPathExperienceController.class);
 	
     /**
@@ -36,7 +37,7 @@ public class PastPathExperienceController {
 								
 				Page page;
 				try {
-					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>());
+					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();

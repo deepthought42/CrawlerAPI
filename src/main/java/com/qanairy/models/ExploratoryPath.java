@@ -136,8 +136,7 @@ public class ExploratoryPath extends Path{
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		List<PathObject> path_obj_list = path.getPath();
-		for(PathObject path_obj : path_obj_list){
+		for(PathObject path_obj : path.getPath()){
 			if(path_obj instanceof Page){
 				if(path_obj.equals(page)){
 					return true;

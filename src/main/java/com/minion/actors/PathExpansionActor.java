@@ -92,6 +92,7 @@ public class PathExpansionActor extends UntypedActor {
 			}
 			else{
 				Path new_path = Path.clone(path);
+				new_path.add(page_element);
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
@@ -101,9 +102,7 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 		}
-		
-		log.info("# of Paths added : "+path_count);
-		
+				
 		return pathList;
 	}
 	

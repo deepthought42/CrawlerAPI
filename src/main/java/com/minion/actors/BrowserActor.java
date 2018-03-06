@@ -74,18 +74,17 @@ public class BrowserActor extends UntypedActor {
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-				log.info("exploratory path started");
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
-				
 				Page last_page = exploratory_path.findLastPage();
-				boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
-				log.info("landable status: " +landable_status);
-				last_page.setLandable(landable_status);
+				//log.info("Checking if page is landable");
+				//boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
+				//log.info("landable status: " +landable_status);
+				//last_page.setLandable(landable_status);
 							
-				if(last_page.isLandable()){
+				//if(landable_status){
 					//clone path starting at last page in path
 					//Path shortened_path = path.clone());
-				}
+				//}
 
 				if(exploratory_path.getPath() != null){
 					Page result_page = null;
@@ -101,7 +100,6 @@ public class BrowserActor extends UntypedActor {
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path path = Path.clone(exploratory_path);
 						path.add(action);
-						log.info("Crawling exploratory path with length : " + path.size());
 						final long pathCrawlStartTime = System.currentTimeMillis();
 						result_page = Crawler.crawlPath(path, browser);
 						final long pathCrawlEndTime = System.currentTimeMillis();
@@ -113,16 +111,13 @@ public class BrowserActor extends UntypedActor {
 							last_idx = 0;
 						}
 						
-						int clicks = getLastClicksSequenceCount(last_idx, exploratory_path, last_page);
-						if(clicks >= 3 && last_page.equals(result_page)){
+						if(ExploratoryPath.hasCycle(path,result_page)){
 							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
+					  		System.err.println("EXPLORATORY PATH HAS CYCLE...trying to next action");
+					  		continue;
 					  	}
 					  	else{
-					  		if(ExploratoryPath.hasCycle(path, last_page)){
-					  			log.info("exploratory path has cycle; exiting");
-					  			break;
-					  		}
 					  		OrientConnectionFactory conn = new OrientConnectionFactory();
 							Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 							domain.setLastDiscoveryPathRanAt(new Date());
@@ -132,14 +127,16 @@ public class BrowserActor extends UntypedActor {
 					  		System.out.println("Count :: "+cnt);
 					  		
 					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg);
-					  	}
-						
-						Path new_path = Path.clone(path);
-						new_path.add(result_page);
-						Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
+							System.err.println("TEST CREATED, path is being expanded");
 
-						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-						path_expansion_actor.tell(path_msg, getSelf() );
+					  		Path new_path = Path.clone(path);
+							new_path.add(result_page);
+							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
+
+							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+							path_expansion_actor.tell(path_msg, getSelf() );
+					  		break;
+					  	}
 					}
 				}
 
@@ -278,8 +275,7 @@ public class BrowserActor extends UntypedActor {
 	  	Path path = new Path();
 	  	System.out.println("Getting browser page...");
 	  	Page page_obj = browser.getPage();
-		boolean landable_status = page_obj.checkIfLandable(browser.getBrowserName());
-		page_obj.setLandable(landable_status);
+		page_obj.setLandable(true);
 	  	path.add(page_obj);
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));

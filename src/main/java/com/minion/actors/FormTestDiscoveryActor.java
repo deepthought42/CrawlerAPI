@@ -51,8 +51,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			
 			//get first page in path
 			Page page = (Page)path.getPath().get(0);
-			//if(path_obj instanceof Page){
-				//Page page = (Page)path_obj;
+
 				int cnt = 0;
 			  	Browser browser = null;
 			  	
@@ -706,8 +705,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			//generate single character str test
 			Path path_2 = new Path();
-			path_2.add(input);
-			path_2.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("click", ""));
 			path_2.add(input);

@@ -47,6 +47,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			System.err.println("Service package :: "+account.getServicePackage());
 			acct_record.setServicePackage(account.getServicePackage());
 			acct_record.setPaymentAcctNum(account.getPaymentAcctNum());
+			acct_record.setLastDomain(account.getLastDomain());
 		}
 		else{
 			acct_record = iter.next();
@@ -82,7 +83,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			users.add(user_repo.convertFromRecord(user));
 		}*/
 		
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains);
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains, account.getLastDomain());
 	}
 	
 	/**

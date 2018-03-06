@@ -11691,3 +11691,21 @@ java.util.concurrent.TimeoutException: null
 2018-03-06 11:22:33.803  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
 2018-03-06 11:22:33.810  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
 2018-03-06 11:22:33.816  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 11:24:17.898  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 11:24:17.917  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 11:24:17.968  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 11:24:17.969  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 11:24:18.026  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 11:24:23.330  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 11:24:23.335  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 11:24:23.337  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 12:20:14.592  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 12:20:14.624  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 12:20:15.642  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 12:20:15.643  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 12:20:15.650  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 12:20:18.919  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 12:20:20.635  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 12:20:21.808  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 12:20:21.814  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 12:20:21.820  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.

@@ -6,6 +6,7 @@ import java.util.Map;
 import com.qanairy.models.PathObject;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+import com.tinkerpop.frames.annotations.gremlin.GremlinGroovy;
 
 public interface IPageElement extends IPathObject{
 	@Property("key")
@@ -64,4 +65,7 @@ public interface IPageElement extends IPathObject{
 	
 	@Property("cssValues")
 	public void setCssValues(Map<String, String> cssMap);
+	
+	@GremlinGroovy("it.out('goes_to').dedup")
+	public Iterable<IAction> getActions();
 }

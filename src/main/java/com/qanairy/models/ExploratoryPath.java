@@ -6,6 +6,12 @@ import java.util.List;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.dto.PageElementRepository;
+import com.qanairy.persistence.IAction;
+import com.qanairy.persistence.IPageElement;
+import com.qanairy.persistence.IPathObject;
+import com.qanairy.persistence.OrientConnectionFactory;
+
 
 /**
  * A set of vertex objects that form a sequential movement through a graph
@@ -138,6 +144,10 @@ public class ExploratoryPath extends Path{
 		//iterate through pages to see if any match
 		for(PathObject path_obj : path.getPath()){
 			if(path_obj instanceof Page){
+				System.err.println("Testing path object vs page equality...");
+				System.err.println("PATH OBJECT SCREENSHOT KEYS :: "+((Page)path_obj).getBrowserScreenshots().keySet().size());
+
+				System.err.println("PAGE SCREENSHOT KEYS :: "+page.getBrowserScreenshots().keySet().size());
 				if(path_obj.equals(page)){
 					return true;
 				}
@@ -146,6 +156,40 @@ public class ExploratoryPath extends Path{
 		return false;
 	}
 
+	/**
+	 * Checks if the path has the same page more than once. 
+	 * 
+	 * @param path
+	 * @return true if sequence appears more than once
+	 */
+	public static boolean hasExistingElementActionSequence(ExploratoryPath path){
+		if(path.size() == 1){
+			return false;
+		}
+		
+		//extract all pages
+		//iterate through pages to see if any match
+		for(PathObject path_obj : path.getPath()){
+			if(path_obj instanceof PageElement){
+				PageElementRepository page_elem_repo = new PageElementRepository();
+				OrientConnectionFactory connection = new OrientConnectionFactory();
+				PageElement page_elem = page_elem_repo.find(connection, page_elem_repo.generateKey((PageElement)path_obj));
+				if(page_elem != null){
+					List<Action> actions = path.getPossibleActions();
+					IPageElement ipage_elem = page_elem_repo.convertToRecord(connection, page_elem);
+					for(IAction iaction : ipage_elem.getActions()){
+						for(Action action : actions){
+							if(iaction.getName().equals(action.getName())){
+								return true;
+							}
+						}
+					}
+				}
+				
+			}
+		}
+		return false;
+	}
 	
 	/**
 	 * Checks if the path has the same page more than once. 

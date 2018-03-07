@@ -111,7 +111,7 @@ public class BrowserActor extends UntypedActor {
 							last_idx = 0;
 						}
 						
-						if(ExploratoryPath.hasCycle(path,result_page)){
+						if(Path.hasCycle(path,result_page)){
 							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
 					  		System.err.println("EXPLORATORY PATH HAS CYCLE...trying to next action");

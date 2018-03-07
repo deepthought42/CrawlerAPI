@@ -29,6 +29,7 @@ import com.qanairy.services.DomainService;
 @RequestMapping("/domains")
 public class DomainController {
 	
+	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -48,12 +49,6 @@ public class DomainController {
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(HttpServletRequest request,
     									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
-        //printGrantedAuthorities((Auth0JWTToken) principal);
-        /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
-            
-            // log username of user requesting domain creation
-            logger.info("creating new domain in domain");
-        }*/
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
@@ -69,6 +64,7 @@ public class DomainController {
 		domain.setUrl(url_obj.getHost());
     	
     	acct.addDomain(domain);
+    	acct.setLastDomain(domain.getUrl());
     	accountService.update(acct);
     	return domainService.create(domain);
     }
@@ -102,6 +98,33 @@ public class DomainController {
     	}
     	
     	return domainService.update(domain);
+    }
+    
+    /**
+     * Create a new {@link Domain domain}
+     * 
+     * @throws UnknownUserException 
+     * @throws UnknownAccountException 
+     * @throws MalformedURLException 
+     */
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="/select", method = RequestMethod.PUT)
+    public @ResponseBody void selectDomain(HttpServletRequest request,
+    									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+    	acct.setLastDomain(domain.getUrl());
+    	accountService.update(acct);
     }
 
     @PreAuthorize("hasAuthority('read:domains')")

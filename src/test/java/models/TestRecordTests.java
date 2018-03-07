@@ -44,7 +44,7 @@ public class TestRecordTests {
 		
 		test.setPath(path);
 		test.setResult(page);
-		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page);	
+		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page, -1L);	
 		TestRecord test_record_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
 		
 		Assert.assertTrue(test_record_record.getKey().equals(test_record_repo.generateKey(test_record)));
@@ -72,7 +72,7 @@ public class TestRecordTests {
 		
 		test.setPath(path);
 		test.setResult(page);
-		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page);
+		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page, -1L);
 		test_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
 		TestRecord test_record_record = test_record_repo.update(new OrientConnectionFactory(), test_record);
 		
@@ -103,7 +103,7 @@ public class TestRecordTests {
 		
 		test.setPath(path);
 		test.setResult(page);
-		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page);
+		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page, -1L);
 		
 		test_record = test_record_repo.create(orient_connection, test_record);
 		TestRecord test_record_record = test_record_repo.find(orient_connection, test_record.getKey());

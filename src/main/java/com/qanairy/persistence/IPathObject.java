@@ -2,7 +2,6 @@ package com.qanairy.persistence;
 
 import com.qanairy.persistence.edges.IPathEdge;
 import com.tinkerpop.blueprints.Direction;
-import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Incidence;
 import com.tinkerpop.frames.Property;
 

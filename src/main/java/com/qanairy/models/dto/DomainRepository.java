@@ -111,11 +111,11 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 
 		if(iter.hasNext()){
 			IDomain domain_record = iter.next();
-			domain_record.setUrl(domain.getUrl());
 			domain_record.setLogoUrl(domain.getLogoUrl());
 			domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 			domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
 			domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
+			domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
 		}
 		
 		return domain;

@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,36 +89,28 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				WebDriverWait wait = new WebDriverWait(driver, 120);
+				WebDriverWait wait = new WebDriverWait(driver, 30);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				
-				try {
-					System.err.println("Waiting 30 seconds ::   "+(new Date()).toString());
-					Thread.sleep(30000);
-				} catch (InterruptedException e) {
-					System.err.println("Done waiting : "+(new Date()).toString());
-				}
 				break;
 			}
 			catch(UnreachableBrowserException e){
+				System.err.println("Unreachable browser exception");
 				log.error(e.getMessage());
 			}
 			catch(WebDriverException e){
+				System.err.println("WebDriver exception occurred opening browser");
 				log.error(e.getMessage());
 			}
 			catch(GridException e){
+				System.err.println("Grid exception occurred when opening browser");
 				log.error(e.getMessage());
 			}
 			
 			cnt++;
-
-			try {
-				Thread.sleep(300000);
-			} catch (InterruptedException e1) {}
 		}
 		
 		if(this.driver != null){			
-			System.err.println("Driver isn't null! Getting url "+url);
 			this.url = url;
 			this.driver.get(url);
 		}

@@ -381,7 +381,7 @@ public class TestController {
 	 * @throws MalformedURLException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
-	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
+	@RequestMapping(path="/run/{key}", method = RequestMethod.POST)
 	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
 									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
@@ -432,8 +432,8 @@ public class TestController {
      * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
-	@RequestMapping(path="/runAll", method = RequestMethod.POST)
-	public @ResponseBody Map<String, Boolean> runAllTests(HttpServletRequest request,
+	@RequestMapping(path="/run", method = RequestMethod.POST)
+	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser_type", required=true) String browser_type,
 														  final Principal principal) 
@@ -465,7 +465,7 @@ public class TestController {
 	   		);
 	   	
     	OrientConnectionFactory connection = new OrientConnectionFactory();
-    	Map<String, Boolean> test_results = new HashMap<String, Boolean>();
+    	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	
     	for(String key : test_keys){
     		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
@@ -485,13 +485,20 @@ public class TestController {
 	    			
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
 	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
-	    			itest.setCorrect(record.getPasses());
+	    			boolean is_passing = true;
+					//update overall passing status based on all browser passing statuses
+					for(Boolean status : itest.getBrowserStatuses().values()){
+						if(status != null && !status){
+							is_passing = false;
+						}
+					}
+					itest.setCorrect(is_passing);
 	    			
 	    			Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
 					browser_statuses.put(record.getBrowser(), record.getPasses());
 					itest.setBrowserStatuses(browser_statuses);
 	    			itest.setLastRunTimestamp(new Date());
-	    			test_results.put(test.getKey(), record.getPasses());
+	    			test_results.put(test.getKey(), record);
 	    			itest.setRunTime(record.getRunTime());
 	    			browser.close();
 	    		}
@@ -565,7 +572,7 @@ public class TestController {
     	if(name == null || name.isEmpty()){
     		throw new EmptyGroupNameException();
     	}
-		Group group = new Group(name, description);
+		Group group = new Group(name.toLowerCase(), description);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();

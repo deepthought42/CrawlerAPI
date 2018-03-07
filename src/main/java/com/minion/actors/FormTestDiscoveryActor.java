@@ -51,8 +51,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			
 			//get first page in path
 			Page page = (Page)path.getPath().get(0);
-			//if(path_obj instanceof Page){
-				//Page page = (Page)path_obj;
+
 				int cnt = 0;
 			  	Browser browser = null;
 			  	
@@ -72,7 +71,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			  	List<Form> forms = Browser.extractAllForms(current_page, browser);
 			  	List<Path> form_paths = new ArrayList<Path>();
-			  	log.info("Total Choice fields in form : " + forms.get(0).getFormFields().size());
 			  	log.info("Generating tests for " + forms.size() + " forms");
 			  	for(Form form : forms){
 			  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
@@ -707,8 +705,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			//generate single character str test
 			Path path_2 = new Path();
-			path_2.add(input);
-			path_2.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("click", ""));
 			path_2.add(input);

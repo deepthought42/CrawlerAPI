@@ -12,7 +12,8 @@ public class Account {
 	private String service_package;
 	private String payment_acct_num;
 	private List<QanairyUser> users;
-	private List<Domain> domains = new ArrayList<Domain>();
+	private List<Domain> domains;
+	private String last_domain_url;
 	
 	public Account(){}
 	
@@ -32,6 +33,7 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = users;
+		this.setDomains(new ArrayList<Domain>());
 	}
 	
 	public Account(String key, String org_name, String service_package, String payment_acct_num){
@@ -40,6 +42,7 @@ public class Account {
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = new ArrayList<QanairyUser>();
+		this.setDomains(new ArrayList<Domain>());
 	}
 	
 	/**
@@ -52,7 +55,7 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains){
+	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains, String last_domain_url){
 		assert users != null;
 		
 		this.setKey(key);
@@ -61,6 +64,7 @@ public class Account {
 		this.setPaymentAcctNum(payment_acct_num);
 		this.setUsers(users);
 		this.setDomains(domains);
+		this.setLastDomain(last_domain_url);
 	}
 
 	public String getOrgName() {
@@ -111,8 +115,8 @@ public class Account {
 		return this.domains;
 	}
 	
-	public boolean setDomains(List<Domain> domains){
-		return this.domains.addAll(domains);
+	public void setDomains(List<Domain> domains){
+		this.domains = domains;
 	}
 	
 	public boolean addDomain(Domain domain) {
@@ -134,5 +138,13 @@ public class Account {
 			return this.domains.remove(idx);
 		}
 		return null;
+	}
+
+	public void setLastDomain(String domain_url) {
+		this.last_domain_url = domain_url;
+	}
+	
+	public String getLastDomain(){
+		return this.last_domain_url;
 	}
 }

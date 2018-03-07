@@ -113,8 +113,6 @@ public class Test {
 	 * @return
 	 */
 	public Boolean isTestPassing(Page page, Boolean last_test_passing_status){
-		System.err.println("last test passing status :: "+ last_test_passing_status);
-		System.err.println("Page obj : "+page);
 		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
 			log.info("Pages are equal and test is NOT marked as passing");
 			last_test_passing_status = false; 
@@ -131,8 +129,6 @@ public class Test {
 			log.info("pages are NOT equal and test is marked as passing");
 			last_test_passing_status = false;
 		}
-
-		System.err.println("passing status:: "+ last_test_passing_status);
 		
 		return last_test_passing_status;
 	}

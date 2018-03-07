@@ -31,6 +31,12 @@ public interface IAccount {
 	@Property("payment_acct_num")
 	public void setPaymentAcctNum(String payment_acct_num);
 	
+	@Property("last_domain")
+	public void setLastDomain(String domain_url);
+	
+	@Property("last_domain")
+	public String getLastDomain();
+	
 	@Adjacency(direction=Direction.OUT, label="has_user")
 	public Iterable<IQanairyUser> getUsers();
 	
@@ -48,4 +54,5 @@ public interface IAccount {
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public void removeDomain(IDomain domain);
+	
 }

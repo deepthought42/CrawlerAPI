@@ -34,6 +34,10 @@ public class ActionFactory {
 	public void execAction(WebElement elem, String input, String action) throws WebDriverException{
 		if(action.equals("click")){
 			builder.click(elem);
+
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {}
 		}
 		else if(action.equals("clickAndHold")){
 			//builder.clickAndHold(elem);
@@ -44,6 +48,9 @@ public class ActionFactory {
 		}
 		else if(action.equals("doubleClick")){
 			builder.doubleClick(elem);
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {}
 		}
 		else if(action.equals("dragAndDrop")){
 			//builder.dragAndDrop(source, target);
@@ -63,6 +70,9 @@ public class ActionFactory {
 		}
 		else if(action.equals("mouseover")){
 			builder.moveToElement(elem);
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {}
 		}
 		builder.perform();
 	}

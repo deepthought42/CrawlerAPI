@@ -84,6 +84,12 @@ public class PathExpansionActor extends UntypedActor {
 						new_path.getPath().addAll(form_path.getPath());
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 							ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+							//check for element action sequence. 
+							//if one exists with one of the actions in the action_list
+							// 	 then skip this action path
+							if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+								continue;
+							}
 							pathList.add(action_path);
 							path_count++;
 						}
@@ -96,7 +102,15 @@ public class PathExpansionActor extends UntypedActor {
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+					
 					ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+					
+					//check for element action sequence. 
+					//if one exists with one of the actions in the action_list
+					// 	 then skip this action path
+					if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+						continue;
+					}
 					pathList.add(action_path);
 					path_count++;
 				}
@@ -113,7 +127,7 @@ public class PathExpansionActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			//send data directly to form test builder 
+			//send data directly to form test builder
 			final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
 			form_test_discoverer.tell(acct_msg, getSelf() );
 			

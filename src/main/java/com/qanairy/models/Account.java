@@ -115,8 +115,8 @@ public class Account {
 		return this.domains;
 	}
 	
-	public boolean setDomains(List<Domain> domains){
-		return this.domains.addAll(domains);
+	public void setDomains(List<Domain> domains){
+		this.domains = domains;
 	}
 	
 	public boolean addDomain(Domain domain) {

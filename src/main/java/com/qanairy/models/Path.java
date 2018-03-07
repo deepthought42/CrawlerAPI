@@ -14,6 +14,7 @@ import com.qanairy.models.PathObject;
  * A set of vertex objects that form a sequential movement through a graph
  */
 public class Path {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Path.class);
 	
     private String key;
@@ -185,6 +186,34 @@ public class Path {
 		}
 
 		return cycle_exists;
+	}
+	
+
+	/**
+	 * Checks if the path has 2 sequential elements that appear in more than 1 location
+	 * 
+	 * @param path
+	 * @return true if sequence appears more than once
+	 */
+	public static boolean hasCycle(Path path, Page page){
+		if(path.size() == 1){
+			return false;
+		}
+		
+		//extract all pages
+		//iterate through pages to see if any match
+		for(PathObject path_obj : path.getPath()){
+			if(path_obj instanceof Page){
+				System.err.println("Testing path object vs page equality...");
+				System.err.println("PATH OBJECT SCREENSHOT KEYS :: "+((Page)path_obj).getBrowserScreenshots().keySet().size());
+
+				System.err.println("PAGE SCREENSHOT KEYS :: "+page.getBrowserScreenshots().keySet().size());
+				if(path_obj.equals(page)){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	/**

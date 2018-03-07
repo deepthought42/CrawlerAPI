@@ -11709,3 +11709,137 @@ java.util.concurrent.TimeoutException: null
 2018-03-06 12:20:21.808  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
 2018-03-06 12:20:21.814  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
 2018-03-06 12:20:21.820  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 12:22:29.994  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 12:22:30.018  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 12:22:31.049  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 12:22:31.063  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 12:22:31.070  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 12:22:36.125  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 12:22:36.133  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 12:22:36.134  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 12:25:02.229  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 12:25:02.252  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 12:25:03.387  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 12:25:03.393  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 12:25:03.399  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 12:25:08.623  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 12:25:08.634  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 12:25:08.689  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 12:26:57.207  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 12:26:57.227  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 12:26:58.345  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 12:26:58.350  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 12:26:58.357  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 12:27:03.276  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 12:27:03.282  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 12:27:03.283  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 12:27:48.642  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 12:27:48.661  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 12:27:48.712  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 12:27:48.713  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 12:27:48.719  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 12:27:51.950  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 12:27:53.581  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 12:27:54.619  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 12:27:54.627  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 12:27:54.634  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 12:31:49.776  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 12:31:49.797  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 12:31:49.937  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 12:31:49.938  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 12:31:49.946  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 12:31:55.513  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 12:31:55.518  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 12:31:55.523  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 13:49:55.240  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 13:49:55.272  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 13:49:55.335  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 13:49:55.336  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 13:49:55.344  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 13:49:58.450  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 13:50:00.041  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 13:50:01.087  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 13:50:01.096  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 13:50:01.161  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 14:02:42.946  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 14:02:42.974  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 14:02:43.038  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 14:02:43.039  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 14:02:43.046  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 14:02:47.975  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 14:02:47.995  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 14:02:48.000  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 14:10:03.011  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 14:10:03.048  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 14:10:03.115  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 14:10:03.116  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 14:10:03.123  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 14:10:09.955  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 14:10:12.202  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 14:10:13.403  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 14:10:13.408  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 14:10:13.414  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 14:25:40.853  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 14:25:40.891  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 14:25:40.981  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 14:25:40.982  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 14:25:40.997  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 14:25:44.672  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 14:25:47.183  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 14:25:55.273  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 14:25:55.287  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 14:25:55.307  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 14:38:28.386  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 14:38:28.447  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 14:38:28.572  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 14:38:28.572  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 14:38:28.587  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 14:38:31.834  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 14:38:33.473  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 14:38:34.554  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 14:38:34.568  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 14:38:34.575  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 14:47:15.886  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 14:47:15.922  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 14:47:16.020  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 14:47:16.020  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 14:47:16.027  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 14:47:22.447  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 14:47:22.455  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 14:47:22.553  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 18:21:10.227  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 18:21:10.256  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 18:21:16.660  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 18:21:16.666  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 18:21:16.673  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 18:21:19.788  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 18:21:21.438  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 18:21:22.470  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 18:21:22.475  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 18:21:22.481  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 18:26:23.047  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 18:26:23.086  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 18:26:29.718  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 18:26:29.724  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 18:26:29.730  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 18:26:33.415  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 18:26:35.009  INFO   --- [main] com.qanairy.models.Test                  : Run status being saved as false
+2018-03-06 18:26:36.083  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 18:26:36.090  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 18:26:36.169  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 18:27:39.009  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 18:27:39.028  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 18:27:39.075  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 18:27:39.076  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 18:27:39.083  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 18:27:44.257  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 18:27:44.273  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 18:27:44.275  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.
+2018-03-06 18:29:15.813  INFO   --- [main] com.qanairy.models.PathObject            : return action path object
+2018-03-06 18:29:15.837  INFO   --- [main] com.getsentry.raven.DefaultRavenFactory  : Using an HTTPS connection to Sentry.
+2018-03-06 18:29:15.890  INFO   --- [main] models.PathTests                         : Path record size :: 3
+2018-03-06 18:29:15.891  INFO   --- [main] models.PathTests                         : Path size :: 3
+2018-03-06 18:29:15.897  INFO   --- [main] models.PathTests                         : path object record type : Page
+2018-03-06 18:29:20.961  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Automatic shutdown of the async connection
+2018-03-06 18:29:20.967  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Gracefully shutdown sentry threads.
+2018-03-06 18:29:20.969  INFO   --- [Thread-3] c.g.raven.connection.AsyncConnection     : Shutdown finished.

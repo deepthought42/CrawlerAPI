@@ -47,13 +47,13 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			System.err.println("Service package :: "+account.getServicePackage());
 			acct_record.setServicePackage(account.getServicePackage());
 			acct_record.setPaymentAcctNum(account.getPaymentAcctNum());
-			acct_record.setLastDomain(account.getLastDomain());
 		}
 		else{
 			acct_record = iter.next();
 		}
 		
 		acct_record.setOrgName(account.getOrgName());
+		acct_record.setLastDomain(account.getLastDomain());
 
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();

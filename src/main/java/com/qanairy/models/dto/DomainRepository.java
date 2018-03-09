@@ -97,6 +97,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		if(domain_record == null){
 			convertToRecord(connection, domain);
 		}
+		
 		return domain;
 	}
 

@@ -65,14 +65,14 @@ public class Domain {
 	 * @param logo_url
 	 * @param protocol
 	 */
-	public Domain(String url, String logo_url, String protocol){
+	public Domain( String protocol, String url, String browser, String logo_url){
 		this.setUrl(url);
 		this.setLogoUrl(logo_url);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
-		this.setDiscoveryBrowser("");
+		this.setDiscoveryBrowser(browser);
 		this.setLastDiscoveryStartedAt(null);
 	}
 	

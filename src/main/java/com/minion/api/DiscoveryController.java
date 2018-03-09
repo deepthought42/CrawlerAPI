@@ -66,8 +66,8 @@ public class DiscoveryController {
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
-													   	  @RequestParam(value="url", required=true) String url) 
-															   throws MalformedURLException, UnknownAccountException {
+													   	  		@RequestParam(value="url", required=true) String url) 
+													   	  				throws MalformedURLException, UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();

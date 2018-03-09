@@ -65,7 +65,4 @@ public interface IPageElement extends IPathObject{
 	
 	@Property("cssValues")
 	public void setCssValues(Map<String, String> cssMap);
-	
-	@GremlinGroovy("it.out('goes_to').dedup")
-	public Iterable<IAction> getActions();
 }

@@ -328,7 +328,7 @@ public class TestController {
 			record = itest_records.next();
 		}
 		if(record != null){
-			record.setPasses(itest.getCorrect());
+			record.setPassing(itest.getCorrect());
 		}
 	}
 
@@ -382,7 +382,7 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run/{key}", method = RequestMethod.POST)
-	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
+	public @ResponseBody TestRecord runTest(@PathVariable(value="key", required=true) String key, 
 									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
@@ -397,19 +397,6 @@ public class TestController {
 				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				record = TestingActor.runTest(test, browser);
 				
-				TestRecordRepository test_record_record = new TestRecordRepository();
-				itest.addRecord(test_record_record.convertToRecord(connection, record));
-
-				itest.getBrowserStatuses().put(record.getBrowser(), record.getPasses());
-				itest.setRunStatus(false);
-				boolean is_passing = true;
-				//update overall passing status based on all browser passing statuses
-				for(Boolean status : itest.getBrowserStatuses().values()){
-					if(status != null && !status){
-						is_passing = false;
-					}
-				}
-				itest.setCorrect(is_passing);
 				
 				browser.close();
 			}
@@ -417,7 +404,7 @@ public class TestController {
 				log.warn("test found does not match key :: " + key);
 			}
 			connection.close();
-			return test_record.convertFromRecord(itest);
+			return record;
 		}
 		
 		throw new TestAlreadyRunningException();
@@ -495,7 +482,7 @@ public class TestController {
 					itest.setCorrect(is_passing);
 	    			
 	    			Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
-					browser_statuses.put(record.getBrowser(), record.getPasses());
+					browser_statuses.put(record.getBrowser(), record.getPassing());
 					itest.setBrowserStatuses(browser_statuses);
 	    			itest.setLastRunTimestamp(new Date());
 	    			test_results.put(test.getKey(), record);

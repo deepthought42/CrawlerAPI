@@ -204,10 +204,6 @@ public class Path {
 		//iterate through pages to see if any match
 		for(PathObject path_obj : path.getPath()){
 			if(path_obj instanceof Page){
-				System.err.println("Testing path object vs page equality...");
-				System.err.println("PATH OBJECT SCREENSHOT KEYS :: "+((Page)path_obj).getBrowserScreenshots().keySet().size());
-
-				System.err.println("PAGE SCREENSHOT KEYS :: "+page.getBrowserScreenshots().keySet().size());
 				if(path_obj.equals(page)){
 					return true;
 				}

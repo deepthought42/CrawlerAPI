@@ -253,7 +253,9 @@ public class Page extends PathObject {
 
 			screenshots_match = compareImages(img1, img2);
         }
-        return screenshots_match; 
+        System.err.println("Screenshots match? :: "+screenshots_match);
+        System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
+        return screenshots_match || this.getSrc().equals(that.getSrc()); 
 	}
 	
 	/**

@@ -73,6 +73,10 @@ public class BrowserActor extends UntypedActor {
 
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
+				/*
+				 * tell discovery registry that we are running an exploratory path for discovery
+				 */
+				
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				Page last_page = exploratory_path.findLastPage();
@@ -110,8 +114,9 @@ public class BrowserActor extends UntypedActor {
 						if(last_idx < 0){
 							last_idx = 0;
 						}
-						
-						if(Path.hasCycle(path,result_page)){
+						last_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
+
+						if(last_page.equals(result_page)){//Path.hasCycle(path,result_page)){
 							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
 					  		System.err.println("EXPLORATORY PATH HAS CYCLE...trying to next action");
@@ -142,6 +147,10 @@ public class BrowserActor extends UntypedActor {
 
 			  	browser.close();
 				
+				/*
+				 * tell discovery registry that we are FINISHED running an exploratory path for discovery
+				 */
+			  	
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}

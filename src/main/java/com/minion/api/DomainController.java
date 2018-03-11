@@ -3,11 +3,11 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -48,8 +50,15 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(HttpServletRequest request,
-    									@RequestBody Domain domain) 
+    									@RequestBody(required = true) Domain domain) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    	if(domain.getProtocol() == null ||
+    		domain.getUrl() == null ||
+    		domain.getDiscoveryBrowser() == null)
+		{
+			throw new RequiredFieldMissingException();
+		}
+    	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
@@ -61,6 +70,12 @@ public class DomainController {
     		throw new UnknownAccountException();
     	}
     	
+    	//check if domain should have a 'www.' or not. We do this for consistency of naming in the database
+    	int dot_idx = domain.getUrl().indexOf('.');
+    	int last_dot_idx = domain.getUrl().lastIndexOf('.');
+    	if(dot_idx == last_dot_idx){
+    		domain.setUrl("www."+domain.getUrl());
+    	}
     	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
 		domain.setUrl(url_obj.getHost());
     	
@@ -130,7 +145,7 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public  @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    public @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
@@ -184,4 +199,16 @@ public class DomainController {
         }
     }
     */	
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class RequiredFieldMissingException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public RequiredFieldMissingException() {
+		super("Please fill in or select all required fields");
+	}
 }

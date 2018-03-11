@@ -36,7 +36,7 @@ public class ActionFactory {
 			builder.click(elem);
 
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {}
 		}
 		else if(action.equals("clickAndHold")){
@@ -49,7 +49,7 @@ public class ActionFactory {
 		else if(action.equals("doubleClick")){
 			builder.doubleClick(elem);
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {}
 		}
 		else if(action.equals("dragAndDrop")){

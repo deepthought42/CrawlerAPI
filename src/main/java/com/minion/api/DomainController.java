@@ -48,7 +48,8 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(HttpServletRequest request,
-    									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    									@RequestBody Domain domain) 
+    											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();

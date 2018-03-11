@@ -65,6 +65,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 		domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
 		domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
+		domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
 		
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<ITestUser> test_users = new ArrayList<ITestUser>();
@@ -96,6 +97,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		if(domain_record == null){
 			convertToRecord(connection, domain);
 		}
+		
 		return domain;
 	}
 
@@ -113,8 +115,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			domain_record.setLogoUrl(domain.getLogoUrl());
 			domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 			domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
+			domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
 			domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
-			
 		}
 		
 		return domain;
@@ -170,8 +172,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			test_users.add(test_user_repo.convertFromRecord(test_user));
 		}
 		int test_cnt = obj.getDiscoveryTestCount();
-		
-		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users, test_cnt, obj.getDiscoveryBrowserName());
+
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), obj.getDiscoveryStartTime(), test_users, test_cnt, obj.getDiscoveryBrowserName());
 	}
 	
 	public Domain convertFromRecord(OrientVertex obj) {

@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -67,8 +66,8 @@ public class DiscoveryController {
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
-													   	  @RequestParam(value="url", required=true) String url) 
-															   throws MalformedURLException, UnknownAccountException {
+													   	  		@RequestParam(value="url", required=true) String url) 
+													   	  				throws MalformedURLException, UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();

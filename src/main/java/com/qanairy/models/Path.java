@@ -178,6 +178,7 @@ public class Path {
 		boolean cycle_exists = false;
 		for(int first_page_idx =0; first_page_idx < page_list.size()-1 && !cycle_exists; first_page_idx++){
 			for(int second_page_idx =1; second_page_idx < page_list.size() && !cycle_exists; first_page_idx++){
+				System.err.println("CYCLE WHAAAAATTTT     ???????????????     "+page_list.get(second_page_idx).getElements().size());
 				if(page_list.get(first_page_idx).equals(page_list.get(second_page_idx))){
 					cycle_exists = true;
 					break;
@@ -204,30 +205,11 @@ public class Path {
 		//iterate through pages to see if any match
 		for(PathObject path_obj : path.getPath()){
 			if(path_obj instanceof Page){
+				System.err.println("OH MY GOD, HOW MANY CYCLE METHODS ARE THERE    !!!!!!!!!!!!!!!!!!!!!!!    "+page.getElements().size());
 				if(path_obj.equals(page)){
 					return true;
 				}
 			}
-		}
-		return false;
-	}
-	
-	/**
-	 * Checks if the path has the same page more than once. 
-	 * 
-	 * @param path
-	 * @return true if sequence appears more than once
-	 */
-	public static boolean hasPageCycle(Path path){
-		for(int i = path.getPath().size()-1; i > 0; i--){
-			for(int j = i-1; j>= 0; j--){
-				if(path.getPath().get(i) instanceof Page 
-						&& path.getPath().get(j) instanceof Page
-						&& path.getPath().get(i).equals(path.getPath().get(j)))
-				{
-					return true;
-				}
-			}			
 		}
 		return false;
 	}

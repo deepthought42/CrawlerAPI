@@ -119,6 +119,7 @@ public class ExploratoryPath extends Path{
 		boolean cycle_exists = false;
 		for(int first_page_idx =0; first_page_idx < page_list.size()-1 && !cycle_exists; first_page_idx++){
 			for(int second_page_idx =1; second_page_idx < page_list.size() && !cycle_exists; first_page_idx++){
+				System.err.println("CYCLE CHECK! second page is &&&&&&&&&&&&& "+page_list.get(second_page_idx).getElements().size());
 				if(page_list.get(first_page_idx).equals(page_list.get(second_page_idx))){
 					cycle_exists = true;
 					break;
@@ -148,6 +149,7 @@ public class ExploratoryPath extends Path{
 				System.err.println("PATH OBJECT SCREENSHOT KEYS :: "+((Page)path_obj).getBrowserScreenshots().keySet().size());
 
 				System.err.println("PAGE SCREENSHOT KEYS :: "+page.getBrowserScreenshots().keySet().size());
+				System.err.println("ANOTHER CYCLE CHECK     %%%%%%%%%%%%%%%%%%%%%   "+page.getElements().size());
 				if(path_obj.equals(page)){
 					return true;
 				}
@@ -186,7 +188,6 @@ public class ExploratoryPath extends Path{
 						if(new_path_obj.getType().equals("Action")){
 							for(Action action : actions){
 								if(((Action)new_path_obj).getName().equals(action.getName()) && ((Action)new_path_obj).getValue().equals(action.getValue())){
-									System.err.println("Action exists....RETURNING TRUE");
 									return true;
 								}
 							}

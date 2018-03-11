@@ -1,17 +1,12 @@
 package com.qanairy.models;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.imageio.ImageIO;
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.minion.browsing.Browser;
@@ -181,6 +176,7 @@ public class Page extends PathObject {
 
 		try{
 			Browser browser = new Browser(this.getUrl().toString(), browser_name);
+			System.err.println("GETTING PAGE TO CHECK EQUALITY    ################     "+browser.getPage().getElements().size());
 			if(this.equals(browser.getPage())){
 				landable = true;
 			}
@@ -238,7 +234,7 @@ public class Page extends PathObject {
         
         Page that = (Page)o;
         
-        boolean screenshots_match = true;
+        /*boolean screenshots_match = false;
         for(String browser : that.getBrowserScreenshots().keySet()){
 			BufferedImage img1;
 			BufferedImage img2;
@@ -253,9 +249,40 @@ public class Page extends PathObject {
 
 			screenshots_match = compareImages(img1, img2);
         }
+        */
+        
+        /*
         System.err.println("Screenshots match? :: "+screenshots_match);
         System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
-        return screenshots_match || this.getSrc().equals(that.getSrc()); 
+        System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        System.err.println("Page 1 length :: "+this.getSrc().length());
+        System.err.println("Page 1 length :: "+that.getSrc().length());
+        System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        */
+        if(this.getElements().size() != that.getElements().size()){
+        	System.err.println("@@@@@@@@@@@@@@     THIS vs THAT ELEMENTS SIZE ++++++++++++++++++++++++++++++++++++    "+this.getElements().size() + "  vs  "+that.getElements().size());
+        	
+        	if(this.getElements().size() < that.getElements().size()){
+        		for(int idx=0; idx<this.getElements().size(); idx++){
+    	        	System.err.println("THIS page element at idx "+idx+"   =    "+this.getElements().get(idx));
+    	        	System.err.println("THAT page element at idx "+idx+"   =    "+that.getElements().get(idx));
+            	}
+        		for(int idx=this.getElements().size(); idx<that.getElements().size(); idx++){
+    	        	System.err.println("THAT page element at idx "+idx+"   =    "+that.getElements().get(idx));
+            	}
+        	}
+        	if(that.getElements().size() < this.getElements().size()){
+        		for(int idx=0; idx<that.getElements().size(); idx++){
+    	        	System.err.println("THIS page element at idx "+idx+"   =    "+this.getElements().get(idx));
+    	        	System.err.println("THAT page element at idx "+idx+"   =    "+that.getElements().get(idx));
+            	}
+        		for(int idx=that.getElements().size(); idx<this.getElements().size(); idx++){
+    	        	System.err.println("THAT page element at idx "+idx+"   =    "+this.getElements().get(idx));
+            	}
+        	}
+        	/**/
+        }
+        return this.getElements().size() == that.getElements().size(); //this.getSrc().equals(that.getSrc()); 
 	}
 	
 	/**
@@ -296,7 +323,7 @@ public class Page extends PathObject {
 		page.setBrowserScreenshots(this.getBrowserScreenshots());
 		page.setSrc(this.getSrc());
 		page.setUrl(this.getUrl());
-
+		page.setElements(this.getElements());
 		return page;
 	}
 	

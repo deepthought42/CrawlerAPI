@@ -225,7 +225,7 @@ public class TestController {
 		}
     	Date end = new Date();
     	long diff = end.getTime() - start.getTime();
-    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
+    	System.err.println("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
 		return unverified_tests;
 	}
 

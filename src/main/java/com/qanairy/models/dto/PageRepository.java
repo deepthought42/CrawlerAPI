@@ -2,6 +2,7 @@ package com.qanairy.models.dto;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -9,8 +10,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.qanairy.models.Page;
+import com.qanairy.models.PageElement;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IPage;
+import com.qanairy.persistence.IPageElement;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -90,6 +93,14 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		page.setElementCounts(result.getElementCounts());
 		page.setBrowserScreenshots(browser_screenshots);
 		
+		/*PageElementRepository page_elem_repo = new PageElementRepository();
+		Iterator<IPageElement> page_elem_iter = result.getElements().iterator();
+		List<PageElement> elements = new ArrayList<PageElement>();
+		while(page_elem_iter.hasNext()){
+			elements.add(page_elem_repo.convertFromRecord(page_elem_iter.next()));
+		}
+		page.setElements(elements);
+		*/
 		try {
 			page.setUrl(new URL(result.getUrl()));
 		} catch (MalformedURLException e) {
@@ -133,6 +144,14 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setImageWeight(page.getImageWeight());
 			page_record.setSrc(page.getSrc());
 			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
+			
+			/*
+			PageElementRepository page_elem_repo = new PageElementRepository();
+			for(PageElement elem: page.getElements()){
+				page_record.addElement(page_elem_repo.convertToRecord(connection, elem));
+			}
+			*/
+
 		}
 
 		return page_record;

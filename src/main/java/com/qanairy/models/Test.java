@@ -113,20 +113,21 @@ public class Test {
 	 * @return
 	 */
 	public Boolean isTestPassing(Page page, Boolean last_test_passing_status){
+		System.err.println("IS TEST PASSING?     ----------------------    "+page.getElements().size());
 		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
-			log.info("Pages are equal and test is NOT marked as passing");
+			System.err.println("Pages are equal and test is NOT marked as passing");
 			last_test_passing_status = false; 
 		}
 		else if((last_test_passing_status == null || !last_test_passing_status) && !this.getResult().equals(page)){
-			log.info("Pages are NOT equal and test is NOT marked as passing");
+			System.err.println("Pages are NOT equal and test is NOT marked as passing");
 			last_test_passing_status = null;
 		}
 		else if((last_test_passing_status != null && last_test_passing_status) && this.getResult().equals(page)){
-			log.info("pages are equal and test is marked as passing");
+			System.err.println("pages are equal and test is marked as passing");
 			last_test_passing_status = true;
 		}
 		else if((last_test_passing_status != null && last_test_passing_status) && !this.getResult().equals(page)){
-			log.info("pages are NOT equal and test is marked as passing");
+			System.err.println("pages are NOT equal and test is marked as passing");
 			last_test_passing_status = false;
 		}
 		
@@ -163,16 +164,6 @@ public class Test {
 		Iterable<ITest> tests = orient_connection.getTransaction().getVertices("groups", group, ITest.class);
 		orient_connection.close();
 		return tests;
-	}
-	
-	/**
-	 * Looks up tests unverified tests
-	 */
-	public static Iterable<ITest> findByDomain(String domain) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		//return orient_connection.getTransaction().getBaseGraph().getRawGraph().query(new OSQLSynchQuery<ITest>("SELECT FROM V WHERE color = 'red'"));
-		orient_connection.close();
-		return null;
 	}
 	
 	/**

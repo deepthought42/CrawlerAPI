@@ -3,6 +3,7 @@ package com.minion.browsing;
 import java.io.IOException;
 
 import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.WebDriverWait;
 

@@ -34,9 +34,9 @@ public class MemoryRegistryActor extends UntypedActor{
 			if(acct_msg.getData() instanceof Test){
 				Test test = (Test)acct_msg.getData();
 				if(test.equals(null)){
-					log.info("MemoryRegistry recieved null test object");
+					System.err.println("MemoryRegistry recieved null test object");
 				}
-				log.info("MemoryRegistry saving test");
+				System.err.println("MemoryRegistry saving test");
 
 				TestRepository test_repo = new TestRepository();
 				test.setKey(test_repo.generateKey(test));
@@ -46,7 +46,7 @@ public class MemoryRegistryActor extends UntypedActor{
 					PastPathExperienceController.broadcastTestExperience(test);
 				}
 				else{
-					log.info("Test already exists. memory registry cannot save");
+					System.err.println("Test already exists. memory registry cannot save");
 				}
 			}
 			else if(acct_msg.getData() instanceof Path){

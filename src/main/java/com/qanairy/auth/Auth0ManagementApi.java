@@ -46,8 +46,6 @@ public class Auth0ManagementApi {
 			
 			// convert JSON string to Map
 			map = mapper.readValue(resp.getBody(), new TypeReference<Map<String, String>>(){});
-
-			//log.info(map);
 		} catch (JsonGenerationException e) {
 			e.printStackTrace();
 		} catch (JsonMappingException e) {

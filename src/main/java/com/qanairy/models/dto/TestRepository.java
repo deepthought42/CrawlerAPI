@@ -145,8 +145,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			test_record.setName(test.getName());
 			//test_record.setCorrect(test.isCorrect());
 			test_record.setBrowserStatuses(test.getBrowserPassingStatuses());
-			log.info("Run status being saved as " + test.getRunStatus());
-			test_record.setRunStatus(test.getRunStatus());
+			test_record.setRunStatus(test.isRunning());
 		}	
 		
 		return test_record;
@@ -176,7 +175,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			test.setBrowserPassingStatuses(itest.getBrowserStatuses());
 		}
 		
-		test.setRunStatus(itest.getRunStatus());
+		test.setIsRunning(itest.getRunStatus());
 		
 		try{
 			test.setPath(path_record.convertFromRecord(itest.getPath()));

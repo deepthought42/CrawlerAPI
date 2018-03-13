@@ -68,16 +68,16 @@ public class PathTests {
 		//look up path and verify all elements
 		Path path_record = path_repo.find(orient_connection, new_path.getKey());
 		orient_connection.close();
-		log.info("Path record size :: " + path_record.getPath().size());
-		log.info("Path size :: " + new_path.getPath().size());
+		System.err.println("Path record size :: " + path_record.getPath().size());
+		System.err.println("Path size :: " + new_path.getPath().size());
 		
-		log.info("path object record type : "+path_record.getPath().get(0).getType());
+		System.err.println("path object record type : "+path_record.getPath().get(0).getType());
 		Assert.assertTrue(path_record.getPath().get(0).getType().equals("Page"));
 		
-		/*log.info("path object record type 1: "+path_record.getPath().get(1).getType());
+		/*System.err.println("path object record type 1: "+path_record.getPath().get(1).getType());
 		Assert.assertTrue(path_record.getPath().get(1).getType().equals("PageElement"));
 		
-		log.info("path object record type 2: "+path_record.getPath().get(2));
+		System.err.println("path object record type 2: "+path_record.getPath().get(2));
 		Assert.assertTrue(path_record.getPath().get(2).getType().equals("Action"));
 		*/
 	}

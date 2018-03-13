@@ -24,7 +24,8 @@ import com.tinkerpop.frames.FramedTransactionalGraph;
  *
  */
 public class Test {
-    private static Logger log = LoggerFactory.getLogger(Test.class);
+    @SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(Test.class);
     
 	private String key; 
 	private String name;
@@ -37,7 +38,7 @@ public class Test {
 	private boolean spansMultipleDomains = false;
 	private List<Group> groups;
 	private Date last_run_time;
-	private boolean run_status;
+	private boolean is_running;
 	private long run_time_length;
 	private Map<String, Boolean> browser_passing_statuses;
 
@@ -52,6 +53,7 @@ public class Test {
 		this.setLastRunTimestamp(null);
 		this.setRunStatus(false);
 		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
+		this.setRunStatus(false);
 	}
 	
 	/**
@@ -78,6 +80,7 @@ public class Test {
 		this.setRunStatus(false);
 		this.setName(name);
 		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
+		this.setRunStatus(false);
 	}
 	
 	/**
@@ -104,6 +107,25 @@ public class Test {
 		this.setRunStatus(false);
 		this.setName(name);
 		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
+		this.setRunStatus(false);
+	}
+	
+	public Test(String key, Path path, Page result, Domain domain, String name, boolean is_running){
+		assert path != null;
+		
+		this.setPath(path);
+		this.setResult(result);
+		this.setRecords(new ArrayList<TestRecord>());
+		this.setDomain(domain);
+		this.setCorrect(null);
+		this.setSpansMultipleDomains(false);
+		this.setGroups(new ArrayList<Group>());
+		this.setLastRunTimestamp(null);
+		this.setKey(key);
+		this.setRunStatus(false);
+		this.setName(name);
+		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
+		this.setRunStatus(false);
 	}
 	
 	/**
@@ -113,20 +135,24 @@ public class Test {
 	 * @return
 	 */
 	public Boolean isTestPassing(Page page, Boolean last_test_passing_status){
+		System.err.println("IS TEST PASSING?     ----------------------    "+page.getElements().size());
+		System.err.println("THIS TEST RESULT **----------------------    "+this.getResult());
+		System.err.println("THIS TEST RESULT ELEMENTS **----------------------    "+this.getResult().getElements().size());
+
 		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
-			log.info("Pages are equal and test is NOT marked as passing");
+			System.err.println("Pages are equal and test is NOT marked as passing");
 			last_test_passing_status = false; 
 		}
 		else if((last_test_passing_status == null || !last_test_passing_status) && !this.getResult().equals(page)){
-			log.info("Pages are NOT equal and test is NOT marked as passing");
+			System.err.println("Pages are NOT equal and test is NOT marked as passing");
 			last_test_passing_status = null;
 		}
 		else if((last_test_passing_status != null && last_test_passing_status) && this.getResult().equals(page)){
-			log.info("pages are equal and test is marked as passing");
+			System.err.println("pages are equal and test is marked as passing");
 			last_test_passing_status = true;
 		}
 		else if((last_test_passing_status != null && last_test_passing_status) && !this.getResult().equals(page)){
-			log.info("pages are NOT equal and test is marked as passing");
+			System.err.println("pages are NOT equal and test is marked as passing");
 			last_test_passing_status = false;
 		}
 		
@@ -163,16 +189,6 @@ public class Test {
 		Iterable<ITest> tests = orient_connection.getTransaction().getVertices("groups", group, ITest.class);
 		orient_connection.close();
 		return tests;
-	}
-	
-	/**
-	 * Looks up tests unverified tests
-	 */
-	public static Iterable<ITest> findByDomain(String domain) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		//return orient_connection.getTransaction().getBaseGraph().getRawGraph().query(new OSQLSynchQuery<ITest>("SELECT FROM V WHERE color = 'red'"));
-		orient_connection.close();
-		return null;
 	}
 	
 	/**
@@ -331,7 +347,6 @@ public class Test {
 		this.records = records;
 	}
 	
-	
 	/**
 	 * @return result of running the test. Can be either null or have a {@link Page} set
 	 */
@@ -399,12 +414,12 @@ public class Test {
 		return this.run_time_length;
 	}
 
-	public boolean getRunStatus() {
-		return run_status;
+	public boolean isRunning() {
+		return is_running;
 	}
 
-	public void setRunStatus(boolean run_status) {
-		this.run_status = run_status;
+	public void setIsRunning(boolean is_running) {
+		this.is_running = is_running;
 	}
 
 	public Map<String, Boolean> getBrowserPassingStatuses() {

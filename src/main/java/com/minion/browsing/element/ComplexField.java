@@ -58,18 +58,18 @@ public class ComplexField {
 				actionFactory.execAction(element, value, action.getName());				
 			}
 			catch(StaleElementReferenceException e){
-				log.warn(e.getMessage());
+				log.error(e.getMessage());
 				wasPerformedSuccessfully = false;			
 			}
 			catch(ElementNotVisibleException e){
-				log.warn(e.getMessage());
+				log.error(e.getMessage());
 			}
 			catch(NoSuchElementException e){
-				log.info(e.getMessage());
+				log.error(e.getMessage());
 				wasPerformedSuccessfully = false;
 			}
 			catch(WebDriverException e){
-				log.warn(e.getMessage());
+				log.error(e.getMessage());
 				wasPerformedSuccessfully = false;
 			}
 		}

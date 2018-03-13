@@ -6,7 +6,7 @@ package com.qanairy.models;
 public class Action extends PathObject{
 	private String name;
 	private String key;
-	private String val;
+	private String value;
 	
 	/**
 	 * Construct empty action object
@@ -15,7 +15,7 @@ public class Action extends PathObject{
 		super.setType("Action");
 		this.name = null;
 		this.key = null;
-		this.val = "";
+		this.value = "";
 	}
 	
 	/**
@@ -25,7 +25,7 @@ public class Action extends PathObject{
 	public Action(String action_name) {
 		super.setType("Action");
 		this.name = action_name;
-		this.val = "";
+		this.value = "";
 	}
 	
 	/**
@@ -35,7 +35,7 @@ public class Action extends PathObject{
 	public Action(String action_name, String value) {
 		super.setType("Action");
 		this.name = action_name;
-		this.val = value;
+		this.value = value;
 	}
 	
 	/**
@@ -70,7 +70,7 @@ public class Action extends PathObject{
 	}
 	
 	public String getValue() {
-		return val;
+		return value;
 	}
 
 

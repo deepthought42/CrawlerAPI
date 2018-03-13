@@ -258,7 +258,7 @@ public class Page extends PathObject {
         System.err.println("Page 1 length :: "+this.getSrc().length());
         System.err.println("Page 1 length :: "+that.getSrc().length());
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        */
+       
         if(this.getElements().size() != that.getElements().size()){
         	System.err.println("@@@@@@@@@@@@@@     THIS vs THAT ELEMENTS SIZE ++++++++++++++++++++++++++++++++++++    "+this.getElements().size() + "  vs  "+that.getElements().size());
         	
@@ -280,8 +280,9 @@ public class Page extends PathObject {
     	        	System.err.println("THAT page element at idx "+idx+"   =    "+this.getElements().get(idx));
             	}
         	}
-        	/**/
+        	
         }
+        */
         return this.getElements().size() == that.getElements().size(); //this.getSrc().equals(that.getSrc()); 
 	}
 	

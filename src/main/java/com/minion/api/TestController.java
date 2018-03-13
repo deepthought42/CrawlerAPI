@@ -305,15 +305,6 @@ public class TestController {
 		itest.setCorrect(correct);
 		itest.getBrowserStatuses().put(browser, correct);
 		
-		boolean is_passing = true;
-		//update overall passing status based on all browser passing statuses
-		for(Boolean status : itest.getBrowserStatuses().values()){
-			if(status != null && !status){
-				is_passing = false;
-			}
-		}
-		itest.setCorrect(is_passing);
-		
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(itest);
 		
@@ -466,8 +457,6 @@ public class TestController {
 	    	
 	    			Test test = test_record.convertFromRecord(itest);
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
-				    System.out.println("test controller -> Browser name : "+browser);
-
 	    			record = TestingActor.runTest(test, browser);
 	    			
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
@@ -475,6 +464,7 @@ public class TestController {
 	    			boolean is_passing = true;
 					//update overall passing status based on all browser passing statuses
 					for(Boolean status : itest.getBrowserStatuses().values()){
+						System.err.println("browser status :: "+status);
 						if(status != null && !status){
 							is_passing = false;
 						}

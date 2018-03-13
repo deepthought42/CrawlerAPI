@@ -378,8 +378,10 @@ public class TestController {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
-		if(!itest.getRunStatus()){
-			itest.setRunStatus(true);
+		Map<String, Boolean> browser_running_status = itest.getBrowserRunningStatuses();
+		if(!browser_running_status.get(browser_type)){
+			browser_running_status.put(browser_type, true);
+			itest.setBrowserRunningStatuses(browser_running_status);
 			TestRecord record = null;
 			TestRepository test_record = new TestRepository();
 			
@@ -387,7 +389,8 @@ public class TestController {
 				Test test = test_record.convertFromRecord(itest);
 				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				record = TestingActor.runTest(test, browser);
-				
+				browser_running_status.put(browser_type, false);
+				itest.setBrowserRunningStatuses(browser_running_status);
 				
 				browser.close();
 			}
@@ -397,7 +400,8 @@ public class TestController {
 			connection.close();
 			return record;
 		}
-		
+		connection.close();
+
 		throw new TestAlreadyRunningException();
 	}
 
@@ -456,9 +460,14 @@ public class TestController {
 	    			TestRepository test_record = new TestRepository();
 	    	
 	    			Test test = test_record.convertFromRecord(itest);
+	    			Map<String, Boolean> browser_running_status = itest.getBrowserRunningStatuses();
+	    			browser_running_status.put(browser_type, true);
+	    			itest.setBrowserRunningStatuses(browser_running_status);
+	    			
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
 	    			record = TestingActor.runTest(test, browser);
-	    			
+	    			browser_running_status.put(browser_type, false);
+	    			itest.setBrowserRunningStatuses(browser_running_status);
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
 	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
 	    			boolean is_passing = true;

@@ -81,11 +81,11 @@ public interface ITest  {
 	@Property("run_time")
 	public void setRunTime(long milliseconds);
 	
-	@Property("run_status")
-	public void setRunStatus(boolean status);
+	@Property("running_status")
+	public void setBrowserRunningStatuses(Map<String, Boolean> status);
 	
-	@Property("run_status")
-	public boolean getRunStatus();
+	@Property("running_status")
+	public Map<String, Boolean> getBrowserRunningStatuses();
 	
 	/**
 	 * @return the domain for the current test

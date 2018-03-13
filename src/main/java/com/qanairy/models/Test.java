@@ -51,9 +51,8 @@ public class Test {
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
-		this.setRunStatus(false);
+		this.setIsRunning(false);
 		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
-		this.setRunStatus(false);
 	}
 	
 	/**
@@ -77,10 +76,9 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(null);
-		this.setRunStatus(false);
 		this.setName(name);
 		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
-		this.setRunStatus(false);
+		this.setIsRunning(false);
 	}
 	
 	/**
@@ -104,10 +102,9 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(key);
-		this.setRunStatus(false);
 		this.setName(name);
 		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
-		this.setRunStatus(false);
+		this.setIsRunning(false);
 	}
 	
 	public Test(String key, Path path, Page result, Domain domain, String name, boolean is_running){
@@ -122,10 +119,9 @@ public class Test {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setKey(key);
-		this.setRunStatus(false);
 		this.setName(name);
 		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
-		this.setRunStatus(false);
+		this.setIsRunning(false);
 	}
 	
 	/**

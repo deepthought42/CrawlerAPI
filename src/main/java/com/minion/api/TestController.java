@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import com.minion.actors.MemoryRegistryActor;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -48,7 +50,13 @@ import com.qanairy.services.DomainService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+
 import com.minion.browsing.Browser;
+import com.minion.structs.Message;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
@@ -457,35 +465,43 @@ public class TestController {
         		TestRecord record = null;
         		
 	    		if(itest.getKey().equals(key)){
-	    			TestRepository test_record = new TestRepository();
+	    			TestRepository test_repo = new TestRepository();
 	    	
-	    			Test test = test_record.convertFromRecord(itest);
+	    			Test test = test_repo.convertFromRecord(itest);
 	    			Map<String, Boolean> browser_running_status = itest.getBrowserRunningStatuses();
-	    			browser_running_status.put(browser_type, true);
+	    			browser_running_status.put(browser_type, null);
 	    			itest.setBrowserRunningStatuses(browser_running_status);
+	    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+	    			
+	    			//tell memory worker of test
+	    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+	    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+	    			memory_actor.tell(test_msg, null);
 	    			
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
 	    			record = TestingActor.runTest(test, browser);
-	    			browser_running_status.put(browser_type, false);
-	    			itest.setBrowserRunningStatuses(browser_running_status);
+	    			ITest itest_new = test_repo.convertToRecord(connection, test);
+	    			
+	    			browser_running_status.put(browser_type, record.getPassing());
+	    			itest_new.setBrowserRunningStatuses(browser_running_status);
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
+	    			itest_new.addRecord(test_record_record.convertToRecord(connection, record));
 	    			boolean is_passing = true;
 					//update overall passing status based on all browser passing statuses
-					for(Boolean status : itest.getBrowserStatuses().values()){
+					for(Boolean status : itest_new.getBrowserStatuses().values()){
 						System.err.println("browser status :: "+status);
 						if(status != null && !status){
 							is_passing = false;
 						}
 					}
-					itest.setCorrect(is_passing);
+					itest_new.setCorrect(is_passing);
 	    			
-	    			Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+	    			Map<String, Boolean> browser_statuses = itest_new.getBrowserStatuses();
 					browser_statuses.put(record.getBrowser(), record.getPassing());
-					itest.setBrowserStatuses(browser_statuses);
-	    			itest.setLastRunTimestamp(new Date());
+					itest_new.setBrowserStatuses(browser_statuses);
+	    			itest_new.setLastRunTimestamp(new Date());
 	    			test_results.put(test.getKey(), record);
-	    			itest.setRunTime(record.getRunTime());
+	    			itest_new.setRunTime(record.getRunTime());
 	    			browser.close();
 	    		}
 	    		else{

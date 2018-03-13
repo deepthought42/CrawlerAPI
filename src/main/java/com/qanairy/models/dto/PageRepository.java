@@ -93,14 +93,14 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		page.setElementCounts(result.getElementCounts());
 		page.setBrowserScreenshots(browser_screenshots);
 		
-		/*PageElementRepository page_elem_repo = new PageElementRepository();
+		PageElementRepository page_elem_repo = new PageElementRepository();
 		Iterator<IPageElement> page_elem_iter = result.getElements().iterator();
 		List<PageElement> elements = new ArrayList<PageElement>();
 		while(page_elem_iter.hasNext()){
 			elements.add(page_elem_repo.convertFromRecord(page_elem_iter.next()));
 		}
 		page.setElements(elements);
-		*/
+		
 		try {
 			page.setUrl(new URL(result.getUrl()));
 		} catch (MalformedURLException e) {
@@ -145,13 +145,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setSrc(page.getSrc());
 			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
 			
-			/*
 			PageElementRepository page_elem_repo = new PageElementRepository();
 			for(PageElement elem: page.getElements()){
 				page_record.addElement(page_elem_repo.convertToRecord(connection, elem));
 			}
-			*/
-
 		}
 
 		return page_record;

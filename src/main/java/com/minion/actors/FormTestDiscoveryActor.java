@@ -1,4 +1,4 @@
-	package com.minion.actors;
+package com.minion.actors;
 
 import java.util.ArrayList;
 import java.util.List;

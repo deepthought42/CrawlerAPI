@@ -58,6 +58,7 @@ public class PastPathExperienceController {
 
 		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
 		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain(), test.getName());
+		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
 		try {

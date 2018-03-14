@@ -278,6 +278,7 @@ public class TestController {
 		
  		String browser_name = idomain.getDiscoveryBrowserName();
 		Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+		System.err.println("browser :::     " +browser_name+" : ##########  : "+correct);
 		browser_statuses.put(browser_name, correct);
 		itest.setBrowserStatuses(browser_statuses);
 		
@@ -386,10 +387,10 @@ public class TestController {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
-		Map<String, Boolean> browser_running_status = itest.getBrowserRunningStatuses();
+		Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
 		if(!browser_running_status.get(browser_type)){
 			browser_running_status.put(browser_type, true);
-			itest.setBrowserRunningStatuses(browser_running_status);
+			itest.setBrowserStatuses(browser_running_status);
 			TestRecord record = null;
 			TestRepository test_record = new TestRepository();
 			
@@ -398,7 +399,7 @@ public class TestController {
 				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				record = TestingActor.runTest(test, browser);
 				browser_running_status.put(browser_type, false);
-				itest.setBrowserRunningStatuses(browser_running_status);
+				itest.setBrowserStatuses(browser_running_status);
 				
 				browser.close();
 			}
@@ -468,9 +469,12 @@ public class TestController {
 	    			TestRepository test_repo = new TestRepository();
 	    	
 	    			Test test = test_repo.convertFromRecord(itest);
-	    			Map<String, Boolean> browser_running_status = itest.getBrowserRunningStatuses();
+	    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
 	    			browser_running_status.put(browser_type, null);
-	    			itest.setBrowserRunningStatuses(browser_running_status);
+	    			for(String browser : browser_running_status.keySet()){
+	    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
+	    			}
+	    			test.setBrowserPassingStatuses(browser_running_status);
 	    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
 	    			
 	    			//tell memory worker of test
@@ -480,28 +484,29 @@ public class TestController {
 	    			
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
 	    			record = TestingActor.runTest(test, browser);
-	    			ITest itest_new = test_repo.convertToRecord(connection, test);
-	    			
+	    			System.err.println("Record is passing :::: "+record.getPassing());
 	    			browser_running_status.put(browser_type, record.getPassing());
-	    			itest_new.setBrowserRunningStatuses(browser_running_status);
-	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest_new.addRecord(test_record_record.convertToRecord(connection, record));
+	    			test.setBrowserPassingStatuses(browser_running_status);
+	    			for(String browser_1 : browser_running_status.keySet()){
+	    				System.err.println("Browser 1  ::::  "+browser_1+"  ************   "+browser_running_status.get(browser_1));
+	    			}
+	    			test.addRecord(record);
 	    			boolean is_passing = true;
 					//update overall passing status based on all browser passing statuses
-					for(Boolean status : itest_new.getBrowserStatuses().values()){
-						System.err.println("browser status :: "+status);
+					for(Boolean status : test.getBrowserPassingStatuses().values()){
 						if(status != null && !status){
 							is_passing = false;
 						}
 					}
-					itest_new.setCorrect(is_passing);
-	    			
-	    			Map<String, Boolean> browser_statuses = itest_new.getBrowserStatuses();
-					browser_statuses.put(record.getBrowser(), record.getPassing());
-					itest_new.setBrowserStatuses(browser_statuses);
-	    			itest_new.setLastRunTimestamp(new Date());
+					test.setCorrect(is_passing);
+					test.setLastRunTimestamp(new Date());
 	    			test_results.put(test.getKey(), record);
-	    			itest_new.setRunTime(record.getRunTime());
+	    			test.setRunTime(record.getRunTime());
+	    			
+	    			//tell memory worker of test
+	    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+	    			memory_actor.tell(test_msg, null);
+	    			
 	    			browser.close();
 	    		}
 	    		else{

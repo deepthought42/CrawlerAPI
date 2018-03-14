@@ -74,7 +74,10 @@ public class PastPathExperienceController {
 		/*Gson gson = new Gson();
         String test_json = gson.toJson(new_test);
         */
-        String host = test.getDomain().getUrl();
+        System.err.println("TEST :::::      "+new_test);
+        System.err.println("TEST DOMAIN :::::      "+new_test.getDomain());
+        System.err.println("TEST DOMAIN URL    :::::      "+new_test.getDomain().getUrl());
+		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
 

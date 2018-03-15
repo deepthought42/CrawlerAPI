@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -46,6 +47,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Deprecated
 	public Test create(OrientConnectionFactory conn, Test test) {
 		test.setKey(generateKey(test));
 		Test test_record = find(conn, test.getKey());
@@ -108,45 +110,45 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		else{
 			test_record = connection.getTransaction().addVertex("class:"+ITest.class.getSimpleName()+","+UUID.randomUUID(), ITest.class);
 			test_record.setKey(generateKey(test));
-
 			PathRepository path_record = new PathRepository();
-			PageRepository page_record = new PageRepository();
-			TestRecordRepository test_record_record = new TestRecordRepository();
 			
 			test_record.setPath(path_record.convertToRecord(connection, test.getPath()));
-			test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
-			
-			DomainRepository domain_record = new DomainRepository();
-			IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
-			Iterator<ITest> test_iter = idomain.getTests().iterator();
-			boolean test_exists = false;
-			while(test_iter.hasNext()){
-				ITest itest = test_iter.next();
-				if(itest.getKey().equals(test_record.getKey())){
-					test_exists = true;
-				}
+		}
+		
+		PageRepository page_record = new PageRepository();
+		TestRecordRepository test_record_record = new TestRecordRepository();
+		
+		test_record.setResult(page_record.convertToRecord(connection, test.getResult()));
+		
+		DomainRepository domain_record = new DomainRepository();
+		IDomain idomain = domain_record.convertToRecord(connection, test.getDomain());
+		Iterator<ITest> test_iter = idomain.getTests().iterator();
+		boolean test_exists = false;
+		while(test_iter.hasNext()){
+			ITest itest = test_iter.next();
+			if(itest.getKey().equals(test_record.getKey())){
+				test_exists = true;
 			}
-			if(!test_exists){
-				test_record.addDomain(idomain);
-			}
-			
-			for(TestRecord record : test.getRecords()){
-				test_record.addRecord(test_record_record.convertToRecord(connection, record));
-			}
-			
-			List<IGroup> igroups = new ArrayList<IGroup>();
-			GroupRepository group_repo = new GroupRepository();
-			for(Group group : test.getGroups()){
-				igroups.add(group_repo.convertToRecord(connection, group));
-			}
-			test_record.setGroups(igroups);
-			test_record.setLastRunTimestamp(test.getLastRunTimestamp());
-			test_record.setRunTime(test.getRunTime());
-			test_record.setName(test.getName());
-			//test_record.setCorrect(test.isCorrect());
-			test_record.setBrowserStatuses(test.getBrowserPassingStatuses());
-			test_record.setRunStatus(test.isRunning());
-		}	
+		}
+		if(!test_exists){
+			test_record.addDomain(idomain);
+		}
+		
+		for(TestRecord record : test.getRecords()){
+			test_record.addRecord(test_record_record.convertToRecord(connection, record));
+		}
+		
+		List<IGroup> igroups = new ArrayList<IGroup>();
+		GroupRepository group_repo = new GroupRepository();
+		for(Group group : test.getGroups()){
+			igroups.add(group_repo.convertToRecord(connection, group));
+		}
+		test_record.setGroups(igroups);
+		test_record.setLastRunTimestamp(test.getLastRunTimestamp());
+		test_record.setRunTime(test.getRunTime());
+		test_record.setName(test.getName());
+		//test_record.setCorrect(test.isCorrect());
+		test_record.setBrowserStatuses(test.getBrowserPassingStatuses());
 		
 		return test_record;
 	}
@@ -168,14 +170,10 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setKey(itest.getKey());
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
-		if(itest.getBrowserStatuses() == null){
-			itest.setBrowserStatuses(new HashMap<String, Boolean>());
-		}
-		else{
-			test.setBrowserPassingStatuses(itest.getBrowserStatuses());
-		}
 		
-		test.setIsRunning(itest.getRunStatus());
+		DomainRepository domain_repo = new DomainRepository();
+		test.setDomain(domain_repo.convertFromRecord(itest.getDomain()));
+		test.setBrowserPassingStatuses(itest.getBrowserStatuses());
 		
 		try{
 			test.setPath(path_record.convertFromRecord(itest.getPath()));

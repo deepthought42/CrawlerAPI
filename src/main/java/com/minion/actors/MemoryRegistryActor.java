@@ -33,6 +33,7 @@ public class MemoryRegistryActor extends UntypedActor{
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
 			if(acct_msg.getData() instanceof Test){
 				Test test = (Test)acct_msg.getData();
+				PastPathExperienceController.broadcastTestExperience(test);
 				if(test.equals(null)){
 					System.err.println("MemoryRegistry recieved null test object");
 				}
@@ -40,14 +41,8 @@ public class MemoryRegistryActor extends UntypedActor{
 
 				TestRepository test_repo = new TestRepository();
 				test.setKey(test_repo.generateKey(test));
-				Test test_record = test_repo.find(connection, test.getKey());
-				if(test_record == null){
-					test_repo.create(connection, test);
-					PastPathExperienceController.broadcastTestExperience(test);
-				}
-				else{
-					System.err.println("Test already exists. memory registry cannot save");
-				}
+				test_repo.convertToRecord(connection, test);
+				PastPathExperienceController.broadcastTestExperience(test);
 			}
 			else if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();

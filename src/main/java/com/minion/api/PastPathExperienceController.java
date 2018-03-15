@@ -58,6 +58,7 @@ public class PastPathExperienceController {
 
 		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
 		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain(), test.getName());
+		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
 		try {
@@ -74,7 +75,10 @@ public class PastPathExperienceController {
 		/*Gson gson = new Gson();
         String test_json = gson.toJson(new_test);
         */
-        String host = test.getDomain().getUrl();
+        System.err.println("TEST :::::      "+new_test);
+        System.err.println("TEST DOMAIN :::::      "+new_test.getDomain());
+        System.err.println("TEST DOMAIN URL    :::::      "+new_test.getDomain().getUrl());
+		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
 

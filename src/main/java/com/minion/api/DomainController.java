@@ -3,7 +3,6 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 

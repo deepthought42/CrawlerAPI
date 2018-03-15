@@ -40,7 +40,6 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
 		path_object_record.setType(path_obj.getType());
 		path_object_record.setKey(generateKey(path_obj));
-		log.info("Converting path object to record");
 		if(path_obj instanceof Page){
 			
 		}
@@ -111,17 +110,14 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			return page_elem_obj;
 		}
 		else if(type.equals("Action")){			
-			//log.info("converting action path object");
 			Action action = new Action();
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
 			action.setType(type);
-			
 			ActionRepository action_record = new ActionRepository();
-			log.info("return action path object");
 			return action_record.convertFromRecord(iaction.iterator().next());
 		}
 		
-		log.info("Returning null path object");
+		System.err.println("Returning null path object");
 		return null;
 	}
 

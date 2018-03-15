@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import com.minion.actors.MemoryRegistryActor;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -48,7 +50,13 @@ import com.qanairy.services.DomainService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+
 import com.minion.browsing.Browser;
+import com.minion.structs.Message;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
@@ -225,7 +233,7 @@ public class TestController {
 		}
     	Date end = new Date();
     	long diff = end.getTime() - start.getTime();
-    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
+    	System.err.println("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
 		return unverified_tests;
 	}
 
@@ -270,6 +278,7 @@ public class TestController {
 		
  		String browser_name = idomain.getDiscoveryBrowserName();
 		Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+		System.err.println("browser :::     " +browser_name+" : ##########  : "+correct);
 		browser_statuses.put(browser_name, correct);
 		itest.setBrowserStatuses(browser_statuses);
 		
@@ -305,15 +314,6 @@ public class TestController {
 		itest.setCorrect(correct);
 		itest.getBrowserStatuses().put(browser, correct);
 		
-		boolean is_passing = true;
-		//update overall passing status based on all browser passing statuses
-		for(Boolean status : itest.getBrowserStatuses().values()){
-			if(status != null && !status){
-				is_passing = false;
-			}
-		}
-		itest.setCorrect(is_passing);
-		
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(itest);
 		
@@ -328,7 +328,7 @@ public class TestController {
 			record = itest_records.next();
 		}
 		if(record != null){
-			record.setPasses(itest.getCorrect());
+			record.setPassing(itest.getCorrect());
 		}
 	}
 
@@ -382,13 +382,15 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run/{key}", method = RequestMethod.POST)
-	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
+	public @ResponseBody TestRecord runTest(@PathVariable(value="key", required=true) String key, 
 									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
-		if(!itest.getRunStatus()){
-			itest.setRunStatus(true);
+		Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
+		if(!browser_running_status.get(browser_type)){
+			browser_running_status.put(browser_type, true);
+			itest.setBrowserStatuses(browser_running_status);
 			TestRecord record = null;
 			TestRepository test_record = new TestRepository();
 			
@@ -396,20 +398,8 @@ public class TestController {
 				Test test = test_record.convertFromRecord(itest);
 				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				record = TestingActor.runTest(test, browser);
-				
-				TestRecordRepository test_record_record = new TestRecordRepository();
-				itest.addRecord(test_record_record.convertToRecord(connection, record));
-
-				itest.getBrowserStatuses().put(record.getBrowser(), record.getPasses());
-				itest.setRunStatus(false);
-				boolean is_passing = true;
-				//update overall passing status based on all browser passing statuses
-				for(Boolean status : itest.getBrowserStatuses().values()){
-					if(status != null && !status){
-						is_passing = false;
-					}
-				}
-				itest.setCorrect(is_passing);
+				browser_running_status.put(browser_type, false);
+				itest.setBrowserStatuses(browser_running_status);
 				
 				browser.close();
 			}
@@ -417,9 +407,10 @@ public class TestController {
 				log.warn("test found does not match key :: " + key);
 			}
 			connection.close();
-			return test_record.convertFromRecord(itest);
+			return record;
 		}
-		
+		connection.close();
+
 		throw new TestAlreadyRunningException();
 	}
 
@@ -475,31 +466,47 @@ public class TestController {
         		TestRecord record = null;
         		
 	    		if(itest.getKey().equals(key)){
-	    			TestRepository test_record = new TestRepository();
+	    			TestRepository test_repo = new TestRepository();
 	    	
-	    			Test test = test_record.convertFromRecord(itest);
-	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
-				    System.out.println("test controller -> Browser name : "+browser);
-
-	    			record = TestingActor.runTest(test, browser);
+	    			Test test = test_repo.convertFromRecord(itest);
+	    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
+	    			browser_running_status.put(browser_type, null);
+	    			for(String browser : browser_running_status.keySet()){
+	    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
+	    			}
+	    			test.setBrowserPassingStatuses(browser_running_status);
+	    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
 	    			
-	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
+	    			//tell memory worker of test
+	    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+	    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+	    			memory_actor.tell(test_msg, null);
+	    			
+	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
+	    			record = TestingActor.runTest(test, browser);
+	    			System.err.println("Record is passing :::: "+record.getPassing());
+	    			browser_running_status.put(browser_type, record.getPassing());
+	    			test.setBrowserPassingStatuses(browser_running_status);
+	    			for(String browser_1 : browser_running_status.keySet()){
+	    				System.err.println("Browser 1  ::::  "+browser_1+"  ************   "+browser_running_status.get(browser_1));
+	    			}
+	    			test.addRecord(record);
 	    			boolean is_passing = true;
 					//update overall passing status based on all browser passing statuses
-					for(Boolean status : itest.getBrowserStatuses().values()){
+					for(Boolean status : test.getBrowserPassingStatuses().values()){
 						if(status != null && !status){
 							is_passing = false;
 						}
 					}
-					itest.setCorrect(is_passing);
-	    			
-	    			Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
-					browser_statuses.put(record.getBrowser(), record.getPasses());
-					itest.setBrowserStatuses(browser_statuses);
-	    			itest.setLastRunTimestamp(new Date());
+					test.setCorrect(is_passing);
+					test.setLastRunTimestamp(new Date());
 	    			test_results.put(test.getKey(), record);
-	    			itest.setRunTime(record.getRunTime());
+	    			test.setRunTime(record.getRunTime());
+	    			
+	    			//tell memory worker of test
+	    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+	    			memory_actor.tell(test_msg, null);
+	    			
 	    			browser.close();
 	    		}
 	    		else{

@@ -68,17 +68,20 @@ public class BrowserActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			log.info("Browser actor received message");
 			Message<?> acct_msg = (Message<?>)message;
 
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
+				/*
+				 * tell discovery registry that we are running an exploratory path for discovery
+				 */
+				
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				Page last_page = exploratory_path.findLastPage();
-				//log.info("Checking if page is landable");
+				//System.err.println("Checking if page is landable");
 				//boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
-				//log.info("landable status: " +landable_status);
+				//System.err.println("landable status: " +landable_status);
 				//last_page.setLandable(landable_status);
 							
 				//if(landable_status){
@@ -110,11 +113,15 @@ public class BrowserActor extends UntypedActor {
 						if(last_idx < 0){
 							last_idx = 0;
 						}
+						last_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
+						System.err.println("EXPLORATORY PATH page element count    ::::::::  "+result_page.getElements().size());
 						
-						if(Path.hasCycle(path,result_page)){
+						//int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
+
+						if(Path.hasCycle(path,result_page)){//last_page.equals(result_page)){//
 							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
-					  		System.err.println("EXPLORATORY PATH HAS CYCLE...trying to next action");
+					  		System.err.println("EXPLORATORY PATH HAS CYCLE...trying next action");
 					  		continue;
 					  	}
 					  	else{
@@ -142,11 +149,14 @@ public class BrowserActor extends UntypedActor {
 
 			  	browser.close();
 				
+				/*
+				 * tell discovery registry that we are FINISHED running an exploratory path for discovery
+				 */
+			  	
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if (acct_msg.getData() instanceof Path){
-				log.info("Path started");
 
 				Path path = (Path)acct_msg.getData();
 				assert(path.getPath() != null);
@@ -161,7 +171,6 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
-				log.info("Url provided");
 
 				try{
 					browser = new Browser(((URL)acct_msg.getData()).toString(), acct_msg.getOptions().get("browser").toString());
@@ -170,12 +179,11 @@ public class BrowserActor extends UntypedActor {
 					log.error("Failed to open connection to browser");
 					return;
 				}
-				log.info("preparting to generate landing page test");
 				
 				try{
 					generate_landing_page_test(browser, acct_msg);
 				}catch(Exception e){
-					log.info(e.getMessage(), "Error occurred while generating landing page test");
+					log.error(e.getMessage(), "Error occurred while generating landing page test");
 				}
 				browser.close();
 		   }
@@ -200,7 +208,6 @@ public class BrowserActor extends UntypedActor {
 		
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
-		log.info("sending test message out");
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 		
 		//tell memory worker of test
@@ -243,10 +250,8 @@ public class BrowserActor extends UntypedActor {
 			}
 			PathObject obj = path.getPath().get(last_idx);
 			if(obj.getType().equals("Action")){
-				log.info("checking action in exploratory path");
 				Action path_action = (Action)obj;
 				if(path_action.getName().equals("click") || path_action.getName().equals("doubleclick")){
-					log.info("incrementing click count");
 					clicks++;
 				}
 			}
@@ -329,8 +334,8 @@ public class BrowserActor extends UntypedActor {
 		if(last_idx < 0){
 			last_idx = 0;
 		}
-		int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
-		if(clicks >= 3 && last_page.equals(result_page) && path.getPath().size() > 1){
+		//int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
+		if(Path.hasCycle(path,result_page) && path.getPath().size() > 1){
 	  		path.setIsUseful(false);
 	  	}
 	  	else{				

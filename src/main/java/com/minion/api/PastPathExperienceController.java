@@ -1,7 +1,10 @@
 package com.minion.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.pusher.rest.Pusher;
+import com.qanairy.models.Action;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
@@ -26,8 +29,9 @@ public class PastPathExperienceController {
      * Message emitter that sends {@link Test} to all registered clients
      * 
      * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
      */
-	public static void broadcastTestExperience(Test test) {	
+	public static void broadcastTestExperience(Test test) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
 		Path path_clone = Path.clone(test.getPath());
 		
@@ -44,13 +48,19 @@ public class PastPathExperienceController {
 				}
 			}
 			else if(obj != null){
+				if(obj.getType().equals("Action")){
+					Action action_obj = (Action)obj;
+					System.err.println("!!!!!     "+action_obj.getValue()+ "   !!!!!!!!");
+				}
 				path_list.add(obj);
 			}
 		}
 
 		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
 		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain(), test.getName());
-		
+		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
+		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
+		new_test.setRunTime(test.getRunTime());
 		try {
 			Page result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
 			new_test.setResult(result_page);
@@ -62,10 +72,19 @@ public class PastPathExperienceController {
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
-		Gson gson = new Gson();
+		/*Gson gson = new Gson();
         String test_json = gson.toJson(new_test);
-        String host = null;
-        host = test.getDomain().getUrl();
+        */
+        System.err.println("TEST :::::      "+new_test);
+        System.err.println("TEST DOMAIN :::::      "+new_test.getDomain());
+        System.err.println("TEST DOMAIN URL    :::::      "+new_test.getDomain().getUrl());
+		String host = new_test.getDomain().getUrl();
+        
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String test_json = mapper.writeValueAsString(new_test);
+        
 		pusher.trigger(host, "test-discovered", test_json);
 	}
 }

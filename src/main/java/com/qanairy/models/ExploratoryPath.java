@@ -1,16 +1,16 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.dto.PageElementRepository;
-import com.qanairy.persistence.IAction;
+import com.qanairy.models.dto.PathObjectRepository;
 import com.qanairy.persistence.IPageElement;
 import com.qanairy.persistence.IPathObject;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.edges.IPathEdge;
 
 
 /**
@@ -119,6 +119,7 @@ public class ExploratoryPath extends Path{
 		boolean cycle_exists = false;
 		for(int first_page_idx =0; first_page_idx < page_list.size()-1 && !cycle_exists; first_page_idx++){
 			for(int second_page_idx =1; second_page_idx < page_list.size() && !cycle_exists; first_page_idx++){
+				System.err.println("CYCLE CHECK! second page is &&&&&&&&&&&&& "+page_list.get(second_page_idx).getElements().size());
 				if(page_list.get(first_page_idx).equals(page_list.get(second_page_idx))){
 					cycle_exists = true;
 					break;
@@ -148,6 +149,7 @@ public class ExploratoryPath extends Path{
 				System.err.println("PATH OBJECT SCREENSHOT KEYS :: "+((Page)path_obj).getBrowserScreenshots().keySet().size());
 
 				System.err.println("PAGE SCREENSHOT KEYS :: "+page.getBrowserScreenshots().keySet().size());
+				System.err.println("ANOTHER CYCLE CHECK     %%%%%%%%%%%%%%%%%%%%%   "+page.getElements().size());
 				if(path_obj.equals(page)){
 					return true;
 				}
@@ -177,15 +179,21 @@ public class ExploratoryPath extends Path{
 				if(page_elem != null){
 					List<Action> actions = path.getPossibleActions();
 					IPageElement ipage_elem = page_elem_repo.convertToRecord(connection, page_elem);
-					for(IAction iaction : ipage_elem.getActions()){
-						for(Action action : actions){
-							if(iaction.getName().equals(action.getName())){
-								return true;
+					Iterator<IPathEdge> path_edge_iter = ipage_elem.getPathEdges().iterator();
+					while(path_edge_iter.hasNext()){
+						IPathEdge edge = path_edge_iter.next();
+						IPathObject path_object_out = edge.getPathObjectIn();
+						PathObjectRepository path_obj_repo = new PathObjectRepository();
+						PathObject new_path_obj = path_obj_repo.convertFromRecord(path_object_out);						
+						if(new_path_obj.getType().equals("Action")){
+							for(Action action : actions){
+								if(((Action)new_path_obj).getName().equals(action.getName()) && ((Action)new_path_obj).getValue().equals(action.getValue())){
+									return true;
+								}
 							}
 						}
 					}
 				}
-				
 			}
 		}
 		return false;

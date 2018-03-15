@@ -94,7 +94,6 @@ public class AccountController {
         Account new_account = null;
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        log.info("User with email: " + username + " creating new account");
         new_account = accountService.create(acct);
         
         

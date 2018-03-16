@@ -30,7 +30,7 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IRule convertToRecord(OrientConnectionFactory connection, Rule rule) {
+	public IRule save(OrientConnectionFactory connection, Rule rule) {
 		@SuppressWarnings("unchecked")
 		Iterable<IRule> rule_records = (Iterable<IRule>) DataAccessObject.findByKey(rule.getType().toString(), connection, IRule.class);
 		Iterator<IRule> iter = rule_records.iterator();
@@ -54,7 +54,7 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 		Rule found_rule = find(conn, rule.getType().toString());
 
 		if( found_rule == null ){
-			this.convertToRecord(conn, rule);
+			this.save(conn, rule);
 		}
 		return rule;
 	}
@@ -70,7 +70,7 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 		Iterator<IRule> iter = svc_pkgs.iterator();
 
 		if(iter.hasNext()){
-			convertToRecord(connection, rule);
+			save(connection, rule);
 			connection.save();
 		}
 
@@ -78,7 +78,7 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 	}
 
 	@Override
-	public Rule convertFromRecord(IRule rule_record) {
+	public Rule load(IRule rule_record) {
 		/**  call rule factory to get rule built */
 		return RuleFactory.build(rule_record.getType(), rule_record.getValue());
 	}
@@ -90,7 +90,7 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 		Iterator<IRule> iter = svc_pkgs.iterator();
 
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 
 		return null;

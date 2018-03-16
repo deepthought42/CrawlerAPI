@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.Principal;
@@ -17,12 +16,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,7 +121,7 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() != null){
-				verified_tests.add(test_repo.convertFromRecord(itest));
+				verified_tests.add(test_repo.load(itest));
 			}
 		}
 		
@@ -228,7 +225,7 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() == null){
-				unverified_tests.add(test_repo.convertFromRecord(itest));
+				unverified_tests.add(test_repo.load(itest));
 			}
 		}
     	Date end = new Date();
@@ -294,7 +291,7 @@ public class TestController {
 	   		);
    	
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
     
 	/**
@@ -306,21 +303,26 @@ public class TestController {
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
 	public @ResponseBody Test updateBrowserCorrectness(@RequestParam(value="key", required=true) String key, 
-														@RequestParam(value="browser", required=true) String browser, 
+														@RequestParam(value="browser_name", required=true) String browser_name, 
 														@RequestParam(value="correct", required=true) boolean correct){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
-		itest.getBrowserStatuses().put(browser, correct);
+		itest.getBrowserStatuses().put(browser_name, correct);
+
 		
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(itest);
 		
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
 
+    /**
+     * 
+     * @param itest
+     */
 	private void updateLastTestRecordPassingStatus(ITest itest) {
 		Iterator<ITestRecord> itest_records = itest.getRecords().iterator();
 		ITestRecord record = null;
@@ -347,7 +349,7 @@ public class TestController {
 		IPath path_record = itest.getPath();
 		
 		PathRepository path_repo = new PathRepository();
-		Path path = path_repo.convertFromRecord(path_record);
+		Path path = path_repo.load(path_record);
 
 		return path;
 	}
@@ -370,7 +372,7 @@ public class TestController {
 		orient_connection.save();
 
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
     
 	/**
@@ -389,16 +391,21 @@ public class TestController {
 		ITest itest = itest_iter.next();
 		Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
 		if(!browser_running_status.get(browser_type)){
-			browser_running_status.put(browser_type, true);
-			itest.setBrowserStatuses(browser_running_status);
+			
 			TestRecord record = null;
 			TestRepository test_record = new TestRepository();
 			
 			if(itest.getKey().equals(key)){
-				Test test = test_record.convertFromRecord(itest);
+				Test test = test_record.load(itest);
 				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				record = TestingActor.runTest(test, browser);
-				browser_running_status.put(browser_type, false);
+				
+				TestRecordRepository test_record_record = new TestRecordRepository();
+				itest.addRecord(test_record_record.save(connection, record));
+				itest.setCorrect(record.getPassing());
+
+				Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+				browser_running_status.put(browser_type, true);
 				itest.setBrowserStatuses(browser_running_status);
 				
 				browser.close();
@@ -468,7 +475,8 @@ public class TestController {
 	    		if(itest.getKey().equals(key)){
 	    			TestRepository test_repo = new TestRepository();
 	    	
-	    			Test test = test_repo.convertFromRecord(itest);
+	    			Test test = test_repo.load(itest);
+
 	    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
 	    			browser_running_status.put(browser_type, null);
 	    			for(String browser : browser_running_status.keySet()){
@@ -502,7 +510,11 @@ public class TestController {
 					test.setLastRunTimestamp(new Date());
 	    			test_results.put(test.getKey(), record);
 	    			test.setRunTime(record.getRunTime());
-	    			
+	    	
+	    			TestRecordRepository test_record_record = new TestRecordRepository();
+	    			itest.addRecord(test_record_record.save(connection, record));
+	    			itest.setCorrect(record.getPassing());
+
 	    			//tell memory worker of test
 	    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
 	    			memory_actor.tell(test_msg, null);
@@ -596,7 +608,7 @@ public class TestController {
 		}
 		
 		GroupRepository group_repo = new GroupRepository();
-		igroup = group_repo.convertToRecord(orient_connection, group);
+		igroup = group_repo.save(orient_connection, group);
 		itest.addGroup(igroup);
 		group.setKey(igroup.getKey());
 		

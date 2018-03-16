@@ -17,12 +17,13 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	/**
 	 * {@inheritDoc}
 	 */
-	public ITestRecord convertToRecord(OrientConnectionFactory connection, TestRecord record){
+	public ITestRecord save(OrientConnectionFactory connection, TestRecord record){
 		ITestRecord testRecord = connection.getTransaction().addVertex("class:"+ITestRecord.class.getSimpleName()+","+UUID.randomUUID(), ITestRecord.class);
 
 		PageRepository page_repo = new PageRepository();
-		testRecord.setResult(page_repo.convertToRecord(connection, record.getPage()));
+		testRecord.setResult(page_repo.save(connection, record.getPage()));
 		testRecord.setPassing(record.getPassing());
+
 		testRecord.setBrowser(record.getBrowser());
 		testRecord.setRanAt(record.getRanAt());
 		testRecord.setRunTime(record.getRunTime());
@@ -46,7 +47,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		record.setKey(generateKey(record));
 		TestRecord test_record_record = find(connection, generateKey(record));
 		if(test_record_record == null){
-			convertToRecord(connection, record);
+			save(connection, record);
 			//connection.save();
 		}
 		else{
@@ -83,16 +84,16 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		Iterator<ITestRecord> iter = (Iterator<ITestRecord>)testRecords.iterator();
 		  
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public TestRecord convertFromRecord(ITestRecord obj) {
+	public TestRecord load(ITestRecord obj) {
 		PageRepository page_repo = new PageRepository();
-		Page page = page_repo.convertFromRecord(obj.getResult());
+		Page page = page_repo.load(obj.getResult());
 		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPassing(), obj.getBrowser(), page, obj.getRunTime());
 		
 		return record;

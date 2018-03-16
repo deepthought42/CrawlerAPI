@@ -25,7 +25,7 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 	}
 
 	@Override
-	public ITestUser convertToRecord(OrientConnectionFactory connection, TestUser test_user) {
+	public ITestUser save(OrientConnectionFactory connection, TestUser test_user) {
 		test_user.setKey(generateKey(test_user));
 
 		@SuppressWarnings("unchecked")
@@ -47,8 +47,8 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 	}
 
 	@Override
-	public TestUser convertFromRecord(ITestUser test_user) {
-		return new TestUser(test_user.getKey(), test_user.getUsername(), test_user.getPassword(), test_user.getRole());
+	public TestUser load(ITestUser test_user) {
+		return new TestUser(test_user.getKey(), test_user.getUsername(), test_user.getPassword());
 	}
 	
 	/**
@@ -63,7 +63,7 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 		Iterator<ITestUser> iter = test_users.iterator();
 		  
 		if(!iter.hasNext()){
-			convertToRecord(connection, test_user);
+			save(connection, test_user);
 			connection.save();
 		}
 		return test_user;
@@ -87,7 +87,7 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 			
 			connection.save();
 		}
-		return convertFromRecord(test_user_record);
+		return load(test_user_record);
 	}
 
 
@@ -101,7 +101,7 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 		Iterator<ITestUser> iter = svc_pkgs.iterator();
 		
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;

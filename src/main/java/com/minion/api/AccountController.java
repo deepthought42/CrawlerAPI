@@ -3,11 +3,9 @@ package com.minion.api;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
-
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.ResponseEntity;
@@ -40,9 +38,6 @@ public class AccountController {
 	private static Logger log = LoggerFactory.getLogger(AccountController.class);
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-    @Autowired
-    private Auth0Client auth0Client;
     
     @Autowired
     protected WebSecurityConfig appConfig;
@@ -72,14 +67,14 @@ public class AccountController {
     public ResponseEntity<Account> create(HttpServletRequest request, 
     										@RequestParam(value="service_package", required=true) String service_package) 
     				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
-       
+
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	//create account
         Account acct = new Account(username, service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
-    	
+
         //Create user
         QanairyUser user = new QanairyUser(username);
         acct.addUser(user);

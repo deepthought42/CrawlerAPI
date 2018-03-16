@@ -27,9 +27,9 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page create(OrientConnectionFactory connection, Page page) {
-		IPage page_record = convertToRecord(connection, page);
+		IPage page_record = save(connection, page);
 		
-		return convertFromRecord(page_record);
+		return load(page_record);
 	}
 
 	/**
@@ -42,7 +42,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Page page2 = find(connection, page.getKey());
 		IPage page_record = null;
 		if(page2 != null){
-			page_record = convertToRecord(connection, page2);
+			page_record = save(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
 			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
@@ -53,7 +53,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		}
 		PageRepository page_repo = new PageRepository();
 		
-		return page_repo.convertFromRecord(page_record);
+		return page_repo.load(page_record);
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
@@ -79,7 +79,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * @return
 	 */
 	@Override
-	public Page convertFromRecord(IPage result) {
+	public Page load(IPage result) {
 		Page page = new Page();
 		
 		//Set browser screenshots
@@ -97,7 +97,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Iterator<IPageElement> page_elem_iter = result.getElements().iterator();
 		List<PageElement> elements = new ArrayList<PageElement>();
 		while(page_elem_iter.hasNext()){
-			elements.add(page_elem_repo.convertFromRecord(page_elem_iter.next()));
+			elements.add(page_elem_repo.load(page_elem_iter.next()));
 		}
 		page.setElements(elements);
 		
@@ -118,7 +118,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * 
 	 * @pre page != null
 	 */
-	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
+	public IPage save(OrientConnectionFactory connection, Page page){
 		assert(page != null);
 		
 		if(page.getKey() == null || page.getKey().isEmpty() && page.getSrc() != null){
@@ -147,7 +147,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			
 			PageElementRepository page_elem_repo = new PageElementRepository();
 			for(PageElement elem: page.getElements()){
-				page_record.addElement(page_elem_repo.convertToRecord(connection, elem));
+				page_record.addElement(page_elem_repo.save(connection, elem));
 			}
 		}
 

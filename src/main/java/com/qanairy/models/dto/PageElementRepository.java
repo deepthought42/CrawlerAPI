@@ -27,9 +27,9 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	 * {@inheritDoc}
 	 */
 	public PageElement create(OrientConnectionFactory connection, PageElement elem) {
-		IPageElement ielem = convertToRecord(connection, elem);
+		IPageElement ielem = save(connection, elem);
 		
-		return convertFromRecord(ielem);
+		return load(ielem);
 	}
 
 	/**
@@ -40,7 +40,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		IPageElement page_elem = null;
 		
 		if(page_elem_record != null){
-			page_elem = convertToRecord(connection, page_elem_record);
+			page_elem = save(connection, page_elem_record);
 
 			page_elem.setName(elem.getName());
 			page_elem.setCssValues(elem.getCssValues());
@@ -48,7 +48,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			page_elem.setXpath(elem.getXpath());
 		}
 	
-		return convertFromRecord(page_elem);
+		return load(page_elem);
 	}
 	
 	/**
@@ -63,7 +63,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		
 		PageElement page_element = null;
 		if(iter.hasNext()){
-			page_element = page_elem_repo.convertFromRecord(iter.next());
+			page_element = page_elem_repo.load(iter.next());
 		}
 		
 		return page_element;
@@ -72,7 +72,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	/**
 	 * {@inheritDoc}
 	 */
-	public PageElement convertFromRecord(IPageElement data) {
+	public PageElement load(IPageElement data) {
 		PageElement elem = new PageElement();
 		elem.setKey(data.getKey());
 		elem.setXpath(data.getXpath());
@@ -83,7 +83,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		List<Attribute> attr_list = new ArrayList<Attribute>();
 		AttributeRepository attr_repo = new AttributeRepository();
 		for(IAttribute attr: data.getAttributes()){
-			attr_list.add(attr_repo.convertFromRecord(attr));
+			attr_list.add(attr_repo.load(attr));
 		}
 		
 		Iterator<IRule> rule_iter = data.getRules().iterator();
@@ -93,8 +93,8 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 				continue;
 			}
 			RuleRepository rule_repo = new RuleRepository();
-			//rules.add(rule_repo.convertFromRecord(iterator.next()));
-			Rule rule = rule_repo.convertFromRecord(irule);
+			//rules.add(rule_repo.load(iterator.next()));
+			Rule rule = rule_repo.load(irule);
 			elem.addRule(rule);
 		}
 		//elem.addRules(rules);
@@ -107,7 +107,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 	/**
 	 * {@inheritDoc}
 	 */
-	public IPageElement convertToRecord(OrientConnectionFactory connection, PageElement elem) {
+	public IPageElement save(OrientConnectionFactory connection, PageElement elem) {
 		elem.setKey(generateKey(elem));
 
 		@SuppressWarnings("unchecked")
@@ -123,14 +123,14 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			AttributeRepository attribute_repo = new AttributeRepository();
 
 			for(Attribute attribute : elem.getAttributes()){
-				IAttribute attribute_persist = attribute_repo.convertToRecord(connection, attribute);
+				IAttribute attribute_persist = attribute_repo.save(connection, attribute);
 				//attribute_persist_list.add(attribute_persist);
 				page_elem_record.addAttribute(attribute_persist);
 			}
 						
 			/*List<IIPageElement> child_elements_persist = new ArrayList<IIPageElement>();
 			for(PageElement elem : this.child_elements){
-				IIPageElement child_element = elem.convertToRecord(framedGraph);
+				IIPageElement child_element = elem.save(framedGraph);
 				child_elements_persist.add(child_element);
 			}
 			*/
@@ -144,7 +144,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			
 			RuleRepository rule_repo = new RuleRepository();
 			for(Rule rule : elem.getRules()){
-				page_elem_record.addRule(rule_repo.convertToRecord(connection, rule));	
+				page_elem_record.addRule(rule_repo.save(connection, rule));	
 			}
 		}
 		else{

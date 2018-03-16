@@ -57,10 +57,10 @@ public interface IAccount {
 	
 	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
 	public Iterable<IDiscoveryRecord> getDiscoveryRecords();
-	
+
 	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
 	public void setDiscoveryRecords(List<IDiscoveryRecord> discovery_records);
-	
+
 	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
 	public void addDiscoveryRecord(IDiscoveryRecord discovery_record);
 	

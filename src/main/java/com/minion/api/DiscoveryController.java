@@ -82,6 +82,7 @@ public class DiscoveryController {
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = accountService.find(username);
+
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -100,8 +101,8 @@ public class DiscoveryController {
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
     	domain.setDiscoveryStartTime(new Date());
-    	
     	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+
     	Date now = new Date();
     	long diffInMinutes = 1000;
     	if(last_ran_date != null){
@@ -112,15 +113,20 @@ public class DiscoveryController {
     	int paths_being_explored = domain.getDiscoveryPathCount();
         
 		Map<String, Object> options = new HashMap<String, Object>();
+
 		options.put("browser", domain.getDiscoveryBrowserName());
         if(paths_being_explored == 0 || diffInMinutes>1440){
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
         	domain.setDiscoveryPathCount(0);
-			WorkAllowanceStatus.register(acct.getKey());
-			AccountRepository acct_repo = new AccountRepository();
-			acct.addDiscoveryRecord(new DiscoveryRecord(new Date()));
-			acct_repo.convertToRecord(connection, acct);
 				
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", domain_url);
+        	acct.getDiscoveryRecords().add(discovery_record);
+        	
+        	AccountRepository acct_repo = new AccountRepository();
+        	acct_repo.save(connection, acct);
+                	
+			WorkAllowanceStatus.register(acct.getKey());
+
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");

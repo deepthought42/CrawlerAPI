@@ -7,7 +7,6 @@ import java.util.UUID;
 import com.qanairy.models.Attribute;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAttribute;
-import com.qanairy.persistence.IPageElement;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -27,7 +26,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IAttribute convertToRecord(OrientConnectionFactory connection, Attribute attr) {
+	public IAttribute save(OrientConnectionFactory connection, Attribute attr) {
 		if((attr.getKey() == null || attr.getKey().isEmpty()) && attr.getName() != null){
 			attr.setKey(generateKey(attr));
 		}
@@ -53,8 +52,8 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 */
 	@Override
 	public Attribute create(OrientConnectionFactory conn, Attribute attr) {
-		IAttribute iattr = this.convertToRecord(conn, attr);
-		return this.convertFromRecord(iattr);
+		IAttribute iattr = this.save(conn, attr);
+		return this.load(iattr);
 	}
 
 	/**
@@ -68,7 +67,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		Iterator<IAttribute> iter = svc_pkgs.iterator();
 
 		if(iter.hasNext()){
-			convertToRecord(connection, attr);
+			save(connection, attr);
 			connection.save();
 		}
 
@@ -76,7 +75,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	}
 
 	@Override
-	public Attribute convertFromRecord(IAttribute attr_record) {
+	public Attribute load(IAttribute attr_record) {
 		return new Attribute(attr_record.getKey(), attr_record.getName(),  attr_record.getVals());
 	}
 
@@ -87,7 +86,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		Iterator<IAttribute> iter = attributes.iterator();
 
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 
 		return null;

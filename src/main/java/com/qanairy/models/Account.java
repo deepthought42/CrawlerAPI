@@ -18,6 +18,16 @@ public class Account {
 	
 	public Account(){}
 	
+	public Account(String key, String org_name, String service_package, String payment_acct_num){
+		this.setKey(key);
+		this.setOrgName(org_name);
+		this.setServicePackage(service_package);
+		this.setPaymentAcctNum(payment_acct_num);
+		this.domains = new ArrayList<Domain>();
+		this.setUsers(new ArrayList<QanairyUser>());
+		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
+	}
+	
 	/**
 	 * 
 	 * @param org_name
@@ -27,25 +37,37 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
+	@Deprecated
 	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users){
 		assert users != null;
 		
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.users = users;
+		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
+		this.setUsers(users);
 		this.setDomains(new ArrayList<Domain>());
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
 	
-	public Account(String key, String org_name, String service_package, String payment_acct_num){
-		this.setKey(key);
+	/**
+	 * 
+	 * @param org_name
+	 * @param service_package
+	 * @param payment_acct_num
+	 * @param users
+	 * 
+	 * @pre users != null
+	 */
+	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<DiscoveryRecord> discovery_records){
+		assert users != null;
+		
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.users = new ArrayList<QanairyUser>();
 		this.setDomains(new ArrayList<Domain>());
-		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
+		this.setUsers(users);
+		this.setDiscoveryRecords(discovery_records);
 	}
 	
 	/**
@@ -67,6 +89,7 @@ public class Account {
 		this.setPaymentAcctNum(payment_acct_num);
 		this.setUsers(users);
 		this.setDomains(domains);
+		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 		this.setLastDomain(last_domain_url);
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
@@ -192,7 +215,7 @@ public class Account {
 		}
 		return null;
 	}
-
+	
 	public void setLastDomain(String domain_url) {
 		this.last_domain_url = domain_url;
 	}

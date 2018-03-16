@@ -207,7 +207,7 @@ public class Test {
 
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();
-			Test test = test_record.convertFromRecord(itest);
+			Test test = test_record.load(itest);
 			list.add(test);
 		}
 		orient_connection.close();
@@ -229,7 +229,7 @@ public class Test {
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();
 			
-			Test test = test_record.convertFromRecord(itest);
+			Test test = test_record.load(itest);
 			list.add(test);
 		}
 		orient_connection.close();
@@ -249,7 +249,7 @@ public class Test {
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();
 			
-			Test test = test_record.convertFromRecord(itest);
+			Test test = test_record.load(itest);
 			list.add(test);
 		}
 		
@@ -272,7 +272,7 @@ public class Test {
 		while(test_iter.hasNext()){
 			ITest itest = test_iter.next();	
 			
-			Test test = test_record.convertFromRecord(itest);
+			Test test = test_record.load(itest);
 			list.add(test);
 		}
 		orient_connection.close();

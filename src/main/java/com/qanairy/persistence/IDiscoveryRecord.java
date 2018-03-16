@@ -4,16 +4,32 @@ import java.util.Date;
 
 import com.tinkerpop.frames.Property;
 
+/**
+ * Tinkerpop representation of a {@link DiscoveryRecord} in graph database
+ */
 public interface IDiscoveryRecord {
+
 	@Property("key")
-	public String getKey();
+	String getKey();
 	
 	@Property("key")
-	public void setKey(String key);
+	void setKey(String key);
+
+	@Property("started_at")
+	Date getStartTime();
+
+	@Property("started_at")
+	void setStartTime(Date timestamp);
+			
+	@Property("browser_name")
+	String getBrowserName();
 	
-	@Property("date")
-	public Date getDate();
+	@Property("browser_name")
+	void setBrowserName(String browser_name);
 	
-	@Property("date")
-	public void setDate(Date date);
+	@Property("domain_url")
+	String getDomainUrl();
+	
+	@Property("domain_url")
+	void setDomainUrl(String domain_url);
 }

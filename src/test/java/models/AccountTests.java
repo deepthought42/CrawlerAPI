@@ -5,6 +5,7 @@ import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -17,7 +18,7 @@ public class AccountTests {
 	@Test(groups="Regression")
 	public void accountCreateRecordWithoutUsers(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		Account acct = new Account("Test Org", "Test Package", "#00000012SD", new ArrayList<QanairyUser>());
+		Account acct = new Account("Test Org", "Test Package", "#00000012SD", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -37,7 +38,7 @@ public class AccountTests {
 		QanairyUser user = new QanairyUser("Test user 1");
 		users.add(user);
 		
-		Account acct = new Account("Test Org", "Test Package", "#00000012SD", users);
+		Account acct = new Account("Test Org", "Test Package", "#00000012SD", users, new ArrayList<DiscoveryRecord>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -52,7 +53,7 @@ public class AccountTests {
 	@Test(groups="Regression")
 	public void accountUpdateRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		Account acct = new Account("Test Org2", "Test Package", "acct_test1", new ArrayList<QanairyUser>());
+		Account acct = new Account("Test Org2", "Test Package", "acct_test1", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -75,7 +76,7 @@ public class AccountTests {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		AccountRepository acct_repo = new AccountRepository();
 
-		Account acct = new Account("Find Test Org", "Test Package", "acct_test1 update", new ArrayList<QanairyUser>());
+		Account acct = new Account("Find Test Org", "Test Package", "acct_test1 update", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>());
 		acct = acct_repo.create(orient_connection, acct);
 		Account acct_record = acct_repo.find(orient_connection, acct.getKey());
 		

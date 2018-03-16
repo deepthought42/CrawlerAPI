@@ -25,6 +25,8 @@ import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
@@ -75,6 +77,7 @@ public class DiscoveryController {
     	String nickname = auth.getNickname(auth_access_token);
 
     	Account acct = accountService.find(username);
+
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -93,10 +96,10 @@ public class DiscoveryController {
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
     	domain.setDiscoveryStartTime(new Date());
-    	
     	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
+    	
     	Date now = new Date();
     	long diffInMinutes = 1000;
     	if(last_ran_date != null){
@@ -105,8 +108,16 @@ public class DiscoveryController {
 		connection.close();
         
 		Map<String, Object> options = new HashMap<String, Object>();
+
 		options.put("browser", domain.getDiscoveryBrowserName());
         if(diffInMinutes > 60){
+        	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", domain_url);
+        	acct.getDiscoveryRecords().add(discovery_record);
+        	
+        	AccountRepository acct_repo = new AccountRepository();
+        	acct_repo.save(connection, acct);
+        
+        	
 			WorkAllowanceStatus.register(acct.getKey()); 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);

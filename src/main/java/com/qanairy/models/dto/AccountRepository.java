@@ -96,7 +96,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		for(IDiscoveryRecord record : discovery_db_records){
 			discovery_records.add(discovery_repo.load(record));
 		}
-			users.add(user_repo.convertFromRecord(user));
+			users.add(user_repo.load(user));
 		}*/
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains, account.getLastDomain());

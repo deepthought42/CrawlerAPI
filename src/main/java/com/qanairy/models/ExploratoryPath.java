@@ -178,13 +178,13 @@ public class ExploratoryPath extends Path{
 				PageElement page_elem = page_elem_repo.find(connection, page_elem_repo.generateKey((PageElement)path_obj));
 				if(page_elem != null){
 					List<Action> actions = path.getPossibleActions();
-					IPageElement ipage_elem = page_elem_repo.convertToRecord(connection, page_elem);
+					IPageElement ipage_elem = page_elem_repo.save(connection, page_elem);
 					Iterator<IPathEdge> path_edge_iter = ipage_elem.getPathEdges().iterator();
 					while(path_edge_iter.hasNext()){
 						IPathEdge edge = path_edge_iter.next();
 						IPathObject path_object_out = edge.getPathObjectIn();
 						PathObjectRepository path_obj_repo = new PathObjectRepository();
-						PathObject new_path_obj = path_obj_repo.convertFromRecord(path_object_out);						
+						PathObject new_path_obj = path_obj_repo.load(path_object_out);						
 						if(new_path_obj.getType().equals("Action")){
 							for(Action action : actions){
 								if(((Action)new_path_obj).getName().equals(action.getName()) && ((Action)new_path_obj).getValue().equals(action.getValue())){

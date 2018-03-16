@@ -97,7 +97,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Iterator<IPageElement> page_elem_iter = result.getElements().iterator();
 		List<PageElement> elements = new ArrayList<PageElement>();
 		while(page_elem_iter.hasNext()){
-			elements.add(page_elem_repo.convertFromRecord(page_elem_iter.next()));
+			elements.add(page_elem_repo.load(page_elem_iter.next()));
 		}
 		page.setElements(elements);
 		
@@ -147,7 +147,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			
 			PageElementRepository page_elem_repo = new PageElementRepository();
 			for(PageElement elem: page.getElements()){
-				page_record.addElement(page_elem_repo.convertToRecord(connection, elem));
+				page_record.addElement(page_elem_repo.save(connection, elem));
 			}
 		}
 

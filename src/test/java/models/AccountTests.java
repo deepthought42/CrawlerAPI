@@ -6,7 +6,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.persistence.OrientConnectionFactory;

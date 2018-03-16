@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -41,9 +42,10 @@ public class DiscoveryRecordTests {
 		DiscoveryRecordRepository discovery_record_repo = new DiscoveryRecordRepository();
 		discovery_record.setKey(discovery_record_repo.generateKey(discovery_record));
 
-		DiscoveryRecord updated_discovery_record = discovery_record_repo.update(new OrientConnectionFactory(), discovery_record);
-		
-		Assert.assertTrue(updated_discovery_record.getStartedAt().equals(now));
+		OrientConnectionFactory conn = new OrientConnectionFactory();
+		IDiscoveryRecord updated_discovery_record = discovery_record_repo.save(conn, discovery_record);
+		conn.close();
+		Assert.assertTrue(updated_discovery_record.getStartTime().equals(now));
 		Assert.assertTrue(updated_discovery_record.getBrowserName().equals(discovery_record.getBrowserName()));
 	}
 }

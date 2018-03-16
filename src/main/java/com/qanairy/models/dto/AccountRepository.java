@@ -17,7 +17,6 @@ import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.IQanairyUser;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
@@ -60,7 +59,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		for(DiscoveryRecord record : account.getDiscoveryRecords()){
 			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
 			//repo.create(connection, user);
-			acct_record.addDiscoveryRecord(repo.convertToRecord(connection, record));
+			acct_record.addDiscoveryRecord(repo.save(connection, record));
 		}
 		
 		/*for(QanairyUser user : account.getUsers()){
@@ -93,7 +92,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		List<DiscoveryRecord> record_list = new ArrayList<DiscoveryRecord>();
 		while(records.hasNext()){
 			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
-			record_list.add(repo.convertFromRecord(records.next()));
+			record_list.add(repo.load(records.next()));
 		}
 		
 		//List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());

@@ -15,6 +15,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
@@ -23,6 +24,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
@@ -72,11 +74,18 @@ public class BrowserActor extends UntypedActor {
 
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
+				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
+
 				/*
 				 * tell discovery registry that we are running an exploratory path for discovery
 				 */
+		  		OrientConnectionFactory conn = new OrientConnectionFactory();
+				DomainRepository domain_repo = new DomainRepository();	
+				System.err.println("Loading domain :: "+((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
+				Domain domain = domain_repo.find(conn, ((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
+				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()+1);
+				domain_repo.convertToRecord(conn, domain);
 				
-				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				Page last_page = exploratory_path.findLastPage();
 				//System.err.println("Checking if page is landable");
@@ -90,19 +99,20 @@ public class BrowserActor extends UntypedActor {
 				//}
 
 				if(exploratory_path.getPath() != null){
+					System.err.println("Path is not empty");
 					Page result_page = null;
 
 					// increment total paths being explored for domain
 					String domain_url = last_page.getUrl().getHost();
-					DomainRepository domain_repo = new DomainRepository();
 					IDomain idomain = domain_repo.find(domain_url);
 					idomain.setLastDiscoveryPathRanAt(new Date());
-					
+					System.err.println("Set time of last discovery path ran");
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path path = Path.clone(exploratory_path);
 						path.add(action);
+						System.err.println("Crawling path...");
 						final long pathCrawlStartTime = System.currentTimeMillis();
 						result_page = Crawler.crawlPath(path, browser);
 						final long pathCrawlEndTime = System.currentTimeMillis();
@@ -113,7 +123,7 @@ public class BrowserActor extends UntypedActor {
 						if(last_idx < 0){
 							last_idx = 0;
 						}
-						last_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
+						
 						System.err.println("EXPLORATORY PATH page element count    ::::::::  "+result_page.getElements().size());
 						
 						//int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
@@ -125,8 +135,7 @@ public class BrowserActor extends UntypedActor {
 					  		continue;
 					  	}
 					  	else{
-					  		OrientConnectionFactory conn = new OrientConnectionFactory();
-							Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
+							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 							domain.setLastDiscoveryPathRanAt(new Date());
 							int cnt = domain.getDiscoveredTestCount()+1;
 							System.out.println("landing page test Count :: "+cnt);
@@ -147,12 +156,15 @@ public class BrowserActor extends UntypedActor {
 					}
 				}
 
-			  	browser.close();
-				
 				/*
 				 * tell discovery registry that we are FINISHED running an exploratory path for discovery
 				 */
-			  	
+				domain = domain_repo.find(conn, ((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
+				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
+				domain_repo.convertToRecord(conn, domain);
+			  	browser.close();
+				
+			  	conn.close();
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
@@ -289,8 +301,6 @@ public class BrowserActor extends UntypedActor {
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 		Domain domain = domain_repo.find(conn, page_obj.getUrl().getHost());
 		domain.setLastDiscoveryPathRanAt(new Date());
-		int cnt = domain.getDiscoveredTestCount()+1;
-		domain.setDiscoveredTestCount(cnt);
 		domain_repo.update(conn, domain);
 		
 		createTest(path, page_obj, 1L, domain, msg);
@@ -343,9 +353,6 @@ public class BrowserActor extends UntypedActor {
 	  		OrientConnectionFactory conn = new OrientConnectionFactory();
 			Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 			domain.setLastDiscoveryPathRanAt(new Date());
-			int cnt = domain.getDiscoveredTestCount()+1;
-			System.out.println("landing page test Count :: "+cnt);
-			domain.setDiscoveredTestCount(cnt);
 			domain_repo.update(conn, domain);
 			
 	  		createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);

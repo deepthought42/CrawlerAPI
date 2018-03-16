@@ -14,6 +14,7 @@ public class Account {
 	private List<QanairyUser> users;
 	private List<Domain> domains;
 	private String last_domain_url;
+	private List<DiscoveryRecord> discovery_records;
 	
 	public Account(){}
 	
@@ -34,6 +35,7 @@ public class Account {
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = users;
 		this.setDomains(new ArrayList<Domain>());
+		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
 	
 	public Account(String key, String org_name, String service_package, String payment_acct_num){
@@ -43,6 +45,7 @@ public class Account {
 		this.setPaymentAcctNum(payment_acct_num);
 		this.users = new ArrayList<QanairyUser>();
 		this.setDomains(new ArrayList<Domain>());
+		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
 	
 	/**
@@ -65,8 +68,58 @@ public class Account {
 		this.setUsers(users);
 		this.setDomains(domains);
 		this.setLastDomain(last_domain_url);
+		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
 
+	/**
+	 * 
+	 * @param key
+	 * @param org_name
+	 * @param service_package
+	 * @param payment_acct_num
+	 * @param users
+	 * @param domains
+	 * @param last_domain_url
+	 * @param discovery_records
+	 */
+	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains, 
+					String last_domain_url, List<DiscoveryRecord> discovery_records){
+		assert users != null;
+		
+		this.setKey(key);
+		this.setOrgName(org_name);
+		this.setServicePackage(service_package);
+		this.setPaymentAcctNum(payment_acct_num);
+		this.setUsers(users);
+		this.setDomains(domains);
+		this.setLastDomain(last_domain_url);
+		this.setDiscoveryRecords(discovery_records);
+	}
+	
+	/**
+	 * 
+	 * @param org_name
+	 * @param service_package
+	 * @param payment_acct_num
+	 * @param users
+	 * @param domains
+	 * @param last_domain_url
+	 * @param discovery_records
+	 */
+	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains, 
+			String last_domain_url, List<DiscoveryRecord> discovery_records){
+		assert users != null;
+		
+		this.setKey(null);
+		this.setOrgName(org_name);
+		this.setServicePackage(service_package);
+		this.setPaymentAcctNum(payment_acct_num);
+		this.setUsers(users);
+		this.setDomains(domains);
+		this.setLastDomain(last_domain_url);
+		this.setDiscoveryRecords(discovery_records);
+	}
+			
 	public String getOrgName() {
 		return org_name;
 	}
@@ -146,5 +199,17 @@ public class Account {
 	
 	public String getLastDomain(){
 		return this.last_domain_url;
+	}
+
+	public List<DiscoveryRecord> getDiscoveryRecords() {
+		return discovery_records;
+	}
+
+	public void setDiscoveryRecords(List<DiscoveryRecord> discovery_records) {
+		this.discovery_records = discovery_records;
+	}
+	
+	public void addDiscoveryRecord(DiscoveryRecord record){
+		this.discovery_records.add(record);
 	}
 }

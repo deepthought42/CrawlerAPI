@@ -37,7 +37,6 @@ public class WorkAllocationActor extends UntypedActor {
 					msg.getOptions().put("browser", browser_name);
 					boolean record_exists = false;
 					Path path = null;
-					ExploratoryPath exp_path = null;
 					OrientConnectionFactory connection = new OrientConnectionFactory();
 					
 					if(acct_message.getData() instanceof Path && !(acct_message.getData() instanceof ExploratoryPath)){
@@ -58,6 +57,7 @@ public class WorkAllocationActor extends UntypedActor {
 						//System.err.println("url needs to be implemented");
 						//THIS SHOULD STILL BE IMPLEMENTED, LEAVING EMPTY FOR NOW DUE TO NON TRIVIAL NATURE OF THIS PIECE
 					}
+					
 					connection.close();
 
 					//if record doesn't exist then send for exploration, else expand the record

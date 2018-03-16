@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Date;
+	import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,6 +25,8 @@ import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
@@ -50,11 +52,17 @@ import akka.actor.Props;
 @Controller
 @RequestMapping("/discovery")
 public class DiscoveryController {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
 
     @Autowired
     protected AccountService accountService;
     
+    @PreAuthorize("hasAuthority('start:discovery')")
+	@RequestMapping(path="/check", method = RequestMethod.GET)
+    public @ResponseBody boolean isDiscoveryRunning(@RequestParam(value="url", required=true) String url){
+    	return false;
+    }
     /**
 	 * 
 	 * @param request
@@ -72,7 +80,6 @@ public class DiscoveryController {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	String nickname = auth.getNickname(auth_access_token);
 
     	Account acct = accountService.find(username);
     	if(acct == null){
@@ -80,8 +87,8 @@ public class DiscoveryController {
     	}
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", nickname);
-        traits.put("email", username);        
+        traits.put("email", username);     
+        traits.put("discovery_started", "true");
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -95,24 +102,29 @@ public class DiscoveryController {
     	domain.setDiscoveryStartTime(new Date());
     	
     	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
-    	String domain_url = domain.getUrl();
-    	String protocol = domain.getProtocol();
     	Date now = new Date();
     	long diffInMinutes = 1000;
     	if(last_ran_date != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
     	}
-		connection.close();
+    	String domain_url = domain.getUrl();
+    	String protocol = domain.getProtocol();
+    	int paths_being_explored = domain.getDiscoveryPathCount();
         
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
-        if(diffInMinutes > 60){
-			WorkAllowanceStatus.register(acct.getKey()); 
+        if(paths_being_explored == 0 || diffInMinutes>1440){
+        	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
+        	domain.setDiscoveryPathCount(0);
+			WorkAllowanceStatus.register(acct.getKey());
+			AccountRepository acct_repo = new AccountRepository();
+			acct.addDiscoveryRecord(new DiscoveryRecord(new Date()));
+			acct_repo.convertToRecord(connection, acct);
+				
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 			
-			 
 		    //Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
 	    	discovery_started_props.put("url", url);
@@ -124,6 +136,8 @@ public class DiscoveryController {
 			
 			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
+			connection.close();
+
 			try {
 				Await.result(future, timeout.duration());
 				return new ResponseEntity<String>(HttpStatus.OK);
@@ -146,11 +160,10 @@ public class DiscoveryController {
 	    		    .userId(acct.getKey())
 	    		    .properties(discovery_started_props)
 	    		);
-			
+			connection.close();
+
         	throw new ExistingDiscoveryFoundException();
         }
-        
-
 	}
 
 	/**

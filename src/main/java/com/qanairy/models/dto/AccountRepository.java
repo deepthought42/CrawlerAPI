@@ -9,10 +9,12 @@ import org.apache.commons.collections.IteratorUtils;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
+import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.IQanairyUser;
@@ -54,7 +56,13 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		
 		acct_record.setOrgName(account.getOrgName());
 		acct_record.setLastDomain(account.getLastDomain());
-
+		
+		for(DiscoveryRecord record : account.getDiscoveryRecords()){
+			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
+			//repo.create(connection, user);
+			acct_record.addDiscoveryRecord(repo.convertToRecord(connection, record));
+		}
+		
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
@@ -76,14 +84,22 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			domains.add(domain_repo.convertFromRecord(domain));
 		}
 		
-		List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
+		Iterator<IDiscoveryRecord> records = account.getDiscoveryRecords().iterator();
+		List<DiscoveryRecord> record_list = new ArrayList<DiscoveryRecord>();
+		while(records.hasNext()){
+			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
+			record_list.add(repo.convertFromRecord(records.next()));
+		}
+		
+		//List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
 		/*List<QanairyUser> users = new ArrayList<QanairyUser>();
 		QanairyUserRepository user_repo = new QanairyUserRepository();
 		for(IQanairyUser user : user_records){
 			users.add(user_repo.convertFromRecord(user));
 		}*/
 		
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains, account.getLastDomain());
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), 
+							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), record_list);
 	}
 	
 	/**

@@ -24,6 +24,7 @@ public class Domain {
 	private int discovered_test_count;
 	private List<TestUser> test_users;
 	private String discovery_browser;
+	private int discovery_path_count;
 	
 	/**
 	 * 
@@ -40,6 +41,7 @@ public class Domain {
 		this.setDiscoveredTestCount(0);
 		this.setDiscoveryBrowser("");
 		this.setLastDiscoveryStartedAt(null);
+		this.setDiscoveryPathCount(0);
 	}
 	
 	/**
@@ -72,6 +74,7 @@ public class Domain {
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryPathCount(0);
 		this.setDiscoveryBrowser(browser);
 		this.setLastDiscoveryStartedAt(null);
 	}
@@ -99,6 +102,7 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryPathCount(0);
 		this.setDiscoveryBrowser("");
 		this.setLastDiscoveryStartedAt(null);
 	}
@@ -127,6 +131,7 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryPathCount(0);
 		this.setDiscoveryBrowser("");
 		this.setLastDiscoveryStartedAt(null);
 	}
@@ -153,7 +158,8 @@ public class Domain {
 					Date last_discovery_started_at,
 					List<TestUser> test_users,
 					int discovered_test_count,
-					String browser_name){
+					String browser_name,
+					int discovery_path_count){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
@@ -162,6 +168,7 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
 		this.setDiscoveredTestCount(discovered_test_count);
+		this.setDiscoveryPathCount(discovery_path_count);
 		this.setDiscoveryBrowser(browser_name);
 		this.setLastDiscoveryStartedAt(last_discovery_started_at);
 	}
@@ -274,5 +281,13 @@ public class Domain {
 
 	public void setLastDiscoveryStartedAt(Date last_discovery_started_at) {
 		this.last_discovery_started_at = last_discovery_started_at;
+	}
+	
+	public int getDiscoveryPathCount() {
+		return discovery_path_count;
+	}
+
+	public void setDiscoveryPathCount(int discovery_path_count) {
+		this.discovery_path_count = discovery_path_count;
 	}
 }

@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,9 @@ public class Browser {
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
 
 	private WebDriver driver = null;
-	private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
+	//private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
+	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "alt"};	
+
 	private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
 	private String url = "";
 	private String browser_name; 
@@ -72,7 +73,7 @@ public class Browser {
 		int cnt = 0;
 		this.setBrowserName(browser);
 		while(driver == null && cnt < 20){
-			log.info("Opening "+ browser +" browser attempt #"+ cnt);
+			System.err.println("Opening "+ browser +" browser attempt #"+ cnt);
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -90,36 +91,28 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				WebDriverWait wait = new WebDriverWait(driver, 120);
+				WebDriverWait wait = new WebDriverWait(driver, 30);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				
-				try {
-					System.err.println("Waiting 30 seconds ::   "+(new Date()).toString());
-					Thread.sleep(30000);
-				} catch (InterruptedException e) {
-					System.err.println("Done waiting : "+(new Date()).toString());
-				}
 				break;
 			}
 			catch(UnreachableBrowserException e){
+				System.err.println("Unreachable browser exception");
 				log.error(e.getMessage());
 			}
 			catch(WebDriverException e){
+				System.err.println("WebDriver exception occurred opening browser");
 				log.error(e.getMessage());
 			}
 			catch(GridException e){
+				System.err.println("Grid exception occurred when opening browser");
 				log.error(e.getMessage());
 			}
 			
 			cnt++;
-
-			try {
-				Thread.sleep(300000);
-			} catch (InterruptedException e1) {}
 		}
 		
 		if(this.driver != null){			
-			System.err.println("Driver isn't null! Getting url "+url);
 			this.url = url;
 			this.driver.get(url);
 		}
@@ -257,7 +250,7 @@ public class Browser {
 	public static WebDriver openWithSafari() throws MalformedURLException, UnreachableBrowserException, GridException{
 		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 
-		log.info("Opening Firefox WebDriver connection using");
+		System.err.println("Opening Safari WebDriver connection using");
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
@@ -275,7 +268,7 @@ public class Browser {
 	public static WebDriver openWithInternetExplorer() throws MalformedURLException, UnreachableBrowserException, GridException {
 		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 
-		log.info("Opening IE WebDriver connection");
+		System.err.println("Opening IE WebDriver connection");
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), capabilities);
@@ -386,7 +379,7 @@ public class Browser {
 		}
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-		//log.info("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
+		//System.err.println("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
 		for(WebElement elem : pageElements){
 			
 			try{
@@ -434,18 +427,15 @@ public class Browser {
 
 		List<Form> form_list = new ArrayList<Form>();
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
-		log.info("total forms found :: " + form_elements.size());
+		System.err.println("total forms found :: " + form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(form_elem) );
 			Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
-			log.info("FORM PATH : " + form_tag.getXpath());
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
-			log.info("total form elements found :: " + input_elements.size());
 
 			List<PageElement> input_tags = new ArrayList<PageElement>(); 
 			for(WebElement input_elem : input_elements){
-				log.info("building form element input :: " + input_elem.getTagName());
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(input_elem) );
 				
 				boolean alreadySeen = false;
@@ -469,7 +459,7 @@ public class Browser {
 						input_field.setFieldLabel(label);
 					}
 					catch(NullPointerException e){
-						log.info("Error occurred while finding label for form input field");
+						System.err.println("Error occurred while finding label for form input field");
 					}
 				}
 				*/
@@ -482,7 +472,7 @@ public class Browser {
 				input_tags.add(input_tag);
 			}
 			
-			log.info("Total inputs for form : "+form.getFormFields().size());
+			System.err.println("Total inputs for form : "+form.getFormFields().size());
 			
 			form_list.add(form);
 		}
@@ -512,8 +502,8 @@ public class Browser {
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
-				log.info("checking labels for id association");
-				log.info(label_elem.getAttribute("for") + " == " + id);
+				System.err.println("checking labels for id association");
+				System.err.println(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
 					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
@@ -522,7 +512,7 @@ public class Browser {
 			}
 		}
 		
-		log.info("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
+		System.err.println("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
 		
 		return null;
 	}
@@ -542,8 +532,8 @@ public class Browser {
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
-				log.info("checking labels for id association");
-				log.info(label_elem.getAttribute("for") + " == " + id);
+				System.err.println("checking labels for id association");
+				System.err.println(label_elem.getAttribute("for") + " == " + id);
 
 				if(label_elem.getAttribute("for").equals(id)){
 					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
@@ -553,7 +543,7 @@ public class Browser {
 			}
 		}
 		
-		log.info("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
+		System.err.println("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
 		
 		return label_tags;
 	}
@@ -635,19 +625,16 @@ public class Browser {
 	 */
 	public static List<PageElement> extractAllInputElements(Page page, WebDriver driver){
 		List<PageElement> choices = new ArrayList<PageElement>();
-		log.info("Searching elements for radio/checkbox inputs : "+page.getElements().size());
 		for(PageElement tag : page.getElements()){
 			//PageElement tag = (PageElement)elem;
-			log.info("Examining tag element");
 			if(tag.getName().equalsIgnoreCase("input")){
 				//List<Attribute> attr_list = tag.getAttributes();
-				log.info("loaded attribute list ");
 				Attribute attr = tag.getAttribute("type");
 				if(attr != null){
 					for(String attr_val : attr.getVals()){
 						if(attr_val.equalsIgnoreCase("checkbox")){
 							/*CheckboxField field = new CheckboxField(tag);
-							log.info("identified checkbox :: "+tag.getText());
+							System.err.println("identified checkbox :: "+tag.getText());
 							
 							String[] id_vals = tag.getAttributeValues("id");
 							
@@ -661,7 +648,7 @@ public class Browser {
 						}
 						else if(attr_val.equalsIgnoreCase("radio")){
 							/*RadioField field = new RadioField(tag);
-							log.info("identified radio");
+							System.err.println("identified radio");
 							
 							String[] id_vals = tag.getAttributeValues("id");
 							
@@ -676,72 +663,72 @@ public class Browser {
 							break;
 						}
 						else if(attr_val.equalsIgnoreCase("text")){
-							log.info("text input encountered");
+							System.err.println("text input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("textarea")){
-							log.info("text area input encountered");
+							System.err.println("text area input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("color")){
-							log.info("color input encountered");
+							System.err.println("color input encountered");
 							choices.add(tag);
 	
 						}
 						else if(attr_val.equalsIgnoreCase("email")){
-							log.info("email input encountered");
+							System.err.println("email input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("file")){
-							log.info("file input encountered");
+							System.err.println("file input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("image")){
-							log.info("image input button encountered");
+							System.err.println("image input button encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("month")){
-							log.info("month and year input encountered");
+							System.err.println("month and year input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("number")){
-							log.info("number input encountered");
+							System.err.println("number input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("password")){
-							log.info("password input encountered");
+							System.err.println("password input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("range")){
-							log.info("range input encountered");
+							System.err.println("range input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("reset")){
-							log.info("reset input encountered");
+							System.err.println("reset input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("search")){
-							log.info("search input encountered");
+							System.err.println("search input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("submit")){
-							log.info("submit input encountered");
+							System.err.println("submit input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("tel")){
-							log.info("telephone input encountered");
+							System.err.println("telephone input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("time")){
-							log.info("time input encountered");
+							System.err.println("time input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("url")){
-							log.info("url input encountered");
+							System.err.println("url input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("week")){
-							log.info("week input encountered");
+							System.err.println("week input encountered");
 							choices.add(tag);
 						}
 					}
@@ -760,7 +747,7 @@ public class Browser {
 					if(attr.getName().equals("for")){
 						for(String val : attr.getVals()){
 							if(val.equals(for_id)){
-								log.info("LABEL FOUND FOR : " + for_id);
+								System.err.println("LABEL FOUND FOR : " + for_id);
 								return elem;
 							}
 						}
@@ -785,13 +772,13 @@ public class Browser {
 			//PageElement tag = (PageElement)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
-					log.info("Getting Attributes for label");
+					System.err.println("Getting Attributes for label");
 					if(attr.getName().equals("for")){
 						
 						for(String val : attr.getVals()){
 							for(String id : for_ids){
 								if(val.equals(id)){
-									log.info("LABEL FOUND FOR : " + id);
+									System.err.println("LABEL FOUND FOR : " + id);
 									labels.add(elem);
 								}
 							}
@@ -843,7 +830,7 @@ public class Browser {
 		
 		xpath += "//"+element.getTagName();
 		for(Attribute attr : Browser.extractedAttributes(element, (JavascriptExecutor)driver)){
-			if(!Arrays.asList(invalid_xpath_attributes).contains(attr.getName())){
+			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
 				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()])).trim() + "\")");
 			}
 		}
@@ -914,6 +901,11 @@ public class Browser {
 		return loadAttributes(attribute_strings);
 	}
 
+	public static void outlineElement(PageElement page_element, WebDriver driver) {
+		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
+		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
+	}
+	
 	public String getBrowserName() {
 		return browser_name;
 	}

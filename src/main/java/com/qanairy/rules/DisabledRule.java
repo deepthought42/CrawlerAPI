@@ -43,7 +43,7 @@ public class DisabledRule implements Rule{
 		 */
 	
 		Attribute attr = elem.getAttribute("disabled");
-		log.info("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
+		System.err.println("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
 		return attr.getVals().size() == 0;
 	}
 }

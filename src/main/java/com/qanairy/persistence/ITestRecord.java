@@ -23,17 +23,23 @@ public interface ITestRecord {
 	@Property("ran_at")
 	public void setRanAt(Date date);
 	
-	@Property("passes")
-	public Boolean getPasses();
+	@Property("passing")
+	public Boolean getPassing();
 	
-	@Property("passes")
-	public void setPasses(Boolean isPassing);
+	@Property("passing")
+	public void setPassing(Boolean isPassing);
 	
 	@Property("browser_name")
 	public String getBrowser();
 	
 	@Property("browser_name")
 	public void setBrowser(String browser_name);
+	
+	@Property("run_time")
+	public long getRunTime();
+	
+	@Property("run_time")
+	public void setRunTime(long run_time);
 	
 	@Adjacency(label="has_result")
 	public void setResult(IPage page);

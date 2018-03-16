@@ -55,6 +55,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		
 		acct_record.setOrgName(account.getOrgName());
+		acct_record.setLastDomain(account.getLastDomain());
 
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
@@ -83,7 +84,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		
 		List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
-		List<QanairyUser> users = new ArrayList<QanairyUser>();
+		/*List<QanairyUser> users = new ArrayList<QanairyUser>();
 		QanairyUserRepository user_repo = new QanairyUserRepository();
 		for(IQanairyUser user : user_records){
 			users.add(user_repo.load(user));
@@ -95,8 +96,10 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		for(IDiscoveryRecord record : discovery_db_records){
 			discovery_records.add(discovery_repo.load(record));
 		}
+			users.add(user_repo.convertFromRecord(user));
+		}*/
 		
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains);
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains, account.getLastDomain());
 	}
 	
 	/**

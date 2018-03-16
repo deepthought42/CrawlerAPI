@@ -68,8 +68,8 @@ public class DiscoveryController {
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
-													   	  @RequestParam(value="url", required=true) String url) 
-															   throws MalformedURLException, UnknownAccountException {
+													   	  		@RequestParam(value="url", required=true) String url) 
+													   	  				throws MalformedURLException, UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -146,8 +146,6 @@ public class DiscoveryController {
 		}
         else{
         	//Throw error indicating discovery has been or is running
-        	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
-
         	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
         	//Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();

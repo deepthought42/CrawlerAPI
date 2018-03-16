@@ -21,7 +21,7 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 */
 	@Override
 	public String generateKey(Group group) {
-		return "group:"+group.getName();
+		return "group:"+group.getName().toLowerCase();
 	}
 	
 	/**

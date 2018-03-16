@@ -22,9 +22,11 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 
 		PageRepository page_repo = new PageRepository();
 		testRecord.setResult(page_repo.save(connection, record.getPage()));
-		testRecord.setPasses(record.getPasses());
+		testRecord.setPassing(record.getPassing());
+
 		testRecord.setBrowser(record.getBrowser());
 		testRecord.setRanAt(record.getRanAt());
+		testRecord.setRunTime(record.getRunTime());
 		testRecord.setKey(record.getKey());
 		
 		return testRecord;
@@ -35,7 +37,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 * @return generated key
 	 */
 	public String generateKey(TestRecord record) {
-		return record.getRanAt().toString()+"::"+record.getPasses();
+		return record.getRanAt().toString()+"::"+record.getPassing();
 	}
 
 	/**
@@ -62,7 +64,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 
 		TestRecord test_record_record = find(connection, record.getKey());
 		if(test_record_record != null){
-			test_record_record.setPasses(record.getPasses());
+			test_record_record.setPassing(record.getPassing());
 			test_record_record.setRanAt(record.getRanAt());
 
 			connection.save();
@@ -92,7 +94,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	public TestRecord load(ITestRecord obj) {
 		PageRepository page_repo = new PageRepository();
 		Page page = page_repo.load(obj.getResult());
-		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPasses(), obj.getBrowser(), page);
+		TestRecord record = new TestRecord(obj.getKey(), obj.getRanAt(), obj.getPassing(), obj.getBrowser(), page, obj.getRunTime());
 		
 		return record;
 	}

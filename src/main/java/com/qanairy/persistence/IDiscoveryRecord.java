@@ -25,4 +25,10 @@ public interface IDiscoveryRecord {
 	
 	@Property("browser_name")
 	void setBrowserName(String browser_name);
+	
+	@Property("domain_url")
+	String getDomainUrl();
+	
+	@Property("domain_url")
+	void setDomainUrl(String domain_url);
 }

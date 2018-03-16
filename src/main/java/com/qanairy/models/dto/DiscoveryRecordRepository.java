@@ -40,14 +40,15 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 			System.out.println("Converting discovery record obj to db record");
 			discovery_record_record = connection.getTransaction().addVertex("class:"+IDiscoveryRecord.class.getSimpleName()+","+UUID.randomUUID(), IDiscoveryRecord.class);
 			discovery_record_record.setKey(discovery_record.getKey());
+			discovery_record_record.setStartTime(discovery_record.getStartedAt());
+			discovery_record_record.setBrowserName(discovery_record.getBrowserName());
+			discovery_record_record.setDomainUrl(discovery_record.getDomainUrl());
 		}
 		else{
 			System.out.println("Discovery record found in db. Getting from db");
 			discovery_record_record = iter.next();
 		}
-		discovery_record_record.setStartTime(discovery_record.getStartedAt());
-		discovery_record_record.setBrowserName(discovery_record.getBrowserName());
-		System.out.println("Updated discovery record");
+		
 		return discovery_record_record;
 	}
 
@@ -118,7 +119,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 
 	@Override
 	public DiscoveryRecord load(IDiscoveryRecord obj) {
-		return new DiscoveryRecord(obj.getKey(), obj.getStartTime(), obj.getBrowserName());
+		return new DiscoveryRecord(obj.getKey(), obj.getStartTime(), obj.getBrowserName(), obj.getDomainUrl());
 	}
 	
 	@Override

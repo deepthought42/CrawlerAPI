@@ -111,7 +111,7 @@ public class DiscoveryController {
 
 		options.put("browser", domain.getDiscoveryBrowserName());
         if(diffInMinutes > 60){
-        	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome");
+        	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", domain_url);
         	acct.getDiscoveryRecords().add(discovery_record);
         	
         	AccountRepository acct_repo = new AccountRepository();

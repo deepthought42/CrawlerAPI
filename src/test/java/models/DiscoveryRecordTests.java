@@ -21,7 +21,7 @@ public class DiscoveryRecordTests {
 	@Test(groups="Regression")
 	public void discoveryRecordCreateRecord(){
 		Date now = new Date();
-		DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome");
+		DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", "www.qanairy-test.com");
 		DiscoveryRecordRepository discovery_record_repo = new DiscoveryRecordRepository();
 
 		DiscoveryRecord created_discovery_record = discovery_record_repo.create(new OrientConnectionFactory(), discovery_record);
@@ -37,7 +37,7 @@ public class DiscoveryRecordTests {
 	@Test(groups="Regression")
 	public void accountUpdateRecord(){
 		Date now = new Date();
-		DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome");
+		DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", "www.qanairy-test.com");
 		DiscoveryRecordRepository discovery_record_repo = new DiscoveryRecordRepository();
 		discovery_record.setKey(discovery_record_repo.generateKey(discovery_record));
 

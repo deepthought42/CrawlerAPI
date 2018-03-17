@@ -286,6 +286,13 @@
 		    <version>8.0.3</version>
 		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/com.stripe/stripe-java -->
+		<dependency>
+		    <groupId>com.stripe</groupId>
+		    <artifactId>stripe-java</artifactId>
+		    <version>5.27.0</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/com.segment.analytics.java/analytics -->
 		<dependency>
 		    <groupId>com.segment.analytics.java</groupId>

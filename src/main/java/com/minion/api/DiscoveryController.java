@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
@@ -36,7 +37,6 @@ import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
-
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;

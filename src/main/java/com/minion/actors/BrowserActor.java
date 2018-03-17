@@ -148,7 +148,7 @@ public class BrowserActor extends UntypedActor {
 						Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
 
 						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-						path_expansion_actor.tell(path_msg, getSelf() );
+						path_expansion_actor.tell(path_msg, getSelf());
 					}
 				}
 

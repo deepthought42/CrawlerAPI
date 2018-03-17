@@ -44,7 +44,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public IDomain convertToRecord(OrientConnectionFactory connection, Domain domain) {
+	public IDomain save(OrientConnectionFactory connection, Domain domain) {
 		domain.setKey(generateKey(domain));
 		@SuppressWarnings("unchecked")
 		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(generateKey(domain), connection, IDomain.class);
@@ -54,20 +54,24 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		if(!iter.hasNext()){
 			domain_record = connection.getTransaction().addVertex("class:"+IDomain.class.getSimpleName()+","+UUID.randomUUID(), IDomain.class);
 			domain_record.setKey(domain.getKey());
+			domain_record.setUrl(domain.getUrl());
 		}
 		else{
 			//figure out throwing exception because domain already exists
 			domain_record = iter.next();
 		}
-		domain_record.setUrl(domain.getUrl());
 		domain_record.setLogoUrl(domain.getLogoUrl());
 		domain_record.setProtocol(domain.getProtocol());
 		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 		domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
+		domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
+		domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
+		domain_record.setDiscoveryPathCount(domain.getDiscoveryPathCount());
+		
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<ITestUser> test_users = new ArrayList<ITestUser>();
 		for(TestUser test_user : domain.getTestUsers()){
-			test_users.add(test_user_repo.convertToRecord(connection, test_user));
+			test_users.add(test_user_repo.save(connection, test_user));
 		}
 		domain_record.setTestUsers(test_users);
 		/*TestRepository test_repo = new TestRepository();
@@ -75,7 +79,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		for(Test test : domain.getTests()){
 			//check if test already exists
 			
-			tests.add(test_repo.convertToRecord(connection, test));
+			tests.add(test_repo.save(connection, test));
 		}
 		
 		domain_record.setTests(tests);
@@ -92,8 +96,9 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		Domain domain_record = find(connection, generateKey(domain));
 		
 		if(domain_record == null){
-			convertToRecord(connection, domain);
+			save(connection, domain);
 		}
+		
 		return domain;
 	}
 
@@ -108,10 +113,12 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 
 		if(iter.hasNext()){
 			IDomain domain_record = iter.next();
-			domain_record.setUrl(domain.getUrl());
 			domain_record.setLogoUrl(domain.getLogoUrl());
 			domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
 			domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
+			domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
+			domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
+			domain_record.setDiscoveryPathCount(domain.getDiscoveryPathCount());
 		}
 		
 		return domain;
@@ -142,14 +149,14 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public Domain convertFromRecord(IDomain obj) {
+	public Domain load(IDomain obj) {
 		List<Test> tests = new ArrayList<Test>();
 		/*TestRepository test_repo = new TestRepository();
 		Lists.newArrayList(obj.getTests());
@@ -158,20 +165,20 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		//NOTE:: TESTS SHOULD BE LAZY LOADED, AKA ONLY WHEN THEY ARE NEEDED
 		
 		while(test_iter.hasNext()){
-			tests.add(test_repo.convertFromRecord(test_iter.next()));
+			tests.add(test_repo.load(test_iter.next()));
 		}
 		*/
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<TestUser> test_users = new ArrayList<TestUser>();
 		for(ITestUser test_user : obj.getTestUsers()){
-			test_users.add(test_user_repo.convertFromRecord(test_user));
+			test_users.add(test_user_repo.load(test_user));
 		}
 		int test_cnt = obj.getDiscoveryTestCount();
-		
-		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), test_users, test_cnt);
+
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), obj.getDiscoveryStartTime(), test_users, test_cnt, obj.getDiscoveryBrowserName(), obj.getDiscoveryPathCount());
 	}
 	
-	public Domain convertFromRecord(OrientVertex obj) {
+	public Domain load(OrientVertex obj) {
 		List<Test> tests = new ArrayList<Test>();
 		/*if(obj.getTests() != null){
 			tests = Lists.newArrayList(obj.getProperty("tests"));
@@ -191,7 +198,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		List<Domain> domain = new ArrayList<Domain>();
 		while(iter.hasNext()){
 			OrientVertex v = iter.next();
-			domain.add(convertFromRecord(v));
+			domain.add(load(v));
 		}
 		
 		return domain;

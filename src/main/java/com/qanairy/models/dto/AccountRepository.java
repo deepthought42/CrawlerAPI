@@ -9,13 +9,14 @@ import org.apache.commons.collections.IteratorUtils;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
+import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.IQanairyUser;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
@@ -34,17 +35,17 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	@Override
-	public IAccount convertToRecord(OrientConnectionFactory connection, Account account) {
+	public IAccount save(OrientConnectionFactory connection, Account account) {
 		account.setKey(generateKey(account));
 		@SuppressWarnings("unchecked")
-		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
-		Iterator<IAccount> iter = svc_pkgs.iterator();
+		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
+		Iterator<IAccount> iter = accounts.iterator();
 		IAccount acct_record = null;  
 
 		if(!iter.hasNext()){
 			acct_record = connection.getTransaction().addVertex("class:"+IAccount.class.getSimpleName()+","+UUID.randomUUID(), IAccount.class);
 			acct_record.setKey(account.getKey());
-			
+			System.err.println("Service package :: "+account.getServicePackage());
 			acct_record.setServicePackage(account.getServicePackage());
 			acct_record.setPaymentAcctNum(account.getPaymentAcctNum());
 		}
@@ -53,11 +54,21 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		
 		acct_record.setOrgName(account.getOrgName());
-
+		acct_record.setLastDomain(account.getLastDomain());
+		
+		List<IDiscoveryRecord> discovery_records = new ArrayList<IDiscoveryRecord>();
+		for(DiscoveryRecord record : account.getDiscoveryRecords()){
+			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
+			//repo.create(connection, user);
+			discovery_records.add(repo.save(connection, record));
+		}
+		
+		acct_record.setDiscoveryRecords(discovery_records);
+		
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
-			acct_record.addUser(repo.convertToRecord(connection, user));
+			acct_record.addUser(repo.save(connection, user));
 		}
 		*/
 		
@@ -66,23 +77,40 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Account convertFromRecord(IAccount account) {
+	public Account load(IAccount account) {
 		List<IDomain> domain_records = IteratorUtils.toList(account.getDomains().iterator());
 		
 		List<Domain> domains = new ArrayList<Domain>();
 		DomainRepository domain_repo = new DomainRepository();
 		for(IDomain domain : domain_records){
-			domains.add(domain_repo.convertFromRecord(domain));
+			domains.add(domain_repo.load(domain));
 		}
 		
-		List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
-		List<QanairyUser> users = new ArrayList<QanairyUser>();
+		Iterator<IDiscoveryRecord> records = account.getDiscoveryRecords().iterator();
+		List<DiscoveryRecord> record_list = new ArrayList<DiscoveryRecord>();
+		while(records.hasNext()){
+			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
+			record_list.add(repo.load(records.next()));
+		}
+		
+		//List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
+		/*List<QanairyUser> users = new ArrayList<QanairyUser>();
 		QanairyUserRepository user_repo = new QanairyUserRepository();
 		for(IQanairyUser user : user_records){
-			users.add(user_repo.convertFromRecord(user));
+			users.add(user_repo.load(user));
 		}
 		
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains);
+		List<IDiscoveryRecord> discovery_db_records = IteratorUtils.toList(account.getUsers().iterator());
+		List<DiscoveryRecord> discovery_records = new ArrayList<DiscoveryRecord>();
+		DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+		for(IDiscoveryRecord record : discovery_db_records){
+			discovery_records.add(discovery_repo.load(record));
+		}
+			users.add(user_repo.load(user));
+		}*/
+		
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), 
+							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), record_list);
 	}
 	
 	/**
@@ -97,9 +125,10 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		Iterator<IAccount> iter = accounts.iterator();
 		  
 		if(!iter.hasNext()){
-			convertToRecord(connection, account);
+			save(connection, account);
 			connection.save();
 		}
+		
 		return account;
 
 	}
@@ -128,7 +157,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 				
 				Domain domain_record = repo.find(connection, domain.getUrl());
 				if(domain_record == null){
-					acct.addDomain(repo.convertToRecord(connection, domain));	
+					acct.addDomain(repo.save(connection, domain));	
 				}
 				else{
 					//check if domain is part of account before adding it to the account
@@ -142,12 +171,12 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 					}
 					
 					if(!domain_account_linked){
-						acct.addDomain(repo.convertToRecord(connection, domain_record));
+						acct.addDomain(repo.save(connection, domain_record));
 					}
 				}
 			}
 		}
-		return convertFromRecord(acct);
+		return load(acct);
 	}
 
 
@@ -161,7 +190,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		Iterator<IAccount> iter = svc_pkgs.iterator();
 		
 		if(iter.hasNext()){
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
@@ -175,16 +204,16 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		List<Account> accounts = new ArrayList<Account>();
 		while(iter.hasNext()){
 			OrientVertex v = iter.next();
-			accounts.add(convertFromRecord((IAccount)v));
+			accounts.add(load((IAccount)v));
 		}
 		
 		return accounts;
 	}
 
 	public Account deleteDomain(OrientConnectionFactory conn, Account acct, Domain domain) {
-		IAccount account = convertToRecord(conn, acct);
+		IAccount account = save(conn, acct);
 		DomainRepository domain_repo = new DomainRepository();
-		account.removeDomain(domain_repo.convertToRecord(conn, domain));
-		return convertFromRecord(account);
+		account.removeDomain(domain_repo.save(conn, domain));
+		return load(account);
 	} 
 }

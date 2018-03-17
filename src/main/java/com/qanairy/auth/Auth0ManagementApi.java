@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import com.auth0.client.mgmt.ManagementAPI;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -22,7 +23,11 @@ public class Auth0ManagementApi {
 	private static String client_secret = "kbHd7I5avP_d5jhofdhAcTGMJKYdNnnzgevoCddRSryv2EgLmrXvSz4aEqZBvfMp";
 	private static String base_url = "https://qanairy.auth0.com/";
 	private static String audience_url = base_url + "api/v2/";
-
+	private static String api_token = "8hk4R5YJ4gO5xPZdjjMdy7YtUF8eA22F";
+	
+	public Auth0ManagementApi(String access_token){
+		ManagementAPI mgmt_api = new ManagementAPI(base_url, api_token);
+	}
 	
 	public static String getToken() throws UnirestException{
 		HttpResponse<String> response1 = Unirest.post(base_url + "oauth/token")
@@ -41,8 +46,6 @@ public class Auth0ManagementApi {
 			
 			// convert JSON string to Map
 			map = mapper.readValue(resp.getBody(), new TypeReference<Map<String, String>>(){});
-
-			//log.info(map);
 		} catch (JsonGenerationException e) {
 			e.printStackTrace();
 		} catch (JsonMappingException e) {

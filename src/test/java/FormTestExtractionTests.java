@@ -31,18 +31,18 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"phantomjs");
+			browser = new Browser(url,"chrome");
 			Page page = browser.getPage();
-			log.info("Extracting forms");
+			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
-			//log.info("Extracting rules");
+			//System.err.println("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean rule_is_required = false;
 			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				log.info("rule class :: " + rule.getClass());
+				System.err.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(RequirementRule.class)){
 					rule_is_required = true;
 				}
@@ -66,21 +66,21 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"phantomjs");
+			browser = new Browser(url,"chrome");
 			Page page = browser.getPage();
-			log.info("Extracting forms");
+			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
-			//log.info("Extracting rules");
+			//System.err.println("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean alphabetic_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
 			
 			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				log.info("rule class :: " + rule.getClass());
+				System.err.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(AlphabeticRestrictionRule.class)){
 					alphabetic_restrict_rule = true;
 				}
@@ -107,20 +107,20 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url, "phantomjs");
+			browser = new Browser(url, "chrome");
 			Page page = browser.getPage();
-			log.info("Extracting forms");
+			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
-			//log.info("Extracting rules");
+			//System.err.println("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean numeric_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
 			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				log.info("rule class :: " + rule.getClass());
+				System.err.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRestrictionRule.class)){
 					numeric_restrict_rule = true;
 				}
@@ -147,14 +147,14 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"phantomjs");
+			browser = new Browser(url,"chrome");
 			Page page = browser.getPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			boolean readonly_restrict_rule = false;
 
 			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				log.info("rule class :: " + rule.getClass());
+				System.err.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(ReadOnlyRule.class)){
 					readonly_restrict_rule = true;
 				}
@@ -178,15 +178,15 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"phantomjs");
+			browser = new Browser(url,"chrome");
 			Page page = browser.getPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
-			log.info(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean min_value_rule = false;
 
 			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				log.info("rule class :: " + rule.getClass());
+				System.err.println("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRule.class)){
 					min_value_rule = true;
 				}
@@ -210,7 +210,7 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"phantomjs");
+			browser = new Browser(url,"chrome");
 			Page page = browser.getPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 

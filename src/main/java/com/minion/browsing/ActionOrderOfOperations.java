@@ -40,22 +40,23 @@ public class ActionOrderOfOperations {
 	static {
 		List<Action> mouse_motion_actions = new ArrayList<Action>();
 		mouse_motion_actions.add(new Action("mouse_over"));
+		//mouse_motion_actions.add(new Action("scroll","100"));
 		
 		List<Action> click_actions = new ArrayList<Action>();
 		//click_actions.add(new Action("clickAndHold"));
 		click_actions.add(new Action("click"));
-		click_actions.add(new Action("clickAt"));
+		//click_actions.add(new Action("clickAt"));
 		//click_actions.add(new Action("clickAndWait"));
 		//click_actions.add(new Action("clickAtAndWait"));
-		click_actions.add(new Action("release"));
+		//click_actions.add(new Action("release"));
 		click_actions.add(new Action("doubleClick"));
 		
-		List<Action> keyboard_actions = new ArrayList<Action>();
-		keyboard_actions.add(new Action("sendKeys"));
+		//List<Action> keyboard_actions = new ArrayList<Action>();
+		//keyboard_actions.add(new Action("sendKeys"));
 		
 		action_lists.add(mouse_motion_actions);
 		action_lists.add(click_actions);
-		action_lists.add(keyboard_actions);
+		//action_lists.add(keyboard_actions);
 	}
 	
 	public static Integer getOrderOfOperationForAction(String actionName){

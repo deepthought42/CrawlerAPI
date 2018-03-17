@@ -3,25 +3,19 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.getsentry.raven.connection.Connection;
 import com.minion.actors.MemoryRegistryActor;
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
@@ -29,9 +23,8 @@ import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-
-
 import com.minion.structs.Message;
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
@@ -62,105 +55,6 @@ public class BrowserActor extends UntypedActor {
 	}
 	
 	/**
-	 * Calculates the rewards
-	 * 
-	 * @param action_rewards
-	 * @param pageElement
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 */
-	public HashMap<String, Double> calculateActionProbabilities(PageElement pageElement) throws IllegalArgumentException, IllegalAccessException{
-		/*List<ObjectDefinition> definitions = DataDecomposer.decompose(pageElement);
-
-		log.info(getSelf().hashCode() + " -> GETTING BEST ACTION PROBABILITY...");
-		HashMap<String, Double> cumulative_action_map = new HashMap<String, Double>();
-		
-		for(Object obj : definitions){
-			Iterable<com.tinkerpop.blueprints.Vertex> memory_vertex_iter = persistor.findVertices(obj);
-			Iterator<com.tinkerpop.blueprints.Vertex> memory_iterator = memory_vertex_iter.iterator();
-			
-			while(memory_iterator.hasNext()){
-				com.tinkerpop.blueprints.Vertex mem_vertex = memory_iterator.next();
-				HashMap<String, Double> action_map = mem_vertex.getProperty("actions");
-				double probability = 0.0;
-				if(action_map != null){
-					for(String action: action_map.keySet()){
-						if(cumulative_action_map.containsKey(action)){
-							probability += cumulative_action_map.get(action);
-						}
-						
-						cumulative_action_map.put(action, probability);
-					}
-				}
-				else{
-					for(String action: ActionFactory.getActions()){						
-						cumulative_action_map.put(action, probability);
-					}
-				}
-			}
-		}
-		return cumulative_action_map;
-		*/
-		return null;
-	}
-	
-	
-	/**
-	 * Calculate all estimated element probabilities
-	 * 
-	 * @param page
-	 * @param element_probabilities
-	 * @throws IllegalArgumentException
-	 * @throws IllegalAccessException
-	 */
-	public ArrayList<HashMap<String, Double>> getEstimatedElementProbabilities(ArrayList<PageElement> pageElements) 
-			throws IllegalArgumentException, IllegalAccessException
-	{
-		/*
-		ArrayList<HashMap<String, Double>> element_action_map_list = new ArrayList<HashMap<String, Double>>(0);
-				
-		for(PageElement elem : pageElements){
-			HashMap<String, Double> full_action_map = new HashMap<String, Double>(0);
-			//find vertex for given element
-			List<Object> raw_object_definitions = DataDecomposer.decompose(elem);
-			List<com.tinkerpop.blueprints.Vertex> object_definition_list
-				= persistor.findAll(raw_object_definitions);
-					
-			//iterate over set to get all actions for object definition list
-			for(com.tinkerpop.blueprints.Vertex v : object_definition_list){
-				HashMap<String, Double> action_map = v.getProperty("actions");
-				if(action_map != null && !action_map.isEmpty()){
-					for(String action : action_map.keySet()){
-						if(!full_action_map.containsKey(action)){
-							//If it doesn't yet exist, then seed it with a random variable
-							full_action_map.put(action, rand.nextDouble());
-						}
-						else{
-							
-							double action_sum = full_action_map.get(action) + action_map.get(action);
-							full_action_map.put(action, action_sum);
-						}
-					}
-				}
-			}
-			
-			for(String action : full_action_map.keySet()){
-				double probability = 0.0;
-				probability = full_action_map.get(action)/(double)object_definition_list.size();
-
-				//cumulative_probability[action_idx] += probability;
-				full_action_map.put(action, probability);
-			}
-			element_action_map_list.add(full_action_map);
-		}
-		
-		return element_action_map_list;
-		*/
-		
-		return null;
-	}
-	
-	/**
 	 * Get the UUID for this Agent
 	 */
 	public UUID getActorId(){
@@ -182,11 +76,21 @@ public class BrowserActor extends UntypedActor {
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-				log.info("exploratory path started");
-				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), "phantomjs");
+
+				/*
+				 * tell discovery registry that we are running an exploratory path for discovery
+				 */
+		  		OrientConnectionFactory conn = new OrientConnectionFactory();
+				DomainRepository domain_repo = new DomainRepository();	
+				System.err.println("Loading domain :: "+((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
+				Domain domain = domain_repo.find(conn, ((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
+				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()+1);
+				domain_repo.save(conn, domain);
+
+				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				
 				Page last_page = exploratory_path.findLastPage();
-				boolean landable_status = last_page.checkIfLandable();
+				boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
 				log.info("landable status: " +landable_status);
 				last_page.setLandable(landable_status);
 							
@@ -196,20 +100,20 @@ public class BrowserActor extends UntypedActor {
 				}
 
 				if(exploratory_path.getPath() != null){
+					System.err.println("Path is not empty");
 					Page result_page = null;
 
 					// increment total paths being explored for domain
 					String domain_url = last_page.getUrl().getHost();
-					DomainRepository domain_repo = new DomainRepository();
 					IDomain idomain = domain_repo.find(domain_url);
 					idomain.setLastDiscoveryPathRanAt(new Date());
-					
+					System.err.println("Set time of last discovery path ran");
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path path = Path.clone(exploratory_path);
 						path.add(action);
-						log.info("Crawling exploratory path with length : " + path.size());
+						System.err.println("Crawling path...");
 						final long pathCrawlStartTime = System.currentTimeMillis();
 						result_page = Crawler.crawlPath(path, browser);
 						final long pathCrawlEndTime = System.currentTimeMillis();
@@ -220,19 +124,16 @@ public class BrowserActor extends UntypedActor {
 						if(last_idx < 0){
 							last_idx = 0;
 						}
-						
-						int clicks = getLastClicksSequenceCount(last_idx, exploratory_path, last_page);
-						if(clicks >= 3 && last_page.equals(result_page)){
+						if(ExploratoryPath.hasCycle(path, last_page)){
 							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
 					  	}
 					  	else{
+							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 					  		if(ExploratoryPath.hasCycle(path, last_page)){
 					  			log.info("exploratory path has cycle; exiting");
 					  			break;
 					  		}
-					  		OrientConnectionFactory conn = new OrientConnectionFactory();
-							Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 							domain.setLastDiscoveryPathRanAt(new Date());
 							int cnt = domain.getDiscoveredTestCount()+1;
 							System.out.println("landing page test Count :: "+cnt);
@@ -251,8 +152,15 @@ public class BrowserActor extends UntypedActor {
 					}
 				}
 
+				/*
+				 * tell discovery registry that we are FINISHED running an exploratory path for discovery
+				 */
+				domain = domain_repo.find(conn, exploratory_path.firstPage().getUrl().getHost());
+				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
+				domain_repo.save(conn, domain);
 			  	browser.close();
 				
+			  	conn.close();
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
@@ -264,7 +172,7 @@ public class BrowserActor extends UntypedActor {
 				if(acct_msg.getOptions().isEmpty()){
 				}
 				
-				browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+				browser = new Browser(((Path)acct_msg.getData()).firstPage().getUrl().toString(), acct_msg.getOptions().get("browser").toString());
 				traverse_path_and_create_test(browser, path, acct_msg);
 			  	browser.close();
 	
@@ -275,15 +183,19 @@ public class BrowserActor extends UntypedActor {
 				log.info("Url provided");
 
 				try{
-					browser = new Browser(((URL)acct_msg.getData()).toString(), "phantomjs");
+					browser = new Browser(((URL)acct_msg.getData()).toString(), acct_msg.getOptions().get("browser").toString());
 				}
 				catch(NullPointerException e){
 					log.error("Failed to open connection to browser");
 					return;
 				}
 				log.info("preparting to generate landing page test");
-				generate_landing_page_test(browser, acct_msg);
-
+				
+				try{
+					generate_landing_page_test(browser, acct_msg);
+				}catch(Exception e){
+					log.info(e.getMessage(), "Error occurred while generating landing page test");
+				}
 				browser.close();
 		   }
 			//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
@@ -305,7 +217,8 @@ public class BrowserActor extends UntypedActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
+		log.info("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		log.info("sending test message out");
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
@@ -375,16 +288,18 @@ public class BrowserActor extends UntypedActor {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public void generate_landing_page_test(Browser browser, Message<?> msg) throws MalformedURLException, IOException{
+	public void generate_landing_page_test(Browser browser, Message<?> msg) throws MalformedURLException, IOException, NullPointerException{
 		assert browser != null;
 		assert msg != null;
 		
 		log.info("Generating landing page");
 	  	Path path = new Path();
+	  	System.out.println("Getting browser page...");
 	  	Page page_obj = browser.getPage();
-	  	path.getPath().add(page_obj);
-	  	//Page current_page = Crawler.crawlPath(path, browser);
+	  	System.out.println("Add page obj to path : "+page_obj);
+	  	System.out.println("Add page obj src to path : "+page_obj.getSrc());
 
+	  	path.getPath().add(page_obj);
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
@@ -393,29 +308,13 @@ public class BrowserActor extends UntypedActor {
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 		Domain domain = domain_repo.find(conn, page_obj.getUrl().getHost());
 		domain.setLastDiscoveryPathRanAt(new Date());
+
 		int cnt = domain.getDiscoveredTestCount()+1;
 		System.out.println("landing page test Count :: "+cnt);
 		domain.setDiscoveredTestCount(cnt);
 		domain_repo.update(conn, domain);
 		
 		createTest(path, page_obj, 1L, domain, msg);
-		
-		/*
-		Test test = new Test(path, page_obj, new Domain(page_obj.getUrl().getHost(), "", page_obj.getUrl().getProtocol()));
-		TestRepository test_repo = new TestRepository();
-		test.setKey(test_repo.generateKey(test));
-		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, test.getResult());
-		test.addRecord(test_record);
-		
-	  	Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), test);
-	  	ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistryActor"+UUID.randomUUID());
-		memory_actor.tell(test_msg, getSelf() );
-		
-		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), path);
-		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-		path_expansion_actor.tell(path_msg, getSelf() );
-		*/
 		
 		Path new_path = Path.clone(path);
 		new_path.add(page_obj);
@@ -446,7 +345,7 @@ public class BrowserActor extends UntypedActor {
 		
 		Page last_page = path.findLastPage();
 
-		last_page.setLandable(last_page.checkIfLandable());
+		last_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
 		if(last_page.isLandable()){
 			//clone path starting at last page in path
 			//Path shortened_path = path.clone());
@@ -467,9 +366,6 @@ public class BrowserActor extends UntypedActor {
 	  		OrientConnectionFactory conn = new OrientConnectionFactory();
 			Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 			domain.setLastDiscoveryPathRanAt(new Date());
-			int cnt = domain.getDiscoveredTestCount()+1;
-			System.out.println("landing page test Count :: "+cnt);
-			domain.setDiscoveredTestCount(cnt);
 			domain_repo.update(conn, domain);
 			
 	  		createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);

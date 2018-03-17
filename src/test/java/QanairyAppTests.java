@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
  * 
  *
  */
-public class TechstarsTests {
+public class QanairyAppTests {
 
 		@Test
 		public void testHttpsSettingsInPhantomjs(){
@@ -34,7 +34,7 @@ public class TechstarsTests {
 	        try {
 	        	//WebDriver driver = new FirefoxDriver(cap);
 				RemoteWebDriver driver = new RemoteWebDriver(new URL("http://104.131.30.168:4444/wd/hub"), cap);
-				driver.get("https://www.techstars.com");
+				driver.get("http://alpha.qanairy.com");
 				//driver.navigate().to("https://www.techstars.com");
 				String src = driver.getPageSource();
 				String domain = driver.getCurrentUrl();

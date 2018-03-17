@@ -19,7 +19,7 @@ public class BrowserTest {
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
 		
 		String clean_src = Browser.cleanSrc(src_example);
-		//log.info("clean src: " +clean_src);
+		//System.err.println("clean src: " +clean_src);
 		Assert.assertTrue(clean_src.equals("<html><head></head></html>"));
 	}
 	
@@ -31,7 +31,7 @@ public class BrowserTest {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getHost(), "", page.getUrl().getProtocol()), "Testing Test 1");
+		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getProtocol(), page.getUrl().getHost(), "chrome",  null), "Testing Test 1");
 		Assert.assertTrue(test.getDomain().getUrl().toString().equals(page.getUrl().getHost()));
 	}
 }

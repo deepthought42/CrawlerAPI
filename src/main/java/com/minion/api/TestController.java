@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,19 +17,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.auth0.spring.security.api.Auth0UserDetails;
+import com.minion.actors.MemoryRegistryActor;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -47,8 +44,18 @@ import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.IdentifyMessage;
+import com.segment.analytics.messages.TrackMessage;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+
 import com.minion.browsing.Browser;
+import com.minion.structs.Message;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
+import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
@@ -77,15 +84,17 @@ public class TestController {
 	 * @throws UnknownAccountException 
 	 * @throws DomainNotOwnedByAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestByDomain(HttpServletRequest request, 
-			   								 @RequestParam(value="url", required=true) String url) throws UnknownAccountException, DomainNotOwnedByAccountException {
-    	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
+													@RequestParam(value="url", required=true) String url) 
+															throws UnknownAccountException, DomainNotOwnedByAccountException {
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -112,7 +121,7 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() != null){
-				verified_tests.add(test_repo.convertFromRecord(itest));
+				verified_tests.add(test_repo.load(itest));
 			}
 		}
 		
@@ -127,16 +136,17 @@ public class TestController {
 	 * @throws UnknownAccountException 
 	 * @throws DomainNotOwnedByAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/failing", method = RequestMethod.GET)
 	public @ResponseBody Map<String, Integer> getFailingTestByDomain(HttpServletRequest request, 
 			   								 	 	@RequestParam(value="url", required=true) String url) 
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
-    	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
 
-    	Account acct = accountService.find(currentUser.getUsername());
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -170,7 +180,7 @@ public class TestController {
 	 * 
 	 * @return all tests matching name passed
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/name", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
 			   								 		@RequestParam(value="name", required=true) String name) {
@@ -189,16 +199,19 @@ public class TestController {
 	 * @throws DomainNotOwnedByAccountException 
 	 * @throws UnknownAccountException 
 	 */
-    //@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
 	public @ResponseBody List<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
     	Date start = new Date();
     	//make sure domain belongs to user account first
-    	final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        final Auth0UserDetails currentUser = (Auth0UserDetails) authentication.getPrincipal();
-    	Account acct = accountService.find(currentUser.getUsername());
+
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -212,37 +225,104 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() == null){
-				unverified_tests.add(test_repo.convertFromRecord(itest));
+				unverified_tests.add(test_repo.load(itest));
 			}
 		}
     	Date end = new Date();
     	long diff = end.getTime() - start.getTime();
-    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
+    	System.err.println("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
 		return unverified_tests;
 	}
 
 	/**
-	 * Updates the correctness of a test with the given test key
+	 * Updates the correctness of a test for a specific browser with the given test key
 	 * 
 	 * @param test
 	 * @return
+	 * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
-	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
-	public @ResponseBody Test updateCorrectness(@RequestParam(value="key", required=true) String key, 
-										 		@RequestParam(value="correct", required=true) boolean correct){
+    @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
+	public @ResponseBody Test setInitialCorrectness(HttpServletRequest request, 
+													@RequestParam(value="key", required=true) String key, 
+													@RequestParam(value="correct", required=true) boolean correct)
+															throws UnknownAccountException{
+    	
+    	//make sure domain belongs to user account first
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("name", auth.getNickname(auth_access_token));
+        traits.put("email", username);        
+    	analytics.enqueue(IdentifyMessage.builder()
+    		    .userId(acct.getKey())
+    		    .traits(traits)
+    		);
+    	
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
+		
+		IDomain idomain = itest.getDomain();
+		
+ 		String browser_name = idomain.getDiscoveryBrowserName();
+		Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+		System.err.println("browser :::     " +browser_name+" : ##########  : "+correct);
+		browser_statuses.put(browser_name, correct);
+		itest.setBrowserStatuses(browser_statuses);
+		
+		//update last TestRecord passes value
+		updateLastTestRecordPassingStatus(itest);
+		
+	   	//Fire discovery started event	
+	   	Map<String, String> set_initial_correctness_props= new HashMap<String, String>();
+	   	set_initial_correctness_props.put("test_key", itest.getKey());
+	   	analytics.enqueue(TrackMessage.builder("Set initial test status")
+	   		    .userId(acct.getKey())
+	   		    .properties(set_initial_correctness_props)
+	   		);
+   	
+		TestRepository test_record = new TestRepository();
+		return test_record.load(itest);
+	}
+    
+	/**
+	 * Updates the correctness of a test for a specific browser with the given test key
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
+	public @ResponseBody Test updateBrowserCorrectness(@RequestParam(value="key", required=true) String key, 
+														@RequestParam(value="browser_name", required=true) String browser_name, 
+														@RequestParam(value="correct", required=true) boolean correct){
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
+		ITest itest = itest_iter.next();
+		itest.setCorrect(correct);
+		itest.getBrowserStatuses().put(browser_name, correct);
 
+		
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(itest);
 		
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
 
+    /**
+     * 
+     * @param itest
+     */
 	private void updateLastTestRecordPassingStatus(ITest itest) {
 		Iterator<ITestRecord> itest_records = itest.getRecords().iterator();
 		ITestRecord record = null;
@@ -250,7 +330,7 @@ public class TestController {
 			record = itest_records.next();
 		}
 		if(record != null){
-			record.setPasses(itest.getCorrect());
+			record.setPassing(itest.getCorrect());
 		}
 	}
 
@@ -260,7 +340,7 @@ public class TestController {
 	 * @param key key for test that path is to be found for
 	 * @return path {@link Path} for given test
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/tests/paths", method=RequestMethod.GET)
 	public @ResponseBody Path getTestPath(@RequestParam(value="key", required=true) String key){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
@@ -269,7 +349,7 @@ public class TestController {
 		IPath path_record = itest.getPath();
 		
 		PathRepository path_repo = new PathRepository();
-		Path path = path_repo.convertFromRecord(path_record);
+		Path path = path_repo.load(path_record);
 
 		return path;
 	}
@@ -280,7 +360,7 @@ public class TestController {
 	 * @param test
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/updateName/{key}", method=RequestMethod.PUT)
 	public @ResponseBody Test updateName(HttpServletRequest request, 
 										 @PathVariable(value="key", required=true) String key, 
@@ -292,7 +372,7 @@ public class TestController {
 		orient_connection.save();
 
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
     
 	/**
@@ -302,37 +382,42 @@ public class TestController {
 	 * @return
 	 * @throws MalformedURLException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
-	@RequestMapping(path="/runTest/{key}", method = RequestMethod.POST)
-	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
-											@RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
+    @PreAuthorize("hasAuthority('run:tests')")
+	@RequestMapping(path="/run/{key}", method = RequestMethod.POST)
+	public @ResponseBody TestRecord runTest(@PathVariable(value="key", required=true) String key, 
+									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
 		ITest itest = itest_iter.next();
-		if(!itest.getRunStatus()){
-			itest.setRunStatus(true);
+		Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
+		if(!browser_running_status.get(browser_type)){
+			
 			TestRecord record = null;
 			TestRepository test_record = new TestRepository();
 			
 			if(itest.getKey().equals(key)){
-				Test test = test_record.convertFromRecord(itest);
+				Test test = test_record.load(itest);
 				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
 				record = TestingActor.runTest(test, browser);
 				
 				TestRecordRepository test_record_record = new TestRecordRepository();
-				itest.addRecord(test_record_record.convertToRecord(connection, record));
-				itest.setCorrect(record.getPasses());
-				itest.setLastRunTimestamp(new Date());
-				itest.setRunStatus(false);
+				itest.addRecord(test_record_record.save(connection, record));
+				itest.setCorrect(record.getPassing());
+
+				Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+				browser_running_status.put(browser_type, true);
+				itest.setBrowserStatuses(browser_running_status);
+				
 				browser.close();
 			}
 			else{
 				log.warn("test found does not match key :: " + key);
 			}
 			connection.close();
-			return test_record.convertFromRecord(itest);
+			return record;
 		}
-		
+		connection.close();
+
 		throw new TestAlreadyRunningException();
 	}
 
@@ -342,15 +427,44 @@ public class TestController {
 	 * @param key
 	 * @return
 	 * @throws MalformedURLException 
+     * @throws UnknownAccountException 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
-	@RequestMapping(path="/runAll", method = RequestMethod.POST)
-	public @ResponseBody Map<String, Boolean> runAllTests(@RequestParam(value="test_keys", required=true) List<String> test_keys, 
-												@RequestParam(value="browser_type", required=true) String browser_type) 
-														throws MalformedURLException{
+    @PreAuthorize("hasAuthority('run:tests')")
+	@RequestMapping(path="/run", method = RequestMethod.POST)
+	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
+														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
+														  @RequestParam(value="browser_type", required=true) String browser_type,
+														  final Principal principal) 
+																  throws MalformedURLException, UnknownAccountException{
+    	
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("name", auth.getNickname(auth_access_token));
+        traits.put("email", username);        
+    	analytics.enqueue(IdentifyMessage.builder()
+    		    .userId(acct.getKey())
+    		    .traits(traits)
+    		);
+    	
+    	//Fire discovery started event	
+	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
+	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
+	   	analytics.enqueue(TrackMessage.builder("Running tests")
+	   		    .userId(acct.getKey())
+	   		    .properties(run_test_batch_props)
+	   		);
+	   	
     	OrientConnectionFactory connection = new OrientConnectionFactory();
-		
-    	Map<String, Boolean> test_results = new HashMap<String, Boolean>();
+    	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
+    	
     	for(String key : test_keys){
     		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
     		
@@ -359,18 +473,52 @@ public class TestController {
         		TestRecord record = null;
         		
 	    		if(itest.getKey().equals(key)){
-	    			TestRepository test_record = new TestRepository();
+	    			TestRepository test_repo = new TestRepository();
 	    	
-	    			Test test = test_record.convertFromRecord(itest);
+	    			Test test = test_repo.load(itest);
+
+	    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
+	    			browser_running_status.put(browser_type, null);
+	    			for(String browser : browser_running_status.keySet()){
+	    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
+	    			}
+	    			test.setBrowserPassingStatuses(browser_running_status);
+	    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+	    			
+	    			//tell memory worker of test
+	    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+	    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+	    			memory_actor.tell(test_msg, null);
+	    			
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
 	    			record = TestingActor.runTest(test, browser);
-	    			
+	    			System.err.println("Record is passing :::: "+record.getPassing());
+	    			browser_running_status.put(browser_type, record.getPassing());
+	    			test.setBrowserPassingStatuses(browser_running_status);
+	    			for(String browser_1 : browser_running_status.keySet()){
+	    				System.err.println("Browser 1  ::::  "+browser_1+"  ************   "+browser_running_status.get(browser_1));
+	    			}
+	    			test.addRecord(record);
+	    			boolean is_passing = true;
+					//update overall passing status based on all browser passing statuses
+					for(Boolean status : test.getBrowserPassingStatuses().values()){
+						if(status != null && !status){
+							is_passing = false;
+						}
+					}
+					test.setCorrect(is_passing);
+					test.setLastRunTimestamp(new Date());
+	    			test_results.put(test.getKey(), record);
+	    			test.setRunTime(record.getRunTime());
+	    	
 	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
-	    			itest.setCorrect(record.getPasses());
-	    			itest.setLastRunTimestamp(new Date());
-	    			test_results.put(test.getKey(), record.getPasses());
-	    			itest.setRunTime(record.getRunTime());
+	    			itest.addRecord(test_record_record.save(connection, record));
+	    			itest.setCorrect(record.getPassing());
+
+	    			//tell memory worker of test
+	    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+	    			memory_actor.tell(test_msg, null);
+	    			
 	    			browser.close();
 	    		}
 	    		else{
@@ -391,7 +539,7 @@ public class TestController {
 	 * 
 	 * @return {@link TestRecord records} that define the results of the tests. 
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
 														@RequestParam(value="url", required=true) String url,
@@ -435,7 +583,7 @@ public class TestController {
 	 * 	
 	 * @return the updated test
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('create:groups')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=true) String description,
@@ -443,7 +591,7 @@ public class TestController {
     	if(name == null || name.isEmpty()){
     		throw new EmptyGroupNameException();
     	}
-		Group group = new Group(name, description);
+		Group group = new Group(name.toLowerCase(), description);
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
@@ -460,7 +608,7 @@ public class TestController {
 		}
 		
 		GroupRepository group_repo = new GroupRepository();
-		igroup = group_repo.convertToRecord(orient_connection, group);
+		igroup = group_repo.save(orient_connection, group);
 		itest.addGroup(igroup);
 		group.setKey(igroup.getKey());
 		
@@ -475,7 +623,7 @@ public class TestController {
 	 * 	
 	 * @return the updated test
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('delete:groups')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
 	public @ResponseBody Boolean removeGroup(@RequestParam(value="group_key", required=true) String group_key,
 										  	 @RequestParam(value="test_key", required=true) String test_key){
@@ -505,7 +653,7 @@ public class TestController {
 	 * 
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+    @PreAuthorize("hasAuthority('read:groups')")
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {

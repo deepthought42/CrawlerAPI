@@ -18,7 +18,7 @@ public class ElementStatement implements IStatementFactory {
 	public String generateStatement(Object o) {
 		if(o instanceof PageElement){
 			PageElement element = (PageElement)o;
-			log.info("I SHOULD BE GENERATING AN ELEMENT TEST...");
+			System.err.println("I SHOULD BE GENERATING AN ELEMENT TEST...");
 			return "document.evaluate("+ element.getXpath() +", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue";
 		}
 		return null;

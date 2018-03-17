@@ -35,12 +35,11 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	 * {@inheritDoc}
 	 */
 	@Override
-	public IPathObject convertToRecord(OrientConnectionFactory connection, PathObject path_obj) {
+	public IPathObject save(OrientConnectionFactory connection, PathObject path_obj) {
 		
 		IPathObject path_object_record = connection.getTransaction().addVertex("class:I"+path_obj.getClass().getSimpleName()+","+UUID.randomUUID(), IPathObject.class);
 		path_object_record.setType(path_obj.getType());
 		path_object_record.setKey(generateKey(path_obj));
-		log.info("Converting path object to record");
 		if(path_obj instanceof Page){
 			
 		}
@@ -60,7 +59,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	public PathObject create(OrientConnectionFactory conn, PathObject attr) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		
-		this.convertToRecord(orient_connection, attr);
+		this.save(orient_connection, attr);
 		orient_connection.close();
 		
 		return attr;
@@ -72,7 +71,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	@Override
 	public PathObject update(OrientConnectionFactory conn, PathObject attr) {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		convertToRecord(connection, attr);
+		save(connection, attr);
 		connection.close();
 		
 		return attr;
@@ -83,7 +82,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public PathObject convertFromRecord(IPathObject data){
+	public PathObject load(IPathObject data){
 		String type = data.getType();
 		
 		if(type.equals("Page")){
@@ -91,7 +90,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			PageRepository page_record = new PageRepository();
 			Iterator<IPage> page_iter = ((Iterable<IPage>) DataAccessObject.findByKey(data.getKey(), IPage.class)).iterator();
 			if(page_iter.hasNext()){
-				page_obj = page_record.convertFromRecord(page_iter.next());
+				page_obj = page_record.load(page_iter.next());
 			}
 			page_obj.setType(type);
 			return page_obj;
@@ -104,24 +103,22 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			if(page_elem_record_iter.hasNext()){
 				PageElementRepository page_elem_repo = new PageElementRepository();
 				IPageElement page_elem = page_elem_record_iter.next();
-				page_elem_obj = page_elem_repo.convertFromRecord(page_elem);
+				page_elem_obj = page_elem_repo.load(page_elem);
 				page_elem_obj.setType(type);
 			}
 
 			return page_elem_obj;
 		}
 		else if(type.equals("Action")){			
-			log.info("converting action path object");
 			Action action = new Action();
 			Iterable<IAction> iaction = (Iterable<IAction>)DataAccessObject.findByKey(data.getKey(), IAction.class);
 			action.setType(type);
-			
 			ActionRepository action_record = new ActionRepository();
 			log.info("return action path object");
-			return action_record.convertFromRecord(iaction.iterator().next());
+			return action_record.load(iaction.iterator().next());
 		}
 		
-		log.info("Returning null path object");
+		System.err.println("Returning null path object");
 		return null;
 	}
 
@@ -136,7 +133,7 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 		
 		PathObject path_obj = null; 
 		if(iter.hasNext()){
-			path_obj = convertFromRecord(iter.next());
+			path_obj = load(iter.next());
 		}
 		
 		return path_obj;

@@ -1,33 +1,79 @@
 package com.qanairy.auth;
 
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.auth0.Auth0;
-import com.auth0.authentication.AuthenticationAPIClient;
-import com.auth0.authentication.result.UserProfile;
-import com.auth0.request.Request;
-import com.auth0.spring.security.api.Auth0JWTToken;
+import com.auth0.client.auth.AuthAPI;
+import com.auth0.exception.APIException;
+import com.auth0.exception.Auth0Exception;
+import com.auth0.json.auth.UserInfo;
+import com.auth0.net.Request;
 
 @Component
 public class Auth0Client {
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private final String clientid;
-    private final String domain;
-    private final Auth0 auth0;
-    private final AuthenticationAPIClient client;
+    private AuthAPI auth0;
+    //private final AuthenticationAPIClient client;
 
-    public Auth0Client(String clientid, String domain) {
-        this.clientid = clientid;
-        this.domain = domain;
-        this.auth0 = new Auth0(clientid, domain);
-        this.client = this.auth0.newAuthenticationAPIClient();
+    public Auth0Client() {
+        this.auth0 = new AuthAPI("qanairy.auth0.com", "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH", "EFXS4rxXk6a036e7DOLKXkh4gYs9nSdL93wzWcRvUUGAuL4Bxh9OmMDL-ZQ-VbnR");//Auth0(clientid, domain);
+        //this.client = this.auth0.newAuthenticationAPIClient();
     }
 
-    public String getUsername(Auth0JWTToken token) {
-        final Request<UserProfile> request = client.tokenInfo(token.getJwt());
-        final UserProfile profile = request.execute();
-        return profile.getEmail();
+	/**
+	 * @return the auth0
+	 */
+	public AuthAPI getApi() {
+		return auth0;
+	}
+
+	public String getUsername(String auth_access_token) {
+		Request<UserInfo> user_info_request = auth0.userInfo(auth_access_token);
+    	String username = null;
+    	try {
+    	    UserInfo info = user_info_request.execute();
+    	    username = info.getValues().get("name").toString();
+    	} catch (APIException exception) {
+    	    // api error
+    		log.error(exception.getError() + " \n "+
+    						exception.getMessage());
+    		exception.printStackTrace();
+
+    	} catch (Auth0Exception exception) {
+    	    // request error
+    		exception.printStackTrace();
+    		log.error(exception.getMessage());
+    	}
+    	
+    	return username;
+	}
+
+	public String getNickname(String auth_access_token) {
+		Request<UserInfo> user_info_request = auth0.userInfo(auth_access_token);
+    	String nickname = null;
+    	try {
+    	    UserInfo info = user_info_request.execute();
+    	    nickname = info.getValues().get("nickname").toString();
+    	} catch (APIException exception) {
+    	    // api error
+    		log.error(exception.getError() + " \n "+
+    						exception.getMessage());
+    		exception.printStackTrace();
+
+    	} catch (Auth0Exception exception) {
+    	    // request error
+    		exception.printStackTrace();
+    		log.error(exception.getMessage());
+    	}
+    	
+    	return nickname;	}
+
+    /*public String getUsername(Auth0JWTToken token) {
+        final Request<UserInfo> request = this.auth0.tokenInfo(token.getJwt());
+        final UserInfo profile = request.execute();
+        return profile.getValues().get("email");
     }
 
     public String getUserId(Auth0JWTToken token) {
@@ -35,4 +81,5 @@ public class Auth0Client {
         final UserProfile profile = request.execute();
         return profile.getId();
     }
+    */
 }

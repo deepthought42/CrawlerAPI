@@ -21,13 +21,13 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 	 */
 	@Override
 	public String generateKey(Group group) {
-		return "group:"+group.getName();
+		return "group:"+group.getName().toLowerCase();
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	public IGroup convertToRecord(OrientConnectionFactory connection, Group group) {
+	public IGroup save(OrientConnectionFactory connection, Group group) {
 		@SuppressWarnings("unchecked")
 		Iterator<IGroup> iter = (Iterator<IGroup>) ((Iterable<IGroup>) DataAccessObject.findByKey(generateKey(group), connection, IGroup.class)).iterator();
 		IGroup group_record= null;
@@ -50,7 +50,7 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 		Group group_record = find(conn, generateKey(group));
 		
 		if(group_record == null){
-			convertToRecord(conn, group);
+			save(conn, group);
 		}
 		group.setKey(generateKey(group));
 		return group;
@@ -86,14 +86,14 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
 	}
 
 	@Override
-	public Group convertFromRecord(IGroup obj) {		
+	public Group load(IGroup obj) {		
 		return new Group(obj.getKey(), obj.getName(), obj.getDescription());
 	}
 

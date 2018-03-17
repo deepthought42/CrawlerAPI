@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -45,7 +44,7 @@ public class TestingActor extends UntypedActor {
 
 				final long pathCrawlStartTime = System.currentTimeMillis();
 
-			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), "phantomjs");
+			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 
 				Page resulting_page = null;
 				if(path.getPath() != null){
@@ -63,7 +62,7 @@ public class TestingActor extends UntypedActor {
 				final long pathCrawlEndTime = System.currentTimeMillis();
 
 				long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-				//log.info("Path crawl time :: "+pathCrawlRunTime);
+				//System.err.println("Path crawl time :: "+pathCrawlRunTime);
 
 				test.setRunTime(pathCrawlRunTime);
 
@@ -72,32 +71,35 @@ public class TestingActor extends UntypedActor {
 				//Page last_page = path.findLastPage();
 				
 				try{
-					resulting_page.setLandable(resulting_page.checkIfLandable());
+					resulting_page.setLandable(resulting_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
 				}catch(Exception e){
 					log.error(e.getMessage());
 					resulting_page.setLandable(false);
 				}
+				
+				System.err.println("TESTING ACTOR expected page ************ "+expected_page.getElements().size());
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecord(new Date(), false, resulting_page);
+					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 					//tell memory worker of path
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
 				}
 				else{
 					TestRecord record = null;
+
 					if(!test.isCorrect()){
-						record = new TestRecord(new Date(), false, resulting_page);
+						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 					else{
-						record = new TestRecord(new Date(), true);
+						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 
 					test.addRecord(record);
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test);
+					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
 					//tell memory worker of test record
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
@@ -132,11 +134,16 @@ public class TestingActor extends UntypedActor {
 		 Page page = null;
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
+		 boolean all_passing = true;
 
 		 try {		
 			page = Crawler.crawlPath(test.getPath(), browser);
 			passing = test.isTestPassing(page, test.isCorrect());
-			test_record = new TestRecord(new Date(), passing, page);
+			for(Boolean status : test.getBrowserPassingStatuses().values()){
+				if(status != null && !status){
+					all_passing = false;
+				}
+			}
 			
 			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
 			    String browserName = cap.getBrowserName().toLowerCase();
@@ -152,8 +159,7 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-
-		 test_record.setRunTime(pathCrawlRunTime);
+		test_record = new TestRecord(new Date(), all_passing, browser.getBrowserName(), page, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

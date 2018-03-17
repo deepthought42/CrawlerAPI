@@ -119,6 +119,9 @@ public class PageElement extends PathObject{
 	 */
 	public boolean cssMatches(PageElement elem){
 		for(String propertyName : cssValues.keySet()){
+			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
+				continue;
+			}
 			if(!cssValues.get(propertyName).equals(elem.cssValues.get(propertyName))){
 				return false;
 			}

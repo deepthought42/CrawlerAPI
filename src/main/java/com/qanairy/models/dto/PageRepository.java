@@ -2,14 +2,18 @@ package com.qanairy.models.dto;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.qanairy.models.Page;
+import com.qanairy.models.PageElement;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IPage;
+import com.qanairy.persistence.IPageElement;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -23,9 +27,9 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * {@inheritDoc}
 	 */
 	public Page create(OrientConnectionFactory connection, Page page) {
-		IPage page_record = convertToRecord(connection, page);
+		IPage page_record = save(connection, page);
 		
-		return convertFromRecord(page_record);
+		return load(page_record);
 	}
 
 	/**
@@ -38,10 +42,10 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		Page page2 = find(connection, page.getKey());
 		IPage page_record = null;
 		if(page2 != null){
-			page_record = convertToRecord(connection, page2);
+			page_record = save(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
-			page_record.setScreenshot(page.getScreenshot());
+			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
@@ -49,7 +53,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		}
 		PageRepository page_repo = new PageRepository();
 		
-		return page_repo.convertFromRecord(page_record);
+		return page_repo.load(page_record);
 	}
 
 	/**
@@ -63,7 +67,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 		  
 		if(iter.hasNext()){
 			//figure out throwing exception because domain already exists
-			return convertFromRecord(iter.next());
+			return load(iter.next());
 		}
 		
 		return null;
@@ -75,15 +79,27 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * @return
 	 */
 	@Override
-	public Page convertFromRecord(IPage result) {
+	public Page load(IPage result) {
 		Page page = new Page();
-		page.setScreenshot(result.getScreenshot());
+		
+		//Set browser screenshots
+		Map<String, String> browser_screenshots = result.getBrowserScreeshots();
+
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());
 		page.setLandable(result.isLandable());
 		page.setImageWeight(result.getImageWeight());
 		page.setTotalWeight(result.getTotalWeight());
 		page.setElementCounts(result.getElementCounts());
+		page.setBrowserScreenshots(browser_screenshots);
+		
+		PageElementRepository page_elem_repo = new PageElementRepository();
+		Iterator<IPageElement> page_elem_iter = result.getElements().iterator();
+		List<PageElement> elements = new ArrayList<PageElement>();
+		while(page_elem_iter.hasNext()){
+			elements.add(page_elem_repo.load(page_elem_iter.next()));
+		}
+		page.setElements(elements);
 		
 		try {
 			page.setUrl(new URL(result.getUrl()));
@@ -102,7 +118,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	 * 
 	 * @pre page != null
 	 */
-	public IPage convertToRecord(OrientConnectionFactory connection, Page page){
+	public IPage save(OrientConnectionFactory connection, Page page){
 		assert(page != null);
 		
 		if(page.getKey() == null || page.getKey().isEmpty() && page.getSrc() != null){
@@ -122,12 +138,17 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setKey(page.getKey());
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
-			page_record.setScreenshot(page.getScreenshot());
 			page_record.setType((Page.class.getSimpleName()));
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
 			page_record.setSrc(page.getSrc());
+			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
+			
+			PageElementRepository page_elem_repo = new PageElementRepository();
+			for(PageElement elem: page.getElements()){
+				page_record.addElement(page_elem_repo.save(connection, elem));
+			}
 		}
 
 		return page_record;
@@ -135,9 +156,12 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	
 	/**
 	 * {@inheritDoc}
+	 * 
+	 * @pre page != null
 	 */
 	@Override
 	public String generateKey(Page page) {
+		assert page != null;
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
 	}
 

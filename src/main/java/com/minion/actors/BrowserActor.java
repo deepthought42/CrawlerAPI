@@ -155,7 +155,7 @@ public class BrowserActor extends UntypedActor {
 				/*
 				 * tell discovery registry that we are FINISHED running an exploratory path for discovery
 				 */
-				domain = domain_repo.find(conn, ((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
+				domain = domain_repo.find(conn, exploratory_path.firstPage().getUrl().getHost());
 				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
 				domain_repo.save(conn, domain);
 			  	browser.close();

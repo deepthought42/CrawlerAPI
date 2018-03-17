@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.net.URL;
-	import java.util.Date;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -75,7 +76,7 @@ public class DiscoveryController {
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
 													   	  		@RequestParam(value="url", required=true) String url) 
-													   	  				throws MalformedURLException, UnknownAccountException {
+													   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -86,6 +87,28 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	
+    	int monthly_discovery_count = 0;
+    	//check if account has exceeded allowed discovery threshold
+    	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getStartedAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			monthly_discovery_count++;
+    		}
+    	}
+    	
+    	if(monthly_discovery_count > 0){
+    		throw new DiscoveryLimitReachedException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("email", username);     
@@ -113,9 +136,9 @@ public class DiscoveryController {
     	int paths_being_explored = domain.getDiscoveryPathCount();
         
 		Map<String, Object> options = new HashMap<String, Object>();
-
 		options.put("browser", domain.getDiscoveryBrowserName());
-        if(paths_being_explored == 0 || diffInMinutes>1440){
+        
+		if(paths_being_explored == 0 || diffInMinutes > 1440){
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
         	domain.setDiscoveryPathCount(0);
 				
@@ -207,7 +230,7 @@ class WorkAllocatorNotFoundException extends RuntimeException {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 7200878662560716215L;
+	private static final long serialVersionUID = 7200878662560716214L;
 
 	public WorkAllocatorNotFoundException() {
 		super("could not find user .");
@@ -223,5 +246,17 @@ class ExistingDiscoveryFoundException extends RuntimeException {
 
 	public ExistingDiscoveryFoundException() {
 		super("Discovery is already running");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class DiscoveryLimitReachedException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public DiscoveryLimitReachedException() {
+		super("Discovery limit reached. Upgrade your account now!");
 	}
 }

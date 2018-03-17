@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -52,11 +53,17 @@ import akka.actor.Props;
 @Controller
 @RequestMapping("/discovery")
 public class DiscoveryController {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
 
     @Autowired
     protected AccountService accountService;
     
+    @PreAuthorize("hasAuthority('start:discovery')")
+	@RequestMapping(path="/check", method = RequestMethod.GET)
+    public @ResponseBody boolean isDiscoveryRunning(@RequestParam(value="url", required=true) String url){
+    	return false;
+    }
     /**
 	 * 
 	 * @param request
@@ -69,22 +76,43 @@ public class DiscoveryController {
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
 													   	  		@RequestParam(value="url", required=true) String url) 
-													   	  				throws MalformedURLException, UnknownAccountException {
+													   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	String nickname = auth.getNickname(auth_access_token);
 
     	Account acct = accountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	
+    	int monthly_discovery_count = 0;
+    	//check if account has exceeded allowed discovery threshold
+    	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getStartedAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			monthly_discovery_count++;
+    		}
+    	}
+    	
+    	if(monthly_discovery_count > 0){
+    		throw new DiscoveryLimitReachedException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", nickname);
-        traits.put("email", username);        
+        traits.put("email", username);     
+        traits.put("discovery_started", "true");
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -97,33 +125,35 @@ public class DiscoveryController {
     	IDomain domain = domains_iter.next();
     	domain.setDiscoveryStartTime(new Date());
     	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
-    	String domain_url = domain.getUrl();
-    	String protocol = domain.getProtocol();
-    	
+
     	Date now = new Date();
     	long diffInMinutes = 1000;
     	if(last_ran_date != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
     	}
-		connection.close();
+    	String domain_url = domain.getUrl();
+    	String protocol = domain.getProtocol();
+    	int paths_being_explored = domain.getDiscoveryPathCount();
         
 		Map<String, Object> options = new HashMap<String, Object>();
-
 		options.put("browser", domain.getDiscoveryBrowserName());
-        if(diffInMinutes > 60){
-        	DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", domain_url);
+        
+		if(paths_being_explored == 0 || diffInMinutes > 1440){
+        	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
+        	domain.setDiscoveryPathCount(0);
+				
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", domain_url);
         	acct.getDiscoveryRecords().add(discovery_record);
         	
         	AccountRepository acct_repo = new AccountRepository();
         	acct_repo.save(connection, acct);
-        
-        	
-			WorkAllowanceStatus.register(acct.getKey()); 
+                	
+			WorkAllowanceStatus.register(acct.getKey());
+
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 			
-			 
 		    //Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
 	    	discovery_started_props.put("url", url);
@@ -135,6 +165,8 @@ public class DiscoveryController {
 			
 			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
+			connection.close();
+
 			try {
 				Await.result(future, timeout.duration());
 				return new ResponseEntity<String>(HttpStatus.OK);
@@ -157,11 +189,10 @@ public class DiscoveryController {
 	    		    .userId(acct.getKey())
 	    		    .properties(discovery_started_props)
 	    		);
-			
+			connection.close();
+
         	throw new ExistingDiscoveryFoundException();
         }
-        
-
 	}
 
 	/**
@@ -199,7 +230,7 @@ class WorkAllocatorNotFoundException extends RuntimeException {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 7200878662560716215L;
+	private static final long serialVersionUID = 7200878662560716214L;
 
 	public WorkAllocatorNotFoundException() {
 		super("could not find user .");
@@ -215,5 +246,17 @@ class ExistingDiscoveryFoundException extends RuntimeException {
 
 	public ExistingDiscoveryFoundException() {
 		super("Discovery is already running");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class DiscoveryLimitReachedException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public DiscoveryLimitReachedException() {
+		super("Discovery limit reached. Upgrade your account now!");
 	}
 }

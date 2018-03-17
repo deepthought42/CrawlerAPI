@@ -88,6 +88,7 @@ public class PathExpansionActor extends UntypedActor {
 							//if one exists with one of the actions in the action_list
 							// 	 then skip this action path
 							if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+								System.err.println("EXISTING ELEMENT ACTION SEQUENCE FOUND");
 								continue;
 							}
 							pathList.add(action_path);

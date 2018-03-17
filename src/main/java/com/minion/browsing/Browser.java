@@ -91,6 +91,7 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
+				System.err.println("driver loaded, waiting 30 seconds for page to load");
 				WebDriverWait wait = new WebDriverWait(driver, 30);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				
@@ -114,6 +115,7 @@ public class Browser {
 		
 		if(this.driver != null){			
 			this.url = url;
+			System.err.println("$$$$$$$$    URL $$$$$$$$$$$$$$$     "+url);
 			this.driver.get(url);
 		}
 		else{
@@ -286,10 +288,13 @@ public class Browser {
 	public static WebDriver openWithChrome() 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
+		//options.setHeadless(true);
 		DesiredCapabilities cap = DesiredCapabilities.chrome();
 		cap.setCapability(ChromeOptions.CAPABILITY, options);
 
 		cap.setJavascriptEnabled(true);
+		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
+
 		//cap.setCapability("screenshot", true);
 		//cap.setPlatform(Platform.LINUX);
 		//cap.setCapability("maxInstances", 5);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.persistence.DataAccessObject;
@@ -22,7 +23,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 	 */
 	@Override
 	public String generateKey(DiscoveryRecord discovery_record) {
-		return discovery_record.getStartedAt().toString()+"::"+discovery_record.getBrowserName();
+		return discovery_record.getDomainUrl()+":"+discovery_record.getStartedAt().toString();
 	}
 
 	
@@ -58,11 +59,15 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 	@Override
 	public DiscoveryRecord create(OrientConnectionFactory connection, DiscoveryRecord discovery_record) {
 		discovery_record.setKey(generateKey(discovery_record));
-		DiscoveryRecord discovery_record_record = find(connection, generateKey(discovery_record));
-		
-		if(discovery_record_record == null){
+
+		@SuppressWarnings("unchecked")
+		Iterable<IDiscoveryRecord> discovery_records = (Iterable<IDiscoveryRecord>) DataAccessObject.findByKey(discovery_record.getKey(), connection, IDiscoveryRecord.class);
+		Iterator<IDiscoveryRecord> iter = discovery_records.iterator();
+		  
+		if(!iter.hasNext()){
 			save(connection, discovery_record);
 		}
+		
 		return discovery_record;
 	}
 
@@ -71,35 +76,20 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 	 */
 	@Override
 	public DiscoveryRecord update(OrientConnectionFactory connection, DiscoveryRecord discovery_record) {
-		save(connection, discovery_record);
+		if(discovery_record.getKey() == null){
+			discovery_record.setKey(generateKey(discovery_record));
+		}
 		@SuppressWarnings("unchecked")
 		Iterable<IDiscoveryRecord> discovery_records = (Iterable<IDiscoveryRecord>) DataAccessObject.findByKey(discovery_record.getKey(), connection, IDiscoveryRecord.class);
 		Iterator<IDiscoveryRecord> iter = discovery_records.iterator();
-
-		if(iter.hasNext()){
-			IDiscoveryRecord discovery_record_record = iter.next();
-			
-			discovery_record_record.setStartTime(discovery_record.getStartedAt());
-			discovery_record_record.setBrowserName(discovery_record.getBrowserName());
-		}
-		
-		return discovery_record;
-	}
-	
-	public IDiscoveryRecord find(String key){
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		@SuppressWarnings("unchecked")
-		Iterable<IDiscoveryRecord> discovery_records = (Iterable<IDiscoveryRecord>) DataAccessObject.findByKey(key, connection, IDiscoveryRecord.class);
-		Iterator<IDiscoveryRecord> iter = discovery_records.iterator();
 		  
+		IDiscoveryRecord idiscovery_record = null;
 		if(iter.hasNext()){
-			//figure out throwing exception because discovery_record already exists
-			return iter.next();
+			idiscovery_record = iter.next();
 		}
-		connection.close();
-		return null;
+		return load(idiscovery_record);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -117,7 +107,6 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		return null;
 	}
 
-	@Override
 	public DiscoveryRecord load(IDiscoveryRecord obj) {
 		return new DiscoveryRecord(obj.getKey(), obj.getStartTime(), obj.getBrowserName(), obj.getDomainUrl());
 	}

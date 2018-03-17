@@ -1,6 +1,7 @@
 package com.qanairy.persistence;
 
 import java.util.Date;
+
 import com.tinkerpop.frames.Property;
 
 /**

@@ -169,8 +169,15 @@ public class ExploratoryPath extends Path{
 			return false;
 		}
 		
-		//extract all pages
-		//iterate through pages to see if any match
+		//iterate through path
+		//if path object is of type PageElement
+		//	then load path object
+		//		check if path object leads to an action that exists in the paths possible actions list
+		//		If there exists an action that matches a possible action 
+		//			then get next path object
+		//				if path object is of type PageElement
+		//					then load path object
+		//						check if path object leads to an action that exists in the paths possible actions list
 		for(PathObject path_obj : path.getPath()){
 			if(path_obj instanceof PageElement){
 				PageElementRepository page_elem_repo = new PageElementRepository();

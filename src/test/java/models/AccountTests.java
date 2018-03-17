@@ -18,6 +18,7 @@ public class AccountTests {
 	@Test(groups="Regression")
 	public void accountCreateRecordWithoutUsers(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
+
 		Account acct = new Account("Test Org", "Test Package", "#00000012SD", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>());
 		AccountRepository acct_repo = new AccountRepository();
 		
@@ -37,7 +38,7 @@ public class AccountTests {
 		List<QanairyUser> users = new ArrayList<QanairyUser>();
 		QanairyUser user = new QanairyUser("Test user 1");
 		users.add(user);
-		
+
 		Account acct = new Account("Test Org", "Test Package", "#00000012SD", users, new ArrayList<DiscoveryRecord>());
 		AccountRepository acct_repo = new AccountRepository();
 		
@@ -53,6 +54,7 @@ public class AccountTests {
 	@Test(groups="Regression")
 	public void accountUpdateRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
+
 		Account acct = new Account("Test Org2", "Test Package", "acct_test1", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>());
 		AccountRepository acct_repo = new AccountRepository();
 		

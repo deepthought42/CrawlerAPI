@@ -206,7 +206,7 @@ public class Path {
 		for(PathObject path_obj : path.getPath()){
 			if(path_obj instanceof Page){
 				System.err.println("OH MY GOD, HOW MANY CYCLE METHODS ARE THERE    !!!!!!!!!!!!!!!!!!!!!!!    "+page.getElements().size());
-				if(path_obj.equals(page)){
+				if(((Page)path_obj).equals(page)){
 					return true;
 				}
 			}

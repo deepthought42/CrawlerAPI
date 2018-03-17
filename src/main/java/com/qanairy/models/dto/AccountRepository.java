@@ -17,7 +17,6 @@ import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
-import com.qanairy.persistence.IQanairyUser;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
@@ -56,18 +55,22 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		
 		acct_record.setOrgName(account.getOrgName());
 		acct_record.setLastDomain(account.getLastDomain());
-
+		
+		List<IDiscoveryRecord> discovery_records = new ArrayList<IDiscoveryRecord>();
+		for(DiscoveryRecord record : account.getDiscoveryRecords()){
+			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
+			//repo.create(connection, user);
+			discovery_records.add(repo.save(connection, record));
+		}
+		
+		acct_record.setDiscoveryRecords(discovery_records);
+		
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
 			acct_record.addUser(repo.save(connection, user));
 		}
 		*/
-		
-		for(DiscoveryRecord record : account.getDiscoveryRecords()){
-			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
-			acct_record.addDiscoveryRecord(repo.save(connection, record));
-		}
 		
 		return acct_record;
 	}
@@ -83,7 +86,14 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			domains.add(domain_repo.load(domain));
 		}
 		
-		List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
+		Iterator<IDiscoveryRecord> records = account.getDiscoveryRecords().iterator();
+		List<DiscoveryRecord> record_list = new ArrayList<DiscoveryRecord>();
+		while(records.hasNext()){
+			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
+			record_list.add(repo.load(records.next()));
+		}
+		
+		//List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
 		/*List<QanairyUser> users = new ArrayList<QanairyUser>();
 		QanairyUserRepository user_repo = new QanairyUserRepository();
 		for(IQanairyUser user : user_records){
@@ -99,7 +109,8 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			users.add(user_repo.load(user));
 		}*/
 		
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), new ArrayList<QanairyUser>(), domains, account.getLastDomain());
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), 
+							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), record_list);
 	}
 	
 	/**

@@ -55,10 +55,13 @@ public interface IAccount {
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public void removeDomain(IDomain domain);
 	
-	@Adjacency(direction=Direction.OUT, label="discovery_record")
+	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
+	public Iterable<IDiscoveryRecord> getDiscoveryRecords();
+
+	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
+	public void setDiscoveryRecords(List<IDiscoveryRecord> discovery_records);
+
+	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
 	public void addDiscoveryRecord(IDiscoveryRecord discovery_record);
 	
-	@Adjacency(direction=Direction.OUT, label="discovery_record")
-	public void removeDiscoveryRecord(IDiscoveryRecord discovery_record);
-
 }

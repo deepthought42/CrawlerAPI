@@ -293,7 +293,6 @@
 		    <version>5.34.0</version>
 		</dependency>
 
-
 		<!-- https://mvnrepository.com/artifact/com.segment.analytics.java/analytics -->
 		<dependency>
 		    <groupId>com.segment.analytics.java</groupId>

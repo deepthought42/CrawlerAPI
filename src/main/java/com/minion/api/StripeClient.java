@@ -47,7 +47,7 @@ public class StripeClient {
     	
     	return Subscription.create(params);
     }
-    
+
     public Customer createCustomer(String token, String email) throws Exception {
         Map<String, Object> customerParams = new HashMap<String, Object>();
         customerParams.put("email", email);

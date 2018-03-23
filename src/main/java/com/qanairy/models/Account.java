@@ -38,15 +38,14 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	@Deprecated
-	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users){
+	public Account(String org_name, String service_package, String payment_acct_num){
 		assert users != null;
 		
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
-		this.setUsers(users);
+		this.setUsers(new ArrayList<QanairyUser>());
 		this.setDomains(new ArrayList<Domain>());
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 		this.setTestRecords(new ArrayList<TestRecord>());

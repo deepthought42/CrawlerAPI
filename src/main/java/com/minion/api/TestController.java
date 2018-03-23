@@ -388,8 +388,7 @@ public class TestController {
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_type", required=true) String browser_type,
-														  final Principal principal) 
+														  @RequestParam(value="browser_type", required=true) String browser_type) 
 																  throws MalformedURLException, UnknownAccountException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");

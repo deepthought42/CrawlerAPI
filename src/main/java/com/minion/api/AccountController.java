@@ -1,6 +1,5 @@
 package com.minion.api;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -17,9 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.qanairy.api.exception.Auth0ManagementApiException;
-import com.qanairy.api.exception.InvalidUserException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
@@ -28,6 +24,8 @@ import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+import com.stripe.model.Customer;
+import com.stripe.model.Subscription;
 
 /**
  *	API endpoints for interacting with {@link User} data
@@ -49,6 +47,13 @@ public class AccountController {
     protected UsernameService usernameService;
     */
     
+    private StripeClient stripeClient;
+
+    @Autowired
+    AccountController(StripeClient stripeClient) {
+        this.stripeClient = stripeClient;
+    }
+    
     /**
      * Create new account
      * 
@@ -57,24 +62,31 @@ public class AccountController {
      * @param principal
      * 
      * @return
-     * 
-     * @throws InvalidUserException
-     * @throws UnirestException
-     * @throws Auth0ManagementApiException 
+     * @throws Exception 
      */
     @PreAuthorize("hasAuthority('create:accounts')")
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create(HttpServletRequest request, 
-    										@RequestParam(value="service_package", required=true) String service_package) 
-    				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
+    										@RequestParam(value="token") String token) 
+    												throws Exception{        
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-
+    	String plan = "4-disc-10000-test";
+    	
+    	Map<String, Object> customerParams = new HashMap<String, Object>();
+    	customerParams.put("description", "Customer for "+username);
+    	//customerParams.put("source", token);
+    	// ^ obtained with Stripe.js
+    	//Customer customer = Customer.create(customerParams);
+    	Customer customer = this.stripeClient.createCustomer(token, username);
+    	Subscription subscription = this.stripeClient.subscribe(plan, customer.getId());
+    	System.err.println("Subscription :: "+subscription.toJson());
+    	
     	//create account
-        Account acct = new Account(username, service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
-
+        Account acct = new Account(username, plan, customer.getId());
+        
         //Create user
         QanairyUser user = new QanairyUser(username);
         acct.addUser(user);

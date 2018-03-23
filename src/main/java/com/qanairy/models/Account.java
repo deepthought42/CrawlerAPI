@@ -15,6 +15,7 @@ public class Account {
 	private List<Domain> domains;
 	private String last_domain_url;
 	private List<DiscoveryRecord> discovery_records;
+	private List<TestRecord> test_records;
 	
 	public Account(){}
 	
@@ -23,7 +24,7 @@ public class Account {
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
 		this.setPaymentAcctNum(payment_acct_num);
-		this.domains = new ArrayList<Domain>();
+		this.setDomains(new ArrayList<Domain>());
 		this.setUsers(new ArrayList<QanairyUser>());
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 	}
@@ -48,6 +49,7 @@ public class Account {
 		this.setUsers(users);
 		this.setDomains(new ArrayList<Domain>());
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
+		this.setTestRecords(new ArrayList<TestRecord>());
 	}
 	
 	/**
@@ -59,7 +61,8 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<DiscoveryRecord> discovery_records){
+	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, 
+					List<DiscoveryRecord> discovery_records, List<TestRecord> test_records){
 		assert users != null;
 		
 		this.setOrgName(org_name);
@@ -68,6 +71,7 @@ public class Account {
 		this.setDomains(new ArrayList<Domain>());
 		this.setUsers(users);
 		this.setDiscoveryRecords(discovery_records);
+		this.setTestRecords(test_records);
 	}
 	
 	/**
@@ -80,7 +84,8 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains, String last_domain_url){
+	public Account(String key, String org_name, String service_package, String payment_acct_num, 
+					List<QanairyUser> users, List<Domain> domains, String last_domain_url){
 		assert users != null;
 		
 		this.setKey(key);
@@ -92,6 +97,7 @@ public class Account {
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 		this.setLastDomain(last_domain_url);
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
+		this.setTestRecords(new ArrayList<TestRecord>());
 	}
 
 	/**
@@ -105,8 +111,10 @@ public class Account {
 	 * @param last_domain_url
 	 * @param discovery_records
 	 */
-	public Account(String key, String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains, 
-					String last_domain_url, List<DiscoveryRecord> discovery_records){
+	public Account(String key, String org_name, String service_package, String payment_acct_num, 
+					List<QanairyUser> users, List<Domain> domains, 
+					String last_domain_url, List<DiscoveryRecord> discovery_records,
+					List<TestRecord> test_records){
 		assert users != null;
 		
 		this.setKey(key);
@@ -117,6 +125,7 @@ public class Account {
 		this.setDomains(domains);
 		this.setLastDomain(last_domain_url);
 		this.setDiscoveryRecords(discovery_records);
+		this.setTestRecords(test_records);
 	}
 	
 	/**
@@ -130,7 +139,7 @@ public class Account {
 	 * @param discovery_records
 	 */
 	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains, 
-			String last_domain_url, List<DiscoveryRecord> discovery_records){
+			String last_domain_url, List<DiscoveryRecord> discovery_records, List<TestRecord> test_records){
 		assert users != null;
 		
 		this.setKey(null);
@@ -141,6 +150,7 @@ public class Account {
 		this.setDomains(domains);
 		this.setLastDomain(last_domain_url);
 		this.setDiscoveryRecords(discovery_records);
+		this.setTestRecords(test_records);
 	}
 			
 	public String getOrgName() {
@@ -234,5 +244,17 @@ public class Account {
 	
 	public void addDiscoveryRecord(DiscoveryRecord record){
 		this.discovery_records.add(record);
+	}
+
+	public List<TestRecord> getTestRecords() {
+		return test_records;
+	}
+
+	public void setTestRecords(List<TestRecord> test_records) {
+		this.test_records = test_records;
+	}
+
+	public void addTestRecord(TestRecord record) {
+		this.test_records.add(record);
 	}
 }

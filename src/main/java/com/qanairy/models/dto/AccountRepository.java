@@ -12,11 +12,13 @@ import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.QanairyUser;
+import com.qanairy.models.TestRecord;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
@@ -65,6 +67,14 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		
 		acct_record.setDiscoveryRecords(discovery_records);
 		
+		List<ITestRecord> test_records = new ArrayList<ITestRecord>();
+		for(TestRecord record : account.getTestRecords()){
+			TestRecordRepository repo = new TestRecordRepository();
+			test_records.add(repo.save(connection, record));
+		}
+		
+		acct_record.setTestRecords(test_records);
+		
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
@@ -86,11 +96,18 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			domains.add(domain_repo.load(domain));
 		}
 		
-		Iterator<IDiscoveryRecord> records = account.getDiscoveryRecords().iterator();
-		List<DiscoveryRecord> record_list = new ArrayList<DiscoveryRecord>();
-		while(records.hasNext()){
+		Iterator<IDiscoveryRecord> discovery_records = account.getDiscoveryRecords().iterator();
+		List<DiscoveryRecord> discovery_record_list = new ArrayList<DiscoveryRecord>();
+		while(discovery_records.hasNext()){
 			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
-			record_list.add(repo.load(records.next()));
+			discovery_record_list.add(repo.load(discovery_records.next()));
+		}
+		
+		Iterator<ITestRecord> test_records = account.getTestRecords().iterator();
+		List<TestRecord> test_record_list = new ArrayList<TestRecord>();
+		while(test_records.hasNext()){
+			TestRecordRepository repo = new TestRecordRepository();
+			test_record_list.add(repo.load(test_records.next()));
 		}
 		
 		//List<IQanairyUser> user_records = IteratorUtils.toList(account.getUsers().iterator());
@@ -99,18 +116,10 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		for(IQanairyUser user : user_records){
 			users.add(user_repo.load(user));
 		}
-		
-		List<IDiscoveryRecord> discovery_db_records = IteratorUtils.toList(account.getUsers().iterator());
-		List<DiscoveryRecord> discovery_records = new ArrayList<DiscoveryRecord>();
-		DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-		for(IDiscoveryRecord record : discovery_db_records){
-			discovery_records.add(discovery_repo.load(record));
-		}
-			users.add(user_repo.load(user));
-		}*/
+		*/
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), 
-							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), record_list);
+							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), discovery_record_list, test_record_list);
 	}
 	
 	/**
@@ -211,9 +220,9 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	public Account deleteDomain(OrientConnectionFactory conn, Account acct, Domain domain) {
-		IAccount account = save(conn, acct);
 		DomainRepository domain_repo = new DomainRepository();
-		account.removeDomain(domain_repo.save(conn, domain));
-		return load(account);
+		acct.removeDomain(domain);
+		save(conn, acct);
+		return acct;
 	} 
 }

@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
@@ -105,7 +104,7 @@ public class DiscoveryController {
     		}
     	}
     	
-    	if(monthly_discovery_count > 0){
+    	if(monthly_discovery_count > 10){
     		throw new DiscoveryLimitReachedException();
     	}
     	

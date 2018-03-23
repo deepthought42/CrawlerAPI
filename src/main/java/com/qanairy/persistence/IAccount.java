@@ -64,4 +64,13 @@ public interface IAccount {
 	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
 	public void addDiscoveryRecord(IDiscoveryRecord discovery_record);
 	
+	@Adjacency(direction=Direction.OUT, label="has_test_record")
+	public Iterable<ITestRecord> getTestRecords();
+
+	@Adjacency(direction=Direction.OUT, label="has_test_record")
+	public void setTestRecords(List<ITestRecord> test_records);
+
+	@Adjacency(direction=Direction.OUT, label="has_test_record")
+	public void addTestRecord(ITestRecord test_record);
+	
 }

@@ -7,27 +7,27 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import com.minion.actors.MemoryRegistryActor;
 import com.minion.actors.TestingActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -48,7 +48,13 @@ import com.qanairy.services.DomainService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+
 import com.minion.browsing.Browser;
+import com.minion.structs.Message;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
@@ -116,7 +122,7 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() != null){
-				verified_tests.add(test_repo.convertFromRecord(itest));
+				verified_tests.add(test_repo.load(itest));
 			}
 		}
 		
@@ -220,12 +226,12 @@ public class TestController {
 		while(tests.hasNext()){
 			ITest itest = tests.next();
 			if(itest.getCorrect() == null){
-				unverified_tests.add(test_repo.convertFromRecord(itest));
+				unverified_tests.add(test_repo.load(itest));
 			}
 		}
     	Date end = new Date();
     	long diff = end.getTime() - start.getTime();
-    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
+    	System.err.println("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
 		return unverified_tests;
 	}
 
@@ -270,6 +276,7 @@ public class TestController {
 		
  		String browser_name = idomain.getDiscoveryBrowserName();
 		Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
+		System.err.println("browser :::     " +browser_name+" : ##########  : "+correct);
 		browser_statuses.put(browser_name, correct);
 		itest.setBrowserStatuses(browser_statuses);
 		
@@ -285,7 +292,7 @@ public class TestController {
 	   		);
    	
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
     
 	/**
@@ -297,30 +304,26 @@ public class TestController {
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
 	public @ResponseBody Test updateBrowserCorrectness(@RequestParam(value="key", required=true) String key, 
-														@RequestParam(value="browser", required=true) String browser, 
+														@RequestParam(value="browser_name", required=true) String browser_name, 
 														@RequestParam(value="correct", required=true) boolean correct){
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
 		ITest itest = itest_iter.next();
 		itest.setCorrect(correct);
-		itest.getBrowserStatuses().put(browser, correct);
-		
-		boolean is_passing = true;
-		//update overall passing status based on all browser passing statuses
-		for(Boolean status : itest.getBrowserStatuses().values()){
-			if(status != null && !status){
-				is_passing = false;
-			}
-		}
-		itest.setCorrect(is_passing);
+		itest.getBrowserStatuses().put(browser_name, correct);
+
 		
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(itest);
 		
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
+		return test_record.load(itest);
 	}
 
+    /**
+     * 
+     * @param itest
+     */
 	private void updateLastTestRecordPassingStatus(ITest itest) {
 		Iterator<ITestRecord> itest_records = itest.getRecords().iterator();
 		ITestRecord record = null;
@@ -328,7 +331,7 @@ public class TestController {
 			record = itest_records.next();
 		}
 		if(record != null){
-			record.setPasses(itest.getCorrect());
+			record.setPassing(itest.getCorrect());
 		}
 	}
 
@@ -347,7 +350,7 @@ public class TestController {
 		IPath path_record = itest.getPath();
 		
 		PathRepository path_repo = new PathRepository();
-		Path path = path_repo.convertFromRecord(path_record);
+		Path path = path_repo.load(path_record);
 
 		return path;
 	}
@@ -370,57 +373,7 @@ public class TestController {
 		orient_connection.save();
 
 		TestRepository test_record = new TestRepository();
-		return test_record.convertFromRecord(itest);
-	}
-    
-	/**
-	 * Runs test with a given key
-	 * 
-	 * @param key
-	 * @return
-	 * @throws MalformedURLException 
-	 */
-    @PreAuthorize("hasAuthority('run:tests')")
-	@RequestMapping(path="/run/{key}", method = RequestMethod.POST)
-	public @ResponseBody Test runTest(@PathVariable(value="key", required=true) String key, 
-									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
-		ITest itest = itest_iter.next();
-		if(!itest.getRunStatus()){
-			itest.setRunStatus(true);
-			TestRecord record = null;
-			TestRepository test_record = new TestRepository();
-			
-			if(itest.getKey().equals(key)){
-				Test test = test_record.convertFromRecord(itest);
-				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
-				record = TestingActor.runTest(test, browser);
-				
-				TestRecordRepository test_record_record = new TestRecordRepository();
-				itest.addRecord(test_record_record.convertToRecord(connection, record));
-
-				itest.getBrowserStatuses().put(record.getBrowser(), record.getPasses());
-				itest.setRunStatus(false);
-				boolean is_passing = true;
-				//update overall passing status based on all browser passing statuses
-				for(Boolean status : itest.getBrowserStatuses().values()){
-					if(status != null && !status){
-						is_passing = false;
-					}
-				}
-				itest.setCorrect(is_passing);
-				
-				browser.close();
-			}
-			else{
-				log.warn("test found does not match key :: " + key);
-			}
-			connection.close();
-			return test_record.convertFromRecord(itest);
-		}
-		
-		throw new TestAlreadyRunningException();
+		return test_record.load(itest);
 	}
 
     /**
@@ -435,8 +388,7 @@ public class TestController {
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_type", required=true) String browser_type,
-														  final Principal principal) 
+														  @RequestParam(value="browser_type", required=true) String browser_type) 
 																  throws MalformedURLException, UnknownAccountException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -447,6 +399,28 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	
+    	int monthly_test_count = 0;
+    	//Check if account has exceeded test run limit
+    	for(TestRecord record : acct.getTestRecords()){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getRanAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			monthly_test_count++;
+    		}
+    	}
+    	
+    	if(monthly_test_count > 10000){
+    		throw new TestLimitReachedException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -475,31 +449,55 @@ public class TestController {
         		TestRecord record = null;
         		
 	    		if(itest.getKey().equals(key)){
-	    			TestRepository test_record = new TestRepository();
+	    			TestRepository test_repo = new TestRepository();
 	    	
-	    			Test test = test_record.convertFromRecord(itest);
-	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
-				    System.out.println("test controller -> Browser name : "+browser);
+	    			Test test = test_repo.load(itest);
 
-	    			record = TestingActor.runTest(test, browser);
+	    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
+	    			browser_running_status.put(browser_type, null);
+	    			for(String browser : browser_running_status.keySet()){
+	    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
+	    			}
+	    			test.setBrowserPassingStatuses(browser_running_status);
+	    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
 	    			
-	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest.addRecord(test_record_record.convertToRecord(connection, record));
+	    			//tell memory worker of test
+	    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+	    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+	    			memory_actor.tell(test_msg, null);
+	    			
+	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
+	    			record = TestingActor.runTest(test, browser);
+	    			acct.addTestRecord(record);
+	    			accountService.save(acct);
+	    			
+	    			System.err.println("Record is passing :::: "+record.getPassing());
+	    			browser_running_status.put(browser_type, record.getPassing());
+	    			test.setBrowserPassingStatuses(browser_running_status);
+	    			for(String browser_1 : browser_running_status.keySet()){
+	    				System.err.println("Browser 1  ::::  "+browser_1+"  ************   "+browser_running_status.get(browser_1));
+	    			}
+	    			test.addRecord(record);
 	    			boolean is_passing = true;
 					//update overall passing status based on all browser passing statuses
-					for(Boolean status : itest.getBrowserStatuses().values()){
+					for(Boolean status : test.getBrowserPassingStatuses().values()){
 						if(status != null && !status){
 							is_passing = false;
 						}
 					}
-					itest.setCorrect(is_passing);
-	    			
-	    			Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
-					browser_statuses.put(record.getBrowser(), record.getPasses());
-					itest.setBrowserStatuses(browser_statuses);
-	    			itest.setLastRunTimestamp(new Date());
+					test.setCorrect(is_passing);
+					test.setLastRunTimestamp(new Date());
 	    			test_results.put(test.getKey(), record);
-	    			itest.setRunTime(record.getRunTime());
+	    			test.setRunTime(record.getRunTime());
+	    	
+	    			TestRecordRepository test_record_record = new TestRecordRepository();
+	    			itest.addRecord(test_record_record.save(connection, record));
+	    			itest.setCorrect(record.getPassing());
+
+	    			//tell memory worker of test
+	    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+	    			memory_actor.tell(test_msg, null);
+	    			
 	    			browser.close();
 	    		}
 	    		else{
@@ -589,7 +587,7 @@ public class TestController {
 		}
 		
 		GroupRepository group_repo = new GroupRepository();
-		igroup = group_repo.convertToRecord(orient_connection, group);
+		igroup = group_repo.save(orient_connection, group);
 		itest.addGroup(igroup);
 		group.setKey(igroup.getKey());
 		
@@ -680,5 +678,17 @@ class EmptyGroupNameException extends RuntimeException {
 
 	public EmptyGroupNameException() {
 		super("");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class TestLimitReachedException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public TestLimitReachedException() {
+		super("Test run limit reached. Upgrade your account now!");
 	}
 }

@@ -19,7 +19,7 @@ public class DomainTests {
 	 */
 	@Test(groups="Regression")
 	public void domainCreateRecord(){
-		Domain domain = new Domain("Test.test", "", "http");
+		Domain domain = new Domain( "http", "Test.test", "chrome", "");
 		DomainRepository domain_repo = new DomainRepository();
 
 		Domain created_domain = domain_repo.create(new OrientConnectionFactory(), domain);
@@ -54,7 +54,7 @@ public class DomainTests {
 	 */
 	@Test(groups="Regression")
 	public void accountFindRecord(){
-		Domain domain = new Domain("Test Domain", "", "http");
+		Domain domain = new Domain("http", "Test Domain", "chrome", "" );
 		DomainRepository domain_repo = new DomainRepository();
 		domain.setKey(domain_repo.generateKey(domain));
 		Domain domain_record = domain_repo.update(new OrientConnectionFactory(), domain);

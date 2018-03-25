@@ -53,7 +53,8 @@ public class Group {
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		String formatted_name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+		this.name = formatted_name;
 	}
 
 	public String getKey() {

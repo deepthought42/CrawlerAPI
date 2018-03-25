@@ -25,11 +25,24 @@ public interface IAccount {
 	@Property("service_package")
 	public void setServicePackage(String service_package);
 
-	@Property("payment_acct_num")
-	public String getPaymentAcctNum();
+	@Property("customer_token")
+	public String getCustomerToken();
 
-	@Property("payment_acct_num")
-	public void setPaymentAcctNum(String payment_acct_num);
+	@Property("customer_token")
+	public void setCustomerToken(String customer_token);
+
+	@Property("subscription_token")
+	public String getSubscriptionToken();
+
+	@Property("subscription_token")
+	public void setSubscriptionToken(String subscription_token);
+	
+	
+	@Property("last_domain")
+	public void setLastDomain(String domain_url);
+	
+	@Property("last_domain")
+	public String getLastDomain();
 	
 	@Adjacency(direction=Direction.OUT, label="has_user")
 	public Iterable<IQanairyUser> getUsers();
@@ -48,4 +61,23 @@ public interface IAccount {
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public void removeDomain(IDomain domain);
+	
+	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
+	public Iterable<IDiscoveryRecord> getDiscoveryRecords();
+
+	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
+	public void setDiscoveryRecords(List<IDiscoveryRecord> discovery_records);
+
+	@Adjacency(direction=Direction.OUT, label="has_discovery_record")
+	public void addDiscoveryRecord(IDiscoveryRecord discovery_record);
+	
+	@Adjacency(direction=Direction.OUT, label="has_test_record")
+	public Iterable<ITestRecord> getTestRecords();
+
+	@Adjacency(direction=Direction.OUT, label="has_test_record")
+	public void setTestRecords(List<ITestRecord> test_records);
+
+	@Adjacency(direction=Direction.OUT, label="has_test_record")
+	public void addTestRecord(ITestRecord test_record);
+	
 }

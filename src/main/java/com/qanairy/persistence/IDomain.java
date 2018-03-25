@@ -60,6 +60,12 @@ public interface IDomain {
 	@Property("last_discovery_path_ran_at")
 	void setLastDiscoveryPathRanAt(Date timestamp);
 	
+	@Property("discovery_path_count")
+	public void setDiscoveryPathCount(int count);
+	
+	@Property("discovery_path_count")
+	public int getDiscoveryPathCount();
+	
 	/* ADJACENCIES */
 	@Adjacency(label="contains_test")
 	Iterable<ITest> getTests();

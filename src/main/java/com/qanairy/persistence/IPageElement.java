@@ -6,6 +6,7 @@ import java.util.Map;
 import com.qanairy.models.PathObject;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
+import com.tinkerpop.frames.annotations.gremlin.GremlinGroovy;
 
 public interface IPageElement extends IPathObject{
 	@Property("key")

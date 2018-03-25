@@ -35,7 +35,7 @@ public class TestTests {
 								 "http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
-			test = new com.qanairy.models.Test(path, page, new Domain("www.test.test", "", "http"), "Testing Test 2");
+			test = new com.qanairy.models.Test(path, page, new Domain("http", "www.test.test", "chrome", ""), "Testing Test 2");
 			test.setKey(test_repo.generateKey(test));
 			com.qanairy.models.Test test_record = test_repo.create(new OrientConnectionFactory(), test);
 			
@@ -62,7 +62,7 @@ public class TestTests {
 								 new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
-			test = new com.qanairy.models.Test(path, page, new Domain("www.test.test", "", "http"),"Testing Test 4");
+			test = new com.qanairy.models.Test(path, page, new Domain("http", "www.test.test", "chrome", null),"Testing Test 4");
 			test.setKey(test_repo.generateKey(test));
 			com.qanairy.models.Test test_record_create = test_repo.create(new OrientConnectionFactory(), test);
 
@@ -92,7 +92,7 @@ public class TestTests {
 			path.add(page);
 			TestRepository test_repo = new TestRepository();
 
-			test = new com.qanairy.models.Test(path, page, new Domain("www.test.test", "", "http"), "Testing Test 3");
+			test = new com.qanairy.models.Test(path, page, new Domain("http", "www.test.test", "chrome", null), "Testing Test 3");
 			test = test_repo.create(orient_connection, test);
 			com.qanairy.models.Test test_record = test_repo.find(orient_connection, test.getKey());
 			

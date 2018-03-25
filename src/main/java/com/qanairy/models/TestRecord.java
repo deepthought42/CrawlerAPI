@@ -19,7 +19,7 @@ public class TestRecord {
 	private String key;
 	private Date ran_at;
 	private String browser;
-	private Boolean passes;
+	private Boolean passing;
 	private Page result;
 	private long run_time_length;
 	
@@ -28,7 +28,7 @@ public class TestRecord {
 		this.setPage(null);
 		this.setKey(null);
 		this.setRunTime(-1L);
-		this.setPasses(passes);
+		this.setPassing(passes);
 		this.setBrowser(browser_name);
 	}
 	
@@ -37,7 +37,7 @@ public class TestRecord {
 		this.setPage(result);
 		this.setKey(null);
 		this.setRunTime(run_time);
-		this.setPasses(passes);
+		this.setPassing(passes);
 		this.setBrowser(browser_name);
 	}
 	
@@ -46,7 +46,7 @@ public class TestRecord {
 		this.setPage(result);
 		this.setKey(key);
 		this.setRunTime(run_time);
-		this.setPasses(passes);
+		this.setPassing(passes);
 		this.setBrowser(browser_name);
 	}
 	
@@ -75,15 +75,15 @@ public class TestRecord {
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public Boolean getPasses(){
-		return this.passes;
+	public Boolean getPassing(){
+		return this.passing;
 	}
 	
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public void setPasses(Boolean passing){
-		this.passes = passing;
+	public void setPassing(Boolean passing){
+		this.passing = passing;
 	}
 	
 	public String getKey() {

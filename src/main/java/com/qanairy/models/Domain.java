@@ -20,9 +20,11 @@ public class Domain {
 	private String protocol;
 	private String logo_url;
 	private Date last_discovery_path_ran_at;
+	private Date last_discovery_started_at;
 	private int discovered_test_count;
 	private List<TestUser> test_users;
 	private String discovery_browser;
+	private int discovery_path_count;
 	
 	/**
 	 * 
@@ -38,6 +40,8 @@ public class Domain {
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
 		this.setDiscoveryBrowser("");
+		this.setLastDiscoveryStartedAt(null);
+		this.setDiscoveryPathCount(0);
 	}
 	
 	/**
@@ -54,6 +58,7 @@ public class Domain {
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
 		this.setDiscoveryBrowser("");
+		this.setLastDiscoveryStartedAt(null);
 	}
 	
 	/**
@@ -62,14 +67,16 @@ public class Domain {
 	 * @param logo_url
 	 * @param protocol
 	 */
-	public Domain(String url, String logo_url, String protocol){
+	public Domain( String protocol, String url, String browser, String logo_url){
 		this.setUrl(url);
 		this.setLogoUrl(logo_url);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
-		this.setDiscoveryBrowser("");
+		this.setDiscoveryPathCount(0);
+		this.setDiscoveryBrowser(browser);
+		this.setLastDiscoveryStartedAt(null);
 	}
 	
 	/**
@@ -95,7 +102,9 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryPathCount(0);
 		this.setDiscoveryBrowser("");
+		this.setLastDiscoveryStartedAt(null);
 	}
 	
 	/**
@@ -122,7 +131,9 @@ public class Domain {
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
 		this.setDiscoveredTestCount(0);
+		this.setDiscoveryPathCount(0);
 		this.setDiscoveryBrowser("");
+		this.setLastDiscoveryStartedAt(null);
 	}
 	
 	/**
@@ -132,26 +143,34 @@ public class Domain {
 	 * @param logo_url
 	 * @param tests
 	 * @param protocol
-	 * @param timestamp
+	 * @param last_path_ran_at
+	 * @param last_discovery_started_at
+	 * @param test_users
+	 * @param discovered_test_count
+	 * @param browser_name
 	 */
 	public Domain(	String key, 
 					String domain_url,
 					String logo_url,
 					List<Test> tests,
 					String protocol,
-					Date timestamp,
+					Date last_path_ran_at,
+					Date last_discovery_started_at,
 					List<TestUser> test_users,
 					int discovered_test_count,
-					String browser_name){
+					String browser_name,
+					int discovery_path_count){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
 		this.setProtocol(protocol);
-		this.setLastDiscoveryPathRanAt(timestamp);
+		this.setLastDiscoveryPathRanAt(last_path_ran_at);
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
 		this.setDiscoveredTestCount(discovered_test_count);
+		this.setDiscoveryPathCount(discovery_path_count);
 		this.setDiscoveryBrowser(browser_name);
+		this.setLastDiscoveryStartedAt(last_discovery_started_at);
 	}
 	
 	public String getUrl() {
@@ -254,5 +273,21 @@ public class Domain {
 
 	public void setDiscoveryBrowser(String discovery_browser) {
 		this.discovery_browser = discovery_browser;
+	}
+
+	public Date getLastDiscoveryStartedAt() {
+		return last_discovery_started_at;
+	}
+
+	public void setLastDiscoveryStartedAt(Date last_discovery_started_at) {
+		this.last_discovery_started_at = last_discovery_started_at;
+	}
+	
+	public int getDiscoveryPathCount() {
+		return discovery_path_count;
+	}
+
+	public void setDiscoveryPathCount(int discovery_path_count) {
+		this.discovery_path_count = discovery_path_count;
 	}
 }

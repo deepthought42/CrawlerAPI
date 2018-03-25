@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.Principal;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,6 +26,8 @@ import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
@@ -34,6 +36,12 @@ import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+import com.stripe.exception.APIConnectionException;
+import com.stripe.exception.APIException;
+import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Subscription;
 
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -51,11 +59,24 @@ import akka.actor.Props;
 @Controller
 @RequestMapping("/discovery")
 public class DiscoveryController {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
 
     @Autowired
     protected AccountService accountService;
     
+    private StripeClient stripeClient;
+
+    @Autowired
+    DiscoveryController(StripeClient stripeClient) {
+        this.stripeClient = stripeClient;
+    }
+    
+    @PreAuthorize("hasAuthority('start:discovery')")
+	@RequestMapping(path="/check", method = RequestMethod.GET)
+    public @ResponseBody boolean isDiscoveryRunning(@RequestParam(value="url", required=true) String url){
+    	return false;
+    }
     /**
 	 * 
 	 * @param request
@@ -63,26 +84,74 @@ public class DiscoveryController {
 	 * @return
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
+     * @throws APIException 
+     * @throws CardException 
+     * @throws APIConnectionException 
+     * @throws InvalidRequestException 
+     * @throws AuthenticationException 
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
-													   	  @RequestParam(value="url", required=true) String url) 
-															   throws MalformedURLException, UnknownAccountException {
+													   	  		@RequestParam(value="url", required=true) String url) 
+													   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	String nickname = auth.getNickname(auth_access_token);
 
     	Account acct = accountService.find(username);
+
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	//Check if subscription is valid
+    	Subscription subscription = this.stripeClient.getSubscription(acct.getSubscriptionToken());
+    	long current_time = (new Date()).getTime();
+    	if(subscription.getPlan().getId().equals("4-disc-10000-test") && subscription.getEndedAt()> current_time && !subscription.getStatus().equals("trialing") && !subscription.getStatus().equals("active")){
+    		//throw exception to force selecting a package to pay for.
+    		
+    		throw new FreeTrialEndedException();
+    	}
+    	else if(subscription.getStatus().equals("past_due") || subscription.getStatus().equals("unpaid")){
+    		//throw exception for force paying for system
+    		throw new PaymentDueException();
+    	}
+    	
+		int allowed_discoveries = 4;    	
+    	if(!subscription.getPlan().getId().equals("free-trial")){
+    		String plan = subscription.getPlan().getId();
+        	int idx = plan.indexOf("-dist");
+        	String sub = plan.substring(0, idx);
+        	allowed_discoveries = Integer.parseInt(sub);
+    	}
+    	
+    	System.err.println("Allowed number of discoveries     ****************          "+allowed_discoveries);
+    	int monthly_discovery_count = 0;
+    	//check if account has exceeded allowed discovery threshold
+    	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getStartedAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			monthly_discovery_count++;
+    		}
+    	}
+    	
+    	if(monthly_discovery_count > allowed_discoveries){
+    		throw new DiscoveryLimitReachedException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", nickname);
-        traits.put("email", username);        
+        traits.put("email", username);     
+        traits.put("discovery_started", "true");
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(acct.getKey())
     		    .traits(traits)
@@ -94,26 +163,36 @@ public class DiscoveryController {
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
     	domain.setDiscoveryStartTime(new Date());
-    	
     	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
-    	String domain_url = domain.getUrl();
-    	String protocol = domain.getProtocol();
+
     	Date now = new Date();
     	long diffInMinutes = 1000;
     	if(last_ran_date != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
     	}
-		connection.close();
+    	String domain_url = domain.getUrl();
+    	String protocol = domain.getProtocol();
+    	int paths_being_explored = domain.getDiscoveryPathCount();
         
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
-        if(diffInMinutes > 60){
-			WorkAllowanceStatus.register(acct.getKey()); 
+        
+		if(paths_being_explored == 0 || diffInMinutes > 1440){
+        	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
+        	domain.setDiscoveryPathCount(0);
+				
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", domain_url);
+        	acct.getDiscoveryRecords().add(discovery_record);
+        	
+        	AccountRepository acct_repo = new AccountRepository();
+        	acct_repo.save(connection, acct);
+                	
+			WorkAllowanceStatus.register(acct.getKey());
+
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
 			
-			 
 		    //Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
 	    	discovery_started_props.put("url", url);
@@ -125,6 +204,8 @@ public class DiscoveryController {
 			
 			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
+			connection.close();
+
 			try {
 				Await.result(future, timeout.duration());
 				return new ResponseEntity<String>(HttpStatus.OK);
@@ -136,7 +217,6 @@ public class DiscoveryController {
 		}
         else{
         	//Throw error indicating discovery has been or is running
-        	log.info("Account: " + acct.getKey() + " attempted to run discovery " + diffInMinutes + " minutes of last discovery" );
         	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
         	//Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
@@ -148,11 +228,10 @@ public class DiscoveryController {
 	    		    .userId(acct.getKey())
 	    		    .properties(discovery_started_props)
 	    		);
-			
+			connection.close();
+
         	throw new ExistingDiscoveryFoundException();
         }
-        
-
 	}
 
 	/**
@@ -190,7 +269,7 @@ class WorkAllocatorNotFoundException extends RuntimeException {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 7200878662560716215L;
+	private static final long serialVersionUID = 7200878662560716214L;
 
 	public WorkAllocatorNotFoundException() {
 		super("could not find user .");
@@ -206,5 +285,41 @@ class ExistingDiscoveryFoundException extends RuntimeException {
 
 	public ExistingDiscoveryFoundException() {
 		super("Discovery is already running");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class DiscoveryLimitReachedException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public DiscoveryLimitReachedException() {
+		super("Discovery limit reached. Upgrade your account now!");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class FreeTrialEndedException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public FreeTrialEndedException() {
+		super("Your free trial has ended. Select a package now!");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class PaymentDueException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public PaymentDueException() {
+		super("There was an issue processing your payment. Please update your payment details.");
 	}
 }

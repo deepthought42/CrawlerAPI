@@ -43,6 +43,13 @@ public class AccountService {
         return acct;
     }
     
+    public Account save(Account account) {
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+        accountRepository.save(connection, account);
+        connection.close();
+        return account;
+    }
+    
     public Account find(String key){
     	OrientConnectionFactory conn = new OrientConnectionFactory();
     	Account acct = accountRepository.find(conn, key);

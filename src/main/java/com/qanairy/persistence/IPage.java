@@ -1,16 +1,14 @@
 package com.qanairy.persistence;
 
 import com.qanairy.models.Page;
+import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
-import com.tinkerpop.frames.modules.typedgraph.TypeValue;
-
 import java.util.Map;
 
 /**
  * Tinkerpop/frames interface implementation of {@link Page}
  *
  */
-@TypeValue("Page") 
 public interface IPage extends IPathObject{
 	@Property("key")
 	public String getKey();
@@ -42,12 +40,12 @@ public interface IPage extends IPathObject{
 	@Property("element_counts")
 	public void setElementCounts(Map<String, Integer> element_count);
 	
-	/*@Adjacency(label="contains")
-	public Iterator<IPageElement> getElements();
+	@Adjacency(label="contains")
+	public Iterable<IPageElement> getElements();
 	
 	@Adjacency(label="contains")
-	public void setElements(List<IPageElement> elements);
-	*/
+	public void addElement(IPageElement elements);
+	
 
 	@Property("total_weight")
 	public void setTotalWeight(Integer totalWeight);
@@ -72,4 +70,5 @@ public interface IPage extends IPathObject{
 	
 	@Property("browser_screenshots")
 	public void setBrowserScreenshots(Map<String, String> browser_screenshots);
+
 }

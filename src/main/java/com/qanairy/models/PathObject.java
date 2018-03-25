@@ -9,7 +9,8 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
  *
  */
 public abstract class PathObject{
-    private static Logger log = LoggerFactory.getLogger(PathObject.class);
+    @SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(PathObject.class);
     private String type = null;
     
     public String getType(){

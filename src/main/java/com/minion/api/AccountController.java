@@ -1,38 +1,23 @@
 package com.minion.api;
 
-import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.auth0.exception.APIException;
-import com.auth0.exception.Auth0Exception;
-import com.auth0.json.auth.UserInfo;
-import com.auth0.net.Request;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.qanairy.api.exception.Auth0ManagementApiException;
-import com.qanairy.api.exception.InvalidUserException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
@@ -40,6 +25,9 @@ import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+import com.stripe.model.Customer;
+import com.stripe.model.Plan;
+import com.stripe.model.Subscription;
 
 /**
  *	API endpoints for interacting with {@link User} data
@@ -50,9 +38,6 @@ public class AccountController {
 	private static Logger log = LoggerFactory.getLogger(AccountController.class);
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-    @Autowired
-    private Auth0Client auth0Client;
     
     @Autowired
     protected WebSecurityConfig appConfig;
@@ -64,6 +49,13 @@ public class AccountController {
     protected UsernameService usernameService;
     */
     
+    private StripeClient stripeClient;
+
+    @Autowired
+    AccountController(StripeClient stripeClient) {
+        this.stripeClient = stripeClient;
+    }
+    
     /**
      * Create new account
      * 
@@ -72,24 +64,35 @@ public class AccountController {
      * @param principal
      * 
      * @return
-     * 
-     * @throws InvalidUserException
-     * @throws UnirestException
-     * @throws Auth0ManagementApiException 
+     * @throws Exception 
      */
-    @PreAuthorize("hasAuthority('create:accounts')")
+    @CrossOrigin(origins = "138.91.154.99, 54.183.64.135, 54.67.77.38, 54.67.15.170, 54.183.204.205, 54.173.21.107, 54.85.173.28, 35.167.74.121, 35.160.3.103, 35.166.202.113, 52.14.40.253, 52.14.38.78, 52.14.17.114, 52.71.209.77, 34.195.142.251, 52.200.94.42", maxAge = 3600)
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Account> create(HttpServletRequest request, 
-    										@RequestParam(value="service_package", required=true) String service_package) 
-    				throws InvalidUserException, UnirestException, Auth0ManagementApiException{        
-       
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
+    public ResponseEntity<Account> create( @RequestParam(value="user_email", required=true) String username) 
+    												throws Exception{        
 
-    	//create account
-        Account acct = new Account(username, service_package, "tmp_payment_acct_num", new ArrayList<QanairyUser>());
+    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	//Auth0Client auth = new Auth0Client();
+    	//String username = auth.getUsername(auth_access_token);
+    	Account acct = this.accountService.find(username);
     	
+    	//create account
+        if(acct != null){
+        	throw new AccountExistsException();
+        }
+        
+        String plan = "4-disc-10000-test";
+    	
+    	Plan new_plan = Plan.retrieve(plan);
+
+    	Map<String, Object> customerParams = new HashMap<String, Object>();
+    	customerParams.put("description", "Customer for "+username);
+    	Customer customer = this.stripeClient.createCustomer(null, username);
+    	Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
+    	
+    	System.err.println("Subscription :: "+subscription.toJson());
+    	acct = new Account(username, plan, customer.getId(), subscription.getId());
+        
         //Create user
         QanairyUser user = new QanairyUser(username);
         acct.addUser(user);
@@ -104,13 +107,11 @@ public class AccountController {
         Account new_account = null;
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        log.info("User with email: " + username + " creating new account");
         new_account = accountService.create(acct);
         
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
     		    .userId(new_account.getKey())
@@ -161,4 +162,16 @@ public class AccountController {
         }
     }
     */
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class AccountExistsException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public AccountExistsException() {
+		super("Account already exists");
+	}
 }

@@ -47,15 +47,15 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		if(!iter.hasNext()){
 			acct_record = connection.getTransaction().addVertex("class:"+IAccount.class.getSimpleName()+","+UUID.randomUUID(), IAccount.class);
 			acct_record.setKey(account.getKey());
-			System.err.println("Service package :: "+account.getServicePackage());
 			acct_record.setServicePackage(account.getServicePackage());
-			acct_record.setPaymentAcctNum(account.getPaymentAcctNum());
+			acct_record.setCustomerToken(account.getCustomerToken());
+			acct_record.setSubscriptionToken(account.getSubscriptionToken());
+			acct_record.setOrgName(account.getOrgName());
 		}
 		else{
 			acct_record = iter.next();
 		}
 		
-		acct_record.setOrgName(account.getOrgName());
 		acct_record.setLastDomain(account.getLastDomain());
 		
 		List<IDiscoveryRecord> discovery_records = new ArrayList<IDiscoveryRecord>();
@@ -118,7 +118,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		*/
 		
-		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getPaymentAcctNum(), 
+		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getCustomerToken(), account.getSubscriptionToken(),
 							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), discovery_record_list, test_record_list);
 	}
 	
@@ -158,7 +158,8 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		if(iter.hasNext()){
 			acct = iter.next();
 			acct.setOrgName(account.getOrgName());
-			acct.setPaymentAcctNum(account.getPaymentAcctNum());
+			acct.setCustomerToken(account.getCustomerToken());
+			acct.setSubscriptionToken(account.getSubscriptionToken());
 			acct.setServicePackage(account.getServicePackage());
 			
 			for(Domain domain : account.getDomains()){

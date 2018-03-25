@@ -6,48 +6,46 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.services.AccountService;
 import com.stripe.model.Charge;
 import com.stripe.model.Customer;
+import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 import com.stripe.model.Charge;
 
 @RestController
-@RequestMapping("/payment")
-public class PaymentController {
+@RequestMapping("/subscribe")
+public class SubscriptionController {
 
     private StripeClient stripeClient;
-
+    
     @Autowired
-    PaymentController(StripeClient stripeClient) {
+    protected AccountService accountService;
+    
+    @Autowired
+    SubscriptionController(StripeClient stripeClient) {
         this.stripeClient = stripeClient;
     }
-
-    @PostMapping("/charge")
-    public Charge chargeCard(@RequestParam(value="token", required=true) String token,
-    						 @RequestParam(value="amount", required=true) int amount) throws Exception {
-        return this.stripeClient.chargeCreditCard(token, amount);
-    }
     
-    @PostMapping("/subscribe")
+    @PutMapping
     public Subscription subscribe(HttpServletRequest request,
-    								@RequestParam(value="token", required=true) String token,
     						 		@RequestParam(value="plan", required=true) String plan) throws Exception {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
+    	Account acct = accountService.find(username);
+    	Plan new_plan = Plan.retrieve(plan);
     	
-    	Map<String, Object> customerParams = new HashMap<String, Object>();
-    	customerParams.put("description", "Customer for "+username);
-    	customerParams.put("source", token);
-    	// ^ obtained with Stripe.js
-    	//Customer customer = Customer.create(customerParams);
-    	Customer customer = this.stripeClient.createCustomer(auth_access_token, username);
-    	Subscription subscription = this.stripeClient.subscribe(plan, customer.getId());
+    	Subscription subscription = Subscription.retrieve(acct.getSubscriptionToken());
+    	subscription.setPlan(new_plan);
+    	//Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
     	System.err.println("Subscription :: "+subscription.toJson());
     	
     	return subscription;

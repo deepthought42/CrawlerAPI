@@ -10,7 +10,8 @@ public class Account {
 	private String key;
 	private String org_name;
 	private String service_package;
-	private String payment_acct_num;
+	private String customer_token;
+	private String subscription_token;
 	private List<QanairyUser> users;
 	private List<Domain> domains;
 	private String last_domain_url;
@@ -19,16 +20,6 @@ public class Account {
 	
 	public Account(){}
 	
-	public Account(String key, String org_name, String service_package, String payment_acct_num){
-		this.setKey(key);
-		this.setOrgName(org_name);
-		this.setServicePackage(service_package);
-		this.setPaymentAcctNum(payment_acct_num);
-		this.setDomains(new ArrayList<Domain>());
-		this.setUsers(new ArrayList<QanairyUser>());
-		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
-	}
-	
 	/**
 	 * 
 	 * @param org_name
@@ -38,12 +29,13 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String org_name, String service_package, String payment_acct_num){
+	public Account(String org_name, String service_package, String customer_token, String subscription_token){
 		assert users != null;
 		
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
-		this.setPaymentAcctNum(payment_acct_num);
+		this.setCustomerToken(customer_token);
+		this.setSubscriptionToken(subscription_token);
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 		this.setUsers(new ArrayList<QanairyUser>());
 		this.setDomains(new ArrayList<Domain>());
@@ -60,43 +52,18 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, 
+	public Account(String org_name, String service_package, String customer_token, String subscription_token, List<QanairyUser> users, 
 					List<DiscoveryRecord> discovery_records, List<TestRecord> test_records){
 		assert users != null;
 		
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
-		this.setPaymentAcctNum(payment_acct_num);
+		this.setCustomerToken(customer_token);
+		this.setSubscriptionToken(subscription_token);
 		this.setDomains(new ArrayList<Domain>());
 		this.setUsers(users);
 		this.setDiscoveryRecords(discovery_records);
 		this.setTestRecords(test_records);
-	}
-	
-	/**
-	 * 
-	 * @param key
-	 * @param org_name
-	 * @param service_package
-	 * @param payment_acct_num
-	 * @param users
-	 * 
-	 * @pre users != null
-	 */
-	public Account(String key, String org_name, String service_package, String payment_acct_num, 
-					List<QanairyUser> users, List<Domain> domains, String last_domain_url){
-		assert users != null;
-		
-		this.setKey(key);
-		this.setOrgName(org_name);
-		this.setServicePackage(service_package);
-		this.setPaymentAcctNum(payment_acct_num);
-		this.setUsers(users);
-		this.setDomains(domains);
-		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
-		this.setLastDomain(last_domain_url);
-		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
-		this.setTestRecords(new ArrayList<TestRecord>());
 	}
 
 	/**
@@ -110,7 +77,7 @@ public class Account {
 	 * @param last_domain_url
 	 * @param discovery_records
 	 */
-	public Account(String key, String org_name, String service_package, String payment_acct_num, 
+	public Account(String key, String org_name, String service_package, String customer_token, String subscription_token, 
 					List<QanairyUser> users, List<Domain> domains, 
 					String last_domain_url, List<DiscoveryRecord> discovery_records,
 					List<TestRecord> test_records){
@@ -119,7 +86,8 @@ public class Account {
 		this.setKey(key);
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
-		this.setPaymentAcctNum(payment_acct_num);
+		this.setCustomerToken(customer_token);
+		this.setSubscriptionToken(subscription_token);
 		this.setUsers(users);
 		this.setDomains(domains);
 		this.setLastDomain(last_domain_url);
@@ -137,14 +105,15 @@ public class Account {
 	 * @param last_domain_url
 	 * @param discovery_records
 	 */
-	public Account(String org_name, String service_package, String payment_acct_num, List<QanairyUser> users, List<Domain> domains, 
+	public Account(String org_name, String service_package, String customer_token, String subscription_token, List<QanairyUser> users, List<Domain> domains, 
 			String last_domain_url, List<DiscoveryRecord> discovery_records, List<TestRecord> test_records){
 		assert users != null;
 		
 		this.setKey(null);
 		this.setOrgName(org_name);
 		this.setServicePackage(service_package);
-		this.setPaymentAcctNum(payment_acct_num);
+		this.setCustomerToken(customer_token);
+		this.setSubscriptionToken(subscription_token);
 		this.setUsers(users);
 		this.setDomains(domains);
 		this.setLastDomain(last_domain_url);
@@ -168,12 +137,20 @@ public class Account {
 		this.service_package = service_package;
 	}
 
-	public String getPaymentAcctNum() {
-		return payment_acct_num;
+	public String getCustomerToken() {
+		return customer_token;
 	}
 
-	public void setPaymentAcctNum(String payment_acct_num) {
-		this.payment_acct_num = payment_acct_num;
+	public void setCustomerToken(String customer_token) {
+		this.customer_token = customer_token;
+	}
+	
+	public String getSubscriptionToken() {
+		return subscription_token;
+	}
+
+	public void setSubscriptionToken(String subscription_token) {
+		this.subscription_token = subscription_token;
 	}
 	
 	public List<QanairyUser> getUsers(){

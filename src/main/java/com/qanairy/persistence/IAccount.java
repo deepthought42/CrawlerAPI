@@ -25,11 +25,18 @@ public interface IAccount {
 	@Property("service_package")
 	public void setServicePackage(String service_package);
 
-	@Property("payment_acct_num")
-	public String getPaymentAcctNum();
+	@Property("customer_token")
+	public String getCustomerToken();
 
-	@Property("payment_acct_num")
-	public void setPaymentAcctNum(String payment_acct_num);
+	@Property("customer_token")
+	public void setCustomerToken(String customer_token);
+
+	@Property("subscription_token")
+	public String getSubscriptionToken();
+
+	@Property("subscription_token")
+	public void setSubscriptionToken(String subscription_token);
+	
 	
 	@Property("last_domain")
 	public void setLastDomain(String domain_url);

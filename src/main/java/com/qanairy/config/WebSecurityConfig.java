@@ -42,7 +42,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
     	 JwtWebSecurityConfigurer
     	 .forRS256(audience, issuer)
     	 //.forHS256(audience, issuer, secret.getBytes())
-         .configure(http).cors().and().csrf().disable().authorizeRequests().anyRequest().authenticated();
+         .configure(http).cors().and().csrf().disable().authorizeRequests()
+         .antMatchers(HttpMethod.POST, "/accounts").permitAll()
+         .anyRequest().authenticated();
     	/*http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
     		.antMatchers("/realtime/**").permitAll()
     		.anyRequest().authenticated();

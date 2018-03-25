@@ -504,24 +504,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		path2.add(new Action("click", ""));
 		paths.add(path2);
 		
-		Path path3 = new Path();
-		path3.add(input_elem);
-		path3.add(new Action("click", ""));
-		path3.add(input_elem);
-		path3.add(new Action("sendKeys", "test.test@test"));
-		path3.add(submit);
-		path3.add(new Action("click", ""));
-		paths.add(path3);
-		
-		Path path4 = new Path();
-		path4.add(input_elem);
-		path4.add(new Action("click", ""));
-		path4.add(input_elem);
-		path4.add(new Action("sendKeys", "test_test@test"));
-		path4.add(submit);
-		path4.add(new Action("click", ""));
-		paths.add(path4);
-		
 		return paths;
 	}
 	/**

@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
@@ -37,6 +36,13 @@ import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+import com.stripe.exception.APIConnectionException;
+import com.stripe.exception.APIException;
+import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Subscription;
+
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;
@@ -59,6 +65,13 @@ public class DiscoveryController {
     @Autowired
     protected AccountService accountService;
     
+    private StripeClient stripeClient;
+
+    @Autowired
+    DiscoveryController(StripeClient stripeClient) {
+        this.stripeClient = stripeClient;
+    }
+    
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/check", method = RequestMethod.GET)
     public @ResponseBody boolean isDiscoveryRunning(@RequestParam(value="url", required=true) String url){
@@ -71,12 +84,17 @@ public class DiscoveryController {
 	 * @return
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
+     * @throws APIException 
+     * @throws CardException 
+     * @throws APIConnectionException 
+     * @throws InvalidRequestException 
+     * @throws AuthenticationException 
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
 													   	  		@RequestParam(value="url", required=true) String url) 
-													   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException {
+													   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -87,7 +105,28 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	//Check if subscription is valid
+    	Subscription subscription = this.stripeClient.getSubscription(acct.getSubscriptionToken());
+    	long current_time = (new Date()).getTime();
+    	if(subscription.getPlan().getId().equals("4-disc-10000-test") && subscription.getEndedAt()> current_time && !subscription.getStatus().equals("trialing") && !subscription.getStatus().equals("active")){
+    		//throw exception to force selecting a package to pay for.
+    		
+    		throw new FreeTrialEndedException();
+    	}
+    	else if(subscription.getStatus().equals("past_due") || subscription.getStatus().equals("unpaid")){
+    		//throw exception for force paying for system
+    		throw new PaymentDueException();
+    	}
     	
+		int allowed_discoveries = 4;    	
+    	if(!subscription.getPlan().getId().equals("free-trial")){
+    		String plan = subscription.getPlan().getId();
+        	int idx = plan.indexOf("-dist");
+        	String sub = plan.substring(0, idx);
+        	allowed_discoveries = Integer.parseInt(sub);
+    	}
+    	
+    	System.err.println("Allowed number of discoveries     ****************          "+allowed_discoveries);
     	int monthly_discovery_count = 0;
     	//check if account has exceeded allowed discovery threshold
     	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
@@ -105,7 +144,7 @@ public class DiscoveryController {
     		}
     	}
     	
-    	if(monthly_discovery_count > 0){
+    	if(monthly_discovery_count > allowed_discoveries){
     		throw new DiscoveryLimitReachedException();
     	}
     	
@@ -258,5 +297,29 @@ class DiscoveryLimitReachedException extends RuntimeException {
 
 	public DiscoveryLimitReachedException() {
 		super("Discovery limit reached. Upgrade your account now!");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class FreeTrialEndedException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public FreeTrialEndedException() {
+		super("Your free trial has ended. Select a package now!");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class PaymentDueException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public PaymentDueException() {
+		super("There was an issue processing your payment. Please update your payment details.");
 	}
 }

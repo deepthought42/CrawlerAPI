@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -374,52 +375,6 @@ public class TestController {
 		TestRepository test_record = new TestRepository();
 		return test_record.load(itest);
 	}
-    
-	/**
-	 * Runs test with a given key
-	 * 
-	 * @param key
-	 * @return
-	 * @throws MalformedURLException 
-	 */
-    @PreAuthorize("hasAuthority('run:tests')")
-	@RequestMapping(path="/run/{key}", method = RequestMethod.POST)
-	public @ResponseBody TestRecord runTest(@PathVariable(value="key", required=true) String key, 
-									  @RequestParam(value="browser_type", required=true) String browser_type) throws MalformedURLException{
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-		Iterator<ITest> itest_iter = Test.findByKey(key, connection).iterator();
-		ITest itest = itest_iter.next();
-		Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
-		if(!browser_running_status.get(browser_type)){
-			
-			TestRecord record = null;
-			TestRepository test_record = new TestRepository();
-			
-			if(itest.getKey().equals(key)){
-				Test test = test_record.load(itest);
-				Browser browser = new Browser(((Page)test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
-				record = TestingActor.runTest(test, browser);
-				
-				TestRecordRepository test_record_record = new TestRecordRepository();
-				itest.addRecord(test_record_record.save(connection, record));
-				itest.setCorrect(record.getPassing());
-
-				Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
-				browser_running_status.put(browser_type, true);
-				itest.setBrowserStatuses(browser_running_status);
-				
-				browser.close();
-			}
-			else{
-				log.warn("test found does not match key :: " + key);
-			}
-			connection.close();
-			return record;
-		}
-		connection.close();
-
-		throw new TestAlreadyRunningException();
-	}
 
     /**
 	 * Runs test with a given key
@@ -433,8 +388,7 @@ public class TestController {
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_type", required=true) String browser_type,
-														  final Principal principal) 
+														  @RequestParam(value="browser_type", required=true) String browser_type) 
 																  throws MalformedURLException, UnknownAccountException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -445,6 +399,28 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	
+    	int monthly_test_count = 0;
+    	//Check if account has exceeded test run limit
+    	for(TestRecord record : acct.getTestRecords()){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getRanAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			monthly_test_count++;
+    		}
+    	}
+    	
+    	if(monthly_test_count > 10000){
+    		throw new TestLimitReachedException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -492,6 +468,9 @@ public class TestController {
 	    			
 	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
 	    			record = TestingActor.runTest(test, browser);
+	    			acct.addTestRecord(record);
+	    			accountService.save(acct);
+	    			
 	    			System.err.println("Record is passing :::: "+record.getPassing());
 	    			browser_running_status.put(browser_type, record.getPassing());
 	    			test.setBrowserPassingStatuses(browser_running_status);
@@ -699,5 +678,17 @@ class EmptyGroupNameException extends RuntimeException {
 
 	public EmptyGroupNameException() {
 		super("");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class TestLimitReachedException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public TestLimitReachedException() {
+		super("Test run limit reached. Upgrade your account now!");
 	}
 }

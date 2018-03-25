@@ -35,19 +35,26 @@ public class SubscriptionController {
     }
     
     @PutMapping
-    public Subscription subscribe(HttpServletRequest request,
+    public void subscribe(HttpServletRequest request,
     						 		@RequestParam(value="plan", required=true) String plan) throws Exception {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account acct = accountService.find(username);
     	Plan new_plan = Plan.retrieve(plan);
-    	
     	Subscription subscription = Subscription.retrieve(acct.getSubscriptionToken());
-    	subscription.setPlan(new_plan);
-    	//Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
-    	System.err.println("Subscription :: "+subscription.toJson());
+
     	
-    	return subscription;
+    	Map<String, Object> item = new HashMap<>();
+    	item.put("id", subscription.getSubscriptionItems().getData().get(0).getId());
+    	item.put("plan", new_plan.getId());
+
+    	Map<String, Object> items = new HashMap<>();
+    	items.put("0", item);
+
+    	Map<String, Object> params = new HashMap<>();
+    	params.put("items", items);
+    	
+    	subscription.update(params);
     }
 }

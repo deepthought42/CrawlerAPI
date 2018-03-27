@@ -68,4 +68,16 @@ public class Auth0ManagementApi {
 		
 		return response;
 	}
+
+	public static HttpResponse<String> deleteUser(String user_id) throws UnirestException {
+		String token = getToken();
+		System.err.println("USER ID PASSED FOR DELETION :::::::::::::     "+user_id);
+    	String request_url = audience_url+"users/" + user_id;
+		HttpResponse<String> response = Unirest.delete(request_url)
+				  .header("content-type", "application/json")
+				  .header("Authorization", "Bearer " + token)
+				  .asString();
+		
+		return response;
+	}
 }

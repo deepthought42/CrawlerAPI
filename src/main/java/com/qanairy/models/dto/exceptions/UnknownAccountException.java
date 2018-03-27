@@ -3,7 +3,7 @@ package com.qanairy.models.dto.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(code = HttpStatus.NOT_FOUND, reason = "Unable to find account in database")
+@ResponseStatus(code = HttpStatus.FORBIDDEN, reason = "Unable to find account in database")
 public class UnknownAccountException extends Exception {
 
 	/**

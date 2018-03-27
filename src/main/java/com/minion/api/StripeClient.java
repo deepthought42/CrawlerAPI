@@ -2,7 +2,6 @@ package com.minion.api;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,8 +14,8 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Charge;
 import com.stripe.model.Customer;
+import com.stripe.model.DeletedCustomer;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 
@@ -25,16 +24,8 @@ public class StripeClient {
 
     @Autowired
     StripeClient() {
-        Stripe.apiKey = "sk_test_PWXpP3kfBOicqxW29nSilcK1";
-    }
-
-    public Charge chargeCreditCard(String token, int amount) throws Exception {
-        Map<String, Object> chargeParams = new HashMap<String, Object>();
-        chargeParams.put("amount", amount);
-        chargeParams.put("currency", "USD");
-        chargeParams.put("source", token);
-        Charge charge = Charge.create(chargeParams);
-        return charge;
+        //Stripe.apiKey = "sk_live_Gx56wLPtGpq8JXcg9UWaRcv9";
+    	Stripe.apiKey = "sk_test_PWXpP3kfBOicqxW29nSilcK1";
     }
     
     public void update_subscription(Plan plan, Subscription subscription) 
@@ -76,5 +67,15 @@ public class StripeClient {
 	public Subscription getSubscription(String subscriptionToken) 
 			throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
 		return Subscription.retrieve(subscriptionToken);
+	}
+	
+	public Subscription cancelSubscription(String subscription_token) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+		Subscription subscription = Subscription.retrieve(subscription_token);
+		return subscription.cancel(new HashMap<String, Object>());
+	}
+
+	public DeletedCustomer deleteCustomer(String customer_token) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+		Customer customer = Customer.retrieve(customer_token);
+		return customer.delete();
 	}
 }

@@ -147,7 +147,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test_record.setLastRunTimestamp(test.getLastRunTimestamp());
 		test_record.setRunTime(test.getRunTime());
 		test_record.setName(test.getName());
-		//test_record.setCorrect(test.isCorrect());
+		test_record.setCorrect(test.isCorrect());
 		test_record.setBrowserStatuses(test.getBrowserPassingStatuses());
 		
 		return test_record;

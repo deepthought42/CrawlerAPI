@@ -23,6 +23,9 @@ public class TestRecord {
 	private Page result;
 	private long run_time_length;
 	
+	//Empty constructor for spring
+	public TestRecord(){}
+	
 	public TestRecord(Date ran_at, Boolean passes, String browser_name){
 		this.setRanAt(ran_at);
 		this.setPage(null);

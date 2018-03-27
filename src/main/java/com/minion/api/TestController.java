@@ -2,6 +2,7 @@ package com.minion.api;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,7 +10,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -37,6 +37,7 @@ import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.IPath;
@@ -58,6 +59,7 @@ import com.minion.structs.Message;
 import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.BrowserPassingStatuses;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
@@ -294,31 +296,6 @@ public class TestController {
 		TestRepository test_record = new TestRepository();
 		return test_record.load(itest);
 	}
-    
-	/**
-	 * Updates the correctness of a test for a specific browser with the given test key
-	 * 
-	 * @param test
-	 * @return
-	 */
-    @PreAuthorize("hasAuthority('update:tests')")
-	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
-	public @ResponseBody Test updateBrowserCorrectness(@RequestParam(value="key", required=true) String key, 
-														@RequestParam(value="browser_name", required=true) String browser_name, 
-														@RequestParam(value="correct", required=true) boolean correct){
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
-		ITest itest = itest_iter.next();
-		itest.setCorrect(correct);
-		itest.getBrowserStatuses().put(browser_name, correct);
-
-		
-		//update last TestRecord passes value
-		updateLastTestRecordPassingStatus(itest);
-		
-		TestRepository test_record = new TestRepository();
-		return test_record.load(itest);
-	}
 
     /**
      * 
@@ -354,6 +331,31 @@ public class TestController {
 
 		return path;
 	}
+
+
+	/**
+	 * Updates a test
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(method=RequestMethod.PUT)
+	public @ResponseBody void update(HttpServletRequest request,
+										@RequestBody(required=true) Test test){
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		@SuppressWarnings("unchecked")
+		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(test.getKey(), orient_connection, ITest.class);
+		Iterator<ITest> iter = tests.iterator();
+		ITest test_record = null;
+		if(iter.hasNext()){
+			test_record = iter.next();
+			test_record.setName(test.getName());
+			test_record.setBrowserStatuses(test.getBrowserPassingStatuses());
+			
+		}
+	}
+
     
 	/**
 	 * Updates the correctness of a test with the given test key
@@ -375,7 +377,7 @@ public class TestController {
 		TestRepository test_record = new TestRepository();
 		return test_record.load(itest);
 	}
-
+    
     /**
 	 * Runs test with a given key
 	 * 

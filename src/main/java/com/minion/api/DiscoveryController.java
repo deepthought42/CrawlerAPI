@@ -75,7 +75,8 @@ public class DiscoveryController {
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/status", method = RequestMethod.GET)
     public @ResponseBody Boolean isDiscoveryRunning(HttpServletRequest request, 
-    												@RequestParam(value="url", required=true) String url) throws UnknownAccountException{
+    												@RequestParam(value="url", required=true) String url) 
+    														throws UnknownAccountException{
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);

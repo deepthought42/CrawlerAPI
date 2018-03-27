@@ -68,7 +68,29 @@ public class Auth0Client {
     		log.error(exception.getMessage());
     	}
     	
-    	return nickname;	}
+    	return nickname;	
+	}
+
+	public String getUserId(String auth_access_token) {
+		Request<UserInfo> user_info_request = auth0.userInfo(auth_access_token);
+    	String user_id = null;
+    	try {
+    	    UserInfo info = user_info_request.execute();
+    	    user_id = info.getValues().get("sub").toString();
+    	} catch (APIException exception) {
+    	    // api error
+    		log.error(exception.getError() + " \n "+
+    						exception.getMessage());
+    		exception.printStackTrace();
+
+    	} catch (Auth0Exception exception) {
+    	    // request error
+    		exception.printStackTrace();
+    		log.error(exception.getMessage());
+    	}
+
+    	return user_id;
+	}
 
     /*public String getUsername(Auth0JWTToken token) {
         final Request<UserInfo> request = this.auth0.tokenInfo(token.getJwt());

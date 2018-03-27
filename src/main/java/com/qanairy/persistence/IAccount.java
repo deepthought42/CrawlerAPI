@@ -3,10 +3,11 @@ package com.qanairy.persistence;
 import java.util.List;
 
 import com.tinkerpop.blueprints.Direction;
+import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 
-public interface IAccount {
+public interface IAccount extends Vertex{
 	@Property("key")
 	public String getKey();
 	
@@ -79,5 +80,4 @@ public interface IAccount {
 
 	@Adjacency(direction=Direction.OUT, label="has_test_record")
 	public void addTestRecord(ITestRecord test_record);
-	
 }

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.AccountRepository;
@@ -63,4 +62,11 @@ public class AccountService {
     	conn.close();
     	return acct;
 	}
+
+
+	public void delete(Account account) {
+		OrientConnectionFactory conn = new OrientConnectionFactory();
+    	accountRepository.delete(conn, account.getKey()); 
+    	conn.close();
+   	}
 }

@@ -20,7 +20,9 @@ import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
+import com.tinkerpop.frames.VertexFrame;
 
 /**
  * 
@@ -221,9 +223,21 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	public Account deleteDomain(OrientConnectionFactory conn, Account acct, Domain domain) {
-		DomainRepository domain_repo = new DomainRepository();
 		acct.removeDomain(domain);
 		save(conn, acct);
 		return acct;
+	}
+
+	public void delete(OrientConnectionFactory connection, String key) {
+		@SuppressWarnings("unchecked")
+		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(key, connection, IAccount.class);
+		Iterator<IAccount> iter = svc_pkgs.iterator();
+		
+		if(iter.hasNext()){
+			IAccount account_vertex = iter.next();
+			((VertexFrame)account_vertex).asVertex().remove();
+			//connection.getTransaction().removeVertex(account_vertex);
+			//account_vertex.remove();
+		}
 	} 
 }

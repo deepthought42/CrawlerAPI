@@ -2,6 +2,7 @@ package com.minion.api;
 
 import java.util.Calendar;
 import java.util.Date;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Customer;
 import com.stripe.model.DeletedCustomer;
+
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 
@@ -78,4 +80,5 @@ public class StripeClient {
 		Customer customer = Customer.retrieve(customer_token);
 		return customer.delete();
 	}
+
 }

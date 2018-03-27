@@ -2,7 +2,6 @@ package com.minion.api;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -42,6 +41,7 @@ import com.stripe.model.Customer;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
+
 
 /**
  *	API endpoints for interacting with {@link User} data

@@ -203,9 +203,7 @@ public class DomainController {
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 class RequiredFieldMissingException extends RuntimeException {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public RequiredFieldMissingException() {

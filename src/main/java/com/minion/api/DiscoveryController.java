@@ -73,9 +73,44 @@ public class DiscoveryController {
     }
     
     @PreAuthorize("hasAuthority('start:discovery')")
-	@RequestMapping(path="/check", method = RequestMethod.GET)
-    public @ResponseBody boolean isDiscoveryRunning(@RequestParam(value="url", required=true) String url){
-    	return false;
+	@RequestMapping(path="/status", method = RequestMethod.GET)
+    public @ResponseBody Boolean isDiscoveryRunning(HttpServletRequest request, 
+    												@RequestParam(value="url", required=true) String url) throws UnknownAccountException{
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+
+    	Account acct = accountService.find(username);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	
+    	OrientConnectionFactory connection = new OrientConnectionFactory();
+
+    	@SuppressWarnings("unchecked")
+		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
+    	IDomain domain = domains_iter.next();
+    	domain.setDiscoveryStartTime(new Date());
+    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+
+    	Date now = new Date();
+    	long diffInMinutes = 1000;
+    	if(last_ran_date != null){
+    		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
+    	}
+
+    	int paths_being_explored = domain.getDiscoveryPathCount();
+        
+		Map<String, Object> options = new HashMap<String, Object>();
+		options.put("browser", domain.getDiscoveryBrowserName());
+        
+		if(paths_being_explored == 0 || diffInMinutes > 1440){
+			return false;
+		}
+		else{
+			return true;
+		}
     }
     /**
 	 * 
@@ -105,28 +140,8 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	//Check if subscription is valid
-    	Subscription subscription = this.stripeClient.getSubscription(acct.getSubscriptionToken());
-    	long current_time = (new Date()).getTime();
-    	if(subscription.getPlan().getId().equals("4-disc-10000-test") && subscription.getEndedAt()> current_time && !subscription.getStatus().equals("trialing") && !subscription.getStatus().equals("active")){
-    		//throw exception to force selecting a package to pay for.
-    		
-    		throw new FreeTrialEndedException();
-    	}
-    	else if(subscription.getStatus().equals("past_due") || subscription.getStatus().equals("unpaid")){
-    		//throw exception for force paying for system
-    		throw new PaymentDueException();
-    	}
+
     	
-		int allowed_discoveries = 4;    	
-    	if(!subscription.getPlan().getId().equals("free-trial")){
-    		String plan = subscription.getPlan().getId();
-        	int idx = plan.indexOf("-dist");
-        	String sub = plan.substring(0, idx);
-        	allowed_discoveries = Integer.parseInt(sub);
-    	}
-    	
-    	System.err.println("Allowed number of discoveries     ****************          "+allowed_discoveries);
     	int monthly_discovery_count = 0;
     	//check if account has exceeded allowed discovery threshold
     	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
@@ -143,11 +158,7 @@ public class DiscoveryController {
     			monthly_discovery_count++;
     		}
     	}
-    	
-    	if(monthly_discovery_count > allowed_discoveries){
-    		throw new DiscoveryLimitReachedException();
-    	}
-    	
+    	    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("email", username);     

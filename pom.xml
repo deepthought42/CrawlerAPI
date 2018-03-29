@@ -226,6 +226,14 @@
 		    <version>4.2.0.RELEASE</version>
 		</dependency>
 -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-parent</artifactId>
+		    <version>${springboot.version}</version>
+		    <type>pom</type>
+		</dependency>
+
 	 	<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
@@ -300,6 +308,14 @@
 		    <version>2.1.0</version>
 		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/io.micrometer/micrometer-spring-legacy -->
+		<dependency>
+		    <groupId>io.micrometer</groupId>
+		    <artifactId>micrometer-spring-legacy</artifactId>
+		    <version>1.0.2</version>
+		</dependency>
+
+
 		<!-- https://mvnrepository.com/artifact/com.auth0/auth0 -->
 		<dependency>
 		    <groupId>com.auth0</groupId>

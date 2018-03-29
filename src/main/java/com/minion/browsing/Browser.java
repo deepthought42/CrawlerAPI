@@ -91,8 +91,8 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				System.err.println("driver loaded, waiting 30 seconds for page to load");
-				WebDriverWait wait = new WebDriverWait(driver, 30);
+				System.err.println("driver loaded, waiting 10 seconds for page to load");
+				WebDriverWait wait = new WebDriverWait(driver, 10);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				
 				break;

@@ -74,7 +74,7 @@ public class DiscoveryController {
     
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/status", method = RequestMethod.GET)
-    public @ResponseBody Boolean isDiscoveryRunning(HttpServletRequest request, 
+    public @ResponseBody Map<String, Boolean> isDiscoveryRunning(HttpServletRequest request, 
     												@RequestParam(value="url", required=true) String url) 
     														throws UnknownAccountException{
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -106,12 +106,14 @@ public class DiscoveryController {
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
         
+		Map<String, Boolean> status_map = new HashMap<String, Boolean>();
 		if(paths_being_explored == 0 || diffInMinutes > 1440){
-			return false;
+			status_map.put("status", false);
 		}
 		else{
-			return true;
+			status_map.put("status", false);
 		}
+		return status_map;
     }
     /**
 	 * 

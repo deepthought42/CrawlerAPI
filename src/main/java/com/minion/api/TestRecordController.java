@@ -48,6 +48,6 @@ class TestCoordinatorNotFoundException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public TestCoordinatorNotFoundException() {
-		super("could not find user .");
+		super("Could not find user.");
 	}
 }

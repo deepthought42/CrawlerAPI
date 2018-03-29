@@ -5,21 +5,16 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.services.AccountService;
 
-import com.stripe.model.Charge;
-import com.stripe.model.Customer;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
-import com.stripe.model.Charge;
 
 @RestController
 @RequestMapping("/subscribe")

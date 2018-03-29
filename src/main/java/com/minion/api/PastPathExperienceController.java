@@ -2,7 +2,6 @@ package com.minion.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.Action;
 import com.qanairy.models.Page;

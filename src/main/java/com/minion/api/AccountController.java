@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.auth0.client.mgmt.UsersEntity;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
@@ -49,6 +48,7 @@ import com.mashape.unirest.http.HttpResponse;
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AccountController.class);
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());

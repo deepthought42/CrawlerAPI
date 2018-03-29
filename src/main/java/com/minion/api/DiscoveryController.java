@@ -41,7 +41,6 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Subscription;
 
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -322,7 +321,7 @@ class FreeTrialEndedException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public FreeTrialEndedException() {
-		super("Your free trial has ended. Select a package now!");
+		super("Your free trial has ended");
 	}
 }
 

@@ -656,15 +656,6 @@ public class TestController {
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-class TestControllerNotFoundException extends RuntimeException {
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public TestControllerNotFoundException() {
-		super("An error occurred accessing tests endpoint.");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_FOUND)
 class TestAlreadyRunningException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
@@ -678,7 +669,7 @@ class EmptyGroupNameException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public EmptyGroupNameException() {
-		super("");
+		super("Groups must have a name");
 	}
 }
 

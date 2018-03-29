@@ -41,6 +41,7 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Plan;
 
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -142,7 +143,6 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-
     	
     	int monthly_discovery_count = 0;
     	//check if account has exceeded allowed discovery threshold
@@ -160,7 +160,25 @@ public class DiscoveryController {
     			monthly_discovery_count++;
     		}
     	}
-    	    	
+    	
+    	Plan plan = stripeClient.getSubscription(acct.getSubscriptionToken()).getPlan();
+    	String plan_name = plan.getName();
+    	int disc_index = plan_name.indexOf("-disc");
+    	int allowed_discovery_cnt = Integer.parseInt(plan_name.substring(0, disc_index));
+    	
+    	if(monthly_discovery_count > allowed_discovery_cnt){
+    		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+        	Map<String, String> traits = new HashMap<String, String>();
+            traits.put("email", username);     
+            traits.put("discovery_limit_reached", plan.getId());
+        	analytics.enqueue(IdentifyMessage.builder()
+        		    .userId(acct.getKey())
+        		    .traits(traits)
+        		);
+        	
+        	throw new DiscoveryLimitReachedException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("email", username);     

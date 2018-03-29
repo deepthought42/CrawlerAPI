@@ -49,6 +49,12 @@ import com.qanairy.services.DomainService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+import com.stripe.exception.APIConnectionException;
+import com.stripe.exception.APIException;
+import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Plan;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -78,6 +84,13 @@ public class TestController {
     @Autowired
     protected DomainService domainService;
 
+    private StripeClient stripeClient;
+
+    @Autowired
+    TestController(StripeClient stripeClient) {
+        this.stripeClient = stripeClient;
+    }
+    
 	/**
 	 * Retrieves list of all tests from the database 
 	 * @param url
@@ -384,13 +397,18 @@ public class TestController {
 	 * @return
 	 * @throws MalformedURLException 
      * @throws UnknownAccountException 
+     * @throws APIException 
+     * @throws CardException 
+     * @throws APIConnectionException 
+     * @throws InvalidRequestException 
+     * @throws AuthenticationException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser_type", required=true) String browser_type) 
-																  throws MalformedURLException, UnknownAccountException{
+																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -416,6 +434,26 @@ public class TestController {
     		if(month_started == month_now && year_started == year_now){
     			monthly_test_count++;
     		}
+    	}
+    	
+    	Plan plan = stripeClient.getSubscription(acct.getSubscriptionToken()).getPlan();
+    	String plan_name = plan.getName();
+    	int test_index = plan_name.indexOf("-test");
+    	int disc_index = plan_name.indexOf("-disc-");
+
+    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+7, test_index));
+    	
+    	if(monthly_test_count > allowed_test_cnt){
+    		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+        	Map<String, String> traits = new HashMap<String, String>();
+            traits.put("email", username);     
+            traits.put("test_limit_reached", plan.getId());
+        	analytics.enqueue(IdentifyMessage.builder()
+        		    .userId(acct.getKey())
+        		    .traits(traits)
+        		);
+        	
+        	throw new DiscoveryLimitReachedException();
     	}
     	
     	if(monthly_test_count > 10000){

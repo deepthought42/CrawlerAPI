@@ -47,14 +47,13 @@ public class StripeClient {
     	params.put("customer", customer.getId());
     	params.put("items", items);
     	
-    	if(plan.getTrialPeriodDays()>0){
-    		Calendar c = Calendar.getInstance();
-    		c.add(Calendar.MONTH, 1);
-    		Date date = c.getTime();
-    		date.getTime();
-    		params.put("trial_end", date.getTime()/1000);
-    	}
-    	return Subscription.create(params);
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.MONTH, 3);
+		Date date = c.getTime();
+		date.getTime();
+		params.put("trial_end", date.getTime()/1000);
+
+		return Subscription.create(params);
     }
 
     public Customer createCustomer(String token, String email) throws Exception {

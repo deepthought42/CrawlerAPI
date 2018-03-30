@@ -24,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
+import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
@@ -86,7 +87,9 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 
     	@SuppressWarnings("unchecked")
@@ -142,6 +145,9 @@ public class DiscoveryController {
 
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
     	
     	int monthly_discovery_count = 0;
@@ -285,6 +291,9 @@ public class DiscoveryController {
     	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
 
 		WorkAllowanceStatus.haltWork(acct.getKey()); 

@@ -29,6 +29,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.actors.TestingActor;
+import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
+import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
@@ -62,7 +64,6 @@ import akka.actor.Props;
 
 import com.minion.browsing.Browser;
 import com.minion.structs.Message;
-import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -112,6 +113,9 @@ public class TestController {
     	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
     	
        	boolean owned_by_acct = false;
@@ -164,6 +168,9 @@ public class TestController {
     	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
     	
 		DomainRepository domain_repo = new DomainRepository();
@@ -272,6 +279,10 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -417,6 +428,9 @@ public class TestController {
     	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
     	
     	int monthly_test_count = 0;

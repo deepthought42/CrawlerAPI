@@ -1,4 +1,4 @@
-package com.qanairy.api.exception;
+package com.qanairy.api.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

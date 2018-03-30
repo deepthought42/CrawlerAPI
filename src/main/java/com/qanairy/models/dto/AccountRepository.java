@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.IteratorUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
@@ -148,7 +150,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Account update(OrientConnectionFactory connection, Account account) {
+	public Account update(OrientConnectionFactory connection, Account account) throws ExistingAccountDomainException{
 		if(account.getKey() == null){
 			account.setKey(generateKey(account));
 		}
@@ -174,17 +176,14 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 				else{
 					//check if domain is part of account before adding it to the account
 					Iterator<IDomain> domain_iter = acct.getDomains().iterator();
-					boolean domain_account_linked = false;
 					while(domain_iter.hasNext()){
 						IDomain idomain = domain_iter.next();
 						if(idomain.getUrl().equals(domain.getUrl())){
-							domain_account_linked = true;
+							throw new ExistingAccountDomainException();
 						}
 					}
 					
-					if(!domain_account_linked){
-						acct.addDomain(repo.save(connection, domain_record));
-					}
+					acct.addDomain(repo.save(connection, domain_record));
 				}
 			}
 		}
@@ -223,9 +222,18 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	public Account deleteDomain(OrientConnectionFactory conn, Account acct, Domain domain) {
-		acct.removeDomain(domain);
-		save(conn, acct);
-		return acct;
+		DomainRepository domain_repo = new DomainRepository();
+		IDomain idomain = domain_repo.find(domain.getKey());
+		
+		@SuppressWarnings("unchecked")
+		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(acct.getKey(), conn, IAccount.class);
+		Iterator<IAccount> iter = svc_pkgs.iterator();
+		IAccount iacct = null;
+		if(iter.hasNext()){
+			iacct = iter.next();
+			iacct.removeDomain(idomain);
+		}
+		return load(iacct);
 	}
 
 	public void delete(OrientConnectionFactory connection, String key) {
@@ -240,4 +248,15 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			//account_vertex.remove();
 		}
 	} 
+}
+
+
+@ResponseStatus(HttpStatus.SEE_OTHER)
+class ExistingAccountDomainException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public ExistingAccountDomainException() {
+		super("Domain already exists for your account");
+	}
 }

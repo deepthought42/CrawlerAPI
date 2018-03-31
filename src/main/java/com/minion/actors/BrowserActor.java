@@ -87,13 +87,13 @@ public class BrowserActor extends UntypedActor {
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				
 				Page last_page = exploratory_path.findLastPage();
-				boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
-				last_page.setLandable(landable_status);
+				//boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
+				//last_page.setLandable(landable_status);
 							
-				if(last_page.isLandable()){
+				//if(last_page.isLandable()){
 					//clone path starting at last page in path
 					//Path shortened_path = path.clone());
-				}
+				//}
 
 				if(exploratory_path.getPath() != null){
 					System.err.println("Path is not empty");
@@ -204,6 +204,9 @@ public class BrowserActor extends UntypedActor {
 	 */
 	private void createTest(Path path, Page result_page, long crawl_time, Domain domain, Message<?> acct_msg ) {
 		path.setIsUseful(true);
+		
+		domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
+		
 		Test test = new Test(path, result_page, domain, "Test #"+domain.getDiscoveredTestCount());							
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
@@ -284,26 +287,19 @@ public class BrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
-		System.err.println("Generating landing page");
 	  	Path path = new Path();
-	  	System.out.println("Getting browser page...");
 	  	Page page_obj = browser.getPage();
-	  	System.out.println("Add page obj to path : "+page_obj);
-	  	System.out.println("Add page obj src to path : "+page_obj.getSrc());
 
 	  	path.getPath().add(page_obj);
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		
 		DomainRepository domain_repo = new DomainRepository();
-		System.out.println("Page Object :: "+page_obj.getUrl().getHost());
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 		Domain domain = domain_repo.find(conn, page_obj.getUrl().getHost());
 		domain.setLastDiscoveryPathRanAt(new Date());
+		domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()+1);
 
-		int cnt = domain.getDiscoveredTestCount()+1;
-		System.out.println("landing page test Count :: "+cnt);
-		domain.setDiscoveredTestCount(cnt);
 		domain_repo.update(conn, domain);
 		
 		createTest(path, page_obj, 1L, domain, msg);
@@ -314,6 +310,9 @@ public class BrowserActor extends UntypedActor {
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );
+		
+		domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
+		domain_repo.update(conn, domain);
 	}
 	
 	/**

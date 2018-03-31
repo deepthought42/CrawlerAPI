@@ -199,7 +199,7 @@ public class Browser {
 			log.error(e.getMessage());			
 		}
 		catch(GridException e){
-			log.error(e.getMessage());
+			log.error("Grid exception occurred when closing browser", e.getMessage());
 		}
 	}
 	

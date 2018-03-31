@@ -24,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
+import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
@@ -43,6 +44,7 @@ import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Plan;
+import com.stripe.model.Subscription;
 
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -150,6 +152,16 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
     	
+    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
+    	Plan plan = subscription.getPlan();
+    	if(subscription.getTrialEnd() < (new Date()).getTime()){
+    		throw new FreeTrialExpiredException();
+    	}
+    	
+    	String plan_name = plan.getId();
+    	int disc_index = plan_name.indexOf("-disc");
+    	int allowed_discovery_cnt = Integer.parseInt(plan_name.substring(0, disc_index));
+    	
     	int monthly_discovery_count = 0;
     	//check if account has exceeded allowed discovery threshold
     	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
@@ -166,11 +178,6 @@ public class DiscoveryController {
     			monthly_discovery_count++;
     		}
     	}
-    	
-    	Plan plan = stripeClient.getSubscription(acct.getSubscriptionToken()).getPlan();
-    	String plan_name = plan.getName();
-    	int disc_index = plan_name.indexOf("-disc");
-    	int allowed_discovery_cnt = Integer.parseInt(plan_name.substring(0, disc_index));
     	
     	if(monthly_discovery_count > allowed_discovery_cnt){
     		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
@@ -316,7 +323,7 @@ class WorkAllocatorNotFoundException extends RuntimeException {
 	}
 }
 
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+@ResponseStatus(HttpStatus.SEE_OTHER)
 class ExistingDiscoveryFoundException extends RuntimeException {
 	/**
 	 * 
@@ -340,19 +347,7 @@ class DiscoveryLimitReachedException extends RuntimeException {
 	}
 }
 
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-class FreeTrialEndedException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7200878662560716216L;
-
-	public FreeTrialEndedException() {
-		super("Your free trial has ended");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+@ResponseStatus(HttpStatus.FORBIDDEN)
 class PaymentDueException extends RuntimeException {
 	/**
 	 * 

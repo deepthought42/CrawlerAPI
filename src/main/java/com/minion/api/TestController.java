@@ -30,6 +30,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.actors.TestingActor;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
+import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -57,6 +58,7 @@ import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Plan;
+import com.stripe.model.Subscription;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -433,7 +435,19 @@ public class TestController {
     		throw new MissingSubscriptionException();
     	}
     	
+    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
+    	Plan plan = subscription.getPlan();
+    	if(subscription.getTrialEnd() < (new Date()).getTime()){
+    		throw new FreeTrialExpiredException();
+    	}
+    	
+    	String plan_name = plan.getId();
+    	int test_index = plan_name.indexOf("-test");
+    	int disc_index = plan_name.indexOf("-disc-");
+
     	int monthly_test_count = 0;
+    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+7, test_index));
+
     	//Check if account has exceeded test run limit
     	for(TestRecord record : acct.getTestRecords()){
     		Calendar cal = Calendar.getInstance(); 
@@ -449,14 +463,7 @@ public class TestController {
     			monthly_test_count++;
     		}
     	}
-    	
-    	Plan plan = stripeClient.getSubscription(acct.getSubscriptionToken()).getPlan();
-    	String plan_name = plan.getName();
-    	int test_index = plan_name.indexOf("-test");
-    	int disc_index = plan_name.indexOf("-disc-");
-
-    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+7, test_index));
-    	
+    	    	
     	if(monthly_test_count > allowed_test_cnt){
     		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
         	Map<String, String> traits = new HashMap<String, String>();
@@ -707,7 +714,7 @@ public class TestController {
 	}
 }
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
+@ResponseStatus(HttpStatus.SEE_OTHER)
 class TestAlreadyRunningException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 

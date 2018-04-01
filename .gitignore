@@ -3,3 +3,7 @@
 *.log
 LOG_FILE_IS_UNDEFINED
 LOG_FILE_IS_UNDEFINED
+*.p12
+src/main/resources/qanairy.jks
+*.properties
+*.p12

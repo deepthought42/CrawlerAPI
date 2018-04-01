@@ -119,7 +119,11 @@ public class PageTests {
 		
 	}
 	
+<<<<<<< HEAD
 	@Test(groups="Regression")
+=======
+	/*@Test(groups="Regression")
+>>>>>>> master
 	public void testCheckIfLandable(){
 		Map<String, String> browser_screenshots = new HashMap<String, String>();
 		List<PageElement> elements = new ArrayList<PageElement>();
@@ -147,7 +151,11 @@ public class PageTests {
 			e.printStackTrace();
 			Assert.fail();
 		}
+<<<<<<< HEAD
 	}
+=======
+	}*/
+>>>>>>> master
 	
 	@Test(groups="Regression")
 	public void testClone(){
@@ -215,6 +223,12 @@ public class PageTests {
 			page3.setLandable(true);
 			page3.setBrowserScreenshots(browser_screenshots);
 			page3.setSrc("");
+<<<<<<< HEAD
+=======
+			List<PageElement> page_elements = new ArrayList<PageElement>();
+			page_elements.add(new PageElement());
+			page3.setElements(page_elements);
+>>>>>>> master
 			page3.setUrl(url);
 						
 			Assert.assertTrue(page1.equals( page2 ));

@@ -15,7 +15,6 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
@@ -24,7 +23,6 @@ import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
@@ -70,7 +68,6 @@ public class BrowserActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			log.info("Browser actor received message");
 			Message<?> acct_msg = (Message<?>)message;
 
 			Browser browser = null;
@@ -91,7 +88,6 @@ public class BrowserActor extends UntypedActor {
 				
 				Page last_page = exploratory_path.findLastPage();
 				boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
-				log.info("landable status: " +landable_status);
 				last_page.setLandable(landable_status);
 							
 				if(last_page.isLandable()){
@@ -131,7 +127,7 @@ public class BrowserActor extends UntypedActor {
 					  	else{
 							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
 					  		if(ExploratoryPath.hasCycle(path, last_page)){
-					  			log.info("exploratory path has cycle; exiting");
+					  			System.err.println("exploratory path has cycle; exiting");
 					  			break;
 					  		}
 							domain.setLastDiscoveryPathRanAt(new Date());
@@ -165,7 +161,7 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if (acct_msg.getData() instanceof Path){
-				log.info("Path started");
+				System.err.println("Path started");
 
 				Path path = (Path)acct_msg.getData();
 				assert(path.getPath() != null);
@@ -180,21 +176,19 @@ public class BrowserActor extends UntypedActor {
 				//Brain.learn(path, path.getIsUseful());
 			}
 			else if(acct_msg.getData() instanceof URL){
-				log.info("Url provided");
 
 				try{
 					browser = new Browser(((URL)acct_msg.getData()).toString(), acct_msg.getOptions().get("browser").toString());
 				}
 				catch(NullPointerException e){
-					log.error("Failed to open connection to browser");
+					log.error(e.getMessage(), "Failed to open connection to browser");
 					return;
 				}
-				log.info("preparting to generate landing page test");
 				
 				try{
 					generate_landing_page_test(browser, acct_msg);
 				}catch(Exception e){
-					log.info(e.getMessage(), "Error occurred while generating landing page test");
+					log.error(e.getMessage(), "Error occurred while generating landing page test");
 				}
 				browser.close();
 		   }
@@ -217,10 +211,10 @@ public class BrowserActor extends UntypedActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		log.info("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
+		System.err.println("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
-		log.info("sending test message out");
+
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 		
 		//tell memory worker of test
@@ -263,10 +257,8 @@ public class BrowserActor extends UntypedActor {
 			}
 			PathObject obj = path.getPath().get(last_idx);
 			if(obj.getType().equals("Action")){
-				log.info("checking action in exploratory path");
 				Action path_action = (Action)obj;
 				if(path_action.getName().equals("click") || path_action.getName().equals("doubleclick")){
-					log.info("incrementing click count");
 					clicks++;
 				}
 			}
@@ -292,7 +284,7 @@ public class BrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
-		log.info("Generating landing page");
+		System.err.println("Generating landing page");
 	  	Path path = new Path();
 	  	System.out.println("Getting browser page...");
 	  	Page page_obj = browser.getPage();

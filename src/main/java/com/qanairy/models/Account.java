@@ -188,7 +188,7 @@ public class Account {
 	public Domain removeDomain(Domain domain) {
 		int idx = -1;
 		boolean domain_found = false;
-		for(Domain curr_domain : domains){
+		for(Domain curr_domain : this.domains){
 			if(curr_domain.getKey().equals(domain.getKey())){
 				domain_found = true;
 				break;

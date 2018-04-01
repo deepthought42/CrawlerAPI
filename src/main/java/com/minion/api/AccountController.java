@@ -2,6 +2,8 @@ package com.minion.api;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.qanairy.auth.Auth0Client;
+import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
@@ -25,9 +31,16 @@ import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+import com.stripe.exception.APIConnectionException;
+import com.stripe.exception.APIException;
+import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
+import com.mashape.unirest.http.HttpResponse;
+
 
 /**
  *	API endpoints for interacting with {@link User} data
@@ -35,6 +48,7 @@ import com.stripe.model.Subscription;
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(AccountController.class);
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -141,7 +155,7 @@ public class AccountController {
         return accountService.get(key);
     }
 
-	@PreAuthorize("hasAuthority('user') or hasAuthority('qanairy')")
+	@PreAuthorize("hasAuthority('update:accounts')")
     @RequestMapping(value ="/{id}", method = RequestMethod.PUT)
     public Account update(final @PathVariable String key, 
     					  final @Validated @RequestBody Account account) {
@@ -149,7 +163,30 @@ public class AccountController {
         return accountService.update(account);
     }
     
-
+	@PreAuthorize("hasAuthority('delete:accounts')")
+    @RequestMapping(method = RequestMethod.DELETE)
+    public void delete(HttpServletRequest request) throws UnirestException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	Account account = this.accountService.find(username);
+    					
+		//remove Auth0 account
+    	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
+    	System.err.println("AUTH0 Response body      :::::::::::      "+response.getBody());
+    	System.err.println("AUTH0 Response status      :::::::::::      "+response.getStatus());
+    	System.err.println("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
+    	
+    	//remove stripe subscription
+        this.stripeClient.cancelSubscription(account.getSubscriptionToken());
+        this.stripeClient.deleteCustomer(account.getCustomerToken());
+        
+		//remove account
+		accountService.delete(account);
+        logger.info("update invoked");
+        
+		
+    }
     /**
      * Simple demonstration of how Principal info can be accessed
      * 

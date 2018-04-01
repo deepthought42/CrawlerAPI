@@ -2,6 +2,7 @@ package com.minion.api;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,7 +10,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -37,6 +37,7 @@ import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IGroup;
 import com.qanairy.persistence.IPath;
@@ -48,6 +49,12 @@ import com.qanairy.services.DomainService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
+import com.stripe.exception.APIConnectionException;
+import com.stripe.exception.APIException;
+import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Plan;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -77,6 +84,13 @@ public class TestController {
     @Autowired
     protected DomainService domainService;
 
+    private StripeClient stripeClient;
+
+    @Autowired
+    TestController(StripeClient stripeClient) {
+        this.stripeClient = stripeClient;
+    }
+    
 	/**
 	 * Retrieves list of all tests from the database 
 	 * @param url
@@ -294,31 +308,6 @@ public class TestController {
 		TestRepository test_record = new TestRepository();
 		return test_record.load(itest);
 	}
-    
-	/**
-	 * Updates the correctness of a test for a specific browser with the given test key
-	 * 
-	 * @param test
-	 * @return
-	 */
-    @PreAuthorize("hasAuthority('update:tests')")
-	@RequestMapping(path="/updateCorrectness", method=RequestMethod.PUT)
-	public @ResponseBody Test updateBrowserCorrectness(@RequestParam(value="key", required=true) String key, 
-														@RequestParam(value="browser_name", required=true) String browser_name, 
-														@RequestParam(value="correct", required=true) boolean correct){
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> itest_iter = Test.findByKey(key, orient_connection).iterator();
-		ITest itest = itest_iter.next();
-		itest.setCorrect(correct);
-		itest.getBrowserStatuses().put(browser_name, correct);
-
-		
-		//update last TestRecord passes value
-		updateLastTestRecordPassingStatus(itest);
-		
-		TestRepository test_record = new TestRepository();
-		return test_record.load(itest);
-	}
 
     /**
      * 
@@ -354,6 +343,31 @@ public class TestController {
 
 		return path;
 	}
+
+
+	/**
+	 * Updates a test
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(method=RequestMethod.PUT)
+	public @ResponseBody void update(HttpServletRequest request,
+										@RequestBody(required=true) Test test){
+		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
+		@SuppressWarnings("unchecked")
+		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(test.getKey(), orient_connection, ITest.class);
+		Iterator<ITest> iter = tests.iterator();
+		ITest test_record = null;
+		if(iter.hasNext()){
+			test_record = iter.next();
+			test_record.setName(test.getName());
+			test_record.setBrowserStatuses(test.getBrowserPassingStatuses());
+			
+		}
+	}
+
     
 	/**
 	 * Updates the correctness of a test with the given test key
@@ -375,7 +389,7 @@ public class TestController {
 		TestRepository test_record = new TestRepository();
 		return test_record.load(itest);
 	}
-
+    
     /**
 	 * Runs test with a given key
 	 * 
@@ -383,13 +397,18 @@ public class TestController {
 	 * @return
 	 * @throws MalformedURLException 
      * @throws UnknownAccountException 
+     * @throws APIException 
+     * @throws CardException 
+     * @throws APIConnectionException 
+     * @throws InvalidRequestException 
+     * @throws AuthenticationException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser_type", required=true) String browser_type) 
-																  throws MalformedURLException, UnknownAccountException{
+																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -415,6 +434,26 @@ public class TestController {
     		if(month_started == month_now && year_started == year_now){
     			monthly_test_count++;
     		}
+    	}
+    	
+    	Plan plan = stripeClient.getSubscription(acct.getSubscriptionToken()).getPlan();
+    	String plan_name = plan.getName();
+    	int test_index = plan_name.indexOf("-test");
+    	int disc_index = plan_name.indexOf("-disc-");
+
+    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+7, test_index));
+    	
+    	if(monthly_test_count > allowed_test_cnt){
+    		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+        	Map<String, String> traits = new HashMap<String, String>();
+            traits.put("email", username);     
+            traits.put("test_limit_reached", plan.getId());
+        	analytics.enqueue(IdentifyMessage.builder()
+        		    .userId(acct.getKey())
+        		    .traits(traits)
+        		);
+        	
+        	throw new DiscoveryLimitReachedException();
     	}
     	
     	if(monthly_test_count > 10000){
@@ -655,15 +694,6 @@ public class TestController {
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-class TestControllerNotFoundException extends RuntimeException {
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public TestControllerNotFoundException() {
-		super("An error occurred accessing tests endpoint.");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_FOUND)
 class TestAlreadyRunningException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
@@ -677,7 +707,7 @@ class EmptyGroupNameException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public EmptyGroupNameException() {
-		super("");
+		super("Groups must have a name");
 	}
 }
 

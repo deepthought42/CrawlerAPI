@@ -82,7 +82,12 @@ public class DomainController {
     	}
     	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
 		domain.setUrl(url_obj.getHost());
-    	
+
+		for(Domain acct_domain : acct.getDomains()){
+			if(acct_domain.getUrl().equals(domain.getUrl())){
+				throw new ExistingAccountDomainException();
+			}
+		}
     	acct.addDomain(domain);
     	acct.setLastDomain(domain.getUrl());
     	accountService.update(acct);
@@ -223,6 +228,16 @@ class RequiredFieldMissingException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public RequiredFieldMissingException() {
-		super("Please fill in or select all required fields");
+		super("Please fill in or select all required fields.");
+	}
+}
+
+@ResponseStatus(HttpStatus.SEE_OTHER)
+class ExistingAccountDomainException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public ExistingAccountDomainException() {
+		super("Domain already exists for your account");
 	}
 }

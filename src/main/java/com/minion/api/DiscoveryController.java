@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,11 +99,11 @@ public class DiscoveryController {
     	@SuppressWarnings("unchecked")
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
-    	domain.setDiscoveryStartTime(new Date());
-    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+    	//domain.setDiscoveryStartTime(new Date());
+    	Date last_ran_date = domain.getDiscoveryStartTime();
 
     	Date now = new Date();
-    	long diffInMinutes = 1000;
+    	long diffInMinutes = 10000;
     	if(last_ran_date != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
     	}
@@ -112,7 +114,7 @@ public class DiscoveryController {
 		options.put("browser", domain.getDiscoveryBrowserName());
         
 		Map<String, Boolean> status_map = new HashMap<String, Boolean>();
-		if(paths_being_explored == 0 || diffInMinutes > 1440){
+		if(diffInMinutes > 1440){
 			status_map.put("status", false);
 		}
 		else{
@@ -154,7 +156,8 @@ public class DiscoveryController {
     	
     	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
     	Plan plan = subscription.getPlan();
-    	if(subscription.getTrialEnd() < (new Date()).getTime()){
+
+    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
     		throw new FreeTrialExpiredException();
     	}
     	
@@ -206,11 +209,10 @@ public class DiscoveryController {
     	@SuppressWarnings("unchecked")
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
-    	domain.setDiscoveryStartTime(new Date());
-    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+    	Date last_ran_date = domain.getDiscoveryStartTime();
 
     	Date now = new Date();
-    	long diffInMinutes = 1000;
+    	long diffInMinutes = 10000;
     	if(last_ran_date != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
     	}
@@ -220,8 +222,10 @@ public class DiscoveryController {
         
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
-        
-		if(paths_being_explored == 0 || diffInMinutes > 1440){
+        System.err.println("Diff in Minutes :::        "+diffInMinutes);
+		if(diffInMinutes > 1440){
+	    	domain.setDiscoveryStartTime(new Date());
+
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
         	domain.setDiscoveryPathCount(0);
 				
@@ -235,7 +239,7 @@ public class DiscoveryController {
 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
-			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
+			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
 			
 		    //Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
@@ -246,7 +250,7 @@ public class DiscoveryController {
 	    		    .properties(discovery_started_props)
 	    		);
 			
-			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(60, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
 			connection.close();
 
@@ -310,19 +314,6 @@ public class DiscoveryController {
 
 }
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-class WorkAllocatorNotFoundException extends RuntimeException {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7200878662560716214L;
-
-	public WorkAllocatorNotFoundException() {
-		super("could not find user .");
-	}
-}
-
 @ResponseStatus(HttpStatus.SEE_OTHER)
 class ExistingDiscoveryFoundException extends RuntimeException {
 	/**
@@ -347,7 +338,7 @@ class DiscoveryLimitReachedException extends RuntimeException {
 	}
 }
 
-@ResponseStatus(HttpStatus.FORBIDDEN)
+@ResponseStatus(HttpStatus.CONFLICT)
 class PaymentDueException extends RuntimeException {
 	/**
 	 * 

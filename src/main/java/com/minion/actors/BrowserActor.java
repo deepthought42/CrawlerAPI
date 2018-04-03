@@ -106,6 +106,7 @@ public class BrowserActor extends UntypedActor {
 					System.err.println("Set time of last discovery path ran");
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
+					
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path path = Path.clone(exploratory_path);
 						path.add(action);
@@ -120,16 +121,18 @@ public class BrowserActor extends UntypedActor {
 						if(last_idx < 0){
 							last_idx = 0;
 						}
-						if(ExploratoryPath.hasCycle(path, last_page)){
+						
+						System.err.println("Checking if exploratory path has a cycle");
+						System.err.println("RESULT PAGE SRC SIZE :: "+result_page.getSrc().length());
+						System.err.println("RESULT PAGE ELEMENTS SIZE :: "+result_page.getElements().size());
+						if(ExploratoryPath.hasCycle(path, result_page)){
 							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
+					  		continue;
 					  	}
 					  	else{
+					  		path.setIsUseful(true);
 							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
-					  		if(ExploratoryPath.hasCycle(path, last_page)){
-					  			System.err.println("exploratory path has cycle; exiting");
-					  			break;
-					  		}
 							domain.setLastDiscoveryPathRanAt(new Date());
 							int cnt = domain.getDiscoveredTestCount()+1;
 							System.out.println("landing page test Count :: "+cnt);

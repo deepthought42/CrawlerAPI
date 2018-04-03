@@ -12,7 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -38,10 +39,12 @@ import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
+import com.minion.structs.TreeNode;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.minion.structs.Tree;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -115,7 +118,6 @@ public class Browser {
 		
 		if(this.driver != null){			
 			this.url = url;
-			System.err.println("$$$$$$$$    URL $$$$$$$$$$$$$$$     "+url);
 			this.driver.get(url);
 		}
 		else{
@@ -416,6 +418,94 @@ public class Browser {
 
 		return elementList;
 	}
+	
+	
+	/**
+	 * Retreives all elements on a given page that are visible. In this instance we take 
+	 *  visible to mean that it is not currently set to {@css display: none} and that it
+	 *  is visible within the confines of the screen. If an element is not hidden but is also 
+	 *  outside of the bounds of the screen it is assumed hidden
+	 *  
+	 * @param driver
+	 * @return list of webelements that are currently visible on the page
+	 */
+	/*
+	 public static List<PageElement> getVisibleElementTree(WebDriver driver, String xpath) 
+															 throws WebDriverException{
+		WebElement body_elem = driver.findElement(By.xpath(xpath));
+		PageElement root_page_element = new PageElement(body_elem.getText(), this_xpath, body_elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(body_elem) );
+		TreeNode<PageElement> root_page_element_node = new TreeNode<PageElement>(root_page_element);
+		Tree<PageElement> tree = new Tree<PageElement>(root_page_element_node);
+		
+		//get all children of body_elem
+		List<WebElement> web_elements = body_elem.findElements(By.xpath("./"));
+		List<TreeNode<PageElement>> page_element_nodes = new ArrayList<TreeNode<PageElement>>();
+		for(WebElement elem : web_elements){
+			//convert elem to PageElement
+			PageElement page_element = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
+			
+			//add page element to tree node list
+			page_element_nodes.add(new TreeNode<PageElement>(page_element));
+		}
+		
+		root_page_element_node.addChildNodes(page_element_nodes);
+		
+		for(TreeNode<PageElement> element : root_page_element_node.getChildNodes()){
+			List<PageElement> child_elements = getVisibleElementTree(driver, element.getRoot().getXpath());
+			element.addChildNodes(child_elements);
+		}
+		
+		
+		
+		
+		List<WebElement> child_elements = driver.findElements(By.xpath(xpath+"/"));
+
+		ArrayList<PageElement> elementList = new ArrayList<PageElement>();
+		if(pageElements.size() == 0){
+			return elementList;
+		}
+		
+		String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
+
+		
+		
+		
+		
+		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
+		//System.err.println("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
+		for(WebElement elem : pageElements){
+			
+			try{
+				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
+					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
+					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
+					try{
+						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));
+						elementList.add(tag);
+					}
+					catch(Exception e){
+						log.error(e.getMessage());
+					}
+
+				}
+			}catch(StaleElementReferenceException e){
+				log.error(e.getMessage());
+			}
+			catch(RasterFormatException e){
+				log.error(e.getMessage());
+			}
+			catch(GridException e){
+				log.error(e.getMessage());
+			}
+		}
+		log.debug("Total elements that are visible on page :: "
+					+ elementList.size() + "; with url "+driver.getCurrentUrl());
+
+		return elementList;
+	}
+
+	*/
 	
 	/**
 	 * Extracts all forms including the child inputs and associated labels. 

@@ -72,7 +72,10 @@ public class Crawler {
 				alert.performChoice(browser.getDriver());
 			}
 		}
-
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e1) {}
+		
 		return browser.getPage();
 	}
 }

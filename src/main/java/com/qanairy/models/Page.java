@@ -251,14 +251,14 @@ public class Page extends PathObject {
         }
         */
         
-        /*
-        System.err.println("Screenshots match? :: "+screenshots_match);
+        
+        //System.err.println("Screenshots match? :: "+screenshots_match);
         System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        System.err.println("Page 1 length :: "+this.getSrc().length());
-        System.err.println("Page 1 length :: "+that.getSrc().length());
+        System.err.println("Page 1 length :: "+this.getElements().size());
+        System.err.println("Page 2 length :: "+that.getElements().size());
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-       
+        /*
         if(this.getElements().size() != that.getElements().size()){
         	System.err.println("@@@@@@@@@@@@@@     THIS vs THAT ELEMENTS SIZE ++++++++++++++++++++++++++++++++++++    "+this.getElements().size() + "  vs  "+that.getElements().size());
         	
@@ -283,7 +283,7 @@ public class Page extends PathObject {
         	
         }
         */
-        return this.getElements().size() == that.getElements().size(); //this.getSrc().equals(that.getSrc()); 
+        return this.getElements().size() == that.getElements().size(); //this.getSrc().equals(that.getSrc());
 	}
 	
 	/**

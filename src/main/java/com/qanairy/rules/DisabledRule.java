@@ -3,12 +3,11 @@ package com.qanairy.rules;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import com.minion.actors.FormTestDiscoveryActor;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 
 public class DisabledRule implements Rule{
-	private static Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
+	private static Logger log = LoggerFactory.getLogger(DisabledRule.class);
 
 	private String value;
 	

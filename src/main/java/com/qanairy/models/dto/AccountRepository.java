@@ -149,7 +149,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Account update(OrientConnectionFactory connection, Account account) throws ExistingAccountDomainException{
+	public Account update(OrientConnectionFactory connection, Account account){
 		if(account.getKey() == null){
 			account.setKey(generateKey(account));
 		}
@@ -173,16 +173,15 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 					acct.addDomain(repo.save(connection, domain));	
 				}
 				else{
-					//check if domain is part of account before adding it to the account
-					Iterator<IDomain> domain_iter = acct.getDomains().iterator();
-					while(domain_iter.hasNext()){
-						IDomain idomain = domain_iter.next();
-						if(idomain.getUrl().equals(domain.getUrl())){
-							throw new ExistingAccountDomainException();
+					boolean domain_exists_on_acct = false;
+					for(IDomain idomain : acct.getDomains()){
+						if(idomain.getUrl().equals(domain_record.getUrl())){
+							domain_exists_on_acct = true;
 						}
 					}
-					
-					acct.addDomain(repo.save(connection, domain_record));
+					if(!domain_exists_on_acct){
+						acct.addDomain(repo.save(connection, domain));
+					}
 				}
 			}
 		}
@@ -247,15 +246,4 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			//account_vertex.remove();
 		}
 	} 
-}
-
-
-@ResponseStatus(HttpStatus.SEE_OTHER)
-class ExistingAccountDomainException extends RuntimeException {
-
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public ExistingAccountDomainException() {
-		super("Domain already exists for your account");
-	}
 }

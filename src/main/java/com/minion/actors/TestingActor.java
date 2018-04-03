@@ -130,28 +130,16 @@ public class TestingActor extends UntypedActor {
 	 public static TestRecord runTest(Test test, Browser browser){				
 		 assert test != null;		
 	 			
-		 Boolean passing = false;		
+		 Boolean passing = null;		
 		 Page page = null;
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
-		 boolean all_passing = true;
 
 		 try {		
 			page = Crawler.crawlPath(test.getPath(), browser);
 			passing = test.isTestPassing(page, test.isCorrect());
-			for(Boolean status : test.getBrowserPassingStatuses().values()){
-				if(status != null && !status){
-					all_passing = false;
-				}
-			}
 			
-			Capabilities cap = ((RemoteWebDriver) browser.getDriver()).getCapabilities();
-			    String browserName = cap.getBrowserName().toLowerCase();
-			    String os = cap.getPlatform().toString();
-			    String v = cap.getVersion().toString();
-			    
-		    test.setBrowserStatus(browserName, passing);
-			    
+		    test.setBrowserStatus(browser.getBrowserName(), passing);
 		 } catch (IOException e) {		
 			 log.error(e.getMessage());		
 		 }	
@@ -159,7 +147,7 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		test_record = new TestRecord(new Date(), all_passing, browser.getBrowserName(), page, pathCrawlRunTime);
+		test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

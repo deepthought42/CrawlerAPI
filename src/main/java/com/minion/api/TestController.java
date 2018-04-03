@@ -437,7 +437,7 @@ public class TestController {
     	
     	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
     	Plan plan = subscription.getPlan();
-    	if(subscription.getTrialEnd() < (new Date()).getTime()){
+    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
     		throw new FreeTrialExpiredException();
     	}
     	
@@ -508,62 +508,47 @@ public class TestController {
     			ITest itest = itest_iter.next();
         		TestRecord record = null;
         		
-	    		if(itest.getKey().equals(key)){
-	    			TestRepository test_repo = new TestRepository();
-	    	
-	    			Test test = test_repo.load(itest);
+    			TestRepository test_repo = new TestRepository();
+    	
+    			Test test = test_repo.load(itest);
 
-	    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
-	    			browser_running_status.put(browser_type, null);
-	    			for(String browser : browser_running_status.keySet()){
-	    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
-	    			}
-	    			test.setBrowserPassingStatuses(browser_running_status);
-	    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
-	    			
-	    			//tell memory worker of test
-	    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-	    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-	    			memory_actor.tell(test_msg, null);
-	    			
-	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
-	    			record = TestingActor.runTest(test, browser);
-	    			acct.addTestRecord(record);
-	    			accountService.save(acct);
-	    			
-	    			System.err.println("Record is passing :::: "+record.getPassing());
-	    			browser_running_status.put(browser_type, record.getPassing());
-	    			test.setBrowserPassingStatuses(browser_running_status);
-	    			for(String browser_1 : browser_running_status.keySet()){
-	    				System.err.println("Browser 1  ::::  "+browser_1+"  ************   "+browser_running_status.get(browser_1));
-	    			}
-	    			test.addRecord(record);
-	    			boolean is_passing = true;
-					//update overall passing status based on all browser passing statuses
-					for(Boolean status : test.getBrowserPassingStatuses().values()){
-						if(status != null && !status){
-							is_passing = false;
-						}
+    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
+    			browser_running_status.put(browser_type, null);
+    			for(String browser : browser_running_status.keySet()){
+    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
+    			}
+    			test.setBrowserPassingStatuses(browser_running_status);
+    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+    			
+    			//tell memory worker of test
+    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+    			memory_actor.tell(test_msg, null);
+    			
+    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
+    			record = TestingActor.runTest(test, browser);
+    			browser.close();
+
+    			acct.addTestRecord(record);
+    			accountService.save(acct);
+    			
+    			test.addRecord(record);
+    			boolean is_passing = true;
+				//update overall passing status based on all browser passing statuses
+				for(Boolean status : test.getBrowserPassingStatuses().values()){
+					if(status != null && !status){
+						is_passing = false;
 					}
-					test.setCorrect(is_passing);
-					test.setLastRunTimestamp(new Date());
-	    			test_results.put(test.getKey(), record);
-	    			test.setRunTime(record.getRunTime());
-	    	
-	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest.addRecord(test_record_record.save(connection, record));
-	    			itest.setCorrect(record.getPassing());
-
-	    			//tell memory worker of test
-	    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
-	    			memory_actor.tell(test_msg, null);
-	    			
-	    			browser.close();
-	    		}
-	    		else{
-	    			log.warn("test found does not match key :: " + key);
-	    		}
-    		}
+				}
+				test.setCorrect(is_passing);
+				test.setLastRunTimestamp(new Date());
+    			test_results.put(test.getKey(), record);
+    			test.setRunTime(record.getRunTime());
+    	
+    			//tell memory worker of test
+    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+    			memory_actor.tell(test_msg, null);
+       		}
     	}
 		connection.close();
 		

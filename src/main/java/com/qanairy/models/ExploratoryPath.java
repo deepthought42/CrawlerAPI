@@ -143,14 +143,12 @@ public class ExploratoryPath extends Path{
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		for(PathObject path_obj : path.getPath()){
+		
+		System.err.println("Checking path for cycle .... ");
+		for(PathObject path_obj : path.getPath()){			
 			if(path_obj instanceof Page){
-				System.err.println("Testing path object vs page equality...");
-				System.err.println("PATH OBJECT SCREENSHOT KEYS :: "+((Page)path_obj).getBrowserScreenshots().keySet().size());
-
-				System.err.println("PAGE SCREENSHOT KEYS :: "+page.getBrowserScreenshots().keySet().size());
-				System.err.println("ANOTHER CYCLE CHECK     %%%%%%%%%%%%%%%%%%%%%   "+page.getElements().size());
-				if(path_obj.equals(page)){
+				if(((Page)path_obj).equals(page)){
+					System.err.println("PATH HAS A CYCLE      !!!!!!!!!!!!!!    ");
 					return true;
 				}
 			}

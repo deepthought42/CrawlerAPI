@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -69,6 +70,9 @@ public class DomainController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
     	
     	//check if domain should have a 'www.' or not. We do this for consistency of naming in the database
     	int dot_idx = domain.getUrl().indexOf('.');
@@ -78,7 +82,12 @@ public class DomainController {
     	}
     	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
 		domain.setUrl(url_obj.getHost());
-    	
+
+		for(Domain acct_domain : acct.getDomains()){
+			if(acct_domain.getUrl().equals(domain.getUrl())){
+				throw new ExistingAccountDomainException();
+			}
+		}
     	acct.addDomain(domain);
     	acct.setLastDomain(domain.getUrl());
     	accountService.update(acct);
@@ -112,6 +121,9 @@ public class DomainController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
     	
     	return domainService.update(domain);
     }
@@ -138,6 +150,9 @@ public class DomainController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
     	
     	acct.setLastDomain(domain.getUrl());
     	accountService.update(acct);
@@ -154,6 +169,9 @@ public class DomainController {
     	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
 
 	    return acct.getDomains();
@@ -182,6 +200,9 @@ public class DomainController {
 		if(acct == null){
 			throw new UnknownAccountException();
 		}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}		
 		
 		Domain domain = domainService.get(key);
 		acct = accountService.deleteDomain(acct, domain);
@@ -207,6 +228,16 @@ class RequiredFieldMissingException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public RequiredFieldMissingException() {
-		super("Please fill in or select all required fields");
+		super("Please fill in or select all required fields.");
+	}
+}
+
+@ResponseStatus(HttpStatus.SEE_OTHER)
+class ExistingAccountDomainException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public ExistingAccountDomainException() {
+		super("Domain already exists for your account");
 	}
 }

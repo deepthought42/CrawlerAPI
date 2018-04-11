@@ -29,12 +29,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.actors.TestingActor;
+import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
+import com.qanairy.api.exceptions.FreeTrialExpiredException;
+import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.GroupRepository;
 import com.qanairy.models.dto.PathRepository;
-import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
@@ -55,6 +57,7 @@ import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Plan;
+import com.stripe.model.Subscription;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -62,7 +65,6 @@ import akka.actor.Props;
 
 import com.minion.browsing.Browser;
 import com.minion.structs.Message;
-import com.qanairy.api.exception.DomainNotOwnedByAccountException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -112,6 +114,9 @@ public class TestController {
     	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
     	
        	boolean owned_by_acct = false;
@@ -164,6 +169,9 @@ public class TestController {
     	Account acct = accountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
     	}
     	
 		DomainRepository domain_repo = new DomainRepository();
@@ -272,6 +280,10 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -418,8 +430,23 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
     	
+    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
+    	Plan plan = subscription.getPlan();
+    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
+    		throw new FreeTrialExpiredException();
+    	}
+    	
+    	String plan_name = plan.getId();
+    	int test_index = plan_name.indexOf("-test");
+    	int disc_index = plan_name.indexOf("-disc-");
+
     	int monthly_test_count = 0;
+    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+6, test_index));
+
     	//Check if account has exceeded test run limit
     	for(TestRecord record : acct.getTestRecords()){
     		Calendar cal = Calendar.getInstance(); 
@@ -435,14 +462,7 @@ public class TestController {
     			monthly_test_count++;
     		}
     	}
-    	
-    	Plan plan = stripeClient.getSubscription(acct.getSubscriptionToken()).getPlan();
-    	String plan_name = plan.getName();
-    	int test_index = plan_name.indexOf("-test");
-    	int disc_index = plan_name.indexOf("-disc-");
-
-    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+7, test_index));
-    	
+    	    	
     	if(monthly_test_count > allowed_test_cnt){
     		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
         	Map<String, String> traits = new HashMap<String, String>();
@@ -453,12 +473,9 @@ public class TestController {
         		    .traits(traits)
         		);
         	
-        	throw new DiscoveryLimitReachedException();
+        	throw new TestLimitReachedException();
     	}
-    	
-    	if(monthly_test_count > 10000){
-    		throw new TestLimitReachedException();
-    	}
+
     	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
@@ -487,62 +504,47 @@ public class TestController {
     			ITest itest = itest_iter.next();
         		TestRecord record = null;
         		
-	    		if(itest.getKey().equals(key)){
-	    			TestRepository test_repo = new TestRepository();
-	    	
-	    			Test test = test_repo.load(itest);
+    			TestRepository test_repo = new TestRepository();
+    	
+    			Test test = test_repo.load(itest);
 
-	    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
-	    			browser_running_status.put(browser_type, null);
-	    			for(String browser : browser_running_status.keySet()){
-	    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
-	    			}
-	    			test.setBrowserPassingStatuses(browser_running_status);
-	    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
-	    			
-	    			//tell memory worker of test
-	    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-	    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-	    			memory_actor.tell(test_msg, null);
-	    			
-	    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
-	    			record = TestingActor.runTest(test, browser);
-	    			acct.addTestRecord(record);
-	    			accountService.save(acct);
-	    			
-	    			System.err.println("Record is passing :::: "+record.getPassing());
-	    			browser_running_status.put(browser_type, record.getPassing());
-	    			test.setBrowserPassingStatuses(browser_running_status);
-	    			for(String browser_1 : browser_running_status.keySet()){
-	    				System.err.println("Browser 1  ::::  "+browser_1+"  ************   "+browser_running_status.get(browser_1));
-	    			}
-	    			test.addRecord(record);
-	    			boolean is_passing = true;
-					//update overall passing status based on all browser passing statuses
-					for(Boolean status : test.getBrowserPassingStatuses().values()){
-						if(status != null && !status){
-							is_passing = false;
-						}
+    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
+    			browser_running_status.put(browser_type, null);
+    			for(String browser : browser_running_status.keySet()){
+    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
+    			}
+    			test.setBrowserPassingStatuses(browser_running_status);
+    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+    			
+    			//tell memory worker of test
+    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+    			memory_actor.tell(test_msg, null);
+    			
+    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
+    			record = TestingActor.runTest(test, browser);
+    			browser.close();
+
+    			acct.addTestRecord(record);
+    			accountService.save(acct);
+    			
+    			test.addRecord(record);
+    			boolean is_passing = true;
+				//update overall passing status based on all browser passing statuses
+				for(Boolean status : test.getBrowserPassingStatuses().values()){
+					if(status != null && !status){
+						is_passing = false;
 					}
-					test.setCorrect(is_passing);
-					test.setLastRunTimestamp(new Date());
-	    			test_results.put(test.getKey(), record);
-	    			test.setRunTime(record.getRunTime());
-	    	
-	    			TestRecordRepository test_record_record = new TestRecordRepository();
-	    			itest.addRecord(test_record_record.save(connection, record));
-	    			itest.setCorrect(record.getPassing());
-
-	    			//tell memory worker of test
-	    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
-	    			memory_actor.tell(test_msg, null);
-	    			
-	    			browser.close();
-	    		}
-	    		else{
-	    			log.warn("test found does not match key :: " + key);
-	    		}
-    		}
+				}
+				test.setCorrect(is_passing);
+				test.setLastRunTimestamp(new Date());
+    			test_results.put(test.getKey(), record);
+    			test.setRunTime(record.getRunTime());
+    	
+    			//tell memory worker of test
+    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+    			memory_actor.tell(test_msg, null);
+       		}
     	}
 		connection.close();
 		
@@ -693,7 +695,7 @@ public class TestController {
 	}
 }
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
+@ResponseStatus(HttpStatus.SEE_OTHER)
 class TestAlreadyRunningException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 

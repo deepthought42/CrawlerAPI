@@ -17,6 +17,7 @@ public class Account {
 	private String last_domain_url;
 	private List<DiscoveryRecord> discovery_records;
 	private List<TestRecord> test_records;
+	private List<String> onboarded_steps;
 	
 	public Account(){}
 	
@@ -41,6 +42,7 @@ public class Account {
 		this.setDomains(new ArrayList<Domain>());
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 		this.setTestRecords(new ArrayList<TestRecord>());
+		this.setOnboardedSteps(new ArrayList<String>());
 	}
 	
 	/**
@@ -53,7 +55,7 @@ public class Account {
 	 * @pre users != null
 	 */
 	public Account(String org_name, String service_package, String customer_token, String subscription_token, List<QanairyUser> users, 
-					List<DiscoveryRecord> discovery_records, List<TestRecord> test_records){
+					List<DiscoveryRecord> discovery_records, List<TestRecord> test_records, List<String> onboarded_steps){
 		assert users != null;
 		
 		this.setOrgName(org_name);
@@ -64,6 +66,7 @@ public class Account {
 		this.setUsers(users);
 		this.setDiscoveryRecords(discovery_records);
 		this.setTestRecords(test_records);
+		this.setOnboardedSteps(onboarded_steps);
 	}
 
 	/**
@@ -80,7 +83,7 @@ public class Account {
 	public Account(String key, String org_name, String service_package, String customer_token, String subscription_token, 
 					List<QanairyUser> users, List<Domain> domains, 
 					String last_domain_url, List<DiscoveryRecord> discovery_records,
-					List<TestRecord> test_records){
+					List<TestRecord> test_records, List<String> onboarded_steps){
 		assert users != null;
 		
 		this.setKey(key);
@@ -93,32 +96,7 @@ public class Account {
 		this.setLastDomain(last_domain_url);
 		this.setDiscoveryRecords(discovery_records);
 		this.setTestRecords(test_records);
-	}
-	
-	/**
-	 * 
-	 * @param org_name
-	 * @param service_package
-	 * @param payment_acct_num
-	 * @param users
-	 * @param domains
-	 * @param last_domain_url
-	 * @param discovery_records
-	 */
-	public Account(String org_name, String service_package, String customer_token, String subscription_token, List<QanairyUser> users, List<Domain> domains, 
-			String last_domain_url, List<DiscoveryRecord> discovery_records, List<TestRecord> test_records){
-		assert users != null;
-		
-		this.setKey(null);
-		this.setOrgName(org_name);
-		this.setServicePackage(service_package);
-		this.setCustomerToken(customer_token);
-		this.setSubscriptionToken(subscription_token);
-		this.setUsers(users);
-		this.setDomains(domains);
-		this.setLastDomain(last_domain_url);
-		this.setDiscoveryRecords(discovery_records);
-		this.setTestRecords(test_records);
+		this.setOnboardedSteps(onboarded_steps);
 	}
 			
 	public String getOrgName() {
@@ -232,5 +210,24 @@ public class Account {
 
 	public void addTestRecord(TestRecord record) {
 		this.test_records.add(record);
+	}
+
+	public List<String> getOnboardedSteps() {
+		return onboarded_steps;
+	}
+
+	public void setOnboardedSteps(List<String> onboarded_steps) {
+		if(onboarded_steps == null){
+			this.onboarded_steps = new ArrayList<String>();
+		}
+		else{
+			this.onboarded_steps = onboarded_steps;
+		}
+	}
+
+	public void addOnboardingStep(String step_name) {
+		if(!this.onboarded_steps.contains(step_name)){
+			this.onboarded_steps.add(step_name);
+		}
 	}
 }

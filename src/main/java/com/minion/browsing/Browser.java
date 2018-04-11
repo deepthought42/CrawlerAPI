@@ -94,22 +94,18 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				System.err.println("driver loaded, waiting 10 seconds for page to load");
-				WebDriverWait wait = new WebDriverWait(driver, 10);
+				WebDriverWait wait = new WebDriverWait(driver, 5);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				
 				break;
 			}
 			catch(UnreachableBrowserException e){
-				System.err.println("Unreachable browser exception");
 				log.error(e.getMessage());
 			}
 			catch(WebDriverException e){
-				System.err.println("WebDriver exception occurred opening browser");
 				log.error(e.getMessage());
 			}
 			catch(GridException e){
-				System.err.println("Grid exception occurred when opening browser");
 				log.error(e.getMessage());
 			}
 			

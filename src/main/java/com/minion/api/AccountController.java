@@ -1,6 +1,7 @@
 package com.minion.api;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
@@ -22,11 +23,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
+import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
@@ -48,16 +51,13 @@ import com.mashape.unirest.http.HttpResponse;
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
-	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(AccountController.class);
-
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     @Autowired
     protected WebSecurityConfig appConfig;
 
     @Autowired
-    protected AccountService accountService;
+    protected AccountService account_service;
 
     /*@Autowired
     protected UsernameService usernameService;
@@ -88,7 +88,7 @@ public class AccountController {
     	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	//Auth0Client auth = new Auth0Client();
     	//String username = auth.getUsername(auth_access_token);
-    	Account acct = this.accountService.find(username);
+    	Account acct = this.account_service.find(username);
     	
     	//create account
         if(acct != null){
@@ -121,7 +121,7 @@ public class AccountController {
         Account new_account = null;
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        new_account = accountService.create(acct);
+        new_account = account_service.create(acct);
         
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
@@ -142,6 +142,43 @@ public class AccountController {
         return ResponseEntity.accepted().body(new_account);
     }
 
+    @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
+    public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
+        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+        Account acct = this.account_service.find(username);
+        if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+        
+        acct.addOnboardingStep(step_name);
+        acct = account_service.save(acct);
+        
+        return acct.getOnboardedSteps();
+    }
+    
+    @PreAuthorize("hasAuthority('read:accounts')")
+    @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
+    public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
+        logger.info("get invoked");
+        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+        Account acct = this.account_service.find(username);
+        if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+        
+        return acct.getOnboardedSteps();
+    }
+    
     /**
      * Retrieves {@link Account account} with a given key
      * 
@@ -152,7 +189,7 @@ public class AccountController {
     @RequestMapping(value ="/{id}", method = RequestMethod.GET)
     public Account get(final @PathVariable String key) {
         logger.info("get invoked");
-        return accountService.get(key);
+        return account_service.get(key);
     }
 
 	@PreAuthorize("hasAuthority('update:accounts')")
@@ -160,7 +197,7 @@ public class AccountController {
     public Account update(final @PathVariable String key, 
     					  final @Validated @RequestBody Account account) {
         logger.info("update invoked");
-        return accountService.update(account);
+        return account_service.update(account);
     }
     
 	@PreAuthorize("hasAuthority('delete:accounts')")
@@ -169,7 +206,7 @@ public class AccountController {
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	Account account = this.accountService.find(username);
+    	Account account = this.account_service.find(username);
     					
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
@@ -182,10 +219,8 @@ public class AccountController {
         this.stripeClient.deleteCustomer(account.getCustomerToken());
         
 		//remove account
-		accountService.delete(account);
+		account_service.delete(account);
         logger.info("update invoked");
-        
-		
     }
     /**
      * Simple demonstration of how Principal info can be accessed

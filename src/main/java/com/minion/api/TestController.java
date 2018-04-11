@@ -37,7 +37,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.GroupRepository;
 import com.qanairy.models.dto.PathRepository;
-import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
@@ -446,7 +445,7 @@ public class TestController {
     	int disc_index = plan_name.indexOf("-disc-");
 
     	int monthly_test_count = 0;
-    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+7, test_index));
+    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+6, test_index));
 
     	//Check if account has exceeded test run limit
     	for(TestRecord record : acct.getTestRecords()){
@@ -474,12 +473,9 @@ public class TestController {
         		    .traits(traits)
         		);
         	
-        	throw new DiscoveryLimitReachedException();
+        	throw new TestLimitReachedException();
     	}
-    	
-    	if(monthly_test_count > 10000){
-    		throw new TestLimitReachedException();
-    	}
+
     	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();

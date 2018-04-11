@@ -172,7 +172,7 @@ public class BrowserActor extends UntypedActor {
 				}
 				
 				browser = new Browser(((Path)acct_msg.getData()).firstPage().getUrl().toString(), acct_msg.getOptions().get("browser").toString());
-				traverse_path_and_create_test(browser, path, acct_msg);
+				traverse_path(browser, path, acct_msg);
 			  	browser.close();
 	
 				//PLACE CALL TO LEARNING SYSTEM HERE
@@ -327,7 +327,7 @@ public class BrowserActor extends UntypedActor {
 	 * @throws NoSuchElementException
 	 * @throws IOException
 	 */
-	public void traverse_path_and_create_test(Browser browser, Path path, Message<?> acct_msg) throws NoSuchElementException, IOException{
+	public void traverse_path(Browser browser, Path path, Message<?> acct_msg) throws NoSuchElementException, IOException{
 
 		Page result_page = null;
 		long crawl_time_in_ms = -1L;
@@ -362,7 +362,7 @@ public class BrowserActor extends UntypedActor {
 			domain.setLastDiscoveryPathRanAt(new Date());
 			domain_repo.update(conn, domain);
 			
-	  		createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);
+	  		//createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);
 	  	}
 	}
 }

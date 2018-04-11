@@ -38,12 +38,20 @@ public interface IAccount extends Vertex{
 	@Property("subscription_token")
 	public void setSubscriptionToken(String subscription_token);
 	
-	
 	@Property("last_domain")
 	public void setLastDomain(String domain_url);
 	
 	@Property("last_domain")
 	public String getLastDomain();
+	
+	@Property("onboarded_steps")
+	public List<String> getOnboardedSteps();
+	
+	@Property("onboarded_steps")
+	public void setOnboardedSteps(List<String> onboarded_steps);
+	
+	@Property("onboarded_steps")
+	public void addOnboardedStep(String onboarded_steps_name);
 	
 	@Adjacency(direction=Direction.OUT, label="has_user")
 	public Iterable<IQanairyUser> getUsers();

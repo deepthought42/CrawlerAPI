@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.IteratorUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
@@ -77,7 +75,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		
 		acct_record.setTestRecords(test_records);
-		
+		acct_record.setOnboardedSteps(account.getOnboardedSteps());
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
@@ -122,7 +120,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		*/
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getCustomerToken(), account.getSubscriptionToken(),
-							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), discovery_record_list, test_record_list);
+							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), discovery_record_list, test_record_list, account.getOnboardedSteps());
 	}
 	
 	/**

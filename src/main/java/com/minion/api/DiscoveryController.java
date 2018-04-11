@@ -77,7 +77,6 @@ public class DiscoveryController {
         this.stripeClient = stripeClient;
     }
     
-    @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/status", method = RequestMethod.GET)
     public @ResponseBody Map<String, Boolean> isDiscoveryRunning(HttpServletRequest request, 
     												@RequestParam(value="url", required=true) String url) 
@@ -105,20 +104,17 @@ public class DiscoveryController {
     	Date now = new Date();
     	long diffInMinutes = 10000;
     	if(last_ran_date != null){
-    		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
+    		diffInMinutes = Math.abs((int)(now.getTime() - last_ran_date.getTime()))/ (1000 * 60);
     	}
 
     	int paths_being_explored = domain.getDiscoveryPathCount();
-        
-		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browser", domain.getDiscoveryBrowserName());
         
 		Map<String, Boolean> status_map = new HashMap<String, Boolean>();
 		if(diffInMinutes > 1440){
 			status_map.put("status", false);
 		}
 		else{
-			status_map.put("status", false);
+			status_map.put("status", true);
 		}
 		return status_map;
     }
@@ -223,6 +219,7 @@ public class DiscoveryController {
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
         System.err.println("Diff in Minutes :::        "+diffInMinutes);
+        
 		if(diffInMinutes > 1440){
 	    	domain.setDiscoveryStartTime(new Date());
 

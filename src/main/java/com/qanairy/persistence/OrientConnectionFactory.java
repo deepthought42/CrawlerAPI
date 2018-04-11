@@ -1,11 +1,8 @@
 package com.qanairy.persistence;
 
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.orientechnologies.orient.client.remote.OStorageRemote;
-import com.qanairy.config.ConfigService;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 import com.tinkerpop.frames.FramedGraph;
@@ -37,7 +34,7 @@ public class OrientConnectionFactory {
 	 */
 	private FramedGraph<OrientGraphNoTx> getConnection(){
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		graphFactory = new OrientGraphFactory("remote:159.203.177.116/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 1000);
+		graphFactory = new OrientGraphFactory("remote:159.89.234.103/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 1000);
 	    //graphFactory.setConnectionStrategy(OStorageRemote.CONNECTION_STRATEGY.ROUND_ROBIN_CONNECT.toString());
 		OrientGraphNoTx instance = graphFactory.getNoTx();
 		return factory.create(instance);

@@ -529,6 +529,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 						PageElement page_elem = (PageElement)path_obj;
 						if(page_elem.equals(input_elem)){
 							field_exists = true;
+							break;
 						}
 					}
 				}

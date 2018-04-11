@@ -64,18 +64,11 @@ public class WorkAllocationActor extends UntypedActor {
 						//System.err.println("url needs to be implemented");
 						System.err.println("Sending path to BrowserActor for exploration");
 						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
-						browser_actor.tell(msg, getSelf() );						
+						browser_actor.tell(msg, getSelf() );	
+
 					}
 					
 					connection.close();
-
-					//if record doesn't exist then send for exploration, else expand the record
-						
-					if(!(acct_message.getData() instanceof ExploratoryPath)) {
-						System.err.println("Sending path to expansion actor");
-						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-						path_expansion_actor.tell(msg, getSelf() );
-					}
 				}
 				else if(acct_message.getData() instanceof Test){					
 					final ActorRef testing_actor = this.getContext().actorOf(Props.create(TestingActor.class), "TestingActor"+UUID.randomUUID());

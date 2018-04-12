@@ -34,7 +34,6 @@ public class WorkAllocationActor extends UntypedActor {
 					String browser_name = acct_message.getOptions().get("browser").toString();
 					Message<?> msg = acct_message.clone();	
 					msg.getOptions().put("browser", browser_name);
-					boolean record_exists = false;
 					Path path = null;
 					OrientConnectionFactory connection = new OrientConnectionFactory();
 					
@@ -49,7 +48,6 @@ public class WorkAllocationActor extends UntypedActor {
 						PathRepository repo = new PathRepository();
 						Path path_record = repo.find(connection, repo.generateKey(path));
 						if(path_record != null){
-							record_exists = true;
 							path = path_record;
 						}
 						else{

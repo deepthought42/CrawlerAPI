@@ -26,6 +26,7 @@ import com.qanairy.models.Path;
  *
  */
 public class PathExpansionActor extends UntypedActor {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
 	/**

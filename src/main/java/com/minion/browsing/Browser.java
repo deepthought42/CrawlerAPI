@@ -306,8 +306,7 @@ public class Browser {
 		}*/
         String hub_node_url = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
-	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    //driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
+
 		return driver;
 	}
 	
@@ -344,13 +343,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static File getScreenshot(WebDriver driver) throws IOException, GridException{
-		/*try{
-			driver.manage().window().maximize();
-		}catch(Exception e){}
-		*/
-		File screenshot = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
-		
-		return screenshot;
+		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 	}
 	 
 	/**
@@ -360,6 +353,15 @@ public class Browser {
 	 */
 	public static List<WebElement> getChildElements(WebElement elem) throws WebDriverException{
 		return elem.findElements(By.xpath("./*"));
+	}
+	
+	/**
+	 * Get immediate parent elements for a given element
+	 * @param elem	{@linkplain WebElement) to get parent of
+	 * @return parent {@linkplain WebElement)
+	 */
+	public static WebElement getParentElement(WebElement elem) throws WebDriverException{
+		return elem.findElement(By.xpath(".."));
 	}
 	
 	 /**

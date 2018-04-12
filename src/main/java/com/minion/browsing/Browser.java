@@ -39,12 +39,10 @@ import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
-import com.minion.structs.TreeNode;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
-import com.minion.structs.Tree;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -396,7 +394,7 @@ public class Browser {
 		for(WebElement elem : pageElements){
 			
 			try{
-				boolean is_child = elem.findElements(By.xpath(xpath+"//*")).isEmpty();
+				boolean is_child = getChildElements(elem).isEmpty();
 				if(is_child && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 

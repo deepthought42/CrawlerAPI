@@ -386,7 +386,8 @@ public class Browser {
 		for(WebElement elem : pageElements){
 			
 			try{
-				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+				boolean is_child = elem.findElements(By.xpath(xpath+"//*")).isEmpty();
+				if(is_child && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );

@@ -71,6 +71,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 import com.qanairy.models.Path;
+import com.qanairy.models.StripeClient;
 
 /**
  * REST controller that defines endpoints to access tests

@@ -29,6 +29,7 @@ import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.QanairyUser;
+import com.qanairy.models.StripeClient;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;

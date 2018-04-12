@@ -114,7 +114,11 @@ public class Browser {
 		
 		if(this.driver != null){			
 			this.url = url;
-			this.driver.get(url);
+			try{
+				this.driver.get(url);
+			}catch(Exception e){
+				
+			}
 		}
 		else{
 			throw new NullPointerException();
@@ -199,6 +203,10 @@ public class Browser {
 		catch(GridException e){
 			log.error("Grid exception occurred when closing browser", e.getMessage());
 		}
+		catch(Exception e){
+			log.error("Unknown exception occurred when closing browser", e.getMessage());
+		}
+		
 	}
 	
 	/**

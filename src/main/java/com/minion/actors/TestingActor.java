@@ -104,8 +104,6 @@ public class TestingActor extends UntypedActor {
 					//tell memory worker of test record
 					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 					memory_actor.tell(test_msg, getSelf() );
-
-					//PastPathExperienceController.broadcastTestExperience(test);
 				}
 
 			  	browser.close();

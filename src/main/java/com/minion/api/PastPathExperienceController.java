@@ -32,40 +32,37 @@ public class PastPathExperienceController {
      */
 	public static void broadcastDiscoveredTest(Test test) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
-		Path path_clone = Path.clone(test.getPath());
-		
-		for(PathObject obj : path_clone.getPath()){
+		System.err.println("PATH LENGTH BEING BROADCAST    ::::: "+test.getPath().size());
+		for(PathObject obj : test.getPath().getPath()){
+			System.err.println("PATH OBJECT TYPE :: "+obj.getType());
 			if(obj != null && obj.getType().equals("Page")){
 				Page page_obj = (Page)obj;
 								
 				Page page;
 				try {
 					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
+					System.err.println("Adding page to path list");
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 			else if(obj != null){
-				if(obj.getType().equals("Action")){
-					Action action_obj = (Action)obj;
-					System.err.println("!!!!!     "+action_obj.getValue()+ "   !!!!!!!!");
-				}
 				path_list.add(obj);
 			}
 		}
 
 		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
-		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain(), test.getName());
-		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
-		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
-		new_test.setRunTime(test.getRunTime());
+		Page result_page = null;
 		try {
-			Page result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
-			new_test.setResult(result_page);
+			result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+		Test new_test = new Test(test.getKey(), path, result_page, test.getDomain(), test.getName());
+		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
+		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
+		new_test.setRunTime(test.getRunTime());
 		
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");

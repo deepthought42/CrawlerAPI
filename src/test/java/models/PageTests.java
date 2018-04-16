@@ -46,7 +46,7 @@ public class PageTests {
 			}
 			
 			Assert.assertTrue(page_record.getType().equals(page.getType()));
-			Assert.assertTrue(page_record.isLandable() == page.isLandable());
+			//Assert.assertTrue(page_record.isLandable() == page.isLandable());
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
 			//Assert.assertTrue(page_record.getSrc().getSrc().equals(page.getSrc().getSrc()));
 		} catch (IOException e) {

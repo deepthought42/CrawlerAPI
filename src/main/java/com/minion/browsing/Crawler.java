@@ -58,13 +58,13 @@ public class Crawler {
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
-				boolean actionPerformedSuccessfully;
+				//boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
 				int attempts = 0;
-				do{
-					actionPerformedSuccessfully = last_element.performAction(action, browser.getDriver());
-					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 5);
+				//do{
+					boolean actionPerformedSuccessfully = last_element.performAction(action, browser.getDriver());
+					//attempts++;
+				//}while(!actionPerformedSuccessfully && attempts < 5);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");

@@ -62,8 +62,6 @@ public class BrowserActor extends UntypedActor {
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * NOTE: Do not change the order of the checks for instance of below. These are in this order because ExploratoryPath
-	 * 		 is also a Path and thus if the order is reversed, then the ExploratoryPath code never runs when it should
 	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
@@ -71,105 +69,11 @@ public class BrowserActor extends UntypedActor {
 			Message<?> acct_msg = (Message<?>)message;
 
 			Browser browser = null;
-			if (acct_msg.getData() instanceof ExploratoryPath){
-				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-
-				/*
-				 * tell discovery registry that we are running an exploratory path for discovery
-				 */
-		  		OrientConnectionFactory conn = new OrientConnectionFactory();
-				DomainRepository domain_repo = new DomainRepository();	
-				System.err.println("Loading domain :: "+((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
-				Domain domain = domain_repo.find(conn, ((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
-				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()+1);
-				domain_repo.save(conn, domain);
-
-				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
-				
-				Page last_page = exploratory_path.findLastPage();
-				//boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
-				//last_page.setLandable(landable_status);
-							
-				//if(last_page.isLandable()){
-					//clone path starting at last page in path
-					//Path shortened_path = path.clone());
-				//}
-
-				if(exploratory_path.getPath() != null){
-					System.err.println("Path is not empty");
-					Page result_page = null;
-
-					// increment total paths being explored for domain
-					String domain_url = last_page.getUrl().getHost();
-					IDomain idomain = domain_repo.find(domain_url);
-					idomain.setLastDiscoveryPathRanAt(new Date());
-					System.err.println("Set time of last discovery path ran");
-					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
-					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
-					
-					for(Action action : exploratory_path.getPossibleActions()){
-						Path path = Path.clone(exploratory_path);
-						path.add(action);
-						System.err.println("Crawling path...");
-						final long pathCrawlStartTime = System.currentTimeMillis();
-						result_page = Crawler.crawlPath(path, browser);
-						final long pathCrawlEndTime = System.currentTimeMillis();
-
-						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
-						
-						int last_idx = exploratory_path.getPath().size()-1;
-						if(last_idx < 0){
-							last_idx = 0;
-						}
-						
-						System.err.println("Checking if exploratory path has a cycle");
-						System.err.println("RESULT PAGE SRC SIZE :: "+result_page.getSrc().length());
-						System.err.println("RESULT PAGE ELEMENTS SIZE :: "+result_page.getElements().size());
-						if(ExploratoryPath.hasCycle(path, result_page)){
-							//check if test has 3 or more consecutive click events since last page
-					  		path.setIsUseful(false);
-					  		continue;
-					  	}
-					  	else{
-					  		path.setIsUseful(true);
-							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
-							domain.setLastDiscoveryPathRanAt(new Date());
-							int cnt = domain.getDiscoveredTestCount()+1;
-							System.out.println("landing page test Count :: "+cnt);
-							domain.setDiscoveredTestCount(cnt);
-					  		System.out.println("Count :: "+cnt);
-					  		
-					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg);
-					  	}
-						
-						Path new_path = Path.clone(path);
-						new_path.add(result_page);
-						Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
-
-						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-						path_expansion_actor.tell(path_msg, getSelf());
-					}
-				}
-
-				/*
-				 * tell discovery registry that we are FINISHED running an exploratory path for discovery
-				 */
-				domain = domain_repo.find(conn, exploratory_path.firstPage().getUrl().getHost());
-				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
-				domain_repo.save(conn, domain);
-			  	browser.close();
-				
-			  	conn.close();
-				//PLACE CALL TO LEARNING SYSTEM HERE
-				//Brain.learn(path, path.getIsUseful());
-			}
-			else if (acct_msg.getData() instanceof Path){
+			if (acct_msg.getData() instanceof Path){
 				System.err.println("Path started");
 
 				Path path = (Path)acct_msg.getData();
 				assert(path.getPath() != null);
-				if(acct_msg.getOptions().isEmpty()){
-				}
 				
 				browser = new Browser(((Path)acct_msg.getData()).firstPage().getUrl().toString(), acct_msg.getOptions().get("browser").toString());
 				traverse_path(browser, path, acct_msg);
@@ -207,9 +111,7 @@ public class BrowserActor extends UntypedActor {
 	 */
 	private void createTest(Path path, Page result_page, long crawl_time, Domain domain, Message<?> acct_msg ) {
 		path.setIsUseful(true);
-		
-		domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
-		
+				
 		Test test = new Test(path, result_page, domain, "Test #"+domain.getDiscoveredTestCount());							
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
@@ -302,10 +204,13 @@ public class BrowserActor extends UntypedActor {
 		Domain domain = domain_repo.find(conn, page_obj.getUrl().getHost());
 		domain.setLastDiscoveryPathRanAt(new Date());
 		domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()+1);
-
+		domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
 		domain_repo.update(conn, domain);
 		
 		createTest(path, page_obj, 1L, domain, msg);
+		
+		domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
+		domain_repo.update(conn, domain);
 		
 		Path new_path = Path.clone(path);
 		new_path.add(page_obj);
@@ -314,8 +219,7 @@ public class BrowserActor extends UntypedActor {
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );
 		
-		domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
-		domain_repo.update(conn, domain);
+		
 	}
 	
 	/**
@@ -362,7 +266,7 @@ public class BrowserActor extends UntypedActor {
 			domain.setLastDiscoveryPathRanAt(new Date());
 			domain_repo.update(conn, domain);
 			
-	  		//createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);
+	  		createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);
 	  	}
 	}
 }

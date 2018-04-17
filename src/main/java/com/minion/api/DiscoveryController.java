@@ -320,7 +320,7 @@ class ExistingDiscoveryFoundException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public ExistingDiscoveryFoundException() {
-		super("Discovery is already running");
+		super("A discovery is already running");
 	}
 }
 
@@ -332,7 +332,7 @@ class DiscoveryLimitReachedException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public DiscoveryLimitReachedException() {
-		super("Discovery limit reached. Upgrade your account now!");
+		super("You’ve reached your discovery limit. <u>Upgrade your account now!</u>");
 	}
 }
 
@@ -344,6 +344,6 @@ class PaymentDueException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public PaymentDueException() {
-		super("There was an issue processing your payment. Please update your payment details.");
+		super("There was an issue processing your payment. Please update your payment details");
 	}
 }

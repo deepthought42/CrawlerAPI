@@ -701,7 +701,7 @@ class TestAlreadyRunningException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public TestAlreadyRunningException() {
-		super("Test is already running");
+		super("This test is already running. Please wait for it to return.");
 	}
 }
 
@@ -710,7 +710,7 @@ class EmptyGroupNameException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public EmptyGroupNameException() {
-		super("Groups must have a name");
+		super("Groups must have a name.");
 	}
 }
 
@@ -722,6 +722,6 @@ class TestLimitReachedException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public TestLimitReachedException() {
-		super("Test run limit reached. Upgrade your account now!");
+		super("You reached your test run limit. Upgrade your account now!");
 	}
 }

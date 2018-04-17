@@ -96,7 +96,7 @@ public class AccountController {
         	throw new AccountExistsException();
         }
         
-        String plan = "4-disc-10000-test-90-trial";
+        String plan = "2-disc-500-test-90-trial";
     	
     	Plan new_plan = Plan.retrieve(plan);
 
@@ -105,7 +105,6 @@ public class AccountController {
     	Customer customer = this.stripeClient.createCustomer(null, username);
     	Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
     	
-    	System.err.println("Subscription :: "+subscription.toJson());
     	acct = new Account(username, plan, customer.getId(), subscription.getId());
         
         //Create user
@@ -211,9 +210,9 @@ public class AccountController {
     					
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
-    	System.err.println("AUTH0 Response body      :::::::::::      "+response.getBody());
-    	System.err.println("AUTH0 Response status      :::::::::::      "+response.getStatus());
-    	System.err.println("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
+    	//System.err.println("AUTH0 Response body      :::::::::::      "+response.getBody());
+    	//System.err.println("AUTH0 Response status      :::::::::::      "+response.getStatus());
+    	//System.err.println("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
     	
     	//remove stripe subscription
         this.stripeClient.cancelSubscription(account.getSubscriptionToken());
@@ -245,6 +244,6 @@ class AccountExistsException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public AccountExistsException() {
-		super("Account already exists");
+		super("This account already exists.");
 	}
 }

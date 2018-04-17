@@ -238,6 +238,6 @@ class ExistingAccountDomainException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public ExistingAccountDomainException() {
-		super("Domain already exists for your account");
+		super("This domain already exists for your account.");
 	}
 }

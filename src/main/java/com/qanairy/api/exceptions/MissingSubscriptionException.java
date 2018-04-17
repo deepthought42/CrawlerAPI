@@ -11,6 +11,6 @@ public class MissingSubscriptionException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public MissingSubscriptionException() {
-		super("You are not subscribed to use our service.");
+		super("Welcome to Qanairy! Sign up for <u>a plan</u> to get started.");
 	}
 }

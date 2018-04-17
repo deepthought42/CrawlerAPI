@@ -32,16 +32,13 @@ public class PastPathExperienceController {
      */
 	public static void broadcastDiscoveredTest(Test test) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
-		System.err.println("PATH LENGTH BEING BROADCAST    ::::: "+test.getPath().size());
 		for(PathObject obj : test.getPath().getPath()){
-			System.err.println("PATH OBJECT TYPE :: "+obj.getType());
 			if(obj != null && obj.getType().equals("Page")){
 				Page page_obj = (Page)obj;
 								
 				Page page;
 				try {
 					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
-					System.err.println("Adding page to path list");
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();

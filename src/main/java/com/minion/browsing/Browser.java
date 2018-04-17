@@ -75,9 +75,16 @@ public class Browser {
 	 * 			firefox = Firefox
 	 * 			ie = internet explorer
 	 * 			safari = safari
+	 * 
 	 * @throws MalformedURLException
+	 * 
+	 * @pre url != null
+	 * @pre browser != null
 	 */
 	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
+		assert url != null;
+		assert browser != null;
+		
 		int cnt = 0;
 		this.setBrowserName(browser);
 		while(driver == null && cnt < 20){
@@ -104,6 +111,9 @@ public class Browser {
 				try {
 					Thread.sleep(3000);
 				} catch (InterruptedException e) {}
+				
+				this.url = url;
+				this.driver.get(url);
 				break;
 			}
 			catch(UnreachableBrowserException e){
@@ -121,14 +131,6 @@ public class Browser {
 			} catch (InterruptedException e) {}
 			cnt++;
 		}
-		
-		if(this.driver != null){			
-			this.url = url;
-			this.driver.get(url);
-		}
-		else{
-			throw new NullPointerException();
-		}
 	}
 	
 	/**
@@ -141,25 +143,20 @@ public class Browser {
 	/**
 	 * 
 	 * @return
+	 * @throws GridException 
 	 * @throws IOException 
 	 * @throws MalformedURLException 
 	 */
-	public Page getPage() throws MalformedURLException, IOException{
+	public Page getPage() throws GridException, IOException{
 		URL page_url = new URL(url);
 		String screenshot = "";
 		String src = null;
 		List<PageElement> visible_elements = null;
 		for(int i=0; i<10; i++){
-			try{
-				src = this.driver.getPageSource();
-				visible_elements = Browser.getVisibleElements(this.driver, "");
-				screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource()));
-				break;
-			}catch(Exception e){
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e1) {}
-			}
+			src = this.driver.getPageSource();
+			screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource()));
+			visible_elements = Browser.getVisibleElements(this.driver, "");
+			break;
 		}
 		
 		if(visible_elements == null){
@@ -440,25 +437,17 @@ public class Browser {
 		for(WebElement elem : pageElements){
 			
 			try{
-				boolean is_child = getChildElements(elem).isEmpty();
+				//boolean is_child = getChildElements(elem).isEmpty();
 				// removed from condition ::   is_child && 
-				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+				
+				boolean is_visible = isElementVisibleInPane(Browser.getScreenshot(driver), elem);
+				if(is_visible && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
-					try{
-						if(isElementVisibleInPane(Browser.getScreenshot(driver), elem)){
-							String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getElementScreenshot(Browser.getScreenshot(driver), elem), (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
-							tag.setScreenshot(screenshot);
-							
-						}
-					}
-					catch(IOException e){
-						log.error("ERROR getting screenshot of element with xpath : "+tag.getXpath(),e.getMessage());
-					}
-					catch(Exception e){
-						log.error(e.getMessage());
-					}
+					String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getElementScreenshot(Browser.getScreenshot(driver), elem), (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
+					tag.setScreenshot(screenshot);
+
 					elementList.add(tag);
 				}
 			}catch(StaleElementReferenceException e){
@@ -469,6 +458,9 @@ public class Browser {
 			}
 			catch(GridException e){
 				log.error(e.getMessage());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 		log.debug("Total elements that are visible on page :: "

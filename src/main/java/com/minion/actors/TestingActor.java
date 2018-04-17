@@ -77,7 +77,6 @@ public class TestingActor extends UntypedActor {
 					resulting_page.setLandable(false);
 				}
 				
-				System.err.println("TESTING ACTOR expected page ************ "+expected_page.getElements().size());
 				if(!resulting_page.equals(expected_page)){
 					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);

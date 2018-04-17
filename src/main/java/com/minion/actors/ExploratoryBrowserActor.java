@@ -1,7 +1,9 @@
 package com.minion.actors;
 
-import java.net.URL;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Date;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -30,6 +32,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 public class ExploratoryBrowserActor extends UntypedActor {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 
 	/**
@@ -37,9 +40,12 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * 
 	 * NOTE: Do not change the order of the checks for instance of below. These are in this order because ExploratoryPath
 	 * 		 is also a Path and thus if the order is reversed, then the ExploratoryPath code never runs when it should
+	 * @throws NullPointerException 
+	 * @throws IOException 
+	 * @throws NoSuchElementException 
 	 */
 	@Override
-	public void onReceive(Object message) throws Exception {
+	public void onReceive(Object message) throws NullPointerException, NoSuchElementException, IOException {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
@@ -71,23 +77,26 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				}
 				 */
 				if(exploratory_path.getPath() != null){
-					System.err.println("Path is not empty");
 					Page result_page = null;
 
 					// increment total paths being explored for domain
 					String domain_url = last_page.getUrl().getHost();
 					IDomain idomain = domain_repo.find(domain_url);
 					idomain.setLastDiscoveryPathRanAt(new Date());
-					System.err.println("Set time of last discovery path ran");
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path path = Path.clone(exploratory_path);
 						path.add(action);
-						System.err.println("Crawling path...");
 						final long pathCrawlStartTime = System.currentTimeMillis();
-						result_page = Crawler.crawlPath(path, browser);
+						int tries = 0;
+						do{
+							result_page = Crawler.crawlPath(path, browser);
+							tries++;
+							System.err.println("Attempting to get result_page :: "+tries+";   is NULL?   ::  "+(result_page==null));
+						}while(result_page == null && tries < 5);
+						
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
@@ -98,18 +107,14 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						}
 						
 						if(ExploratoryPath.hasCycle(path, result_page)){
-							//check if test has 3 or more consecutive click events since last page
 					  		path.setIsUseful(false);
 					  		continue;
 					  	}
 					  	else{
 					  		path.setIsUseful(true);
-							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
-							domain.setLastDiscoveryPathRanAt(new Date());
-							domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
-							domain_repo.update(conn, domain);
-
+							
 					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg);
+							
 					  		Path new_path = Path.clone(path);
 							new_path.add(result_page);
 							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
@@ -117,6 +122,10 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 							path_expansion_actor.tell(path_msg, getSelf());
 							
+							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
+							domain.setLastDiscoveryPathRanAt(new Date());
+							domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
+							domain_repo.update(conn, domain);
 							break;
 					  	}
 					}
@@ -154,12 +163,10 @@ public class ExploratoryBrowserActor extends UntypedActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		System.err.println("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
-
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-		
+
 		//tell memory worker of test
 		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf());

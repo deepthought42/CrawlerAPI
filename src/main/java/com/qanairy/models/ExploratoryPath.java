@@ -94,41 +94,6 @@ public class ExploratoryPath extends Path{
 
 		return page;
 	}
-	
-	/**
-	 * Checks if the path has 2 sequential elements that appear in more than 1 location
-	 * 
-	 * @param path
-	 * @return true if sequence appears more than once
-	 */
-	public static boolean hasCycle(Path path){
-		if(path.size() == 1){
-			return false;
-		}
-		
-		//extract all pages
-		//iterate through pages to see if any match
-		List<Page> page_list = new ArrayList<Page>();
-		List<PathObject> path_obj_list = path.getPath();
-		for(PathObject path_obj : path_obj_list){
-			if(path_obj instanceof Page){
-				page_list.add((Page)path_obj);
-			}
-		}
-		
-		boolean cycle_exists = false;
-		for(int first_page_idx =0; first_page_idx < page_list.size()-1 && !cycle_exists; first_page_idx++){
-			for(int second_page_idx =1; second_page_idx < page_list.size() && !cycle_exists; first_page_idx++){
-				System.err.println("CYCLE CHECK! second page is &&&&&&&&&&&&& "+page_list.get(second_page_idx).getElements().size());
-				if(page_list.get(first_page_idx).equals(page_list.get(second_page_idx))){
-					cycle_exists = true;
-					break;
-				}
-			}	
-		}
-
-		return cycle_exists;
-	}
 
 	/**
 	 * Checks if the path has 2 sequential elements that appear in more than 1 location

@@ -31,7 +31,21 @@ public class Crawler {
 	 * @throws UnhandledAlertException
 	 * @throws IOException
 	 */
+	/**
+	 * Crawls the path using the provided {@link Browser browser}
+	 * 
+	 * @param path
+	 * @param browser
+	 * @return {@link Page result_page} state that resulted from crawling path
+	 * 
+	 * @throws java.util.NoSuchElementException
+	 * @throws IOException
+	 * 
+	 * @pre path != null
+	 * @pre path != null
+	 */
 	public static Page crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, IOException{
+		assert browser != null;
 		assert path != null;
 		
 		PageElement last_element = null;
@@ -40,6 +54,7 @@ public class Crawler {
 		for(PathObject current_obj: path.getPath()){
 
 			if(current_obj instanceof Page){
+				/**
 				if(browser ==  null){
 					log.error("BROWSER IS NULL WHEN CRAWLING PATH");
 				}
@@ -52,6 +67,7 @@ public class Crawler {
 				catch(Exception e){
 					log.error(e.getMessage());
 				}
+				*/
 			}
 			else if(current_obj instanceof PageElement){
 				last_element = (PageElement) current_obj;

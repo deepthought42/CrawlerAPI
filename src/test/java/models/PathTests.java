@@ -66,6 +66,8 @@ public class PathTests {
 		Path new_path = path_repo.create(orient_connection, path);
 		
 		//look up path and verify all elements
+		System.err.println("new path :: "+new_path);
+		System.err.println("new path key :: "+new_path.getKey());
 		Path path_record = path_repo.find(orient_connection, new_path.getKey());
 		orient_connection.close();
 		System.err.println("Path record size :: " + path_record.getPath().size());

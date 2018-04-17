@@ -18,7 +18,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
-import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -70,8 +69,6 @@ public class BrowserActor extends UntypedActor {
 
 			Browser browser = null;
 			if (acct_msg.getData() instanceof Path){
-				System.err.println("Path started");
-
 				Path path = (Path)acct_msg.getData();
 				assert(path.getPath() != null);
 				
@@ -119,7 +116,6 @@ public class BrowserActor extends UntypedActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		System.err.println("Creating test with browser : "+acct_msg.getOptions().get("browser").toString());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
@@ -213,7 +209,6 @@ public class BrowserActor extends UntypedActor {
 		domain_repo.update(conn, domain);
 		
 		Path new_path = Path.clone(path);
-		new_path.add(page_obj);
 		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_path, msg.getOptions());
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
@@ -236,7 +231,12 @@ public class BrowserActor extends UntypedActor {
 		Page result_page = null;
 		long crawl_time_in_ms = -1L;
 		final long pathCrawlStartTime = System.currentTimeMillis();
-		result_page = Crawler.crawlPath(path, browser);	
+		int tries = 0;
+		do{
+			result_page = Crawler.crawlPath(path, browser);
+			tries++;
+			System.err.println("Attempting to get result_page :: "+tries+";   is NULL?   ::  "+(result_page==null));
+		}while(result_page == null && tries < 5);
 		final long pathCrawlEndTime = System.currentTimeMillis();
 		
 		crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
@@ -255,8 +255,8 @@ public class BrowserActor extends UntypedActor {
 		if(last_idx < 0){
 			last_idx = 0;
 		}
-		int clicks = getLastClicksSequenceCount(last_idx, path, last_page);
-		if(clicks >= 3 && last_page.equals(result_page) && path.getPath().size() > 1){
+
+		if(ExploratoryPath.hasCycle(path, result_page)){
 	  		path.setIsUseful(false);
 	  	}
 	  	else{				

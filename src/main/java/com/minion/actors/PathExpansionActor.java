@@ -20,12 +20,14 @@ import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
+import com.qanairy.models.PathObject;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
  *
  */
 public class PathExpansionActor extends UntypedActor {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
 	/**
@@ -40,6 +42,9 @@ public class PathExpansionActor extends UntypedActor {
 				//send data directly to form test builder
 				final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
 				form_test_discoverer.tell(acct_msg, getSelf() );
+				
+				//extract buttons for expansion
+				//extract all links for expansion
 				
 				Path path = (Path)acct_msg.getData();
 				

@@ -38,6 +38,7 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		PathRepository path_record = new PathRepository();
 		path_key += path_record.generateKey(test.getPath());
 		
+		System.err.println("GENERATING KEY FOR RESULT PAGE OF TEST...");
 		PageRepository page_repo = new PageRepository();
 		path_key += page_repo.generateKey(test.getResult());
 		

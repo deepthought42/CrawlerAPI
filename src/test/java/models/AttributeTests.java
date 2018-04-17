@@ -29,7 +29,6 @@ public class AttributeTests {
 		Assert.assertTrue(created_attr != null);
 		Attribute attr_record = attr_repo.find(connection, created_attr.getKey()); 
 		Assert.assertTrue(attr_record.getKey().equals(created_attr.getKey()));
-		Assert.assertTrue(attr_record.getKey().equals(created_attr.getKey()));
 		Assert.assertTrue(attr_record.getName().equals(created_attr.getName()));
 		Assert.assertTrue(attr_record.getVals().equals(created_attr.getVals()));
 	}

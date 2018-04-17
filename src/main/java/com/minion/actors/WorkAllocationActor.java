@@ -39,12 +39,10 @@ public class WorkAllocationActor extends UntypedActor {
 					OrientConnectionFactory connection = new OrientConnectionFactory();
 					
 					if(acct_message.getData() instanceof ExploratoryPath){
-						System.err.println("Sending path to BrowserActor for exploration");
-						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
-						browser_actor.tell(msg, getSelf() );
+						final ActorRef exploratory_browser_actor = this.getContext().actorOf(Props.create(ExploratoryBrowserActor.class), "ExploratoryBrowserActor"+UUID.randomUUID());
+						exploratory_browser_actor.tell(msg, getSelf() );
 					}
 					else if(acct_message.getData() instanceof Path){
-						System.err.println("Account message received by work allocation actor contains a path");
 						path = (Path)acct_message.getData();
 						PathRepository repo = new PathRepository();
 						Path path_record = repo.find(connection, repo.generateKey(path));
@@ -56,19 +54,26 @@ public class WorkAllocationActor extends UntypedActor {
 							path.setKey(repo.generateKey(path));
 						}
 						
-						System.err.println("Sending path to BrowserActor for exploration");
 						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
 						browser_actor.tell(msg, getSelf() );						
 					}
 					else if(acct_message.getData() instanceof URL){
 						//System.err.println("url needs to be implemented");
-						System.err.println("Sending path to BrowserActor for exploration");
+						System.err.println("Sending URL to BrowserActor");
 						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
 						browser_actor.tell(msg, getSelf() );	
-
+						System.err.println("Sending path to expansion actor");
+						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+						path_expansion_actor.tell(msg, getSelf() );
 					}
 					
 					connection.close();
+					
+					if(!(acct_message.getData() instanceof ExploratoryPath)) {
+						//System.err.println("Sending path to expansion actor");
+						//final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+						//path_expansion_actor.tell(msg, getSelf() );
+					}
 				}
 				else if(acct_message.getData() instanceof Test){					
 					final ActorRef testing_actor = this.getContext().actorOf(Props.create(TestingActor.class), "TestingActor"+UUID.randomUUID());

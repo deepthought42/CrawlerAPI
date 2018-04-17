@@ -19,7 +19,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 * {@inheritDoc}
 	 */
 	public String generateKey(Attribute attr) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(attr.getName());
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(attr.getVals().toString());
 	}
 
 	/**

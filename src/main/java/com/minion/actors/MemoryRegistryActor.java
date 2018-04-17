@@ -33,11 +33,6 @@ public class MemoryRegistryActor extends UntypedActor{
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
 			if(acct_msg.getData() instanceof Test){
 				Test test = (Test)acct_msg.getData();
-				if(test.equals(null)){
-					System.err.println("MemoryRegistry recieved null test object");
-				}
-				System.err.println("MemoryRegistry saving test");
-
 				TestRepository test_repo = new TestRepository();
 				test.setKey(test_repo.generateKey(test));
 				test_repo.save(connection, test);

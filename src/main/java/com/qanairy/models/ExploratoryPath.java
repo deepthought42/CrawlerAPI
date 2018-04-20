@@ -96,7 +96,7 @@ public class ExploratoryPath extends Path{
 	}
 
 	/**
-	 * Checks if the path has 2 sequential elements that appear in more than 1 location
+	 * Checks if the path has 2 pages that are the equal
 	 * 
 	 * @param path
 	 * @return true if sequence appears more than once

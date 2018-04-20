@@ -36,11 +36,11 @@ public class ActionFactory {
 			builder.click(elem);
 
 			try {
-				Thread.sleep(10000);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {}
 		}
 		else if(action.equals("clickAndHold")){
-			//builder.clickAndHold(elem);
+			builder.clickAndHold(elem);
 		}
 		//Context click clicks select/options box
 		else if(action.equals("contextClick")){
@@ -71,7 +71,7 @@ public class ActionFactory {
 		else if(action.equals("mouseover")){
 			builder.moveToElement(elem);
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {}
 		}
 		builder.perform();

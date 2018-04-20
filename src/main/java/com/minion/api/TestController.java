@@ -107,31 +107,6 @@ public class TestController {
 	public @ResponseBody List<Test> getTestByDomain(HttpServletRequest request, 
 													@RequestParam(value="url", required=true) String url) 
 															throws UnknownAccountException, DomainNotOwnedByAccountException {
-
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = accountService.find(username);
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-    	
-       	boolean owned_by_acct = false;
-
-    	for(Domain domain_rec : acct.getDomains()){
-    		if(domain_rec.getUrl().equals(url)){
-    			owned_by_acct = true;
-    			break;
-    		}
-    	}
-    	
-    	if(!owned_by_acct){
-    		throw new DomainNotOwnedByAccountException();
-    	}
 		DomainRepository domain_repo = new DomainRepository();
     	
 		IDomain idomain = domain_repo.find(url);
@@ -162,19 +137,6 @@ public class TestController {
 	public @ResponseBody Map<String, Integer> getFailingTestByDomain(HttpServletRequest request, 
 			   								 	 	@RequestParam(value="url", required=true) String url) 
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
-
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = accountService.find(username);
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-    	
 		DomainRepository domain_repo = new DomainRepository();
     	
 		int failed_tests = 0;
@@ -229,16 +191,6 @@ public class TestController {
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
     	Date start = new Date();
-    	//make sure domain belongs to user account first
-
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
-    	
-    	Account acct = accountService.find(username);
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
     	
 		DomainRepository domain_repo = new DomainRepository();
 		IDomain idomain = domain_repo.find(url);

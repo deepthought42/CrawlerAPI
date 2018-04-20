@@ -58,13 +58,9 @@ public class WorkAllocationActor extends UntypedActor {
 						browser_actor.tell(msg, getSelf() );						
 					}
 					else if(acct_message.getData() instanceof URL){
-						//System.err.println("url needs to be implemented");
 						System.err.println("Sending URL to BrowserActor");
-						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
-						browser_actor.tell(msg, getSelf() );	
-						System.err.println("Sending path to expansion actor");
-						final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-						path_expansion_actor.tell(msg, getSelf() );
+						final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
+						url_browser_actor.tell(msg, getSelf() );
 					}
 					
 					connection.close();

@@ -49,7 +49,7 @@ public class ActionOrderOfOperations {
 		//click_actions.add(new Action("clickAndWait"));
 		//click_actions.add(new Action("clickAtAndWait"));
 		//click_actions.add(new Action("release"));
-		click_actions.add(new Action("doubleClick"));
+		//click_actions.add(new Action("doubleClick"));
 		
 		//List<Action> keyboard_actions = new ArrayList<Action>();
 		//keyboard_actions.add(new Action("sendKeys"));

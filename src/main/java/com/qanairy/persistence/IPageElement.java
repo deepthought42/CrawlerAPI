@@ -33,6 +33,18 @@ public interface IPageElement extends IPathObject{
 	@Property("xpath")
 	public void setXpath(String xpath);
 	
+	@Property("cssValues")
+	public Map<String, String> getCssValues();
+	
+	@Property("cssValues")
+	public void setCssValues(Map<String, String> cssMap);
+	
+	@Property("screenshot")
+	public String getScreenshot();
+	
+	@Property("screenshot")
+	public void setScreenshot(String cssMap);
+	
 	@Adjacency(label="has_attribute")
 	public Iterable<IAttribute> getAttributes();
 	
@@ -59,10 +71,4 @@ public interface IPageElement extends IPathObject{
 	
 	@Adjacency(label="has_rule")
 	public Iterable<IRule> getRules();
-	
-	@Property("cssValues")
-	public Map<String, String> getCssValues();
-	
-	@Property("cssValues")
-	public void setCssValues(Map<String, String> cssMap);
 }

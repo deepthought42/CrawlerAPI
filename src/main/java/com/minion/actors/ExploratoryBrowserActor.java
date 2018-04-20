@@ -1,7 +1,6 @@
 package com.minion.actors;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -58,7 +57,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				 */
 		  		OrientConnectionFactory conn = new OrientConnectionFactory();
 				DomainRepository domain_repo = new DomainRepository();	
-				System.err.println("Loading domain :: "+((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
 				Domain domain = domain_repo.find(conn, ((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
 				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()+1);
 				domain_repo.save(conn, domain);
@@ -66,16 +64,16 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				
 				Page last_page = exploratory_path.findLastPage();
-				//boolean landable_status = last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString());
-				//
-							
-				/*if(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString())){
-					last_page.setLandable(true);
-					Path shortened_path = new Path();
+				/*
+				last_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
+				if(last_page.isLandable()){
 					//clone path starting at last page in path
-					//Path shortened_path = path.clone());
+					System.err.println("Last page in traversal in landable");
+					path = new Path();
+					path.add(last_page);
 				}
-				 */
+				*/
+				
 				if(exploratory_path.getPath() != null){
 					Page result_page = null;
 
@@ -93,6 +91,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						int tries = 0;
 						do{
 							result_page = Crawler.crawlPath(path, browser);
+							result_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
 							tries++;
 							System.err.println("Attempting to get result_page :: "+tries+";   is NULL?   ::  "+(result_page==null));
 						}while(result_page == null && tries < 5);
@@ -101,7 +100,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 						
-						int last_idx = exploratory_path.getPath().size()-1;
+						int last_idx = path.getPath().size()-1;
 						if(last_idx < 0){
 							last_idx = 0;
 						}
@@ -113,6 +112,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  	else{
 					  		path.setIsUseful(true);
 							
+					  		domain = domain_repo.find(conn, domain_url);
+					  		domain.setLastDiscoveryPathRanAt(new Date());
+							domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
+							domain_repo.save(conn, domain);
+							
 					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg);
 							
 					  		Path new_path = Path.clone(path);
@@ -121,25 +125,25 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 							path_expansion_actor.tell(path_msg, getSelf());
-							
-							domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
-							domain.setLastDiscoveryPathRanAt(new Date());
-							domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
-							domain_repo.update(conn, domain);
-							break;
 					  	}
+						
+						if(path.isUseful()){
+							break;
+						}
 					}
+					
+					/*
+					 * tell discovery registry that we are FINISHED running an exploratory pa	th for discovery
+					 */
+					domain = domain_repo.find(conn, domain_url);
+					domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
+					domain_repo.save(conn, domain);
+				  	browser.close();
+					
+				  	conn.close();
 				}
 
-				/*
-				 * tell discovery registry that we are FINISHED running an exploratory path for discovery
-				 */
-				domain = domain_repo.find(conn, exploratory_path.firstPage().getUrl().getHost());
-				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
-				domain_repo.save(conn, domain);
-			  	browser.close();
 				
-			  	conn.close();
 				//PLACE CALL TO LEARNING SYSTEM HERE
 				//Brain.learn(path, path.getIsUseful());
 			}
@@ -155,8 +159,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 */
 	private void createTest(Path path, Page result_page, long crawl_time, Domain domain, Message<?> acct_msg ) {
 		path.setIsUseful(true);
-				
-		Test test = new Test(path, result_page, domain, "Test #"+domain.getDiscoveredTestCount());							
+		Test test = new Test(path, result_page, domain, "Test #" + domain.getDiscoveredTestCount());							
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
 		test.setRunTime(crawl_time);

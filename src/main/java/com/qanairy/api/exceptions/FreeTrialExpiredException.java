@@ -11,6 +11,6 @@ public class FreeTrialExpiredException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public FreeTrialExpiredException() {
-		super("Your free trial has ended. Sign up for <u>a plan</u>.");
+		super("Your free trial has ended. Sign up for a plan.");
 	}
 }

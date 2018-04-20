@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -20,11 +19,8 @@ import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
-import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -35,8 +31,8 @@ import com.qanairy.models.PathObject;
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
  *
  */
-public class BrowserActor extends UntypedActor {
-	private static Logger log = LoggerFactory.getLogger(BrowserActor.class.getName());
+public class UrlBrowserActor extends UntypedActor {
+	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
 
 	private static Random rand = new Random();
 	private UUID uuid = null;
@@ -68,18 +64,7 @@ public class BrowserActor extends UntypedActor {
 			Message<?> acct_msg = (Message<?>)message;
 
 			Browser browser = null;
-			if (acct_msg.getData() instanceof Path){
-				Path path = (Path)acct_msg.getData();
-				assert(path.getPath() != null);
-				
-				browser = new Browser(((Path)acct_msg.getData()).firstPage().getUrl().toString(), acct_msg.getOptions().get("browser").toString());
-				traverse_path(browser, path, acct_msg);
-			  	browser.close();
-	
-				//PLACE CALL TO LEARNING SYSTEM HERE
-				//Brain.learn(path, path.getIsUseful());
-			}
-			else if(acct_msg.getData() instanceof URL){
+			if(acct_msg.getData() instanceof URL){
 
 				try{
 					browser = new Browser(((URL)acct_msg.getData()).toString(), acct_msg.getOptions().get("browser").toString());
@@ -144,34 +129,6 @@ public class BrowserActor extends UntypedActor {
 	}
 
 	/**
-	 * counts how many clicks have happened in a sequence since last page change
-	 * 
-	 * @param last_idx
-	 * @param path
-	 * @param last_page
-	 * @return
-	 */
-	private int getLastClicksSequenceCount(int last_idx, Path path, Page last_page) {
-		int clicks = 0;
-		
-		while(last_idx>=0){
-			if(path.getPath().get(last_idx).equals(last_page)){
-				break;
-			}
-			PathObject obj = path.getPath().get(last_idx);
-			if(obj.getType().equals("Action")){
-				Action path_action = (Action)obj;
-				if(path_action.getName().equals("click") || path_action.getName().equals("doubleclick")){
-					clicks++;
-				}
-			}
-			last_idx--;
-		};
-		
-		return clicks;
-	}
-
-	/**
 	 * Generates a landing page test based on a given URL
 	 * 
 	 * @param browser
@@ -212,51 +169,5 @@ public class BrowserActor extends UntypedActor {
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );
-	}
-	
-	/**
-	 * 
-	 * 
-	 * @param browser
-	 * @param path
-	 * @param acct_msg
-	 * @throws NoSuchElementException
-	 * @throws IOException
-	 */
-	public void traverse_path(Browser browser, Path path, Message<?> acct_msg) throws NoSuchElementException, IOException{
-
-		Page result_page = null;
-		long crawl_time_in_ms = -1L;
-		final long pathCrawlStartTime = System.currentTimeMillis();
-		int tries = 0;
-		do{
-			result_page = Crawler.crawlPath(path, browser);
-			tries++;
-			result_page.setLandable(result_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
-		}while(result_page == null && tries < 5);
-		final long pathCrawlEndTime = System.currentTimeMillis();
-		
-		crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-				
-		PathRepository path_repo = new PathRepository();
-		path.setKey(path_repo.generateKey(path));
-		int last_idx = path.getPath().size()-1;
-		if(last_idx < 0){
-			last_idx = 0;
-		}
-
-		if(ExploratoryPath.hasCycle(path, result_page)){
-	  		path.setIsUseful(false);
-	  	}
-	  	else{				
-	  		DomainRepository domain_repo = new DomainRepository();
-	  		OrientConnectionFactory conn = new OrientConnectionFactory();
-			Domain domain = domain_repo.find(conn, browser.getPage().getUrl().getHost());
-			domain.setLastDiscoveryPathRanAt(new Date());
-			domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
-			domain_repo.save(conn, domain);
-			
-	  		createTest(path, result_page, crawl_time_in_ms, domain, acct_msg);
-	  	}
 	}
 }

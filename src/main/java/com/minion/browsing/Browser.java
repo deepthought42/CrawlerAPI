@@ -109,11 +109,11 @@ public class Browser {
 				WebDriverWait wait = new WebDriverWait(driver, 30);
 				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 				try {
-					Thread.sleep(3000);
+					Thread.sleep(10000);
 				} catch (InterruptedException e) {}
 				
 				this.url = url;
-				this.driver.get(url);
+				this.getDriver().get(url);
 				break;
 			}
 			catch(UnreachableBrowserException e){
@@ -127,7 +127,7 @@ public class Browser {
 			}
 			
 			try {
-				Thread.sleep(15000);
+				Thread.sleep(3000);
 			} catch (InterruptedException e) {}
 			cnt++;
 		}
@@ -148,25 +148,24 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws GridException, IOException{
-		URL page_url = new URL(url);
+		URL page_url = new URL(this.getDriver().getCurrentUrl());
 		String screenshot = "";
 		String src = null;
 		List<PageElement> visible_elements = null;
 		for(int i=0; i<10; i++){
-			src = this.driver.getPageSource();
-			screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.driver), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.driver.getPageSource()));
-			visible_elements = Browser.getVisibleElements(this.driver, "");
+			src = this.getDriver().getPageSource();
+			screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.getDriver()), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
+			visible_elements = Browser.getVisibleElements(this.getDriver(), "");
 			break;
 		}
 		
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();
 		}
-		
 		Map<String, String> browser_screenshot = new HashMap<String, String>();
 		browser_screenshot.put(browser_name, screenshot);
 		return new Page(src, 
-						url,
+						page_url.toString(),
 						browser_screenshot,
 						visible_elements);
 	}
@@ -441,13 +440,16 @@ public class Browser {
 				// removed from condition ::   is_child && 
 				
 				boolean is_visible = isElementVisibleInPane(Browser.getScreenshot(driver), elem);
-				if(is_visible && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+				//NOTE :: Add is_visible back into if statement once scrolling is added in.
+				
+				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
-					String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getElementScreenshot(Browser.getScreenshot(driver), elem), (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
-					tag.setScreenshot(screenshot);
-
+					if(is_visible){
+						String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getElementScreenshot(Browser.getScreenshot(driver), elem), (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
+						tag.setScreenshot(screenshot);
+					}
 					elementList.add(tag);
 				}
 			}catch(StaleElementReferenceException e){

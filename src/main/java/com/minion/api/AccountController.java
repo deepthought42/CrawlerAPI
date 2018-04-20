@@ -96,7 +96,7 @@ public class AccountController {
         	throw new AccountExistsException();
         }
         
-        String plan = "2-disc-500-test-90-trial";
+        String plan = "4-disc-10000-test-90-trial";
     	
     	Plan new_plan = Plan.retrieve(plan);
 

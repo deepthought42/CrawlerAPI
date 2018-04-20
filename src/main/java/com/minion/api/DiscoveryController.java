@@ -332,7 +332,7 @@ class DiscoveryLimitReachedException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public DiscoveryLimitReachedException() {
-		super("You’ve reached your discovery limit. <u>Upgrade your account now!</u>");
+		super("You’ve reached your discovery limit. Upgrade your account now!");
 	}
 }
 

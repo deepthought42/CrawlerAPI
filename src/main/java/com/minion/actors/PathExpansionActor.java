@@ -1,6 +1,7 @@
 package com.minion.actors;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,9 +55,12 @@ public class PathExpansionActor extends UntypedActor {
 					Page first_page = (Page)path.getPath().get(0);
 					
 					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
-						System.err.println("Last page is landable...truncating path to start with last_page");
-						path = new Path();
-						path.getPath().add(last_page);
+						System.err.println("Last page is landable...sending page to be mapped for page verification test");
+						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+						Message<URL> expanded_path_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
+						
+						work_allocator.tell(expanded_path_msg, getSelf() );
+						return;
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);

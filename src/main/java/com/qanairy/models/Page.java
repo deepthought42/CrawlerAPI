@@ -257,12 +257,13 @@ public class Page extends PathObject {
         
         
         //System.err.println("Screenshots match? :: "+screenshots_match);
+        /*
         System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         System.err.println("Page 1 length :: "+this.getElements().size());
         System.err.println("Page 2 length :: "+that.getElements().size());
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        
+        */
         
         
         /*

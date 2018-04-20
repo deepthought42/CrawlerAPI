@@ -76,7 +76,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		elem.setText(data.getText());
 		elem.setName(data.getName());
 		elem.setType(data.getType());
-		
+		elem.setScreenshot(data.getScreenshot());
 		List<Attribute> attr_list = new ArrayList<Attribute>();
 		AttributeRepository attr_repo = new AttributeRepository();
 		for(IAttribute attr: data.getAttributes()){

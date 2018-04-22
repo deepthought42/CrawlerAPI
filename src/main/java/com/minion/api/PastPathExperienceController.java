@@ -30,7 +30,62 @@ public class PastPathExperienceController {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTestExperience(Test test) throws JsonProcessingException {	
+	public static void broadcastDiscoveredTest(Test test) throws JsonProcessingException {	
+		List<PathObject> path_list = new ArrayList<PathObject>();
+		for(PathObject obj : test.getPath().getPath()){
+			if(obj != null && obj.getType().equals("Page")){
+				Page page_obj = (Page)obj;
+								
+				Page page;
+				try {
+					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
+					path_list.add(page);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			else if(obj != null){
+				path_list.add(obj);
+			}
+		}
+
+		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
+		Page result_page = null;
+		try {
+			result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		Test new_test = new Test(test.getKey(), path, result_page, test.getDomain(), test.getName());
+		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
+		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
+		new_test.setRunTime(test.getRunTime());
+		
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+		/*Gson gson = new Gson();
+        String test_json = gson.toJson(new_test);
+        */
+
+		String host = new_test.getDomain().getUrl();
+        
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String test_json = mapper.writeValueAsString(new_test);
+        
+		pusher.trigger(host, "test-discovered", test_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link Test} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastTest(Test test) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
 		Path path_clone = Path.clone(test.getPath());
 		
@@ -74,9 +129,7 @@ public class PastPathExperienceController {
 		/*Gson gson = new Gson();
         String test_json = gson.toJson(new_test);
         */
-        System.err.println("TEST :::::      "+new_test);
-        System.err.println("TEST DOMAIN :::::      "+new_test.getDomain());
-        System.err.println("TEST DOMAIN URL    :::::      "+new_test.getDomain().getUrl());
+
 		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
@@ -84,6 +137,6 @@ public class PastPathExperienceController {
         //Object to JSON in String
         String test_json = mapper.writeValueAsString(new_test);
         
-		pusher.trigger(host, "test-discovered", test_json);
+		pusher.trigger(host, "test-run", test_json);
 	}
 }

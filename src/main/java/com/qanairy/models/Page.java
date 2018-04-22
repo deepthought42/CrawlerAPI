@@ -52,10 +52,13 @@ public class Page extends PathObject {
 	 * @param elements
 	 * @throws IOException
 	 * 
+	 * @pre html != null && html.length() > 0
 	 * @pre elements != null
 	 */
 	public Page(String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements) throws IOException {
 		assert elements != null;
+		assert html != null;
+		assert html.length() > 0;
 		
 		super.setType("Page");
 		this.setSrc(html);
@@ -100,11 +103,12 @@ public class Page extends PathObject {
  	 * 
 	 * @param html
 	 * @param url
-	 * @param screenshot
+	 * @param browsers_screenshots
 	 * @param elements
-	 * @throws IOException
+	 * @param isLandable
 	 * 
 	 * @pre elements != null;
+	 * @throws IOException
 	 */
 	public Page(String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
@@ -251,14 +255,18 @@ public class Page extends PathObject {
         }
         */
         
+        
+        //System.err.println("Screenshots match? :: "+screenshots_match);
         /*
-        System.err.println("Screenshots match? :: "+screenshots_match);
         System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        System.err.println("Page 1 length :: "+this.getSrc().length());
-        System.err.println("Page 1 length :: "+that.getSrc().length());
+        System.err.println("Page 1 length :: "+this.getElements().size());
+        System.err.println("Page 2 length :: "+that.getElements().size());
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-       
+        */
+        
+        
+        /*
         if(this.getElements().size() != that.getElements().size()){
         	System.err.println("@@@@@@@@@@@@@@     THIS vs THAT ELEMENTS SIZE ++++++++++++++++++++++++++++++++++++    "+this.getElements().size() + "  vs  "+that.getElements().size());
         	
@@ -283,7 +291,7 @@ public class Page extends PathObject {
         	
         }
         */
-        return this.getElements().size() == that.getElements().size(); //this.getSrc().equals(that.getSrc()); 
+        return this.getElements().size() == that.getElements().size(); //this.getSrc().equals(that.getSrc());
 	}
 	
 	/**

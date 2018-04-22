@@ -52,36 +52,36 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			//get first page in path
 			Page page = (Page)path.getPath().get(0);
 
-				int cnt = 0;
-			  	Browser browser = null;
-			  	
-			  	while(browser == null && cnt < 5){
-			  		try{
-				  		browser = new Browser(page.getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
-						break;
-					}catch(NullPointerException e){
-						log.error(e.getMessage());
-					}
-					cnt++;
-				}	
-
-				Page current_page = Crawler.crawlPath(path, browser);
-
-			  	List<Form> forms = Browser.extractAllForms(current_page, browser);
-			  	List<Path> form_paths = new ArrayList<Path>();
-			  	System.err.println("Generating tests for " + forms.size() + " forms");
-			  	for(Form form : forms){
-			  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
-			  	}
-			  	
-			  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-				for(Path expanded : form_paths){
-					//send all paths to work allocator to be evaluated
-					Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
-					work_allocator.tell(expanded_path_msg, getSelf() );
+			int cnt = 0;
+		  	Browser browser = null;
+		  	
+		  	while(browser == null && cnt < 5){
+		  		try{
+			  		browser = new Browser(page.getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
+					break;
+				}catch(NullPointerException e){
+					log.error(e.getMessage());
 				}
-				
-			  	browser.close();
+				cnt++;
+			}	
+
+			Page current_page = Crawler.crawlPath(path, browser);
+
+		  	List<Form> forms = Browser.extractAllForms(current_page, browser);
+		  	List<Path> form_paths = new ArrayList<Path>();
+		  	System.err.println("Generating tests for " + forms.size() + " forms");
+		  	for(Form form : forms){
+		  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
+		  	}
+		  	
+		  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+			for(Path expanded : form_paths){
+				//send all paths to work allocator to be evaluated
+				Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
+				work_allocator.tell(expanded_path_msg, getSelf() );
+			}
+		  	browser.close();
+		  	
 		}
 	}
 	
@@ -159,12 +159,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		assert rule != null;
 		
 		List<Path> paths = new ArrayList<Path>();
-		if(rule.getType().equals(RuleType.REQUIRED)){
-			//generate required path for element type
-			System.err.println("=================  SHOULD BE GENERATING REQUIRED TESTS ======================");
-			paths.addAll(generateRequirementChecks(input_elem, true));
-		}
-		else if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
+		if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
 			System.err.println("====================== SHOULD BE GENERATED ALPHABETIC ONLY RESTRICTION ======================");
 			paths.addAll(generateAlphabeticRestrictionTests(input_elem, rule));
 		}
@@ -178,11 +173,11 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		}
 		else if(rule.getType().equals(RuleType.DISABLED)){
 			System.err.println("====================== SHOULD BE GENERATING DISABLED FIELD TESTS ======================");
-			//path.addAll(generateEnabledTests(input_elem, rule));
+			paths.addAll(generateEnabledTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.READ_ONLY)){
 			System.err.println("====================== SHOULD BE GENERATING READ-ONLY FIELD TESTS ======================");
-			//path.addAll(generateReadOnlyTests(input_elem, rule));
+			paths.addAll(generateReadOnlyTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.MAX_LENGTH)){
 			System.err.println("====================== SHOULD BE GENERATING MAX LENGTH TESTS ======================");
@@ -375,8 +370,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			path_2.add(new Action("click", ""));
 			path_2.add(input);
 			path_2.add(new Action("sendKeys", "a"));
-			path.add(submit);
-			path.add(new Action("click", ""));
+			path_2.add(submit);
+			path_2.add(new Action("click", ""));
 			paths.add(path_2);
 		}
 		else if( input_type.equals("number")){
@@ -529,6 +524,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 						PageElement page_elem = (PageElement)path_obj;
 						if(page_elem.equals(input_elem)){
 							field_exists = true;
+							break;
 						}
 					}
 				}

@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +26,12 @@ import org.springframework.stereotype.Controller;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
+import com.qanairy.api.exceptions.FreeTrialExpiredException;
+import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.StripeClient;
 import com.qanairy.models.dto.AccountRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
@@ -42,6 +47,7 @@ import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Plan;
+import com.stripe.model.Subscription;
 
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -72,7 +78,6 @@ public class DiscoveryController {
         this.stripeClient = stripeClient;
     }
     
-    @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/status", method = RequestMethod.GET)
     public @ResponseBody Map<String, Boolean> isDiscoveryRunning(HttpServletRequest request, 
     												@RequestParam(value="url", required=true) String url) 
@@ -86,32 +91,31 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 
     	@SuppressWarnings("unchecked")
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
-    	domain.setDiscoveryStartTime(new Date());
-    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+    	//domain.setDiscoveryStartTime(new Date());
+    	Date last_ran_date = domain.getDiscoveryStartTime();
 
     	Date now = new Date();
-    	long diffInMinutes = 1000;
+    	long diffInMinutes = 10000;
     	if(last_ran_date != null){
-    		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
+    		diffInMinutes = Math.abs((int)(now.getTime() - last_ran_date.getTime()))/ (1000 * 60);
     	}
 
     	int paths_being_explored = domain.getDiscoveryPathCount();
         
-		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browser", domain.getDiscoveryBrowserName());
-        
 		Map<String, Boolean> status_map = new HashMap<String, Boolean>();
-		if(paths_being_explored == 0 || diffInMinutes > 1440){
+		if(diffInMinutes > 1440){
 			status_map.put("status", false);
 		}
 		else{
-			status_map.put("status", false);
+			status_map.put("status", true);
 		}
 		return status_map;
     }
@@ -143,6 +147,20 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
+    	Plan plan = subscription.getPlan();
+
+    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
+    		throw new FreeTrialExpiredException();
+    	}
+    	
+    	String plan_name = plan.getId();
+    	int disc_index = plan_name.indexOf("-disc");
+    	int allowed_discovery_cnt = Integer.parseInt(plan_name.substring(0, disc_index));
     	
     	int monthly_discovery_count = 0;
     	//check if account has exceeded allowed discovery threshold
@@ -160,11 +178,6 @@ public class DiscoveryController {
     			monthly_discovery_count++;
     		}
     	}
-    	
-    	Plan plan = stripeClient.getSubscription(acct.getSubscriptionToken()).getPlan();
-    	String plan_name = plan.getName();
-    	int disc_index = plan_name.indexOf("-disc");
-    	int allowed_discovery_cnt = Integer.parseInt(plan_name.substring(0, disc_index));
     	
     	if(monthly_discovery_count > allowed_discovery_cnt){
     		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
@@ -193,11 +206,10 @@ public class DiscoveryController {
     	@SuppressWarnings("unchecked")
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
     	IDomain domain = domains_iter.next();
-    	domain.setDiscoveryStartTime(new Date());
-    	Date last_ran_date = domain.getLastDiscoveryPathRanAt();
+    	Date last_ran_date = domain.getDiscoveryStartTime();
 
     	Date now = new Date();
-    	long diffInMinutes = 1000;
+    	long diffInMinutes = 10000;
     	if(last_ran_date != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
     	}
@@ -207,8 +219,11 @@ public class DiscoveryController {
         
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
+        System.err.println("Diff in Minutes :::        "+diffInMinutes);
         
-		if(paths_being_explored == 0 || diffInMinutes > 1440){
+		if(diffInMinutes > 1440){
+	    	domain.setDiscoveryStartTime(new Date());
+
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
         	domain.setDiscoveryPathCount(0);
 				
@@ -222,7 +237,7 @@ public class DiscoveryController {
 
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
-			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor");
+			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
 			
 		    //Fire discovery started event	
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
@@ -233,7 +248,7 @@ public class DiscoveryController {
 	    		    .properties(discovery_started_props)
 	    		);
 			
-			Timeout timeout = new Timeout(Duration.create(30, "seconds"));
+			Timeout timeout = new Timeout(Duration.create(60, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
 			connection.close();
 
@@ -286,6 +301,9 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
 
 		WorkAllowanceStatus.haltWork(acct.getKey()); 
 		
@@ -294,20 +312,7 @@ public class DiscoveryController {
 
 }
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-class WorkAllocatorNotFoundException extends RuntimeException {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7200878662560716214L;
-
-	public WorkAllocatorNotFoundException() {
-		super("could not find user .");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+@ResponseStatus(HttpStatus.SEE_OTHER)
 class ExistingDiscoveryFoundException extends RuntimeException {
 	/**
 	 * 
@@ -315,7 +320,7 @@ class ExistingDiscoveryFoundException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
 	public ExistingDiscoveryFoundException() {
-		super("Discovery is already running");
+		super("A discovery is already running");
 	}
 }
 
@@ -327,23 +332,11 @@ class DiscoveryLimitReachedException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public DiscoveryLimitReachedException() {
-		super("Discovery limit reached. Upgrade your account now!");
+		super("You’ve reached your discovery limit. Upgrade your account now!");
 	}
 }
 
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
-class FreeTrialEndedException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7200878662560716216L;
-
-	public FreeTrialEndedException() {
-		super("Your free trial has ended");
-	}
-}
-
-@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+@ResponseStatus(HttpStatus.CONFLICT)
 class PaymentDueException extends RuntimeException {
 	/**
 	 * 
@@ -351,6 +344,6 @@ class PaymentDueException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716216L;
 
 	public PaymentDueException() {
-		super("There was an issue processing your payment. Please update your payment details.");
+		super("There was an issue processing your payment. Please update your payment details");
 	}
 }

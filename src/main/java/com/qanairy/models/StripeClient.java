@@ -1,4 +1,4 @@
-package com.minion.api;
+package com.qanairy.models;
 
 import java.util.Calendar;
 import java.util.Date;

@@ -20,7 +20,7 @@ public class AccountTests {
 	public void accountCreateRecordWithoutUsers(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 
-		Account acct = new Account("Test Org", "Test Package", "#00000012SD", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>());
+		Account acct = new Account("Test Org", "Test Package", "#00000012SD", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -40,7 +40,7 @@ public class AccountTests {
 		QanairyUser user = new QanairyUser("Test user 1");
 		users.add(user);
 
-		Account acct = new Account("Test Org", "Test Package", "#00000012SD", "test_subscription", users, new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>());
+		Account acct = new Account("Test Org", "Test Package", "#00000012SD", "test_subscription", users, new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -56,7 +56,7 @@ public class AccountTests {
 	public void accountUpdateRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 
-		Account acct = new Account("Test Org2", "Test Package", "acct_test1", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>());
+		Account acct = new Account("Test Org2", "Test Package", "acct_test1", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
 		AccountRepository acct_repo = new AccountRepository();
 		
 		Account created_acct = acct_repo.create(connection, acct);
@@ -79,7 +79,7 @@ public class AccountTests {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		AccountRepository acct_repo = new AccountRepository();
 
-		Account acct = new Account("Find Test Org", "Test Package", "acct_test1 update", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>());
+		Account acct = new Account("Find Test Org", "Test Package", "acct_test1 update", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
 		acct = acct_repo.create(orient_connection, acct);
 		Account acct_record = acct_repo.find(orient_connection, acct.getKey());
 		

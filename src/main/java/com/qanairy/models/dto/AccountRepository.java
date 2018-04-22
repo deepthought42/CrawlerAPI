@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.IteratorUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
@@ -22,7 +20,6 @@ import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 import com.tinkerpop.frames.VertexFrame;
 
@@ -78,7 +75,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		
 		acct_record.setTestRecords(test_records);
-		
+		acct_record.setOnboardedSteps(account.getOnboardedSteps());
 		/*for(QanairyUser user : account.getUsers()){
 			QanairyUserRepository repo = new QanairyUserRepository();
 			//repo.create(connection, user);
@@ -123,7 +120,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		*/
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getCustomerToken(), account.getSubscriptionToken(),
-							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), discovery_record_list, test_record_list);
+							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), discovery_record_list, test_record_list, account.getOnboardedSteps());
 	}
 	
 	/**
@@ -150,7 +147,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Account update(OrientConnectionFactory connection, Account account) throws ExistingAccountDomainException{
+	public Account update(OrientConnectionFactory connection, Account account){
 		if(account.getKey() == null){
 			account.setKey(generateKey(account));
 		}
@@ -174,16 +171,15 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 					acct.addDomain(repo.save(connection, domain));	
 				}
 				else{
-					//check if domain is part of account before adding it to the account
-					Iterator<IDomain> domain_iter = acct.getDomains().iterator();
-					while(domain_iter.hasNext()){
-						IDomain idomain = domain_iter.next();
-						if(idomain.getUrl().equals(domain.getUrl())){
-							throw new ExistingAccountDomainException();
+					boolean domain_exists_on_acct = false;
+					for(IDomain idomain : acct.getDomains()){
+						if(idomain.getUrl().equals(domain_record.getUrl())){
+							domain_exists_on_acct = true;
 						}
 					}
-					
-					acct.addDomain(repo.save(connection, domain_record));
+					if(!domain_exists_on_acct){
+						acct.addDomain(repo.save(connection, domain));
+					}
 				}
 			}
 		}
@@ -248,15 +244,4 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			//account_vertex.remove();
 		}
 	} 
-}
-
-
-@ResponseStatus(HttpStatus.SEE_OTHER)
-class ExistingAccountDomainException extends RuntimeException {
-
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public ExistingAccountDomainException() {
-		super("Domain already exists for your account");
-	}
 }

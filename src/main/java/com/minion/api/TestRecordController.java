@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -13,7 +12,6 @@ import com.qanairy.models.TestRecord;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 
@@ -37,17 +35,4 @@ public class TestRecordController {
 		return test_records;
 	}
 
-}
-
-@ResponseStatus(HttpStatus.NOT_FOUND)
-class TestCoordinatorNotFoundException extends RuntimeException {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public TestCoordinatorNotFoundException() {
-		super("Could not find user.");
-	}
 }

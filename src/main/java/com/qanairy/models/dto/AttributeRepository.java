@@ -19,7 +19,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 	 * {@inheritDoc}
 	 */
 	public String generateKey(Attribute attr) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(attr.getName());
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(attr.getVals().toString());
 	}
 
 	/**
@@ -37,7 +37,7 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 		
 		IAttribute attribute_record = null;
 		if( !iter.hasNext()){
-			attribute_record = connection.getTransaction().addVertex("class:"+Attribute.class.getSimpleName()+","+UUID.randomUUID(), IAttribute.class);
+			attribute_record = connection.getTransaction().addVertex("class:"+IAttribute.class.getSimpleName()+","+UUID.randomUUID(), IAttribute.class);
 			attribute_record.setName(attr.getName());
 			attribute_record.setVals(attr.getVals());
 			attribute_record.setKey(attr.getKey());

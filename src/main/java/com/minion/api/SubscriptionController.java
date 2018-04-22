@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.StripeClient;
 import com.qanairy.services.AccountService;
 
 import com.stripe.model.Plan;

@@ -123,7 +123,7 @@ public class PathTests {
 		assert true;
 	}
 	
-	@Test(groups="Regression")
+/*	@Test(groups="Regression")
 	public void testHasCycle(){
 		Map<String, String> browser_screenshots = new HashMap<String, String>();
 		List<PageElement> elements = new ArrayList<PageElement>();
@@ -174,4 +174,5 @@ public class PathTests {
 			Assert.fail();
 		}
 	}	
+	*/
 }

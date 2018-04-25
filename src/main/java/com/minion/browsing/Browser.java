@@ -150,11 +150,9 @@ public class Browser {
 	 */
 	public Page getPage() throws GridException, IOException{
 		URL page_url = new URL(this.getDriver().getCurrentUrl());
-
 		String src = this.getDriver().getPageSource();
 		String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.getDriver()), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
 		List<PageElement> visible_elements = Browser.getVisibleElements(this.getDriver(), "");
-
 		
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();

@@ -90,13 +90,13 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 				continue;
 			}
 			RuleRepository rule_repo = new RuleRepository();
-			//rules.add(rule_repo.load(iterator.next()));
 			Rule rule = rule_repo.load(irule);
 			elem.addRule(rule);
 		}
-		//elem.addRules(rules);
+		
 		elem.setAttributes(attr_list);
 		elem.setCssValues(data.getCssValues());
+		
 		return elem;
 	}
 

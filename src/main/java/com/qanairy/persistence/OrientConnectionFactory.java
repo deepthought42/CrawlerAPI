@@ -34,7 +34,7 @@ public class OrientConnectionFactory {
 	 */
 	private FramedGraph<OrientGraphNoTx> getConnection(){
 		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		graphFactory = new OrientGraphFactory("remote:159.89.234.103/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 1000);
+		graphFactory = new OrientGraphFactory("remote:159.89.234.103/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 10000);
 	    //graphFactory.setConnectionStrategy(OStorageRemote.CONNECTION_STRATEGY.ROUND_ROBIN_CONNECT.toString());
 		OrientGraphNoTx instance = graphFactory.getNoTx();
 		return factory.create(instance);

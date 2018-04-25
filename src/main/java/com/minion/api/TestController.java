@@ -487,6 +487,7 @@ public class TestController {
 				for(Boolean status : test.getBrowserPassingStatuses().values()){
 					if(status != null && !status){
 						is_passing = false;
+						break;
 					}
 				}
 				test.setCorrect(is_passing);

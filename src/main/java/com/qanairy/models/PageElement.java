@@ -13,9 +13,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
 import com.minion.browsing.ActionFactory;
 import com.qanairy.rules.Rule;
 
@@ -269,8 +267,7 @@ public class PageElement extends PathObject{
 		
 		boolean areElementsEqual =  false;
 		
-		if(this.getName().equals(that.getName())
-				|| this.getText().equals(that.getText())){
+		if(this.getText().equals(that.getText())){
 			areElementsEqual = true;
 		}
 		

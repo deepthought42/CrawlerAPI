@@ -40,7 +40,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		IPageElement page_elem = null;
 		
 		if(page_elem_record != null){
-			page_elem = save(connection, page_elem_record);
+			page_elem = save(connection, elem);
 
 			
 		}
@@ -90,13 +90,13 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 				continue;
 			}
 			RuleRepository rule_repo = new RuleRepository();
-			//rules.add(rule_repo.load(iterator.next()));
 			Rule rule = rule_repo.load(irule);
 			elem.addRule(rule);
 		}
-		//elem.addRules(rules);
+		
 		elem.setAttributes(attr_list);
 		elem.setCssValues(data.getCssValues());
+		
 		return elem;
 	}
 
@@ -135,6 +135,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 			
 			page_elem_record.setName(elem.getName());
 			page_elem_record.setText(elem.getText());
+
 			page_elem_record.setXpath(elem.getXpath());
 			page_elem_record.setKey(elem.getKey());
 
@@ -146,6 +147,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		else{
 			page_elem_record = iter.next();
 		}
+    
 		page_elem_record.setCssValues(elem.getCssValues());
 		page_elem_record.setScreenshot(elem.getScreenshot());
 

@@ -117,6 +117,7 @@ public class Browser {
 				break;
 			}
 			catch(UnreachableBrowserException e){
+				
 				log.error(e.getMessage());
 			}
 			catch(WebDriverException e){
@@ -149,15 +150,9 @@ public class Browser {
 	 */
 	public Page getPage() throws GridException, IOException{
 		URL page_url = new URL(this.getDriver().getCurrentUrl());
-		String screenshot = "";
-		String src = null;
-		List<PageElement> visible_elements = null;
-		for(int i=0; i<10; i++){
-			src = this.getDriver().getPageSource();
-			screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.getDriver()), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
-			visible_elements = Browser.getVisibleElements(this.getDriver(), "");
-			break;
-		}
+		String src = this.getDriver().getPageSource();
+		String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.getDriver()), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
+		List<PageElement> visible_elements = Browser.getVisibleElements(this.getDriver(), "");
 		
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();

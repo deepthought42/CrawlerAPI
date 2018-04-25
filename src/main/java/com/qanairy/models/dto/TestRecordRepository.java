@@ -14,6 +14,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class TestRecordRepository implements IPersistable<TestRecord, ITestRecord> {
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -23,7 +24,6 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 		PageRepository page_repo = new PageRepository();
 		testRecord.setResult(page_repo.save(connection, record.getPage()));
 		testRecord.setPassing(record.getPassing());
-
 		testRecord.setBrowser(record.getBrowser());
 		testRecord.setRanAt(record.getRanAt());
 		testRecord.setRunTime(record.getRunTime());
@@ -33,7 +33,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	}
 
 	/**
-	 * Generates a key for thos object
+	 * Generates a key for this object
 	 * @return generated key
 	 */
 	public String generateKey(TestRecord record) {

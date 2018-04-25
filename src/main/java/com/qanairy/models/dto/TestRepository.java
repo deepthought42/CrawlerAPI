@@ -172,8 +172,8 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		test.setName(itest.getName());
 		test.setCorrect(itest.getCorrect());
 		
-		DomainRepository domain_repo = new DomainRepository();
-		test.setDomain(domain_repo.load(itest.getDomain()));
+		//DomainRepository domain_repo = new DomainRepository();
+		//test.setDomain(domain_repo.load(itest.getDomain()));
 		test.setBrowserPassingStatuses(itest.getBrowserStatuses());
 		
 		try{

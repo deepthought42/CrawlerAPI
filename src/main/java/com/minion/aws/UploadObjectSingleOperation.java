@@ -1,9 +1,13 @@
 package com.minion.aws;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
@@ -15,6 +19,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 
@@ -26,15 +31,21 @@ public class UploadObjectSingleOperation {
 
 	private static String bucketName     = "qanairy";
 	
-	public static String saveImageToS3(File image, String domain, String page_key) {
+	public static String saveImageToS3(BufferedImage image, String domain, String page_key) {
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");;
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
         try {
-            log.debug("Uploading a new object to S3 from a file: "+domain+"/"+image.getName() + " " + image);
+        	ByteArrayOutputStream os = new ByteArrayOutputStream();
+        	ImageIO.write(image, "png", os);
+        	byte[] buffer = os.toByteArray();
+        	InputStream is = new ByteArrayInputStream(buffer);
+        	ObjectMetadata meta = new ObjectMetadata();
+        	meta.setContentLength(buffer.length);
+            log.debug("Uploading a new object to S3 from a file: "+ image);
             s3client.putObject(new PutObjectRequest(
-             		                 bucketName, domain+"/"+page_key+".png", image).withCannedAcl(CannedAccessControlList.PublicRead));
+             		                 bucketName, domain+"/"+page_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
             
             filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+".png";
          } catch (AmazonServiceException ase) {
@@ -54,7 +65,10 @@ public class UploadObjectSingleOperation {
                     "communicate with S3, " +
                     "such as not being able to access the network.");
             log.error("Error Message: " + ace.getMessage());
-        }
+        } catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
         return filepath;
     }

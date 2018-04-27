@@ -50,6 +50,10 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
+
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
@@ -151,9 +155,8 @@ public class Browser {
 		String src = this.getDriver().getPageSource();
 		String screenshot = "";
 		try{
-			File img = Browser.getScreenshot(this.getDriver());
-			screenshot = UploadObjectSingleOperation.saveImageToS3(img, page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
-			img.delete();
+			Screenshot img = Browser.getScreenshot(this.getDriver());
+			screenshot = UploadObjectSingleOperation.saveImageToS3(img.getImage(), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
 		}catch(IOException e){}
 		List<PageElement> visible_elements = Browser.getVisibleElements(this.getDriver(), "");
 	
@@ -346,8 +349,20 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static File getScreenshot(WebDriver driver) throws IOException, GridException{
+	/*public static File getScreenshot(WebDriver driver) throws IOException, GridException{
 		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+	}
+	*/
+	
+	/**
+	 * Gets image as a base 64 string
+	 * 
+	 * @return File png file of image
+	 * @throws IOException
+	 */
+	public static Screenshot getScreenshot(WebDriver driver) throws IOException, GridException{
+		return new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100))
+				.takeScreenshot(driver);
 	}
 	
 	/**
@@ -357,9 +372,9 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static File getElementScreenshot(File screenshot, WebElement elem) throws IOException{
+	public static File getElementScreenshot(Screenshot screenshot, WebElement elem) throws IOException{
 		// Get entire page screenshot
-		BufferedImage  fullImg = ImageIO.read(screenshot);
+		BufferedImage  fullImg = screenshot.getImage();
 
 		// Get the location of element on the page
 		Point point = elem.getLocation();
@@ -439,13 +454,12 @@ public class Browser {
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
-					if(is_visible){
+					//if(is_visible){
 						File img = Browser.getElementScreenshot(Browser.getScreenshot(driver), elem);
 						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
 						tag.setScreenshot(screenshot);
 						img.delete();
-						img = null;
-					}
+					//}
 					elementList.add(tag);
 				}
 			}catch(StaleElementReferenceException e){

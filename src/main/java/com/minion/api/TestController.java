@@ -67,7 +67,6 @@ import com.minion.browsing.Browser;
 import com.minion.structs.Message;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
-import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Page;
 import com.qanairy.models.Path;
@@ -206,7 +205,7 @@ public class TestController {
 		}
     	Date end = new Date();
     	long diff = end.getTime() - start.getTime();
-    	System.err.println("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
+    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
 		return unverified_tests;
 	}
 
@@ -255,7 +254,6 @@ public class TestController {
 		
  		String browser_name = idomain.getDiscoveryBrowserName();
 		Map<String, Boolean> browser_statuses = itest.getBrowserStatuses();
-		System.err.println("browser :::     " +browser_name+" : ##########  : "+correct);
 		browser_statuses.put(browser_name, correct);
 		itest.setBrowserStatuses(browser_statuses);
 		
@@ -463,9 +461,7 @@ public class TestController {
 
     			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
     			browser_running_status.put(browser_type, null);
-    			for(String browser : browser_running_status.keySet()){
-    				System.err.println("Browser ::::  "+browser+"  ************   "+test.getBrowserPassingStatuses().get(browser));
-    			}
+
     			test.setBrowserPassingStatuses(browser_running_status);
     			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
     			

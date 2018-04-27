@@ -117,7 +117,6 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 			return action_record.load(iaction.iterator().next());
 		}
 		
-		System.err.println("Returning null path object");
 		return null;
 	}
 

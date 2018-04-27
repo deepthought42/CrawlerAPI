@@ -180,7 +180,6 @@ public class Page extends PathObject {
 
 		try{
 			Browser browser = new Browser(this.getUrl().toString(), browser_name);
-			System.err.println("GETTING PAGE TO CHECK EQUALITY    ################     "+browser.getPage().getElements().size());
 			if(this.equals(browser.getPage())){
 				landable = true;
 			}

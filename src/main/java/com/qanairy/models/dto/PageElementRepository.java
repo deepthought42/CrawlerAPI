@@ -40,9 +40,7 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		IPageElement page_elem = null;
 		
 		if(page_elem_record != null){
-			page_elem = save(connection, elem);
-
-			
+			page_elem = save(connection, elem);			
 		}
 		
 		return load(page_elem);

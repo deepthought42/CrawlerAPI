@@ -219,7 +219,6 @@ public class DiscoveryController {
         
 		Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
-        System.err.println("Diff in Minutes :::        "+diffInMinutes);
         
 		if(diffInMinutes > 1440){
 	    	domain.setDiscoveryStartTime(new Date());

@@ -29,12 +29,10 @@ public class ElementRuleExtractor {
 			if(attr.getName().trim().equalsIgnoreCase("required")){
 				Rule required = new RequirementRule();
 				rules.add(required);
-				System.err.println("Form field is required : "+rules.size());
 			}
 			else if(attr.getName().trim().equalsIgnoreCase("disabled")){
 				Rule disabled = new DisabledRule();
 				rules.add(disabled);
-				System.err.println("Field is disabled");
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.contains("number")){
 				Rule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
@@ -42,37 +40,30 @@ public class ElementRuleExtractor {
 				
 				rules.add(alphabetic_restriction_rule);
 				rules.add(special_character_rule);
-				System.err.println("form input is of number type. Numbers only.");
 			}
 			else if(attr.getName().equalsIgnoreCase("readonly")){
 				rules.add(new ReadOnlyRule());
-				System.err.println("Form field is read only");
 			}
 			else if(attr.getName().equalsIgnoreCase("min")){
 				Rule min_val = new NumericRule(RuleType.MIN_VALUE, attr.getVals().get(0));
 				rules.add(min_val);
-				System.err.println("form field has a minimum value of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("max")){
 				Rule max_val = new NumericRule(RuleType.MAX_VALUE, attr.getVals().get(0));
 				rules.add(max_val);
-				System.err.println("form field has a maximum value of : " + attr.getVals().get(0));
 			}
 			//minlength only works for certain frameworks such as angularjs that support it as a custom html5 attribute
 			else if(attr.getName().equalsIgnoreCase("minlength")){
 				NumericRule min_length = new NumericRule(RuleType.MIN_LENGTH, attr.getVals().get(0));
 				rules.add(min_length);
-				System.err.println("form field has a minimum length of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("maxlength")){
 				NumericRule max_length = new NumericRule(RuleType.MAX_LENGTH, attr.getVals().get(0));
 				rules.add(max_length);
-				System.err.println("form field has a maximum length of : " + attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().get(0).equalsIgnoreCase("email")){
 				EmailPatternRule email_rule = new EmailPatternRule();
 				rules.add(email_rule);
-				System.err.println("created email rule");
 			}
 			else if(attr.getName().equalsIgnoreCase("pattern")){
 				String regex_str = attr.getVals().get(0);

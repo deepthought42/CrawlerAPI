@@ -119,6 +119,7 @@ public class DiscoveryController {
 		}
 		return status_map;
     }
+	
     /**
 	 * 
 	 * @param request

@@ -372,7 +372,7 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static File getElementScreenshot(Screenshot screenshot, WebElement elem) throws IOException{
+	public static BufferedImage getElementScreenshot(Screenshot screenshot, WebElement elem) throws IOException{
 		// Get entire page screenshot
 		BufferedImage  fullImg = screenshot.getImage();
 
@@ -397,8 +397,8 @@ public class Browser {
 
 		// Crop the entire page screenshot to get only element screenshot
 		BufferedImage elemScreenshot= fullImg.getSubimage(point.getX(), point.getY(), elemWidth, elemHeight);
-		ImageIO.write(elemScreenshot, "png", screenshot);
-		return screenshot;
+		//ImageIO.write(elemScreenshot, "png", screenshot);
+		return elemScreenshot;
 	}
 	 
 	/**
@@ -447,7 +447,7 @@ public class Browser {
 				//boolean is_child = getChildElements(elem).isEmpty();
 				// removed from condition ::   is_child && 
 				
-				boolean is_visible = isElementVisibleInPane(Browser.getScreenshot(driver), elem);
+				boolean is_visible = isElementVisibleInPane(Browser.getScreenshot(driver).getImage(), elem);
 				//NOTE :: Add is_visible back into if statement once scrolling is added in.
 				
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
@@ -455,10 +455,9 @@ public class Browser {
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
 					//if(is_visible){
-						File img = Browser.getElementScreenshot(Browser.getScreenshot(driver), elem);
+						BufferedImage img = Browser.getElementScreenshot(Browser.getScreenshot(driver), elem);
 						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
 						tag.setScreenshot(screenshot);
-						img.delete();
 					//}
 					elementList.add(tag);
 				}
@@ -577,13 +576,13 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	private static boolean isElementVisibleInPane(File screenshot, WebElement elem) throws IOException {
+	private static boolean isElementVisibleInPane(BufferedImage screenshot, WebElement elem) throws IOException {
 		Dimension weD = elem.getSize();
 	    Point weP = elem.getLocation();
-	    BufferedImage  fullImg = ImageIO.read(screenshot);
+	    //BufferedImage  fullImg = ImageIO.read(screenshot);
 
-	    int x = fullImg.getWidth();;
-	    int y = fullImg.getHeight();
+	    int x = screenshot.getWidth();;
+	    int y = screenshot.getHeight();
 	    int x2 = weD.getWidth() + weP.getX();
 	    int y2 = weD.getHeight() + weP.getY();
 

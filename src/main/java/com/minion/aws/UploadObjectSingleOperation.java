@@ -26,7 +26,7 @@ public class UploadObjectSingleOperation {
 
 	private static String bucketName     = "qanairy";
 	
-	public static String saveImageToS3(File image, String domain, String page_key) throws IOException {
+	public static String saveImageToS3(File image, String domain, String page_key) {
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");;
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();
@@ -56,8 +56,6 @@ public class UploadObjectSingleOperation {
             log.error("Error Message: " + ace.getMessage());
         }
         
-        image.delete();
-
         return filepath;
     }
 	

@@ -1,6 +1,5 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -108,12 +107,9 @@ public class ExploratoryPath extends Path{
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		
-		System.err.println("Checking path for cycle .... ");
 		for(PathObject path_obj : path.getPath()){			
 			if(path_obj instanceof Page){
 				if(((Page)path_obj).equals(page)){
-					System.err.println("PATH HAS A CYCLE      !!!!!!!!!!!!!!    ");
 					return true;
 				}
 			}

@@ -51,7 +51,7 @@ public class PageAlert extends PathObject implements IObjectValuationAccessor {
 			}
 		}
 		catch(NoAlertPresentException nae){
-			System.err.println( "Alert not present");
+			log.warn( "Alert not present");
 		}
 	}
 	

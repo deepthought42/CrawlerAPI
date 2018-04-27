@@ -88,7 +88,6 @@ public class Browser {
 		int cnt = 0;
 		this.setBrowserName(browser);
 		while(driver == null && cnt < 20){
-			System.err.println("Opening "+ browser +" browser attempt #"+ cnt);
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -146,14 +145,18 @@ public class Browser {
 	 * @return
 	 * @throws GridException 
 	 * @throws IOException 
-	 * @throws MalformedURLException 
 	 */
 	public Page getPage() throws GridException, IOException{
 		URL page_url = new URL(this.getDriver().getCurrentUrl());
 		String src = this.getDriver().getPageSource();
-		String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getScreenshot(this.getDriver()), page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
+		String screenshot = "";
+		try{
+			File img = Browser.getScreenshot(this.getDriver());
+			screenshot = UploadObjectSingleOperation.saveImageToS3(img, page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
+			img.delete();
+		}catch(IOException e){}
 		List<PageElement> visible_elements = Browser.getVisibleElements(this.getDriver(), "");
-		
+	
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();
 		}
@@ -254,8 +257,6 @@ public class Browser {
 	 */
 	public static WebDriver openWithSafari() throws MalformedURLException, UnreachableBrowserException, GridException{
 		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
-
-		System.err.println("Opening Safari WebDriver connection using");
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
@@ -272,8 +273,6 @@ public class Browser {
 	 */
 	public static WebDriver openWithInternetExplorer() throws MalformedURLException, UnreachableBrowserException, GridException {
 		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
-
-		System.err.println("Opening IE WebDriver connection");
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), capabilities);
@@ -427,7 +426,6 @@ public class Browser {
 		}
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-		//System.err.println("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
 		for(WebElement elem : pageElements){
 			
 			try{
@@ -442,8 +440,11 @@ public class Browser {
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
 					if(is_visible){
-						String screenshot = UploadObjectSingleOperation.saveImageToS3(Browser.getElementScreenshot(Browser.getScreenshot(driver), elem), (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
+						File img = Browser.getElementScreenshot(Browser.getScreenshot(driver), elem);
+						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
 						tag.setScreenshot(screenshot);
+						img.delete();
+						img = null;
 					}
 					elementList.add(tag);
 				}
@@ -520,7 +521,6 @@ public class Browser {
 		
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-		//System.err.println("Total elements on page :: "+pageElements.size() + "; with url "+driver.getCurrentUrl());
 		for(WebElement elem : pageElements){
 			
 			try{
@@ -585,12 +585,10 @@ public class Browser {
 	 * @return
 	 */
 	public static List<Form> extractAllForms(Page page, Browser browser){
-		System.err.println("Extracting all form tests.");
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 
 		List<Form> form_list = new ArrayList<Form>();
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
-		System.err.println("total forms found :: " + form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(form_elem) );
@@ -634,9 +632,7 @@ public class Browser {
 				form.addFormField(combo_input);
 				input_tags.add(input_tag);
 			}
-			
-			System.err.println("Total inputs for form : "+form.getFormFields().size());
-			
+						
 			form_list.add(form);
 		}
 		return form_list;
@@ -665,17 +661,12 @@ public class Browser {
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
-				System.err.println("checking labels for id association");
-				System.err.println(label_elem.getAttribute("for") + " == " + id);
-
 				if(label_elem.getAttribute("for").equals(id)){
 					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
 					return label_tag;
 				}
 			}
 		}
-		
-		System.err.println("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
 		
 		return null;
 	}
@@ -695,9 +686,6 @@ public class Browser {
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
-				System.err.println("checking labels for id association");
-				System.err.println(label_elem.getAttribute("for") + " == " + id);
-
 				if(label_elem.getAttribute("for").equals(id)){
 					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
 					label_tags.add(label_tag);
@@ -705,9 +693,7 @@ public class Browser {
 				}
 			}
 		}
-		
-		System.err.println("Total labels added : "+label_tags.size() + " :: Total ids : "+input_ids.size());
-		
+				
 		return label_tags;
 	}
 	
@@ -797,7 +783,6 @@ public class Browser {
 					for(String attr_val : attr.getVals()){
 						if(attr_val.equalsIgnoreCase("checkbox")){
 							/*CheckboxField field = new CheckboxField(tag);
-							System.err.println("identified checkbox :: "+tag.getText());
 							
 							String[] id_vals = tag.getAttributeValues("id");
 							
@@ -811,7 +796,6 @@ public class Browser {
 						}
 						else if(attr_val.equalsIgnoreCase("radio")){
 							/*RadioField field = new RadioField(tag);
-							System.err.println("identified radio");
 							
 							String[] id_vals = tag.getAttributeValues("id");
 							
@@ -826,72 +810,55 @@ public class Browser {
 							break;
 						}
 						else if(attr_val.equalsIgnoreCase("text")){
-							System.err.println("text input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("textarea")){
-							System.err.println("text area input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("color")){
-							System.err.println("color input encountered");
 							choices.add(tag);
 	
 						}
 						else if(attr_val.equalsIgnoreCase("email")){
-							System.err.println("email input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("file")){
-							System.err.println("file input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("image")){
-							System.err.println("image input button encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("month")){
-							System.err.println("month and year input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("number")){
-							System.err.println("number input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("password")){
-							System.err.println("password input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("range")){
-							System.err.println("range input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("reset")){
-							System.err.println("reset input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("search")){
-							System.err.println("search input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("submit")){
-							System.err.println("submit input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("tel")){
-							System.err.println("telephone input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("time")){
-							System.err.println("time input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("url")){
-							System.err.println("url input encountered");
 							choices.add(tag);
 						}
 						else if(attr_val.equalsIgnoreCase("week")){
-							System.err.println("week input encountered");
 							choices.add(tag);
 						}
 					}
@@ -910,7 +877,6 @@ public class Browser {
 					if(attr.getName().equals("for")){
 						for(String val : attr.getVals()){
 							if(val.equals(for_id)){
-								System.err.println("LABEL FOUND FOR : " + for_id);
 								return elem;
 							}
 						}
@@ -935,13 +901,10 @@ public class Browser {
 			//PageElement tag = (PageElement)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
-					System.err.println("Getting Attributes for label");
 					if(attr.getName().equals("for")){
-						
 						for(String val : attr.getVals()){
 							for(String id : for_ids){
 								if(val.equals(id)){
-									System.err.println("LABEL FOUND FOR : " + id);
 									labels.add(elem);
 								}
 							}

@@ -1,15 +1,10 @@
 package com.qanairy.models.dto;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
-import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -38,7 +33,6 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		PathRepository path_record = new PathRepository();
 		path_key += path_record.generateKey(test.getPath());
 		
-		System.err.println("GENERATING KEY FOR RESULT PAGE OF TEST...");
 		PageRepository page_repo = new PageRepository();
 		path_key += page_repo.generateKey(test.getResult());
 		
@@ -114,27 +108,17 @@ public class TestRepository implements IPersistable<Test, ITest> {
 			PathRepository path_record = new PathRepository();
 			
 			test_record.setPath(path_record.save(connection, test.getPath()));
-		}
-		
-		PageRepository page_record = new PageRepository();
-		TestRecordRepository test_record_record = new TestRecordRepository();
-		
-		test_record.setResult(page_record.save(connection, test.getResult()));
-		
-		DomainRepository domain_record = new DomainRepository();
-		IDomain idomain = domain_record.save(connection, test.getDomain());
-		Iterator<ITest> test_iter = idomain.getTests().iterator();
-		boolean test_exists = false;
-		while(test_iter.hasNext()){
-			ITest itest = test_iter.next();
-			if(itest.getKey().equals(test_record.getKey())){
-				test_exists = true;
-			}
-		}
-		if(!test_exists){
+			PageRepository page_record = new PageRepository();
+			
+			test_record.setResult(page_record.save(connection, test.getResult()));
+			
+			DomainRepository domain_record = new DomainRepository();
+			IDomain idomain = domain_record.save(connection, test.getDomain());
 			test_record.addDomain(idomain);
+
 		}
-		
+		TestRecordRepository test_record_record = new TestRecordRepository();
+
 		for(TestRecord record : test.getRecords()){
 			test_record.addRecord(test_record_record.save(connection, record));
 		}

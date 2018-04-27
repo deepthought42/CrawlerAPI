@@ -42,33 +42,6 @@ public class PageElementTests {
 	}
 	
 	@Test(groups="Regression")
-	public void pageElementUpdateRecord(){
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		
-		List<Attribute> attributes = new ArrayList<Attribute>();
-		List<String> attr_strings = new ArrayList<String>();
-		attr_strings.add("spacejam");
-		attributes.add(new Attribute("class", attr_strings));
-		
-		Map<String, String> css_map = new HashMap<String, String>();
-		css_map.put("color", "purple");
-		
-		PageElement page_element = new PageElement("test element2", "//div/test", "div", attributes, css_map);
-		PageElementRepository page_elem_repo = new PageElementRepository();
-		page_element = page_elem_repo.create(connection, page_element);
-		page_element.setName("updated test element2");
-		
-		PageElement page_element_record = page_elem_repo.update(connection, page_element);
-		
-
-		Assert.assertTrue(page_element_record.getKey().equals(page_elem_repo.generateKey(page_element)));
-		Assert.assertTrue(page_element_record.getCssValues().keySet().size() == page_element.getCssValues().keySet().size());
-		Assert.assertTrue(page_element_record.getName().equals(page_element.getName()));
-		Assert.assertTrue(page_element_record.getText().equals(page_element.getText()));
-		Assert.assertTrue(page_element_record.getXpath().equals(page_element.getXpath()));
-	}
-	
-	@Test(groups="Regression")
 	public void pageElementFindRecord(){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 

@@ -21,7 +21,6 @@ import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -55,7 +54,6 @@ public class PathExpansionActor extends UntypedActor {
 					Page first_page = (Page)path.getPath().get(0);
 					
 					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
-						System.err.println("Last page is landable...sending page to be mapped for page verification test");
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						Message<URL> expanded_path_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
 						
@@ -64,7 +62,6 @@ public class PathExpansionActor extends UntypedActor {
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);
-					System.err.println("Path expansions found : " +pathExpansions.size());
 					
 					for(ExploratoryPath expanded : pathExpansions){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
@@ -122,7 +119,6 @@ public class PathExpansionActor extends UntypedActor {
 					List<Path> paths = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
 					for(Path form_path: paths){
-						System.err.println("constructing new path");
 						//iterate over all actions
 						Path new_path = Path.clone(path);
 						new_path.getPath().addAll(form_path.getPath());

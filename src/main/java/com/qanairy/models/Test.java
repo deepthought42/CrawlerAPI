@@ -131,24 +131,16 @@ public class Test {
 	 * @return
 	 */
 	public Boolean isTestPassing(Page page, Boolean last_test_passing_status){
-		System.err.println("IS TEST PASSING?     ----------------------    "+page.getElements().size());
-		System.err.println("THIS TEST RESULT **----------------------    "+this.getResult());
-		System.err.println("THIS TEST RESULT ELEMENTS **----------------------    "+this.getResult().getElements().size());
-
 		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
-			System.err.println("Pages are equal and test is NOT marked as passing");
 			last_test_passing_status = false; 
 		}
 		else if((last_test_passing_status == null || !last_test_passing_status) && !this.getResult().equals(page)){
-			System.err.println("Pages are NOT equal and test is NOT marked as passing");
 			last_test_passing_status = null;
 		}
 		else if((last_test_passing_status != null && last_test_passing_status) && this.getResult().equals(page)){
-			System.err.println("pages are equal and test is marked as passing");
 			last_test_passing_status = true;
 		}
 		else if((last_test_passing_status != null && last_test_passing_status) && !this.getResult().equals(page)){
-			System.err.println("pages are NOT equal and test is marked as passing");
 			last_test_passing_status = false;
 		}
 		

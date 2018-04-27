@@ -60,15 +60,10 @@ public class TestingActor extends UntypedActor {
 					}
 				}
 				final long pathCrawlEndTime = System.currentTimeMillis();
-
 				long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-				//System.err.println("Path crawl time :: "+pathCrawlRunTime);
-
 				test.setRunTime(pathCrawlRunTime);
-
 				//get current page of browser
 				Page expected_page = test.getResult();
-				//Page last_page = path.findLastPage();
 				
 				try{
 					resulting_page.setLandable(resulting_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));

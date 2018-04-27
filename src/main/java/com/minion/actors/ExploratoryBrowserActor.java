@@ -64,15 +64,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				
 				Page last_page = exploratory_path.findLastPage();
-				/*
-				last_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
-				if(last_page.isLandable()){
-					//clone path starting at last page in path
-					System.err.println("Last page in traversal in landable");
-					path = new Path();
-					path.add(last_page);
-				}
-				*/
 				
 				if(exploratory_path.getPath() != null){
 					Page result_page = null;
@@ -93,7 +84,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							result_page = Crawler.crawlPath(path, browser);
 							result_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
 							tries++;
-							System.err.println("Attempting to get result_page :: "+tries+";   is NULL?   ::  "+(result_page==null));
 						}while(result_page == null && tries < 5);
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();

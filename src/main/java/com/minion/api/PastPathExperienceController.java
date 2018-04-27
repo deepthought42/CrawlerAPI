@@ -102,10 +102,6 @@ public class PastPathExperienceController {
 				}
 			}
 			else if(obj != null){
-				if(obj.getType().equals("Action")){
-					Action action_obj = (Action)obj;
-					System.err.println("!!!!!     "+action_obj.getValue()+ "   !!!!!!!!");
-				}
 				path_list.add(obj);
 			}
 		}

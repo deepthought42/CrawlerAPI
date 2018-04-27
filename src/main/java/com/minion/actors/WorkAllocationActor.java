@@ -58,7 +58,7 @@ public class WorkAllocationActor extends UntypedActor {
 						browser_actor.tell(msg, getSelf() );						
 					}
 					else if(acct_message.getData() instanceof URL){
-						System.err.println("Sending URL to BrowserActor");
+						log.info("Sending URL to BrowserActor");
 						final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
 						url_browser_actor.tell(msg, getSelf() );
 					}

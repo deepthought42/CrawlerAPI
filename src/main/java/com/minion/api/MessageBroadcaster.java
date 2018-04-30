@@ -20,9 +20,9 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 /**
  * Defines methods for emitting data to subscribed clients
  */
-public class PastPathExperienceController {
+public class MessageBroadcaster {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PastPathExperienceController.class);
+	private static Logger log = LoggerFactory.getLogger(MessageBroadcaster.class);
 	
     /**
      * Message emitter that sends {@link Test} to all registered clients
@@ -128,6 +128,54 @@ public class PastPathExperienceController {
 
 		String host = new_test.getDomain().getUrl();
         
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String test_json = mapper.writeValueAsString(new_test);
+        
+		pusher.trigger(host, "test-run", test_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link TestStatus to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastTestStatus(String host, String test_key, String status) throws JsonProcessingException {
+		
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+		/*Gson gson = new Gson();
+        String test_json = gson.toJson(new_test);
+        */
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String test_json = mapper.writeValueAsString(new_test);
+        
+		pusher.trigger(host, "test-run", test_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link DiscoveryStatus} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastDiscoveryStatus(String host, String test_key, String status) throws JsonProcessingException {
+		
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+		/*Gson gson = new Gson();
+        String test_json = gson.toJson(new_test);
+        */
+
         ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String

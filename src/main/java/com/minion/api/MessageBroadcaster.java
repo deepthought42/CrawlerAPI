@@ -179,7 +179,7 @@ public class MessageBroadcaster {
         ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String
-        String test_json = mapper.writeValueAsString(new_test);
+        String test_json = mapper.writeValueAsString(status);
         
 		pusher.trigger(host, "test-run", test_json);
 	}

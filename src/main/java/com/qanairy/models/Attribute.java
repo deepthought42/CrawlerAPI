@@ -57,6 +57,7 @@ public class Attribute {
 	public boolean equals(Object obj){
 		if(obj instanceof Attribute){
 			Attribute attr = (Attribute)obj;
+			
 			if(this.getName().equals(attr.getName())
 				&& ListUtils.subtract(this.getVals(), attr.getVals()).size() == 0){
 				return true;

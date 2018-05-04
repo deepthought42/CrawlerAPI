@@ -5,22 +5,24 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.ScreenshotSet;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IPage;
 import com.qanairy.persistence.IPageElement;
 import com.qanairy.persistence.IPersistable;
+import com.qanairy.persistence.IScreenshotSet;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * 
  */
 public class PageRepository implements IPersistable<Page, IPage> {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageRepository.class);
 
 	/**
@@ -35,6 +37,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Deprecated
 	public Page update(OrientConnectionFactory connection, Page page) {
 		if(page.getKey() == null || page.getKey().isEmpty()){
 			page.setKey(generateKey(page));
@@ -45,7 +48,7 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record = save(connection, page2);
 			page_record.setElementCounts(page.getElementCounts());
 			page_record.setLandable(page.isLandable());
-			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
+
 			page_record.setUrl(page.getUrl().toString());
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
@@ -81,17 +84,22 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	@Override
 	public Page load(IPage result) {
 		Page page = new Page();
-		
-		//Set browser screenshots
-		Map<String, String> browser_screenshots = result.getBrowserScreeshots();
 
 		page.setKey(result.getKey());
 		page.setSrc(result.getSrc());
 		page.setLandable(result.isLandable());
 		page.setImageWeight(result.getImageWeight());
 		page.setTotalWeight(result.getTotalWeight());
-		page.setElementCounts(result.getElementCounts());
-		page.setBrowserScreenshots(browser_screenshots);
+		page.setElementCounts(result.getElementCounts());		
+		
+		//Set browser screenshots
+		Iterator<IScreenshotSet> browser_screenshots = result.getBrowserScreenshots().iterator();
+		ScreenshotSetRepository screenshot_repo = new ScreenshotSetRepository();
+		List<ScreenshotSet> screenshots = new ArrayList<ScreenshotSet>();
+		while(browser_screenshots.hasNext()){
+			screenshots.add(screenshot_repo.load(browser_screenshots.next()));
+		}
+		page.setBrowserScreenshots(screenshots);
 		
 		PageElementRepository page_elem_repo = new PageElementRepository();
 		Iterator<IPageElement> page_elem_iter = result.getElements().iterator();
@@ -143,7 +151,12 @@ public class PageRepository implements IPersistable<Page, IPage> {
 			page_record.setTotalWeight(page.getTotalWeight());
 			page_record.setImageWeight(page.getImageWeight());
 			page_record.setSrc(page.getSrc());
-			page_record.setBrowserScreenshots(page.getBrowserScreenshots());
+			
+			ScreenshotSetRepository repo = new ScreenshotSetRepository();
+			
+			for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
+				page_record.addBrowserScreenshot(repo.save(connection, screenshot));
+			}
 			
 			PageElementRepository page_elem_repo = new PageElementRepository();
 			for(PageElement elem: page.getElements()){

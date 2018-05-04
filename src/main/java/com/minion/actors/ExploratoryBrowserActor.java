@@ -8,10 +8,12 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Group;
@@ -21,6 +23,7 @@ import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.dto.DiscoveryRecordRepository;
 import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.IDomain;
@@ -52,14 +55,8 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 
-				/*
-				 * tell discovery registry that we are running an exploratory path for discovery
-				 */
 		  		OrientConnectionFactory conn = new OrientConnectionFactory();
 				DomainRepository domain_repo = new DomainRepository();	
-				Domain domain = domain_repo.find(conn, ((Page)exploratory_path.getPath().get(0)).getUrl().getHost());
-				domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()+1);
-				domain_repo.save(conn, domain);
 
 				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
 				
@@ -71,9 +68,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					// increment total paths being explored for domain
 					String domain_url = last_page.getUrl().getHost();
 					IDomain idomain = domain_repo.find(domain_url);
-					idomain.setLastDiscoveryPathRanAt(new Date());
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
+					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+			  		discovery_record.setLastPathRanAt(new Date());
+					discovery_repo.save(conn, discovery_record);
 					
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path path = Path.clone(exploratory_path);
@@ -102,13 +103,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  	else{
 					  		path.setIsUseful(true);
 							
-					  		domain = domain_repo.find(conn, domain_url);
-					  		domain.setLastDiscoveryPathRanAt(new Date());
-							domain.setDiscoveredTestCount(domain.getDiscoveredTestCount()+1);
+					  		Domain domain = domain_repo.find(conn, domain_url);
+							domain.setTestCount(domain.getTestCount()+1);
 							domain_repo.save(conn, domain);
 							
-					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg);
-							
+					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
+							MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
+
 					  		Path new_path = Path.clone(path);
 							new_path.add(result_page);
 							Message<Path> path_msg = new Message<Path>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
@@ -121,15 +122,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							break;
 						}
 					}
-					
-					/*
-					 * tell discovery registry that we are FINISHED running an exploratory pa	th for discovery
-					 */
-					domain = domain_repo.find(conn, domain_url);
-					domain.setDiscoveryPathCount(domain.getDiscoveryPathCount()-1);
-					domain_repo.save(conn, domain);
 				  	browser.close();
-					
 				  	conn.close();
 				}
 
@@ -147,9 +140,9 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(Path path, Page result_page, long crawl_time, Domain domain, Message<?> acct_msg ) {
+	private void createTest(Path path, Page result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
 		path.setIsUseful(true);
-		Test test = new Test(path, result_page, domain, "Test #" + domain.getDiscoveredTestCount());							
+		Test test = new Test(path, result_page, domain, "Test #" + domain.getTestCount());							
 		TestRepository test_repo = new TestRepository();
 		test.setKey(test_repo.generateKey(test));
 		test.setRunTime(crawl_time);

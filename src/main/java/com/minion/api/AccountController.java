@@ -52,7 +52,7 @@ import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
 
 /**
- *	API endpoints for interacting with {@link User} data
+ *	API for interacting with {@link User} data
  */
 @RestController
 @RequestMapping("/accounts")
@@ -64,10 +64,6 @@ public class AccountController {
 
     @Autowired
     protected AccountService account_service;
-
-    /*@Autowired
-    protected UsernameService usernameService;
-    */
     
     private StripeClient stripeClient;
 
@@ -228,8 +224,9 @@ public class AccountController {
         logger.info("update invoked");
     }
 	
+    @PreAuthorize("hasAuthority('read:accounts')")
 	@RequestMapping(path ="/usage", method = RequestMethod.GET)
-    public AccountUsage getUsageStats(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+    public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);

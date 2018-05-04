@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.ListUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
@@ -262,24 +263,32 @@ public class PageElement extends PathObject{
         if (!(o instanceof PageElement)) return false;
         
         PageElement that = (PageElement)o;
-		
 		List<Attribute> newPageElementAttributes = that.getAttributes();
+		boolean areElementsEqual =  true;
 		
-		boolean areElementsEqual =  false;
-		
-		if(this.getText().equals(that.getText())){
-			areElementsEqual = true;
+		if(!this.getText().equals(that.getText())){
+			return false;
 		}
 		
-		if(areElementsEqual && this.getAttributes().size() == newPageElementAttributes.size())
+		if(this.getAttributes().size() == newPageElementAttributes.size())
 		{
-			for(int attrIdx = 0; attrIdx < this.getAttributes().size(); attrIdx++)
-			{
-				areElementsEqual = this.getAttributes().get(attrIdx).equals(newPageElementAttributes.get(attrIdx));
-				if(!areElementsEqual){
-					return false;
+			Map<String, Attribute> attribute_map = new HashMap<String, Attribute>();
+			for(Attribute attr : this.getAttributes()){
+				attribute_map.put(attr.name, attr);		
+			}
+			
+			for(Attribute attr : newPageElementAttributes){
+				if(attr.equals(attribute_map.get(attr.name))){
+					attribute_map.remove(attr.name);
 				}
 			}
+
+			if(!attribute_map.isEmpty()){
+				return false;
+			}
+		}
+		else{
+			return false;
 		}
 		
 		areElementsEqual = this.cssMatches(that);

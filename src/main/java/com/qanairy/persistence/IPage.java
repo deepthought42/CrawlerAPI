@@ -1,6 +1,7 @@
 package com.qanairy.persistence;
 
 import com.qanairy.models.Page;
+import com.qanairy.models.ScreenshotSet;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import java.util.Map;
@@ -22,12 +23,6 @@ public interface IPage extends IPathObject{
 	@Property("landable")
 	public void setLandable(boolean isLandable);
 	
-	@Property("screenshot")
-	public String getScreenshot();
-	
-	@Property("screenshot")
-	public void setScreenshot(String screenshotUrl);
-	
 	@Property("url")
 	public String getUrl();
 	
@@ -39,13 +34,6 @@ public interface IPage extends IPathObject{
 	
 	@Property("element_counts")
 	public void setElementCounts(Map<String, Integer> element_count);
-	
-	@Adjacency(label="contains")
-	public Iterable<IPageElement> getElements();
-	
-	@Adjacency(label="contains")
-	public void addElement(IPageElement elements);
-	
 
 	@Property("total_weight")
 	public void setTotalWeight(Integer totalWeight);
@@ -65,10 +53,19 @@ public interface IPage extends IPathObject{
 	@Property("src")
 	public void setSrc(String src);
 	
-	@Property("browser_screenshots")
-	public Map<String, String> getBrowserScreeshots();
+	@Adjacency(label="browser_screenshots")
+	public Iterable<IScreenshotSet> getBrowserScreenshots();
 	
-	@Property("browser_screenshots")
-	public void setBrowserScreenshots(Map<String, String> browser_screenshots);
+	@Adjacency(label="browser_screenshots")
+	public void addBrowserScreenshot(IScreenshotSet browser_screenshots);
 
+	@Adjacency(label="contains")
+	public Iterable<IPageElement> getElements();
+	
+	@Adjacency(label="contains")
+	public void addElement(IPageElement elements);
+
+	public void setBrowserScreenshots(Map<String, ScreenshotSet> browserScreenshots);
+	
+	
 }

@@ -93,6 +93,6 @@ public class Crawler {
 			Thread.sleep(5000);
 		} catch (InterruptedException e1) {}
 		
-		return browser.getPage();
+		return browser.buildPage();
 	}
 }

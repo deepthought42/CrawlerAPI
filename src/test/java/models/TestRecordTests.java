@@ -3,14 +3,14 @@ package models;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
+import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.TestRecordRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -23,10 +23,10 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordCreateRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
 		String browser_name = "chrome";
 
-		browser_screenshots.put(browser_name, "testscreenshoturl.com");
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", browser_name));
 		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 		com.qanairy.models.Test test = new com.qanairy.models.Test();
@@ -52,9 +52,9 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordUpdateRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
 		String browser_name = "chrome";
-		browser_screenshots.put(browser_name, "testscreenshoturl.com");
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", browser_name));
 		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 
@@ -63,7 +63,9 @@ public class TestRecordTests {
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
+							"http://www.test.test", 
+							browser_screenshots, 
+							new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}
@@ -81,10 +83,9 @@ public class TestRecordTests {
 	
 	@Test(groups="Regression")
 	public void testRecordFindRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
 		String browser_name = "chrome";
-
-		browser_screenshots.put(browser_name, "testscreenshoturl.com");
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", browser_name));
 		
 		TestRecordRepository test_record_repo = new TestRecordRepository();
 
@@ -94,7 +95,9 @@ public class TestRecordTests {
 		Page page = null;
 		try {
 			page = new Page("<html><body></body></html>",
-							"http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
+							"http://www.test.test", 
+							browser_screenshots, 
+							new ArrayList<PageElement>(), true);
 		} catch (IOException e) {
 			Assert.assertFalse(true);
 		}

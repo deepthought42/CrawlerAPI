@@ -3,6 +3,7 @@ package models;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.testng.Assert;
@@ -11,6 +12,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
+import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 
@@ -25,14 +27,16 @@ public class TestTests {
 	 */
 	@Test(groups="Regression")
 	public void testCreateRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		
 		com.qanairy.models.Test test;
 		try {
 			TestRepository test_repo = new TestRepository();
 			Page page = new Page("<html></html>",
-								 "http://www.test.test", browser_screenshots, new ArrayList<PageElement>(), true);
+								 "http://www.test.test", 
+								 browser_screenshots, 
+								 new ArrayList<PageElement>(), true);
 			Path path = new Path();
 			path.add(page);
 			test = new com.qanairy.models.Test(path, page, new Domain("http", "www.test.test", "chrome", ""), "Testing Test 2");
@@ -51,8 +55,8 @@ public class TestTests {
 	 */
 	@Test(groups="Regression")
 	public void testUpdateRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		
 		com.qanairy.models.Test test;
 		try {
@@ -79,8 +83,8 @@ public class TestTests {
 	 */
 	@Test(groups="Regression")
 	public void testFindRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 

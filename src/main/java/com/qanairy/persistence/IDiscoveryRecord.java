@@ -32,4 +32,30 @@ public interface IDiscoveryRecord {
 	
 	@Property("domain_url")
 	void setDomainUrl(String domain_url);
+	
+	@Property("last_path_ran_at")
+	Date getLastPathRan();
+	
+	@Property("last_path_ran_at")
+	void setLastPathRan(Date last_path_ran);
+	
+	@Property("test_cnt")
+	int getTestCount();
+	
+	@Property("test_cnt")
+	void setTestCount(int cnt);
+	
+	@Property("examined_path_cnt")
+	int getExaminedPathCount();
+	
+	@Property("examined_path_cnt")
+	void setExaminedPathCount(int path_cnt);
+
+	@Property("total_path_cnt")
+	int getTotalPathCount();
+	
+	@Property("total_path_cnt")
+	void setTotalPathCount(int path_cnt);
+	
+	
 }

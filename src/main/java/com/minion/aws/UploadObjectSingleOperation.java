@@ -31,7 +31,7 @@ public class UploadObjectSingleOperation {
 
 	private static String bucketName     = "qanairy";
 	
-	public static String saveImageToS3(BufferedImage image, String domain, String page_key) {
+	public static String saveImageToS3(BufferedImage image, String domain, String page_key, String image_type) {
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");;
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();
@@ -45,9 +45,9 @@ public class UploadObjectSingleOperation {
         	meta.setContentLength(buffer.length);
             log.debug("Uploading a new object to S3 from a file: "+ image);
             s3client.putObject(new PutObjectRequest(
-             		                 bucketName, domain+"/"+page_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
+             		                 bucketName, domain+"/"+page_key+"/"+image_type+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
             
-            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+".png";
+            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+"/"+image_type+".png";
          } catch (AmazonServiceException ase) {
             log.error("Caught an AmazonServiceException, which " +
             		"means your request made it " +

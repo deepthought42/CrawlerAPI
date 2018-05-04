@@ -62,11 +62,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		}
 		domain_record.setLogoUrl(domain.getLogoUrl());
 		domain_record.setProtocol(domain.getProtocol());
-		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
-		domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
 		domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
-		domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
-		domain_record.setDiscoveryPathCount(domain.getDiscoveryPathCount());
+		domain_record.setDiscoveryTestCount(domain.getTestCount());
 		
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<ITestUser> test_users = new ArrayList<ITestUser>();
@@ -114,11 +111,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		if(iter.hasNext()){
 			IDomain domain_record = iter.next();
 			domain_record.setLogoUrl(domain.getLogoUrl());
-			domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
-			domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
-			domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
 			domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
-			domain_record.setDiscoveryPathCount(domain.getDiscoveryPathCount());
 		}
 		
 		return domain;
@@ -173,9 +166,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		for(ITestUser test_user : obj.getTestUsers()){
 			test_users.add(test_user_repo.load(test_user));
 		}
-		int test_cnt = obj.getDiscoveryTestCount();
 
-		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), obj.getDiscoveryStartTime(), test_users, test_cnt, obj.getDiscoveryBrowserName(), obj.getDiscoveryPathCount());
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), test_users, obj.getDiscoveryBrowserName(), obj.getDiscoveryTestCount());
 	}
 	
 	public Domain load(OrientVertex obj) {
@@ -185,8 +177,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		}
 		*/
 
-		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), obj.getProperty("logo_url"), tests, obj.getProperty("protocol"), null);
-		return domain;
+		return new Domain(obj.getProperty("key"), obj.getProperty("url"), obj.getProperty("logo_url"), tests, obj.getProperty("protocol"), obj.getProperty("test_cnt"));
 	}
 	
 	@Override

@@ -3,6 +3,7 @@ package com.minion.actors;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -12,11 +13,15 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rules.Rule;
+import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -62,6 +67,14 @@ public class PathExpansionActor extends UntypedActor {
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);
+					
+			  		OrientConnectionFactory conn = new OrientConnectionFactory();
+					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
+					discovery_repo.save(conn, discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
+					conn.close();
 					
 					for(ExploratoryPath expanded : pathExpansions){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());

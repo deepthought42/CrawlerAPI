@@ -15,8 +15,8 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
+import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.dto.PathRepository;
-import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -27,8 +27,8 @@ public class PathTests {
 
 	@Test(groups="Regression")
 	public void pathRecordDatabaseConfirmation(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		
 		Path path = new Path();
 		path.setIsUseful(false);

@@ -32,7 +32,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -67,7 +67,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -108,7 +108,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser(url, "chrome");
-			Page page = browser.getPage();
+			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -148,7 +148,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			boolean readonly_restrict_rule = false;
@@ -179,7 +179,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
@@ -211,7 +211,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			boolean max_value_rule = false;

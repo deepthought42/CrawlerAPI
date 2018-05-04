@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -122,10 +124,6 @@ public class MessageBroadcaster {
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
-		/*Gson gson = new Gson();
-        String test_json = gson.toJson(new_test);
-        */
-
 		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
@@ -142,45 +140,38 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTestStatus(String host, String test_key, String status) throws JsonProcessingException {
+	public static void broadcastTestStatus(String host, TestRecord record) throws JsonProcessingException {
 		
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
-		/*Gson gson = new Gson();
-        String test_json = gson.toJson(new_test);
-        */
-
         ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String
-        String test_json = mapper.writeValueAsString(new_test);
         
-		pusher.trigger(host, "test-run", test_json);
+        String test_json = mapper.writeValueAsString(record);
+        
+		pusher.trigger(host, "test-status", test_json);
 	}
 	
 	/**
-     * Message emitter that sends {@link DiscoveryStatus} to all registered clients
+     * Message emitter that sends {@link DiscoveryRecord} to all registered clients
      * 
-     * @param test {@link Test} to be emitted to clients
+     * @param record {@link Record} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveryStatus(String host, String test_key, String status) throws JsonProcessingException {
+	public static void broadcastDiscoveryStatus(String host, DiscoveryRecord record) throws JsonProcessingException {
 		
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
-		/*Gson gson = new Gson();
-        String test_json = gson.toJson(new_test);
-        */
-
         ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String
-        String test_json = mapper.writeValueAsString(status);
+        String discovery_json = mapper.writeValueAsString(record);
         
-		pusher.trigger(host, "test-run", test_json);
+		pusher.trigger(host, "discovery-status", discovery_json);
 	}
 }

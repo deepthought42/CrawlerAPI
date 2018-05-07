@@ -33,6 +33,8 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 		IGroup group_record= null;
 		if(iter.hasNext()){
 			group_record = iter.next();
+			group.setDescription(group_record.getDescription());
+			group.setName(group_record.getName());
 		}
 		else{
 			group_record = connection.getTransaction().addVertex("class:"+IGroup.class.getSimpleName()+","+UUID.randomUUID(), IGroup.class);
@@ -41,38 +43,6 @@ public class GroupRepository implements IPersistable<Group, IGroup> {
 			group_record.setName(group.getName());
 		}
 		return group_record;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Group create(OrientConnectionFactory conn, Group group) {
-		Group group_record = find(conn, generateKey(group));
-		
-		if(group_record == null){
-			save(conn, group);
-		}
-		group.setKey(generateKey(group));
-		return group;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * Only allows for description to be updated
-	 */
-	public Group update(OrientConnectionFactory conn, Group group) {
-		@SuppressWarnings("unchecked")
-		Iterable<IGroup> domains = (Iterable<IGroup>) DataAccessObject.findByKey(group.getKey(), conn, IGroup.class);
-		Iterator<IGroup> iter = domains.iterator();
-		
-		if(iter.hasNext()){
-			IGroup group_record = iter.next();
-			group_record.setDescription(group.getDescription());
-			conn.save();
-		}
-		
-		return group;
 	}
 
 	/**

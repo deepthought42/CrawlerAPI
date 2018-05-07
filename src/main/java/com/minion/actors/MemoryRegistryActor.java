@@ -49,7 +49,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				PathRepository path_repo = new PathRepository();
 				Path path_record = path_repo.find(connection, path_repo.generateKey(path));
 				if(path_record == null){
-					path_repo.create(connection, path);
+					path_repo.save(connection, path);
 				}
 			}
 			connection.close();

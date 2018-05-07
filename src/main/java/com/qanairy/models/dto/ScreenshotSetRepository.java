@@ -51,17 +51,6 @@ public class ScreenshotSetRepository implements IPersistable<ScreenshotSet, IScr
 		return new ScreenshotSet(screenshotSet.getFullScreenshot(), screenshotSet.getViewportScreenshot(), screenshotSet.getBrowser());
 	}
 
-	@Override
-	public ScreenshotSet create(OrientConnectionFactory connection, ScreenshotSet obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ScreenshotSet update(OrientConnectionFactory connection, ScreenshotSet obj) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public ScreenshotSet find(OrientConnectionFactory connection, String key) {

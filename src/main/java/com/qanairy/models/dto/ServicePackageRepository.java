@@ -53,44 +53,6 @@ public class ServicePackageRepository implements IPersistable<ServicePackage, IS
 	}
 
 	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public ServicePackage create(OrientConnectionFactory connection, ServicePackage service_package) {
-		service_package.setKey(generateKey(service_package));
-
-		ServicePackage svc_pkg = find(connection, generateKey(service_package));
-		
-		if(svc_pkg == null){
-			IServicePackage pkg_record = save(connection, service_package);
-			svc_pkg = load(pkg_record);
-			connection.save();
-		}
-
-		return svc_pkg;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public ServicePackage update(OrientConnectionFactory connection, ServicePackage service_package) {
-		@SuppressWarnings("unchecked")
-		Iterable<IServicePackage> svc_pkgs = (Iterable<IServicePackage>) DataAccessObject.findByKey(service_package.getKey(), connection, IServicePackage.class);
-		Iterator<IServicePackage> iter = svc_pkgs.iterator();
-		
-		if(iter.hasNext()){
-			IServicePackage svc_pkg = iter.next();
-			svc_pkg.setName(service_package.getName());
-			svc_pkg.setMaxUsers(service_package.getMaxUsers());
-			svc_pkg.setPrice(service_package.getPrice());
-			connection.save();
-		}
-		
-		return service_package;
-	}
-	
-	/**
 	 * Looks up the current object by key
 	 * @param orient_connection
 	 * @return

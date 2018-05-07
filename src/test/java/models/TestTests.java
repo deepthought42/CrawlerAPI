@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.testng.Assert;
+import org.testng.ITest;
 import org.testng.annotations.Test;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Page;
@@ -41,7 +42,7 @@ public class TestTests {
 			path.add(page);
 			test = new com.qanairy.models.Test(path, page, new Domain("http", "www.test.test", "chrome", ""), "Testing Test 2");
 			test.setKey(test_repo.generateKey(test));
-			com.qanairy.models.Test test_record = test_repo.create(new OrientConnectionFactory(), test);
+			com.qanairy.persistence.ITest test_record = test_repo.save(new OrientConnectionFactory(), test);
 			
 			Assert.assertTrue(test_record.getKey().equals(test.getKey()));
 		} catch (IOException e) {
@@ -68,9 +69,9 @@ public class TestTests {
 			path.add(page);
 			test = new com.qanairy.models.Test(path, page, new Domain("http", "www.test.test", "chrome", null),"Testing Test 4");
 			test.setKey(test_repo.generateKey(test));
-			com.qanairy.models.Test test_record_create = test_repo.create(new OrientConnectionFactory(), test);
+			com.qanairy.persistence.ITest test_record_create = test_repo.save(new OrientConnectionFactory(), test);
 
-			com.qanairy.models.Test test_record = test_repo.update(new OrientConnectionFactory(), test_record_create);
+			com.qanairy.persistence.ITest test_record = test_repo.save(new OrientConnectionFactory(), test_repo.load(test_record_create));
 			
 			Assert.assertTrue(test_record.getKey().equals(test.getKey()));
 		} catch (IOException e) {
@@ -97,10 +98,11 @@ public class TestTests {
 			TestRepository test_repo = new TestRepository();
 
 			test = new com.qanairy.models.Test(path, page, new Domain("http", "www.test.test", "chrome", null), "Testing Test 3");
-			test = test_repo.create(orient_connection, test);
+			com.qanairy.persistence.ITest saved_test = test_repo.save(orient_connection, test);
+			
 			com.qanairy.models.Test test_record = test_repo.find(orient_connection, test.getKey());
 			
-			Assert.assertTrue(test_record.getKey().equals(test.getKey()));
+			Assert.assertTrue(test_record.getKey().equals(saved_test.getKey()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}		

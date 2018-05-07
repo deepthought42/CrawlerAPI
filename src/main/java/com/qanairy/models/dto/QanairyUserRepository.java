@@ -54,45 +54,6 @@ public class QanairyUserRepository implements IPersistable<QanairyUser, IQanairy
 	public QanairyUser load(IQanairyUser qanairyUser) {
 		return new QanairyUser(qanairyUser.getKey(), qanairyUser.getEmail());
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public QanairyUser create(OrientConnectionFactory connection, QanairyUser qanairyUser) {
-		qanairyUser.setKey(generateKey(qanairyUser));
-
-		@SuppressWarnings("unchecked")
-		Iterable<IQanairyUser> qanairyUsers = (Iterable<IQanairyUser>) DataAccessObject.findByKey(generateKey(qanairyUser), connection, IQanairyUser.class);
-		Iterator<IQanairyUser> iter = qanairyUsers.iterator();
-		  
-		if(!iter.hasNext()){
-			save(connection, qanairyUser);
-			connection.save();
-		}
-		return qanairyUser;
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public QanairyUser update(OrientConnectionFactory connection, QanairyUser qanairyUser) {
-		@SuppressWarnings("unchecked")
-		Iterable<IQanairyUser> qanairyUsers = (Iterable<IQanairyUser>) DataAccessObject.findByKey(qanairyUser.getKey(), connection, IQanairyUser.class);
-		Iterator<IQanairyUser> iter = qanairyUsers.iterator();
-		  
-		IQanairyUser qanairy_user = null;
-		if(iter.hasNext()){
-			qanairy_user = iter.next();
-			qanairy_user.setEmail(qanairyUser.getEmail());
-			
-			connection.save();
-		}
-		return load(qanairy_user);
-	}
-
 
 	/**
 	 * {@inheritDoc}

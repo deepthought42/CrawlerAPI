@@ -28,40 +28,6 @@ public class PageRepository implements IPersistable<Page, IPage> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Page create(OrientConnectionFactory connection, Page page) {
-		IPage page_record = save(connection, page);
-		
-		return load(page_record);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Deprecated
-	public Page update(OrientConnectionFactory connection, Page page) {
-		if(page.getKey() == null || page.getKey().isEmpty()){
-			page.setKey(generateKey(page));
-		}
-		Page page2 = find(connection, page.getKey());
-		IPage page_record = null;
-		if(page2 != null){
-			page_record = save(connection, page2);
-			page_record.setElementCounts(page.getElementCounts());
-			page_record.setLandable(page.isLandable());
-
-			page_record.setUrl(page.getUrl().toString());
-			page_record.setTotalWeight(page.getTotalWeight());
-			page_record.setImageWeight(page.getImageWeight());
-			page_record.setSrc(page.getSrc());
-		}
-		PageRepository page_repo = new PageRepository();
-		
-		return page_repo.load(page_record);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public Page find(OrientConnectionFactory connection, String key){
 		@SuppressWarnings("unchecked")

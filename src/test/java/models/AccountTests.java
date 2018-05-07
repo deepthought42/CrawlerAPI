@@ -9,6 +9,7 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.AccountRepository;
+import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -23,7 +24,7 @@ public class AccountTests {
 		Account acct = new Account("Test Org", "Test Package", "#00000012SD", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
 		AccountRepository acct_repo = new AccountRepository();
 		
-		Account created_acct = acct_repo.create(connection, acct);
+		IAccount created_acct = acct_repo.save(connection, acct);
 		Assert.assertTrue(created_acct != null);
 		Account acct_record = acct_repo.find(connection, created_acct.getKey()); 
 		Assert.assertTrue(acct_record.getKey().equals(created_acct.getKey()));
@@ -43,7 +44,7 @@ public class AccountTests {
 		Account acct = new Account("Test Org", "Test Package", "#00000012SD", "test_subscription", users, new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
 		AccountRepository acct_repo = new AccountRepository();
 		
-		Account created_acct = acct_repo.create(connection, acct);
+		IAccount created_acct = acct_repo.save(connection, acct);
 		Assert.assertTrue(created_acct != null);
 		Account acct_record = acct_repo.find(connection, created_acct.getKey()); 
 		Assert.assertTrue(acct_record.getKey().equals(created_acct.getKey()));
@@ -59,11 +60,11 @@ public class AccountTests {
 		Account acct = new Account("Test Org2", "Test Package", "acct_test1", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
 		AccountRepository acct_repo = new AccountRepository();
 		
-		Account created_acct = acct_repo.create(connection, acct);
+		IAccount created_acct = acct_repo.save(connection, acct);
 		Assert.assertTrue(created_acct != null);
 		
 		created_acct.setCustomerToken("acct_test1 update");
-		Account updated_acct = acct_repo.update(connection, acct);
+		IAccount updated_acct = acct_repo.save(connection, acct);
 		Assert.assertTrue(created_acct != null);
 
 		Account acct_record = acct_repo.find(connection, created_acct.getKey()); 
@@ -80,7 +81,7 @@ public class AccountTests {
 		AccountRepository acct_repo = new AccountRepository();
 
 		Account acct = new Account("Find Test Org", "Test Package", "acct_test1 update", "test_subscription", new ArrayList<QanairyUser>(), new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
-		acct = acct_repo.create(orient_connection, acct);
+		acct_repo.save(orient_connection, acct);
 		Account acct_record = acct_repo.find(orient_connection, acct.getKey());
 		
 		Assert.assertTrue(acct_record.getKey().equals(acct.getKey()));

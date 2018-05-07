@@ -113,7 +113,15 @@ public class Attribute {
 		return this.name;
 	}
 	
+	public void setName(String name){
+		this.name = name;
+	}
+	
 	public List<String> getVals(){
 		return this.vals;
+	}
+	
+	public void setVals(List<String> val_list){
+		this.vals = val_list;
 	}
 }

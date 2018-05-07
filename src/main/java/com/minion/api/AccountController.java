@@ -122,7 +122,7 @@ public class AccountController {
         Account new_account = null;
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        new_account = account_service.create(acct);
+        new_account = account_service.save(acct);
         
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
@@ -198,7 +198,7 @@ public class AccountController {
     public Account update(final @PathVariable String key, 
     					  final @Validated @RequestBody Account account) {
         logger.info("update invoked");
-        return account_service.update(account);
+        return account_service.save(account);
     }
     
 	@PreAuthorize("hasAuthority('delete:accounts')")

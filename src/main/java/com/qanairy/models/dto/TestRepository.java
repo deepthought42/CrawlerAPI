@@ -38,65 +38,14 @@ public class TestRepository implements IPersistable<Test, ITest> {
 		
 		return path_key;
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Deprecated
-	public Test create(OrientConnectionFactory conn, Test test) {
-		test.setKey(generateKey(test));
-		Test test_record = find(conn, test.getKey());
-		
-		if(test_record == null){
-			save(conn, test);
-		}
-		else{
-			test = test_record;
-		}
-		return test;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * Does not allow updating domain
-	 * 
-	 * @pre test key != null
-	 */
-	public Test update(OrientConnectionFactory conn, Test test) {
-		assert test.getKey() != null;
-		
-		@SuppressWarnings("unchecked")
-		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(test.getKey(), conn, ITest.class);
-		Iterator<ITest> iter = tests.iterator();
-		
-		PageRepository page_record = new PageRepository();
-
-		if(iter.hasNext()){
-			ITest test_record = iter.next();
-			test_record.setCorrect(test.isCorrect());
-			List<IGroup> igroups = new ArrayList<IGroup>();
-			GroupRepository group_repo = new GroupRepository();
-			for(Group group : test.getGroups()){
-				group_repo.save(conn, group);
-			}
-			test_record.setGroups(igroups);
-			test_record.setName(test.getName());
-			test_record.setRecords(test.getRecords());
-			test_record.setResult(page_record.save(conn, test.getResult()));
-			conn.save();
-		}
-		
-		return test;
-	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public ITest save(OrientConnectionFactory connection, Test test){
-		
+		test.setKey(generateKey(test));
 		@SuppressWarnings("unchecked")
-		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(generateKey(test), connection, ITest.class);
+		Iterable<ITest> tests = (Iterable<ITest>) DataAccessObject.findByKey(test.getKey(), connection, ITest.class);
 		Iterator<ITest> iter = tests.iterator();
 		ITest test_record = null;
 		if(iter.hasNext()){

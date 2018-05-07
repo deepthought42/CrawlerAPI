@@ -48,6 +48,9 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		else{
 			System.out.println("Discovery record found in db. Getting from db");
 			discovery_record_record = iter.next();
+			discovery_record.setStartedAt(discovery_record_record.getStartTime());
+			discovery_record.setBrowserName(discovery_record_record.getBrowserName());
+			discovery_record.setDomainUrl(discovery_record_record.getDomainUrl());
 		}
 		
 		discovery_record_record.setExaminedPathCount(discovery_record.getExaminedPathCount());
@@ -56,43 +59,6 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		discovery_record_record.setTotalPathCount(discovery_record.getTotalPathCount());
 		
 		return discovery_record_record;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public DiscoveryRecord create(OrientConnectionFactory connection, DiscoveryRecord discovery_record) {
-		discovery_record.setKey(generateKey(discovery_record));
-
-		@SuppressWarnings("unchecked")
-		Iterable<IDiscoveryRecord> discovery_records = (Iterable<IDiscoveryRecord>) DataAccessObject.findByKey(discovery_record.getKey(), connection, IDiscoveryRecord.class);
-		Iterator<IDiscoveryRecord> iter = discovery_records.iterator();
-		  
-		if(!iter.hasNext()){
-			save(connection, discovery_record);
-		}
-		
-		return discovery_record;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public DiscoveryRecord update(OrientConnectionFactory connection, DiscoveryRecord discovery_record) {
-		if(discovery_record.getKey() == null){
-			discovery_record.setKey(generateKey(discovery_record));
-		}
-		@SuppressWarnings("unchecked")
-		Iterable<IDiscoveryRecord> discovery_records = (Iterable<IDiscoveryRecord>) DataAccessObject.findByKey(discovery_record.getKey(), connection, IDiscoveryRecord.class);
-		Iterator<IDiscoveryRecord> iter = discovery_records.iterator();
-		  
-		IDiscoveryRecord idiscovery_record = null;
-		if(iter.hasNext()){
-			idiscovery_record = iter.next();
-		}
-		return load(idiscovery_record);
 	}
 
 	/**

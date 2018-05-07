@@ -35,7 +35,7 @@ public class PageTests {
 							false);
 			PageRepository page_repo = new PageRepository();
 			
-			Page page_record = page_repo.create(new OrientConnectionFactory(), page);
+			IPage page_record = page_repo.save(new OrientConnectionFactory(), page);
 			
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());
@@ -97,7 +97,7 @@ public class PageTests {
 							true);
 			PageRepository page_repo = new PageRepository();
 
-			page = page_repo.create(orient_connection, page);
+			page_repo.save(orient_connection, page);
 			Page page_record = page_repo.find(orient_connection, page.getKey());
 			
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));

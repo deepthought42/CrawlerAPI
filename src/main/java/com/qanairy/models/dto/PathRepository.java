@@ -143,32 +143,6 @@ public class PathRepository implements IPersistable<Path, IPath> {
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * 
-	 * Path only allows you to update usefulness and if it spans multiple domains
-	 */
-	@Override
-	public Path create(OrientConnectionFactory connection, Path path) {
-		this.save(connection, path);
-		return path;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Path update(OrientConnectionFactory connection, Path path) {
-		Path path_record = find(connection, path.getKey());
-		
-		if(path != null){
-			path_record.setSpansMultipleDomains(path.checkIfSpansMultipleDomains());
-			path_record.setIsUseful(path.isUseful());
-			connection.save();
-		}
-		return path;
-	}
-
-	/**
 	 * @pre path != null
 	 */
 	@Override

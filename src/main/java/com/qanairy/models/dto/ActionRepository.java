@@ -47,41 +47,11 @@ public class ActionRepository implements IPersistable<Action, IAction>{
 		}
 		else{
 			action_record = iter.next();
+			action.setKey(action_record.getKey());
+			action.setType(action_record.getType());
+			action.setValue(action_record.getValue());
 		}
 		return action_record;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Action create(OrientConnectionFactory connection, Action action) {
-		Action action_record = find(connection, action.getKey());
-		
-		if(action_record != null){
-			this.save(connection, action);
-			//connection.save();
-		}
-		return action;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Action update(OrientConnectionFactory connection, Action action) {
-		assert action.getKey() != null;
-		
-		@SuppressWarnings("unchecked")
-		Iterable<IAction> actions = (Iterable<IAction>) DataAccessObject.findByKey(action.getKey(), connection, IAction.class);
-		Iterator<IAction> iter = actions.iterator();
-		if(iter.hasNext()){
-			IAction action_record = iter.next();
-			action_record.setName(action.getName());
-			action_record.setType(action.getType());
-			action_record.setValue(action.getValue());
-			connection.save();
-		}
-		
-		return action;
 	}
 
 	/**

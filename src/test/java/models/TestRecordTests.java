@@ -13,6 +13,7 @@ import com.qanairy.models.Path;
 import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.TestRecordRepository;
+import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -45,9 +46,9 @@ public class TestRecordTests {
 		test.setPath(path);
 		test.setResult(page);
 		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page, -1L);	
-		TestRecord test_record_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
+		ITestRecord test_record_record = test_record_repo.save(new OrientConnectionFactory(), test_record);
 		
-		Assert.assertTrue(test_record_record.getKey().equals(test_record_repo.generateKey(test_record)));
+		Assert.assertTrue(test_record_record.getPassing().equals(test_record.getPassing()));
 	}
 	
 	@Test(groups="Regression")
@@ -75,10 +76,10 @@ public class TestRecordTests {
 		test.setPath(path);
 		test.setResult(page);
 		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page, -1L);
-		test_record = test_record_repo.create(new OrientConnectionFactory(), test_record);
-		TestRecord test_record_record = test_record_repo.update(new OrientConnectionFactory(), test_record);
+		ITestRecord saved_test_record = test_record_repo.save(new OrientConnectionFactory(), test_record);
+		ITestRecord test_record_record = test_record_repo.save(new OrientConnectionFactory(), test_record);
 		
-		Assert.assertTrue(test_record_record.getKey().equals(test_record.getKey()));
+		Assert.assertTrue(test_record_record.getKey().equals(saved_test_record.getKey()));
 	}
 	
 	@Test(groups="Regression")
@@ -107,10 +108,9 @@ public class TestRecordTests {
 		test.setPath(path);
 		test.setResult(page);
 		TestRecord test_record = new TestRecord(new Date(), true, browser_name, page, -1L);
+		ITestRecord saved_test_record = test_record_repo.save(orient_connection, test_record);
+		TestRecord test_record_record = test_record_repo.find(orient_connection, saved_test_record.getKey());
 		
-		test_record = test_record_repo.create(orient_connection, test_record);
-		TestRecord test_record_record = test_record_repo.find(orient_connection, test_record.getKey());
-		
-		Assert.assertTrue(test_record_record.getKey().equals(test_record.getKey()));
+		Assert.assertTrue(test_record_record.getKey().equals(saved_test_record.getKey()));
 	}
 }

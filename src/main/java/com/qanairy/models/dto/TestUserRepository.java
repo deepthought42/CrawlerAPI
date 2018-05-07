@@ -50,46 +50,6 @@ public class TestUserRepository implements IPersistable<TestUser, ITestUser> {
 	public TestUser load(ITestUser test_user) {
 		return new TestUser(test_user.getKey(), test_user.getUsername(), test_user.getPassword());
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public TestUser create(OrientConnectionFactory connection, TestUser test_user) {
-		test_user.setKey(generateKey(test_user));
-
-		@SuppressWarnings("unchecked")
-		Iterable<ITestUser> test_users = (Iterable<ITestUser>) DataAccessObject.findByKey(generateKey(test_user), connection, ITestUser.class);
-		Iterator<ITestUser> iter = test_users.iterator();
-		  
-		if(!iter.hasNext()){
-			save(connection, test_user);
-			connection.save();
-		}
-		return test_user;
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public TestUser update(OrientConnectionFactory connection, TestUser test_user) {
-		@SuppressWarnings("unchecked")
-		Iterable<ITestUser> test_users = (Iterable<ITestUser>) DataAccessObject.findByKey(test_user.getKey(), connection, ITestUser.class);
-		Iterator<ITestUser> iter = test_users.iterator();
-		  
-		ITestUser test_user_record = null;
-		if(iter.hasNext()){
-			test_user_record = iter.next();
-			test_user_record.setUsername(test_user.getUsername());
-			test_user_record.setPassword(test_user.getPassword());
-			
-			connection.save();
-		}
-		return load(test_user_record);
-	}
-
 
 	/**
 	 * {@inheritDoc}

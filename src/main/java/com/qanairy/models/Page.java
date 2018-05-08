@@ -10,6 +10,9 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -184,6 +187,21 @@ public class Page extends PathObject {
 
 		try{
 			Browser browser = new Browser(this.getUrl().toString(), browser_name);
+			browser.getDriver().get(this.getUrl().toString());
+			try{
+				new WebDriverWait(browser.getDriver(), 360).until(
+						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			}catch(GridException e){
+				log.error(e.getMessage());
+			}
+			catch(Exception e){
+				log.error(e.getMessage());
+			}
+			
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {}
+			
 			if(this.equals(browser.buildPage())){
 				landable = true;
 			}
@@ -219,6 +237,7 @@ public class Page extends PathObject {
 	      }
 	    }
 	  } else {
+		System.err.println("#########          Pages are not the same size!!!");
 	    return false;
 	  }
 
@@ -241,8 +260,8 @@ public class Page extends PathObject {
         
         Page that = (Page)o;
         
-        ScreenshotSet thisBrowserScreenshot = null;
-        ScreenshotSet thatBrowserScreenshot = null;
+        String thisBrowserScreenshot = this.getBrowserScreenshots().get(0).getFullScreenshot();
+        String thatBrowserScreenshot = that.getBrowserScreenshots().get(0).getFullScreenshot();
         
         boolean screenshots_match = false;
         /*for(ScreenshotSet screenshots : this.getBrowserScreenshots()){
@@ -254,21 +273,26 @@ public class Page extends PathObject {
         }
         */
         //for(String browser : that.getBrowserScreenshots().keySet()){
-			BufferedImage img1;
-			BufferedImage img2;
-        	
-			try {
-				img1 = ImageIO.read(new URL(this.getBrowserScreenshots().get(0).getFullScreenshot()));
-				img2 = ImageIO.read(new URL(that.getBrowserScreenshots().get(0).getFullScreenshot()));
-			} catch (IOException e1) {
-				e1.printStackTrace();
-				return false;
-			}
+		BufferedImage img1;
+		BufferedImage img2;
+    	System.err.println("THIS full screenshot url   ::   "+this.getBrowserScreenshots().get(0).getFullScreenshot());
+    	System.err.println("THAT full screenshot url   ::   "+that.getBrowserScreenshots().get(0).getFullScreenshot());
 
-			screenshots_match = compareImages(img1, img2);
-        //}
-        
-        return screenshots_match;
+    	if(!thisBrowserScreenshot.equals(thatBrowserScreenshot)){
+    		try {
+    			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
+    			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
+    			screenshots_match = compareImages(img1, img2);
+    			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+screenshots_match);
+    	        return screenshots_match;
+    		} catch (IOException e1) {
+    			e1.printStackTrace();
+    			System.err.println("YO THE FULL PAGE SCREENSHOT COMPARISON THINGY ISN'T WORKING!!!!!!  HALP!!!!!!!!!!");
+    		}
+    	}
+    	else{
+    		return true;
+    	}
         
         
         //System.err.println("Screenshots match? :: "+screenshots_match);
@@ -280,7 +304,8 @@ public class Page extends PathObject {
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        /*if(this.getElements().size() == that.getElements().size()){
+        //NOTE ::: THE FOLLOWING COMMENTED CODE CAN BE USED TO TEST PAGE EQUALITY BASED ON PAGE ELEMENTS
+        if(this.getElements().size() == that.getElements().size()){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
 	        	page_elements.put(elem.getXpath(), elem);
@@ -301,7 +326,7 @@ public class Page extends PathObject {
 	        }
         }
     	return false;
-    	*/
+    	
   	}
 	
 	/**

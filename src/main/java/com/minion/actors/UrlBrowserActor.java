@@ -150,6 +150,8 @@ public class UrlBrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
+		browser.getDriver().get(((URL)msg.getData()).toString());
+
 	  	Path path = new Path();
 	  	Page page_obj = browser.buildPage();
 	  	page_obj.setLandable(true);
@@ -157,7 +159,7 @@ public class UrlBrowserActor extends UntypedActor {
 		PathRepository path_repo = new PathRepository();
 		path.setKey(path_repo.generateKey(path));
 		OrientConnectionFactory conn = new OrientConnectionFactory();
-		
+
 		DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
 		DiscoveryRecord discovery_record = discovery_repo.find(conn, msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());

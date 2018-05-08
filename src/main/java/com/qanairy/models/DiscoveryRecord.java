@@ -30,6 +30,23 @@ public class DiscoveryRecord {
 		setTestCount(0);
 	}
 	
+	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
+		assert started_timestamp != null;
+		assert browser_name != null;
+		assert domain_url != null;
+		assert test_cnt > -1;
+		assert total_path_count > 0;
+		
+		setKey(null);
+		setStartedAt(started_timestamp);
+		setBrowserName(browser_name);
+		setDomainUrl(domain_url);
+		setLastPathRanAt(last_path_ran);
+		setTotalPathCount(total_cnt);
+		setExaminedPathCount(examined_cnt);
+		setTestCount(test_cnt);
+	}
+	
 	public DiscoveryRecord(String key, Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
 		assert key != null;
 		assert started_timestamp != null;

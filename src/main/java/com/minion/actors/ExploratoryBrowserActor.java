@@ -2,9 +2,15 @@ package com.minion.actors;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +73,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 					// increment total paths being explored for domain
 					String domain_url = last_page.getUrl().getHost();
-					IDomain idomain = domain_repo.find(domain_url);
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
@@ -90,19 +95,28 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
-						
-						int last_idx = path.getPath().size()-1;
-						if(last_idx < 0){
-							last_idx = 0;
-						}
-						
+					
 						if(ExploratoryPath.hasCycle(path, result_page)){
 					  		path.setIsUseful(false);
 					  		continue;
 					  	}
 					  	else{
 					  		path.setIsUseful(true);
-							
+					  		boolean results_match = false;
+					  		//crawl path and get result
+					  		//if this result is the same as the result achieved by the original path then replace the original path with this new path
+					  		
+					  		/*do{
+					  			Path parent_path = buildParentPath(path, browser.getDriver());
+					  			if(parent_path == null){
+					  				break;
+					  			}
+					  			results_match = doesPathProduceExpectedResult(parent_path, result_page, browser);
+					  			if(results_match){
+					  				path = parent_path;
+					  			}
+					  		}while(results_match);
+					  		*/
 					  		Domain domain = domain_repo.find(conn, domain_url);
 							domain.setTestCount(domain.getTestCount()+1);
 							domain_repo.save(conn, domain);
@@ -174,5 +188,59 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Checks if the result of crawling a given {@link Path path} results in an identical {@link Page page state} to the 
+	 *   result_page that is passed in.
+	 * 
+	 * @param path
+	 * @param result_page
+	 * @param browser
+	 * @return
+	 * 
+	 * @throws NoSuchElementException
+	 * @throws IOException
+	 */
+	private boolean doesPathProduceExpectedResult(Path path, Page result_page, Browser browser) throws NoSuchElementException, IOException{
+		Page parent_result = Crawler.crawlPath(path, browser);
+		return parent_result.equals(result_page);
+	}
+	
+	/**
+	 * Takes in a {@link Path path} and {@link WebDriver driver} and builds a new path such that
+	 *  the last {@link PageElement element} is replaced with it's parent element from the html document controlled by the 
+	 *  given {@link WebDriver driver}
+	 *  
+	 * @param path
+	 * @param driver
+	 * @return
+	 */
+	private Path buildParentPath(Path path, WebDriver driver){
+		PageElement elem = null;
+		int element_idx = -1;
+		for(int idx = path.size()-1; idx >= 0; idx--){
+			if(path.getPath().get(idx).getType().equals("PageElement")){
+				elem = (PageElement)path.getPath().get(idx);
+				element_idx = idx;
+				break;
+			}
+		}
+		
+		if(elem != null && element_idx > -1){
+			//get parent of element
+			WebElement web_elem = driver.findElement(By.xpath(elem.getXpath()));
+			WebElement parent = Browser.getParentElement(web_elem);
+			
+			//clone path and swap page element with parent
+			Path parent_path = Path.clone(path);
+			String this_xpath = Browser.generateXpath(parent, "", new HashMap<String, Integer>(), driver); 
+			
+			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), PageElement.loadCssProperties(parent) );
+			parent_path.getPath().set(element_idx, parent_tag);
+			
+			return parent_path;
+		}
+		return null;
 	}
 }

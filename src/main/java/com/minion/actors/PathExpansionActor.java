@@ -58,11 +58,19 @@ public class PathExpansionActor extends UntypedActor {
 					Page last_page = path.findLastPage();
 					Page first_page = (Page)path.getPath().get(0);
 					
-					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
+					if(!last_page.equals(first_page) && last_page.isLandable()){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						Message<URL> expanded_path_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
+						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
 						
-						work_allocator.tell(expanded_path_msg, getSelf() );
+						work_allocator.tell(url_msg, getSelf() );
+						
+						OrientConnectionFactory conn = new OrientConnectionFactory();
+						DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+						DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+						discovery_repo.save(conn, discovery_record);
+						MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
+						conn.close();
 						return;
 					}
 					
@@ -106,7 +114,6 @@ public class PathExpansionActor extends UntypedActor {
 		List<PageElement> page_elements = page.getElements();
 		
 		//iterate over all elements
-		int path_count = 0;
 		for(PageElement page_element : page_elements){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
@@ -142,12 +149,11 @@ public class PathExpansionActor extends UntypedActor {
 							// 	 then skip this action path
 							
 							
-							/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+							if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 								System.err.println("EXISTING ELEMENT ACTION SEQUENCE FOUND");
 								continue;
-							}*/
+							}
 							pathList.add(action_path);
-							path_count++;
 						}
 					}
 				}
@@ -165,11 +171,10 @@ public class PathExpansionActor extends UntypedActor {
 					//if one exists with one of the actions in the action_list
 					// 	 then skip this action path
 					/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
-					//if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-					//	continue;
-					//}
+					if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+						continue;
+					}
 					pathList.add(action_path);
-					path_count++;
 				}
 			}
 		}

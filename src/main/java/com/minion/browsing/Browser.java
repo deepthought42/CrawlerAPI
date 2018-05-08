@@ -111,11 +111,7 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				WebDriverWait wait = new WebDriverWait(driver, 30);
-				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-				
 				this.url = url;
-				this.getDriver().get(url);
 				break;
 			}
 			catch(UnreachableBrowserException e){
@@ -128,10 +124,7 @@ public class Browser {
 			catch(GridException e){
 				log.error(e.getMessage());
 			}
-			
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {}
+
 			cnt++;
 		}
 	}
@@ -434,10 +427,9 @@ public class Browser {
 		for(WebElement elem : pageElements){
 			
 			try{
-				//boolean is_child = getChildElements(elem).isEmpty();
-				// removed from condition ::   is_child && 
+				boolean is_child = getChildElements(elem).isEmpty();
 				
-				if(elem.getSize().getHeight() > 5 && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+				if(is_child && elem.getSize().getHeight() > 5 && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					
@@ -461,9 +453,7 @@ public class Browser {
 				log.error(e.getMessage());
 			}
 		}
-		log.debug("Total elements that are visible on page :: "
-					+ elementList.size() + "; with url "+driver.getCurrentUrl());
-
+		
 		return elementList;
 	}
 	
@@ -936,7 +926,7 @@ public class Browser {
 					count += 1;
 				}
 				xpathHash.put(xpath, count);
-				xpath = xpath+"[" + count + "]";
+				xpath = "("+xpath+")[" + count + "]";
 			}
 			
 		}catch(InvalidSelectorException e){

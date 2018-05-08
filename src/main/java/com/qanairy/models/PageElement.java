@@ -325,13 +325,16 @@ public class PageElement extends PathObject{
 	 * @param elemAction ElementAction pair
 	 * @return whether action was able to be performed on element or not
 	 */
-	public boolean performAction(Action action, WebDriver driver) throws UnreachableBrowserException {
+	public boolean performAction(Action action, WebDriver driver) throws UnreachableBrowserException, NoSuchElementException {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 		
 		try{
 			WebElement element = driver.findElement(By.xpath(this.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {}
 		}
 		catch(StaleElementReferenceException e){
 			
@@ -341,10 +344,6 @@ public class PageElement extends PathObject{
 		}
 		catch(ElementNotVisibleException e){
 			log.warn("ELEMENT IS NOT CURRENTLY VISIBLE.", e.getMessage());
-		}
-		catch(NoSuchElementException e){
-			log.warn(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action, e.getMessage());
-			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
 			log.warn("Element can not have action performed on it at point performed", e.getMessage());

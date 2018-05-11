@@ -64,7 +64,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 		  		OrientConnectionFactory conn = new OrientConnectionFactory();
 				DomainRepository domain_repo = new DomainRepository();	
 
-				browser = new Browser(((Page)exploratory_path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
+				browser = new Browser((String)acct_msg.getOptions().get("browser"));
 				
 				Page last_page = exploratory_path.findLastPage();
 				
@@ -87,10 +87,28 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						final long pathCrawlStartTime = System.currentTimeMillis();
 						int tries = 0;
 						do{
-							result_page = Crawler.crawlPath(path, browser);
-							result_page.setLandable(last_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
+							try{
+								result_page = Crawler.crawlPath(path, browser);
+							}catch(NullPointerException e){
+								browser = new Browser(browser.getBrowserName());
+								log.error("Error happened while exploratory actor attempted to crawl path");
+							}
 							tries++;
 						}while(result_page == null && tries < 5);
+						
+						do{
+							System.err.println("attempting is landable check. Attemp #"+tries);
+							
+							try{
+								result_page.setLandable(last_page.isLandable(acct_msg.getOptions().get("browser").toString()));
+								break;
+							}catch(NullPointerException e){
+								browser = new Browser(browser.getBrowserName());
+								log.error("Error happened while exploratory actor attempted to crawl path");
+							}
+							
+							tries++;
+						}while(tries < 5);
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
@@ -106,17 +124,22 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  		//crawl path and get result
 					  		//if this result is the same as the result achieved by the original path then replace the original path with this new path
 					  		
-					  		/*do{
+					  		do{
 					  			Path parent_path = buildParentPath(path, browser.getDriver());
 					  			if(parent_path == null){
 					  				break;
 					  			}
-					  			results_match = doesPathProduceExpectedResult(parent_path, result_page, browser);
+					  			System.err.println("parent path length @@@@@@@@   "+parent_path);
+					  			Browser new_browser = new Browser(browser.getBrowserName());
+					  			System.err.println("Retrieved new browser");
+					  			results_match = doesPathProduceExpectedResult(parent_path, result_page, new_browser);
+					  			new_browser.close();
+					  			
 					  			if(results_match){
 					  				path = parent_path;
 					  			}
 					  		}while(results_match);
-					  		*/
+					  		
 					  		Domain domain = domain_repo.find(conn, domain_url);
 							domain.setTestCount(domain.getTestCount()+1);
 							domain_repo.save(conn, domain);
@@ -203,6 +226,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @throws IOException
 	 */
 	private boolean doesPathProduceExpectedResult(Path path, Page result_page, Browser browser) throws NoSuchElementException, IOException{
+		System.err.println("attempting to crawl path with length #########   "+path.size());
 		Page parent_result = Crawler.crawlPath(path, browser);
 		return parent_result.equals(result_page);
 	}

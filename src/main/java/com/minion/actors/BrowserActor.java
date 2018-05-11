@@ -76,7 +76,7 @@ public class BrowserActor extends UntypedActor {
 				Path path = (Path)acct_msg.getData();
 				assert(path.getPath() != null);
 				
-				browser = new Browser(((Path)acct_msg.getData()).firstPage().getUrl().toString(), acct_msg.getOptions().get("browser").toString());
+				browser = new Browser(acct_msg.getOptions().get("browser").toString());
 				traverse_path(browser, path, acct_msg);
 			  	browser.close();
 	
@@ -86,7 +86,7 @@ public class BrowserActor extends UntypedActor {
 			else if(acct_msg.getData() instanceof URL){
 
 				try{
-					browser = new Browser(((URL)acct_msg.getData()).toString(), acct_msg.getOptions().get("browser").toString());
+					browser = new Browser(acct_msg.getOptions().get("browser").toString());
 				}
 				catch(NullPointerException e){
 					log.error(e.getMessage(), "Failed to open connection to browser");
@@ -242,7 +242,7 @@ public class BrowserActor extends UntypedActor {
 		do{
 			result_page = Crawler.crawlPath(path, browser);
 			tries++;
-			result_page.setLandable(result_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
+			result_page.setLandable(result_page.isLandable(acct_msg.getOptions().get("browser").toString()));
 		}while(result_page == null && tries < 5);
 		final long pathCrawlEndTime = System.currentTimeMillis();
 		

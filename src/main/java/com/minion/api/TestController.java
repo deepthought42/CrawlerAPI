@@ -470,7 +470,7 @@ public class TestController {
     			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
     			memory_actor.tell(test_msg, null);
     			
-    			Browser browser = new Browser(test.getPath().firstPage().getUrl().toString().trim(), browser_type.trim());
+    			Browser browser = new Browser(browser_type.trim());
     			record = TestingActor.runTest(test, browser);
     			browser.close();
 
@@ -534,7 +534,7 @@ public class TestController {
 		for(Test group_test : group_list){
 			Browser browser;
 			try {
-				browser = new Browser(((Page)group_test.getPath().getPath().get(0)).getUrl().toString(), browser_type);
+				browser = new Browser(browser_type);
 				TestRecord record = TestingActor.runTest(group_test, browser);
 				group_records.add(record);
 			} catch (IOException e) {

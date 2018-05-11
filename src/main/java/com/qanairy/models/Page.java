@@ -182,11 +182,12 @@ public class Page extends PathObject {
 	 * 
 	 * @return
 	 */
-	public boolean checkIfLandable(String browser_name){		
+	public boolean isLandable(String browser_name){		
 		boolean landable = false;
+		int tries = 0;
 
 		try{
-			Browser browser = new Browser(this.getUrl().toString(), browser_name);
+			Browser browser = new Browser(browser_name);
 			browser.getDriver().get(this.getUrl().toString());
 			try{
 				new WebDriverWait(browser.getDriver(), 360).until(
@@ -205,11 +206,16 @@ public class Page extends PathObject {
 			if(this.equals(browser.buildPage())){
 				landable = true;
 			}
-
+			tries = 5;
 			browser.close();
 		}catch(Exception e){
-			log.error("ERROR VISITING PAGE AT :: "+this.getUrl().getHost()+" ::: "+this.getUrl().toString(), e.getMessage());
+			e.printStackTrace();
+			log.error("ERROR VISITING PAGE AT ::: "+this.getUrl().toString());
 		}
+		
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {}
 		
 		return landable;
 	}
@@ -275,9 +281,7 @@ public class Page extends PathObject {
         //for(String browser : that.getBrowserScreenshots().keySet()){
 		BufferedImage img1;
 		BufferedImage img2;
-    	System.err.println("THIS full screenshot url   ::   "+this.getBrowserScreenshots().get(0).getFullScreenshot());
-    	System.err.println("THAT full screenshot url   ::   "+that.getBrowserScreenshots().get(0).getFullScreenshot());
-
+    	
     	if(!thisBrowserScreenshot.equals(thatBrowserScreenshot)){
     		try {
     			img1 = ImageIO.read(new URL(thisBrowserScreenshot));

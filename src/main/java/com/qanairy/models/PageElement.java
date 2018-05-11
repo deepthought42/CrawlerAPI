@@ -101,9 +101,13 @@ public class PageElement extends PathObject{
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){
-			String element_value = element.getCssValue(propertyName);
-			if(element_value != null){
-				css_map.put(propertyName, element_value);
+			try{
+				String element_value = element.getCssValue(propertyName);
+				if(element_value != null){
+					css_map.put(propertyName, element_value);
+				}
+			}catch(Exception e){
+				
 			}
 		}
 		

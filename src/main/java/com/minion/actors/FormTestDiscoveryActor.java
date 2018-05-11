@@ -53,14 +53,14 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			}
 			
 			//get first page in path
-			Page page = (Page)path.getPath().get(0);
+			Page page = path.firstPage();
 
 			int cnt = 0;
 		  	Browser browser = null;
 		  	
 		  	while(browser == null && cnt < 5){
 		  		try{
-			  		browser = new Browser(page.getUrl().toString(), acct_msg.getOptions().get("browser").toString());
+			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
 					break;
 				}catch(NullPointerException e){
 					log.error(e.getMessage());
@@ -72,7 +72,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 		  	List<Form> forms = Browser.extractAllForms(current_page, browser);
 		  	List<Path> form_paths = new ArrayList<Path>();
-		  	System.err.println("!!!!        GENERATING FORM PATHS !!!!!!!!!!!!!!!!!!  ");
+		  	System.err.println("!!!!        GENERATING FORM PATHS FOR PAGE   "+ page.getUrl() +"!!!!!!!!!!!!!!!!!!  ");
 		  	for(Form form : forms){
 		  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
 		  	}

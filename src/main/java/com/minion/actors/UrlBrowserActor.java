@@ -71,7 +71,7 @@ public class UrlBrowserActor extends UntypedActor {
 			if(acct_msg.getData() instanceof URL){
 
 				try{
-					browser = new Browser(((URL)acct_msg.getData()).toString(), acct_msg.getOptions().get("browser").toString());
+					browser = new Browser(acct_msg.getOptions().get("browser").toString());
 				}
 				catch(NullPointerException e){
 					log.error(e.getMessage());
@@ -180,5 +180,8 @@ public class UrlBrowserActor extends UntypedActor {
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );
+
+		final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
+		form_test_discoverer.tell(path_msg, getSelf() );
 	}
 }

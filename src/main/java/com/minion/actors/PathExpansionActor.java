@@ -43,34 +43,27 @@ public class PathExpansionActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
-			if(acct_msg.getData() instanceof Path){
-				//send data directly to form test builder
-				final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
-				form_test_discoverer.tell(acct_msg, getSelf() );
-				
-				//extract buttons for expansion
-				//extract all links for expansion
-				
+			if(acct_msg.getData() instanceof Path){				
 				Path path = (Path)acct_msg.getData();
 				
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
-					Page first_page = (Page)path.getPath().get(0);
+					Page first_page = path.firstPage();
 					
 					if(!last_page.equals(first_page) && last_page.isLandable()){
-						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
-						
-						work_allocator.tell(url_msg, getSelf() );
-						
 						OrientConnectionFactory conn = new OrientConnectionFactory();
 						DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
 						DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_repo.save(conn, discovery_record);
-						MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
 						conn.close();
+
+						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
+						work_allocator.tell(url_msg, getSelf() );
+						
+						MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
 						return;
 					}
 					
@@ -149,10 +142,10 @@ public class PathExpansionActor extends UntypedActor {
 							// 	 then skip this action path
 							
 							
-							if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+							/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 								System.err.println("EXISTING ELEMENT ACTION SEQUENCE FOUND");
 								continue;
-							}
+							}*/
 							pathList.add(action_path);
 						}
 					}
@@ -169,11 +162,11 @@ public class PathExpansionActor extends UntypedActor {
 					
 					//check for element action sequence. 
 					//if one exists with one of the actions in the action_list
-					// 	 then skip this action path
+					// 	 then load the existing path and process it for path expansion action path
 					/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
-					if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 						continue;
-					}
+					}*/
 					pathList.add(action_path);
 				}
 			}

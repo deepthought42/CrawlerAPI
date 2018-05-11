@@ -31,7 +31,7 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser("chrome");
 			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
@@ -66,7 +66,7 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser("chrome");
 			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
@@ -107,7 +107,7 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url, "chrome");
+			browser = new Browser("chrome");
 			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
@@ -147,7 +147,7 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser("chrome");
 			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
@@ -178,7 +178,7 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser("chrome");
 			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
@@ -210,7 +210,7 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
+			browser = new Browser("chrome");
 			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 

@@ -87,8 +87,7 @@ public class Browser {
 	 * @pre url != null
 	 * @pre browser != null
 	 */
-	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
-		assert url != null;
+	public Browser(String browser) throws MalformedURLException, NullPointerException {
 		assert browser != null;
 		
 		int cnt = 0;
@@ -111,7 +110,6 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				this.url = url;
 				break;
 			}
 			catch(UnreachableBrowserException e){

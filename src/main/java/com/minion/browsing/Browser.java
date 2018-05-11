@@ -49,6 +49,12 @@ import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.ScreenshotSet;
+import com.qanairy.models.dto.PageElementRepository;
+
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -81,8 +87,7 @@ public class Browser {
 	 * @pre url != null
 	 * @pre browser != null
 	 */
-	public Browser(String url, String browser) throws MalformedURLException, NullPointerException {
-		assert url != null;
+	public Browser(String browser) throws MalformedURLException, NullPointerException {
 		assert browser != null;
 		
 		int cnt = 0;
@@ -105,14 +110,6 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				WebDriverWait wait = new WebDriverWait(driver, 30);
-				wait.until( webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException e) {}
-				
-				this.url = url;
-				this.getDriver().get(url);
 				break;
 			}
 			catch(UnreachableBrowserException e){
@@ -125,10 +122,7 @@ public class Browser {
 			catch(GridException e){
 				log.error(e.getMessage());
 			}
-			
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {}
+
 			cnt++;
 		}
 	}
@@ -146,23 +140,31 @@ public class Browser {
 	 * @throws GridException 
 	 * @throws IOException 
 	 */
-	public Page getPage() throws GridException, IOException{
+	public Page buildPage() throws GridException, IOException{
 		URL page_url = new URL(this.getDriver().getCurrentUrl());
 		String src = this.getDriver().getPageSource();
 		String screenshot = "";
+
+		List<PageElement> visible_elements = new ArrayList<PageElement>();
+		String viewport_screenshot_url = null;
+		String src_hash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource());
 		try{
-			File img = Browser.getScreenshot(this.getDriver());
-			screenshot = UploadObjectSingleOperation.saveImageToS3(img, page_url.getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource()));
-			img.delete();
-		}catch(IOException e){}
-		List<PageElement> visible_elements = Browser.getVisibleElements(this.getDriver(), "");
+			File viewport_screenshot = Browser.getViewportScreenshot(driver);
+			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(ImageIO.read(viewport_screenshot), page_url.getHost(), src_hash, "viewport");
+
+			Screenshot img = Browser.getFullScreenshot(this.getDriver());
+			screenshot = UploadObjectSingleOperation.saveImageToS3(img.getImage(), page_url.getHost(), src_hash, "full");
+			visible_elements = Browser.getVisibleElements(driver, "", img.getImage());
+		}catch(IOException e){
+			log.error(e.getMessage());
+		}
 	
 		if(visible_elements == null){
 			visible_elements = new ArrayList<PageElement>();
 		}
-		Map<String, String> browser_screenshot = new HashMap<String, String>();
-		browser_screenshot.put(browser_name, screenshot);
-		return new Page(src, 
+		List<ScreenshotSet> browser_screenshot = new ArrayList<ScreenshotSet>();
+		browser_screenshot.add(new ScreenshotSet(screenshot, viewport_screenshot_url, browser_name));
+		return new Page(src,
 						page_url.toString(),
 						browser_screenshot,
 						visible_elements);
@@ -346,8 +348,24 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static File getScreenshot(WebDriver driver) throws IOException, GridException{
+	public static File getViewportScreenshot(WebDriver driver) throws IOException, GridException{
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {}
+		
 		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+	}
+	
+	
+	/**
+	 * Gets image as a base 64 string
+	 * 
+	 * @return File png file of image
+	 * @throws IOException
+	 */
+	public static Screenshot getFullScreenshot(WebDriver driver) throws IOException, GridException{
+		return new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000))
+				.takeScreenshot(driver);
 	}
 	
 	/**
@@ -357,33 +375,12 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static File getElementScreenshot(File screenshot, WebElement elem) throws IOException{
-		// Get entire page screenshot
-		BufferedImage  fullImg = ImageIO.read(screenshot);
-
-		// Get the location of element on the page
-		Point point = elem.getLocation();
+	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point) throws IOException{
 		// Get width and height of the element
-		int elemWidth = elem.getSize().getWidth();
-		if(fullImg.getWidth() < point.getX()+elemWidth){
-			elemWidth =  fullImg.getWidth()-point.getX();
-		}
-		else if(elemWidth < 0){
-			throw new IOException();
-		}
-		
-		int elemHeight = elem.getSize().getHeight();
-		if(fullImg.getHeight() < point.getY()+elemHeight){
-			elemHeight =  fullImg.getHeight()-point.getY();
-		}
-		else if(elemHeight < 0){
-			throw new IOException();
-		}
+		int elemWidth = dimension.getWidth();
+		int elemHeight = dimension.getHeight();
 
-		// Crop the entire page screenshot to get only element screenshot
-		BufferedImage elemScreenshot= fullImg.getSubimage(point.getX(), point.getY(), elemWidth, elemHeight);
-		ImageIO.write(elemScreenshot, "png", screenshot);
-		return screenshot;
+		return page_screenshot.getSubimage(point.getX(), point.getY(), elemWidth, elemHeight);
 	}
 	 
 	/**
@@ -415,7 +412,7 @@ public class Browser {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	public static List<PageElement> getVisibleElements(WebDriver driver, String xpath) 
+	public static List<PageElement> getVisibleElements(WebDriver driver, String xpath, BufferedImage page_screenshot) 
 															 throws WebDriverException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
@@ -429,23 +426,19 @@ public class Browser {
 		for(WebElement elem : pageElements){
 			
 			try{
-				//boolean is_child = getChildElements(elem).isEmpty();
-				// removed from condition ::   is_child && 
+				boolean is_child = getChildElements(elem).isEmpty();
 				
-				boolean is_visible = isElementVisibleInPane(Browser.getScreenshot(driver), elem);
-				//NOTE :: Add is_visible back into if statement once scrolling is added in.
-				
-				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+				if(is_child && elem.getSize().getHeight() > 5 && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
+					
+					Dimension d = elem.getSize();
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
-					if(is_visible){
-						File img = Browser.getElementScreenshot(Browser.getScreenshot(driver), elem);
-						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()));	
-						tag.setScreenshot(screenshot);
-						img.delete();
-						img = null;
-					}
+					PageElementRepository page_elem_repo = new PageElementRepository();
+					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
+					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), page_elem_repo.generateKey(tag));	
+					tag.setScreenshot(screenshot);
+
 					elementList.add(tag);
 				}
 			}catch(StaleElementReferenceException e){
@@ -457,13 +450,10 @@ public class Browser {
 			catch(GridException e){
 				log.error(e.getMessage());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 		}
-		log.debug("Total elements that are visible on page :: "
-					+ elementList.size() + "; with url "+driver.getCurrentUrl());
-
+		
 		return elementList;
 	}
 	
@@ -563,13 +553,13 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	private static boolean isElementVisibleInPane(File screenshot, WebElement elem) throws IOException {
+	private static boolean isElementVisibleInPane(BufferedImage screenshot, WebElement elem) throws IOException {
 		Dimension weD = elem.getSize();
 	    Point weP = elem.getLocation();
-	    BufferedImage  fullImg = ImageIO.read(screenshot);
+	    //BufferedImage  fullImg = ImageIO.read(screenshot);
 
-	    int x = fullImg.getWidth();;
-	    int y = fullImg.getHeight();
+	    int x = screenshot.getWidth();;
+	    int y = screenshot.getHeight();
 	    int x2 = weD.getWidth() + weP.getX();
 	    int y2 = weD.getHeight() + weP.getY();
 
@@ -936,7 +926,7 @@ public class Browser {
 					count += 1;
 				}
 				xpathHash.put(xpath, count);
-				xpath = xpath+"[" + count + "]";
+				xpath = "("+xpath+")[" + count + "]";
 			}
 			
 		}catch(InvalidSelectorException e){

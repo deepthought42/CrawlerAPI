@@ -19,6 +19,7 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 * {@inheritDoc}
 	 */
 	public ITestRecord save(OrientConnectionFactory connection, TestRecord record){
+		record.setKey(generateKey(record));
 		ITestRecord testRecord = connection.getTransaction().addVertex("class:"+ITestRecord.class.getSimpleName()+","+UUID.randomUUID(), ITestRecord.class);
 
 		PageRepository page_repo = new PageRepository();
@@ -38,40 +39,6 @@ public class TestRecordRepository implements IPersistable<TestRecord, ITestRecor
 	 */
 	public String generateKey(TestRecord record) {
 		return record.getRanAt().toString()+"::"+record.getPassing();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public TestRecord create(OrientConnectionFactory connection, TestRecord record) {
-		record.setKey(generateKey(record));
-		TestRecord test_record_record = find(connection, generateKey(record));
-		if(test_record_record == null){
-			save(connection, record);
-			//connection.save();
-		}
-		else{
-			record = test_record_record;
-		}
-		return record;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	public TestRecord update(OrientConnectionFactory connection, TestRecord record) {
-		assert record.getKey() != null;
-
-		TestRecord test_record_record = find(connection, record.getKey());
-		if(test_record_record != null){
-			test_record_record.setPassing(record.getPassing());
-			test_record_record.setRanAt(record.getRanAt());
-
-			connection.save();
-			record = test_record_record;
-		}
-		
-		return record;
 	}
 
 	/**

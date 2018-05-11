@@ -55,31 +55,6 @@ public class PathObjectRepository implements IPersistable<PathObject, IPathObjec
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public PathObject create(OrientConnectionFactory conn, PathObject attr) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		
-		this.save(orient_connection, attr);
-		orient_connection.close();
-		
-		return attr;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public PathObject update(OrientConnectionFactory conn, PathObject attr) {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		save(connection, attr);
-		connection.close();
-		
-		return attr;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public PathObject load(IPathObject data){

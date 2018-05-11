@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
@@ -33,6 +32,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.dto.AccountRepository;
+import com.qanairy.models.dto.DiscoveryRecordRepository;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IDomain;
@@ -79,7 +79,7 @@ public class DiscoveryController {
     }
     
 	@RequestMapping(path="/status", method = RequestMethod.GET)
-    public @ResponseBody Map<String, Boolean> isDiscoveryRunning(HttpServletRequest request, 
+    public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request, 
     												@RequestParam(value="url", required=true) String url) 
     														throws UnknownAccountException{
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -94,31 +94,19 @@ public class DiscoveryController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
 
-    	@SuppressWarnings("unchecked")
-		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
-    	IDomain domain = domains_iter.next();
-    	//domain.setDiscoveryStartTime(new Date());
-    	Date last_ran_date = domain.getDiscoveryStartTime();
-
-    	Date now = new Date();
-    	long diffInMinutes = 10000;
-    	if(last_ran_date != null){
-    		diffInMinutes = Math.abs((int)(now.getTime() - last_ran_date.getTime()))/ (1000 * 60);
-    	}
-
-    	int paths_being_explored = domain.getDiscoveryPathCount();
-        
-		Map<String, Boolean> status_map = new HashMap<String, Boolean>();
-		if(diffInMinutes > 1440){
-			status_map.put("status", false);
+    	DiscoveryRecord last_discovery_record = null;
+    	Date last_ran_date = new Date(0L);
+		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+			if(record.getStartedAt().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url)){
+				last_ran_date = record.getStartedAt();
+				last_discovery_record = record;
+			}
 		}
-		else{
-			status_map.put("status", true);
-		}
-		return status_map;
+
+		return last_discovery_record;
     }
+	
     /**
 	 * 
 	 * @param request
@@ -134,13 +122,14 @@ public class DiscoveryController {
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
-	public @ResponseBody ResponseEntity<String> startDiscovery(HttpServletRequest request, 
-													   	  		@RequestParam(value="url", required=true) String url) 
-													   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request, 
+											   	  		@RequestParam(value="url", required=true) String url) 
+										   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
+		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
 
     	Account acct = accountService.find(username);
 
@@ -179,8 +168,9 @@ public class DiscoveryController {
     		}
     	}
     	
+		DiscoveryRecord last_discovery_record = null;
+
     	if(monthly_discovery_count > allowed_discovery_cnt){
-    		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
         	Map<String, String> traits = new HashMap<String, String>();
             traits.put("email", username);     
             traits.put("discovery_limit_reached", plan.getId());
@@ -191,74 +181,72 @@ public class DiscoveryController {
         	
         	throw new DiscoveryLimitReachedException();
     	}
-    	
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-    	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("email", username);     
-        traits.put("discovery_started", "true");
-    	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getKey())
-    		    .traits(traits)
-    		);
+    	else{
+    		Date started_date = new Date(0L);
+    		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+    			if(record.getStartedAt().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
+    				started_date = record.getStartedAt();
+    				last_discovery_record = record;
+    			}
+    		}
+    	}
     	
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 
     	@SuppressWarnings("unchecked")
 		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
-    	IDomain domain = domains_iter.next();
-    	Date last_ran_date = domain.getDiscoveryStartTime();
+    	IDomain domain = domains_iter.next(); 
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
-    	if(last_ran_date != null){
-    		diffInMinutes = Math.abs((int)((now.getTime() - last_ran_date.getTime())/ (1000 * 60) ));
+    	if(last_discovery_record != null){
+    		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartedAt().getTime()) / (1000 * 60) ));
     	}
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
-    	int paths_being_explored = domain.getDiscoveryPathCount();
-        
-		Map<String, Object> options = new HashMap<String, Object>();
-		options.put("browser", domain.getDiscoveryBrowserName());
         
 		if(diffInMinutes > 1440){
-	    	domain.setDiscoveryStartTime(new Date());
-
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-        	domain.setDiscoveryPathCount(0);
 				
-			DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", domain_url);
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	acct.getDiscoveryRecords().add(discovery_record);
         	
         	AccountRepository acct_repo = new AccountRepository();
         	acct_repo.save(connection, acct);
                 	
 			WorkAllowanceStatus.register(acct.getKey());
-
+			DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+			Map<String, Object> options = new HashMap<String, Object>();
+			options.put("browser", domain.getDiscoveryBrowserName());
+	        options.put("discovery_key", discovery_repo.generateKey(discovery_record));
+
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
-			
+
 		    //Fire discovery started event	
-	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
-	    	discovery_started_props.put("url", url);
-	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
-	    	analytics.enqueue(TrackMessage.builder("Started Discovery")
+			Map<String, String> traits = new HashMap<String, String>();
+	        traits.put("email", username);    
+	        traits.put("url", url);
+	    	traits.put("browser", domain.getDiscoveryBrowserName());
+	        traits.put("discovery_started", "true");
+	    	traits.put("discovery_key", discovery_record.getKey());
+	        analytics.enqueue(TrackMessage.builder("Started Discovery")
 	    		    .userId(acct.getKey())
-	    		    .properties(discovery_started_props)
+	    		    .properties(traits)
 	    		);
-			
+
 			Timeout timeout = new Timeout(Duration.create(60, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
 			connection.close();
 
 			try {
 				Await.result(future, timeout.duration());
-				return new ResponseEntity<String>(HttpStatus.OK);
-	
 			} catch (Exception e) {
-				e.printStackTrace();
-				return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
+				log.error(e.getMessage());
 			}
+			return discovery_record;
+
 		}
         else{
         	//Throw error indicating discovery has been or is running

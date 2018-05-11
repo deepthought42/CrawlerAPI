@@ -20,24 +20,9 @@ public class AccountService {
         this.accountRepository = accountRepository;
     }
 
-
-    public Account create(Account account) {
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-        Account acct = accountRepository.create(connection, account);
-        connection.close();
-        return acct;
-    }
-
     public Account get(String key) {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
         Account acct = accountRepository.find(connection, key);
-        connection.close();
-        return acct;
-    }
-
-    public Account update(Account account) {
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-        Account acct = accountRepository.update(connection, account);
         connection.close();
         return acct;
     }

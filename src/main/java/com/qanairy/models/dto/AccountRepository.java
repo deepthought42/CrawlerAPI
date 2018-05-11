@@ -55,6 +55,11 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		}
 		else{
 			acct_record = iter.next();
+			account.setKey(acct_record.getKey());
+			account.setServicePackage(acct_record.getServicePackage());
+			account.setCustomerToken(acct_record.getCustomerToken());
+			account.setSubscriptionToken(acct_record.getSubscriptionToken());
+			account.setOrgName(acct_record.getOrgName());
 		}
 		
 		acct_record.setLastDomain(account.getLastDomain());
@@ -121,69 +126,6 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		
 		return new Account(account.getKey(), account.getOrgName(), account.getServicePackage(), account.getCustomerToken(), account.getSubscriptionToken(),
 							new ArrayList<QanairyUser>(), domains, account.getLastDomain(), discovery_record_list, test_record_list, account.getOnboardedSteps());
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Account create(OrientConnectionFactory connection, Account account) {
-		account.setKey(generateKey(account));
-
-		@SuppressWarnings("unchecked")
-		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
-		Iterator<IAccount> iter = accounts.iterator();
-		  
-		if(!iter.hasNext()){
-			save(connection, account);
-			connection.save();
-		}
-		
-		return account;
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Account update(OrientConnectionFactory connection, Account account){
-		if(account.getKey() == null){
-			account.setKey(generateKey(account));
-		}
-		@SuppressWarnings("unchecked")
-		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
-		Iterator<IAccount> iter = accounts.iterator();
-		  
-		IAccount acct = null;
-		if(iter.hasNext()){
-			acct = iter.next();
-			acct.setOrgName(account.getOrgName());
-			acct.setCustomerToken(account.getCustomerToken());
-			acct.setSubscriptionToken(account.getSubscriptionToken());
-			acct.setServicePackage(account.getServicePackage());
-			
-			for(Domain domain : account.getDomains()){
-				DomainRepository repo = new DomainRepository();
-				
-				Domain domain_record = repo.find(connection, domain.getUrl());
-				if(domain_record == null){
-					acct.addDomain(repo.save(connection, domain));	
-				}
-				else{
-					boolean domain_exists_on_acct = false;
-					for(IDomain idomain : acct.getDomains()){
-						if(idomain.getUrl().equals(domain_record.getUrl())){
-							domain_exists_on_acct = true;
-						}
-					}
-					if(!domain_exists_on_acct){
-						acct.addDomain(repo.save(connection, domain));
-					}
-				}
-			}
-		}
-		return load(acct);
 	}
 
 

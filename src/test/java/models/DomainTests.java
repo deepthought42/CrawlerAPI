@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.DomainRepository;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -22,7 +23,7 @@ public class DomainTests {
 		Domain domain = new Domain( "http", "Test.test", "chrome", "");
 		DomainRepository domain_repo = new DomainRepository();
 
-		Domain created_domain = domain_repo.create(new OrientConnectionFactory(), domain);
+		IDomain created_domain = domain_repo.save(new OrientConnectionFactory(), domain);
 		
 		
 		Assert.assertTrue(created_domain.getKey().equals(domain.getKey()));
@@ -36,11 +37,11 @@ public class DomainTests {
 	 */
 	@Test(groups="Regression")
 	public void accountUpdateRecord(){
-		Domain domain = new Domain("Test.test", "Test.test", "", new ArrayList<com.qanairy.models.Test>(), "http", null);
+		Domain domain = new Domain("Test.test", "Test.test", "", new ArrayList<com.qanairy.models.Test>(), "http", 0);
 		DomainRepository domain_repo = new DomainRepository();
 		domain.setKey(domain_repo.generateKey(domain));
 
-		Domain domain_record = domain_repo.update(new OrientConnectionFactory(), domain);
+		IDomain domain_record = domain_repo.save(new OrientConnectionFactory(), domain);
 		
 		Assert.assertTrue(domain_record.getKey().equals(domain.getKey()));
 		Assert.assertTrue(domain_record.getUrl().equals(domain.getUrl()));
@@ -57,7 +58,7 @@ public class DomainTests {
 		Domain domain = new Domain("http", "Test Domain", "chrome", "" );
 		DomainRepository domain_repo = new DomainRepository();
 		domain.setKey(domain_repo.generateKey(domain));
-		Domain domain_record = domain_repo.update(new OrientConnectionFactory(), domain);
+		IDomain domain_record = domain_repo.save(new OrientConnectionFactory(), domain);
 		
 		Assert.assertTrue(domain_record.getKey().equals(domain.getKey()));
 		Assert.assertTrue(domain_record.getUrl().equals(domain.getUrl()));

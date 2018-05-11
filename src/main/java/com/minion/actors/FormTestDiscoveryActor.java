@@ -8,6 +8,9 @@ import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.persistence.OrientConnectionFactory;
+import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.element.ComplexField;
@@ -15,6 +18,7 @@ import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
@@ -49,14 +53,14 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			}
 			
 			//get first page in path
-			Page page = (Page)path.getPath().get(0);
+			Page page = path.firstPage();
 
 			int cnt = 0;
 		  	Browser browser = null;
 		  	
 		  	while(browser == null && cnt < 5){
 		  		try{
-			  		browser = new Browser(page.getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
+			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
 					break;
 				}catch(NullPointerException e){
 					log.error(e.getMessage());
@@ -72,14 +76,23 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
 		  	}
 		  	
+		  	OrientConnectionFactory conn = new OrientConnectionFactory();
+			DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+			DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+			discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+form_paths.size());
+			discovery_repo.save(conn, discovery_record);
+			MessageBroadcaster.broadcastDiscoveryStatus(page.getUrl().getHost(), discovery_record);
+			System.err.println("Broadcasting discovery record now that we've added "+form_paths.size()+"        paths   ");
+			conn.close();
+			
 		  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 			for(Path expanded : form_paths){
 				//send all paths to work allocator to be evaluated
 				Message<Path> expanded_path_msg = new Message<Path>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
 				work_allocator.tell(expanded_path_msg, getSelf() );
 			}
+			
 		  	browser.close();
-		  	
 		}
 	}
 	

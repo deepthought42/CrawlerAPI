@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.Attribute;
 import com.qanairy.models.dto.AttributeRepository;
+import com.qanairy.persistence.IAttribute;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 
@@ -25,7 +26,7 @@ public class AttributeTests {
 		Attribute attr = new Attribute("class", attributes);
 		AttributeRepository attr_repo = new AttributeRepository();
 		
-		Attribute created_attr = attr_repo.create(connection, attr);
+		IAttribute created_attr = attr_repo.save(connection, attr);
 		Assert.assertTrue(created_attr != null);
 		Attribute attr_record = attr_repo.find(connection, created_attr.getKey()); 
 		Assert.assertTrue(attr_record.getKey().equals(created_attr.getKey()));
@@ -52,7 +53,7 @@ public class AttributeTests {
 		attributes.add("button");
 		attributes.add("redbutton");
 		Attribute attr = new Attribute("class", attributes);
-		attr = attr_repo.create(orient_connection, attr);
+		attr_repo.save(orient_connection, attr);
 		Attribute attr_record = attr_repo.find(orient_connection, attr.getKey());
 		
 		Assert.assertTrue(attr_record.getKey().equals(attr.getKey()));

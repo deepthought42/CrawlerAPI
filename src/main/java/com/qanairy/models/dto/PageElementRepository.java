@@ -144,6 +144,9 @@ public class PageElementRepository implements IPersistable<PageElement, IPageEle
 		}
 		else{
 			page_elem_record = iter.next();
+			elem.setXpath(page_elem_record.getXpath());
+			elem.setText(page_elem_record.getText());
+			elem.setName(page_elem_record.getName());
 		}
     
 		page_elem_record.setCssValues(elem.getCssValues());

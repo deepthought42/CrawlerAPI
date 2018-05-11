@@ -15,7 +15,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
+import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.persistence.IPath;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -24,12 +24,13 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class PathTests {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathTests.class);
 
 	@Test(groups="Regression")
 	public void pathRecordDatabaseConfirmation(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		
 		Path path = new Path();
 		path.setIsUseful(false);
@@ -64,17 +65,12 @@ public class PathTests {
 		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 		PathRepository path_repo = new PathRepository();
-		Path new_path = path_repo.create(orient_connection, path);
+		IPath new_path = path_repo.save(orient_connection, path);
 		
 		//look up path and verify all elements
-		System.err.println("new path :: "+new_path);
-		System.err.println("new path key :: "+new_path.getKey());
 		Path path_record = path_repo.find(orient_connection, new_path.getKey());
 		orient_connection.close();
-		System.err.println("Path record size :: " + path_record.getPath().size());
-		System.err.println("Path size :: " + new_path.getPath().size());
-		
-		System.err.println("path object record type : "+path_record.getPath().get(0).getType());
+
 		Assert.assertTrue(path_record.getPath().get(0).getType().equals("Page"));
 		
 		/*System.err.println("path object record type 1: "+path_record.getPath().get(1).getType());

@@ -9,7 +9,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.minion.api.PastPathExperienceController;
+import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
 import com.qanairy.models.Path;
 
@@ -37,10 +37,10 @@ public class MemoryRegistryActor extends UntypedActor{
 				test.setKey(test_repo.generateKey(test));
 				test_repo.save(connection, test);
 				if(test.getBrowserPassingStatuses().isEmpty()){
-					PastPathExperienceController.broadcastDiscoveredTest(test);
+					MessageBroadcaster.broadcastDiscoveredTest(test);
 				}
 				else{
-					PastPathExperienceController.broadcastTest(test);
+					MessageBroadcaster.broadcastTest(test);
 				}
 			}
 			else if(acct_msg.getData() instanceof Path){
@@ -49,7 +49,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				PathRepository path_repo = new PathRepository();
 				Path path_record = path_repo.find(connection, path_repo.generateKey(path));
 				if(path_record == null){
-					path_repo.create(connection, path);
+					path_repo.save(connection, path);
 				}
 			}
 			connection.close();

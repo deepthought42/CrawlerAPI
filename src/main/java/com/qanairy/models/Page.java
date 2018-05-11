@@ -3,9 +3,16 @@ package com.qanairy.models;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
+
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,7 +27,7 @@ public class Page extends PathObject {
 
     private String key;
     private boolean landable = false;
-	private Map<String, String> browser_screenshots;
+	private List<ScreenshotSet> browser_screenshots;
 	
 	@JsonIgnore
 	private String src;
@@ -40,7 +47,7 @@ public class Page extends PathObject {
 		this.setType(Page.class.getSimpleName());
 		this.setImageWeight(0);
 		this.element_counts = new HashMap<String, Integer>();
-		this.setBrowserScreenshots(new HashMap<String, String>());
+		this.setBrowserScreenshots(new ArrayList<ScreenshotSet>());
 	}
 	
 	/**
@@ -55,7 +62,7 @@ public class Page extends PathObject {
 	 * @pre html != null && html.length() > 0
 	 * @pre elements != null
 	 */
-	public Page(String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements) throws IOException {
+	public Page(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		assert html != null;
 		assert html.length() > 0;
@@ -83,7 +90,7 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null
 	 */
-	public Page(String key, String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements) throws IOException {
+	public Page(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
 		super.setType("Page");
@@ -110,7 +117,7 @@ public class Page extends PathObject {
 	 * @pre elements != null;
 	 * @throws IOException
 	 */
-	public Page(String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
+	public Page(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		super.setType("Page");
 		this.setSrc(html);
@@ -134,7 +141,7 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null;
 	 */
-	public Page(String key, String html, String url, Map<String, String> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
+	public Page(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		super.setType("Page");
 		this.setSrc(html);
@@ -175,19 +182,40 @@ public class Page extends PathObject {
 	 * 
 	 * @return
 	 */
-	public boolean checkIfLandable(String browser_name){		
+	public boolean isLandable(String browser_name){		
 		boolean landable = false;
+		int tries = 0;
 
 		try{
-			Browser browser = new Browser(this.getUrl().toString(), browser_name);
-			if(this.equals(browser.getPage())){
+			Browser browser = new Browser(browser_name);
+			browser.getDriver().get(this.getUrl().toString());
+			try{
+				new WebDriverWait(browser.getDriver(), 360).until(
+						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			}catch(GridException e){
+				log.error(e.getMessage());
+			}
+			catch(Exception e){
+				log.error(e.getMessage());
+			}
+			
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {}
+			
+			if(this.equals(browser.buildPage())){
 				landable = true;
 			}
-
+			tries = 5;
 			browser.close();
 		}catch(Exception e){
-			log.error("ERROR VISITING PAGE AT :: "+this.getUrl().getHost()+" ::: "+this.getUrl().toString(), e.getMessage());
+			e.printStackTrace();
+			log.error("ERROR VISITING PAGE AT ::: "+this.getUrl().toString());
 		}
+		
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {}
 		
 		return landable;
 	}
@@ -215,6 +243,7 @@ public class Page extends PathObject {
 	      }
 	    }
 	  } else {
+		System.err.println("#########          Pages are not the same size!!!");
 	    return false;
 	  }
 
@@ -237,22 +266,37 @@ public class Page extends PathObject {
         
         Page that = (Page)o;
         
-        /*boolean screenshots_match = false;
-        for(String browser : that.getBrowserScreenshots().keySet()){
-			BufferedImage img1;
-			BufferedImage img2;
+        String thisBrowserScreenshot = this.getBrowserScreenshots().get(0).getFullScreenshot();
+        String thatBrowserScreenshot = that.getBrowserScreenshots().get(0).getFullScreenshot();
+        
+        boolean screenshots_match = false;
+        /*for(ScreenshotSet screenshots : this.getBrowserScreenshots()){
+        	if(screenshots.getBrowserName().equals(anObject))
+        }
+        
+        for(ScreenshotSet screenshots : this.getBrowserScreenshots()){
         	
-			try {
-				img1 = ImageIO.read(new URL(this.getBrowserScreenshots().get(browser)));
-				img2 = ImageIO.read(new URL(that.getBrowserScreenshots().get(browser)));
-			} catch (IOException e1) {
-				e1.printStackTrace();
-				return false;
-			}
-
-			screenshots_match = compareImages(img1, img2);
         }
         */
+        //for(String browser : that.getBrowserScreenshots().keySet()){
+		BufferedImage img1;
+		BufferedImage img2;
+    	
+    	if(!thisBrowserScreenshot.equals(thatBrowserScreenshot)){
+    		try {
+    			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
+    			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
+    			screenshots_match = compareImages(img1, img2);
+    			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+screenshots_match);
+    	        return screenshots_match;
+    		} catch (IOException e1) {
+    			e1.printStackTrace();
+    			System.err.println("YO THE FULL PAGE SCREENSHOT COMPARISON THINGY ISN'T WORKING!!!!!!  HALP!!!!!!!!!!");
+    		}
+    	}
+    	else{
+    		return true;
+    	}
         
         
         //System.err.println("Screenshots match? :: "+screenshots_match);
@@ -264,34 +308,30 @@ public class Page extends PathObject {
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        
-        /*
-        if(this.getElements().size() != that.getElements().size()){
-        	System.err.println("@@@@@@@@@@@@@@     THIS vs THAT ELEMENTS SIZE ++++++++++++++++++++++++++++++++++++    "+this.getElements().size() + "  vs  "+that.getElements().size());
-        	
-        	if(this.getElements().size() < that.getElements().size()){
-        		for(int idx=0; idx<this.getElements().size(); idx++){
-    	        	System.err.println("THIS page element at idx "+idx+"   =    "+this.getElements().get(idx));
-    	        	System.err.println("THAT page element at idx "+idx+"   =    "+that.getElements().get(idx));
-            	}
-        		for(int idx=this.getElements().size(); idx<that.getElements().size(); idx++){
-    	        	System.err.println("THAT page element at idx "+idx+"   =    "+that.getElements().get(idx));
-            	}
-        	}
-        	if(that.getElements().size() < this.getElements().size()){
-        		for(int idx=0; idx<that.getElements().size(); idx++){
-    	        	System.err.println("THIS page element at idx "+idx+"   =    "+this.getElements().get(idx));
-    	        	System.err.println("THAT page element at idx "+idx+"   =    "+that.getElements().get(idx));
-            	}
-        		for(int idx=that.getElements().size(); idx<this.getElements().size(); idx++){
-    	        	System.err.println("THAT page element at idx "+idx+"   =    "+this.getElements().get(idx));
-            	}
-        	}
-        	
+        //NOTE ::: THE FOLLOWING COMMENTED CODE CAN BE USED TO TEST PAGE EQUALITY BASED ON PAGE ELEMENTS
+        if(this.getElements().size() == that.getElements().size()){
+	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
+	        for(PageElement elem : that.getElements()){
+	        	page_elements.put(elem.getXpath(), elem);
+	        }
+	        
+	        for(PageElement elem : this.getElements()){
+	        	if(elem.equals(page_elements.get(elem.getXpath()))){
+	        		page_elements.remove(elem.getXpath());
+	        	}
+	        	else{
+	        		System.err.println("PAGE ELEMENTS ARE NOT EQUAL");
+	        	}
+	        }
+	        
+	        if(page_elements.isEmpty()){
+	        	System.err.println("Page elements map is empty. Pages are EQUAL!!!!");
+	        	return true;
+	        }
         }
-        */
-        return this.getElements().size() == that.getElements().size(); //this.getSrc().equals(that.getSrc());
-	}
+    	return false;
+    	
+  	}
 	
 	/**
 	 * {@inheritDoc} 	
@@ -415,15 +455,11 @@ public class Page extends PathObject {
 	}
 
 	@JsonProperty("browser_screenshots")
-	public Map<String, String> getBrowserScreenshots() {
+	public List<ScreenshotSet> getBrowserScreenshots() {
 		return browser_screenshots;
 	}
 
-	public void setBrowserScreenshots(Map<String, String> browser_screenshots) {
+	public void setBrowserScreenshots(List<ScreenshotSet> browser_screenshots) {
 		this.browser_screenshots = browser_screenshots;
-	}
-	
-	public void setBrowserScreenshot(String browser, String screenshot_url) {
-		this.browser_screenshots.put(browser, screenshot_url);
 	}
 }

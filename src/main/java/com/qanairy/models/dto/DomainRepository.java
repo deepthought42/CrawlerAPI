@@ -59,14 +59,12 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		else{
 			//figure out throwing exception because domain already exists
 			domain_record = iter.next();
+			domain.setUrl(domain_record.getUrl());
 		}
 		domain_record.setLogoUrl(domain.getLogoUrl());
 		domain_record.setProtocol(domain.getProtocol());
-		domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
-		domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
 		domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
-		domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
-		domain_record.setDiscoveryPathCount(domain.getDiscoveryPathCount());
+		domain_record.setDiscoveryTestCount(domain.getTestCount());
 		
 		TestUserRepository test_user_repo = new TestUserRepository();
 		List<ITestUser> test_users = new ArrayList<ITestUser>();
@@ -74,56 +72,13 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 			test_users.add(test_user_repo.save(connection, test_user));
 		}
 		domain_record.setTestUsers(test_users);
-		/*TestRepository test_repo = new TestRepository();
-		List<ITest> tests = new ArrayList<ITest>();
-		for(Test test : domain.getTests()){
-			//check if test already exists
-			
-			tests.add(test_repo.save(connection, test));
-		}
-		
-		domain_record.setTests(tests);
-		*/
+
 		return domain_record;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Domain create(OrientConnectionFactory connection, Domain domain) {
-		domain.setKey(generateKey(domain));
-		Domain domain_record = find(connection, generateKey(domain));
-		
-		if(domain_record == null){
-			save(connection, domain);
-		}
-		
-		return domain;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Domain update(OrientConnectionFactory connection, Domain domain) {
-		@SuppressWarnings("unchecked")
-		Iterable<IDomain> domains = (Iterable<IDomain>) DataAccessObject.findByKey(domain.getKey(), connection, IDomain.class);
-		Iterator<IDomain> iter = domains.iterator();
-
-		if(iter.hasNext()){
-			IDomain domain_record = iter.next();
-			domain_record.setLogoUrl(domain.getLogoUrl());
-			domain_record.setLastDiscoveryPathRanAt(domain.getLastDiscoveryPathRanAt());
-			domain_record.setDiscoveryTestCount(domain.getDiscoveredTestCount());
-			domain_record.setDiscoveryStartTime(domain.getLastDiscoveryStartedAt());
-			domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowser());
-			domain_record.setDiscoveryPathCount(domain.getDiscoveryPathCount());
-		}
-		
-		return domain;
-	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public IDomain find(String key){
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		@SuppressWarnings("unchecked")
@@ -173,9 +128,8 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		for(ITestUser test_user : obj.getTestUsers()){
 			test_users.add(test_user_repo.load(test_user));
 		}
-		int test_cnt = obj.getDiscoveryTestCount();
 
-		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), obj.getLastDiscoveryPathRanAt(), obj.getDiscoveryStartTime(), test_users, test_cnt, obj.getDiscoveryBrowserName(), obj.getDiscoveryPathCount());
+		return new Domain(obj.getKey(), obj.getUrl(), obj.getLogoUrl(), tests, obj.getProtocol(), test_users, obj.getDiscoveryBrowserName(), obj.getDiscoveryTestCount());
 	}
 	
 	public Domain load(OrientVertex obj) {
@@ -185,8 +139,7 @@ public class DomainRepository implements IPersistable<Domain, IDomain> {
 		}
 		*/
 
-		Domain domain = new Domain(obj.getProperty("key"), obj.getProperty("url"), obj.getProperty("logo_url"), tests, obj.getProperty("protocol"), null);
-		return domain;
+		return new Domain(obj.getProperty("key"), obj.getProperty("url"), obj.getProperty("logo_url"), tests, obj.getProperty("protocol"), obj.getProperty("test_cnt"));
 	}
 	
 	@Override

@@ -1,5 +1,7 @@
 package com.minion.api;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +25,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
+import com.qanairy.models.AccountUsage;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.QanairyUser;
 import com.qanairy.models.StripeClient;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
@@ -45,9 +51,8 @@ import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
 
-
 /**
- *	API endpoints for interacting with {@link User} data
+ *	API for interacting with {@link User} data
  */
 @RestController
 @RequestMapping("/accounts")
@@ -59,10 +64,6 @@ public class AccountController {
 
     @Autowired
     protected AccountService account_service;
-
-    /*@Autowired
-    protected UsernameService usernameService;
-    */
     
     private StripeClient stripeClient;
 
@@ -121,7 +122,7 @@ public class AccountController {
         Account new_account = null;
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        new_account = account_service.create(acct);
+        new_account = account_service.save(acct);
         
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
@@ -197,7 +198,7 @@ public class AccountController {
     public Account update(final @PathVariable String key, 
     					  final @Validated @RequestBody Account account) {
         logger.info("update invoked");
-        return account_service.update(account);
+        return account_service.save(account);
     }
     
 	@PreAuthorize("hasAuthority('delete:accounts')")
@@ -222,18 +223,73 @@ public class AccountController {
 		account_service.delete(account);
         logger.info("update invoked");
     }
-    /**
-     * Simple demonstration of how Principal info can be accessed
-     * 
-     * @param principal
-     */
-    /*private void printGrantedAuthorities(final Auth0JWTToken principal) {
-        for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
-            final String authority = grantedAuthority.getAuthority();
-            logger.info(authority);
-        }
+	
+    @PreAuthorize("hasAuthority('read:accounts')")
+	@RequestMapping(path ="/usage", method = RequestMethod.GET)
+    public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+        Account acct = this.account_service.find(username);
+        if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+        
+        Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
+    	Plan plan = subscription.getPlan();
+
+    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
+    		throw new FreeTrialExpiredException();
+    	}
+    	
+    	String plan_name = plan.getId();
+    	int disc_index = plan_name.indexOf("-disc");
+    	int test_index = plan_name.indexOf("-test");
+
+    	int monthly_test_count = 0;
+    	int test_limit = Integer.parseInt(plan_name.substring(disc_index+6, test_index));
+    	//Check if account has exceeded test run limit
+    	for(TestRecord record : acct.getTestRecords()){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getRanAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			monthly_test_count++;
+    		}
+    	}
+    	int tests_used = acct.getTestRecords().size();
+    	
+    	int monthly_discovery_count = 0;
+    	//check if account has exceeded allowed discovery threshold
+    	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getStartedAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			monthly_discovery_count++;
+    		}
+    	}
+    	
+    	int discovery_limit = Integer.parseInt(plan_name.substring(0, disc_index));
+        int discoveries_used = acct.getDiscoveryRecords().size();
+        
+        return new AccountUsage(discovery_limit, discoveries_used, test_limit, tests_used);
     }
-    */
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

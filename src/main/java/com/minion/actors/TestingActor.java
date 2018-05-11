@@ -44,7 +44,7 @@ public class TestingActor extends UntypedActor {
 
 				final long pathCrawlStartTime = System.currentTimeMillis();
 
-			  	Browser browser = new Browser(((Page)path.getPath().get(0)).getUrl().toString(), (String)acct_msg.getOptions().get("browser"));
+			  	Browser browser = new Browser((String)acct_msg.getOptions().get("browser"));
 
 				Page resulting_page = null;
 				if(path.getPath() != null){
@@ -65,12 +65,17 @@ public class TestingActor extends UntypedActor {
 				//get current page of browser
 				Page expected_page = test.getResult();
 				
-				try{
-					resulting_page.setLandable(resulting_page.checkIfLandable(acct_msg.getOptions().get("browser").toString()));
-				}catch(Exception e){
-					log.error(e.getMessage());
-					resulting_page.setLandable(false);
-				}
+				int tries=0;
+				do{
+					try{
+						resulting_page.setLandable(resulting_page.isLandable(acct_msg.getOptions().get("browser").toString()));
+						break;
+					}catch(Exception e){
+						log.error(e.getMessage());
+						resulting_page.setLandable(false);
+					}
+				}while(tries < 5);
+
 				
 				if(!resulting_page.equals(expected_page)){
 					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);

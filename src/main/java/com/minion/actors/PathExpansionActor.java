@@ -3,6 +3,7 @@ package com.minion.actors;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -12,11 +13,15 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
+import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rules.Rule;
+import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
@@ -38,31 +43,40 @@ public class PathExpansionActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
-			if(acct_msg.getData() instanceof Path){
-				//send data directly to form test builder
-				final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
-				form_test_discoverer.tell(acct_msg, getSelf() );
-				
-				//extract buttons for expansion
-				//extract all links for expansion
-				
+			if(acct_msg.getData() instanceof Path){				
 				Path path = (Path)acct_msg.getData();
 				
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
-					Page first_page = (Page)path.getPath().get(0);
+					Page first_page = path.firstPage();
 					
-					if(!first_page.getUrl().equals(last_page.getUrl()) && last_page.isLandable()){
+					if(!last_page.equals(first_page) && last_page.isLandable()){
+						OrientConnectionFactory conn = new OrientConnectionFactory();
+						DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+						DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+						discovery_repo.save(conn, discovery_record);
+						conn.close();
+
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						Message<URL> expanded_path_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
+						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
+						work_allocator.tell(url_msg, getSelf() );
 						
-						work_allocator.tell(expanded_path_msg, getSelf() );
+						MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
 						return;
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(path);
 					
+			  		OrientConnectionFactory conn = new OrientConnectionFactory();
+					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
+					discovery_repo.save(conn, discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
+					conn.close();
+
 					for(ExploratoryPath expanded : pathExpansions){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
@@ -93,7 +107,6 @@ public class PathExpansionActor extends UntypedActor {
 		List<PageElement> page_elements = page.getElements();
 		
 		//iterate over all elements
-		int path_count = 0;
 		for(PageElement page_element : page_elements){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
@@ -134,7 +147,6 @@ public class PathExpansionActor extends UntypedActor {
 								continue;
 							}*/
 							pathList.add(action_path);
-							path_count++;
 						}
 					}
 				}
@@ -150,13 +162,12 @@ public class PathExpansionActor extends UntypedActor {
 					
 					//check for element action sequence. 
 					//if one exists with one of the actions in the action_list
-					// 	 then skip this action path
+					// 	 then load the existing path and process it for path expansion action path
 					/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
-					//if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-					//	continue;
-					//}
+					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+						continue;
+					}*/
 					pathList.add(action_path);
-					path_count++;
 				}
 			}
 		}

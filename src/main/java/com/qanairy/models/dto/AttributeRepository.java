@@ -41,37 +41,15 @@ public class AttributeRepository implements IPersistable<Attribute, IAttribute> 
 			attribute_record.setName(attr.getName());
 			attribute_record.setVals(attr.getVals());
 			attribute_record.setKey(attr.getKey());
-			return attribute_record;
+		}
+		else{
+			attribute_record = iter.next();
+			attr.setKey(attribute_record.getKey());
+			attr.setName(attribute_record.getName());
+			attr.setVals(attribute_record.getVals());
 		}
 		
-		return iter.next();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Attribute create(OrientConnectionFactory conn, Attribute attr) {
-		IAttribute iattr = this.save(conn, attr);
-		return this.load(iattr);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Attribute update(OrientConnectionFactory conn, Attribute attr) {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		@SuppressWarnings("unchecked")
-		Iterable<IAttribute> svc_pkgs = (Iterable<IAttribute>) DataAccessObject.findByKey(attr.getKey(), conn, IAttribute.class);
-		Iterator<IAttribute> iter = svc_pkgs.iterator();
-
-		if(iter.hasNext()){
-			save(connection, attr);
-			connection.save();
-		}
-
-		return attr;
+		return attribute_record;
 	}
 
 	@Override

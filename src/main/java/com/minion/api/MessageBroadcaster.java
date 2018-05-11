@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,9 +22,9 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 /**
  * Defines methods for emitting data to subscribed clients
  */
-public class PastPathExperienceController {
+public class MessageBroadcaster {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PastPathExperienceController.class);
+	private static Logger log = LoggerFactory.getLogger(MessageBroadcaster.class);
 	
     /**
      * Message emitter that sends {@link Test} to all registered clients
@@ -122,10 +124,6 @@ public class PastPathExperienceController {
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
-		/*Gson gson = new Gson();
-        String test_json = gson.toJson(new_test);
-        */
-
 		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
@@ -134,5 +132,46 @@ public class PastPathExperienceController {
         String test_json = mapper.writeValueAsString(new_test);
         
 		pusher.trigger(host, "test-run", test_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link TestStatus to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastTestStatus(String host, TestRecord record) throws JsonProcessingException {
+		
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        
+        String test_json = mapper.writeValueAsString(record);
+        
+		pusher.trigger(host, "test-status", test_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link DiscoveryRecord} to all registered clients
+     * 
+     * @param record {@link Record} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastDiscoveryStatus(String host, DiscoveryRecord record) throws JsonProcessingException {
+		
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String discovery_json = mapper.writeValueAsString(record);
+        
+		pusher.trigger(host, "discovery-status", discovery_json);
 	}
 }

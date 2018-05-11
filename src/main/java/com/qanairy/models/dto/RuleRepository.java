@@ -46,37 +46,6 @@ public class RuleRepository implements IPersistable<Rule, IRule> {
 		return iter.next();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Rule create(OrientConnectionFactory conn, Rule rule) {
-		Rule found_rule = find(conn, rule.getType().toString());
-
-		if( found_rule == null ){
-			this.save(conn, rule);
-		}
-		return rule;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Rule update(OrientConnectionFactory conn, Rule rule) {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		@SuppressWarnings("unchecked")
-		Iterable<IRule> svc_pkgs = (Iterable<IRule>) DataAccessObject.findByKey(rule.getType().toString(), conn, IRule.class);
-		Iterator<IRule> iter = svc_pkgs.iterator();
-
-		if(iter.hasNext()){
-			save(connection, rule);
-			connection.save();
-		}
-
-		return rule;
-	}
-
 	@Override
 	public Rule load(IRule rule_record) {
 		/**  call rule factory to get rule built */

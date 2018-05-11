@@ -57,6 +57,7 @@ public class Attribute {
 	public boolean equals(Object obj){
 		if(obj instanceof Attribute){
 			Attribute attr = (Attribute)obj;
+			
 			if(this.getName().equals(attr.getName())
 				&& ListUtils.subtract(this.getVals(), attr.getVals()).size() == 0){
 				return true;
@@ -112,7 +113,15 @@ public class Attribute {
 		return this.name;
 	}
 	
+	public void setName(String name){
+		this.name = name;
+	}
+	
 	public List<String> getVals(){
 		return this.vals;
+	}
+	
+	public void setVals(List<String> val_list){
+		this.vals = val_list;
 	}
 }

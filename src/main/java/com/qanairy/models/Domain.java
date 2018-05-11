@@ -16,15 +16,12 @@ public class Domain {
 	private String domain;
 	private List<Account> accounts;
 	private List<Test> tests;
+	private int test_cnt;
 	private String key;
 	private String protocol;
 	private String logo_url;
-	private Date last_discovery_path_ran_at;
-	private Date last_discovery_started_at;
-	private int discovered_test_count;
 	private List<TestUser> test_users;
 	private String discovery_browser;
-	private int discovery_path_count;
 	
 	/**
 	 * 
@@ -38,10 +35,8 @@ public class Domain {
 		this.accounts = new ArrayList<Account>();
 		this.setProtocol("http");
 		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveredTestCount(0);
 		this.setDiscoveryBrowser("");
-		this.setLastDiscoveryStartedAt(null);
-		this.setDiscoveryPathCount(0);
+		this.setTestCount(0);
 	}
 	
 	/**
@@ -56,16 +51,16 @@ public class Domain {
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveredTestCount(0);
 		this.setDiscoveryBrowser("");
-		this.setLastDiscoveryStartedAt(null);
+		this.setTestCount(0);
 	}
 	
 	/**
 	 * 
-	 * @param url
-	 * @param logo_url
-	 * @param protocol
+	 * @param protocol web protocol ("http", "https", "file", etc.)
+	 * @param url landable url
+	 * @param browser name of the browser ie. chrome, firefox, etc.
+	 * @param logo_url url of logo image file
 	 */
 	public Domain( String protocol, String url, String browser, String logo_url){
 		this.setUrl(url);
@@ -73,10 +68,8 @@ public class Domain {
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
 		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveredTestCount(0);
-		this.setDiscoveryPathCount(0);
 		this.setDiscoveryBrowser(browser);
-		this.setLastDiscoveryStartedAt(null);
+		this.setTestCount(0);
 	}
 	
 	/**
@@ -86,55 +79,24 @@ public class Domain {
 	 * @param logo_url
 	 * @param tests
 	 * @param protocol
-	 * @param timestamp
+	 * @param test_count
 	 */
 	public Domain(	String key, 
 					String domain_url,
 					String logo_url,
 					List<Test> tests,
 					String protocol,
-					Date timestamp){
+					int test_count){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
 		this.setProtocol(protocol);
-		this.setLastDiscoveryPathRanAt(timestamp);
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveredTestCount(0);
-		this.setDiscoveryPathCount(0);
 		this.setDiscoveryBrowser("");
-		this.setLastDiscoveryStartedAt(null);
+		this.setTestCount(test_count);
 	}
-	
-	/**
-	 * 
-	 * @param key
-	 * @param domain_url
-	 * @param logo_url
-	 * @param tests
-	 * @param protocol
-	 * @param timestamp
-	 */
-	public Domain(	String key, 
-					String domain_url,
-					String logo_url,
-					List<Test> tests,
-					String protocol,
-					Date timestamp,
-					List<TestUser> test_users){
-		this.setKey(key);
-		this.setUrl(domain_url);
-		this.setTests(tests);
-		this.setProtocol(protocol);
-		this.setLastDiscoveryPathRanAt(timestamp);
-		this.setLogoUrl(logo_url);
-		this.setTestUsers(test_users);
-		this.setDiscoveredTestCount(0);
-		this.setDiscoveryPathCount(0);
-		this.setDiscoveryBrowser("");
-		this.setLastDiscoveryStartedAt(null);
-	}
+
 	
 	/**
 	 * 
@@ -154,23 +116,17 @@ public class Domain {
 					String logo_url,
 					List<Test> tests,
 					String protocol,
-					Date last_path_ran_at,
-					Date last_discovery_started_at,
 					List<TestUser> test_users,
-					int discovered_test_count,
 					String browser_name,
-					int discovery_path_count){
+					int test_count){
 		this.setKey(key);
 		this.setUrl(domain_url);
 		this.setTests(tests);
 		this.setProtocol(protocol);
-		this.setLastDiscoveryPathRanAt(last_path_ran_at);
 		this.setLogoUrl(logo_url);
 		this.setTestUsers(test_users);
-		this.setDiscoveredTestCount(discovered_test_count);
-		this.setDiscoveryPathCount(discovery_path_count);
 		this.setDiscoveryBrowser(browser_name);
-		this.setLastDiscoveryStartedAt(last_discovery_started_at);
+		this.setTestCount(test_count);
 	}
 	
 	public String getUrl() {
@@ -231,14 +187,6 @@ public class Domain {
 		this.key = key;
 	}
 
-	public Date getLastDiscoveryPathRanAt() {
-		return this.last_discovery_path_ran_at;
-	}
-	
-	public void setLastDiscoveryPathRanAt(Date timestamp) {
-		this.last_discovery_path_ran_at = timestamp;
-	}
-
 	public String getLogoUrl() {
 		return logo_url;
 	}
@@ -259,14 +207,6 @@ public class Domain {
 		this.test_users.add(test_user);
 	}
 
-	public int getDiscoveredTestCount() {
-		return discovered_test_count;
-	}
-
-	public void setDiscoveredTestCount(int discovered_test_count) {
-		this.discovered_test_count = discovered_test_count;
-	}
-
 	public String getDiscoveryBrowser() {
 		return discovery_browser;
 	}
@@ -275,19 +215,11 @@ public class Domain {
 		this.discovery_browser = discovery_browser;
 	}
 
-	public Date getLastDiscoveryStartedAt() {
-		return last_discovery_started_at;
+	public int getTestCount() {
+		return test_cnt;
 	}
 
-	public void setLastDiscoveryStartedAt(Date last_discovery_started_at) {
-		this.last_discovery_started_at = last_discovery_started_at;
-	}
-	
-	public int getDiscoveryPathCount() {
-		return discovery_path_count;
-	}
-
-	public void setDiscoveryPathCount(int discovery_path_count) {
-		this.discovery_path_count = discovery_path_count;
+	public void setTestCount(int test_cnt) {
+		this.test_cnt = test_cnt;
 	}
 }

@@ -31,8 +31,8 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			browser = new Browser("chrome");
+			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -66,8 +66,8 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			browser = new Browser("chrome");
+			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -107,8 +107,8 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url, "chrome");
-			Page page = browser.getPage();
+			browser = new Browser("chrome");
+			Page page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -147,8 +147,8 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			browser = new Browser("chrome");
+			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			boolean readonly_restrict_rule = false;
@@ -178,8 +178,8 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			browser = new Browser("chrome");
+			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
@@ -210,8 +210,8 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {
-			browser = new Browser(url,"chrome");
-			Page page = browser.getPage();
+			browser = new Browser("chrome");
+			Page page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			boolean max_value_rule = false;

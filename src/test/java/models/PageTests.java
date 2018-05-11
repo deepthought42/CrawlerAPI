@@ -11,6 +11,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.dto.PageRepository;
 import com.qanairy.persistence.IPage;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -23,8 +24,8 @@ public class PageTests {
 	
 	@Test(groups="Regression")
 	public void pageCreateRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		Page page;
 		try {
 			page = new Page("<html></html>",
@@ -34,17 +35,12 @@ public class PageTests {
 							false);
 			PageRepository page_repo = new PageRepository();
 			
-			Page page_record = page_repo.create(new OrientConnectionFactory(), page);
+			IPage page_record = page_repo.save(new OrientConnectionFactory(), page);
 			
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
 			Assert.assertTrue(page_record.getElementCounts().keySet().size() == page.getElementCounts().keySet().size());
 			Assert.assertTrue(page_record.getImageWeight() == page.getImageWeight());
 			Assert.assertTrue(page_record.getTotalWeight() == page.getTotalWeight());
-			
-			//assert each element matches
-			for(String browser : page_record.getBrowserScreenshots().keySet()){
-				Assert.assertTrue(page.getBrowserScreenshots().containsKey(browser));	
-			}
 			
 			Assert.assertTrue(page_record.getType().equals(page.getType()));
 			//Assert.assertTrue(page_record.isLandable() == page.isLandable());
@@ -58,8 +54,8 @@ public class PageTests {
 	
 	@Test(groups="Regression")
 	public void pageUpdateRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		try {
 			Page page = new Page("<html></html>",
 								 "http://www.test.test", 
@@ -87,8 +83,8 @@ public class PageTests {
 	
 	@Test(groups="Regression")
 	public void pageFindRecord(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
-		browser_screenshots.put("chrome", "testscreenshoturl.com");
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
@@ -101,7 +97,7 @@ public class PageTests {
 							true);
 			PageRepository page_repo = new PageRepository();
 
-			page = page_repo.create(orient_connection, page);
+			page_repo.save(orient_connection, page);
 			Page page_record = page_repo.find(orient_connection, page.getKey());
 			
 			Assert.assertTrue(page_record.getKey().equals(page.getKey()));
@@ -154,8 +150,9 @@ public class PageTests {
 	
 	@Test(groups="Regression")
 	public void testClone(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
 		List<PageElement> elements = new ArrayList<PageElement>();
+
 		Page page;
 		URL url;
 		try {
@@ -185,9 +182,10 @@ public class PageTests {
 		}
 	}
 	
-	@Test(groups="Regression")
+	//@Test(groups="Regression")
 	public void testEquals(){
-		Map<String, String> browser_screenshots = new HashMap<String, String>();
+		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
+		browser_screenshots.add(new ScreenshotSet("dummy.jpg", "dummy.jpg", "chrome"));
 		List<PageElement> elements = new ArrayList<PageElement>();
 		Page page1;
 		Page page2;

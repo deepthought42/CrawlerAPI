@@ -10,7 +10,11 @@ public class DiscoveryRecord {
 	private Date started_at;
 	private String browser_name;
 	private String domain_url;
-	
+	private Date last_path_ran_at;
+	private int total_path_count;
+	private int examined_path_count;
+	private int test_cnt;
+
 	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url){
 		assert started_timestamp != null;
 		assert browser_name != null;
@@ -20,9 +24,30 @@ public class DiscoveryRecord {
 		setStartedAt(started_timestamp);
 		setBrowserName(browser_name);
 		setDomainUrl(domain_url);
+		setLastPathRanAt(null);
+		setTotalPathCount(0);
+		setExaminedPathCount(0);
+		setTestCount(0);
 	}
 	
-	public DiscoveryRecord(String key, Date started_timestamp, String browser_name, String domain_url){
+	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
+		assert started_timestamp != null;
+		assert browser_name != null;
+		assert domain_url != null;
+		assert test_cnt > -1;
+		assert total_path_count > 0;
+		
+		setKey(null);
+		setStartedAt(started_timestamp);
+		setBrowserName(browser_name);
+		setDomainUrl(domain_url);
+		setLastPathRanAt(last_path_ran);
+		setTotalPathCount(total_cnt);
+		setExaminedPathCount(examined_cnt);
+		setTestCount(test_cnt);
+	}
+	
+	public DiscoveryRecord(String key, Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
 		assert key != null;
 		assert started_timestamp != null;
 		assert browser_name != null;
@@ -32,6 +57,10 @@ public class DiscoveryRecord {
 		setStartedAt(started_timestamp);
 		setBrowserName(browser_name);
 		setDomainUrl(domain_url);
+		setLastPathRanAt(last_path_ran);
+		setTotalPathCount(total_cnt);
+		setExaminedPathCount(examined_cnt);
+		setTestCount(test_cnt);
 	}
 
 	public String getKey() {
@@ -64,5 +93,37 @@ public class DiscoveryRecord {
 
 	public void setDomainUrl(String domain_url) {
 		this.domain_url = domain_url;
+	}
+
+	public Date getLastPathRanAt() {
+		return last_path_ran_at;
+	}
+
+	public void setLastPathRanAt(Date last_path_ran_at) {
+		this.last_path_ran_at = last_path_ran_at;
+	}
+
+	public int getTotalPathCount() {
+		return total_path_count;
+	}
+
+	public void setTotalPathCount(int total_path_count) {
+		this.total_path_count = total_path_count;
+	}
+
+	public int getExaminedPathCount() {
+		return examined_path_count;
+	}
+
+	public void setExaminedPathCount(int examined_path_count) {
+		this.examined_path_count = examined_path_count;
+	}
+
+	public int getTestCount() {
+		return this.test_cnt;
+	}
+	
+	public void setTestCount(int cnt){
+		this.test_cnt = cnt;
 	}
 }

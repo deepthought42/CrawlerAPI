@@ -72,7 +72,10 @@ public class Action extends PathObject{
 	public String getValue() {
 		return value;
 	}
-
+	
+	public void setValue(String value) {
+		this.value = value;
+	}
 
 	/**
 	 * {@inheritDoc}

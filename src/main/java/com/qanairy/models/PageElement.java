@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.ListUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
@@ -100,9 +101,13 @@ public class PageElement extends PathObject{
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){
-			String element_value = element.getCssValue(propertyName);
-			if(element_value != null){
-				css_map.put(propertyName, element_value);
+			try{
+				String element_value = element.getCssValue(propertyName);
+				if(element_value != null){
+					css_map.put(propertyName, element_value);
+				}
+			}catch(Exception e){
+				
 			}
 		}
 		
@@ -262,24 +267,32 @@ public class PageElement extends PathObject{
         if (!(o instanceof PageElement)) return false;
         
         PageElement that = (PageElement)o;
-		
 		List<Attribute> newPageElementAttributes = that.getAttributes();
+		boolean areElementsEqual =  true;
 		
-		boolean areElementsEqual =  false;
-		
-		if(this.getText().equals(that.getText())){
-			areElementsEqual = true;
+		if(!this.getText().equals(that.getText())){
+			return false;
 		}
 		
-		if(areElementsEqual && this.getAttributes().size() == newPageElementAttributes.size())
+		if(this.getAttributes().size() == newPageElementAttributes.size())
 		{
-			for(int attrIdx = 0; attrIdx < this.getAttributes().size(); attrIdx++)
-			{
-				areElementsEqual = this.getAttributes().get(attrIdx).equals(newPageElementAttributes.get(attrIdx));
-				if(!areElementsEqual){
-					return false;
+			Map<String, Attribute> attribute_map = new HashMap<String, Attribute>();
+			for(Attribute attr : this.getAttributes()){
+				attribute_map.put(attr.name, attr);		
+			}
+			
+			for(Attribute attr : newPageElementAttributes){
+				if(attr.equals(attribute_map.get(attr.name))){
+					attribute_map.remove(attr.name);
 				}
 			}
+
+			if(!attribute_map.isEmpty()){
+				return false;
+			}
+		}
+		else{
+			return false;
 		}
 		
 		areElementsEqual = this.cssMatches(that);
@@ -316,13 +329,16 @@ public class PageElement extends PathObject{
 	 * @param elemAction ElementAction pair
 	 * @return whether action was able to be performed on element or not
 	 */
-	public boolean performAction(Action action, WebDriver driver) throws UnreachableBrowserException {
+	public boolean performAction(Action action, WebDriver driver) throws UnreachableBrowserException, NoSuchElementException {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 		
 		try{
 			WebElement element = driver.findElement(By.xpath(this.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {}
 		}
 		catch(StaleElementReferenceException e){
 			
@@ -332,10 +348,6 @@ public class PageElement extends PathObject{
 		}
 		catch(ElementNotVisibleException e){
 			log.warn("ELEMENT IS NOT CURRENTLY VISIBLE.", e.getMessage());
-		}
-		catch(NoSuchElementException e){
-			log.warn(" NO SUCH ELEMENT EXCEPTION WHILE PERFORMING "+action, e.getMessage());
-			wasPerformedSuccessfully = false;
 		}
 		catch(WebDriverException e){
 			log.warn("Element can not have action performed on it at point performed", e.getMessage());

@@ -90,8 +90,8 @@ public class DomainController {
 		}
     	acct.addDomain(domain);
     	acct.setLastDomain(domain.getUrl());
-    	accountService.update(acct);
-    	return domainService.create(domain);
+    	accountService.save(acct);
+    	return domainService.save(domain);
     }
 
     /**
@@ -125,7 +125,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	return domainService.update(domain);
+    	return domainService.save(domain);
     }
     
     /**
@@ -155,7 +155,7 @@ public class DomainController {
     	}
     	
     	acct.setLastDomain(domain.getUrl());
-    	accountService.update(acct);
+    	accountService.save(acct);
     }
 
     @PreAuthorize("hasAuthority('read:domains')")

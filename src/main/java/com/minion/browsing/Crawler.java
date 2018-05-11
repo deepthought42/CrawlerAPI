@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.slf4j.LoggerFactory;
@@ -44,30 +45,28 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public static Page crawlPath(Path path, Browser browser) throws java.util.NoSuchElementException, IOException{
+	public static Page crawlPath(Path path, Browser browser) throws NoSuchElementException, IOException{
 		assert browser != null;
 		assert path != null;
 		
 		PageElement last_element = null;
 
+		browser.getDriver().get(path.firstPage().getUrl().toString());
+		try{
+			new WebDriverWait(browser.getDriver(), 360).until(
+					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+		}catch(GridException e){
+			log.error(e.getMessage());
+		}
+		catch(Exception e){
+			log.error(e.getMessage());
+		}
+
 		//skip first node since we should have already loaded it during initialization
 		for(PathObject current_obj: path.getPath()){
 
 			if(current_obj instanceof Page){
-				/**
-				if(browser ==  null){
-					log.error("BROWSER IS NULL WHEN CRAWLING PATH");
-				}
-				try{
-					new WebDriverWait(browser.getDriver(), 360).until(
-							webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-				}catch(GridException e){
-					log.error(e.getMessage());
-				}
-				catch(Exception e){
-					log.error(e.getMessage());
-				}
-				*/
+				//Do Nothing for now
 			}
 			else if(current_obj instanceof PageElement){
 				last_element = (PageElement) current_obj;
@@ -76,12 +75,7 @@ public class Crawler {
 			else if(current_obj instanceof Action){
 				//boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
-				int attempts = 0;
-				boolean actionPerformedSuccessfully = false;
-				do{
-					actionPerformedSuccessfully = last_element.performAction(action, browser.getDriver());
-					attempts++;
-				}while(!actionPerformedSuccessfully && attempts < 3);
+				boolean actionPerformedSuccessfully = last_element.performAction(action, browser.getDriver());
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -89,10 +83,7 @@ public class Crawler {
 				alert.performChoice(browser.getDriver());
 			}
 		}
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e1) {}
 		
-		return browser.getPage();
+		return browser.buildPage();
 	}
 }

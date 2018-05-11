@@ -29,25 +29,6 @@ public interface IPersistable<V, Z> {
 	 * @return
 	 */
 	V load(Z obj);
-	
-	/**
-	 * 
-	 * @param connection
-	 * @param obj
-	 * @return
-	 */
-	V create(OrientConnectionFactory connection, V obj);
-	
-	/**
-	 * Updates the given object by finding existing instances in the databases, making
-	 * the appropriate updates, then saving the data to the database
-	 * 
-	 * @param connection
-	 * @param key
-	 * @param obj
-	 * @return
-	 */
-	V update(OrientConnectionFactory connection, V obj);
 
 	/**
 	 * 

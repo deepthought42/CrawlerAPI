@@ -76,7 +76,7 @@ public class PathExpansionActor extends UntypedActor {
 					discovery_repo.save(conn, discovery_record);
 					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
 					conn.close();
-					
+
 					for(ExploratoryPath expanded : pathExpansions){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());

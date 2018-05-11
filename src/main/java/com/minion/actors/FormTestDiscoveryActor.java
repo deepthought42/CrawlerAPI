@@ -72,7 +72,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 		  	List<Form> forms = Browser.extractAllForms(current_page, browser);
 		  	List<Path> form_paths = new ArrayList<Path>();
-		  	System.err.println("!!!!        GENERATING FORM PATHS FOR PAGE   "+ page.getUrl() +"!!!!!!!!!!!!!!!!!!  ");
 		  	for(Form form : forms){
 		  		form_paths.addAll(FormTestDiscoveryActor.generateAllFormPaths(path, form));
 		  	}

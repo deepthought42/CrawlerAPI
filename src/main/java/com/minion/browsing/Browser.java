@@ -144,6 +144,7 @@ public class Browser {
 		URL page_url = new URL(this.getDriver().getCurrentUrl());
 		String src = this.getDriver().getPageSource();
 		String screenshot = "";
+
 		List<PageElement> visible_elements = new ArrayList<PageElement>();
 		String viewport_screenshot_url = null;
 		String src_hash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource());
@@ -437,6 +438,7 @@ public class Browser {
 					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
 					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), page_elem_repo.generateKey(tag));	
 					tag.setScreenshot(screenshot);
+
 					elementList.add(tag);
 				}
 			}catch(StaleElementReferenceException e){

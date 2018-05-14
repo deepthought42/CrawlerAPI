@@ -202,6 +202,7 @@ public class DiscoveryController {
     	if(last_discovery_record != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartedAt().getTime()) / (1000 * 60) ));
     	}
+    	
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
         
@@ -220,7 +221,7 @@ public class DiscoveryController {
 			Map<String, Object> options = new HashMap<String, Object>();
 			options.put("browser", domain.getDiscoveryBrowserName());
 	        options.put("discovery_key", discovery_repo.generateKey(discovery_record));
-
+	        
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
 

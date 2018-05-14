@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.api.MessageBroadcaster;
+import com.minion.browsing.Browser;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -21,7 +22,6 @@ import com.qanairy.models.dto.DomainRepository;
 import com.qanairy.models.dto.PathRepository;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.minion.browsing.Browser;
 import com.minion.structs.Message;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;

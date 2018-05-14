@@ -3,7 +3,6 @@ package com.minion.actors;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -14,6 +13,7 @@ import akka.actor.UntypedActor;
 
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.models.dto.PageRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.rules.Rule;
 import com.minion.api.MessageBroadcaster;
@@ -50,11 +50,18 @@ public class PathExpansionActor extends UntypedActor {
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
 					Page last_page = path.findLastPage();
 					Page first_page = path.firstPage();
+					//Check that the page hasn't already been expanded in this discovery
+					OrientConnectionFactory conn = new OrientConnectionFactory();
+					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+					PageRepository page_repo = new PageRepository();
+					
+					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+					if(discovery_record.getExpandedPageKeys().contains(page_repo.generateKey(last_page))){
+						//this page has been expanded already. Don't expand again
+						return;
+					}
 					
 					if(!last_page.equals(first_page) && last_page.isLandable()){
-						OrientConnectionFactory conn = new OrientConnectionFactory();
-						DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-						DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_repo.save(conn, discovery_record);
 						conn.close();
@@ -69,10 +76,8 @@ public class PathExpansionActor extends UntypedActor {
 					
 					pathExpansions = PathExpansionActor.expandPath(path);
 					
-			  		OrientConnectionFactory conn = new OrientConnectionFactory();
-					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
+					discovery_record.getExpandedPageKeys().add(last_page.getKey());
 					discovery_repo.save(conn, discovery_record);
 					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
 					conn.close();

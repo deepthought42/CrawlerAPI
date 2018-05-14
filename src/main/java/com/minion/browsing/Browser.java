@@ -35,6 +35,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -108,6 +109,9 @@ public class Browser {
 				}
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
+				}
+				else if(browser.equals("phantomjs")){
+					this.driver = openWithPhantomJS();
 				}
 
 				break;
@@ -313,6 +317,25 @@ public class Browser {
         String hub_node_url = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
 
+		return driver;
+	}
+	
+	/**
+	 * open new phantomjs browser
+	 * 
+	 * @param url 
+	 * @return
+	 * @throws MalformedURLException 
+	 */
+	public static WebDriver openWithPhantomJS() 
+			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException{
+		
+		DesiredCapabilities cap = DesiredCapabilities.phantomjs();
+		cap.setJavascriptEnabled(true);
+		cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {"--ssl-protocol=tlsv1"});
+
+        RemoteWebDriver driver = new RemoteWebDriver(new URL("http://"+HUB_IP_ADDRESS+":4444/wd/hub"), cap);	    
+	    
 		return driver;
 	}
 	

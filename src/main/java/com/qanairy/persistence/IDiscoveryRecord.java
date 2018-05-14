@@ -1,6 +1,7 @@
 package com.qanairy.persistence;
 
 import java.util.Date;
+import java.util.List;
 
 import com.tinkerpop.frames.Property;
 
@@ -56,6 +57,10 @@ public interface IDiscoveryRecord {
 	
 	@Property("total_path_cnt")
 	void setTotalPathCount(int path_cnt);
+
+	@Property("expanded_path_list")
+	List<String> getExpandedPageList();
 	
-	
+	@Property("expanded_path_list")
+	void setExpandedPageKeys(List<String> expandedPageKeys);
 }

@@ -1,6 +1,8 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Record detailing a "Discovery" ran by an account.
@@ -14,6 +16,7 @@ public class DiscoveryRecord {
 	private int total_path_count;
 	private int examined_path_count;
 	private int test_cnt;
+	private List<String> expanded_page_keys;
 
 	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url){
 		assert started_timestamp != null;
@@ -28,6 +31,7 @@ public class DiscoveryRecord {
 		setTotalPathCount(0);
 		setExaminedPathCount(0);
 		setTestCount(0);
+		setExpandedPageKeys(new ArrayList<String>());
 	}
 	
 	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
@@ -45,9 +49,10 @@ public class DiscoveryRecord {
 		setTotalPathCount(total_cnt);
 		setExaminedPathCount(examined_cnt);
 		setTestCount(test_cnt);
+		setExpandedPageKeys(new ArrayList<String>());
 	}
 	
-	public DiscoveryRecord(String key, Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
+	public DiscoveryRecord(String key, Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt, List<String> expanded_page_list){
 		assert key != null;
 		assert started_timestamp != null;
 		assert browser_name != null;
@@ -61,6 +66,7 @@ public class DiscoveryRecord {
 		setTotalPathCount(total_cnt);
 		setExaminedPathCount(examined_cnt);
 		setTestCount(test_cnt);
+		setExpandedPageKeys(expanded_page_list);
 	}
 
 	public String getKey() {
@@ -125,5 +131,13 @@ public class DiscoveryRecord {
 	
 	public void setTestCount(int cnt){
 		this.test_cnt = cnt;
+	}
+
+	public List<String> getExpandedPageKeys() {
+		return expanded_page_keys;
+	}
+
+	public void setExpandedPageKeys(List<String> expanded_page_keys) {
+		this.expanded_page_keys = expanded_page_keys;
 	}
 }

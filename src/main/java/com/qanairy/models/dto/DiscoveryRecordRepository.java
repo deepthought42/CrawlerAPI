@@ -57,6 +57,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 		discovery_record_record.setLastPathRan(discovery_record.getLastPathRanAt());
 		discovery_record_record.setTestCount(discovery_record.getTestCount());
 		discovery_record_record.setTotalPathCount(discovery_record.getTotalPathCount());
+		discovery_record_record.setExpandedPageKeys(discovery_record.getExpandedPageKeys());
 		
 		return discovery_record_record;
 	}
@@ -79,7 +80,7 @@ public class DiscoveryRecordRepository implements IPersistable<DiscoveryRecord, 
 	}
 
 	public DiscoveryRecord load(IDiscoveryRecord obj) {
-		return new DiscoveryRecord(obj.getKey(), obj.getStartTime(), obj.getBrowserName(), obj.getDomainUrl(), obj.getLastPathRan(), obj.getTestCount(), obj.getTotalPathCount(), obj.getExaminedPathCount());
+		return new DiscoveryRecord(obj.getKey(), obj.getStartTime(), obj.getBrowserName(), obj.getDomainUrl(), obj.getLastPathRan(), obj.getTestCount(), obj.getTotalPathCount(), obj.getExaminedPathCount(), obj.getExpandedPageList());
 	}
 	
 	@Override

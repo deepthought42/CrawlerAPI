@@ -5,17 +5,17 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.dao.RuleDao;
 import com.qanairy.models.dao.impl.RuleDaoImpl;
-import com.qanairy.models.rules.AlphabeticRestrictionRule;
+import com.qanairy.models.rules.SpecialCharacterRestriction;
 import com.qanairy.persistence.Rule;
 
 /**
  * 
  */
-public class AlphabeticRestrictionRuleTests {
+public class SpecialCharacterRestrictionRuleTests {
 
 	@Test(groups="Regression")
 	public void assertRulePersists(){
-		Rule rule = new AlphabeticRestrictionRule();
+		Rule rule = new SpecialCharacterRestriction();
 		RuleDao dao = new RuleDaoImpl();
 		dao.save(rule);
 		

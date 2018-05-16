@@ -2,7 +2,6 @@ package com.qanairy.models.rules;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.qanairy.models.PageElement;
 import com.qanairy.persistence.Rule;
 
 /**
@@ -11,7 +10,7 @@ import com.qanairy.persistence.Rule;
  */
 public class RuleFactory {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PageElement.class);
+	private static Logger log = LoggerFactory.getLogger(RuleFactory.class);
 
 	/**
 	 * 

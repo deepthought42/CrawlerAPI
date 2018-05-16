@@ -2,8 +2,8 @@ package com.minion.actors;
 
 import java.util.UUID;
 
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
+
+
 
 import akka.actor.UntypedActor;
 

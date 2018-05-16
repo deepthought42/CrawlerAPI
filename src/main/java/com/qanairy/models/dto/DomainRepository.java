@@ -16,7 +16,7 @@ import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.ITestUser;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.tinkerpop.blueprints.impls.orient.OrientVertex;
+
 
 /**
  * 

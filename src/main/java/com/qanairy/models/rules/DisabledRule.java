@@ -39,8 +39,7 @@ public class DisabledRule extends Rule{
 
 	@Override
 	public void setKey(String key) {
-		// TODO Auto-generated method stub
-		
+		this.key = key;
 	}
 
 	@Override

@@ -3,16 +3,42 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.Rule;
 
-public class EmailPatternRule implements Rule {
+public class EmailPatternRule extends Rule {
 
-	private static String email_regex_str = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
+	private String key;
+	private RuleType type;
+	private String value;
 	
 	public EmailPatternRule() {
+		setType(RuleType.EMAIL_PATTERN);
+		setValue("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$");
 	}
-	
+
+	@Override
+	public Boolean evaluate(PageElement page_element) {
+		String pattern = "/^" + page_element.getAttribute("vals").getVals().toString() + " $/";
+		Matcher matcher = Pattern.compile(getValue()).matcher(pattern);
+	    return matcher.matches();
+	}
+
+	@Override
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	@Override
+	public String getKey() {
+		return this.key;
+	}
+
+	@Override
+	public void setType(RuleType type) {
+		this.type = type;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -24,13 +50,11 @@ public class EmailPatternRule implements Rule {
 	 * {@inheritDoc}
 	 */
 	public String getValue() {
-		return email_regex_str;
+		return this.value;
 	}
-
+	
 	@Override
-	public Boolean evaluate(PageElement page_element) {
-		String pattern = "/^" + page_element.getAttribute("vals").getVals().toString() + " $/";
-		Matcher matcher = Pattern.compile(getValue()).matcher(pattern);
-	    return matcher.matches();
+	public void setValue(String value) {
+		this.value = value;
 	}
 }

@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.apache.commons.collections.ListUtils;
 
+import com.qanairy.persistence.Attribute;
+
 /**
  * A pairing of a name and a set of string values
  */
-public class Attribute {
+public class AttributePOJO extends Attribute {
 
 	public String key;
 	public String name;
@@ -21,7 +23,7 @@ public class Attribute {
 	 * @pre attrName != null
 	 * @pre val != null;
 	 */
-	public Attribute(String attrName, List<String> vals){
+	public AttributePOJO(String attrName, List<String> vals){
 		assert attrName != null;
 		assert vals != null;
 		
@@ -30,7 +32,7 @@ public class Attribute {
 		setKey(null);
 	}
 	
-	public Attribute(String key, String attrName, List<String> vals){
+	public AttributePOJO(String key, String attrName, List<String> vals){
 		setKey(key);
 		this.name = attrName;
 		this.vals = vals;

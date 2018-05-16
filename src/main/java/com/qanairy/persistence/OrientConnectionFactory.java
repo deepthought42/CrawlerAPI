@@ -16,7 +16,8 @@ import com.syncleus.ferma.FramedGraph;
  */
 @Component
 public class OrientConnectionFactory {
-    private static Logger log = LoggerFactory.getLogger(OrientConnectionFactory.class);
+    @SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(OrientConnectionFactory.class);
         
     DelegatingFramedGraph<OrientGraph> current_tx = null;
 	OrientGraphFactory graphFactory;

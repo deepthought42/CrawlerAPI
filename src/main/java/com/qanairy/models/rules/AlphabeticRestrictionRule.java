@@ -1,6 +1,5 @@
 package com.qanairy.models.rules;
 
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

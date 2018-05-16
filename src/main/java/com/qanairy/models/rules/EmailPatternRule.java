@@ -1,9 +1,10 @@
-package com.qanairy.rules;
+package com.qanairy.models.rules;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.qanairy.models.PageElement;
+import com.qanairy.persistence.Rule;
 
 public class EmailPatternRule implements Rule {
 

@@ -1,0 +1,31 @@
+package com.qanairy.models;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.qanairy.persistence.PathObject;
+
+/**
+ * An object wrapper that allows data to be dynamically placed in data structures
+ * 
+ *
+ */
+public abstract class PathObjectPOJO{
+    @SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(PathObject.class);
+    private String type = null;
+    
+    public String getType(){
+    	return this.type;
+    }
+    
+    /**
+     * Sets type to the classname passed. System generally expects classname to be simpleClassName()
+     * @param classname
+     */
+    public void setType(String type){
+    	this.type = type;
+    }
+	
+	public abstract PathObject clone();
+}

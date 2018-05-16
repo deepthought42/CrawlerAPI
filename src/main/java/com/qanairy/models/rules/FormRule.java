@@ -1,8 +1,7 @@
-package com.qanairy.rules;
+package com.qanairy.models.rules;
 
 
 import com.minion.browsing.form.FormField;
-import com.qanairy.models.PageElement;
 
 /**
  * Defines rule to be used to evaluate if a {@link FormField} has a value that satisfies the 
@@ -10,24 +9,21 @@ import com.qanairy.models.PageElement;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
-public interface Rule {
+@Deprecated
+public interface FormRule {
 	
 	/**
 	 * @return the {@link RuleType} of this rule
 	 */
 	RuleType getType();
 	
-	/**
-	 * @return the value as a string
-	 */
-	String getValue();
 	
 	/**
 	 * evaluates the rule to determine if it is satisfied
 	 * 
-	 * @return boolean value indicating the rule is satisfied or not
+	 * @return boolean value indicating the rule is satisfied(true) or not satisfied(false)
 	 */
-	Boolean evaluate(PageElement val);	
+	Boolean evaluate(FormField val);	
 
 	
 	/**

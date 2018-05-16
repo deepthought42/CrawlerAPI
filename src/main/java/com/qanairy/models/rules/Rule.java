@@ -1,7 +1,10 @@
-package com.qanairy.rules;
-
+package com.qanairy.models.rules;
 
 import com.minion.browsing.form.FormField;
+import com.qanairy.models.rules.RuleType;
+import com.qanairy.persistence.PageElement;
+import com.syncleus.ferma.AbstractVertexFrame;
+import com.syncleus.ferma.annotations.Property;
 
 /**
  * Defines rule to be used to evaluate if a {@link FormField} has a value that satisfies the 
@@ -9,21 +12,32 @@ import com.minion.browsing.form.FormField;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
-@Deprecated
-public interface FormRule {
+public abstract class Rule extends AbstractVertexFrame {
+
+	@Property("key")
+	public abstract void setKey(String key);
+
+	@Property("key")
+	public abstract String getKey();
+
+	@Property("rule_type")
+	public abstract RuleType getType();
+
+	@Property("rule_type")
+	public abstract void setType(RuleType type);
 	
-	/**
-	 * @return the {@link RuleType} of this rule
-	 */
-	RuleType getType();
-	
+	@Property("value")
+	public abstract String getValue();
+
+	@Property("value")
+	public abstract void setValue(String value);
 	
 	/**
 	 * evaluates the rule to determine if it is satisfied
 	 * 
-	 * @return boolean value indicating the rule is satisfied(true) or not satisfied(false)
+	 * @return boolean value indicating the rule is satisfied or not
 	 */
-	Boolean evaluate(FormField val);	
+	abstract Boolean evaluate(PageElement val);	
 
 	
 	/**

@@ -9,7 +9,6 @@ import com.qanairy.models.DiscoveryRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Defines all tests for the service package POJO

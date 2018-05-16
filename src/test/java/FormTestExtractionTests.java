@@ -9,13 +9,13 @@ import org.testng.annotations.Test;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.Form;
 import com.qanairy.models.Page;
-import com.qanairy.rules.Rule;
-import com.qanairy.rules.NumericRestrictionRule;
-import com.qanairy.rules.NumericRule;
-import com.qanairy.rules.ReadOnlyRule;
-import com.qanairy.rules.RequirementRule;
-import com.qanairy.rules.SpecialCharacterRestriction;
-import com.qanairy.rules.AlphabeticRestrictionRule;
+import com.qanairy.models.rules.AlphabeticRestrictionRule;
+import com.qanairy.models.rules.NumericRestrictionRule;
+import com.qanairy.models.rules.NumericRule;
+import com.qanairy.models.rules.ReadOnlyRule;
+import com.qanairy.models.rules.RequirementRule;
+import com.qanairy.models.rules.SpecialCharacterRestriction;
+import com.qanairy.persistence.Rule;
 
 /**
  * A group of TestNG tests designed to verify the extraction of tests involving forms and rules on fields

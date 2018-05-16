@@ -20,7 +20,6 @@ public class AttributeTests {
 	
 	@Test(groups="Regression")
 	public void attributeCreateRecord(){
-		OrientConnectionFactory connection = new OrientConnectionFactory();
 		List<String> attributes = new ArrayList<String>();
 		attributes.add("button");
 		attributes.add("redbutton");

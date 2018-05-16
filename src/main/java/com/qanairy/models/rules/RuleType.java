@@ -1,4 +1,4 @@
-package com.qanairy.rules;
+package com.qanairy.models.rules;
 
 /**
  * Defines all types of rules that exist in the system

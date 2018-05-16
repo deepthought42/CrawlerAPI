@@ -6,12 +6,12 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.rules.RuleFactory;
 import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.IRule;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.rules.Rule;
-import com.qanairy.rules.RuleFactory;
+import com.qanairy.persistence.Rule;
 
 /**
  *

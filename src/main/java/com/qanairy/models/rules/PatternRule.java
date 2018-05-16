@@ -3,35 +3,17 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.Rule;
 
 /**
  * Defines a regular expression based rule that applies to the entire text content(beginning to end) of a field.
  */
-public class PatternRule implements Rule {
+public class PatternRule extends Rule {
 
+	private String key;
 	private String value;
-
-	public PatternRule(String pattern){
-		this.value = pattern;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public RuleType getType() {
-		return RuleType.PATTERN;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getValue() {
-		return this.value;
-	}
+	private RuleType type;
 	
 	/**
 	 * {@inheritDoc}
@@ -42,4 +24,47 @@ public class PatternRule implements Rule {
 		Matcher matcher = Pattern.compile(this.value).matcher(pattern);
 	    return matcher.matches();
 	}
+	
+	public PatternRule(String pattern){
+		this.value = pattern;
+		setType(RuleType.PATTERN);
+	}
+
+
+	@Override
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	@Override
+	public String getKey() {
+		return this.key;
+	}
+
+	@Override
+	public void setType(RuleType type) {
+		this.type = type;	
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public RuleType getType() {
+		return this.type;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getValue() {
+		return this.value;
+	}
+	
+	@Override
+	public void setValue(String value) {
+		this.value = value;
+	}
+
 }

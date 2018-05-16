@@ -5,23 +5,22 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.dao.RuleDao;
 import com.qanairy.models.dao.impl.RuleDaoImpl;
-import com.qanairy.models.rules.NumericRule;
-import com.qanairy.models.rules.RuleType;
+import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.persistence.Rule;
 
 /**
  * 
  */
-public class NumericRuleTests {
+public class AlphabeticRestrictionRuleTests {
 
 	@Test(groups="Regression")
-	public void assertNumericRulePersists(){
-		Rule rule = new NumericRule(RuleType.NUMERIC_RESTRICTION, null);
+	public void assertRulePersists(){
+		Rule rule = new AlphabeticRestrictionRule();
 		RuleDao dao = new RuleDaoImpl();
 		dao.save(rule);
 		
 		Rule created_rule = dao.find(rule.getKey());
 		Assert.assertTrue(created_rule.getType().equals(rule.getType()));
-		Assert.assertTrue(created_rule.getValue() == null);
+		Assert.assertTrue(created_rule.getValue().equals("[a-zA-Z]*"));
 	}
 }

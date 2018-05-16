@@ -29,10 +29,10 @@ public abstract class Rule extends AbstractVertexFrame {
 	public abstract void setType(RuleType type);
 	
 	@Property("value")
-	public abstract Optional<String> getValue();
+	public abstract String getValue();
 
 	@Property("value")
-	public abstract void setValue(Optional<String> value);
+	public abstract void setValue(String value);
 	
 	/**
 	 * evaluates the rule to determine if it is satisfied

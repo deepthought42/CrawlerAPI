@@ -5,18 +5,17 @@ import org.testng.annotations.Test;
 
 import com.qanairy.models.dao.RuleDao;
 import com.qanairy.models.dao.impl.RuleDaoImpl;
-import com.qanairy.models.rules.NumericRule;
-import com.qanairy.models.rules.RuleType;
+import com.qanairy.models.rules.Clickable;
 import com.qanairy.persistence.Rule;
 
 /**
  * 
  */
-public class NumericRuleTests {
+public class ClickableRuleTests {
 
 	@Test(groups="Regression")
-	public void assertNumericRulePersists(){
-		Rule rule = new NumericRule(RuleType.NUMERIC_RESTRICTION, null);
+	public void assertRulePersists(){
+		Rule rule = new Clickable();
 		RuleDao dao = new RuleDaoImpl();
 		dao.save(rule);
 		

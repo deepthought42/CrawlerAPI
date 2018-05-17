@@ -1,18 +1,26 @@
 package com.qanairy.models;
 
+import java.util.List;
+
+import com.qanairy.persistence.Action;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.edges.PathEdge;
+
 /**
  * Defines an action in name only
  */
-public class Action extends PathObject{
+public class ActionPOJO extends Action{
 	private String name;
 	private String key;
 	private String value;
+	private String type;
+	private List<PathEdge> edges;
 	
 	/**
 	 * Construct empty action object
 	 */
-	public Action(){
-		super.setType("Action");
+	public ActionPOJO(){
+		setType("Action");
 		this.name = null;
 		this.key = null;
 		this.value = "";
@@ -22,8 +30,8 @@ public class Action extends PathObject{
 	 * 
 	 * @param action_name
 	 */
-	public Action(String action_name) {
-		super.setType("Action");
+	public ActionPOJO(String action_name) {
+		setType("Action");
 		this.name = action_name;
 		this.value = "";
 	}
@@ -32,8 +40,8 @@ public class Action extends PathObject{
 	 * 
 	 * @param action_name
 	 */
-	public Action(String action_name, String value) {
-		super.setType("Action");
+	public ActionPOJO(String action_name, String value) {
+		setType("Action");
 		this.name = action_name;
 		this.value = value;
 	}
@@ -45,6 +53,11 @@ public class Action extends PathObject{
 		return this.name;
 	}
 
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -82,8 +95,28 @@ public class Action extends PathObject{
 	 */
 	@Override
 	public PathObject clone() {
-		Action action_clone = new Action(this.getName(), this.getValue());
-		//action_clone.setNext(this.getNext());
+		Action action_clone = new ActionPOJO(this.getName(), this.getValue());
 		return action_clone;
+	}
+
+	@Override
+	public String getType() {
+		return this.type;
+	}
+
+	@Override
+	public void setType(String type) {
+		this.type = type;
+	}
+
+
+	@Override
+	public List<PathEdge> getPathEdges(){
+	    return this.edges;
+	}
+	
+	@Override
+	public boolean addPathEdge(PathObject path_obj){
+		return this.edges.add(new PathEdgePOJO());
 	}
 }

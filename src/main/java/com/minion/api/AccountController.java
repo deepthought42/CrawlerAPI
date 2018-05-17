@@ -30,13 +30,11 @@ import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
-import com.qanairy.models.Account;
+import com.qanairy.models.AccountPOJO;
 import com.qanairy.models.AccountUsage;
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.QanairyUser;
 import com.qanairy.models.StripeClient;
-import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.Account;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
@@ -106,11 +104,8 @@ public class AccountController {
     	Customer customer = this.stripeClient.createCustomer(null, username);
     	Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
     	
-    	acct = new Account(username, plan, customer.getId(), subscription.getId());
-        
-        //Create user
-        QanairyUser user = new QanairyUser(username);
-        acct.addUser(user);
+    	acct = new AccountPOJO(username, plan, customer.getId(), subscription.getId());
+
 
         // Connect to Auth0 API and update user metadata
         /*HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
@@ -134,7 +129,7 @@ public class AccountController {
     		);
     	
     	Map<String, String> account_signup_properties = new HashMap<String, String>();
-    	account_signup_properties.put("plan", new_account.getServicePackage());
+    	account_signup_properties.put("plan", subscription.getId());
     	analytics.enqueue(TrackMessage.builder("Signed Up")
     		    .userId(new_account.getKey())
     		    .properties(account_signup_properties)

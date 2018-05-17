@@ -1,22 +1,27 @@
 package com.qanairy.models;
 
-public class ScreenshotSet {
+import com.qanairy.persistence.ScreenshotSet;
+
+/**
+ * 
+ */
+public class ScreenshotSetPOJO extends ScreenshotSet {
 	private String key;
 	private String browser_name;
 	private String full_screenshot;
 	private String viewport_screenshot;
 	
-	public ScreenshotSet(String full, String viewport, String browser_name){
+	public ScreenshotSetPOJO(String full, String viewport, String browser_name){
 		this.full_screenshot = full;
 		this.viewport_screenshot = viewport;
-		this.setBrowserName(browser_name);
+		this.setBrowser(browser_name);
 	}
 	
-	public ScreenshotSet(String key, String full, String viewport, String browser_name){
+	public ScreenshotSetPOJO(String key, String full, String viewport, String browser_name){
 		this.key = key;
 		this.full_screenshot = full;
 		this.viewport_screenshot = viewport;
-		this.setBrowserName(browser_name);
+		this.setBrowser(browser_name);
 	}
 	
 	public String getFullScreenshot() {
@@ -43,11 +48,11 @@ public class ScreenshotSet {
 		this.key = key;
 	}
 
-	public String getBrowserName() {
+	public String getBrowser() {
 		return browser_name;
 	}
 
-	public void setBrowserName(String browser_name) {
+	public void setBrowser(String browser_name) {
 		this.browser_name = browser_name;
 	}
 }

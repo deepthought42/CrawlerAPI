@@ -13,7 +13,7 @@ import com.qanairy.persistence.Rule;
 public class RuleDaoImpl implements RuleDao {
 
 	@Override
-	public void save(Rule rule) {
+	public Rule save(Rule rule) {
 		rule.setKey(generateKey(rule));
 		Rule record = find(rule.getKey());
 		
@@ -25,6 +25,7 @@ public class RuleDaoImpl implements RuleDao {
 			record.setValue(rule.getValue());
 		}
 		connection.close();
+		return record;
 	}
 
 	@Override

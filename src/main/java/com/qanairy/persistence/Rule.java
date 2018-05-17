@@ -1,7 +1,5 @@
 package com.qanairy.persistence;
 
-import java.util.Optional;
-
 import com.minion.browsing.form.FormField;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.persistence.PageElement;

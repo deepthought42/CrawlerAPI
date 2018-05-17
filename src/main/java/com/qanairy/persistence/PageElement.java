@@ -66,10 +66,10 @@ public abstract class PageElement extends AbstractVertexFrame implements PathObj
 	 * @return {@link List} of {@link PathObject}s representing a path sequence
 	 */
 	@Adjacency(label="has_rule")
-	public abstract void setRules(List<IRule> rules);
+	public abstract void setRules(List<Rule> rules);
 	
 	@Adjacency(label="has_rule")
-	public abstract void addRule(IRule rules);
+	public abstract void addRule(Rule rules);
 	
 	@Adjacency(label="has_rule")
 	public abstract List<Rule> getRules();

@@ -7,7 +7,7 @@ import com.qanairy.persistence.Rule;
  * 
  */
 public interface RuleDao {
-	public void save(Rule rule);
+	public Rule save(Rule rule);
 	public Rule find(String key);
 	public Iterator<? extends Rule> findAll();
 }

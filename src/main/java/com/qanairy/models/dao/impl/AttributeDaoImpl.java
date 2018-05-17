@@ -12,7 +12,7 @@ public class AttributeDaoImpl implements AttributeDao {
 	}
 	
 	@Override
-	public void save(Attribute attribute) {
+	public Attribute save(Attribute attribute) {
 		attribute.setKey(generateKey(attribute));
 
 		OrientConnectionFactory connection = new OrientConnectionFactory();
@@ -24,6 +24,8 @@ public class AttributeDaoImpl implements AttributeDao {
 			attribute_record.setVals(attribute.getVals());
 			attribute_record.setKey(attribute.getKey());
 		}
+		
+		return attribute_record;
 	}
 
 	@Override

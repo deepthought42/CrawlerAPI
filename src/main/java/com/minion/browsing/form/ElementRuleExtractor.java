@@ -7,17 +7,17 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
-import com.qanairy.rules.DisabledRule;
-import com.qanairy.rules.EmailPatternRule;
-import com.qanairy.rules.Rule;
-import com.qanairy.rules.NumericRule;
-import com.qanairy.rules.PatternRule;
-import com.qanairy.rules.ReadOnlyRule;
-import com.qanairy.rules.RequirementRule;
-import com.qanairy.rules.SpecialCharacterRestriction;
-import com.qanairy.rules.AlphabeticRestrictionRule;
-import com.qanairy.rules.Clickable;
-import com.qanairy.rules.RuleType;
+import com.qanairy.models.rules.AlphabeticRestrictionRule;
+import com.qanairy.models.rules.Clickable;
+import com.qanairy.models.rules.DisabledRule;
+import com.qanairy.models.rules.EmailPatternRule;
+import com.qanairy.models.rules.NumericRule;
+import com.qanairy.models.rules.PatternRule;
+import com.qanairy.models.rules.ReadOnlyRule;
+import com.qanairy.models.rules.RequirementRule;
+import com.qanairy.models.rules.RuleType;
+import com.qanairy.models.rules.SpecialCharacterRestriction;
+import com.qanairy.persistence.Rule;
 
 public class ElementRuleExtractor {
 	private static Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.PageElement;
-import com.qanairy.rules.Rule;
+import com.qanairy.persistence.Rule;
 
 /**
  * Defines a complex element grouping of input and label for a field contained within a form. 

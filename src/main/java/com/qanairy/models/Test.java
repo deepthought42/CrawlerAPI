@@ -15,8 +15,8 @@ import org.joda.time.DateTime;
 import com.qanairy.models.dto.TestRepository;
 import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.frames.FramedTransactionalGraph;
+
+
 
 /**
  * Defines the path of a test, the result and the expected values to determine if a test was 

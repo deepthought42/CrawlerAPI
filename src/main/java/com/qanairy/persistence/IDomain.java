@@ -2,9 +2,9 @@ package com.qanairy.persistence;
 
 import java.util.List;
 
-import com.tinkerpop.blueprints.Direction;
-import com.tinkerpop.frames.Adjacency;
-import com.tinkerpop.frames.Property;
+
+
+
 
 /**
  * Represents an {@link Domain} record in OrientDB database

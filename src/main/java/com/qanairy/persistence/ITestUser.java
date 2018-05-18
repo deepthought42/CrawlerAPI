@@ -1,6 +1,6 @@
 package com.qanairy.persistence;
 
-import com.tinkerpop.frames.Property;
+
 
 /**
  * Defines user information that can be used during testing

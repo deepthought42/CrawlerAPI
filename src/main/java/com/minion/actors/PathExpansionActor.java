@@ -15,7 +15,7 @@ import akka.actor.UntypedActor;
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.DiscoveryRecordRepository;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.rules.Rule;
+import com.qanairy.persistence.Rule;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;

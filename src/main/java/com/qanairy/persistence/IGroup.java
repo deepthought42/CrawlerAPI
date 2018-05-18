@@ -1,6 +1,6 @@
 package com.qanairy.persistence;
 
-import com.tinkerpop.frames.Property;
+
 
 /**
  * Represents a {@link Group} to be stored in orientDB database

@@ -1,6 +1,6 @@
 package com.qanairy.persistence;
 
-import com.tinkerpop.frames.Property;
+
 
 public interface ISystemInfo {
 	@Property("browser_count")

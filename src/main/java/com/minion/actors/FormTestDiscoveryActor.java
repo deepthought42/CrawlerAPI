@@ -9,6 +9,8 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.Test;
 import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.models.rules.NumericRule;
+import com.qanairy.models.rules.RuleType;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
@@ -23,9 +25,7 @@ import com.qanairy.models.Page;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Path;
 import com.qanairy.models.PathObject;
-import com.qanairy.rules.Rule;
-import com.qanairy.rules.NumericRule;
-import com.qanairy.rules.RuleType;
+import com.qanairy.rules.IRule;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;

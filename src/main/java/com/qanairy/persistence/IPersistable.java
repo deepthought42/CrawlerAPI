@@ -1,47 +1,13 @@
 package com.qanairy.persistence;
 
-import java.util.List;
-
 /**
- * 
- * @author brand
+ * Interface for persistable objects which allows objects to generate a key before saving 
  *
  * @param <V>
  */
-public interface IPersistable<V, Z> {
+public interface IPersistable<V> {
 	/**
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */
 	String generateKey(V obj);
-
-	/**
-	 * 
-	 * @param connection
-	 * @param obj
-	 * @return
-	 */
-	Z save(OrientConnectionFactory connection, V obj);
-	
-	/**
-	 * 
-	 * @param connection
-	 * @param obj
-	 * @return
-	 */
-	V load(Z obj);
-
-	/**
-	 * 
-	 * @param connection
-	 * @param key
-	 * @return
-	 */
-	V find(OrientConnectionFactory connection, String key);
-	
-	/**
-	 * 
-	 * @param connection
-	 * @return
-	 */
-	List<V> findAll(OrientConnectionFactory connection);
 }

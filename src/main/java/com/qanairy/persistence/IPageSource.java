@@ -1,6 +1,6 @@
 package com.qanairy.persistence;
 
-import com.tinkerpop.frames.Property;
+
 
 /**
  * Tinkerpop/frames interface implementation of {@link PageSource}

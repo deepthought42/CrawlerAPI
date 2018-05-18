@@ -8,26 +8,22 @@ import java.util.UUID;
 import org.apache.commons.collections.IteratorUtils;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.models.Account;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
-import com.qanairy.models.QanairyUser;
-import com.qanairy.models.TestRecord;
 import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IAccount;
 import com.qanairy.persistence.IDiscoveryRecord;
 import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.IPersistable;
 import com.qanairy.persistence.ITestRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.tinkerpop.blueprints.impls.orient.OrientVertex;
-import com.tinkerpop.frames.VertexFrame;
+
+
 
 /**
  * 
+ * 
  */
 @Component
-public class AccountRepository implements IPersistable<Account, IAccount> {
+public class AccountRepository {
 
 	/**
 	 * {@inheritDoc}
@@ -38,15 +34,14 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	}
 
 	@Override
-	public IAccount save(OrientConnectionFactory connection, Account account) {
+	public Account save(Account account) {
 		account.setKey(generateKey(account));
 		@SuppressWarnings("unchecked")
-		Iterable<IAccount> accounts = (Iterable<IAccount>) DataAccessObject.findByKey(account.getKey(), connection, IAccount.class);
-		Iterator<IAccount> iter = accounts.iterator();
-		IAccount acct_record = null;  
+		Iterator<Account> iter  = (Iterator<Account>) DataAccessObject.findByKey(account.getKey(), connection, Account.class);
+		Account acct_record = null;  
 
 		if(!iter.hasNext()){
-			acct_record = connection.getTransaction().addVertex("class:"+IAccount.class.getSimpleName()+","+UUID.randomUUID(), IAccount.class);
+			acct_record = connection.getTransaction().addFramedVertex(Account.class);
 			acct_record.setKey(account.getKey());
 			acct_record.setServicePackage(account.getServicePackage());
 			acct_record.setCustomerToken(account.getCustomerToken());
@@ -64,19 +59,19 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 		
 		acct_record.setLastDomain(account.getLastDomain());
 		
-		List<IDiscoveryRecord> discovery_records = new ArrayList<IDiscoveryRecord>();
+		List<DiscoveryRecord> discovery_records = new ArrayList<DiscoveryRecord>();
 		for(DiscoveryRecord record : account.getDiscoveryRecords()){
 			DiscoveryRecordRepository repo = new DiscoveryRecordRepository();
 			//repo.create(connection, user);
-			discovery_records.add(repo.save(connection, record));
+			discovery_records.add(record);
 		}
 		
 		acct_record.setDiscoveryRecords(discovery_records);
 		
-		List<ITestRecord> test_records = new ArrayList<ITestRecord>();
+		List<TestRecord> test_records = new ArrayList<TestRecord>();
 		for(TestRecord record : account.getTestRecords()){
 			TestRecordRepository repo = new TestRecordRepository();
-			test_records.add(repo.save(connection, record));
+			test_records.add(record);
 		}
 		
 		acct_record.setTestRecords(test_records);
@@ -87,7 +82,7 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 			acct_record.addUser(repo.save(connection, user));
 		}
 		*/
-		
+		connection.save();
 		return acct_record;
 	}
 
@@ -135,11 +130,10 @@ public class AccountRepository implements IPersistable<Account, IAccount> {
 	@Override
 	public Account find(OrientConnectionFactory connection, String key) {
 		@SuppressWarnings("unchecked")
-		Iterable<IAccount> svc_pkgs = (Iterable<IAccount>) DataAccessObject.findByKey(key, connection, IAccount.class);
-		Iterator<IAccount> iter = svc_pkgs.iterator();
+		Iterator<Account> iter = (Iterator<Account>) DataAccessObject.findByKey(key, connection, Account.class);
 		
 		if(iter.hasNext()){
-			return load(iter.next());
+			return iter.next();
 		}
 		
 		return null;

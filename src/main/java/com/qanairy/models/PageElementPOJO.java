@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.ListUtils;
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
@@ -14,17 +14,25 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.minion.browsing.ActionFactory;
-import com.qanairy.rules.Rule;
+import com.qanairy.models.dao.AttributeDao;
+import com.qanairy.models.dao.impl.AttributeDaoImpl;
+import com.qanairy.persistence.Attribute;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Rule;
+import com.qanairy.persistence.edges.PathEdge;
+import com.syncleus.ferma.annotations.Incidence;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement
  *  may be a Parent and/or child of another PageElement. This heirarchy is not
  *  maintained by PageElement though. 
  */
-public class PageElement extends PathObject{
-	private static Logger log = LoggerFactory.getLogger(PageElement.class);
+public class PageElementPOJO extends PageElement implements PathObject{
+	private static Logger log = LoggerFactory.getLogger(PageElementPOJO.class);
 
     private String key;
     private String screenshot;
@@ -34,16 +42,18 @@ public class PageElement extends PathObject{
 	private Map<String, String> cssValues;
 	private List<Attribute> attributes;
 	private List<Rule> rules;
+	private String type;
+	private List<PathEdge> edges;
 			
-	public PageElement(){
-		super.setType("PageElement");
+	public PageElementPOJO(){
+		setType("PageElement");
 		setCssValues(new HashMap<String,String>());
 		setAttributes(new ArrayList<Attribute>());
 		setRules(new ArrayList<Rule>());
 	}
 	
-	public PageElement(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
-		super.setType("PageElement");
+	public PageElementPOJO(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
+		setType("PageElement");
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
@@ -53,8 +63,8 @@ public class PageElement extends PathObject{
 		setKey(null);
 	}
 	
-	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
-		super.setType("PageElement");
+	public PageElementPOJO(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
+		setType("PageElement");
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
@@ -64,8 +74,8 @@ public class PageElement extends PathObject{
 		setKey(key);
 	}
 	
-	public PageElement(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
-		super.setType("PageElement");
+	public PageElementPOJO(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
+		setType("PageElement");
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
@@ -125,7 +135,7 @@ public class PageElement extends PathObject{
 			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
 				continue;
 			}
-			if(!cssValues.get(propertyName).equals(elem.cssValues.get(propertyName))){
+			if(!cssValues.get(propertyName).equals(elem.getCssValues().get(propertyName))){
 				return false;
 			}
 		}
@@ -278,12 +288,12 @@ public class PageElement extends PathObject{
 		{
 			Map<String, Attribute> attribute_map = new HashMap<String, Attribute>();
 			for(Attribute attr : this.getAttributes()){
-				attribute_map.put(attr.name, attr);		
+				attribute_map.put(attr.getName(), attr);		
 			}
 			
 			for(Attribute attr : newPageElementAttributes){
-				if(attr.equals(attribute_map.get(attr.name))){
-					attribute_map.remove(attr.name);
+				if(attr.equals(attribute_map.get(attr.getName()))){
+					attribute_map.remove(attr.getName());
 				}
 			}
 
@@ -301,7 +311,7 @@ public class PageElement extends PathObject{
 
 
 	public PathObject clone() {
-		PageElement page_elem = new PageElement();
+		PageElement page_elem = new PageElementPOJO();
 		page_elem.setAttributes(this.getAttributes());
 		page_elem.setCssValues(this.getCssValues());
 		page_elem.setKey(this.getKey());
@@ -355,5 +365,30 @@ public class PageElement extends PathObject{
 		}
 		
 		return wasPerformedSuccessfully;
+	}
+
+	@Override
+	public String getType() {
+		return this.type;
+	}
+
+	@Override
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	@Override
+	public List<PathEdge> getPathEdges(){
+	    return this.edges;
+	}
+	
+	@Override
+	public boolean addPathEdge(PathObject path_obj){
+		return this.edges.add(new PathEdgePOJO());
+	}
+
+	@Override
+	public void addAttribute(Attribute attribute) {
+		this.attributes.add(attribute);
 	}
 }

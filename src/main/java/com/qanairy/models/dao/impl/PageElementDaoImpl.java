@@ -17,7 +17,7 @@ import com.qanairy.persistence.Rule;
 public class PageElementDaoImpl implements PageElementDao {
 
 	@Override
-	public void save(PageElement element) {
+	public PageElement save(PageElement element) {
 		element.setKey(generateKey(element));
 
 		PageElement page_element_record = find(element.getKey());
@@ -58,6 +58,8 @@ public class PageElementDaoImpl implements PageElementDao {
 		for(Rule rule : element.getRules()){
 			page_element_record.addRule(rule_dao.save(rule));	
 		}
+		
+		return page_element_record;
 	}
 
 	@Override

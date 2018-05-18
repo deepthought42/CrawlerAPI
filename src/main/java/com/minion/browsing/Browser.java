@@ -46,11 +46,13 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.ScreenshotSet;
-import com.qanairy.models.dto.PageElementRepository;
+import com.qanairy.models.PageStatePOJO;
+import com.qanairy.models.ScreenshotSetPOJO;
+import com.qanairy.models.dao.PageElementDao;
+import com.qanairy.models.dao.impl.PageElementDaoImpl;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.ScreenshotSet;
 
 import ru.yandex.qatools.ashot.AShot;
 import ru.yandex.qatools.ashot.Screenshot;
@@ -140,7 +142,7 @@ public class Browser {
 	 * @throws GridException 
 	 * @throws IOException 
 	 */
-	public Page buildPage() throws GridException, IOException{
+	public PageState buildPage() throws GridException, IOException{
 		URL page_url = new URL(this.getDriver().getCurrentUrl());
 		String src = this.getDriver().getPageSource();
 		String screenshot = "";
@@ -163,8 +165,8 @@ public class Browser {
 			visible_elements = new ArrayList<PageElement>();
 		}
 		List<ScreenshotSet> browser_screenshot = new ArrayList<ScreenshotSet>();
-		browser_screenshot.add(new ScreenshotSet(screenshot, viewport_screenshot_url, browser_name));
-		return new Page(src,
+		browser_screenshot.add(new ScreenshotSetPOJO(screenshot, viewport_screenshot_url, browser_name));
+		return new PageStatePOJO(src,
 						page_url.toString(),
 						browser_screenshot,
 						visible_elements);
@@ -434,7 +436,7 @@ public class Browser {
 					
 					Dimension d = elem.getSize();
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
-					PageElementRepository page_elem_repo = new PageElementRepository();
+					PageElementDao page_elem_repo = new PageElementDaoImpl();
 					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
 					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), page_elem_repo.generateKey(tag));	
 					tag.setScreenshot(screenshot);
@@ -574,7 +576,7 @@ public class Browser {
 	 * @param driver
 	 * @return
 	 */
-	public static List<Form> extractAllForms(Page page, Browser browser){
+	public static List<Form> extractAllForms(PageState page, Browser browser){
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 
 		List<Form> form_list = new ArrayList<Form>();
@@ -751,7 +753,7 @@ public class Browser {
 		return child_inputs;
 	}
 	
-	public static List<Form> extractAllSelectOptions(Page page, WebDriver driver){
+	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
 		return null;
 	}
 	
@@ -762,7 +764,7 @@ public class Browser {
 	 * @param driver
 	 * @return
 	 */
-	public static List<PageElement> extractAllInputElements(Page page, WebDriver driver){
+	public static List<PageElement> extractAllInputElements(PageState page, WebDriver driver){
 		List<PageElement> choices = new ArrayList<PageElement>();
 		for(PageElement tag : page.getElements()){
 			//PageElement tag = (PageElement)elem;

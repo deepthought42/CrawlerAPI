@@ -13,17 +13,22 @@ import javax.imageio.ImageIO;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.minion.browsing.Browser;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.ScreenshotSet;
 
 /**
  * A reference to a web page 
  *
  */
-public class Page extends PathObject {
-	private static Logger log = LoggerFactory.getLogger(Page.class);
+public class PageStatePOJO extends PageState {
+	private static Logger log = LoggerFactory.getLogger(PageStatePOJO.class);
 
     private String key;
     private boolean landable = false;
@@ -38,16 +43,18 @@ public class Page extends PathObject {
 	@JsonIgnore
 	private List<PageElement> elements;
 	private Map<String, Integer> element_counts;
+
+	private String type;
 	
 	/**
 	 * instantiate an empty page instance
 	 */
-	public Page(){
+	public PageStatePOJO(){
 		this.setSrc(null);
-		this.setType(Page.class.getSimpleName());
 		this.setImageWeight(0);
 		this.element_counts = new HashMap<String, Integer>();
 		this.setBrowserScreenshots(new ArrayList<ScreenshotSet>());
+		this.setType(PageState.class.getSimpleName());
 	}
 	
 	/**
@@ -62,12 +69,12 @@ public class Page extends PathObject {
 	 * @pre html != null && html.length() > 0
 	 * @pre elements != null
 	 */
-	public Page(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
+	public PageStatePOJO(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		assert html != null;
 		assert html.length() > 0;
 		
-		super.setType("Page");
+		setType("Page");
 		this.setSrc(html);
 		this.setType("Page");
 		this.setUrl(new URL(url.replace("/#","")));
@@ -77,6 +84,7 @@ public class Page extends PathObject {
 		this.setLandable(false);
 		this.setImageWeight(0);
 		this.setKey(null);
+		this.setType(PageState.class.getSimpleName());
 	}
 	
 	/**
@@ -90,10 +98,10 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null
 	 */
-	public Page(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
+	public PageStatePOJO(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
-		super.setType("Page");
+		setType("Page");
 		this.setSrc(html);
 		this.setType("Page");
 		this.setUrl(new URL(url.replace("/#","")));
@@ -103,6 +111,7 @@ public class Page extends PathObject {
 		this.setLandable(false);
 		this.setImageWeight(0);
 		this.setKey(key);
+		this.setType(PageState.class.getSimpleName());
 	}
 	
 	/**
@@ -117,9 +126,9 @@ public class Page extends PathObject {
 	 * @pre elements != null;
 	 * @throws IOException
 	 */
-	public Page(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
+	public PageStatePOJO(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		super.setType("Page");
+		setType("Page");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
 		this.setBrowserScreenshots(browsers_screenshots);
@@ -128,6 +137,7 @@ public class Page extends PathObject {
 		this.setLandable(isLandable);
 		this.setImageWeight(0);
 		this.setKey(null);
+		this.setType(PageState.class.getSimpleName());
 	}
 	
 	/**
@@ -141,9 +151,9 @@ public class Page extends PathObject {
 	 * 
 	 * @pre elements != null;
 	 */
-	public Page(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
+	public PageStatePOJO(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		super.setType("Page");
+		setType("Page");
 		this.setSrc(html);
 		this.setUrl(new URL(url.replace("/#","")));
 		this.setBrowserScreenshots(browsers_screenshots);
@@ -152,6 +162,7 @@ public class Page extends PathObject {
 		this.setLandable(isLandable);
 		this.setImageWeight(0);
 		this.setKey(key);
+		this.setType(PageState.class.getSimpleName());
 	}
 	
 	
@@ -262,9 +273,9 @@ public class Page extends PathObject {
 	@Override
 	public boolean equals(Object o){
 		if (this == o) return true;
-        if (!(o instanceof Page)) return false;
+        if (!(o instanceof PageState)) return false;
         
-        Page that = (Page)o;
+        PageState that = (PageState)o;
         
         String thisBrowserScreenshot = this.getBrowserScreenshots().get(0).getFullScreenshot();
         String thatBrowserScreenshot = that.getBrowserScreenshots().get(0).getFullScreenshot();
@@ -363,7 +374,7 @@ public class Page extends PathObject {
 	 */
 	@Override
 	public PathObject clone() {
-		Page page = new Page();
+		PageStatePOJO page = new PageStatePOJO();
 		
 		page.setElements(this.getElements());
 		page.setKey(this.getKey());
@@ -384,8 +395,6 @@ public class Page extends PathObject {
 	 }
 	 
 	/**
-	 * 
-	 * 
 	 * @return the page of the source
 	 */
 	@JsonIgnore
@@ -461,5 +470,25 @@ public class Page extends PathObject {
 
 	public void setBrowserScreenshots(List<ScreenshotSet> browser_screenshots) {
 		this.browser_screenshots = browser_screenshots;
+	}
+
+	@Override
+	public String getType() {
+		return this.type;
+	}
+
+	@Override
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	@Override
+	public void addBrowserScreenshot(ScreenshotSet browser_screenshots) {
+		this.browser_screenshots.add(browser_screenshots);
+	}
+
+	@Override
+	public void addElement(PageElement element) {
+		this.elements.add(element);
 	}
 }

@@ -2,60 +2,64 @@ package com.qanairy.persistence;
 
 import java.util.List;
 
-import com.qanairy.models.PathObject;
-import com.tinkerpop.frames.Adjacency;
-import com.tinkerpop.frames.Property;
-import com.tinkerpop.frames.modules.typedgraph.TypeValue;
+import com.syncleus.ferma.AbstractVertexFrame;
+import com.syncleus.ferma.annotations.Adjacency;
+import com.syncleus.ferma.annotations.Property;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
  *
  */
-@TypeValue("Path") 
-public interface IPath{
+public abstract class Path extends AbstractVertexFrame {
 	/**
 	 * @return the key for the current test
 	 */
 	@Property("key")
-	public String getKey();
+	public abstract String getKey();
 	
 	@Property("key")
-	public void setKey(String key);
+	public abstract void setKey(String key);
 		
 	/**
 	 * @return {@link Boolean} value indicating usefulness for a path.
 	 * A value of null means that it's usefulness is unknown.
 	 */
 	@Property("useful")
-	public Boolean isUseful();
+	public abstract Boolean isUseful();
 	
 	/**
 	 * Sets the useful property to either true/false/null 
 	 */
 	@Property("useful")
-	public void setIsUseful(Boolean isUseful);
+	public abstract void setIsUseful(Boolean isUseful);
 	
 	/**
 	 * @return whether or not this path goes into another domain
 	 */
 	@Property("spansMultipleDomains")
-	public boolean isSpansMultipleDomains();
+	public abstract boolean doesSpanMultipleDomains();
 
 	/**
 	 * @return whether or not this path goes into another domain
 	 */
 	@Property("spansMultipleDomains")
-	public void setSpansMultipleDomains(boolean spanningMultipleDomains);
+	public abstract void setSpansMultipleDomains(boolean spanningMultipleDomains);
 
 	/**
 	 * @return {@link List} of {@link PathObject}s representing a path sequence
 	 */
 	@Adjacency(label="starts_with")
-	public IPathObject getPath();
+	public abstract PathObject getPathStartsWith();
 
 	/**
 	 * Sets the {@link List} of {@link PathObject}s representing the path sequence
 	 */
 	@Adjacency(label="starts_with")
-	public void setPath(IPathObject path_obj);
+	public abstract void setPathStartsWith(PathObject path_obj);
+	
+	public abstract void setPath(List<PathObject> path_obj_list);
+	
+	public abstract List<PathObject> getPath();
+	
+	public abstract int size();
 }

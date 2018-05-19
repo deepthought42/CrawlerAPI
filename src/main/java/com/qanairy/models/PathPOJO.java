@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
-import com.qanairy.persistence.Page;
+import com.qanairy.models.dao.PathDao;
+import com.qanairy.models.dao.PathObjectDao;
+import com.qanairy.models.dao.impl.PathDaoImpl;
+import com.qanairy.models.dao.impl.PathObjectDaoImpl;
+import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.Path;
 import com.qanairy.persistence.PathObject;
 
@@ -17,10 +21,9 @@ public class PathPOJO extends Path {
 	
     private String key;
 	private boolean isUseful;
-	private boolean spansMultipleDomains = false;
-	private List<PathObject> path = null;
-
-	private PathObject path_entry_obj;
+	private boolean spansMultipleDomains;
+	private List<String> path = null;
+	private List<PathObject> path_obj_list;
 	
 	/**
 	 * Creates new instance of Path
@@ -28,8 +31,9 @@ public class PathPOJO extends Path {
 	public PathPOJO(){
 		this.isUseful = false;
 		this.spansMultipleDomains = false;
-		this.path = new ArrayList<PathObject>();
+		this.path = new ArrayList<String>();
 		this.key = null;
+		this.path_obj_list = new ArrayList<PathObject>();
 	}
 
 	/**
@@ -37,10 +41,11 @@ public class PathPOJO extends Path {
 	 * 
 	 * @param current_path
 	 */
-	public PathPOJO(List<PathObject> current_path){
+	public PathPOJO(List<String> current_path){
 		this.isUseful = false;
 		this.path = current_path;
 		this.key = null;
+		this.path_obj_list = new ArrayList<PathObject>();
 	}
 
 	/**
@@ -48,25 +53,28 @@ public class PathPOJO extends Path {
 	 * 
 	 * @param current_path
 	 */
-	public PathPOJO(String key, boolean isUseful, boolean spansMultipleDomains, List<PathObject> current_path){
+	public PathPOJO(String key, boolean isUseful, boolean spansMultipleDomains, List<String> current_path){
 		this.isUseful = isUseful;
 		this.path = current_path;
 		this.key = key;
 		this.spansMultipleDomains = spansMultipleDomains;
+		this.path_obj_list = new ArrayList<PathObject>();
 	}
 		
 	/**
-	 * Gets the last Vertex in a path that is of type {@link Page}
+	 * Gets the last Vertex in a path that is of type {@link PageState}
 	 * 
 	 * @return
 	 */
-	public Page findLastPage(){
-		List<PathObject> path_obj_list = this.getPath();
-		Page page = null;
+	public PageState findLastPage(){
+		List<String> path_obj_list = this.getPath();
+		PageState page = null;
 
-		for(PathObject obj : path_obj_list){
-			if(obj != null && obj.getType().equals("Page")){
-				page = (Page)obj;
+		PathObjectDao path_obj_dao = new PathObjectDaoImpl();
+		for(String obj : path_obj_list){
+			PathObject path_obj = path_obj_dao.find(key);
+			if(path_obj != null && path_obj.getType().equals("PageState")){
+				page = (PageState)path_obj;
 			}
 		}
 
@@ -77,11 +85,11 @@ public class PathPOJO extends Path {
 		String domain = "";
 		
 		//iterate over path
-		List<PathObject> path_obj_list = this.getPath();
+		List<? extends PathObject> path_obj_list = this.getPathObjects();
 		
 		for(PathObject obj : path_obj_list){
-			if(obj instanceof Page){
-				Page page = (Page)obj;
+			if(obj instanceof PageState){
+				PageState page = (PageState)obj;
 				String curr_domain = page.getUrl().toString();
 				if(domain.isEmpty()){
 					domain = curr_domain;
@@ -96,10 +104,12 @@ public class PathPOJO extends Path {
 		return false;
 	}
 
-	public Page firstPage() {
-		for(PathObject obj : this.getPath()){
-			if(obj instanceof Page){
-				return (Page)obj;
+	public PageState firstPage() {
+		PathObjectDao path_obj_dao = new PathObjectDaoImpl();
+		for(String key : this.getPath()){
+			PathObject path_obj = path_obj_dao.find(key);
+			if(path_obj instanceof PageState){
+				return (PageState)path_obj;
 			}
 		}
 		return null;
@@ -110,18 +120,19 @@ public class PathPOJO extends Path {
 	 */
 	public boolean equals(Path path){
 		int thisPathLength = this.size();
-		int comparatorPathLength = path.size();
+		int comparatorPathLength = path.getPath().size();
 				
 		if(thisPathLength != comparatorPathLength){
 			return false;
 		}
 		
-		List<PathObject> comparatorPathNode = path.getPath();
-		for(PathObject obj : this.getPath()){
-			if(!obj.getClass().getSimpleName().equals(comparatorPathNode.getClass().getSimpleName())){
+		PathObjectDao path_obj_dao = new PathObjectDaoImpl();
+		for(String key : this.getPath()){
+			PathObject path_obj = path_obj_dao.find(key);
+			if(!path_obj.getClass().getSimpleName().equals(comparatorPathNode.getClass().getSimpleName())){
 				return false;
 			}
-			if(!obj.equals(comparatorPathNode)){
+			if(!path_obj.equals(comparatorPathNode)){
 				return false;
 			}
 		}
@@ -136,23 +147,24 @@ public class PathPOJO extends Path {
 	 * @return
 	 */
 	public static Path clone(Path path){
-		Path clonePath = new PathPOJO();
+		Path clone_path = new PathPOJO();
 		
-		List<PathObject> path_obj = path.getPath();
-		List<PathObject> clone_list = new ArrayList<PathObject>();
+		List<? extends PathObject> path_obj = path.getPathObjects();
+		List<String> path_keys = new ArrayList<String>();
 		for(PathObject obj : path_obj){
-			clone_list.add(obj);
+			clone_path.addToPath(obj.getKey());
+			path_keys.add(obj.getKey());
 		}
 		
-		clonePath.setPath(clone_list);
-		clonePath.setKey(path.getKey());
-		clonePath.setIsUseful(path.isUseful());
-		clonePath.setSpansMultipleDomains(path.doesSpanMultipleDomains());
+		clone_path.setPath(path_keys);
+		clone_path.setKey(path.getKey());
+		clone_path.setIsUseful(path.isUseful());
+		clone_path.setSpansMultipleDomains(path.getIfSpansMultipleDomains());
 		
-		return clonePath;
+		return clone_path;
 	}
 	
-	public boolean doesSpanMultipleDomains() {
+	public boolean getIfSpansMultipleDomains() {
 		return spansMultipleDomains;
 	}
 	
@@ -168,30 +180,26 @@ public class PathPOJO extends Path {
 	public String getKey() {
 		return this.key;
 	}
-
-	@Override
-	public void setPathStartsWith(PathObject path_obj) {
-		this.path_entry_obj = path_obj;
-	}
 	
 	/**
-	 * Adds an object to path and sets whether or not this path spans multiple domains
+	 * Adds an object to path
 	 * 
 	 * @param obj
 	 * @return
 	 */
-	public boolean add(PathObject obj){
-		return this.getPath().add(obj);
+	@Override
+	public boolean addToPath(String key){
+		return this.getPath().add(key);
 	}
 	
 	/**
 	 * @return The {@link List} of {@link PathObject}s that comprise a path
 	 */
-	public List<PathObject> getPath(){
+	public List<String> getPath(){
 		return this.path;
 	}
 	
-	public void setPath( List<PathObject> path){
+	public void setPath( List<String> path){
 		this.path = path;
 	}
 	
@@ -208,8 +216,13 @@ public class PathPOJO extends Path {
 	}
 
 	@Override
-	public PathObject getPathStartsWith() {
-		return this.path_entry_obj;
+	public void addPathObject(PathObject path_obj) {
+		this.path_obj_list.add(path_obj);
+	}
+
+	@Override
+	public List<? extends PathObject> getPathObjects() {
+		return this.path_obj_list;
 	}
 }
 

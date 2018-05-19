@@ -1,5 +1,7 @@
 package com.qanairy.models.dao.impl;
 
+import java.util.NoSuchElementException;
+
 import com.qanairy.models.dao.PageElementDao;
 import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.ScreenshotSetDao;
@@ -46,8 +48,16 @@ public class PageStateDaoImpl implements PageStateDao {
 
 	@Override
 	public PageState find(String key) {
-		// TODO Auto-generated method stub
-		return null;
+		PageState page_state = null;
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+
+		try{
+			page_state = connection.getTransaction().getFramedVertices("key", key, PageState.class).next();
+		}catch(NoSuchElementException e){
+			System.err.println("could not find record");
+		}
+		connection.close();
+		return page_state;
 	}
 
 

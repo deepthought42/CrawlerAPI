@@ -22,6 +22,7 @@ import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.ScreenshotSet;
+import com.qanairy.persistence.edges.PathEdge;
 
 /**
  * A reference to a web page 
@@ -382,7 +383,6 @@ public class PageStatePOJO extends PageState {
 		page.setBrowserScreenshots(this.getBrowserScreenshots());
 		page.setSrc(this.getSrc());
 		page.setUrl(this.getUrl());
-		page.setElements(this.getElements());
 		return page;
 	}
 	

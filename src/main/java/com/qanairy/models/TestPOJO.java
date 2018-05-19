@@ -7,14 +7,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
 import com.qanairy.models.dto.TestRepository;
-import com.qanairy.persistence.ITest;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.Path;
+import com.qanairy.persistence.TestRecord;
 
 
 
@@ -23,7 +23,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * successful or not
  *
  */
-public class Test {
+public class TestPOJO {
     @SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Test.class);
     
@@ -31,7 +31,7 @@ public class Test {
 	private String name;
 	private List<TestRecord> records;
 	private Path path;
-	private Page result;
+	private PageState result;
 	private Domain domain;
 	private Boolean correct;
 	private boolean isUseful = false;
@@ -46,7 +46,7 @@ public class Test {
 	 * Construct a test with defaults of useful set to fault and 
 	 * spansMultipleDomains set to false
 	 */
-	public Test(){
+	public TestPOJO(){
 		this.setRecords(new ArrayList<TestRecord>());
 		this.setSpansMultipleDomains(false);
 		this.setGroups(new ArrayList<Group>());
@@ -64,7 +64,7 @@ public class Test {
 	 * 
 	 * @pre path != null
 	 */
-	public Test(Path path, Page result, Domain domain, String name){
+	public TestPOJO(Path path, PageState result, Domain domain, String name){
 		assert path != null;
 		
 		this.setPath(path);
@@ -90,7 +90,7 @@ public class Test {
 	 * 
 	 * @pre path != null
 	 */
-	public Test(String key, Path path, Page result, Domain domain, String name){
+	public TestPOJO(String key, Path path, PageState result, Domain domain, String name){
 		assert path != null;
 		
 		this.setPath(path);
@@ -107,7 +107,7 @@ public class Test {
 		this.setIsRunning(false);
 	}
 	
-	public Test(String key, Path path, Page result, Domain domain, String name, boolean is_running){
+	public TestPOJO(String key, Path path, PageState result, Domain domain, String name, boolean is_running){
 		assert path != null;
 		
 		this.setPath(path);
@@ -125,12 +125,12 @@ public class Test {
 	}
 	
 	/**
-	 * Checks if a {@code TestRecord} snapshot of a {@code Test} is passing or not
+	 * Checks if a {@code TestRecord} snapshot of a {@code TestPOJO} is passing or not
 	 * 
 	 * @param record
 	 * @return
 	 */
-	public Boolean isTestPassing(Page page, Boolean last_test_passing_status){
+	public Boolean isTestPassing(PageState page, Boolean last_test_passing_status){
 		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
 			last_test_passing_status = false; 
 		}
@@ -152,38 +152,18 @@ public class Test {
 	 */
 	@Override
 	public boolean equals(Object o){
-		if(o instanceof Test){
+		if(o instanceof TestPOJO){
 			
 		}
 		
 		return false;
 	}
-		
-	/**
-	 * 
-	 * @param framedGraph
-	 * @param id
-	 * @return
-	 */
-	public ITest findById(FramedTransactionalGraph<OrientGraph> framedGraph, String id ){
-		return framedGraph.getVertex(id, ITest.class);
-	}
-
-	/**
-	 * Looks up tests by group
-	 */
-	public static Iterable<ITest> findTestByGroup(String group) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterable<ITest> tests = orient_connection.getTransaction().getVertices("groups", group, ITest.class);
-		orient_connection.close();
-		return tests;
-	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	public static Iterable<ITest> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
-		return orient_connection.getTransaction().getVertices("key", generated_key, ITest.class);
+	public static Iterable<Test> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
+		return orient_connection.getTransaction().getFramedVertices("key", generated_key, Test.class);
 	}
 
 	/**
@@ -192,13 +172,13 @@ public class Test {
 	 */
 	public static List<Test> findByUrl(String pageUrl) throws MalformedURLException {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("domain", pageUrl, ITest.class).iterator();
+		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("domain", pageUrl, Test.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
 		TestRepository test_record = new TestRepository();
 
 		while(test_iter.hasNext()){
-			ITest itest = test_iter.next();
+			Test itest = test_iter.next();
 			Test test = test_record.load(itest);
 			list.add(test);
 		}
@@ -213,13 +193,13 @@ public class Test {
 	 */
 	public static List<Test> findByLandable(boolean isLandable) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("landable", isLandable, ITest.class).iterator();
+		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("landable", isLandable, Test.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
 		TestRepository test_record = new TestRepository();
 
 		while(test_iter.hasNext()){
-			ITest itest = test_iter.next();
+			Test itest = test_iter.next();
 			
 			Test test = test_record.load(itest);
 			list.add(test);
@@ -233,13 +213,13 @@ public class Test {
 	 */
 	public static List<Test> findByName(String test_name) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("name", test_name, ITest.class).iterator();
+		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("name", test_name, Test.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
 		TestRepository test_record = new TestRepository();
 
 		while(test_iter.hasNext()){
-			ITest itest = test_iter.next();
+			Test itest = test_iter.next();
 			
 			Test test = test_record.load(itest);
 			list.add(test);
@@ -256,13 +236,13 @@ public class Test {
 	 */
 	public static List<Test> findBySource(String source) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<ITest> test_iter = orient_connection.getTransaction().getVertices("name", source, ITest.class).iterator();
+		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("name", source, Test.class).iterator();
 		
 		ArrayList<Test> list = new ArrayList<Test>();
 		TestRepository test_record = new TestRepository();
 
 		while(test_iter.hasNext()){
-			ITest itest = test_iter.next();	
+			Test itest = test_iter.next();	
 			
 			Test test = test_record.load(itest);
 			list.add(test);
@@ -336,16 +316,16 @@ public class Test {
 	}
 	
 	/**
-	 * @return result of running the test. Can be either null or have a {@link Page} set
+	 * @return result of running the test. Can be either null or have a {@link PageState} set
 	 */
-	public Page getResult(){
+	public PageState getResult(){
 		return this.result;
 	}
 	
 	/**
-	 * @param result_page expected {@link Page} state after running through path
+	 * @param result_page expected {@link PageState} state after running through path
 	 */
-	public void setResult(Page result_page){
+	public void setResult(PageState result_page){
 		this.result = result_page;
 	}
 

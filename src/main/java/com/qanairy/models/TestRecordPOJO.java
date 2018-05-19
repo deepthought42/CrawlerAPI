@@ -4,13 +4,14 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.TestRecord;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 
  * indicating whether the execution is aligned with the test and therefore passing
  * or mis-aligned with the expectations of the test and therefore failing in 
- * which case a {@link Page} can be saved as a record of what the state of the page
+ * which case a {@link PageState} can be saved as a record of what the state of the page
  * was after the test was executed.
  *
  */
@@ -22,7 +23,7 @@ public class TestRecordPOJO extends TestRecord {
 	private Date ran_at;
 	private String browser;
 	private Boolean passing;
-	private Page result;
+	private PageState result;
 	private long run_time_length;
 	
 	//Empty constructor for spring
@@ -30,25 +31,25 @@ public class TestRecordPOJO extends TestRecord {
 	
 	public TestRecordPOJO(Date ran_at, Boolean passes, String browser_name){
 		this.setRanAt(ran_at);
-		//this.setPage(null);
+		this.setResult(null);
 		this.setKey(null);
 		this.setRunTime(-1L);
 		this.setPassing(passes);
 		this.setBrowser(browser_name);
 	}
 	
-	public TestRecordPOJO(Date ran_at, Boolean passes, String browser_name, Page result, long run_time){
+	public TestRecordPOJO(Date ran_at, Boolean passes, String browser_name, PageState result, long run_time){
 		this.setRanAt(ran_at);
-		//this.setPage(result);
+		this.setResult(result);
 		this.setKey(null);
 		this.setRunTime(run_time);
 		this.setPassing(passes);
 		this.setBrowser(browser_name);
 	}
 	
-	public TestRecordPOJO(String key, Date ran_at, Boolean passes, String browser_name, Page result, long run_time){
+	public TestRecordPOJO(String key, Date ran_at, Boolean passes, String browser_name, PageState result, long run_time){
 		this.setRanAt(ran_at);
-		//this.setPage(result);
+		this.setResult(result);
 		this.setKey(key);
 		this.setRunTime(run_time);
 		this.setPassing(passes);
@@ -71,16 +72,16 @@ public class TestRecordPOJO extends TestRecord {
 		this.ran_at = date;
 	}
 	
-	/*@Override
-	public Page getPage() {
+	@Override
+	public PageState getResult() {
 		return this.result;
 	}
 
 	@Override
-	public void setPage(Page page) {
+	public void setResult(PageState page) {
 		this.result = page;
 	}
-	*/
+	
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */

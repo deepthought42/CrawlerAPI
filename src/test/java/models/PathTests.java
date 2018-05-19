@@ -10,15 +10,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.Path;
-import com.qanairy.models.ScreenshotSet;
-import com.qanairy.models.dto.PathRepository;
-import com.qanairy.persistence.IPath;
+
+import com.qanairy.models.ActionPOJO;
+import com.qanairy.models.AttributePOJO;
+import com.qanairy.models.PageElementPOJO;
+import com.qanairy.models.PageStatePOJO;
+import com.qanairy.models.PathPOJO;
+import com.qanairy.models.ScreenshotSetPOJO;
+import com.qanairy.models.dao.PathDao;
+import com.qanairy.models.dao.impl.PathDaoImpl;
+import com.qanairy.persistence.Action;
+import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.Path;
+import com.qanairy.persistence.ScreenshotSet;
 
 /**
  * 
@@ -30,18 +37,18 @@ public class PathTests {
 	@Test(groups="Regression")
 	public void pathRecordDatabaseConfirmation(){
 		List<ScreenshotSet> browser_screenshots = new ArrayList<ScreenshotSet>();
-		browser_screenshots.add(new ScreenshotSet("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
+		browser_screenshots.add(new ScreenshotSetPOJO("fulltestscreenshot.com", "testscreenshoturl.com", "chrome"));
 		
-		Path path = new Path();
+		Path path = new PathPOJO();
 		path.setIsUseful(false);
 		path.setSpansMultipleDomains(false);
 		
 		List<Attribute> attributes = new ArrayList<Attribute>();
 		List<String> attr_strings = new ArrayList<String>();
 		attr_strings.add("spacejam");
-		attributes.add(new Attribute("class", attr_strings));
+		attributes.add(new AttributePOJO("class", attr_strings));
 		
-		Page page = new Page();
+		PageState page = new PageStatePOJO();
 		page.setLandable(true);
 		page.setBrowserScreenshots(browser_screenshots);
 		page.setSrc("src goes here 1");
@@ -52,26 +59,29 @@ public class PathTests {
 			e.printStackTrace();
 		}
 
-		path.add(page);
+		path.addPathObject(page);
+		path.addToPath(page.getKey());
 		
 		Map<String, String> css_map = new HashMap<String, String>();
 		css_map.put("color", "purple");
 		
-		PageElement page_element = new PageElement("test element", "//div", "div", attributes, css_map);
-		path.add(page_element);
-		
-		Action action = new Action("click");
-		path.add(action);
-		
+		PageElement page_element = new PageElementPOJO("test element", "//div", "div", attributes, css_map);
+		path.addPathObject(page_element);
+		path.addToPath(page_element.getKey());
+
+		Action action = new ActionPOJO("click");
+		path.addPathObject(action);
+		path.addToPath(action.getKey());
+
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		PathRepository path_repo = new PathRepository();
-		IPath new_path = path_repo.save(orient_connection, path);
+		PathDao path_dao = new PathDaoImpl();
+		Path new_path = path_dao.save(path);
 		
 		//look up path and verify all elements
-		Path path_record = path_repo.find(orient_connection, new_path.getKey());
+		Path path_record = path_dao.find(new_path.getKey());
 		orient_connection.close();
 
-		Assert.assertTrue(path_record.getPath().get(0).getType().equals("Page"));
+		Assert.assertEquals(path_record.getPathObjects().get(0).getType(), "Page");
 		
 		/*System.err.println("path object record type 1: "+path_record.getPath().get(1).getType());
 		Assert.assertTrue(path_record.getPath().get(1).getType().equals("PageElement"));

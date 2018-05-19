@@ -41,8 +41,8 @@ public abstract class TestRecord extends AbstractVertexFrame {
 	public abstract void setRunTime(long run_time);
 	
 	@Adjacency(label="has_result")
-	public abstract void setResult(IPage page);
+	public abstract void setResult(PageState page);
 	
 	@Adjacency(label="has_result")
-	public abstract IPage getResult();
+	public abstract PageState getResult();
 }

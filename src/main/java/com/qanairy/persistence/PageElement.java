@@ -51,13 +51,13 @@ public abstract class PageElement extends AbstractVertexFrame implements PathObj
 	public abstract List<Attribute> getAttributes();
 	
 	/**
-	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 * @return {@link List} of {@link Attribute}s representing an html attribute
 	 */
 	@Adjacency(label="has_attribute")
 	public abstract void setAttributes(List<Attribute> attributes);
 	
 	/**
-	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 * @return {@link List} of {@link Attribute}s representing an html attribute
 	 */
 	@Adjacency(label="has_attribute")
 	public abstract void addAttribute(Attribute attribute);

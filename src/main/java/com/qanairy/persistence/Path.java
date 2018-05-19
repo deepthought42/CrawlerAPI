@@ -2,8 +2,12 @@ package com.qanairy.persistence;
 
 import java.util.List;
 
+import org.apache.tinkerpop.gremlin.structure.Direction;
+
+import com.qanairy.persistence.edges.PathEdge;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
+import com.syncleus.ferma.annotations.Incidence;
 import com.syncleus.ferma.annotations.Property;
 
 /**
@@ -37,7 +41,7 @@ public abstract class Path extends AbstractVertexFrame {
 	 * @return whether or not this path goes into another domain
 	 */
 	@Property("spansMultipleDomains")
-	public abstract boolean doesSpanMultipleDomains();
+	public abstract boolean getIfSpansMultipleDomains();
 
 	/**
 	 * @return whether or not this path goes into another domain
@@ -45,21 +49,22 @@ public abstract class Path extends AbstractVertexFrame {
 	@Property("spansMultipleDomains")
 	public abstract void setSpansMultipleDomains(boolean spanningMultipleDomains);
 
+	@Property("path_list")
+	public abstract void setPath(List<String> path_obj_key_list);
+	
 	/**
 	 * @return {@link List} of {@link PathObject}s representing a path sequence
 	 */
-	@Adjacency(label="starts_with")
-	public abstract PathObject getPathStartsWith();
+	@Property("path_list")
+	public abstract List<String> getPath();
+	
+	@Property("path_list")
+	public abstract boolean addToPath(String key);
+	
+	@Adjacency(label="contains")
+	public abstract void addPathObject(PathObject path_obj);
+	
+	@Adjacency(label="contains")
+	public abstract List<? extends PathObject> getPathObjects();
 
-	/**
-	 * Sets the {@link List} of {@link PathObject}s representing the path sequence
-	 */
-	@Adjacency(label="starts_with")
-	public abstract void setPathStartsWith(PathObject path_obj);
-	
-	public abstract void setPath(List<PathObject> path_obj_list);
-	
-	public abstract List<PathObject> getPath();
-	
-	public abstract int size();
 }

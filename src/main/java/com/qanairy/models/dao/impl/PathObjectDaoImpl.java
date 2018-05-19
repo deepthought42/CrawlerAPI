@@ -10,8 +10,8 @@ import com.qanairy.models.dao.PageElementDao;
 import com.qanairy.models.dao.PathObjectDao;
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.persistence.Page;
 import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
 
 /**
@@ -32,8 +32,8 @@ public class PathObjectDaoImpl implements PathObjectDao {
 	public PathObject save(PathObject path_obj) {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		
-		if(path_obj instanceof Page){
-			PathObject page = (Page)path_obj;
+		if(path_obj instanceof PageState){
+			PathObject page = (PageState)path_obj;
 			//PageDao page_dao = new PageDaoImpl();
 			//path_obj = page_dao.save(page);
 		}

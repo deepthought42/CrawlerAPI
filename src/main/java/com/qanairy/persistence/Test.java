@@ -4,38 +4,40 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.apache.tinkerpop.gremlin.structure.Direction;
 
-import com.qanairy.models.TestRecord;
+import com.syncleus.ferma.AbstractVertexFrame;
+import com.syncleus.ferma.annotations.Adjacency;
+import com.syncleus.ferma.annotations.Property;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
  *
  */
-@TypeValue(value="Test") 
-public interface ITest  {
+public abstract class Test extends AbstractVertexFrame{
 	/**
 	 * @return the key for the current test
 	 */
 	@Property("key")
-	public String getKey();
+	public abstract String getKey();
 	
 	/**
 	 * sets the key for the current test
 	 */
 	@Property("key")
-	public void setKey(String key);
+	public abstract void setKey(String key);
 	
 	/**
 	 * @return the name for the current test
 	 */
 	@Property("name")
-	public String getName();
+	public abstract String getName();
 	
 	/**
 	 * sets the name for the current test
 	 */
 	@Property("name")
-	public void setName(String name);
+	public abstract void setName(String name);
 	
 	/**
 	 * Gets the correctness value of the test
@@ -43,7 +45,7 @@ public interface ITest  {
 	 * @return Correctness value. Null indicates value is unset.
 	 */
 	@Property("correct")
-	public Boolean getCorrect();
+	public abstract Boolean getCorrect();
 	
 	/**
 	 * Sets correctness value of test
@@ -51,43 +53,43 @@ public interface ITest  {
 	 * @param correctness value
 	 */
 	@Property("correct")
-	public void setCorrect(Boolean correct);
+	public abstract void setCorrect(Boolean correct);
 	
 	/**
 	 * @return date timestamp of when test was last ran
 	 */
 	@Property("last_ran")
-	public Date getLastRunTimestamp();
+	public abstract Date getLastRunTimestamp();
 	
 	/**
 	 * sets date timestamp of when test was last ran
 	 */
 	@Property("last_ran")
-	public void setLastRunTimestamp(Date timestamp);
+	public abstract void setLastRunTimestamp(Date timestamp);
 	
 	/**
 	 * @return date timestamp of when test was last ran
 	 */
 	@Property("run_time")
-	public long getRunTime();
+	public abstract long getRunTime();
 	
 	/**
 	 * sets date timestamp of when test was last ran
 	 */
 	@Property("run_time")
-	public void setRunTime(long milliseconds);
+	public abstract void setRunTime(long milliseconds);
 	
 	/**
 	 * @return the domain for the current test
 	 */
 	@Adjacency(direction=Direction.IN, label="contains_test")
-	public IDomain getDomain();
+	public abstract IDomain getDomain();
 	
 	/**
 	 * sets the domain for the current test
 	 */
 	@Adjacency(direction=Direction.IN, label="contains_test")
-	public void addDomain(IDomain domain);
+	public abstract void addDomain(IDomain domain);
 	
 	
 	/**
@@ -96,7 +98,7 @@ public interface ITest  {
 	 * @return Correctness value. Null indicates value is unset.
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public Iterable<IGroup> getGroups();
+	public abstract Iterable<IGroup> getGroups();
 	
 	/**
 	 * Sets correctness value of test
@@ -104,7 +106,7 @@ public interface ITest  {
 	 * @param correctness value
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public void setGroups(List<IGroup> groups);
+	public abstract void setGroups(List<IGroup> groups);
 	
 	/**
 	 * Sets correctness value of test
@@ -112,7 +114,7 @@ public interface ITest  {
 	 * @param correctness value
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public void addGroup(IGroup group);
+	public abstract void addGroup(IGroup group);
 	
 	/**
 	 * Sets correctness value of test
@@ -120,54 +122,72 @@ public interface ITest  {
 	 * @param correctness value
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public void removeGroup(IGroup group);
+	public abstract void removeGroup(IGroup group);
 	
 	/**
 	 * Adds a record to this test connecting it via edge with label "has"
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
-	public void addRecord(ITestRecord testRecord);
-		
-	/**
-	 * @return {@link Path} that this test was created for
-	 */
-	@Adjacency(label="path")
-	public IPath getPath();
-	
-	/**
-	 * Sets the path for this test
-	 */
-	@Adjacency(label="path")
-	public void setPath(IPath path); 
+	public abstract void addRecord(TestRecord testRecord);
 	
 	/**
 	 * @return {@link Page} experienced as a result of executing the path
 	 */
 	@Adjacency(label="result")
-	public IPage getResult();
+	public abstract PageState getResult();
 	
 	/**
 	 * Sets the {@link Page} that is the result of executing the path 
 	 */
 	@Adjacency(label="result")
-	public void setResult(IPage page);
+	public abstract void setResult(PageState page);
 
 	
 	/**
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
-	public Iterable<ITestRecord> getRecords();
+	public abstract Iterable<TestRecord> getRecords();
 	
 	/**
 	 * Sets the {@link TestRecord} that is the result of executing the path
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
-	public void setRecords(List<TestRecord> page);
+	public abstract void setRecords(List<TestRecord> page);
 	
 	@Property("browser_run_statuses")
-	public Map<String, Boolean> getBrowserStatuses();
+	public abstract Map<String, Boolean> getBrowserStatuses();
 
 	@Property("browser_run_statuses")
-	public void setBrowserStatuses(Map<String, Boolean> browser_statuses);
+	public abstract void setBrowserStatuses(Map<String, Boolean> browser_statuses);
+	
+	/**
+	 * @return whether or not this path goes into another domain
+	 */
+	@Property("spansMultipleDomains")
+	public abstract boolean getIfSpansMultipleDomains();
+
+	/**
+	 * @return whether or not this path goes into another domain
+	 */
+	@Property("spansMultipleDomains")
+	public abstract void setSpansMultipleDomains(boolean spanningMultipleDomains);
+
+	@Property("path_list")
+	public abstract void setPath(List<String> path_obj_key_list);
+	
+	/**
+	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 */
+	@Property("path_list")
+	public abstract List<String> getPath();
+	
+	@Property("path_list")
+	public abstract boolean addToPath(String key);
+	
+	@Adjacency(label="contains")
+	public abstract void addPathObject(PathObject path_obj);
+	
+	@Adjacency(label="contains")
+	public abstract List<? extends PathObject> getPathObjects();
 }

@@ -7,7 +7,6 @@ import com.qanairy.models.GroupPOJO;
 import com.qanairy.models.dao.GroupDao;
 import com.qanairy.models.dao.impl.GroupDaoImpl;
 import com.qanairy.persistence.Group;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
  * Defines all tests for the service package POJO

@@ -1,15 +1,17 @@
 package com.qanairy.models.dao.impl;
 
-import java.util.Iterator;
-import java.util.UUID;
+import java.util.NoSuchElementException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.dao.TestUserDao;
-import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.TestUser;
+import com.qanairy.persistence.OrientConnectionFactory;
 
 public class TestUserDaoImpl implements TestUserDao{
-
+	private static Logger log = LoggerFactory.getLogger(TestUserDaoImpl.class);
+	
 	@Override
 	public TestUser save(TestUser user) {
 		user.setKey(generateKey(user));
@@ -30,14 +32,30 @@ public class TestUserDaoImpl implements TestUserDao{
 
 	@Override
 	public TestUser find(String key) {
-		// TODO Auto-generated method stub
-		return null;
+		TestUser test_user = null;
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+
+		try{
+			test_user = connection.getTransaction().getFramedVertices("key", key, TestUser.class).next();
+		}catch(NoSuchElementException e){
+			log.error("Error requesting action record from database");
+		}
+		connection.close();
+		return test_user;
 	}
 
 	@Override
 	public TestUser findByUsername(String username) {
-		// TODO Auto-generated method stub
-		return null;
+		TestUser test_user = null;
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+
+		try{
+			test_user = connection.getTransaction().getFramedVertices("username", username, TestUser.class).next();
+		}catch(NoSuchElementException e){
+			log.error("Error requesting action record from database");
+		}
+		connection.close();
+		return test_user;
 	}
 
 	/**

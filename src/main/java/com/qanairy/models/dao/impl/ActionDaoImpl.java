@@ -11,7 +11,6 @@ import com.qanairy.persistence.OrientConnectionFactory;
  * 
  */
 public class ActionDaoImpl implements ActionDao {
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Action.class);
 
 	

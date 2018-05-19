@@ -78,19 +78,36 @@ public abstract class Test extends AbstractVertexFrame{
 	 */
 	@Property("run_time")
 	public abstract void setRunTime(long milliseconds);
+
+	@Property("browser_run_statuses")
+	public abstract void setBrowserStatuses(Map<String, Boolean> browser_statuses);
 	
 	/**
-	 * @return the domain for the current test
+	 * @return whether or not this path goes into another domain
 	 */
-	@Adjacency(direction=Direction.IN, label="contains_test")
-	public abstract IDomain getDomain();
+	@Property("spansMultipleDomains")
+	public abstract boolean getSpansMultipleDomains();
+
+	/**
+	 * @return whether or not this path goes into another domain
+	 */
+	@Property("spansMultipleDomains")
+	public abstract void setSpansMultipleDomains(boolean spanningMultipleDomains);
+
+	@Property("path_list")
+	public abstract void setPathKeys(List<String> path_obj_key_list);
 	
 	/**
-	 * sets the domain for the current test
+	 * @return {@link List} of {@link PathObject}s representing a path sequence
 	 */
-	@Adjacency(direction=Direction.IN, label="contains_test")
-	public abstract void addDomain(IDomain domain);
+	@Property("path_keys")
+	public abstract List<String> getPathKeys();
 	
+	@Adjacency(label="contains")
+	public abstract void addPathObject(PathObject path_obj);
+	
+	@Adjacency(label="contains")
+	public abstract List<? extends PathObject> getPathObjects();
 	
 	/**
 	 * Gets the correctness value of the test
@@ -98,7 +115,7 @@ public abstract class Test extends AbstractVertexFrame{
 	 * @return Correctness value. Null indicates value is unset.
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public abstract Iterable<IGroup> getGroups();
+	public abstract Iterable<Group> getGroups();
 	
 	/**
 	 * Sets correctness value of test
@@ -106,7 +123,7 @@ public abstract class Test extends AbstractVertexFrame{
 	 * @param correctness value
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public abstract void setGroups(List<IGroup> groups);
+	public abstract void setGroups(List<Group> groups);
 	
 	/**
 	 * Sets correctness value of test
@@ -114,7 +131,7 @@ public abstract class Test extends AbstractVertexFrame{
 	 * @param correctness value
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public abstract void addGroup(IGroup group);
+	public abstract boolean addGroup(Group group);
 	
 	/**
 	 * Sets correctness value of test
@@ -122,13 +139,13 @@ public abstract class Test extends AbstractVertexFrame{
 	 * @param correctness value
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public abstract void removeGroup(IGroup group);
+	public abstract void removeGroup(Group group);
 	
 	/**
 	 * Adds a record to this test connecting it via edge with label "has"
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
-	public abstract void addRecord(TestRecord testRecord);
+	public abstract boolean addRecord(TestRecord testRecord);
 	
 	/**
 	 * @return {@link Page} experienced as a result of executing the path
@@ -157,37 +174,4 @@ public abstract class Test extends AbstractVertexFrame{
 	
 	@Property("browser_run_statuses")
 	public abstract Map<String, Boolean> getBrowserStatuses();
-
-	@Property("browser_run_statuses")
-	public abstract void setBrowserStatuses(Map<String, Boolean> browser_statuses);
-	
-	/**
-	 * @return whether or not this path goes into another domain
-	 */
-	@Property("spansMultipleDomains")
-	public abstract boolean getIfSpansMultipleDomains();
-
-	/**
-	 * @return whether or not this path goes into another domain
-	 */
-	@Property("spansMultipleDomains")
-	public abstract void setSpansMultipleDomains(boolean spanningMultipleDomains);
-
-	@Property("path_list")
-	public abstract void setPath(List<String> path_obj_key_list);
-	
-	/**
-	 * @return {@link List} of {@link PathObject}s representing a path sequence
-	 */
-	@Property("path_list")
-	public abstract List<String> getPath();
-	
-	@Property("path_list")
-	public abstract boolean addToPath(String key);
-	
-	@Adjacency(label="contains")
-	public abstract void addPathObject(PathObject path_obj);
-	
-	@Adjacency(label="contains")
-	public abstract List<? extends PathObject> getPathObjects();
 }

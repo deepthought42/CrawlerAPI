@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.minion.browsing.ActionFactory;
 import com.qanairy.models.dao.AttributeDao;
 import com.qanairy.models.dao.impl.AttributeDaoImpl;
+import com.qanairy.persistence.Action;
 import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PathObject;
@@ -52,7 +53,25 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		setRules(new ArrayList<Rule>());
 	}
 	
+	/**
+	 * 
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * 
+	 * @pre attributes != null
+	 * @pre css_map != null
+	 * @pre xpath != null
+	 * @pre name != null
+	 */
 	public PageElementPOJO(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
+		assert attributes != null;
+		assert css_map != null;
+		assert xpath != null;
+		assert name != null;
+		
 		setType("PageElement");
 		setName(name);
 		setXpath(xpath);
@@ -63,7 +82,26 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		setKey(null);
 	}
 	
+	/**
+	 * 
+	 * @param key
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * 
+	 * @pre attributes != null
+	 * @pre css_map != null
+	 * @pre xpath != null
+	 * @pre name != null
+	 */
 	public PageElementPOJO(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
+		assert attributes != null;
+		assert css_map != null;
+		assert xpath != null;
+		assert name != null;
+		
 		setType("PageElement");
 		setName(name);
 		setXpath(xpath);
@@ -74,7 +112,27 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		setKey(key);
 	}
 	
+	/**
+	 * 
+	 * @param key
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * @param rules
+	 * 
+	 * @pre attributes != null
+	 * @pre css_map != null
+	 * @pre xpath != null
+	 * @pre name != null
+	 */
 	public PageElementPOJO(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
+		assert attributes != null;
+		assert css_map != null;
+		assert xpath != null;
+		assert name != null;
+		
 		setType("PageElement");
 		setName(name);
 		setXpath(xpath);
@@ -375,16 +433,6 @@ public class PageElementPOJO extends PageElement implements PathObject{
 	@Override
 	public void setType(String type) {
 		this.type = type;
-	}
-
-	@Override
-	public List<PathEdge> getPathEdges(){
-	    return this.edges;
-	}
-	
-	@Override
-	public boolean addPathEdge(PathObject path_obj){
-		return this.edges.add(new PathEdgePOJO());
 	}
 
 	@Override

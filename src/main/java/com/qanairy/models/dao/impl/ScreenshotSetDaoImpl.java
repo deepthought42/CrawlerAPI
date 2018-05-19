@@ -1,12 +1,8 @@
 package com.qanairy.models.dao.impl;
 
-import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.qanairy.models.dao.ScreenshotSetDao;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.ScreenshotSet;
@@ -45,7 +41,7 @@ public class ScreenshotSetDaoImpl implements ScreenshotSetDao {
 		try{
 			screenshot = connection.getTransaction().getFramedVertices("key", key, ScreenshotSet.class).next();
 		}catch(NoSuchElementException e){
-			log.error("Error requesting action record from database");
+			log.error("Error requesting screenshot set record from database");
 		}
 		connection.close();
 		return screenshot;

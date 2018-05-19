@@ -1,19 +1,20 @@
 package com.qanairy.models;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
-import com.qanairy.models.dto.TestRepository;
-import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.Group;
+import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.Path;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
 
 
@@ -23,16 +24,16 @@ import com.qanairy.persistence.TestRecord;
  * successful or not
  *
  */
-public class TestPOJO {
+public class TestPOJO extends Test{
     @SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(Test.class);
+	private static Logger log = LoggerFactory.getLogger(TestPOJO.class);
     
 	private String key; 
 	private String name;
 	private List<TestRecord> records;
-	private Path path;
+	private List<String> path_keys;
+	private List<PathObject> path_objects;
 	private PageState result;
-	private Domain domain;
 	private Boolean correct;
 	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
@@ -52,7 +53,7 @@ public class TestPOJO {
 		this.setGroups(new ArrayList<Group>());
 		this.setLastRunTimestamp(null);
 		this.setIsRunning(false);
-		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
+		this.setBrowserStatuses(new HashMap<String, Boolean>());
 	}
 	
 	/**
@@ -64,21 +65,24 @@ public class TestPOJO {
 	 * 
 	 * @pre path != null
 	 */
-	public TestPOJO(Path path, PageState result, Domain domain, String name){
-		assert path != null;
+	public TestPOJO(List<String> path_keys, List<PathObject> path_objects, PageState result, String name){
+		assert path_keys != null;
+		assert !path_keys.isEmpty();
+		assert path_objects != null;
+		assert !path_objects.isEmpty();
 		
-		this.setPath(path);
-		this.setResult(result);
-		this.setRecords(new ArrayList<TestRecord>());
-		this.setDomain(domain);
-		this.setCorrect(null);
-		this.setSpansMultipleDomains(false);
-		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTimestamp(null);
-		this.setKey(null);
-		this.setName(name);
-		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
-		this.setIsRunning(false);
+		setPathKeys(path_keys);
+		setPathObjects(path_objects);
+		setResult(result);
+		setRecords(new ArrayList<TestRecord>());
+		setCorrect(null);
+		setSpansMultipleDomains(false);
+		setGroups(new ArrayList<Group>());
+		setLastRunTimestamp(null);
+		setKey(null);
+		setName(name);
+		setBrowserStatuses(new HashMap<String, Boolean>());
+		setIsRunning(false);
 	}
 	
 	/**
@@ -90,38 +94,45 @@ public class TestPOJO {
 	 * 
 	 * @pre path != null
 	 */
-	public TestPOJO(String key, Path path, PageState result, Domain domain, String name){
-		assert path != null;
+	public TestPOJO(String key, List<String> path_keys, List<PathObject> path_objects, PageState result, String name){
+		assert path_keys != null;
+		assert !path_keys.isEmpty();
+		assert path_objects != null;
+		assert !path_objects.isEmpty();
 		
-		this.setPath(path);
-		this.setResult(result);
-		this.setRecords(new ArrayList<TestRecord>());
-		this.setDomain(domain);
-		this.setCorrect(null);
-		this.setSpansMultipleDomains(false);
-		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTimestamp(null);
-		this.setKey(key);
-		this.setName(name);
-		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
-		this.setIsRunning(false);
+		setPathKeys(path_keys);
+		setPathObjects(path_objects);
+		setResult(result);
+		setRecords(new ArrayList<TestRecord>());
+		setCorrect(null);
+		setSpansMultipleDomains(false);
+		setGroups(new ArrayList<Group>());
+		setLastRunTimestamp(null);
+		setKey(key);
+		setName(name);
+		setBrowserStatuses(new HashMap<String, Boolean>());
+		setIsRunning(false);
 	}
-	
-	public TestPOJO(String key, Path path, PageState result, Domain domain, String name, boolean is_running){
-		assert path != null;
+
+
+	public TestPOJO(String key, List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running){
+		assert path_keys != null;
+		assert !path_keys.isEmpty();
+		assert path_objects != null;
+		assert !path_objects.isEmpty();
 		
-		this.setPath(path);
-		this.setResult(result);
-		this.setRecords(new ArrayList<TestRecord>());
-		this.setDomain(domain);
-		this.setCorrect(null);
-		this.setSpansMultipleDomains(false);
-		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTimestamp(null);
-		this.setKey(key);
-		this.setName(name);
-		this.setBrowserPassingStatuses(new HashMap<String, Boolean>());
-		this.setIsRunning(false);
+		setPathKeys(path_keys);
+		setPathObjects(path_objects);
+		setResult(result);
+		setRecords(new ArrayList<TestRecord>());
+		setCorrect(null);
+		setSpansMultipleDomains(false);
+		setGroups(new ArrayList<Group>());
+		setLastRunTimestamp(null);
+		setKey(key);
+		setName(name);
+		setBrowserStatuses(new HashMap<String, Boolean>());
+		setIsRunning(false);
 	}
 	
 	/**
@@ -158,100 +169,8 @@ public class TestPOJO {
 		
 		return false;
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	public static Iterable<Test> findByKey(String generated_key, OrientConnectionFactory orient_connection) {
-		return orient_connection.getTransaction().getFramedVertices("key", generated_key, Test.class);
-	}
 
-	/**
-	 * {@inheritDoc}
-	 * @throws MalformedURLException 
-	 */
-	public static List<Test> findByUrl(String pageUrl) throws MalformedURLException {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("domain", pageUrl, Test.class).iterator();
-		
-		ArrayList<Test> list = new ArrayList<Test>();
-		TestRepository test_record = new TestRepository();
-
-		while(test_iter.hasNext()){
-			Test itest = test_iter.next();
-			Test test = test_record.load(itest);
-			list.add(test);
-		}
-		orient_connection.close();
-		
-		return list;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 * @throws MalformedURLException 
-	 */
-	public static List<Test> findByLandable(boolean isLandable) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("landable", isLandable, Test.class).iterator();
-		
-		ArrayList<Test> list = new ArrayList<Test>();
-		TestRepository test_record = new TestRepository();
-
-		while(test_iter.hasNext()){
-			Test itest = test_iter.next();
-			
-			Test test = test_record.load(itest);
-			list.add(test);
-		}
-		orient_connection.close();
-		return list;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	public static List<Test> findByName(String test_name) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("name", test_name, Test.class).iterator();
-		
-		ArrayList<Test> list = new ArrayList<Test>();
-		TestRepository test_record = new TestRepository();
-
-		while(test_iter.hasNext()){
-			Test itest = test_iter.next();
-			
-			Test test = test_record.load(itest);
-			list.add(test);
-		}
-		
-		orient_connection.close();
-		return list;
-	}
-	
-	/**
-	 * 
-	 * @param test_name
-	 * @return
-	 */
-	public static List<Test> findBySource(String source) {
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<Test> test_iter = orient_connection.getTransaction().getVertices("name", source, Test.class).iterator();
-		
-		ArrayList<Test> list = new ArrayList<Test>();
-		TestRepository test_record = new TestRepository();
-
-		while(test_iter.hasNext()){
-			Test itest = test_iter.next();	
-			
-			Test test = test_record.load(itest);
-			list.add(test);
-		}
-		orient_connection.close();
-		return list;
-	}
-	
-	public Boolean isCorrect(){
+	public Boolean getCorrect(){
 		return this.correct;
 	}
 	
@@ -275,14 +194,6 @@ public class TestPOJO {
 		this.name = name;
 	}
 	
-	public Domain getDomain(){
-		return this.domain;
-	}
-	
-	public void setDomain(Domain domain){
-		this.domain = domain;
-	}
-	
 	/**
 	 * 
 	 * @param browser_name name of browser (ie 'chrome', 'firefox')
@@ -295,16 +206,20 @@ public class TestPOJO {
 		this.browser_passing_statuses.put(browser_name, status);
 	}
 	
-	public Path getPath(){
-		return this.path;
+	public List<String> getPathKeys(){
+		return this.path_keys;
 	}
 	
-	public void setPath(Path path){
-		this.path = path;
+	public void setPathKeys(List<String> path_keys){
+		this.path_keys = path_keys;
 	}
 	
-	public void addRecord(TestRecord record){
-		this.records.add(record);
+	public boolean addPathKey(String key) {
+		return this.path_keys.add(key);
+	}
+	
+	public boolean addRecord(TestRecord record){
+		return this.records.add(record);
 	}
 	
 	public List<TestRecord> getRecords(){
@@ -337,7 +252,7 @@ public class TestPOJO {
 		this.isUseful = isUseful;
 	}
 
-	public boolean isSpansMultipleDomains() {
+	public boolean getSpansMultipleDomains() {
 		return spansMultipleDomains;
 	}
 
@@ -355,6 +270,12 @@ public class TestPOJO {
 	
 	public boolean addGroup(Group group){
 		return this.groups.add(group);
+	}
+	
+	@Override
+	public void removeGroup(Group group) {
+		//remove edge between test and group
+		this.groups.remove(group);
 	}
 	
 	/**
@@ -390,11 +311,27 @@ public class TestPOJO {
 		this.is_running = is_running;
 	}
 
-	public Map<String, Boolean> getBrowserPassingStatuses() {
+	public Map<String, Boolean> getBrowserStatuses() {
 		return browser_passing_statuses;
 	}
 
-	public void setBrowserPassingStatuses(Map<String, Boolean> browser_passing_statuses) {
+	public void setBrowserStatuses(Map<String, Boolean> browser_passing_statuses) {
 		this.browser_passing_statuses = browser_passing_statuses;
+	}
+
+	
+
+	@Override
+	public void addPathObject(PathObject path_obj) {
+		this.path_objects.add(path_obj);
+	}
+
+	@Override
+	public List<? extends PathObject> getPathObjects() {
+		return this.path_objects;
+	}
+
+	private void setPathObjects(List<PathObject> path_objects) {
+		this.path_objects = path_objects;
 	}
 }

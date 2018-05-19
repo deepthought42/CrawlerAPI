@@ -1,26 +1,28 @@
 package com.qanairy.models;
 
+import com.qanairy.persistence.TestUser;
+
 /**
  * Defines user information that can be used during testing
  */
-public class TestUser {
+public class TestUserPOJO extends TestUser {
 	private String key;
 	private String username;
 	private String password;
 	private String role;
 	
-	public TestUser(){}
+	public TestUserPOJO(){}
 	
-	public TestUser(String username, String password, String role){
+	public TestUserPOJO(String username, String password, String role){
 		this.setKey(null);
-		this.username = username;
-		this.password = password;
+		setUsername(username);
+		setPassword(password);
 	}
 	
-	public TestUser(String key, String username, String password, String role){
+	public TestUserPOJO(String key, String username, String password, String role){
 		this.setKey(key);
-		this.username = username;
-		this.password = password;
+		setUsername(username);
+		setPassword(password);
 	}
 	
 	public String getUsername(){
@@ -45,5 +47,15 @@ public class TestUser {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	@Override
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	@Override
+	public void setPassword(String password) {
+		this.password = password;
 	}
 }

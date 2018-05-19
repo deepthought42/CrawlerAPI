@@ -24,14 +24,6 @@ import com.qanairy.persistence.OrientConnectionFactory;
 @Component
 public class DomainRepository implements IPersistable<Domain, IDomain> {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String generateKey(Domain domain) {
-		return domain.getUrl().toString();
-	}
-
 	public boolean addTest(Domain domain, ITest test){
 		try{
 			IDomain idomain = find(domain.getKey());

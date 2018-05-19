@@ -1,10 +1,12 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+
+import com.qanairy.persistence.Domain;
+import com.qanairy.persistence.Test;
 
 
 /**
@@ -12,9 +14,8 @@ import org.springframework.stereotype.Component;
  * belong to this domain
  */
 @Component
-public class Domain {
+public class DomainPOJO {
 	private String domain;
-	private List<Account> accounts;
 	private List<Test> tests;
 	private int test_cnt;
 	private String key;
@@ -29,10 +30,9 @@ public class Domain {
 	 * @param domain
 	 * @param organization
 	 */
-	public Domain(){
+	public DomainPOJO(){
 		this.setUrl(null);
 		this.setTests(new ArrayList<Test>());
-		this.accounts = new ArrayList<Account>();
 		this.setProtocol("http");
 		this.setTestUsers(new ArrayList<TestUser>());
 		this.setDiscoveryBrowser("");
@@ -46,7 +46,7 @@ public class Domain {
 	 * @param organization
 	 */
 	@Deprecated
-	public Domain(String url, String protocol){
+	public DomainPOJO(String url, String protocol){
 		this.setUrl(url);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
@@ -62,7 +62,7 @@ public class Domain {
 	 * @param browser name of the browser ie. chrome, firefox, etc.
 	 * @param logo_url url of logo image file
 	 */
-	public Domain( String protocol, String url, String browser, String logo_url){
+	public DomainPOJO( String protocol, String url, String browser, String logo_url){
 		this.setUrl(url);
 		this.setLogoUrl(logo_url);
 		this.setTests(new ArrayList<Test>());
@@ -81,7 +81,7 @@ public class Domain {
 	 * @param protocol
 	 * @param test_count
 	 */
-	public Domain(	String key, 
+	public DomainPOJO(	String key, 
 					String domain_url,
 					String logo_url,
 					List<Test> tests,
@@ -111,7 +111,7 @@ public class Domain {
 	 * @param discovered_test_count
 	 * @param browser_name
 	 */
-	public Domain(	String key, 
+	public DomainPOJO(	String key, 
 					String domain_url,
 					String logo_url,
 					List<Test> tests,
@@ -144,11 +144,7 @@ public class Domain {
 	public void setTests(List<Test> tests) {
 		this.tests = tests;
 	}
-	
-	public boolean addAccount(Account acct){
-		return this.accounts.add(acct);
-	}
-	
+
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}

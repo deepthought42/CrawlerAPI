@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.dao.ActionDao;
 import com.qanairy.models.dao.PageElementDao;
+import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.PathObjectDao;
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.OrientConnectionFactory;
@@ -29,13 +30,11 @@ public class PathObjectDaoImpl implements PathObjectDao {
 	}
 	
 	@Override
-	public PathObject save(PathObject path_obj) {
-		OrientConnectionFactory connection = new OrientConnectionFactory();
-		
+	public PathObject save(PathObject path_obj) {		
 		if(path_obj instanceof PageState){
 			PathObject page = (PageState)path_obj;
-			//PageDao page_dao = new PageDaoImpl();
-			//path_obj = page_dao.save(page);
+			PageStateDao page_dao = new PageStateDaoImpl();
+			path_obj = page_dao.save((PageState)page);
 		}
 		else if(path_obj instanceof PageElement){
 			PageElementDao page_element_dao = new PageElementDaoImpl();

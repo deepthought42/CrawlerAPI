@@ -5,7 +5,7 @@ package com.qanairy.persistence;
  *
  * @param <V>
  */
-public interface IPersistable<V> {
+public interface Persistable<V> {
 	/**
 	 * @return string of hashCodes identifying unique fingerprint of object by the contents of the object
 	 */

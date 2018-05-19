@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.TestRecord;
 
 

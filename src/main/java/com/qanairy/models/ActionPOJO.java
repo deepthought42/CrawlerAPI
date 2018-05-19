@@ -108,15 +108,4 @@ public class ActionPOJO extends Action{
 	public void setType(String type) {
 		this.type = type;
 	}
-
-
-	@Override
-	public List<PathEdge> getPathEdges(){
-	    return this.edges;
-	}
-	
-	@Override
-	public boolean addPathEdge(PathObject path_obj){
-		return this.edges.add(new PathEdgePOJO());
-	}
 }

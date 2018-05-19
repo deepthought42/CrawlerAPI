@@ -12,7 +12,6 @@ import com.qanairy.models.dao.PathObjectDao;
 import com.qanairy.models.dao.TestDao;
 import com.qanairy.models.dao.TestRecordDao;
 import com.qanairy.persistence.Group;
-import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.Test;

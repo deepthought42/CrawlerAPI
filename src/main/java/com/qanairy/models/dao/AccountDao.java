@@ -6,10 +6,9 @@ import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.TestRecord;
 
 public interface AccountDao {
-	public List<Account> getAll();
 	public Account find(String key);
-	public void save(Account account);
-	public void delete(Account account);
+	public Account save(Account account);
+	public void remove(Account account);
 	public void updateSubscription(String key, String token);
 	public void updateCustomerToken(String key, String token);
 	public List<DiscoveryRecord> getAllDiscoveryRecords();

@@ -1,10 +1,8 @@
 package models;
 
 import java.util.ArrayList;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.DomainPOJO;
 import com.qanairy.models.dao.DomainDao;
 import com.qanairy.models.dao.impl.DomainDaoImpl;

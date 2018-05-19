@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
 import com.qanairy.persistence.Group;
-import com.qanairy.persistence.IDomain;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.Path;
 import com.qanairy.persistence.PathObject;

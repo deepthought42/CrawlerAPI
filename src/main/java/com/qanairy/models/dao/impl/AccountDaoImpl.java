@@ -5,18 +5,14 @@ import java.util.NoSuchElementException;
 
 import com.qanairy.models.dao.AccountDao;
 import com.qanairy.persistence.Account;
+import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.TestRecord;
 
 /**
  * 
  */
 public class AccountDaoImpl implements AccountDao{
-
-	@Override
-	public List<Account> getAll() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	public Account find(String key) {
@@ -35,7 +31,7 @@ public class AccountDaoImpl implements AccountDao{
 	}
 
 	@Override
-	public void save(Account account) {
+	public Account save(Account account) {
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 
 		account.setKey(generateKey(account));
@@ -59,8 +55,9 @@ public class AccountDaoImpl implements AccountDao{
 		account_record.setDiscoveryRecords(account.getDiscoveryRecords());
 		account_record.setTestRecords(account.getTestRecords());
 		account_record.setOnboardedSteps(account.getOnboardedSteps());
-		account_record.setUsers(account.getUsers());
 		connection.save();
+		
+		return account_record;
 	}
 
 	@Override
@@ -69,8 +66,9 @@ public class AccountDaoImpl implements AccountDao{
 	}
 	
 	@Override
-	public void delete(Account account) {
-		// TODO Auto-generated method stub
+	public void remove(Account account) {
+		Account acct = find(account.getKey());
+		acct.remove();
 	}
 	
 	/**
@@ -80,5 +78,33 @@ public class AccountDaoImpl implements AccountDao{
 		return acct.getOrgName();
 	}
 
-	
+	@Override
+	public void updateCustomerToken(String key, String token) {
+		Account account = find(key);
+		account.setCustomerToken(token);
+	}
+
+	@Override
+	public List<DiscoveryRecord> getAllDiscoveryRecords() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<DiscoveryRecord> getDiscoveryRecordsByMonth(int month) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<TestRecord> getAllTestRecords() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<TestRecord> getTestRecordsByMonth(int month) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -2,8 +2,6 @@ package com.qanairy.persistence;
 
 import java.util.List;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-
-import com.qanairy.models.Domain;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
@@ -11,7 +9,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * 
  */
-public abstract class Account extends AbstractVertexFrame {
+public abstract class Account extends AbstractVertexFrame{
 	
 	@Property("key")
 	public abstract String getKey();

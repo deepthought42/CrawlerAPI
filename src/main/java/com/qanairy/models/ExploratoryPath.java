@@ -4,12 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
-import com.qanairy.models.dto.PageElementRepository;
-import com.qanairy.models.dto.PathObjectRepository;
-import com.qanairy.persistence.IPageElement;
-import com.qanairy.persistence.IPathObject;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.persistence.edges.IPathEdge;
 
 
 /**

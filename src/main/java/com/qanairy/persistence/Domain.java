@@ -42,14 +42,14 @@ public abstract class Domain extends AbstractVertexFrame{
 	public abstract String getDiscoveryBrowserName();
 	
 	@Property("test_cnt")
-	public abstract int getDiscoveryTestCount();
+	public abstract int getTestCount();
 
 	@Property("test_cnt")
-	public abstract void setDiscoveryTestCount(int count);
+	public abstract void setTestCount(int count);
 	
 	/* ADJACENCIES */
 	@Adjacency(label="contains_test")
-	public abstract Iterable<Test> getTests();
+	public abstract List<Test> getTests();
 
 	@Adjacency(label="contains_test")
 	public abstract void setTests(List<Test> tests);
@@ -58,11 +58,11 @@ public abstract class Domain extends AbstractVertexFrame{
 	public abstract void addTest(Test test);
 	
 	@Adjacency(label="has_test_user")
-	public abstract Iterable<ITestUser> getTestUsers();
+	public abstract List<TestUser> getTestUsers();
 
 	@Adjacency(label="has_test_user")
-	public abstract void setTestUsers(List<ITestUser> test_users);
+	public abstract void removeTestUser(TestUser test_users);
 
 	@Adjacency(label="has_test_user")
-	public abstract void addTestUser(ITestUser test_user);
+	public abstract void addTestUser(TestUser test_user);
 }

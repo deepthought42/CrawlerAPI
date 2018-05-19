@@ -1,17 +1,10 @@
 package com.qanairy.models.dao.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
-import com.qanairy.models.TestUser;
 import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dto.TestUserRepository;
-import com.qanairy.persistence.DataAccessObject;
+import com.qanairy.models.dao.TestUserDao;
 import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.ITestUser;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.TestUser;
 
 public class DomainDaoImpl implements DomainDao{
 
@@ -31,14 +24,13 @@ public class DomainDaoImpl implements DomainDao{
 		domain_record.setLogoUrl(domain.getLogoUrl());
 		domain_record.setProtocol(domain.getProtocol());
 		domain_record.setDiscoveryBrowserName(domain.getDiscoveryBrowserName());
-		domain_record.setDiscoveryTestCount(domain.getDiscoveryTestCount());
+		domain_record.setTestCount(domain.getTestCount());
 		
-		TestUserRepository test_user_repo = new TestUserRepository();
-		List<TestUser> test_users = new ArrayList<TestUser>();
+		TestUserDao test_user_dao = new TestUserDaoImpl();
 		for(TestUser test_user : domain.getTestUsers()){
-			test_users.add(test_user_repo.save(test_user));
+			domain_record.addTestUser(test_user_dao.save(test_user));
 		}
-		domain_record.setTestUsers(test_users);
+
 		connection.close();
 		return domain_record;
 	}

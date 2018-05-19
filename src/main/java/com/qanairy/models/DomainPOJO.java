@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.Test;
+import com.qanairy.persistence.TestUser;
 
 
 /**
@@ -14,7 +15,7 @@ import com.qanairy.persistence.Test;
  * belong to this domain
  */
 @Component
-public class DomainPOJO {
+public class DomainPOJO extends Domain{
 	private String domain;
 	private List<Test> tests;
 	private int test_cnt;
@@ -34,8 +35,8 @@ public class DomainPOJO {
 		this.setUrl(null);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol("http");
-		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveryBrowser("");
+		this.test_users = new ArrayList<TestUser>();
+		this.setDiscoveryBrowserName("");
 		this.setTestCount(0);
 	}
 	
@@ -50,8 +51,8 @@ public class DomainPOJO {
 		this.setUrl(url);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
-		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveryBrowser("");
+		this.test_users = new ArrayList<TestUser>();
+		this.setDiscoveryBrowserName("");
 		this.setTestCount(0);
 	}
 	
@@ -67,8 +68,8 @@ public class DomainPOJO {
 		this.setLogoUrl(logo_url);
 		this.setTests(new ArrayList<Test>());
 		this.setProtocol(protocol);
-		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveryBrowser(browser);
+		this.test_users = new ArrayList<TestUser>();
+		this.setDiscoveryBrowserName(browser);
 		this.setTestCount(0);
 	}
 	
@@ -92,8 +93,8 @@ public class DomainPOJO {
 		this.setTests(tests);
 		this.setProtocol(protocol);
 		this.setLogoUrl(logo_url);
-		this.setTestUsers(new ArrayList<TestUser>());
-		this.setDiscoveryBrowser("");
+		this.test_users = new ArrayList<TestUser>();
+		this.setDiscoveryBrowserName("");
 		this.setTestCount(test_count);
 	}
 
@@ -124,31 +125,37 @@ public class DomainPOJO {
 		this.setTests(tests);
 		this.setProtocol(protocol);
 		this.setLogoUrl(logo_url);
-		this.setTestUsers(test_users);
-		this.setDiscoveryBrowser(browser_name);
+		this.test_users = test_users;
+		this.setDiscoveryBrowserName(browser_name);
 		this.setTestCount(test_count);
 	}
 	
+	@Override
 	public String getUrl() {
 		return domain;
 	}
 
+	@Override
 	public void setUrl(String domain) {
 		this.domain = domain;
 	}
 
+	@Override
 	public List<Test> getTests() {
 		return tests;
 	}
 
+	@Override
 	public void setTests(List<Test> tests) {
 		this.tests = tests;
 	}
 
+	@Override
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
 
+	@Override
 	public String getProtocol() {
 		return this.protocol;
 	}
@@ -172,6 +179,7 @@ public class DomainPOJO {
 	/**
 	 * @return the key
 	 */
+	@Override
 	public String getKey() {
 		return key;
 	}
@@ -179,43 +187,60 @@ public class DomainPOJO {
 	/**
 	 * @param key the key to set
 	 */
+	@Override
 	public void setKey(String key) {
 		this.key = key;
 	}
 
+	@Override
 	public String getLogoUrl() {
 		return logo_url;
 	}
 
+	@Override
 	public void setLogoUrl(String logo_url) {
 		this.logo_url = logo_url;
 	}
 
+	@Override
 	public List<TestUser> getTestUsers() {
 		return test_users;
 	}
-
-	public void setTestUsers(List<TestUser> test_users) {
-		this.test_users = test_users;
+	
+	@Override
+	public void removeTestUser(TestUser test_user) {
+		this.test_users.remove(test_user);
 	}
 	
-	public void addTestUsers(TestUser test_user) {
+	@Override
+	public void addTestUser(TestUser test_user) {
 		this.test_users.add(test_user);
 	}
 
-	public String getDiscoveryBrowser() {
+	@Override
+	public String getDiscoveryBrowserName() {
 		return discovery_browser;
 	}
 
-	public void setDiscoveryBrowser(String discovery_browser) {
+	@Override
+	public void setDiscoveryBrowserName(String discovery_browser) {
 		this.discovery_browser = discovery_browser;
 	}
 
+	@Override
 	public int getTestCount() {
 		return test_cnt;
 	}
 
+	@Override
 	public void setTestCount(int test_cnt) {
 		this.test_cnt = test_cnt;
+	}
+
+
+	@Override
+	public void addTest(Test test) {
+		// TODO Auto-generated method stub
+		
 	}
 }

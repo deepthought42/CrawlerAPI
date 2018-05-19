@@ -2,10 +2,12 @@ package com.qanairy.models;
 
 import java.util.List;
 
+import com.qanairy.persistence.Group;
+
 /**
  * Defines a name and color used to group {@link Test}s
  */
-public class Group {
+public class GroupPOJO extends Group{
 	private String key;
 	private String name;
 	private String description;
@@ -17,7 +19,7 @@ public class Group {
 	 * @param test		{@link List} of {@link Test}s
 	 * @param description describes group
 	 */
-	public Group(String name){
+	public GroupPOJO(String name){
 		this.setName(name);
 		this.setDescription("");
 		this.setKey(null);
@@ -30,7 +32,7 @@ public class Group {
 	 * @param test		{@link List} of {@link Test}s
 	 * @param description describes group
 	 */
-	public Group(String key, String name, String desc){
+	public GroupPOJO(String key, String name, String desc){
 		this.setName(name);
 		this.setDescription(desc);
 		this.setKey(key);
@@ -42,7 +44,7 @@ public class Group {
 	 * @param test		{@link List} of {@link Test}s
 	 * @param description describes group
 	 */
-	public Group(String name, String desc){
+	public GroupPOJO(String name, String desc){
 		this.setName(name);
 		this.setDescription(desc);
 		this.setKey(null);

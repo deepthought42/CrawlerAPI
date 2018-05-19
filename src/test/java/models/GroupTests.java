@@ -2,9 +2,12 @@ package models;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import com.qanairy.models.Group;
+
+import com.qanairy.models.GroupPOJO;
+import com.qanairy.models.dao.GroupDao;
+import com.qanairy.models.dao.impl.GroupDaoImpl;
 import com.qanairy.models.dto.GroupRepository;
-import com.qanairy.persistence.IGroup;
+import com.qanairy.persistence.Group;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 /**
@@ -17,12 +20,12 @@ public class GroupTests {
 	 */
 	@Test(groups="Regression")
 	public void groupCreateRecord(){
-		Group group = new Group("Regression");
-		GroupRepository group_repo = new GroupRepository();
+		Group group = new GroupPOJO("Regression");
+		GroupDao group_dao = new GroupDaoImpl();
 
-		IGroup created_group = group_repo.save(new OrientConnectionFactory(), group);
+		Group created_group = group_dao.save(group);
 		
-		Assert.assertTrue(created_group.getKey().equals(group_repo.generateKey(group)));
+		Assert.assertEquals(created_group.getKey(),group.getKey());
 		Assert.assertTrue(created_group.getDescription().equals(group.getDescription()));
 		Assert.assertTrue(created_group.getName().equals(group.getName()));
 	}

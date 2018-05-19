@@ -2,7 +2,6 @@ package com.qanairy.models.dao.impl;
 
 import java.util.NoSuchElementException;
 
-import com.qanairy.models.Test;
 import com.qanairy.models.dao.AttributeDao;
 import com.qanairy.models.dao.PageElementDao;
 import com.qanairy.models.dao.RuleDao;

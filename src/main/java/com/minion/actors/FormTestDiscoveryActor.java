@@ -43,16 +43,16 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			Test path = null;
+			Test test = null;
 			if(acct_msg.getData() instanceof Test){
-				path = (Test)acct_msg.getData();
+				test = (Test)acct_msg.getData();
 			}
 			else if(acct_msg.getData() instanceof Test){
-				path = ((Test)acct_msg.getData()).getTest();
+				test = ((Test)acct_msg.getData());
 			}
 			
 			//get first page in path
-			PageState page = path.firstPage();
+			PageState page = test.firstPage();
 
 			int cnt = 0;
 		  	Browser browser = null;
@@ -67,7 +67,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				cnt++;
 			}	
 
-			Page current_page = Crawler.crawlTest(path, browser);
+			PageState current_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
 
 		  	List<Form> forms = Browser.extractAllForms(current_page, browser);
 		  	List<Test> form_tests = new ArrayList<Test>();
@@ -502,7 +502,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					List<Test> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 					for(Test curr_test : path_list){
 						Test clone_test = Test.clone(test);
-						clone_test.getTest().addAll(curr_test.getTest());
 						form_tests.add(clone_test);
 					}
 				}

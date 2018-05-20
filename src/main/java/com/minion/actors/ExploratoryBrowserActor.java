@@ -119,7 +119,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 					
-						if(ExploratoryPath.hasCycle(test, result_page)){
+						if(ExploratoryPath.hasCycle(test.getPathKeys(), result_page)){
 					  		test.setIsUseful(false);
 					  		continue;
 					  	}

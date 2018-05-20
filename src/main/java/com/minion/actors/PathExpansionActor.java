@@ -158,7 +158,7 @@ public class PathExpansionActor extends UntypedActor {
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					
-					ExploratoryPath action_path = new ExploratoryPath(new_test.getPath(), action_list);
+					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 
 					//if one exists with one of the actions in the action_list

@@ -42,6 +42,7 @@ public class AccountPOJO extends Account{
 		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
 		this.setTestRecords(new ArrayList<TestRecord>());
 		this.setOnboardedSteps(new ArrayList<String>());
+		this.setKey(generateKey());
 	}
 	
 	/**
@@ -62,6 +63,7 @@ public class AccountPOJO extends Account{
 		this.setDiscoveryRecords(discovery_records);
 		this.setTestRecords(test_records);
 		this.setOnboardedSteps(onboarded_steps);
+		this.setKey(generateKey());
 	}
 
 	/**
@@ -74,12 +76,11 @@ public class AccountPOJO extends Account{
 	 * @param last_domain_url
 	 * @param discovery_records
 	 */
-	public AccountPOJO(String key, String org_name, String customer_token, String subscription_token, 
+	public AccountPOJO(String org_name, String customer_token, String subscription_token, 
 					List<Domain> domains, 
 					String last_domain_url, List<DiscoveryRecord> discovery_records,
 					List<TestRecord> test_records, List<String> onboarded_steps){
 		
-		this.setKey(key);
 		this.setOrgName(org_name);
 		this.setCustomerToken(customer_token);
 		this.setSubscriptionToken(subscription_token);
@@ -88,6 +89,7 @@ public class AccountPOJO extends Account{
 		this.setDiscoveryRecords(discovery_records);
 		this.setTestRecords(test_records);
 		this.setOnboardedSteps(onboarded_steps);
+		this.setKey(generateKey());
 	}
 			
 	public String getOrgName() {
@@ -119,7 +121,7 @@ public class AccountPOJO extends Account{
 	}
 
 	public void setKey(String key) {
-		this.key = key;
+		this.key = generateKey();
 	}
 
 	public void setLastDomain(String domain_url) {
@@ -205,5 +207,13 @@ public class AccountPOJO extends Account{
 
 	public void addTestRecord(TestRecord record) {
 		this.test_records.add(record);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String generateKey() {
+		return getOrgName();
 	}
 }

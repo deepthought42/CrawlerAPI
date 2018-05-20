@@ -9,7 +9,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * 
  */
-public abstract class TestRecord extends AbstractVertexFrame {
+public abstract class TestRecord extends AbstractVertexFrame implements Persistable{
 	@Property("key")
 	public abstract String getKey();
 	

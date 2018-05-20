@@ -11,10 +11,6 @@ import com.qanairy.persistence.OrientConnectionFactory;
  */
 public class DiscoveryRecordDaoImpl implements DiscoveryRecordDao {
 	
-	public String generateKey(DiscoveryRecord discovery_record) {
-		return discovery_record.getDomainUrl()+":"+discovery_record.getStartTime().toString();
-	}
-	
 	/**
 	 * {@inheritDoc}
 	 */

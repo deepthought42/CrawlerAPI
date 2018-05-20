@@ -11,10 +11,15 @@ public class ScreenshotSetPOJO extends ScreenshotSet {
 	private String full_screenshot;
 	private String viewport_screenshot;
 	
+	public String generateKey(ScreenshotSet obj) {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(obj.getFullScreenshot())+":"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(obj.getViewportScreenshot());
+	}
+	
 	public ScreenshotSetPOJO(String full, String viewport, String browser_name){
 		this.full_screenshot = full;
 		this.viewport_screenshot = viewport;
 		this.setBrowser(browser_name);
+		setKey(generateKey());
 	}
 	
 	public ScreenshotSetPOJO(String key, String full, String viewport, String browser_name){
@@ -22,6 +27,7 @@ public class ScreenshotSetPOJO extends ScreenshotSet {
 		this.full_screenshot = full;
 		this.viewport_screenshot = viewport;
 		this.setBrowser(browser_name);
+		setKey(generateKey());
 	}
 	
 	public String getFullScreenshot() {
@@ -41,7 +47,7 @@ public class ScreenshotSetPOJO extends ScreenshotSet {
 	}
 
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
 	public void setKey(String key) {
@@ -54,5 +60,9 @@ public class ScreenshotSetPOJO extends ScreenshotSet {
 
 	public void setBrowser(String browser_name) {
 		this.browser_name = browser_name;
+	}
+	
+	public String generateKey() {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getFullScreenshot())+":"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getViewportScreenshot());
 	}
 }

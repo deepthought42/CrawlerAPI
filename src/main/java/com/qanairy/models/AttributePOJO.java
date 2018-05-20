@@ -29,13 +29,13 @@ public class AttributePOJO extends Attribute {
 		
 		this.name = attrName;
 		this.vals = vals;
-		setKey(null);
+		setKey(generateKey());
 	}
 	
 	public AttributePOJO(String key, String attrName, List<String> vals){
-		setKey(key);
 		this.name = attrName;
 		this.vals = vals;
+		this.setKey(generateKey());
 	}
 	
 	/**
@@ -125,5 +125,9 @@ public class AttributePOJO extends Attribute {
 	
 	public void setVals(List<String> val_list){
 		this.vals = val_list;
+	}
+	
+	public String generateKey() {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getVals().toString());
 	}
 }

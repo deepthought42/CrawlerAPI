@@ -51,6 +51,7 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		setCssValues(new HashMap<String,String>());
 		setAttributes(new ArrayList<Attribute>());
 		setRules(new ArrayList<Rule>());
+		setKey(generateKey());
 	}
 	
 	/**
@@ -79,37 +80,7 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		setText(text);
 		setCssValues(css_map);
 		setRules(new ArrayList<Rule>());
-		setKey(null);
-	}
-	
-	/**
-	 * 
-	 * @param key
-	 * @param text
-	 * @param xpath
-	 * @param name
-	 * @param attributes
-	 * @param css_map
-	 * 
-	 * @pre attributes != null
-	 * @pre css_map != null
-	 * @pre xpath != null
-	 * @pre name != null
-	 */
-	public PageElementPOJO(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
-		assert attributes != null;
-		assert css_map != null;
-		assert xpath != null;
-		assert name != null;
-		
-		setType("PageElement");
-		setName(name);
-		setXpath(xpath);
-		setAttributes(attributes);
-		setText(text);
-		setCssValues(css_map);
-		setRules(new ArrayList<Rule>());
-		setKey(key);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -127,7 +98,7 @@ public class PageElementPOJO extends PageElement implements PathObject{
 	 * @pre xpath != null
 	 * @pre name != null
 	 */
-	public PageElementPOJO(String key, String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
+	public PageElementPOJO(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -140,7 +111,7 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		setText(text);
 		setCssValues(css_map);
 		setRules(rules);
-		setKey(key);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -247,7 +218,7 @@ public class PageElementPOJO extends PageElement implements PathObject{
 	}
 	
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 	
 	public void setKey(String key) {
@@ -438,5 +409,15 @@ public class PageElementPOJO extends PageElement implements PathObject{
 	@Override
 	public void addAttribute(Attribute attribute) {
 		this.attributes.add(attribute);
+	}
+	
+	/**
+	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
+	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * 
+	 * @return
+	 */
+	public String generateKey() {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath());   
 	}
 }

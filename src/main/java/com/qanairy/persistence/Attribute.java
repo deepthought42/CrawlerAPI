@@ -8,7 +8,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * Represents {@link Attribute} to be stored in database
  */
-public abstract class Attribute extends AbstractVertexFrame {
+public abstract class Attribute extends AbstractVertexFrame implements Persistable {
 	@Property("key")
 	public abstract String getKey();
 	

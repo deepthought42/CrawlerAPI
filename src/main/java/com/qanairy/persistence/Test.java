@@ -14,7 +14,7 @@ import com.syncleus.ferma.annotations.Property;
  * Test object data access interface for use with tinkerpop/frames
  *
  */
-public abstract class Test extends AbstractVertexFrame{
+public abstract class Test extends AbstractVertexFrame implements Persistable{
 	/**
 	 * @return the key for the current test
 	 */

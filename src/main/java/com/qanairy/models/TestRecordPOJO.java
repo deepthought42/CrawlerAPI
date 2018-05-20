@@ -32,28 +32,19 @@ public class TestRecordPOJO extends TestRecord {
 	public TestRecordPOJO(Date ran_at, Boolean passes, String browser_name){
 		this.setRanAt(ran_at);
 		this.setResult(null);
-		this.setKey(null);
 		this.setRunTime(-1L);
 		this.setPassing(passes);
 		this.setBrowser(browser_name);
+		setKey(generateKey());
 	}
 	
 	public TestRecordPOJO(Date ran_at, Boolean passes, String browser_name, PageState result, long run_time){
 		this.setRanAt(ran_at);
 		this.setResult(result);
-		this.setKey(null);
 		this.setRunTime(run_time);
 		this.setPassing(passes);
 		this.setBrowser(browser_name);
-	}
-	
-	public TestRecordPOJO(String key, Date ran_at, Boolean passes, String browser_name, PageState result, long run_time){
-		this.setRanAt(ran_at);
-		this.setResult(result);
-		this.setKey(key);
-		this.setRunTime(run_time);
-		this.setPassing(passes);
-		this.setBrowser(browser_name);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -100,7 +91,7 @@ public class TestRecordPOJO extends TestRecord {
 	
 	@Override
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
 	@Override
@@ -126,5 +117,15 @@ public class TestRecordPOJO extends TestRecord {
 	@Override
 	public void setBrowser(String browser) {
 		this.browser = browser;
+	}
+	
+	
+	/**
+	 * Generates a key for this object
+	 * @return generated key
+	 */
+	@Override
+	public String generateKey() {
+		return getRanAt().toString()+"::"+record.getPassing();
 	}
 }

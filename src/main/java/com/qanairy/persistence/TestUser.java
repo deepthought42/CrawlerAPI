@@ -3,7 +3,7 @@ package com.qanairy.persistence;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Property;
 
-public abstract class TestUser extends AbstractVertexFrame{
+public abstract class TestUser extends AbstractVertexFrame implements Persistable{
 	
 	@Property("key")
 	public abstract String getKey();

@@ -56,6 +56,7 @@ public class PageStatePOJO extends PageState {
 		this.element_counts = new HashMap<String, Integer>();
 		this.setBrowserScreenshots(new ArrayList<ScreenshotSet>());
 		this.setType(PageState.class.getSimpleName());
+		setKey(generateKey());
 	}
 	
 	/**
@@ -84,8 +85,9 @@ public class PageStatePOJO extends PageState {
 		this.setElementCounts(countTags(elements));
 		this.setLandable(false);
 		this.setImageWeight(0);
-		this.setKey(null);
 		this.setType(PageState.class.getSimpleName());
+		setKey(generateKey());
+
 	}
 	
 	/**
@@ -111,8 +113,8 @@ public class PageStatePOJO extends PageState {
 		this.setElementCounts(countTags(elements));
 		this.setLandable(false);
 		this.setImageWeight(0);
-		this.setKey(key);
 		this.setType(PageState.class.getSimpleName());
+		setKey(generateKey());
 	}
 	
 	/**
@@ -137,8 +139,8 @@ public class PageStatePOJO extends PageState {
 		this.setElementCounts(countTags(elements));
 		this.setLandable(isLandable);
 		this.setImageWeight(0);
-		this.setKey(null);
 		this.setType(PageState.class.getSimpleName());
+		setKey(generateKey());
 	}
 	
 	/**
@@ -387,7 +389,7 @@ public class PageStatePOJO extends PageState {
 	}
 	
 	 public String getKey() {
-		 return key;
+		 return this.key;
 	 }
 
 	 public void setKey(String key) {
@@ -490,5 +492,14 @@ public class PageStatePOJO extends PageState {
 	@Override
 	public void addElement(PageElement element) {
 		this.elements.add(element);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @pre page != null
+	 */
+	public String generateKey() {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getSrc());   
 	}
 }

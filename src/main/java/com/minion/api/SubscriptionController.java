@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.Account;
 import com.qanairy.models.StripeClient;
+import com.qanairy.persistence.Account;
 import com.qanairy.services.AccountService;
 
 import com.stripe.model.Plan;
@@ -40,7 +40,6 @@ public class SubscriptionController {
     	Account acct = accountService.find(username);
     	Plan new_plan = Plan.retrieve(plan);
     	Subscription subscription = Subscription.retrieve(acct.getSubscriptionToken());
-
     	
     	Map<String, Object> item = new HashMap<>();
     	item.put("id", subscription.getSubscriptionItems().getData().get(0).getId());

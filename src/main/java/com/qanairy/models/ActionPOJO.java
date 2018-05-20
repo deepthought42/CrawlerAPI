@@ -21,9 +21,9 @@ public class ActionPOJO extends Action{
 	 */
 	public ActionPOJO(){
 		setType("Action");
-		this.name = null;
-		this.key = null;
+		this.name = "";
 		this.value = "";
+		this.setKey(generateKey());
 	}
 	
 	/**
@@ -34,6 +34,7 @@ public class ActionPOJO extends Action{
 		setType("Action");
 		this.name = action_name;
 		this.value = "";
+		this.setKey(generateKey());
 	}
 	
 	/**
@@ -44,6 +45,7 @@ public class ActionPOJO extends Action{
 		setType("Action");
 		this.name = action_name;
 		this.value = value;
+		this.setKey(generateKey());
 	}
 	
 	/**
@@ -107,5 +109,13 @@ public class ActionPOJO extends Action{
 	@Override
 	public void setType(String type) {
 		this.type = type;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String generateKey() {
+		return getName() + ":"+ getValue().hashCode();
 	}
 }

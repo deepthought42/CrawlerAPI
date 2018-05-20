@@ -8,7 +8,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * Representation of a {@link DiscoveryRecord} in graph database
  */
-public abstract class DiscoveryRecord extends AbstractVertexFrame {
+public abstract class DiscoveryRecord extends AbstractVertexFrame implements Persistable{
 
 	@Property("key")
 	public abstract String getKey();

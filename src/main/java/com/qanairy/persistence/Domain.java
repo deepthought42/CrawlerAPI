@@ -9,7 +9,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * Represents an {@link Domain} record in OrientDB database
  */
-public abstract class Domain extends AbstractVertexFrame{
+public abstract class Domain extends AbstractVertexFrame implements Persistable{
 
 	@Property("key")
 	public abstract String getKey();

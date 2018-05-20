@@ -10,7 +10,7 @@ import com.qanairy.persistence.PathObject;
 /**
  * 
  */
-public abstract class PageElement extends AbstractVertexFrame implements PathObject{
+public abstract class PageElement extends AbstractVertexFrame implements PathObject, Persistable{
 	@Property("key")
 	public abstract String getKey();
 	

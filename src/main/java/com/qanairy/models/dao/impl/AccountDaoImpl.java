@@ -6,6 +6,7 @@ import java.util.NoSuchElementException;
 import com.qanairy.models.dao.AccountDao;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.TestRecord;
 
@@ -106,5 +107,11 @@ public class AccountDaoImpl implements AccountDao{
 	public List<TestRecord> getTestRecordsByMonth(int month) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void removeDomain(Account account, Domain domain) {
+		Account acct = find(account.getKey());
+		acct.getDomains().remove(domain);
 	}
 }

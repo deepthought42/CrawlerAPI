@@ -14,15 +14,9 @@ public class TestUserPOJO extends TestUser {
 	public TestUserPOJO(){}
 	
 	public TestUserPOJO(String username, String password, String role){
-		this.setKey(null);
 		setUsername(username);
 		setPassword(password);
-	}
-	
-	public TestUserPOJO(String key, String username, String password, String role){
-		this.setKey(key);
-		setUsername(username);
-		setPassword(password);
+		setKey(generateKey());
 	}
 	
 	public String getUsername(){
@@ -57,5 +51,14 @@ public class TestUserPOJO extends TestUser {
 	@Override
 	public void setPassword(String password) {
 		this.password = password;
+	}
+	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String generateKey() {
+		return getUsername()+"::"+getPassword();
 	}
 }

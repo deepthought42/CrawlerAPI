@@ -59,15 +59,4 @@ public class PageStateDaoImpl implements PageStateDao {
 		connection.close();
 		return page_state;
 	}
-
-
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @pre page != null
-	 */
-	public String generateKey(PageState page) {
-		assert page != null;
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page.getSrc());   
-	}
 }

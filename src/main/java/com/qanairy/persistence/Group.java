@@ -6,7 +6,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * Represents a {@link Group} to be stored in orientDB database
  */
-public abstract class Group extends AbstractVertexFrame {
+public abstract class Group extends AbstractVertexFrame implements Persistable{
 	@Property("name")
 	public abstract String getName();
 	

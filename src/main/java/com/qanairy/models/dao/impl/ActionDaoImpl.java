@@ -45,11 +45,4 @@ public class ActionDaoImpl implements ActionDao {
 		connection.close();
 		return attr;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey(Action action) {
-		return action.getName() + ":"+ action.getValue().hashCode();
-	}
 }

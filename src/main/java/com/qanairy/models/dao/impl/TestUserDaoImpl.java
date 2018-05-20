@@ -57,11 +57,4 @@ public class TestUserDaoImpl implements TestUserDao{
 		connection.close();
 		return test_user;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey(TestUser test_user) {
-		return test_user.getUsername()+"::"+test_user.getPassword();
-	}
 }

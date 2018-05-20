@@ -40,11 +40,4 @@ public class DomainDaoImpl implements DomainDao{
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey(Domain domain) {
-		return domain.getUrl().toString();
-	}
 }

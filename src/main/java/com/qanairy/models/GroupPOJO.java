@@ -20,9 +20,9 @@ public class GroupPOJO extends Group{
 	 * @param description describes group
 	 */
 	public GroupPOJO(String name){
-		this.setName(name);
-		this.setDescription("");
-		this.setKey(null);
+		setName(name);
+		setDescription("");
+		setKey(generateKey());
 	}
 	
 	/**
@@ -32,22 +32,10 @@ public class GroupPOJO extends Group{
 	 * @param test		{@link List} of {@link Test}s
 	 * @param description describes group
 	 */
-	public GroupPOJO(String key, String name, String desc){
-		this.setName(name);
-		this.setDescription(desc);
-		this.setKey(key);
-	}
-	/**
-	 * Construct a new grouping	
-	 * 
-	 * @param name 		name of the group
-	 * @param test		{@link List} of {@link Test}s
-	 * @param description describes group
-	 */
 	public GroupPOJO(String name, String desc){
-		this.setName(name);
-		this.setDescription(desc);
-		this.setKey(null);
+		setName(name);
+		setDescription(desc);
+		setKey(generateKey());
 	}
 
 	public String getName() {
@@ -60,7 +48,7 @@ public class GroupPOJO extends Group{
 	}
 
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
 	public void setKey(String key) {
@@ -74,4 +62,13 @@ public class GroupPOJO extends Group{
 	public String getDescription() {
 		return this.description;
 	}
+	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public String generateKey() {
+		return "group:"+getName().toLowerCase();
+	}
+	
 }

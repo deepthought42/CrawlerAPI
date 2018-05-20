@@ -32,12 +32,13 @@ public class DomainPOJO extends Domain{
 	 * @param organization
 	 */
 	public DomainPOJO(){
-		this.setUrl(null);
-		this.setTests(new ArrayList<Test>());
-		this.setProtocol("http");
-		this.test_users = new ArrayList<TestUser>();
-		this.setDiscoveryBrowserName("");
-		this.setTestCount(0);
+		setUrl(null);
+		setTests(new ArrayList<Test>());
+		setProtocol("http");
+		test_users = new ArrayList<TestUser>();
+		setDiscoveryBrowserName("");
+		setTestCount(0);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -48,12 +49,13 @@ public class DomainPOJO extends Domain{
 	 */
 	@Deprecated
 	public DomainPOJO(String url, String protocol){
-		this.setUrl(url);
-		this.setTests(new ArrayList<Test>());
-		this.setProtocol(protocol);
-		this.test_users = new ArrayList<TestUser>();
-		this.setDiscoveryBrowserName("");
-		this.setTestCount(0);
+		setUrl(url);
+		setTests(new ArrayList<Test>());
+		setProtocol(protocol);
+		test_users = new ArrayList<TestUser>();
+		setDiscoveryBrowserName("");
+		setTestCount(0);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -64,13 +66,14 @@ public class DomainPOJO extends Domain{
 	 * @param logo_url url of logo image file
 	 */
 	public DomainPOJO( String protocol, String url, String browser, String logo_url){
-		this.setUrl(url);
-		this.setLogoUrl(logo_url);
-		this.setTests(new ArrayList<Test>());
-		this.setProtocol(protocol);
-		this.test_users = new ArrayList<TestUser>();
-		this.setDiscoveryBrowserName(browser);
-		this.setTestCount(0);
+		setUrl(url);
+		setLogoUrl(logo_url);
+		setTests(new ArrayList<Test>());
+		setProtocol(protocol);
+		test_users = new ArrayList<TestUser>();
+		setDiscoveryBrowserName(browser);
+		setTestCount(0);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -82,20 +85,19 @@ public class DomainPOJO extends Domain{
 	 * @param protocol
 	 * @param test_count
 	 */
-	public DomainPOJO(	String key, 
-					String domain_url,
+	public DomainPOJO(String domain_url,
 					String logo_url,
 					List<Test> tests,
 					String protocol,
 					int test_count){
-		this.setKey(key);
-		this.setUrl(domain_url);
-		this.setTests(tests);
-		this.setProtocol(protocol);
-		this.setLogoUrl(logo_url);
-		this.test_users = new ArrayList<TestUser>();
-		this.setDiscoveryBrowserName("");
-		this.setTestCount(test_count);
+		setUrl(domain_url);
+		setTests(tests);
+		setProtocol(protocol);
+		setLogoUrl(logo_url);
+		test_users = new ArrayList<TestUser>();
+		setDiscoveryBrowserName("");
+		setTestCount(test_count);
+		setKey(generateKey());
 	}
 
 	
@@ -112,22 +114,21 @@ public class DomainPOJO extends Domain{
 	 * @param discovered_test_count
 	 * @param browser_name
 	 */
-	public DomainPOJO(	String key, 
-					String domain_url,
+	public DomainPOJO(String domain_url,
 					String logo_url,
 					List<Test> tests,
 					String protocol,
 					List<TestUser> test_users,
 					String browser_name,
 					int test_count){
-		this.setKey(key);
-		this.setUrl(domain_url);
-		this.setTests(tests);
-		this.setProtocol(protocol);
-		this.setLogoUrl(logo_url);
-		this.test_users = test_users;
-		this.setDiscoveryBrowserName(browser_name);
-		this.setTestCount(test_count);
+		setUrl(domain_url);
+		setTests(tests);
+		setProtocol(protocol);
+		setLogoUrl(logo_url);
+		test_users = test_users;
+		setDiscoveryBrowserName(browser_name);
+		setTestCount(test_count);
+		setKey(generateKey());
 	}
 	
 	@Override
@@ -181,7 +182,7 @@ public class DomainPOJO extends Domain{
 	 */
 	@Override
 	public String getKey() {
-		return key;
+		return this.key;
 	}
 
 	/**
@@ -240,7 +241,14 @@ public class DomainPOJO extends Domain{
 
 	@Override
 	public void addTest(Test test) {
-		// TODO Auto-generated method stub
-		
+		this.tests.add(test);
+	}
+	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public String generateKey() {
+		return getUrl().toString();
 	}
 }

@@ -46,12 +46,4 @@ public class TestRecordDaoImpl implements TestRecordDao {
 		connection.close();
 		return test_record;
 	}
-	
-	/**
-	 * Generates a key for this object
-	 * @return generated key
-	 */
-	public String generateKey(TestRecord record) {
-		return record.getRanAt().toString()+"::"+record.getPassing();
-	}
 }

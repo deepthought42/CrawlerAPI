@@ -3,7 +3,7 @@ package com.qanairy.persistence;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Property;
 
-public abstract class Action extends AbstractVertexFrame implements PathObject{
+public abstract class Action extends AbstractVertexFrame implements PathObject, Persistable{
 	@Property("key")
 	public abstract String getKey();
 	

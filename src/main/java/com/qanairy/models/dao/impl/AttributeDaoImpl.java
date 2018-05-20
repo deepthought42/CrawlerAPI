@@ -6,10 +6,6 @@ import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.OrientConnectionFactory;
 
 public class AttributeDaoImpl implements AttributeDao {
-
-	public String generateKey(Attribute attr) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(attr.getVals().toString());
-	}
 	
 	@Override
 	public Attribute save(Attribute attribute) {

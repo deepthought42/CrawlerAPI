@@ -74,14 +74,4 @@ public class PageElementDaoImpl implements PageElementDao {
 		connection.close();
 		return attr;
 	}
-
-	/**
-	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
-	 * as easy identity of {@link Test} when generated in the wild via discovery
-	 * 
-	 * @return
-	 */
-	public String generateKey(PageElement page_elem) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(page_elem.getXpath());   
-	}
 }

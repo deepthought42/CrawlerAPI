@@ -107,19 +107,4 @@ public class TestDaoImpl implements TestDao {
 		connection.close();
 		return test;
 	}
-	
-	/**
-	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
-	 * as easy identity of {@link Test} when generated in the wild via discovery
-	 * 
-	 * @return
-	 */
-	public String generateKey(Test test) {
-		String path_key =  String.join("::", test.getPathKeys());
-		
-		PageStateDaoImpl page_dao = new PageStateDaoImpl();
-		path_key += page_dao.generateKey(test.getResult());
-		
-		return path_key;
-	}
 }

@@ -11,7 +11,6 @@ import org.joda.time.DateTime;
 
 import com.qanairy.persistence.Group;
 import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.Path;
 import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
@@ -53,6 +52,7 @@ public class TestPOJO extends Test{
 		this.setLastRunTimestamp(null);
 		this.setIsRunning(false);
 		this.setBrowserStatuses(new HashMap<String, Boolean>());
+		setKey(generateKey());
 	}
 	
 	/**
@@ -78,22 +78,14 @@ public class TestPOJO extends Test{
 		setSpansMultipleDomains(false);
 		setGroups(new ArrayList<Group>());
 		setLastRunTimestamp(null);
-		setKey(null);
 		setName(name);
 		setBrowserStatuses(new HashMap<String, Boolean>());
 		setIsRunning(false);
+		setKey(generateKey());
 	}
-	
-	/**
-	 * Constructs a test object
-	 * 
-	 * @param path {@link Path} that will be used to determine what the expected path should be
- 	 * @param result
-	 * @param domain
-	 * 
-	 * @pre path != null
-	 */
-	public TestPOJO(String key, List<String> path_keys, List<PathObject> path_objects, PageState result, String name){
+
+
+	public TestPOJO(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running){
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -107,31 +99,10 @@ public class TestPOJO extends Test{
 		setSpansMultipleDomains(false);
 		setGroups(new ArrayList<Group>());
 		setLastRunTimestamp(null);
-		setKey(key);
 		setName(name);
 		setBrowserStatuses(new HashMap<String, Boolean>());
 		setIsRunning(false);
-	}
-
-
-	public TestPOJO(String key, List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running){
-		assert path_keys != null;
-		assert !path_keys.isEmpty();
-		assert path_objects != null;
-		assert !path_objects.isEmpty();
-		
-		setPathKeys(path_keys);
-		setPathObjects(path_objects);
-		setResult(result);
-		setRecords(new ArrayList<TestRecord>());
-		setCorrect(null);
-		setSpansMultipleDomains(false);
-		setGroups(new ArrayList<Group>());
-		setLastRunTimestamp(null);
-		setKey(key);
-		setName(name);
-		setBrowserStatuses(new HashMap<String, Boolean>());
-		setIsRunning(false);
+		setKey(generateKey());
 	}
 	
 	/**
@@ -332,5 +303,18 @@ public class TestPOJO extends Test{
 
 	private void setPathObjects(List<PathObject> path_objects) {
 		this.path_objects = path_objects;
+	}
+	
+	/**
+	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
+	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * 
+	 * @return
+	 */
+	public String generateKey() {
+		String path_key =  String.join("::", getPathKeys());
+		path_key += getResult().getKey();
+		
+		return path_key;
 	}
 }

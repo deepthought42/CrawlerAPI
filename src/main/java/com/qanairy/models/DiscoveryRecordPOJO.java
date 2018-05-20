@@ -22,7 +22,6 @@ public class DiscoveryRecordPOJO extends DiscoveryRecord {
 		assert browser_name != null;
 		assert domain_url != null;
 		
-		setKey("");
 		setStartTime(started_timestamp);
 		setBrowserName(browser_name);
 		setDomainUrl(domain_url);
@@ -30,6 +29,7 @@ public class DiscoveryRecordPOJO extends DiscoveryRecord {
 		setTotalPathCount(0);
 		setExaminedPathCount(0);
 		setTestCount(0);
+		setKey(generateKey());
 	}
 	
 	public DiscoveryRecordPOJO(Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
@@ -39,7 +39,6 @@ public class DiscoveryRecordPOJO extends DiscoveryRecord {
 		assert test_cnt > -1;
 		assert total_path_count > 0;
 		
-		setKey(null);
 		setStartTime(started_timestamp);
 		setBrowserName(browser_name);
 		setDomainUrl(domain_url);
@@ -47,32 +46,17 @@ public class DiscoveryRecordPOJO extends DiscoveryRecord {
 		setTotalPathCount(total_cnt);
 		setExaminedPathCount(examined_cnt);
 		setTestCount(test_cnt);
-	}
-	
-	public DiscoveryRecordPOJO(String key, Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
-		assert key != null;
-		assert started_timestamp != null;
-		assert browser_name != null;
-		assert domain_url != null;
-		
-		setKey(key);
-		setStartTime(started_timestamp);
-		setBrowserName(browser_name);
-		setDomainUrl(domain_url);
-		setLastPathRanAt(last_path_ran);
-		setTotalPathCount(total_cnt);
-		setExaminedPathCount(examined_cnt);
-		setTestCount(test_cnt);
+		setKey(generateKey());
 	}
 
 	@Override
 	public String getKey() {
-		return key;
+		return generateKey();
 	}
 	
 	@Override
 	public void setKey(String key) {
-		this.key = key;
+		this.key = generateKey();
 	}
 	
 	@Override
@@ -143,5 +127,9 @@ public class DiscoveryRecordPOJO extends DiscoveryRecord {
 	@Override
 	public void setTestCount(int cnt){
 		this.test_cnt = cnt;
+	}
+	
+	public String generateKey() {
+		return getDomainUrl()+":"+getStartTime().toString();
 	}
 }

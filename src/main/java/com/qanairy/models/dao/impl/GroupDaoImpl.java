@@ -34,12 +34,4 @@ public class GroupDaoImpl implements GroupDao {
 		connection.close();
 		return group;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public String generateKey(Group group) {
-		return "group:"+group.getName().toLowerCase();
-	}
-	
 }

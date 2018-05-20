@@ -12,7 +12,7 @@ import java.util.Map;
  * Frames interface implementation of {@link PagePOJO}
  *
  */
-public abstract class PageState extends AbstractVertexFrame implements PathObject {
+public abstract class PageState extends AbstractVertexFrame implements PathObject, Persistable {
 	@Property("key")
 	public abstract String getKey();
 	

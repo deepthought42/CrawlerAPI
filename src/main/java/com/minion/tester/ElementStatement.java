@@ -1,9 +1,11 @@
 package com.minion.tester;
 
 import org.slf4j.LoggerFactory;
+
+import com.qanairy.persistence.PageElement;
+
 import org.slf4j.Logger;
 
-import com.qanairy.models.PageElement;
 
 /**
  * Generates statements for finding an element

@@ -46,10 +46,12 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
+import com.qanairy.models.AttributePOJO;
 import com.qanairy.models.PageStatePOJO;
 import com.qanairy.models.ScreenshotSetPOJO;
 import com.qanairy.models.dao.PageElementDao;
 import com.qanairy.models.dao.impl.PageElementDaoImpl;
+import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.ScreenshotSet;
@@ -438,7 +440,7 @@ public class Browser {
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
 					PageElementDao page_elem_repo = new PageElementDaoImpl();
 					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
-					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), page_elem_repo.generateKey(tag));	
+					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
 					tag.setScreenshot(screenshot);
 
 					elementList.add(tag);
@@ -1001,7 +1003,7 @@ public class Browser {
 				attributeVals = new String[0];
 			}
 			
-			attr_lst.add(new Attribute(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
+			attr_lst.add(new AttributePOJO(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
 		}
 		 return attr_lst;
 	}
@@ -1022,6 +1024,31 @@ public class Browser {
 	public static void outlineElement(PageElement page_element, WebDriver driver) {
 		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 */
+	public static Map<String, String> loadCssProperties(WebElement element){
+		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
+		Map<String, String> css_map = new HashMap<String, String>();
+		
+		for(String propertyName : cssList){
+			try{
+				String element_value = element.getCssValue(propertyName);
+				if(element_value != null){
+					css_map.put(propertyName, element_value);
+				}
+			}catch(Exception e){
+				
+			}
+		}
+		
+		return css_map;
 	}
 	
 	public String getBrowserName() {

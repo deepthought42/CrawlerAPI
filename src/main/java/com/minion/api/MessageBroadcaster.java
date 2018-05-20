@@ -3,14 +3,13 @@ package com.minion.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
-import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
-import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
+import com.qanairy.models.PageStatePOJO;
+import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Test;
+import com.qanairy.persistence.TestRecord;
+import com.qanairy.persistence.PageElement;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,12 +34,12 @@ public class MessageBroadcaster {
 	public static void broadcastDiscoveredTest(Test test) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
 		for(PathObject obj : test.getPath().getPath()){
-			if(obj != null && obj.getType().equals("Page")){
-				Page page_obj = (Page)obj;
+			if(obj != null && obj.getType().equals("PageState")){
+				PageState page_obj = (PageState)obj;
 								
-				Page page;
+				PageState page;
 				try {
-					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
+					page = new PageStatePOJO( "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -52,9 +51,9 @@ public class MessageBroadcaster {
 		}
 
 		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
-		Page result_page = null;
+		PageState result_page = null;
 		try {
-			result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
+			result_page = new PageStatePOJO("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -92,12 +91,12 @@ public class MessageBroadcaster {
 		Path path_clone = Path.clone(test.getPath());
 		
 		for(PathObject obj : path_clone.getPath()){
-			if(obj != null && obj.getType().equals("Page")){
-				Page page_obj = (Page)obj;
+			if(obj != null && obj.getType().equals("PageState")){
+				PageState page_obj = (PageState)obj;
 								
-				Page page;
+				PageState page;
 				try {
-					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
+					page = new PageStatePOJO( "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -114,7 +113,7 @@ public class MessageBroadcaster {
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
 		try {
-			Page result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
+			PageState result_page = new PageStatePOJO("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
 			new_test.setResult(result_page);
 		} catch (IOException e1) {
 			e1.printStackTrace();

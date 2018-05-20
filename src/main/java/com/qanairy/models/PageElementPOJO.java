@@ -127,31 +127,6 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		}
 		System.out.print("\n+++++++++++++++++++++++++++++++++++++++");
 	}
-	
-	/**
-	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
-	 * 
-	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
-	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
-	 * @param element the element to for which css styles should be loaded.
-	 */
-	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
-		Map<String, String> css_map = new HashMap<String, String>();
-		
-		for(String propertyName : cssList){
-			try{
-				String element_value = element.getCssValue(propertyName);
-				if(element_value != null){
-					css_map.put(propertyName, element_value);
-				}
-			}catch(Exception e){
-				
-			}
-		}
-		
-		return css_map;
-	}
 
 	/**
 	 * checks if css properties match between {@link WebElement elements}

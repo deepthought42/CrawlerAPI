@@ -32,7 +32,7 @@ public class ExploratoryPath {
 	 * @param current_path
 	 */
 	public ExploratoryPath(List<PathObject> current_path, List<Action> actions){
-		super(current_path);
+		setPathObjects(current_path);
 		this.setPossibleActions(actions);
 	}
 
@@ -44,17 +44,18 @@ public class ExploratoryPath {
 	 * @return
 	 */
 	public boolean add(PathObject obj){
-		return this.getPath().add(obj);
+		return getPathObjects().add(obj);
 	}
 	
 	public int size(){
-		return this.getPath().size();
+		return getPathObjects().size();
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean equals(Path path){
+	@Override
+	public boolean equals(Object o){
 		int thisPathLength = this.size();
 		int comparatorPathLength = path.size();
 				
@@ -63,7 +64,7 @@ public class ExploratoryPath {
 		}
 		
 		List<PathObject> comparatorPathNode = path.getPath();
-		for(PathObject obj : this.getPath()){
+		for(PathObject obj : getPathObjects()){
 			if(!obj.getClass().getSimpleName().equals(comparatorPathNode.getClass().getSimpleName())){
 				return false;
 			}
@@ -81,7 +82,7 @@ public class ExploratoryPath {
 	 * @return
 	 */
 	public PageState findLastPage(){
-		List<PathObject> path_obj_list = getPath();
+		List<PathObject> path_obj_list = getPathObjects();
 		PageState page = null;
 
 		for(PathObject obj : path_obj_list){
@@ -170,12 +171,12 @@ public class ExploratoryPath {
 	 * @param path
 	 * @return true if sequence appears more than once
 	 */
-	public static boolean hasPageCycle(Path path){
-		for(int i = path.getPath().size()-1; i > 0; i--){
+	public static boolean hasPageCycle(List<PathObject> path){
+		for(int i = path.size()-1; i > 0; i--){
 			for(int j = i-1; j>= 0; j--){
-				if(path.getPath().get(i) instanceof PageState 
-						&& path.getPath().get(j) instanceof PageState
-						&& path.getPath().get(i).equals(path.getPath().get(j)))
+				if(path.get(i) instanceof PageState 
+						&& path.get(j) instanceof PageState
+						&& path.get(i).equals(path.get(j)))
 				{
 					return true;
 				}
@@ -189,7 +190,7 @@ public class ExploratoryPath {
 		String domain = "";
 		
 		//iterate over path
-		List<PathObject> path_obj_list = this.getPath();
+		List<PathObject> path_obj_list = getPathObjects();
 		
 		for(PathObject obj : path_obj_list){
 			if(obj instanceof PageState){
@@ -210,7 +211,7 @@ public class ExploratoryPath {
 
 	public PageState firstPage() {
 		
-		for(PathObject obj : this.getPath()){
+		for(PathObject obj : getPathObjects()){
 			if(obj instanceof PageState){
 				return (PageState)obj;
 			}
@@ -224,6 +225,14 @@ public class ExploratoryPath {
 
 	public void setPossibleActions(List<Action> possible_actions) {
 		this.possible_actions = possible_actions;
+	}
+
+	public List<PathObject> getPathObjects() {
+		return path_objects;
+	}
+
+	public void setPathObjects(List<PathObject> path_objects) {
+		this.path_objects = path_objects;
 	}
 }
 

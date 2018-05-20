@@ -12,13 +12,13 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
+import com.qanairy.persistence.Test;
+import com.qanairy.persistence.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.models.Page;
-import com.qanairy.models.Path;
+import com.qanairy.models.TestRecordPOJO;
+import com.qanairy.persistence.PageState;
 
 /**
  * Handles retrieving tests
@@ -46,7 +46,7 @@ public class TestingActor extends UntypedActor {
 
 			  	Browser browser = new Browser((String)acct_msg.getOptions().get("browser"));
 
-				Page resulting_page = null;
+				PageState resulting_page = null;
 				if(path.getPath() != null){
 					int cnt = 0;
 					while(browser == null && cnt < 5){
@@ -63,7 +63,7 @@ public class TestingActor extends UntypedActor {
 				long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
 				test.setRunTime(pathCrawlRunTime);
 				//get current page of browser
-				Page expected_page = test.getResult();
+				PageState expected_page = test.getResult();
 				
 				int tries=0;
 				do{
@@ -78,7 +78,7 @@ public class TestingActor extends UntypedActor {
 
 				
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+					TestRecord record = new TestRecordPOJO(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 
@@ -91,10 +91,10 @@ public class TestingActor extends UntypedActor {
 					TestRecord record = null;
 
 					if(!test.isCorrect()){
-						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+						record = new TestRecordPOJO(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 					else{
-						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+						record = new TestRecordPOJO(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 
 					test.addRecord(record);
@@ -134,7 +134,7 @@ public class TestingActor extends UntypedActor {
 
 		 try {		
 			page = Crawler.crawlPath(test.getPath(), browser);
-			passing = test.isTestPassing(page, test.isCorrect());
+			passing = test.isTestPassing(page, test.getCorrect());
 			
 		    test.setBrowserStatus(browser.getBrowserName(), passing);
 		 } catch (IOException e) {		

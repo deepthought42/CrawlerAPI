@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.qanairy.models.Action;
-
+import com.qanairy.models.ActionPOJO;
+import com.qanairy.persistence.Action;
 
 /**
  * Contains the Order of operations for actions. A lower value indicates that
@@ -39,12 +39,12 @@ public class ActionOrderOfOperations {
 	 */
 	static {
 		List<Action> mouse_motion_actions = new ArrayList<Action>();
-		mouse_motion_actions.add(new Action("mouse_over"));
+		mouse_motion_actions.add(new ActionPOJO("mouse_over"));
 		//mouse_motion_actions.add(new Action("scroll","100"));
 		
 		List<Action> click_actions = new ArrayList<Action>();
 		//click_actions.add(new Action("clickAndHold"));
-		click_actions.add(new Action("click"));
+		click_actions.add(new ActionPOJO("click"));
 		//click_actions.add(new Action("clickAt"));
 		//click_actions.add(new Action("clickAndWait"));
 		//click_actions.add(new Action("clickAtAndWait"));

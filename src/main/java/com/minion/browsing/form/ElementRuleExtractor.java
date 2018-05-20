@@ -5,8 +5,6 @@ import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import com.minion.browsing.Browser;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElement;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.Clickable;
 import com.qanairy.models.rules.DisabledRule;
@@ -17,6 +15,8 @@ import com.qanairy.models.rules.ReadOnlyRule;
 import com.qanairy.models.rules.RequirementRule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.models.rules.SpecialCharacterRestriction;
+import com.qanairy.persistence.Attribute;
+import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.Rule;
 
 public class ElementRuleExtractor {

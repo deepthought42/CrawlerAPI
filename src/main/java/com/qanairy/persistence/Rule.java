@@ -12,7 +12,7 @@ import com.syncleus.ferma.annotations.Property;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
-public abstract class Rule extends AbstractVertexFrame implements Persistable<Rule> {
+public abstract class Rule extends AbstractVertexFrame implements Persistable {
 
 	@Property("key")
 	public abstract void setKey(String key);

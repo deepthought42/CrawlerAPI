@@ -18,22 +18,24 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.Group;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
-import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
-import com.qanairy.models.dto.DiscoveryRecordRepository;
-import com.qanairy.models.dto.DomainRepository;
-import com.qanairy.models.dto.TestRepository;
-import com.qanairy.persistence.IDomain;
+import com.qanairy.models.GroupPOJO;
+import com.qanairy.models.TestRecordPOJO;
+import com.qanairy.models.dao.DiscoveryRecordDao;
+import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.TestDao;
+import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
+import com.qanairy.models.dao.impl.DomainDaoImpl;
+import com.qanairy.models.dao.impl.TestDaoImpl;
+import com.qanairy.persistence.Action;
+import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Test;
+import com.qanairy.persistence.TestRecord;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -62,24 +64,24 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 
 		  		OrientConnectionFactory conn = new OrientConnectionFactory();
-				DomainRepository domain_repo = new DomainRepository();	
+				DomainDao domain_dao = new DomainDaoImpl();	
 
 				browser = new Browser((String)acct_msg.getOptions().get("browser"));
 				
-				Page last_page = exploratory_path.findLastPage();
+				PageState last_page = exploratory_path.findLastPage();
 				
 				if(exploratory_path.getPath() != null){
-					Page result_page = null;
+					PageState result_page = null;
 
 					// increment total paths being explored for domain
 					String domain_url = last_page.getUrl().getHost();
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
-					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+					DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
+					DiscoveryRecord discovery_record = discovery_repo.find(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 			  		discovery_record.setLastPathRanAt(new Date());
-					discovery_repo.save(conn, discovery_record);
+					discovery_repo.save(discovery_record);
 					
 					for(Action action : exploratory_path.getPossibleActions()){
 						Path path = Path.clone(exploratory_path);
@@ -140,9 +142,9 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  			}
 					  		}while(results_match);
 					  		
-					  		Domain domain = domain_repo.find(conn, domain_url);
+					  		Domain domain = domain_dao.find(domain_url);
 							domain.setTestCount(domain.getTestCount()+1);
-							domain_repo.save(conn, domain);
+							domain_dao.save(domain);
 							
 					  		createTest(path, result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
 							MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
@@ -177,16 +179,15 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(Path path, Page result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
+	private void createTest(Path path, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
 		path.setIsUseful(true);
 		Test test = new Test(path, result_page, domain, "Test #" + domain.getTestCount());							
-		TestRepository test_repo = new TestRepository();
-		test.setKey(test_repo.generateKey(test));
+		TestDao test_repo = new TestDaoImpl();
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
+		TestRecord test_record = new TestRecordPOJO(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
@@ -202,11 +203,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 */
 	private void addFormGroupsToPath(Test test) {
 		//check if test has any form elements
-		for(PathObject path_obj: test.getPath().getPath()){
+		for(PathObject path_obj: test.getPathObjects()){
 			if(path_obj.getClass().equals(PageElement.class)){
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
-					test.addGroup(new Group("form"));
+					test.addGroup(new GroupPOJO("form"));
 					break;
 				}
 			}
@@ -214,7 +215,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	}
 	
 	/**
-	 * Checks if the result of crawling a given {@link Path path} results in an identical {@link Page page state} to the 
+	 * Checks if the result of crawling a given {@link Path path} results in an identical {@link PageState page state} to the 
 	 *   result_page that is passed in.
 	 * 
 	 * @param path
@@ -225,9 +226,9 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @throws NoSuchElementException
 	 * @throws IOException
 	 */
-	private boolean doesPathProduceExpectedResult(Path path, Page result_page, Browser browser) throws NoSuchElementException, IOException{
+	private boolean doesPathProduceExpectedResult(Path path, PageState result_page, Browser browser) throws NoSuchElementException, IOException{
 		System.err.println("attempting to crawl path with length #########   "+path.size());
-		Page parent_result = Crawler.crawlPath(path, browser);
+		PageState parent_result = Crawler.crawlPath(path, browser);
 		return parent_result.equals(result_page);
 	}
 	

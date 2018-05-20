@@ -22,7 +22,6 @@ import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.ScreenshotSet;
-import com.qanairy.persistence.edges.PathEdge;
 
 /**
  * A reference to a web page 
@@ -197,41 +196,7 @@ public class PageStatePOJO extends PageState {
 	 * @return
 	 */
 	public boolean isLandable(String browser_name){		
-		boolean landable = false;
-		int tries = 0;
-
-		try{
-			Browser browser = new Browser(browser_name);
-			browser.getDriver().get(this.getUrl().toString());
-			try{
-				new WebDriverWait(browser.getDriver(), 360).until(
-						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			}catch(GridException e){
-				log.error(e.getMessage());
-			}
-			catch(Exception e){
-				log.error(e.getMessage());
-			}
-			
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {}
-			
-			if(this.equals(browser.buildPage())){
-				landable = true;
-			}
-			tries = 5;
-			browser.close();
-		}catch(Exception e){
-			e.printStackTrace();
-			log.error("ERROR VISITING PAGE AT ::: "+this.getUrl().toString());
-		}
 		
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {}
-		
-		return landable;
 	}
 	
 	/**

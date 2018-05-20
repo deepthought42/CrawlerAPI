@@ -1,19 +1,146 @@
 package com.minion.browsing.element;
 
 import java.util.List;
-
+import java.util.Map;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+
+import com.qanairy.persistence.Attribute;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.Rule;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-
-
-import com.qanairy.models.Action;
-import com.qanairy.models.PageElement;
 
 public class SelectElement extends PageElement {
     @SuppressWarnings("unused")
     private static Logger log = LoggerFactory.getLogger(SelectElement.class);
+
+	@Override
+	public String getType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setType(String type) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String generateKey() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getKey() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setKey(String key) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setName(String tagName) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String getText() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setText(String text) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String getXpath() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setXpath(String xpath) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Map<String, String> getCssValues() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setCssValues(Map<String, String> cssMap) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public String getScreenshot() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setScreenshot(String cssMap) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<Attribute> getAttributes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setAttributes(List<Attribute> attributes) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addAttribute(Attribute attribute) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setRules(List<Rule> rules) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addRule(Rule rules) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<Rule> getRules() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	/*
 	private HtmlTag select_element;

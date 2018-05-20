@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.UUID;
+
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,10 +125,8 @@ public class BrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(Path path, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
-		path.setIsUseful(true);
-		Test test = new TestPOJO(path, result_page, domain, "Test #"+domain.getTestCount());							
-		TestDao test_repo = new TestDaoImpl();
+	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
+		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
@@ -146,7 +148,7 @@ public class BrowserActor extends UntypedActor {
 	 */
 	private void addFormGroupsToPath(Test test) {
 		//check if test has any form elements
-		for(PathObject path_obj: test.getPath().getPath()){
+		for(PathObject path_obj: test.getPathObjects()){
 			if(path_obj.getClass().equals(PageElement.class)){
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
@@ -155,34 +157,6 @@ public class BrowserActor extends UntypedActor {
 				}
 			}
 		}
-	}
-
-	/**
-	 * counts how many clicks have happened in a sequence since last page change
-	 * 
-	 * @param last_idx
-	 * @param path
-	 * @param last_page
-	 * @return
-	 */
-	private int getLastClicksSequenceCount(int last_idx, Path path, PageState last_page) {
-		int clicks = 0;
-		
-		while(last_idx>=0){
-			if(path.getPath().get(last_idx).equals(last_page)){
-				break;
-			}
-			PathObject obj = path.getPath().get(last_idx);
-			if(obj.getType().equals("Action")){
-				Action path_action = (Action)obj;
-				if(path_action.getName().equals("click") || path_action.getName().equals("doubleclick")){
-					clicks++;
-				}
-			}
-			last_idx--;
-		};
-		
-		return clicks;
 	}
 
 	/**
@@ -224,7 +198,7 @@ public class BrowserActor extends UntypedActor {
 		domain.setTestCount(domain.getTestCount()+1);
 		domain_repo.save(domain);
 		
-		createTest(path, page_obj, 1L, domain, msg, discovery_record);
+		createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
 		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
@@ -255,7 +229,7 @@ public class BrowserActor extends UntypedActor {
 		do{
 			result_page = Crawler.crawlPath(path_keys, path_objects, browser);
 			tries++;
-			result_page.setLandable(result_page.isLandable(acct_msg.getOptions().get("browser").toString()));
+			result_page.setLandable(checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
 		}while(result_page == null && tries < 5);
 		final long pathCrawlEndTime = System.currentTimeMillis();
 		
@@ -266,7 +240,7 @@ public class BrowserActor extends UntypedActor {
 			last_idx = 0;
 		}
 
-		if(ExploratoryPath.hasCycle(path_keys, result_page)){
+		if(ExploratoryPath.hasCycle(path, result_page)){
 			path_keys.setIsUseful(false);
 	  	}
 	  	else{				
@@ -284,5 +258,43 @@ public class BrowserActor extends UntypedActor {
 
 			createTest(path, result_page, crawl_time_in_ms, domain, acct_msg, discovery_record);
 	  	}
+	}
+
+	private boolean checkIfLandable(String browser_name, PageState page) {
+		boolean landable = false;
+		int tries = 0;
+
+		try{
+			Browser browser = new Browser(browser_name);
+			browser.getDriver().get(page.getUrl().toString());
+			try{
+				new WebDriverWait(browser.getDriver(), 360).until(
+						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			}catch(GridException e){
+				log.error(e.getMessage());
+			}
+			catch(Exception e){
+				log.error(e.getMessage());
+			}
+			
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {}
+			
+			if(this.equals(browser.buildPage())){
+				landable = true;
+			}
+			tries = 5;
+			browser.close();
+		}catch(Exception e){
+			e.printStackTrace();
+			log.error("ERROR VISITING PAGE AT ::: "+this.getUrl().toString());
+		}
+		
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {}
+		
+		return landable;
 	}
 }

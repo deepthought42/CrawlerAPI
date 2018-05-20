@@ -14,16 +14,16 @@ import com.qanairy.persistence.OrientConnectionFactory;
 public class AccountService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    protected AccountRepository accountRepository;
+    protected AccountDao account_dao;
 
     @Autowired
-    public AccountService(final AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
+    public AccountService(final AccountDao account_dao) {
+        this.account_dao = account_dao;
     }
 
     public static Account get(String key) {
     	AccountDao account_dao = new AccountDaoImpl();
-    	Account acct = account_dao.find(connection, key);
+    	Account acct = account_dao.find(key);
         return acct;
     }
     
@@ -39,15 +39,14 @@ public class AccountService {
     	return acct;
     }
 
-	public static Account deleteDomain(Account account, Domain domain) {
+	public static void deleteDomain(Account account, Domain domain) {
 		AccountDao account_dao = new AccountDaoImpl();
-    	Account acct = account_dao.removeDomain(account, domain);
-    	return acct;
+    	account_dao.removeDomain(account, domain);
 	}
 
 
 	public static void delete(Account account) {
 		AccountDao account_dao = new AccountDaoImpl();
-    	Account acct = account_dao.delete(conn, account.getKey()); 
+    	account_dao.remove(account); 
    	}
 }

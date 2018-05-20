@@ -12,20 +12,19 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.qanairy.models.Test;
-import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.persistence.Action;
+import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.Rule;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
-import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.Path;
+import com.qanairy.models.dao.DiscoveryRecordDao;
+import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -48,8 +47,8 @@ public class PathExpansionActor extends UntypedActor {
 				
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
-					Page last_page = path.findLastPage();
-					Page first_page = path.firstPage();
+					PageState last_page = path.findLastPage();
+					PageState first_page = path.firstPage();
 					
 					if(!last_page.equals(first_page) && last_page.isLandable()){
 						OrientConnectionFactory conn = new OrientConnectionFactory();
@@ -70,10 +69,10 @@ public class PathExpansionActor extends UntypedActor {
 					pathExpansions = PathExpansionActor.expandPath(path);
 					
 			  		OrientConnectionFactory conn = new OrientConnectionFactory();
-					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+					DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
+					DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
-					discovery_repo.save(conn, discovery_record);
+					discovery_dao.save(discovery_record);
 					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
 					conn.close();
 
@@ -99,7 +98,7 @@ public class PathExpansionActor extends UntypedActor {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		Page page = path.findLastPage();
+		PageState page = path.findLastPage();
 		if(page == null){
 			return null;
 		}

@@ -3,8 +3,8 @@ package com.minion.tester;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
+import com.qanairy.persistence.PathObject;
+
 
 /**
  * Writes contents of testDefinition to a file.

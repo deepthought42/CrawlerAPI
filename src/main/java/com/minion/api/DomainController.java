@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.Account;
-import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.Domain;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.stripe.model.Account;
 
 /**
  *	API endpoints for interacting with {@link Domain} data
@@ -55,7 +55,7 @@ public class DomainController {
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	if(domain.getProtocol() == null ||
     		domain.getUrl() == null ||
-    		domain.getDiscoveryBrowser() == null)
+    		domain.getDiscoveryBrowserName() == null)
 		{
 			throw new RequiredFieldMissingException();
 		}

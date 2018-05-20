@@ -1,6 +1,6 @@
 package com.minion.browsing.element;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.persistence.PageElement;
 
 /**
  * Defines an error element by tag and the string contained within

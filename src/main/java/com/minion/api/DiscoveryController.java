@@ -28,14 +28,17 @@ import com.minion.structs.Message;
 import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.Account;
-import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.DiscoveryRecordPOJO;
 import com.qanairy.models.StripeClient;
-import com.qanairy.models.dto.AccountRepository;
-import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.models.dao.AccountDao;
+import com.qanairy.models.dao.DiscoveryRecordDao;
+import com.qanairy.models.dao.impl.AccountDaoImpl;
+import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DataAccessObject;
-import com.qanairy.persistence.IDomain;
+import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
@@ -98,8 +101,8 @@ public class DiscoveryController {
     	DiscoveryRecord last_discovery_record = null;
     	Date last_ran_date = new Date(0L);
 		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-			if(record.getStartedAt().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url)){
-				last_ran_date = record.getStartedAt();
+			if(record.getStartTime().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url)){
+				last_ran_date = record.getStartTime();
 				last_discovery_record = record;
 			}
 		}
@@ -155,7 +158,7 @@ public class DiscoveryController {
     	//check if account has exceeded allowed discovery threshold
     	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
     		Calendar cal = Calendar.getInstance(); 
-    		cal.setTime(record.getStartedAt()); 
+    		cal.setTime(record.getStartTime()); 
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
    
@@ -184,8 +187,8 @@ public class DiscoveryController {
     	else{
     		Date started_date = new Date(0L);
     		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-    			if(record.getStartedAt().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
-    				started_date = record.getStartedAt();
+    			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
+    				started_date = record.getStartTime();
     				last_discovery_record = record;
     			}
     		}
@@ -194,8 +197,8 @@ public class DiscoveryController {
     	OrientConnectionFactory connection = new OrientConnectionFactory();
 
     	@SuppressWarnings("unchecked")
-		Iterator<IDomain> domains_iter = ((Iterable<IDomain>) DataAccessObject.findByKey(url, connection, IDomain.class)).iterator();
-    	IDomain domain = domains_iter.next(); 
+		Iterator<Domain> domains_iter = ((Iterable<Domain>) DataAccessObject.findByKey(url, connection, Domain.class));
+    	Domain domain = domains_iter.next(); 
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
@@ -208,18 +211,18 @@ public class DiscoveryController {
 		if(diffInMinutes > 1440){
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
 				
-			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
+			DiscoveryRecord discovery_record = new DiscoveryRecordPOJO(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	acct.getDiscoveryRecords().add(discovery_record);
         	
-        	AccountRepository acct_repo = new AccountRepository();
-        	acct_repo.save(connection, acct);
+        	AccountDao acct_dao = new AccountDaoImpl();
+        	acct_dao.save(acct);
                 	
 			WorkAllowanceStatus.register(acct.getKey());
-			DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
+			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Map<String, Object> options = new HashMap<String, Object>();
 			options.put("browser", domain.getDiscoveryBrowserName());
-	        options.put("discovery_key", discovery_repo.generateKey(discovery_record));
+	        options.put("discovery_key", discovery_record.getKey());
 
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());

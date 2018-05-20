@@ -361,41 +361,6 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		this.screenshot = screenshot;
 	}
 
-	/**
-	 * Executes the given {@link ElementAction element action} pair such that
-	 * the action is executed against the element 
-	 * 
-	 * @param elemAction ElementAction pair
-	 * @return whether action was able to be performed on element or not
-	 */
-	public boolean performAction(Action action, WebDriver driver) throws UnreachableBrowserException, NoSuchElementException {
-		ActionFactory actionFactory = new ActionFactory(driver);
-		boolean wasPerformedSuccessfully = true;
-		
-		try{
-			WebElement element = driver.findElement(By.xpath(this.getXpath()));
-			actionFactory.execAction(element, action.getValue(), action.getName());
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {}
-		}
-		catch(StaleElementReferenceException e){
-			
-			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
-					+ action + ". ", e.getMessage());
-			wasPerformedSuccessfully = false;			
-		}
-		catch(ElementNotVisibleException e){
-			log.warn("ELEMENT IS NOT CURRENTLY VISIBLE.", e.getMessage());
-		}
-		catch(WebDriverException e){
-			log.warn("Element can not have action performed on it at point performed", e.getMessage());
-			wasPerformedSuccessfully = false;
-		}
-		
-		return wasPerformedSuccessfully;
-	}
-
 	@Override
 	public String getType() {
 		return this.type;

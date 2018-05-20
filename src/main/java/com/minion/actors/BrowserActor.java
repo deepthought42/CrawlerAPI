@@ -88,7 +88,7 @@ public class BrowserActor extends UntypedActor {
 				assert(!test.getPathObjects().isEmpty());
 				
 				browser = new Browser(acct_msg.getOptions().get("browser").toString());
-				traverse_path(browser, test, acct_msg);
+				traverse_path(browser, test.getPathKeys(), test.getPathObjects(), acct_msg);
 			  	browser.close();
 	
 				//PLACE CALL TO LEARNING SYSTEM HERE
@@ -246,14 +246,14 @@ public class BrowserActor extends UntypedActor {
 	 * @throws NoSuchElementException
 	 * @throws IOException
 	 */
-	public void traverse_path(Browser browser, Path path, Message<?> acct_msg) throws NoSuchElementException, IOException{
+	public void traverse_path(Browser browser, List<String> path_keys, List<? extends PathObject> path_objects, Message<?> acct_msg) throws NoSuchElementException, IOException{
 
 		PageState result_page = null;
 		long crawl_time_in_ms = -1L;
 		final long pathCrawlStartTime = System.currentTimeMillis();
 		int tries = 0;
 		do{
-			result_page = Crawler.crawlPath(path, browser);
+			result_page = Crawler.crawlPath(path_keys, path_objects, browser);
 			tries++;
 			result_page.setLandable(result_page.isLandable(acct_msg.getOptions().get("browser").toString()));
 		}while(result_page == null && tries < 5);
@@ -261,15 +261,13 @@ public class BrowserActor extends UntypedActor {
 		
 		crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
 				
-		PathRepository path_repo = new PathRepository();
-		path.setKey(path_repo.generateKey(path));
-		int last_idx = path.getPath().size()-1;
+		int last_idx = path_keys.size()-1;
 		if(last_idx < 0){
 			last_idx = 0;
 		}
 
-		if(ExploratoryPath.hasCycle(path, result_page)){
-	  		path.setIsUseful(false);
+		if(ExploratoryPath.hasCycle(path_keys, result_page)){
+			path_keys.setIsUseful(false);
 	  	}
 	  	else{				
 	  		DomainDao domain_repo = new DomainDaoImpl();

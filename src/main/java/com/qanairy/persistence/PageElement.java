@@ -73,4 +73,5 @@ public abstract class PageElement extends AbstractVertexFrame implements PathObj
 	
 	@Adjacency(label="has_rule")
 	public abstract List<Rule> getRules();
+	
 }

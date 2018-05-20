@@ -4,16 +4,20 @@ import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
+import com.qanairy.persistence.Action;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
 
 
 /**
  * A set of vertex objects that form a sequential movement through a graph
  */
-public class ExploratoryPath extends Path{
+public class ExploratoryPath {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryPath.class);
 	
-	private List<Action> possible_actions = null;
+	private List<PathObject> path_objects;
+	private List<Action> possible_actions;
 	
 	/**
 	 * Creates new instance of Path
@@ -72,39 +76,39 @@ public class ExploratoryPath extends Path{
 	}
 	
 	/**
-	 * Gets the last Vertex in a path that is of type {@link Page}
+	 * Gets the last Vertex in a path that is of type {@link PageState}
 	 * 
 	 * @return
 	 */
-	public Page findLastPage(){
-		List<PathObject> path_obj_list = this.getPath();
-		Page page = null;
+	public PageState findLastPage(){
+		List<PathObject> path_obj_list = getPath();
+		PageState page = null;
 
 		for(PathObject obj : path_obj_list){
-			if(obj instanceof Page){
-				page = (Page)obj;
+			if(obj instanceof PageState){
+				page = (PageState)obj;
 			}
 		}
 
 		return page;
 	}
-
+	
 	/**
 	 * Checks if the path has 2 pages that are the equal
 	 * 
 	 * @param path
 	 * @return true if sequence appears more than once
 	 */
-	public static boolean hasCycle(Path path, Page page){
-		if(path.size() == 1){
+	public static boolean hasCycle(List<PathObject> path_obj_list, PageState page){
+		if(path_obj_list.size() == 1){
 			return false;
 		}
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		for(PathObject path_obj : path.getPath()){			
-			if(path_obj instanceof Page){
-				if(((Page)path_obj).equals(page)){
+		for(PathObject path_obj : path_obj_list){			
+			if(path_obj instanceof PageState){
+				if(((PageState)path_obj).equals(page)){
 					return true;
 				}
 			}
@@ -169,8 +173,8 @@ public class ExploratoryPath extends Path{
 	public static boolean hasPageCycle(Path path){
 		for(int i = path.getPath().size()-1; i > 0; i--){
 			for(int j = i-1; j>= 0; j--){
-				if(path.getPath().get(i) instanceof Page 
-						&& path.getPath().get(j) instanceof Page
+				if(path.getPath().get(i) instanceof PageState 
+						&& path.getPath().get(j) instanceof PageState
 						&& path.getPath().get(i).equals(path.getPath().get(j)))
 				{
 					return true;
@@ -188,8 +192,8 @@ public class ExploratoryPath extends Path{
 		List<PathObject> path_obj_list = this.getPath();
 		
 		for(PathObject obj : path_obj_list){
-			if(obj instanceof Page){
-				Page page = (Page)obj;
+			if(obj instanceof PageState){
+				PageState page = (PageState)obj;
 				String curr_domain = page.getUrl().toString();
 				if(domain.isEmpty()){
 					domain = curr_domain;
@@ -204,11 +208,11 @@ public class ExploratoryPath extends Path{
 		return false;
 	}
 
-	public Page firstPage() {
+	public PageState firstPage() {
 		
 		for(PathObject obj : this.getPath()){
-			if(obj instanceof Page){
-				return (Page)obj;
+			if(obj instanceof PageState){
+				return (PageState)obj;
 			}
 		}
 		return null;

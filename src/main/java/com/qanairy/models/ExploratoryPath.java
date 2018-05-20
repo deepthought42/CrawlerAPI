@@ -4,10 +4,16 @@ import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.dao.PageElementDao;
+import com.qanairy.models.dao.PathObjectDao;
+import com.qanairy.models.dao.impl.PageElementDaoImpl;
+import com.qanairy.models.dao.impl.PathObjectDaoImpl;
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.edges.PathEdge;
 
 
 /**
@@ -139,18 +145,18 @@ public class ExploratoryPath {
 		//						check if path object leads to an action that exists in the paths possible actions list
 		for(PathObject path_obj : path.getPath()){
 			if(path_obj instanceof PageElement){
-				PageElementRepository page_elem_repo = new PageElementRepository();
+				PageElementDao page_elem_dao = new PageElementDaoImpl();
 				OrientConnectionFactory connection = new OrientConnectionFactory();
-				PageElement page_elem = page_elem_repo.find(connection, page_elem_repo.generateKey((PageElement)path_obj));
+				PageElement page_elem = page_elem_dao.find(path_obj.getKey());
 				if(page_elem != null){
 					List<Action> actions = path.getPossibleActions();
-					IPageElement ipage_elem = page_elem_repo.save(connection, page_elem);
-					Iterator<IPathEdge> path_edge_iter = ipage_elem.getPathEdges().iterator();
+					PageElement ipage_elem = page_elem_dao.save(page_elem);
+					Iterator<PathEdge> path_edge_iter = ipage_elem.getPathEdges().iterator();
 					while(path_edge_iter.hasNext()){
-						IPathEdge edge = path_edge_iter.next();
-						IPathObject path_object_out = edge.getPathObjectIn();
-						PathObjectRepository path_obj_repo = new PathObjectRepository();
-						PathObject new_path_obj = path_obj_repo.load(path_object_out);						
+						PathEdge edge = path_edge_iter.next();
+						PathObject path_object_out = edge.getPathObjectIn();
+						PathObjectDao path_obj_repo = new PathObjectDaoImpl();
+						PathObject new_path_obj = path_obj_repo.find(path_object_out.getKey());						
 						if(new_path_obj.getType().equals("Action")){
 							for(Action action : actions){
 								if(((Action)new_path_obj).getName().equals(action.getName()) && ((Action)new_path_obj).getValue().equals(action.getValue())){

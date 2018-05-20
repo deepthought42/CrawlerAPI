@@ -125,7 +125,7 @@ public class BrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(List<String> path_keys, List<? extends PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
+	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
 		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());

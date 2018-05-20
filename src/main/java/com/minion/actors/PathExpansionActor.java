@@ -129,14 +129,14 @@ public class PathExpansionActor extends UntypedActor {
 			if(page_element.getName().equals("input")){
 				page_element.addRules(ElementRuleExtractor.extractInputRules(page_element));
 				for(Rule rule : page_element.getRules()){
-					List<Path> paths = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+					List<Test> tests = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
-					for(Path form_path: paths){
+					for(Test form_test: tests){
 						//iterate over all actions
-						Path new_path = Path.clone(path);
-						new_path.getPath().addAll(form_path.getPath());
+						Test new_test = Test.clone(test);
+						new_test.getPathObjects().addAll(form_test.getPathObjects());
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+							ExploratoryPath action_path = new ExploratoryPath(new_test.getPathObjects(), action_list);
 							//check for element action sequence. 
 							//if one exists with one of the actions in the action_list
 							// 	 then skip this action path

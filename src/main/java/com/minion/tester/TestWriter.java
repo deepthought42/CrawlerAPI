@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Test;
 
 
 /**
  * Writes contents of testDefinition to a file.
  */
 public class TestWriter {
-	private Path path = null;
+	private Test test = null;
 	private String filename;
 	
 	/*public TestWriter(Path path, Graph graph){
@@ -22,7 +23,7 @@ public class TestWriter {
 	 * @return
 	 */
 	public String createTest(){
-		List<PathObject> pathIterator = this.path.getPath();
+		List<PathObject> pathIterator = test.getPathObjects();
 		ArrayList<String> testStatements = new ArrayList<String>();
 		for(PathObject obj : pathIterator){
 			//Integer graph_idx = (Integer) pathIterator.next();
@@ -55,12 +56,5 @@ public class TestWriter {
 	public void setFileName(String filename){
 		this.filename = filename;
 	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public Path getRootNode(){
-		return this.path;
-	}
+
 }

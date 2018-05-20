@@ -107,7 +107,7 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	public abstract void addPathObject(PathObject path_obj);
 	
 	@Adjacency(label="contains")
-	public abstract List<? extends PathObject> getPathObjects();
+	public abstract List<PathObject> getPathObjects();
 	
 	/**
 	 * Gets the correctness value of the test

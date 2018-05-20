@@ -5,6 +5,8 @@ import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.Test;
+
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -41,7 +43,6 @@ public class WorkAllocationActor extends UntypedActor {
 					}
 					else if(acct_message.getData() instanceof Path){
 						path = (Path)acct_message.getData();
-						PathRepository repo = new PathRepository();
 						Path path_record = repo.find(connection, repo.generateKey(path));
 						if(path_record != null){
 							record_exists = true;

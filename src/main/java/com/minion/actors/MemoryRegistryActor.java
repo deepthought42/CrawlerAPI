@@ -44,9 +44,9 @@ public class MemoryRegistryActor extends UntypedActor{
 			else if(acct_msg.getData() instanceof Path){
 				Path path = (Path)acct_msg.getData();
 				
-				Path path_record = path_repo.find(connection, path_repo.generateKey(path));
+				Path path_record = path_repo.find(path_repo.generateKey(path));
 				if(path_record == null){
-					path_repo.save(connection, path);
+					path_repo.save(path);
 				}
 			}
 			connection.close();

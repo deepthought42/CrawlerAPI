@@ -18,6 +18,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.Rule;
+import com.qanairy.persistence.Test;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -151,13 +152,13 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 			else{
-				Path new_path = Path.clone(path);
-				new_path.add(page_element);
+				Test new_test = Test.clone(path);
+				new_test.addPathObject(page_element);
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					
-					ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+					ExploratoryPath action_path = new ExploratoryPath(new_test.getPath(), action_list);
 					
 					//check for element action sequence. 
 					//if one exists with one of the actions in the action_list

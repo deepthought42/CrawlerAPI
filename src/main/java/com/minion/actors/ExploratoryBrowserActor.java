@@ -3,6 +3,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.GroupPOJO;
+import com.qanairy.models.PageElementPOJO;
 import com.qanairy.models.TestPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
@@ -91,7 +93,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						int tries = 0;
 						do{
 							try{
-								result_page = Crawler.crawlPath(test, browser);
+								result_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
 								log.error("Error happened while exploratory actor attempted to crawl test");
@@ -147,7 +149,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							domain.setTestCount(domain.getTestCount()+1);
 							domain_dao.save(domain);
 							
-					  		createTest(test, result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
+					  		createTest(path_keys, path_objects, result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
 							MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
 					  		Test new_path = Test.clone(test);
@@ -180,10 +182,9 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @param test
 	 * @param result_page
 	 */
-	private void createTest(Test test, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
-		test.setIsUseful(true);
-		Test test = new TestPOJO(test, result_page, "Test #" + domain.getTestCount());							
-		TestDao test_repo = new TestDaoImpl();
+	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
+		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #" + domain.getTestCount());							
+
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
@@ -245,9 +246,9 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	private Test buildParentPath(Test test, WebDriver driver){
 		PageElement elem = null;
 		int element_idx = -1;
-		for(int idx = test.size()-1; idx >= 0; idx--){
-			if(test.getPath().get(idx).getType().equals("PageElement")){
-				elem = (PageElement)test.getPath().get(idx);
+		for(int idx = test.getPathObjects().size()-1; idx >= 0; idx--){
+			if(test.getPathObjects().get(idx).getType().equals("PageElement")){
+				elem = (PageElement)test.getPathObjects().get(idx);
 				element_idx = idx;
 				break;
 			}
@@ -262,8 +263,8 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			Test parent_path = Test.clone(test);
 			String this_xpath = Browser.generateXpath(parent, "", new HashMap<String, Integer>(), driver); 
 			
-			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), PageElement.loadCssProperties(parent) );
-			parent_path.getPath().set(element_idx, parent_tag);
+			PageElement parent_tag = new PageElementPOJO(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), PageElement.loadCssProperties(parent) );
+			parent_path.getPathObjects().set(element_idx, parent_tag);
 			
 			return parent_path;
 		}

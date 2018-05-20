@@ -256,7 +256,7 @@ public class BrowserActor extends UntypedActor {
 			discovery_record.setLastPathRanAt(new Date());
 			discovery_repo.save(discovery_record);
 
-			createTest(path, result_page, crawl_time_in_ms, domain, acct_msg, discovery_record);
+			createTest(path_keys, path_objects, result_page, crawl_time_in_ms, domain, acct_msg, discovery_record);
 	  	}
 	}
 
@@ -288,7 +288,7 @@ public class BrowserActor extends UntypedActor {
 			browser.close();
 		}catch(Exception e){
 			e.printStackTrace();
-			log.error("ERROR VISITING PAGE AT ::: "+this.getUrl().toString());
+			log.error("ERROR VISITING PAGE AT ::: "+page.getUrl().toString());
 		}
 		
 		try {

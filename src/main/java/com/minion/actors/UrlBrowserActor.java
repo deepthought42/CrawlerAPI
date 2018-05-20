@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
 import com.minion.structs.Message;
 import com.qanairy.models.GroupPOJO;
+import com.qanairy.models.TestPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.DomainDao;
@@ -100,9 +102,9 @@ public class UrlBrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(Path path, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
+	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
 		path.setIsUseful(true);
-		Test test = new Test(path, result_page, domain, "Test #"+domain.getTestCount());							
+		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
 		TestDao test_repo = new TestDaoImpl();
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
@@ -156,7 +158,7 @@ public class UrlBrowserActor extends UntypedActor {
 
 	  	PageState page_obj = browser.buildPage();
 	  	page_obj.setLandable(true);
-	  	path.getPath().add(page_obj);
+	  	path.getPathObjects().add(page_obj);
 
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 
@@ -165,7 +167,7 @@ public class UrlBrowserActor extends UntypedActor {
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 		discovery_record.setTestCount(discovery_record.getTestCount()+1);
-		discovery_repo.save(conn, discovery_record);
+		discovery_repo.save(discovery_record);
 
 		DomainDao domain_dao = new DomainDaoImpl();
 		Domain domain = domain_dao.find(page_obj.getUrl().getHost());
@@ -175,8 +177,8 @@ public class UrlBrowserActor extends UntypedActor {
 		createTest(path, page_obj, 1L, domain, msg, discovery_record);
 		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
-		Path new_path = Path.clone(path);
-		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_path, msg.getOptions());
+		Test new_test = Test.clone(path);
+		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_test, msg.getOptions());
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );

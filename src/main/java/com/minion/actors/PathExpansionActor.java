@@ -52,10 +52,10 @@ public class PathExpansionActor extends UntypedActor {
 					
 					if(!last_page.equals(first_page) && last_page.isLandable()){
 						OrientConnectionFactory conn = new OrientConnectionFactory();
-						DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-						DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+						DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
+						DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						discovery_repo.save(conn, discovery_record);
+						discovery_dao.save(discovery_record);
 						conn.close();
 
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());

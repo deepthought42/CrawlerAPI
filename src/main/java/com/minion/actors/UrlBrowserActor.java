@@ -158,11 +158,10 @@ public class UrlBrowserActor extends UntypedActor {
 	  	page_obj.setLandable(true);
 	  	path.getPath().add(page_obj);
 
-	  	path.setKey(path_repo.generateKey(path));
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 
 		DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
-		DiscoveryRecord discovery_record = discovery_repo.find(conn, msg.getOptions().get("discovery_key").toString());
+		DiscoveryRecord discovery_record = discovery_repo.find( msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 		discovery_record.setTestCount(discovery_record.getTestCount()+1);

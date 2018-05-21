@@ -28,6 +28,8 @@ public class AlphabeticRestrictionRule extends Rule{
 
 	public AlphabeticRestrictionRule() {
 		this.value = "[a-zA-Z]*";
+		setType(RuleType.ALPHABETIC_RESTRICTION);
+		setKey(generateKey());
 	}
 	
 

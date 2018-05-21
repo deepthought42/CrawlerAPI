@@ -111,17 +111,17 @@ public class TestPOJO extends Test{
 	 * @param record
 	 * @return
 	 */
-	public Boolean isTestPassing(PageState page, Boolean last_test_passing_status){
-		if((last_test_passing_status != null && !last_test_passing_status) && this.getResult().equals(page)){
+	public static Boolean isTestPassing(PageState expected_page, PageState new_result_page, Boolean last_test_passing_status){
+		if((last_test_passing_status != null && !last_test_passing_status) && expected_page.equals(new_result_page)){
 			last_test_passing_status = false; 
 		}
-		else if((last_test_passing_status == null || !last_test_passing_status) && !this.getResult().equals(page)){
+		else if((last_test_passing_status == null || !last_test_passing_status) && !expected_page.equals(new_result_page)){
 			last_test_passing_status = null;
 		}
-		else if((last_test_passing_status != null && last_test_passing_status) && this.getResult().equals(page)){
+		else if((last_test_passing_status != null && last_test_passing_status) && expected_page.equals(new_result_page)){
 			last_test_passing_status = true;
 		}
-		else if((last_test_passing_status != null && last_test_passing_status) && !this.getResult().equals(page)){
+		else if((last_test_passing_status != null && last_test_passing_status) && !expected_page.equals(new_result_page)){
 			last_test_passing_status = false;
 		}
 		
@@ -297,7 +297,7 @@ public class TestPOJO extends Test{
 	}
 
 	@Override
-	public List<? extends PathObject> getPathObjects() {
+	public List<PathObject> getPathObjects() {
 		return this.path_objects;
 	}
 
@@ -316,5 +316,33 @@ public class TestPOJO extends Test{
 		path_key += getResult().getKey();
 		
 		return path_key;
+	}
+	
+	/**
+	 * Clone {@link Test} object
+	 * 
+	 * @param path
+	 * @return
+	 */
+	public static Test clone(Test test){
+		Test clone_test = new TestPOJO();
+		
+		List<? extends PathObject> path_obj = test.getPathObjects();
+		List<String> path_keys = new ArrayList<String>();
+		for(PathObject obj : path_obj){
+			clone_test.addPathObject(obj);
+			path_keys.add(obj.getKey());
+		}
+		
+		clone_test.setPathKeys(path_keys);
+		clone_test.setKey(test.getKey());
+		clone_test.setSpansMultipleDomains(test.getSpansMultipleDomains());
+		clone_test.setBrowserStatuses(test.getBrowserStatuses());
+		clone_test.setGroups(new ArrayList<Group>(test.getGroups()));
+		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());
+		clone_test.setCorrect(test.getCorrect());
+		clone_test.setName(test.getName());
+		clone_test.setRunTime(test.getRunTime());
+		return clone_test;
 	}
 }

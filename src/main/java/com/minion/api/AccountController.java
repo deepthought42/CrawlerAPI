@@ -35,6 +35,8 @@ import com.qanairy.models.AccountUsage;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.Account;
+import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.TestRecord;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
@@ -94,17 +96,15 @@ public class AccountController {
         if(acct != null){
         	throw new AccountExistsException();
         }
-        
-        String plan = "4-disc-10000-test-90-trial";
-    	
-    	Plan new_plan = Plan.retrieve(plan);
+            	
+    	Plan new_plan = Plan.retrieve("4-disc-10000-test-90-trial");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
     	Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
     	
-    	acct = new AccountPOJO(username, plan, customer.getId(), subscription.getId());
+    	acct = new AccountPOJO(username, customer.getId(), subscription.getId());
 
 
         // Connect to Auth0 API and update user metadata
@@ -202,7 +202,7 @@ public class AccountController {
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	Account account = this.account_service.find(username);
+    	Account account = AccountService.find(username);
     					
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
@@ -215,7 +215,7 @@ public class AccountController {
         this.stripeClient.deleteCustomer(account.getCustomerToken());
         
 		//remove account
-		account_service.delete(account);
+        AccountService.delete(account);
         logger.info("update invoked");
     }
 	
@@ -267,7 +267,7 @@ public class AccountController {
     	//check if account has exceeded allowed discovery threshold
     	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
     		Calendar cal = Calendar.getInstance(); 
-    		cal.setTime(record.getStartedAt()); 
+    		cal.setTime(record.getStartTime()); 
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
    

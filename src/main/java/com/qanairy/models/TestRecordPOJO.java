@@ -126,6 +126,6 @@ public class TestRecordPOJO extends TestRecord {
 	 */
 	@Override
 	public String generateKey() {
-		return getRanAt().toString()+"::"+record.getPassing();
+		return getRanAt().toString()+"::"+getPassing();
 	}
 }

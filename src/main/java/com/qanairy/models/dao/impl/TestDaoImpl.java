@@ -18,21 +18,18 @@ import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
 
 public class TestDaoImpl implements TestDao {
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestDao.class);
 
 	@Override
 	public Test save(Test test) {
 		assert test != null;
 		
-		test.setKey(generateKey(test));
 		Test test_record = find(test.getKey());
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		if(test_record == null){
 			test_record = connection.getTransaction().addFramedVertex(Test.class);
-			test_record.setKey(generateKey(test));
-			
+			test_record.setKey(test.getKey());
 			test_record.setPathKeys(test.getPathKeys());
 			
 			PageStateDao page_record = new PageStateDaoImpl();

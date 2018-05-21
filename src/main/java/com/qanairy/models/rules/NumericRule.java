@@ -22,6 +22,7 @@ public class NumericRule extends Rule{
 	public NumericRule(RuleType type, String value){
 		setType(type);
 		setValue(value);
+		setKey(generateKey());
 	}
 	
 

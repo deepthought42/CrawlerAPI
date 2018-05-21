@@ -18,7 +18,8 @@ import com.minion.structs.Message;
  *
  */
 public class MemoryRegistryActor extends UntypedActor{
-    private static Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
+    @SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
 
 
 	/**
@@ -27,7 +28,6 @@ public class MemoryRegistryActor extends UntypedActor{
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			OrientConnectionFactory connection = new OrientConnectionFactory();
 			Message<?> acct_msg = (Message<?>)message;
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
 			if(acct_msg.getData() instanceof Test){
@@ -41,15 +41,6 @@ public class MemoryRegistryActor extends UntypedActor{
 					MessageBroadcaster.broadcastTest(test);
 				}
 			}
-			else if(acct_msg.getData() instanceof Path){
-				Path path = (Path)acct_msg.getData();
-				
-				Path path_record = path_repo.find(path_repo.generateKey(path));
-				if(path_record == null){
-					path_repo.save(path);
-				}
-			}
-			connection.close();
 		}
 		else unhandled(message);
 	}

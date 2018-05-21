@@ -3,6 +3,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -102,8 +103,7 @@ public class UrlBrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
-		path.setIsUseful(true);
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
 		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
 		TestDao test_repo = new TestDaoImpl();
 		test.setRunTime(crawl_time);
@@ -118,6 +118,8 @@ public class UrlBrowserActor extends UntypedActor {
 		//tell memory worker of test
 		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf());
+		
+		return test;
 	}
 
 	/**
@@ -158,8 +160,13 @@ public class UrlBrowserActor extends UntypedActor {
 
 	  	PageState page_obj = browser.buildPage();
 	  	page_obj.setLandable(true);
-	  	path.getPathObjects().add(page_obj);
-
+	  	
+	  	List<String> path_keys = new ArrayList<String>();
+	  	path_keys.add(page_obj.getKey());
+	  	
+	  	List<PathObject> path_objects = new ArrayList<PathObject>();
+	  	path_objects.add(page_obj);
+	  	
 		OrientConnectionFactory conn = new OrientConnectionFactory();
 
 		DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
@@ -174,16 +181,15 @@ public class UrlBrowserActor extends UntypedActor {
 		domain.setTestCount(domain.getTestCount()+1);
 		domain_dao.save(domain);
 		
-		createTest(path, page_obj, 1L, domain, msg, discovery_record);
+		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
 		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
-		Test new_test = Test.clone(path);
-		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_test, msg.getOptions());
+		Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), test, msg.getOptions());
 
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-		path_expansion_actor.tell(path_msg, getSelf() );
+		path_expansion_actor.tell(test_msg, getSelf() );
 
 		final ActorRef form_test_discoverer = this.getContext().actorOf(Props.create(FormTestDiscoveryActor.class), "FormTestDiscoveryActor"+UUID.randomUUID());
-		form_test_discoverer.tell(path_msg, getSelf() );
+		form_test_discoverer.tell(test_msg, getSelf() );
 	}
 }

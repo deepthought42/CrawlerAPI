@@ -15,10 +15,13 @@ import com.qanairy.persistence.Rule;
  */
 public class PageElementDaoImpl implements PageElementDao {
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public PageElement save(PageElement element) {
-		element.setKey(generateKey(element));
-
+		assert element != null;
+		
 		PageElement page_element_record = find(element.getKey());
 
 		OrientConnectionFactory connection = new OrientConnectionFactory();

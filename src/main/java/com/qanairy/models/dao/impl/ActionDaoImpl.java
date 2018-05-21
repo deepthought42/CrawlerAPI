@@ -15,9 +15,7 @@ public class ActionDaoImpl implements ActionDao {
 
 	
 	@Override
-	public Action save(Action action) {
-		action.setKey(generateKey(action));
-		
+	public Action save(Action action) {		
 		Action action_record = find(action.getKey());
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 

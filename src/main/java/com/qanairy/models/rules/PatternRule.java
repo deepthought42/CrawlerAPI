@@ -28,6 +28,7 @@ public class PatternRule extends Rule {
 	public PatternRule(String pattern){
 		this.value = pattern;
 		setType(RuleType.PATTERN);
+		setKey(generateKey());
 	}
 
 

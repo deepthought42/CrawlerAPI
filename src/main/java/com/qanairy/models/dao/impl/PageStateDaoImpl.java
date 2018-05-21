@@ -16,7 +16,6 @@ public class PageStateDaoImpl implements PageStateDao {
 	public PageState save(PageState page) {
 		assert(page != null);
 		
-		page.setKey(generateKey(page));
 		PageState page_record = find(page.getKey());
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();

@@ -14,8 +14,6 @@ public class TestUserDaoImpl implements TestUserDao{
 	
 	@Override
 	public TestUser save(TestUser user) {
-		user.setKey(generateKey(user));
-
 		TestUser test_user_record = find(user.getKey());
 		
 		OrientConnectionFactory connection = new OrientConnectionFactory();

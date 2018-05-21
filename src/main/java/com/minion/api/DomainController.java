@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.Account;
 import com.qanairy.persistence.Domain;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.stripe.model.Account;
 
 /**
  *	API endpoints for interacting with {@link Domain} data
@@ -65,7 +65,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -205,7 +205,7 @@ public class DomainController {
     	}		
 		
 		Domain domain = domainService.get(key);
-		acct = accountService.deleteDomain(acct, domain);
+		AccountService.deleteDomain(acct, domain);
 		
 	    return domain;
 	}

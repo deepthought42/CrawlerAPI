@@ -16,7 +16,7 @@ public class DiscoveryRecordDaoImpl implements DiscoveryRecordDao {
 	 */
 	@Override
 	public void save(DiscoveryRecord record) {
-		record.setKey(generateKey(record));
+		assert record != null;
 		DiscoveryRecord discovery_record = find(record.getKey());
 
 		OrientConnectionFactory connection = new OrientConnectionFactory();

@@ -15,6 +15,7 @@ public class EmailPatternRule extends Rule {
 	public EmailPatternRule() {
 		setType(RuleType.EMAIL_PATTERN);
 		setValue("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$");
+		setKey(generateKey());
 	}
 
 	@Override

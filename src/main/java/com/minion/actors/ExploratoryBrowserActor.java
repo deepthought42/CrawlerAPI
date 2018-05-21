@@ -87,7 +87,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					discovery_repo.save(discovery_record);
 					
 					for(Action action : exploratory_path.getPossibleActions()){
-						Test test = Test.clone(exploratory_path);
+						Test test = TestPOJO.clone(exploratory_path);
 						test.addPathObject(action);
 						final long pathCrawlStartTime = System.currentTimeMillis();
 						int tries = 0;
@@ -104,8 +104,8 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						do{
 							System.err.println("attempting is landable check. Attemp #"+tries);
 							
-							try{
-								result_page.setLandable(last_page.isLandable(acct_msg.getOptions().get("browser").toString()));
+							try{								
+								result_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), last_page));
 								break;
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
@@ -119,12 +119,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 					
-						if(ExploratoryPath.hasCycle(test.getPathKeys(), result_page)){
-					  		test.setIsUseful(false);
+						if(!ExploratoryPath.hasCycle(test.getPathObjects(), result_page)){
+					  		/*test.setIsUseful(false);
 					  		continue;
 					  	}
 					  	else{
 					  		test.setIsUseful(true);
+					  		*/
 					  		boolean results_match = false;
 					  		//crawl test and get result
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
@@ -149,20 +150,19 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							domain.setTestCount(domain.getTestCount()+1);
 							domain_dao.save(domain);
 							
-					  		createTest(path_keys, path_objects, result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
+					  		createTest(test.getPathKeys(), test.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
 							MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
-					  		Test new_path = Test.clone(test);
-							new_path.add(result_page);
-							Message<Test> path_msg = new Message<Test>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
+					  		Test new_test = TestPOJO.clone(test);
+							new_test.setResult(result_page);
+							Message<Test> path_msg = new Message<Test>(acct_msg.getAccountKey(), new_test, acct_msg.getOptions());
 
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 							path_expansion_actor.tell(path_msg, getSelf());
-					  	}
-						
-						if(test.isUseful()){
 							break;
-						}
+
+					  	}
+
 					}
 				  	browser.close();
 				  	conn.close();
@@ -229,8 +229,8 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @throws IOException
 	 */
 	private boolean doesPathProduceExpectedResult(Test test, PageState result_page, Browser browser) throws NoSuchElementException, IOException{
-		System.err.println("attempting to crawl test with length #########   "+test.size());
-		PageState parent_result = Crawler.crawlPath(test, browser);
+		System.err.println("attempting to crawl test with length #########   "+test.getPathKeys().size());
+		PageState parent_result = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
 		return parent_result.equals(result_page);
 	}
 	
@@ -260,10 +260,10 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			WebElement parent = Browser.getParentElement(web_elem);
 			
 			//clone test and swap page element with parent
-			Test parent_path = Test.clone(test);
+			Test parent_path = TestPOJO.clone(test);
 			String this_xpath = Browser.generateXpath(parent, "", new HashMap<String, Integer>(), driver); 
 			
-			PageElement parent_tag = new PageElementPOJO(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), PageElement.loadCssProperties(parent) );
+			PageElement parent_tag = new PageElementPOJO(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), Browser.loadCssProperties(parent) );
 			parent_path.getPathObjects().set(element_idx, parent_tag);
 			
 			return parent_path;

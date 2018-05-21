@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.models.dao.DomainDao;
 import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.OrientConnectionFactory;
 
 @Service
 public class DomainService {
@@ -21,16 +20,10 @@ public class DomainService {
     }
 
     public Domain save(Domain domain) {
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-    	Domain domain_record = domain_dao.save(connection, domain);
-    	connection.close();
-        return domain_dao.load(domain_record);
+    	return domain_dao.save(domain);
     }
 
     public Domain get(String key) {
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-    	Domain domain = domain_dao.find(key);
-    	connection.close();
-        return domain;
+    	return domain_dao.find(key);
     }
 }

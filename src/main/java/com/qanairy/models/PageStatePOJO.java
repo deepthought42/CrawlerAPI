@@ -10,9 +10,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -188,15 +185,6 @@ public class PageStatePOJO extends PageState {
 			}
 		}
 		return elem_cnts;
-	}
-	
-	/**
-	 * Checks if the page is able to be accessed directly as a landing page
-	 * 
-	 * @return
-	 */
-	public boolean isLandable(String browser_name){		
-		
 	}
 	
 	/**

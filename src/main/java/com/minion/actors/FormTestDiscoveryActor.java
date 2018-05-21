@@ -72,7 +72,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		  	List<Form> forms = Browser.extractAllForms(current_page, browser);
 		  	List<Test> form_tests = new ArrayList<Test>();
 		  	for(Form form : forms){
-		  		form_tests.addAll(FormTestDiscoveryActor.generateAllFormTests(path, form));
+		  		form_tests.addAll(FormTestDiscoveryActor.generateAllFormTests(test, form));
 		  	}
 		  	
 		  	OrientConnectionFactory conn = new OrientConnectionFactory();
@@ -501,7 +501,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				for(Rule rule : rules){
 					List<Test> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 					for(Test curr_test : path_list){
-						Test clone_test = Test.clone(test);
+						Test clone_test = TestPOJO.clone(test);
 						form_tests.add(clone_test);
 					}
 				}

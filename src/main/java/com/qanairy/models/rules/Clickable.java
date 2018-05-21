@@ -11,7 +11,8 @@ public class Clickable extends Rule {
 	
 	public Clickable(){
 		this.type = RuleType.CLICKABLE;
-		this.value = null;
+		this.value = "";
+		setKey(generateKey());
 	}
 	@Override
 	public void setKey(String key) {

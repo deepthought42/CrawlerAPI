@@ -39,7 +39,11 @@ public abstract class Rule extends AbstractVertexFrame implements Persistable {
 	 */
 	public abstract Boolean evaluate(PageElement val);	
 
-	
+
+	@Override
+	public String generateKey() {
+		return this.getType()+"::"+this.getValue();
+	}
 	/**
 	 * Rule types
 	 * 

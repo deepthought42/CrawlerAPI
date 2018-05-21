@@ -32,8 +32,10 @@ import com.qanairy.models.DiscoveryRecordPOJO;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.dao.AccountDao;
 import com.qanairy.models.dao.DiscoveryRecordDao;
+import com.qanairy.models.dao.DomainDao;
 import com.qanairy.models.dao.impl.AccountDaoImpl;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
+import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DataAccessObject;
@@ -194,16 +196,13 @@ public class DiscoveryController {
     		}
     	}
     	
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-
-    	@SuppressWarnings("unchecked")
-		Iterator<Domain> domains_iter = ((Iterable<Domain>) DataAccessObject.findByKey(url, connection, Domain.class));
-    	Domain domain = domains_iter.next(); 
+    	DomainDao domain_dao = new DomainDaoImpl();
+    	Domain domain = domain_dao.find(url); 
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
     	if(last_discovery_record != null){
-    		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartedAt().getTime()) / (1000 * 60) ));
+    		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
@@ -241,7 +240,6 @@ public class DiscoveryController {
 
 			Timeout timeout = new Timeout(Duration.create(60, "seconds"));
 			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
-			connection.close();
 
 			try {
 				Await.result(future, timeout.duration());
@@ -264,7 +262,6 @@ public class DiscoveryController {
 	    		    .userId(acct.getKey())
 	    		    .properties(discovery_started_props)
 	    		);
-			connection.close();
 
         	throw new ExistingDiscoveryFoundException();
         }

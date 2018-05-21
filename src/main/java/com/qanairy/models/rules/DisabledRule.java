@@ -16,7 +16,8 @@ public class DisabledRule extends Rule{
 	
 	public DisabledRule() {
 		setType(RuleType.DISABLED);
-		setValue(null);
+		setValue("");
+		setKey(generateKey());
 	}
 	
 	/**

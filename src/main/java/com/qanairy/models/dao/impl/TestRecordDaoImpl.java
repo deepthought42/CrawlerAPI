@@ -14,7 +14,6 @@ public class TestRecordDaoImpl implements TestRecordDao {
 	
 	@Override
 	public TestRecord save(TestRecord record) {
-		record.setKey(generateKey(record));
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		
 		TestRecord test_record = find(record.getKey());

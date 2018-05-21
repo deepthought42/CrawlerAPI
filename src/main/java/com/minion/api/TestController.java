@@ -107,13 +107,13 @@ public class TestController {
     	
 		Domain idomain = domain_repo.find(url);
 		Iterator<Test> tests = idomain.getTests().iterator();
-		TestDao test_repo = new TestDaoImpl();
+		TestDao test_dao = new TestDaoImpl();
 		List<Test> verified_tests = new ArrayList<Test>();
 		
 		while(tests.hasNext()){
-			Test itest = tests.next();
-			if(itest.getCorrect() != null){
-				verified_tests.add(test_repo.load(itest));
+			Test test = tests.next();
+			if(test.getCorrect() != null){
+				verified_tests.add(test_dao.find(test.getKey()));
 			}
 		}
 		
@@ -164,12 +164,12 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/name", method = RequestMethod.GET)
-	public @ResponseBody List<Test> getTestsByName(HttpSession session, HttpServletRequest request, 
+	public @ResponseBody Test getTestsByName(HttpSession session, HttpServletRequest request, 
 			   								 		@RequestParam(value="name", required=true) String name) {
-		List<Test> test_list = new ArrayList<Test>();
-		test_list = Test.findByName(name);
+		TestDao test_dao = new TestDaoImpl();
+		Test test = test_dao.findByName(name);
 		
-		return test_list;
+		return test;
 	}
 	
 	/**
@@ -242,9 +242,8 @@ public class TestController {
     		    .traits(traits)
     		);
     	
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<Test> itest_iter = Test.findByKey(key, orient_connection).iterator();
-		Test test = itest_iter.next();
+		TestDao test_dao = new TestDaoImpl();
+		Test test = test_dao.find(key);
 		test.setCorrect(correct);
 		
 		
@@ -264,8 +263,7 @@ public class TestController {
 	   		    .properties(set_initial_correctness_props)
 	   		);
    	
-		TestDao test_dao= new TestDaoImpl();
-		return test_dao.find(test.getKey());
+		return test;
 	}
 
     /**
@@ -318,14 +316,11 @@ public class TestController {
 	public @ResponseBody Test updateName(HttpServletRequest request, 
 										 @PathVariable(value="key", required=true) String key, 
 										 @RequestParam(value="name", required=true) String name){
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterator<Test> itest_iter = Test.findByKey(key, orient_connection).iterator();
-		Test itest = itest_iter.next();
-		itest.setName(name);
-		orient_connection.save();
+		TestDao test_dao = new TestDaoImpl();
+		Test test = test_dao.find(key);
+		test.setName(name);
 
-		TestDao test_record = new TestDaoImpl();
-		return test_record.save(itest);
+		return test_dao.save(test);
 	}
     
     /**
@@ -420,58 +415,50 @@ public class TestController {
 	   		    .properties(run_test_batch_props)
 	   		);
 	   	
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	
+    	TestDao test_dao = new TestDaoImpl();
     	for(String key : test_keys){
-    		Iterator<Test> itest_iter = Test.findByKey(key, connection).iterator();
+    		Test test = test_dao.find(key);
     		
-    		while(itest_iter.hasNext()){
-    			Test itest = itest_iter.next();
-        		TestRecord record = null;
-        		
-    			TestDao test_repo = new TestDaoImpl();
-    	
-    			Test test = test_repo.find(test.getKey());
+    		TestRecord record = null;
 
-    			Map<String, Boolean> browser_running_status = itest.getBrowserStatuses();
-    			browser_running_status.put(browser_type, null);
+			Map<String, Boolean> browser_running_status = test.getBrowserStatuses();
+			browser_running_status.put(browser_type, null);
 
-    			test.setBrowserStatuses(browser_running_status);
-    			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
-    			
-    			//tell memory worker of test
-    			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-    			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-    			memory_actor.tell(test_msg, null);
-    			
-    			Browser browser = new Browser(browser_type.trim());
-    			record = TestingActor.runTest(test, browser);
-    			browser.close();
+			test.setBrowserStatuses(browser_running_status);
+			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+			
+			//tell memory worker of test
+			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+			memory_actor.tell(test_msg, null);
+			
+			Browser browser = new Browser(browser_type.trim());
+			record = TestingActor.runTest(test, browser);
+			browser.close();
 
-    			acct.addTestRecord(record);
-    			accountService.save(acct);
-    			
-    			test.addRecord(record);
-    			boolean is_passing = true;
-				//update overall passing status based on all browser passing statuses
-				for(Boolean status : test.getBrowserStatuses().values()){
-					if(status != null && !status){
-						is_passing = false;
-						break;
-					}
+			acct.addTestRecord(record);
+			accountService.save(acct);
+			
+			test.addRecord(record);
+			boolean is_passing = true;
+			//update overall passing status based on all browser passing statuses
+			for(Boolean status : test.getBrowserStatuses().values()){
+				if(status != null && !status){
+					is_passing = false;
+					break;
 				}
-				test.setCorrect(is_passing);
-				test.setLastRunTimestamp(new Date());
-    			test_results.put(test.getKey(), record);
-    			test.setRunTime(record.getRunTime());
-    	
-    			//tell memory worker of test
-    			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
-    			memory_actor.tell(test_msg, null);
-       		}
-    	}
-		connection.close();
+			}
+			test.setCorrect(is_passing);
+			test.setLastRunTimestamp(new Date());
+			test_results.put(test.getKey(), record);
+			test.setRunTime(record.getRunTime());
+	
+			//tell memory worker of test
+			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+			memory_actor.tell(test_msg, null);
+   		}
 		
 		return test_results;
 	}
@@ -491,17 +478,13 @@ public class TestController {
 														@RequestParam(value="browser_type", required=true) String browser_type){		
 		List<Test> test_list = new ArrayList<Test>();
 		List<Test> group_list = new ArrayList<Test>();
+		TestDao test_dao = new TestDaoImpl();
+		test_list = test_dao.findByUrl(url);
 		
-		try {
-			test_list = Test.findByUrl(url);
-			
-			for(Test test : test_list){
-				if(test.getGroups() != null && test.getGroups().contains(group)){
-					group_list.add(test);
-				}
+		for(Test test : test_list){
+			if(test.getGroups() != null && test.getGroups().contains(group)){
+				group_list.add(test);
 			}
-		} catch (MalformedURLException e) {
-			log.warn("Malformed URL received", e.getMessage());
 		}
 		
 		List<TestRecord> group_records = new ArrayList<TestRecord>();
@@ -537,25 +520,13 @@ public class TestController {
     		throw new EmptyGroupNameException();
     	}
 		Group group = new GroupPOJO(name.toLowerCase(), description);
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
 
-		Iterator<Test> itest_iter = Test.findByKey(key, orient_connection).iterator();
-		Test itest = itest_iter.next();
-		Iterator<Group> group_iter = itest.getGroups().iterator();
-		Group group_record = null;
-
-		while(group_iter.hasNext()){
-			group_record = group_iter.next();
-			if(group_record.getName().equals(name)){
-				return null;
-				//would be better to return an already exists status/error
-			}
-		}
+		TestDao test_dao = new TestDaoImpl();
+		Test test = test_dao.find(key);
 		
 		GroupDao group_repo = new GroupDaoImpl();
 		group = group_repo.save(group);
-		itest.addGroup(group_record);
-		group.setKey(group_record.getKey());
+		test.addGroup(group);
 		
 		return group;
 	}
@@ -570,25 +541,14 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('delete:groups')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
-	public @ResponseBody Boolean removeGroup(@RequestParam(value="group_key", required=true) String group_key,
+	public @ResponseBody void removeGroup(@RequestParam(value="group_key", required=true) String group_key,
 										  	 @RequestParam(value="test_key", required=true) String test_key){
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-
-		Iterator<Test> itest_iter = Test.findByKey(test_key, orient_connection).iterator();
-		Test itest = itest_iter.next();
-		Iterator<Group> group_iter = itest.getGroups().iterator();
-		boolean was_removed = false;
-		Group igroup = null;
-		while(group_iter.hasNext()){
-			igroup = group_iter.next();
-			if(igroup.getKey().equals(group_key)){
-				itest.removeGroup(igroup);
-				was_removed=true;
-			}
-		}
-
-		orient_connection.close();
-		return was_removed;
+		TestDao test_dao = new TestDaoImpl();
+		Test test = test_dao.find(test_key);
+		
+		GroupDao group_dao = new GroupDaoImpl();
+		Group group = group_dao.find(group_key);
+		test.removeGroup(group);
 	}
 
 	/**
@@ -602,20 +562,17 @@ public class TestController {
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {
-		List<Test> test_list = new ArrayList<Test>();
 		List<Group> groups = new ArrayList<Group>();
-		try {
-			test_list = Test.findByUrl(url);
-			
-			for(Test test : test_list){
-				if(test.getGroups() != null){
-					groups.addAll(test.getGroups());
-				}
-			}
-		} catch (MalformedURLException e) {
-			log.warn("Malformed url exception thrown", e.getMessage());
-		}
+		TestDao test_dao = new TestDaoImpl();
+
+		List<Test> test_list = test_dao.findByUrl(url);
 		
+		for(Test test : test_list){
+			if(test.getGroups() != null){
+				groups.addAll(test.getGroups());
+			}
+		}
+
 		return groups;
 	}
 }

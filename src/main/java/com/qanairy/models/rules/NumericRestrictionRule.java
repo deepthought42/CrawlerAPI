@@ -18,6 +18,7 @@ public class NumericRestrictionRule extends Rule {
 	public NumericRestrictionRule() {
 		setValue("[0-9]*");
 		setType(RuleType.NUMERIC_RESTRICTION);
+		setKey(generateKey());
 	}
 	
 	/**

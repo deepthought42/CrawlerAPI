@@ -10,8 +10,7 @@ public class DomainDaoImpl implements DomainDao{
 
 	@Override
 	public Domain save(Domain domain) {
-		domain.setKey(generateKey(domain));
-		
+		assert domain != null;
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		Domain domain_record = find(domain.getKey());
 

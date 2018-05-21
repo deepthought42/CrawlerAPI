@@ -8,8 +8,6 @@ import com.qanairy.persistence.Rule;
  *
  */
 public class ReadOnlyRule extends Rule {
-
-	
 	private String key;
 	private RuleType type;
 	private String value;
@@ -18,6 +16,7 @@ public class ReadOnlyRule extends Rule {
 	public ReadOnlyRule(){
 		setValue(null);
 		setType(RuleType.READ_ONLY);
+		setKey(generateKey());
 	}
 
 	

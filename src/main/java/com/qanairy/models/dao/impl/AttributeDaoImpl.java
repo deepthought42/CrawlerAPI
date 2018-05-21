@@ -9,8 +9,6 @@ public class AttributeDaoImpl implements AttributeDao {
 	
 	@Override
 	public Attribute save(Attribute attribute) {
-		attribute.setKey(generateKey(attribute));
-
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		Attribute attribute_record = find(attribute.getKey());
 

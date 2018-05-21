@@ -33,7 +33,7 @@ public class MessageBroadcaster {
      */
 	public static void broadcastDiscoveredTest(Test test) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
-		for(PathObject obj : test.getPath().getPath()){
+		for(PathObject obj : test.getPathObjects()){
 			if(obj != null && obj.getType().equals("PageState")){
 				PageState page_obj = (PageState)obj;
 								
@@ -58,7 +58,7 @@ public class MessageBroadcaster {
 			e1.printStackTrace();
 		}
 		Test new_test = new Test(test.getKey(), path, result_page, test.getDomain(), test.getName());
-		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
+		new_test.setBrowserStatuses(test.getBrowserStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
 		

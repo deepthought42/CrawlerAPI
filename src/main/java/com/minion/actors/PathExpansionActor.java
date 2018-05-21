@@ -24,6 +24,7 @@ import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.models.ExploratoryPath;
+import com.qanairy.models.TestPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 
@@ -43,13 +44,14 @@ public class PathExpansionActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
-			if(acct_msg.getData() instanceof Path){				
-				Path path = (Path)acct_msg.getData();
+			if(acct_msg.getData() instanceof Test){				
+				Test test = (Test)acct_msg.getData();
 				
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
-				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
-					PageState last_page = path.findLastPage();
-					PageState first_page = path.firstPage();
+				if((!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
+						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
+					PageState last_page = test.findLastPage();
+					PageState first_page = test.firstPage();
 					
 					if(!last_page.equals(first_page) && last_page.isLandable()){
 						OrientConnectionFactory conn = new OrientConnectionFactory();
@@ -67,7 +69,7 @@ public class PathExpansionActor extends UntypedActor {
 						return;
 					}
 					
-					pathExpansions = PathExpansionActor.expandPath(path);
+					pathExpansions = PathExpansionActor.expandPath(test);
 					
 			  		OrientConnectionFactory conn = new OrientConnectionFactory();
 					DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
@@ -95,11 +97,11 @@ public class PathExpansionActor extends UntypedActor {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static ArrayList<ExploratoryPath> expandPath(Path path)  {
+	public static ArrayList<ExploratoryPath> expandPath(Test test)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		PageState page = path.findLastPage();
+		PageState page = test.findLastPage();
 		if(page == null){
 			return null;
 		}
@@ -127,13 +129,16 @@ public class PathExpansionActor extends UntypedActor {
 			}
 			//check if page element is an input
 			if(page_element.getName().equals("input")){
-				page_element.addRules(ElementRuleExtractor.extractInputRules(page_element));
+				List<Rule> rules = ElementRuleExtractor.extractInputRules(page_element);
+				for(Rule rule : rules){
+					page_element.addRule(rule);
+				}
 				for(Rule rule : page_element.getRules()){
 					List<Test> tests = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
 					for(Test form_test: tests){
 						//iterate over all actions
-						Test new_test = Test.clone(test);
+						Test new_test = TestPOJO.clone(test);
 						new_test.getPathObjects().addAll(form_test.getPathObjects());
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 							ExploratoryPath action_path = new ExploratoryPath(new_test.getPathObjects(), action_list);
@@ -152,7 +157,7 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 			else{
-				Test new_test = Test.clone(path);
+				Test new_test = TestPOJO.clone(test);
 				new_test.addPathObject(page_element);
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 

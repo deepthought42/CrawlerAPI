@@ -9,12 +9,11 @@ public class GroupDaoImpl implements GroupDao {
 
 	@Override
 	public Group save(Group group) {
-		group.setKey(generateKey(group));
 		Group group_record= find(group.getKey());
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		if(group_record == null){
 			group_record = connection.getTransaction().addFramedVertex(Group.class);
-			group_record.setKey(generateKey(group));
+			group_record.setKey(group.getKey());
 			group_record.setDescription(group.getDescription());
 			group_record.setName(group.getName());
 		}

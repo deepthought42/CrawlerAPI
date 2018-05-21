@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
+import com.qanairy.models.dao.PathObjectDao;
+import com.qanairy.models.dao.impl.PathObjectDaoImpl;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
@@ -82,6 +84,10 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	@Property("browser_run_statuses")
 	public abstract void setBrowserStatuses(Map<String, Boolean> browser_statuses);
 	
+	
+	@Property("browser_run_statuses")
+	public abstract Map<String, Boolean> getBrowserStatuses();
+
 	/**
 	 * @return whether or not this path goes into another domain
 	 */
@@ -115,7 +121,7 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 * @return Correctness value. Null indicates value is unset.
 	 */
 	@Adjacency(direction=Direction.IN, label="test_group")
-	public abstract Iterable<Group> getGroups();
+	public abstract List<Group> getGroups();
 	
 	/**
 	 * Sets correctness value of test
@@ -171,7 +177,39 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
 	public abstract void setRecords(List<TestRecord> page);
+
+	/**
+	 * 
+	 * @return
+	 */
+	public PageState firstPage() {
+		PathObjectDao path_obj_dao = new PathObjectDaoImpl();
+		for(String key : this.getPathKeys()){
+			PathObject path_obj = path_obj_dao.find(key);
+			if(path_obj instanceof PageState){
+				return (PageState)path_obj;
+			}
+		}
+		return null;
+	}
 	
-	@Property("browser_run_statuses")
-	public abstract Map<String, Boolean> getBrowserStatuses();
+	/**
+	 * Gets the last Vertex in a path that is of type {@link PageState}
+	 * 
+	 * @return
+	 */
+	public PageState findLastPage(){
+		List<String> path_keys = this.getPathKeys();
+		PageState page = null;
+
+		PathObjectDao path_obj_dao = new PathObjectDaoImpl();
+		for(String key : path_keys){
+			PathObject path_obj = path_obj_dao.find(key);
+			if(path_obj != null && path_obj.getType().equals("PageState")){
+				page = (PageState)path_obj;
+			}
+		}
+
+		return page;
+	}
 }

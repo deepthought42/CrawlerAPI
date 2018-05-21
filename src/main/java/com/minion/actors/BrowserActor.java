@@ -23,10 +23,8 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.qanairy.persistence.Action;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.Group;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
@@ -42,10 +40,8 @@ import com.qanairy.models.TestPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dao.TestDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.models.dao.impl.DomainDaoImpl;
-import com.qanairy.models.dao.impl.TestDaoImpl;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -125,7 +121,7 @@ public class BrowserActor extends UntypedActor {
 	 * @param path
 	 * @param result_page
 	 */
-	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
 		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
@@ -139,6 +135,8 @@ public class BrowserActor extends UntypedActor {
 		//tell memory worker of test
 		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf());
+		
+		return test;
 	}
 
 	/**
@@ -198,14 +196,14 @@ public class BrowserActor extends UntypedActor {
 		domain.setTestCount(domain.getTestCount()+1);
 		domain_repo.save(domain);
 		
-		createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
+		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
 		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 		discovery_repo.save(discovery_record);
 		
-		Path new_path = Path.clone(path);
-		Message<Path> path_msg = new Message<Path>(msg.getAccountKey(), new_path, msg.getOptions());
+		Test new_test = TestPOJO.clone(test);
+		Message<Test> path_msg = new Message<Test>(msg.getAccountKey(), new_test, msg.getOptions());
 		
 		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 		path_expansion_actor.tell(path_msg, getSelf() );
@@ -220,7 +218,7 @@ public class BrowserActor extends UntypedActor {
 	 * @throws NoSuchElementException
 	 * @throws IOException
 	 */
-	public void traverse_path(Browser browser, List<String> path_keys, List<? extends PathObject> path_objects, Message<?> acct_msg) throws NoSuchElementException, IOException{
+	public void traverse_path(Browser browser, List<String> path_keys, List<PathObject> path_objects, Message<?> acct_msg) throws NoSuchElementException, IOException{
 
 		PageState result_page = null;
 		long crawl_time_in_ms = -1L;
@@ -229,7 +227,7 @@ public class BrowserActor extends UntypedActor {
 		do{
 			result_page = Crawler.crawlPath(path_keys, path_objects, browser);
 			tries++;
-			result_page.setLandable(checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
+			result_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
 		}while(result_page == null && tries < 5);
 		final long pathCrawlEndTime = System.currentTimeMillis();
 		
@@ -240,12 +238,11 @@ public class BrowserActor extends UntypedActor {
 			last_idx = 0;
 		}
 
-		if(ExploratoryPath.hasCycle(path, result_page)){
-			path_keys.setIsUseful(false);
+		if(!ExploratoryPath.hasCycle(path_objects, result_page)){
+			/*path_keys.setIsUseful(false);
 	  	}
-	  	else{				
+	  	else{*/				
 	  		DomainDao domain_repo = new DomainDaoImpl();
-	  		OrientConnectionFactory conn = new OrientConnectionFactory();
 			Domain domain = domain_repo.find(browser.buildPage().getUrl().getHost());
 			domain.setTestCount(domain.getTestCount()+1);
 			domain_repo.save(domain);
@@ -258,43 +255,5 @@ public class BrowserActor extends UntypedActor {
 
 			createTest(path_keys, path_objects, result_page, crawl_time_in_ms, domain, acct_msg, discovery_record);
 	  	}
-	}
-
-	private boolean checkIfLandable(String browser_name, PageState page) {
-		boolean landable = false;
-		int tries = 0;
-
-		try{
-			Browser browser = new Browser(browser_name);
-			browser.getDriver().get(page.getUrl().toString());
-			try{
-				new WebDriverWait(browser.getDriver(), 360).until(
-						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			}catch(GridException e){
-				log.error(e.getMessage());
-			}
-			catch(Exception e){
-				log.error(e.getMessage());
-			}
-			
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {}
-			
-			if(this.equals(browser.buildPage())){
-				landable = true;
-			}
-			tries = 5;
-			browser.close();
-		}catch(Exception e){
-			e.printStackTrace();
-			log.error("ERROR VISITING PAGE AT ::: "+page.getUrl().toString());
-		}
-		
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {}
-		
-		return landable;
 	}
 }

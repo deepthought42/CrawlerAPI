@@ -19,6 +19,7 @@ public class SpecialCharacterRestriction extends Rule {
 	public SpecialCharacterRestriction() {
 		setValue("[a-zA-Z0-9]*");
 		setType(RuleType.SPECIAL_CHARACTER_RESTRICTION);
+		setKey(generateKey());
 	}
 
 	@Override

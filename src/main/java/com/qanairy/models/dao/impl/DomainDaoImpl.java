@@ -1,11 +1,16 @@
 package com.qanairy.models.dao.impl;
 
+import java.util.NoSuchElementException;
+
 import com.qanairy.models.dao.DomainDao;
 import com.qanairy.models.dao.TestUserDao;
 import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.TestUser;
 
+/**
+ * 
+ */
 public class DomainDaoImpl implements DomainDao{
 
 	@Override
@@ -36,7 +41,15 @@ public class DomainDaoImpl implements DomainDao{
 
 	@Override
 	public Domain find(String key) {
-		// TODO Auto-generated method stub
-		return null;
+		Domain domain = null;
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+
+		try{
+			domain = connection.getTransaction().getFramedVertices("key", key, Domain.class).next();
+		}catch(NoSuchElementException e){
+			System.err.println("could not find record");
+		}
+		connection.close();
+		return domain;
 	}
 }

@@ -6,6 +6,7 @@ import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.TestRecord;
+import com.qanairy.persistence.edges.HasDomain;
 
 
 /**
@@ -214,5 +215,17 @@ public class AccountPOJO extends Account{
 	@Override
 	public String generateKey() {
 		return getOrgName();
+	}
+
+	@Override
+	public List<HasDomain> getHasDomains() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public HasDomain addHasDomain(Domain domain) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

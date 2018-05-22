@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.qanairy.models.dao.AccountDao;
+import com.qanairy.models.dao.DomainDao;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
@@ -56,6 +57,13 @@ public class AccountDaoImpl implements AccountDao{
 		account_record.setDiscoveryRecords(account.getDiscoveryRecords());
 		account_record.setTestRecords(account.getTestRecords());
 		account_record.setOnboardedSteps(account.getOnboardedSteps());
+		
+		DomainDao domain_dao = new DomainDaoImpl();
+		for(Domain domain : account.getDomains()){
+			//account_record.addDomain(domain_dao.save(domain));
+			account_record.addHasDomain(domain_dao.save(domain));
+
+		}
 		connection.save();
 		
 		return account_record;

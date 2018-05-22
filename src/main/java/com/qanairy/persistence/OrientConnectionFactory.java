@@ -1,10 +1,15 @@
 package com.qanairy.persistence;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.persistence.edges.HasDomain;
 import com.syncleus.ferma.DelegatingFramedGraph;
 import com.syncleus.ferma.FramedGraph;
 
@@ -33,10 +38,14 @@ public class OrientConnectionFactory {
 	 * @return
 	 */
 	private DelegatingFramedGraph<OrientGraph> getConnection(){
+		Set<Class<?>> types = new HashSet<Class<?>>(Arrays.asList(new Class<?>[]{
+            Account.class,
+            Domain.class,
+            HasDomain.class}));
 		graphFactory = new OrientGraphFactory("remote:206.189.178.146/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000);
 		
 		
-		return new DelegatingFramedGraph<OrientGraph>(graphFactory.getTx(), true, true);
+		return new DelegatingFramedGraph<OrientGraph>(graphFactory.getTx(), true, types);
 		//return new OrientTransactionFactoryImpl(factory, annotationsSupported, basePaths);
 
 		

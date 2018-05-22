@@ -76,9 +76,9 @@ public class DomainController {
     	DomainPOJO domain_pojo = new DomainPOJO(protocol, url_obj.getHost(), discoveryBrowser, logo_url);
 		
 		Domain domain = DomainService.save(domain_pojo);
-    	acct.addDomain(domain);
+    	acct.addHasDomain(domain);
     	acct.setLastDomain(domain.getUrl());
-    	//AccountService.save(acct);
+    	AccountService.save(acct);
     	return domain;
     }
 
@@ -148,7 +148,7 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    public @ResponseBody List<? extends Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();

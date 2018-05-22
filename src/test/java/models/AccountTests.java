@@ -1,14 +1,18 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.qanairy.models.AccountPOJO;
+import com.qanairy.models.DomainPOJO;
 import com.qanairy.models.dao.AccountDao;
 import com.qanairy.models.dao.impl.AccountDaoImpl;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.TestRecord;
 
 /**
@@ -87,6 +91,27 @@ public class AccountTests {
 		Assert.assertTrue(acct_record.getCustomerToken().equals(acct.getCustomerToken()));
 		Assert.assertEquals(acct_record.getSubscriptionToken(), acct.getSubscriptionToken());
 		Assert.assertEquals(acct_record.getDiscoveryRecords(), acct.getDiscoveryRecords());
+		Assert.assertEquals(acct_record.getDomains(), acct.getDomains());
+		Assert.assertEquals(acct_record.getOnboardedSteps(), acct.getOnboardedSteps());
+		Assert.assertEquals(acct_record.getTestRecords(), acct.getTestRecords());
+	}
+	
+	@Test(groups="Regression")
+	public void accountCreateAndFindWithDomainUsers(){
+		Account acct = new AccountPOJO("Test Org", "#00000012SD", "test_subscription", new ArrayList<DiscoveryRecord>(), new ArrayList<TestRecord>(), new ArrayList<String>());
+		Domain domain = new DomainPOJO( "http", "Test.test", "chrome", "");
+		
+		acct.addHasDomain(domain);
+		AccountDao acct_dao = new AccountDaoImpl();
+		acct_dao.save(acct);
+		Account acct_record = acct_dao.find(acct.getKey());
+		Assert.assertTrue(acct_record.getKey().equals(acct.getKey()));
+		Assert.assertTrue(acct_record.getOrgName().equals(acct.getOrgName()));
+		Assert.assertTrue(acct_record.getCustomerToken().equals(acct.getCustomerToken()));
+		Assert.assertEquals(acct_record.getSubscriptionToken(), acct.getSubscriptionToken());
+		Assert.assertEquals(acct_record.getDiscoveryRecords(), acct.getDiscoveryRecords());
+		List<Domain> d1 = acct_record.getDomains();
+		List<Domain> d2 = acct.getDomains();
 		Assert.assertEquals(acct_record.getDomains(), acct.getDomains());
 		Assert.assertEquals(acct_record.getOnboardedSteps(), acct.getOnboardedSteps());
 		Assert.assertEquals(acct_record.getTestRecords(), acct.getTestRecords());

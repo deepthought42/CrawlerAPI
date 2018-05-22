@@ -1,6 +1,5 @@
 package com.qanairy.persistence;
 
-
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;

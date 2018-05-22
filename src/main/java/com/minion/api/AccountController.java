@@ -62,9 +62,6 @@ public class AccountController {
     @Autowired
     protected WebSecurityConfig appConfig;
 
-    @Autowired
-    protected AccountService account_service;
-    
     private StripeClient stripeClient;
 
     @Autowired
@@ -90,7 +87,7 @@ public class AccountController {
     	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	//Auth0Client auth = new Auth0Client();
     	//String username = auth.getUsername(auth_access_token);
-    	Account acct = this.account_service.find(username);
+    	Account acct = AccountService.find(username);
     	
     	//create account
         if(acct != null){
@@ -117,7 +114,7 @@ public class AccountController {
         Account new_account = null;
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        new_account = account_service.save(acct);
+        new_account = AccountService.save(acct);
         
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
@@ -143,7 +140,7 @@ public class AccountController {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-        Account acct = this.account_service.find(username);
+        Account acct = AccountService.find(username);
         if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -151,8 +148,8 @@ public class AccountController {
     		throw new MissingSubscriptionException();
     	}
         
-        acct.addOnboardingStep(step_name);
-        acct = account_service.save(acct);
+        acct.getOnboardedSteps().add(step_name);
+        acct = AccountService.save(acct);
         
         return acct.getOnboardedSteps();
     }
@@ -164,7 +161,7 @@ public class AccountController {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-        Account acct = this.account_service.find(username);
+        Account acct = AccountService.find(username);
         if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -185,7 +182,7 @@ public class AccountController {
     @RequestMapping(value ="/{id}", method = RequestMethod.GET)
     public Account get(final @PathVariable String key) {
         logger.info("get invoked");
-        return account_service.get(key);
+        return AccountService.get(key);
     }
 
 	@PreAuthorize("hasAuthority('update:accounts')")
@@ -193,7 +190,7 @@ public class AccountController {
     public Account update(final @PathVariable String key, 
     					  final @Validated @RequestBody Account account) {
         logger.info("update invoked");
-        return account_service.save(account);
+        return AccountService.save(account);
     }
     
 	@PreAuthorize("hasAuthority('delete:accounts')")
@@ -225,7 +222,7 @@ public class AccountController {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-        Account acct = this.account_service.find(username);
+        Account acct = AccountService.find(username);
         if(acct == null){
     		throw new UnknownAccountException();
     	}

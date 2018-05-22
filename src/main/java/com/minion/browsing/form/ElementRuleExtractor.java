@@ -34,7 +34,7 @@ public class ElementRuleExtractor {
 				Rule disabled = new DisabledRule();
 				rules.add(disabled);
 			}
-			else if(attr.getName().equalsIgnoreCase("type") && attr.contains("number")){
+			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().contains("number")){
 				Rule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
 				Rule special_character_rule = new SpecialCharacterRestriction();
 				

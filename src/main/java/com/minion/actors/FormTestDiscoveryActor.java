@@ -321,7 +321,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		assert input.getName().equals("input");
 		
 		List<Test> tests = new ArrayList<Test>();
-		String input_type = input.getAttribute("type").getVals().get(0);
+		String input_type = input.getAttributes().get(input.getAttributes().indexOf("type")).getVals().get(0);
 		if(input_type.equals("text") ||
 				input_type.equals("textarea") ||
 				input_type.equals("email")){
@@ -614,7 +614,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		assert input.getName().equals("input");
 		
 		List<Test> tests = new ArrayList<Test>();
-		String input_type = input.getAttribute("type").getVals().get(0);
+		String input_type = input.getAttributes().get(input.getAttributes().indexOf("type")).getVals().get(0);
 		if(input_type.equals("text") ||
 				input_type.equals("textarea") ||
 				input_type.equals("email")){

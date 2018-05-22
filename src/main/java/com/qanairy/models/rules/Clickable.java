@@ -36,12 +36,12 @@ public class Clickable extends Rule {
 
 	@Override
 	public void setValue(String value) {
-		this.value = null;
+		this.value = value;
 	}
 	
 	@Override
 	public String getValue() {
-		return null;
+		return this.value;
 	}
 
 	@Override

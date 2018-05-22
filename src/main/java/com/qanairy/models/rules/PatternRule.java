@@ -20,7 +20,7 @@ public class PatternRule extends Rule {
 	 */
 	@Override
 	public Boolean evaluate(PageElement elem) {
-		String pattern = "/^" + elem.getAttribute("vals").getVals().toString() + " $/";
+		String pattern = "/^" + elem.getAttributes().get(elem.getAttributes().indexOf("vals")).getVals().toString() + " $/";
 		Matcher matcher = Pattern.compile(this.value).matcher(pattern);
 	    return matcher.matches();
 	}
@@ -28,7 +28,7 @@ public class PatternRule extends Rule {
 	public PatternRule(String pattern){
 		this.value = pattern;
 		setType(RuleType.PATTERN);
-		setKey(generateKey());
+		setKey(super.generateKey());
 	}
 
 

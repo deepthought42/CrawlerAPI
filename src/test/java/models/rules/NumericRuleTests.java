@@ -16,12 +16,12 @@ public class NumericRuleTests {
 
 	@Test(groups="Regression")
 	public void assertNumericRulePersists(){
-		Rule rule = new NumericRule(RuleType.NUMERIC_RESTRICTION, null);
+		Rule rule = new NumericRule(RuleType.MAX_LENGTH, null);
 		RuleDao dao = new RuleDaoImpl();
 		dao.save(rule);
 		
 		Rule created_rule = dao.find(rule.getKey());
-		Assert.assertTrue(created_rule.getType().equals(rule.getType()));
-		Assert.assertTrue(created_rule.getValue() == null);
+		Assert.assertEquals(created_rule.getType(), rule.getType());
+		Assert.assertEquals(created_rule.getValue(), null);
 	}
 }

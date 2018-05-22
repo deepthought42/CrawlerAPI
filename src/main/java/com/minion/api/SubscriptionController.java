@@ -24,9 +24,6 @@ public class SubscriptionController {
     private StripeClient stripeClient;
     
     @Autowired
-    protected AccountService accountService;
-    
-    @Autowired
     SubscriptionController(StripeClient stripeClient) {
         this.stripeClient = stripeClient;
     }
@@ -37,7 +34,7 @@ public class SubscriptionController {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
     	Plan new_plan = Plan.retrieve(plan);
     	Subscription subscription = Subscription.retrieve(acct.getSubscriptionToken());
     	

@@ -50,8 +50,6 @@ import com.qanairy.models.AttributePOJO;
 import com.qanairy.models.PageElementPOJO;
 import com.qanairy.models.PageStatePOJO;
 import com.qanairy.models.ScreenshotSetPOJO;
-import com.qanairy.models.dao.PageElementDao;
-import com.qanairy.models.dao.impl.PageElementDaoImpl;
 import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
@@ -434,13 +432,13 @@ public class Browser {
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 				
-				if(is_child && elem.getSize().getHeight() > 5 && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+				if(is_child && elem.getSize().getHeight() > 5 && elem.isDisplayed() 
+						&& (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					
 					Dimension d = elem.getSize();
-					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
-					PageElementDao page_elem_repo = new PageElementDaoImpl();
+					PageElement tag = new PageElementPOJO(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
 					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
 					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
 					tag.setScreenshot(screenshot);
@@ -653,9 +651,8 @@ public class Browser {
 		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();
-		input_ids.add(input_field.getInputElement().getAttribute("id").getVals().get(0));
+		input_ids.add(input_field.getInputElement().getAttributes().get(input_field.getInputElement().getAttributes().indexOf("id")).getVals().get(0));
 		
-		List<PageElement> label_tags = new ArrayList<PageElement>();
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
@@ -677,7 +674,7 @@ public class Browser {
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();
 		for(FormField input : group_inputs){
-			input_ids.add(input.getInputElement().getAttribute("id").getVals().get(0));
+			input_ids.add(input.getInputElement().getAttributes().get(input.getInputElement().getAttributes().indexOf("id")).getVals().get(0));
 		}
 		
 		List<PageElement> label_tags = new ArrayList<PageElement>();
@@ -776,7 +773,7 @@ public class Browser {
 			//PageElement tag = (PageElement)elem;
 			if(tag.getName().equalsIgnoreCase("input")){
 				//List<Attribute> attr_list = tag.getAttributes();
-				Attribute attr = tag.getAttribute("type");
+				Attribute attr = tag.getAttributes().get(tag.getAttributes().indexOf("type"));
 				if(attr != null){
 					for(String attr_val : attr.getVals()){
 						if(attr_val.equalsIgnoreCase("checkbox")){

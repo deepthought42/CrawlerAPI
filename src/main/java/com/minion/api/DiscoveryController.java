@@ -70,11 +70,7 @@ import akka.actor.Props;
 @Controller
 @RequestMapping("/discovery")
 public class DiscoveryController {
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
-
-    @Autowired
-    protected AccountService accountService;
     
     private StripeClient stripeClient;
 
@@ -91,7 +87,7 @@ public class DiscoveryController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -136,7 +132,7 @@ public class DiscoveryController {
     	String username = auth.getUsername(auth_access_token);
 		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -284,7 +280,7 @@ public class DiscoveryController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}

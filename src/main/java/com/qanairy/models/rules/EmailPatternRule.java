@@ -20,7 +20,7 @@ public class EmailPatternRule extends Rule {
 
 	@Override
 	public Boolean evaluate(PageElement page_element) {
-		String pattern = "/^" + page_element.getAttribute("vals").getVals().toString() + " $/";
+		String pattern = "/^" + page_element.getAttributes().get(page_element.getAttributes().indexOf("vals")).getVals().toString() + " $/";
 		Matcher matcher = Pattern.compile(getValue()).matcher(pattern);
 	    return matcher.matches();
 	}

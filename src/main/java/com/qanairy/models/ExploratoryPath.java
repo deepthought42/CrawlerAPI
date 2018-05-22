@@ -1,19 +1,12 @@
 package com.qanairy.models;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
-import com.qanairy.models.dao.PageElementDao;
-import com.qanairy.models.dao.PathObjectDao;
-import com.qanairy.models.dao.impl.PageElementDaoImpl;
-import com.qanairy.models.dao.impl.PathObjectDaoImpl;
 import com.qanairy.persistence.Action;
-import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
-import com.qanairy.persistence.edges.PathEdge;
 
 
 /**
@@ -22,24 +15,19 @@ import com.qanairy.persistence.edges.PathEdge;
 public class ExploratoryPath {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryPath.class);
 	
+	private List<String> path_keys;
 	private List<PathObject> path_objects;
 	private List<Action> possible_actions;
-	
-	/**
-	 * Creates new instance of Path
-	 */
-	public ExploratoryPath(){
-		super();
-	}
 
 	/**
 	 * Creates new instance of path setting it to the given path
 	 * 
 	 * @param current_path
 	 */
-	public ExploratoryPath(List<PathObject> current_path, List<Action> actions){
+	public ExploratoryPath(List<String> path_keys, List<PathObject> current_path, List<Action> actions){
+		setPathKeys(path_keys);
 		setPathObjects(current_path);
-		this.setPossibleActions(actions);
+		setPossibleActions(actions);
 	}
 
 		
@@ -55,31 +43,6 @@ public class ExploratoryPath {
 	
 	public int size(){
 		return getPathObjects().size();
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object o){
-		int thisPathLength = this.size();
-		int comparatorPathLength = path.size();
-				
-		if(thisPathLength != comparatorPathLength){
-			return false;
-		}
-		
-		List<PathObject> comparatorPathNode = path.getPath();
-		for(PathObject obj : getPathObjects()){
-			if(!obj.getClass().getSimpleName().equals(comparatorPathNode.getClass().getSimpleName())){
-				return false;
-			}
-			if(!obj.equals(comparatorPathNode)){
-				return false;
-			}
-		}
-		
-		return true;		
 	}
 	
 	/**
@@ -143,7 +106,7 @@ public class ExploratoryPath {
 		//				if path object is of type PageElement
 		//					then load path object
 		//						check if path object leads to an action that exists in the paths possible actions list
-		for(PathObject path_obj : path.getPath()){
+		/*for(PathObject path_obj : path.getPathObjects()){
 			if(path_obj instanceof PageElement){
 				PageElementDao page_elem_dao = new PageElementDaoImpl();
 				OrientConnectionFactory connection = new OrientConnectionFactory();
@@ -168,6 +131,7 @@ public class ExploratoryPath {
 				}
 			}
 		}
+		*/
 		return false;
 	}
 	
@@ -225,6 +189,28 @@ public class ExploratoryPath {
 		return null;
 	}
 
+	/**
+	 * Adds an object to path
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	public boolean addToPathKeys(String key){
+		return this.getPathKeys().add(key);
+	}
+	
+	public void addPathObject(PathObject path_obj) {
+		this.path_objects.add(path_obj);
+	}
+
+	public List<PathObject> getPathObjects() {
+		return this.path_objects;
+	}
+
+	public void setPathObjects(List<PathObject> path_objects) {
+		this.path_objects = path_objects;
+	}
+	
 	public List<Action> getPossibleActions() {
 		return possible_actions;
 	}
@@ -233,12 +219,54 @@ public class ExploratoryPath {
 		this.possible_actions = possible_actions;
 	}
 
-	public List<PathObject> getPathObjects() {
-		return path_objects;
+	public List<String> getPathKeys() {
+		return path_keys;
 	}
 
-	public void setPathObjects(List<PathObject> path_objects) {
-		this.path_objects = path_objects;
+	public void setPathKeys(List<String> path_keys) {
+		this.path_keys = path_keys;
+	}
+	
+	/**
+	 * Clone {@link Path} object
+	 * 
+	 * @param path
+	 * @return
+	 */
+	public static ExploratoryPath clone(ExploratoryPath path){		
+		List<PathObject> path_objects = new ArrayList<PathObject>(path.getPathObjects());
+		List<String> path_keys = new ArrayList<String>(path.getPathKeys());
+		List<Action> possible_actions = new ArrayList<Action>(path.getPossibleActions());
+		
+		ExploratoryPath clone_path = new ExploratoryPath(path_keys, path_objects, possible_actions);
+		clone_path.setPathKeys(path_keys);
+		clone_path.setPathObjects(path_objects);
+		
+		return clone_path;
+	}
+	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof ExploratoryPath){
+			ExploratoryPath path = (ExploratoryPath)o;
+			List<PathObject> comparator_nodes = new ArrayList<PathObject>(path.getPathObjects());
+			for(PathObject obj : getPathObjects()){
+				int idx = 0;
+				for(PathObject comparator_obj : path.getPathObjects()){
+					if(comparator_obj.equals(obj)){
+						comparator_nodes.remove(idx);
+						break;
+					}
+					idx++;
+				}
+			}
+			return comparator_nodes.isEmpty();
+		}
+		return false;
 	}
 }
 

@@ -25,6 +25,7 @@ import com.qanairy.persistence.ScreenshotSet;
  *
  */
 public class PageStatePOJO extends PageState {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageStatePOJO.class);
 
     private String key;
@@ -42,18 +43,6 @@ public class PageStatePOJO extends PageState {
 	private Map<String, Integer> element_counts;
 
 	private String type;
-	
-	/**
-	 * instantiate an empty page instance
-	 */
-	public PageStatePOJO(){
-		this.setSrc(null);
-		this.setImageWeight(0);
-		this.element_counts = new HashMap<String, Integer>();
-		this.setBrowserScreenshots(new ArrayList<ScreenshotSet>());
-		this.setType(PageState.class.getSimpleName());
-		setKey(generateKey());
-	}
 	
 	/**
  	 * Creates a page instance that is meant to contain information about a state of a webpage
@@ -128,14 +117,14 @@ public class PageStatePOJO extends PageState {
 	public PageStatePOJO(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		setType("Page");
-		this.setSrc(html);
-		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshots(browsers_screenshots);
-		this.setElements(elements);
-		this.setElementCounts(countTags(elements));
-		this.setLandable(isLandable);
-		this.setImageWeight(0);
-		this.setType(PageState.class.getSimpleName());
+		setSrc(html);
+		setUrl(new URL(url.replace("/#","")));
+		setBrowserScreenshots(browsers_screenshots);
+		setElements(elements);
+		setElementCounts(countTags(elements));
+		setLandable(isLandable);
+		setImageWeight(0);
+		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
 	
@@ -153,15 +142,15 @@ public class PageStatePOJO extends PageState {
 	public PageStatePOJO(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		setType("Page");
-		this.setSrc(html);
-		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshots(browsers_screenshots);
-		this.setElements(elements);
-		this.setElementCounts(countTags(elements));
-		this.setLandable(isLandable);
-		this.setImageWeight(0);
-		this.setKey(key);
-		this.setType(PageState.class.getSimpleName());
+		setSrc(html);
+		setUrl(new URL(url.replace("/#","")));
+		setBrowserScreenshots(browsers_screenshots);
+		setElements(elements);
+		setElementCounts(countTags(elements));
+		setLandable(isLandable);
+		setImageWeight(0);
+		setKey(key);
+		setType(PageState.class.getSimpleName());
 	}
 	
 	
@@ -330,15 +319,22 @@ public class PageStatePOJO extends PageState {
 	 */
 	@Override
 	public PathObject clone() {
-		PageStatePOJO page = new PageStatePOJO();
+		List<PageElement> elements = new ArrayList<PageElement>(getElements());
+		List<ScreenshotSet> screenshots = new ArrayList<ScreenshotSet>(getBrowserScreenshots());
 		
-		page.setElements(this.getElements());
-		page.setKey(this.getKey());
-		page.setLandable(this.isLandable());
-		page.setBrowserScreenshots(this.getBrowserScreenshots());
-		page.setSrc(this.getSrc());
-		page.setUrl(this.getUrl());
-		return page;
+		PageStatePOJO page;
+		try {
+			page = new PageStatePOJO(getSrc(), getUrl().toString(), screenshots, elements, isLandable());
+			page.setElements(this.getElements());
+			page.setLandable(this.isLandable());
+			page.setSrc(this.getSrc());
+			page.setUrl(this.getUrl());
+			return page;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	 public String getKey() {

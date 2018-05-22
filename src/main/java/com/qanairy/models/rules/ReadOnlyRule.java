@@ -16,7 +16,7 @@ public class ReadOnlyRule extends Rule {
 	public ReadOnlyRule(){
 		setValue(null);
 		setType(RuleType.READ_ONLY);
-		setKey(generateKey());
+		setKey(super.generateKey());
 	}
 
 	

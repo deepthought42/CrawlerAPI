@@ -180,6 +180,17 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 
 	/**
 	 * 
+	 * @param browser_name name of browser (ie 'chrome', 'firefox')
+	 * @param status boolean indicating passing or failing
+	 * 
+	 * @pre browser_name != null
+	 */
+	public void setBrowserStatus(String browser_name, Boolean status){
+		assert browser_name != null;
+		getBrowserStatuses().put(browser_name, status);
+	}
+	/**
+	 * 
 	 * @return
 	 */
 	public PageState firstPage() {

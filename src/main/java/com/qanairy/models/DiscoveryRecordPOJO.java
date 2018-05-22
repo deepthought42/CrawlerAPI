@@ -51,7 +51,7 @@ public class DiscoveryRecordPOJO extends DiscoveryRecord {
 
 	@Override
 	public String getKey() {
-		return generateKey();
+		return this.key;
 	}
 	
 	@Override

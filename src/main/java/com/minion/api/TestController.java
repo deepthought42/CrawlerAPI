@@ -41,7 +41,6 @@ import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.DomainService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -76,12 +75,6 @@ import com.qanairy.models.dao.impl.TestDaoImpl;
 @RequestMapping("/tests")
 public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
-
-    @Autowired
-    protected AccountService accountService;
-    
-    @Autowired
-    protected DomainService domainService;
 
     private StripeClient stripeClient;
 
@@ -217,6 +210,7 @@ public class TestController {
 	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
 	public @ResponseBody Test setInitialCorrectness(HttpServletRequest request, 
 													@RequestParam(value="key", required=true) String key, 
+													@RequestParam(value="browser", required=true) String browser_name,
 													@RequestParam(value="correct", required=true) boolean correct)
 															throws UnknownAccountException{
     	
@@ -225,7 +219,7 @@ public class TestController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -246,8 +240,6 @@ public class TestController {
 		Test test = test_dao.find(key);
 		test.setCorrect(correct);
 		
-		
- 		String browser_name = domain.getDiscoveryBrowserName();
 		Map<String, Boolean> browser_statuses = test.getBrowserStatuses();
 		browser_statuses.put(browser_name, correct);
 		test.setBrowserStatuses(browser_statuses);
@@ -347,7 +339,7 @@ public class TestController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -439,7 +431,7 @@ public class TestController {
 			browser.close();
 
 			acct.addTestRecord(record);
-			accountService.save(acct);
+			AccountService.save(acct);
 			
 			test.addRecord(record);
 			boolean is_passing = true;

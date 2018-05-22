@@ -4,19 +4,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import com.qanairy.models.PageStatePOJO;
 import com.qanairy.models.ScreenshotSetPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.TestRecordDao;
 import com.qanairy.models.dao.impl.TestRecordDaoImpl;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.Path;
 import com.qanairy.persistence.ScreenshotSet;
 import com.qanairy.persistence.TestRecord;
 

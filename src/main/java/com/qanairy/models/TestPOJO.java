@@ -82,6 +82,7 @@ public class TestPOJO extends Test{
 		setBrowserStatuses(new HashMap<String, Boolean>());
 		setIsRunning(false);
 		setKey(generateKey());
+		setRunTime(0L);
 	}
 
 
@@ -103,6 +104,7 @@ public class TestPOJO extends Test{
 		setBrowserStatuses(new HashMap<String, Boolean>());
 		setIsRunning(false);
 		setKey(generateKey());
+		setRunTime(0L);
 	}
 	
 	/**
@@ -162,18 +164,6 @@ public class TestPOJO extends Test{
 	
 	public void setName(String name){
 		this.name = name;
-	}
-	
-	/**
-	 * 
-	 * @param browser_name name of browser (ie 'chrome', 'firefox')
-	 * @param status boolean indicating passing or failing
-	 * 
-	 * @pre browser_name != null
-	 */
-	public void setBrowserStatus(String browser_name, Boolean status){
-		assert browser_name != null;
-		this.browser_passing_statuses.put(browser_name, status);
 	}
 	
 	public List<String> getPathKeys(){

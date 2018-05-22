@@ -141,7 +141,7 @@ public class PathExpansionActor extends UntypedActor {
 						Test new_test = TestPOJO.clone(test);
 						new_test.getPathObjects().addAll(form_test.getPathObjects());
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							ExploratoryPath action_path = new ExploratoryPath(new_test.getPathObjects(), action_list);
+							ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 							//check for element action sequence. 
 							//if one exists with one of the actions in the action_list
 							// 	 then skip this action path
@@ -163,7 +163,7 @@ public class PathExpansionActor extends UntypedActor {
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					
-					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathObjects(), action_list);
+					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 
 					//if one exists with one of the actions in the action_list

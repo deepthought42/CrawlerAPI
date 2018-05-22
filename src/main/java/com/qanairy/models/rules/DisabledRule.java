@@ -33,7 +33,7 @@ public class DisabledRule extends Rule{
 		 * 
 		 */
 	
-		Attribute attr = elem.getAttribute("disabled");
+		Attribute attr = elem.getAttributes().get(elem.getAttributes().indexOf("disabled"));
 		System.err.println("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
 		return attr.getVals().size() == 0;
 	}
@@ -63,11 +63,11 @@ public class DisabledRule extends Rule{
 
 	@Override
 	public String getValue() {
-		return null;
+		return this.value;
 	}
 	
 	@Override
 	public void setValue(String value) {
-		this.value = null;
+		this.value = value;
 	}
 }

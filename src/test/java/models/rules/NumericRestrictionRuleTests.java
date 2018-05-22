@@ -21,6 +21,6 @@ public class NumericRestrictionRuleTests {
 		
 		Rule created_rule = dao.find(rule.getKey());
 		Assert.assertTrue(created_rule.getType().equals(rule.getType()));
-		Assert.assertTrue(created_rule.getValue() == null);
+		Assert.assertEquals(created_rule.getValue(), "[0-9]*");
 	}
 }

@@ -12,7 +12,6 @@ import com.qanairy.models.PageElementPOJO;
 import com.qanairy.models.dao.PageElementDao;
 import com.qanairy.models.dao.impl.PageElementDaoImpl;
 import com.qanairy.models.rules.Clickable;
-import com.qanairy.models.rules.NumericRestrictionRule;
 import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.Rule;
@@ -34,7 +33,7 @@ public class PageElementTests {
 		Map<String, String> css_map = new HashMap<String, String>();
 		css_map.put("color", "purple");
 		
-		PageElement page_element = new PageElementPOJO("71a7731fee27df1b6e01a589ab1f386aaf83f2b9456083d6e49264c91941b911", "test element", "//div", "div", attributes, css_map);
+		PageElement page_element = new PageElementPOJO("test element", "//div", "div", attributes, css_map);
 		PageElementDao page_elem_dao = new PageElementDaoImpl();
 		
 		page_elem_dao.save(page_element);
@@ -61,7 +60,7 @@ public class PageElementTests {
 		Map<String, String> css_map = new HashMap<String, String>();
 		css_map.put("color", "purple");
 		
-		PageElement page_element = new PageElementPOJO("71a7731fee27df1b6e01a589ab1f386aaf83f2b9456083d6e49264c91941b911", "test element", "//div", "div", attributes, css_map, rules);
+		PageElement page_element = new PageElementPOJO("test element", "//div", "div", attributes, css_map, rules);
 		PageElementDao page_elem_dao = new PageElementDaoImpl();
 		
 		page_elem_dao.save(page_element);

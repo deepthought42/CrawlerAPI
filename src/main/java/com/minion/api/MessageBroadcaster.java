@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.PageStatePOJO;
+import com.qanairy.models.TestPOJO;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
@@ -31,7 +32,7 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveredTest(Test test) throws JsonProcessingException {	
+	public static void broadcastDiscoveredTest(Test test, String host) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
 		for(PathObject obj : test.getPathObjects()){
 			if(obj != null && obj.getType().equals("PageState")){
@@ -50,14 +51,13 @@ public class MessageBroadcaster {
 			}
 		}
 
-		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
 		PageState result_page = null;
 		try {
 			result_page = new PageStatePOJO("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		Test new_test = new Test(test.getKey(), path, result_page, test.getDomain(), test.getName());
+		Test new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), result_page, test.getName());
 		new_test.setBrowserStatuses(test.getBrowserStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
@@ -69,8 +69,6 @@ public class MessageBroadcaster {
 		/*Gson gson = new Gson();
         String test_json = gson.toJson(new_test);
         */
-
-		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
 
@@ -86,11 +84,10 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTest(Test test) throws JsonProcessingException {	
+	public static void broadcastTest(Test test, String host) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
-		Path path_clone = Path.clone(test.getPath());
 		
-		for(PathObject obj : path_clone.getPath()){
+		for(PathObject obj : test.getPathObjects()){
 			if(obj != null && obj.getType().equals("PageState")){
 				PageState page_obj = (PageState)obj;
 								
@@ -107,9 +104,8 @@ public class MessageBroadcaster {
 			}
 		}
 
-		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
-		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain(), test.getName());
-		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
+		Test new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), test.getResult(), test.getName());
+		new_test.setBrowserStatuses(test.getBrowserStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
 		try {
@@ -122,8 +118,6 @@ public class MessageBroadcaster {
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
-
-		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
 

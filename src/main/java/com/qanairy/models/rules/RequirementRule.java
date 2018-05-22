@@ -15,7 +15,7 @@ public class RequirementRule extends Rule{
 	public RequirementRule(){
 		setValue(null);
 		setType(RuleType.REQUIRED);
-		this.setKey(generateKey());
+		this.setKey(super.generateKey());
 	}
 	
 

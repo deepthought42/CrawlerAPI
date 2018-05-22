@@ -1,6 +1,5 @@
 package com.qanairy.models.rules;
 
-import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.Rule;
@@ -54,7 +53,7 @@ public class NumericRule extends Rule{
 	 */
 	@Override
 	public Boolean evaluate(PageElement elem) {
-		String field_value = elem.getAttribute("val").getVals().toString();
+		String field_value = elem.getAttributes().get(elem.getAttributes().indexOf("val")).getVals().toString();
 		if(this.getType().equals(RuleType.MAX_LENGTH)){
 			return field_value.length() <= Integer.parseInt(this.getValue());
 		}

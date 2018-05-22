@@ -33,16 +33,15 @@ public class AccountPOJO extends Account{
 	 * @pre users != null
 	 */
 	public AccountPOJO(String org_name, String customer_token, String subscription_token){
-		
-		this.setOrgName(org_name);
-		this.setCustomerToken(customer_token);
-		this.setSubscriptionToken(subscription_token);
-		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
-		this.setDomains(new ArrayList<Domain>());
-		this.setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
-		this.setTestRecords(new ArrayList<TestRecord>());
-		this.setOnboardedSteps(new ArrayList<String>());
-		this.setKey(generateKey());
+		setOrgName(org_name);
+		setCustomerToken(customer_token);
+		setSubscriptionToken(subscription_token);
+		setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
+		setDomains(new ArrayList<Domain>());
+		setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
+		setTestRecords(new ArrayList<TestRecord>());
+		setOnboardedSteps(new ArrayList<String>());
+		setKey(generateKey());
 	}
 	
 	/**
@@ -56,14 +55,14 @@ public class AccountPOJO extends Account{
 	public AccountPOJO(String org_name, String customer_token, String subscription_token, 
 					List<DiscoveryRecord> discovery_records, List<TestRecord> test_records, List<String> onboarded_steps){
 		
-		this.setOrgName(org_name);
-		this.setCustomerToken(customer_token);
-		this.setSubscriptionToken(subscription_token);
-		this.setDomains(new ArrayList<Domain>());
-		this.setDiscoveryRecords(discovery_records);
-		this.setTestRecords(test_records);
-		this.setOnboardedSteps(onboarded_steps);
-		this.setKey(generateKey());
+		setOrgName(org_name);
+		setCustomerToken(customer_token);
+		setSubscriptionToken(subscription_token);
+		setDomains(new ArrayList<Domain>());
+		setDiscoveryRecords(discovery_records);
+		setTestRecords(test_records);
+		setOnboardedSteps(onboarded_steps);
+		setKey(generateKey());
 	}
 
 	/**
@@ -81,15 +80,15 @@ public class AccountPOJO extends Account{
 					String last_domain_url, List<DiscoveryRecord> discovery_records,
 					List<TestRecord> test_records, List<String> onboarded_steps){
 		
-		this.setOrgName(org_name);
-		this.setCustomerToken(customer_token);
-		this.setSubscriptionToken(subscription_token);
-		this.setDomains(domains);
-		this.setLastDomain(last_domain_url);
-		this.setDiscoveryRecords(discovery_records);
-		this.setTestRecords(test_records);
-		this.setOnboardedSteps(onboarded_steps);
-		this.setKey(generateKey());
+		setOrgName(org_name);
+		setCustomerToken(customer_token);
+		setSubscriptionToken(subscription_token);
+		setDomains(domains);
+		setLastDomain(last_domain_url);
+		setDiscoveryRecords(discovery_records);
+		setTestRecords(test_records);
+		setOnboardedSteps(onboarded_steps);
+		setKey(generateKey());
 	}
 			
 	public String getOrgName() {
@@ -160,8 +159,8 @@ public class AccountPOJO extends Account{
 		this.domains = domains;
 	}
 	
-	public boolean addDomain(Domain domain) {
-		return this.domains.add(domain);
+	public void addDomain(Domain domain) {
+		this.domains.add(domain);
 	}
 	
 	public void removeDomain(Domain domain) {

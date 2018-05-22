@@ -10,8 +10,6 @@ import org.testng.annotations.Test;
 import com.qanairy.models.PageElementPOJO;
 import com.qanairy.models.PageStatePOJO;
 import com.qanairy.models.ScreenshotSetPOJO;
-import com.qanairy.models.dao.impl.PageElementDaoImpl;
-import com.qanairy.models.dao.impl.PageStateDaoImpl;
 import com.qanairy.models.dao.impl.TestDaoImpl;
 import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.PageElement;
@@ -43,11 +41,9 @@ public class TestTests {
 								 true);
 			
 			PageElement page_elem = new PageElementPOJO("button test", "//button", "input", new ArrayList<Attribute>(), new HashMap<String, String>());
-			PageElementDaoImpl page_elem_dao = new PageElementDaoImpl();
-			PageStateDaoImpl page_dao = new PageStateDaoImpl();
 			List<String> path_keys = new ArrayList<String>();
-			path_keys.add(page_dao.generateKey(page));
-			path_keys.add(page_elem_dao.generateKey(page_elem));
+			path_keys.add(page.getKey());
+			path_keys.add(page_elem.getKey());
 			
 			List<PathObject> path_nodes = new ArrayList<PathObject>();
 			path_nodes.add(page);
@@ -55,7 +51,7 @@ public class TestTests {
 			
 			//new Domain("http", "www.test.test", "chrome", "")
 			test = new com.qanairy.models.TestPOJO(path_keys, path_nodes, page, "Testing Test 2");
-			test.setKey(test_dao.generateKey(test));
+			test.setKey(test.getKey());
 			test.setCorrect(true);
 			com.qanairy.persistence.Test test_record = test_dao.save(test);
 			
@@ -84,9 +80,8 @@ public class TestTests {
 								 new ArrayList<PageElement>(), 
 								 true);
 			
-			PageStateDaoImpl page_dao = new PageStateDaoImpl();
 			List<String> path_keys = new ArrayList<String>();
-			path_keys.add(page_dao.generateKey(page));
+			path_keys.add(page.getKey());
 			
 			List<PathObject> path_objects = new ArrayList<PathObject>();
 			path_objects.add(page);
@@ -94,7 +89,7 @@ public class TestTests {
 			//new Domain("http", "www.test.test", "chrome", null);
 			test = new com.qanairy.models.TestPOJO(path_keys, path_objects, page, "Testing Test 2");
 			test.setCorrect(true);
-			test.setKey(test_dao.generateKey(test));
+			test.setKey(test.getKey());
 			com.qanairy.persistence.Test test_record = test_dao.save(test);
 			
 			Assert.assertEquals(test_record.getKey(), test.getKey());

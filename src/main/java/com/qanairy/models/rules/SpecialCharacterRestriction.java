@@ -19,14 +19,14 @@ public class SpecialCharacterRestriction extends Rule {
 	public SpecialCharacterRestriction() {
 		setValue("[a-zA-Z0-9]*");
 		setType(RuleType.SPECIAL_CHARACTER_RESTRICTION);
-		setKey(generateKey());
+		setKey(super.generateKey());
 	}
 
 	@Override
 	public Boolean evaluate(PageElement elem) {
 		Pattern pattern = Pattern.compile(this.value);
 
-        Matcher matcher = pattern.matcher(elem.getAttribute("val").getVals().toString());
+        Matcher matcher = pattern.matcher(elem.getAttributes().get(elem.getAttributes().indexOf("val")).getVals().toString());
 		return matcher.matches();
 	}
 	

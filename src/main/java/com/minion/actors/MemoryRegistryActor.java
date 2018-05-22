@@ -28,17 +28,17 @@ public class MemoryRegistryActor extends UntypedActor{
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
-			Message<?> acct_msg = (Message<?>)message;
+			Message<?> msg = (Message<?>)message;
 			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
-			if(acct_msg.getData() instanceof Test){
-				Test test = (Test)acct_msg.getData();
+			if(msg.getData() instanceof Test){
+				Test test = (Test)msg.getData();
 				TestDao test_repo = new TestDaoImpl();
 				test_repo.save(test);
 				if(test.getBrowserStatuses().isEmpty()){
-					MessageBroadcaster.broadcastDiscoveredTest(test);
+					MessageBroadcaster.broadcastDiscoveredTest(test, msg.getOptions().get("browser").toString());
 				}
 				else{
-					MessageBroadcaster.broadcastTest(test);
+					MessageBroadcaster.broadcastTest(test, msg.getOptions().get("browser").toString());
 				}
 			}
 		}

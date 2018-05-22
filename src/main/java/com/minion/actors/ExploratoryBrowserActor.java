@@ -8,7 +8,6 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -26,10 +25,8 @@ import com.qanairy.models.TestPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dao.TestDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.models.dao.impl.DomainDaoImpl;
-import com.qanairy.models.dao.impl.TestDaoImpl;
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
@@ -45,7 +42,6 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 public class ExploratoryBrowserActor extends UntypedActor {
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 
 	/**
@@ -87,13 +83,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					discovery_repo.save(discovery_record);
 					
 					for(Action action : exploratory_path.getPossibleActions()){
-						Test test = TestPOJO.clone(exploratory_path);
-						test.addPathObject(action);
+						ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
+						path.addPathObject(action);
 						final long pathCrawlStartTime = System.currentTimeMillis();
 						int tries = 0;
 						do{
 							try{
-								result_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
+								result_page = Crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser);
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
 								log.error("Error happened while exploratory actor attempted to crawl test");
@@ -119,7 +115,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 					
-						if(!ExploratoryPath.hasCycle(test.getPathObjects(), result_page)){
+						if(!ExploratoryPath.hasCycle(path.getPathObjects(), result_page)){
 					  		/*test.setIsUseful(false);
 					  		continue;
 					  	}
@@ -131,7 +127,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 					  		
 					  		do{
-					  			Test parent_path = buildParentPath(test, browser.getDriver());
+					  			ExploratoryPath parent_path = buildParentPath(path, browser.getDriver());
 					  			if(parent_path == null){
 					  				break;
 					  			}
@@ -142,7 +138,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  			new_browser.close();
 					  			
 					  			if(results_match){
-					  				test = parent_path;
+					  				path = parent_path;
 					  			}
 					  		}while(results_match);
 					  		
@@ -150,12 +146,12 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							domain.setTestCount(domain.getTestCount()+1);
 							domain_dao.save(domain);
 							
-					  		createTest(test.getPathKeys(), test.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
+					  		createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
 							MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
-					  		Test new_test = TestPOJO.clone(test);
-							new_test.setResult(result_page);
-							Message<Test> path_msg = new Message<Test>(acct_msg.getAccountKey(), new_test, acct_msg.getOptions());
+					  		ExploratoryPath new_path = ExploratoryPath.clone(path);
+					  		//new_path.setResult(result_page);
+							Message<ExploratoryPath> path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), new_path, acct_msg.getOptions());
 
 							final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
 							path_expansion_actor.tell(path_msg, getSelf());
@@ -228,9 +224,9 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @throws NoSuchElementException
 	 * @throws IOException
 	 */
-	private boolean doesPathProduceExpectedResult(Test test, PageState result_page, Browser browser) throws NoSuchElementException, IOException{
-		System.err.println("attempting to crawl test with length #########   "+test.getPathKeys().size());
-		PageState parent_result = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
+	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser) throws NoSuchElementException, IOException{
+		System.err.println("attempting to crawl test with length #########   "+path.getPathKeys().size());
+		PageState parent_result = Crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser);
 		return parent_result.equals(result_page);
 	}
 	
@@ -243,12 +239,12 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @param driver
 	 * @return
 	 */
-	private Test buildParentPath(Test test, WebDriver driver){
+	private ExploratoryPath buildParentPath(ExploratoryPath path, WebDriver driver){
 		PageElement elem = null;
 		int element_idx = -1;
-		for(int idx = test.getPathObjects().size()-1; idx >= 0; idx--){
-			if(test.getPathObjects().get(idx).getType().equals("PageElement")){
-				elem = (PageElement)test.getPathObjects().get(idx);
+		for(int idx = path.getPathObjects().size()-1; idx >= 0; idx--){
+			if(path.getPathObjects().get(idx).getType().equals("PageElement")){
+				elem = (PageElement)path.getPathObjects().get(idx);
 				element_idx = idx;
 				break;
 			}
@@ -260,7 +256,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			WebElement parent = Browser.getParentElement(web_elem);
 			
 			//clone test and swap page element with parent
-			Test parent_path = TestPOJO.clone(test);
+			ExploratoryPath parent_path = ExploratoryPath.clone(path);
 			String this_xpath = Browser.generateXpath(parent, "", new HashMap<String, Integer>(), driver); 
 			
 			PageElement parent_tag = new PageElementPOJO(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), Browser.loadCssProperties(parent) );

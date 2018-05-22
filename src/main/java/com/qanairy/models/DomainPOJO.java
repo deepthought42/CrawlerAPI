@@ -2,9 +2,6 @@ package com.qanairy.models;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.stereotype.Component;
-
 import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestUser;
@@ -14,7 +11,6 @@ import com.qanairy.persistence.TestUser;
  * Encompasses a domain name as well as all {@link Test}s and {@link Group}s 
  * belong to this domain
  */
-@Component
 public class DomainPOJO extends Domain{
 	private String domain;
 	private List<Test> tests;

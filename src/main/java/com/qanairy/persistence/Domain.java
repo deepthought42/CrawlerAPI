@@ -2,6 +2,8 @@ package com.qanairy.persistence;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.qanairy.persistence.serializers.DomainSerializer;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
@@ -9,6 +11,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * Represents an {@link Domain} record in OrientDB database
  */
+@JsonSerialize(using = DomainSerializer.class)
 public abstract class Domain extends AbstractVertexFrame implements Persistable{
 
 	@Property("key")

@@ -49,7 +49,7 @@ public class DomainTests {
 	 */
 	@Test(groups="Regression")
 	public void domainUpdateRecord(){
-		Domain domain = new DomainPOJO("test_key_here", "Test.test", "Test.test", new ArrayList<com.qanairy.persistence.Test>(), "http", 0);
+		Domain domain = new DomainPOJO("Test.test", "Test.test", new ArrayList<com.qanairy.persistence.Test>(), "http", 0);
 		DomainDaoImpl domain_dao = new DomainDaoImpl();
 
 		Domain domain_record = domain_dao.save(domain);

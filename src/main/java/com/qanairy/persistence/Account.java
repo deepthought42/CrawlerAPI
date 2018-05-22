@@ -47,14 +47,11 @@ public abstract class Account extends AbstractVertexFrame implements Persistable
 	@Property("onboarded_steps")
 	public abstract void setOnboardedSteps(List<String> onboarded_steps);
 	
-	@Property("onboarded_steps")
-	public abstract void addOnboardingStep(String step_name);
-	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public abstract List<Domain> getDomains();
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
-	public abstract boolean addDomain(Domain domain);
+	public abstract void addDomain(Domain domain);
 	
 	@Adjacency(direction=Direction.OUT, label="has_domain")
 	public abstract void removeDomain(Domain domain);

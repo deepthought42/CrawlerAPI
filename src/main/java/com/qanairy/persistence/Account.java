@@ -3,10 +3,8 @@ package com.qanairy.persistence;
 import java.util.List;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
-import com.qanairy.persistence.edges.HasDomain;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
-import com.syncleus.ferma.annotations.Incidence;
 import com.syncleus.ferma.annotations.Property;
 
 /**
@@ -53,15 +51,12 @@ public abstract class Account extends AbstractVertexFrame implements Persistable
 	@Adjacency(label="has_domain")
 	public abstract List<Domain> getDomains();
 	
-	@Incidence(label = "has_domain")
-	public abstract List<HasDomain> getHasDomains();
-
-	@Incidence(label = "has_domain")
-	public abstract HasDomain addHasDomain(Domain domain);
-
-	/*@Adjacency(direction=Direction.OUT, label="has_domain")
+	@Adjacency(label="has_domain")
+	public abstract void setDomains(List<Domain> domains);
+	
+	@Adjacency(label = "has_domain")
 	public abstract void addDomain(Domain domain);
-	*/
+
 	@Adjacency(label="has_domain")
 	public abstract void removeDomain(Domain domain);
 	

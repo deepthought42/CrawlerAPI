@@ -58,14 +58,25 @@ public class AccountDaoImpl implements AccountDao{
 		account_record.setTestRecords(account.getTestRecords());
 		account_record.setOnboardedSteps(account.getOnboardedSteps());
 		
-		DomainDao domain_dao = new DomainDaoImpl();
-		for(Domain domain : account.getDomains()){
-			//account_record.addDomain(domain_dao.save(domain));
-			account_record.addHasDomain(domain_dao.save(domain));
-
+		boolean exists = false;
+		for(Domain domain : account_record.getDomains()){
+			for(Domain domain2 : account.getDomains()){
+				if(domain.getKey().equals(domain2.getKey())){
+					exists = true;
+				}
+			}
 		}
-		connection.save();
 		
+		if(!exists){
+			DomainDao domain_dao = new DomainDaoImpl();
+			for(Domain domain : account.getDomains()){
+				//account_record.addDomain(domain_dao.save(domain));
+				account_record.addDomain(domain_dao.save(domain));
+			}
+		}
+		
+		//connection.save();
+		connection.close();
 		return account_record;
 	}
 

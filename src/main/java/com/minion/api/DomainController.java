@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.DomainPOJO;
+import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.Domain;
@@ -47,7 +49,7 @@ public class DomainController {
     public @ResponseBody Domain create(HttpServletRequest request,
 							    		 @RequestParam(value="protocol", required=true) String protocol,
 							    		 @RequestParam(value="url", required=true) String url,
-							    		 @RequestParam(value="discoveryBrowser", required=true) String discoveryBrowser,
+							    		 @RequestParam(value="browser_name", required=true) String browser_name,
 							    		 @RequestParam(value="logo_url", required=false) String logo_url) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -73,10 +75,10 @@ public class DomainController {
     	}
     	URL url_obj = new URL(protocol+"://"+formatted_url);
 		
-    	DomainPOJO domain_pojo = new DomainPOJO(protocol, url_obj.getHost(), discoveryBrowser, logo_url);
+    	DomainPOJO domain_pojo = new DomainPOJO(protocol, url_obj.getHost(), browser_name, logo_url);
 		
 		Domain domain = DomainService.save(domain_pojo);
-    	acct.addHasDomain(domain);
+    	acct.addDomain(domain);
     	acct.setLastDomain(domain.getUrl());
     	AccountService.save(acct);
     	return domain;
@@ -92,7 +94,13 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.PUT)
     public @ResponseBody Domain update(HttpServletRequest request,
-    									@RequestBody DomainPOJO domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+   		 								 @RequestParam(value="key", required=true) String key,
+							    		 @RequestParam(value="protocol", required=true) String protocol,
+								   		 @RequestParam(value="browser_name", required=true) String browser_name,
+								   		 @RequestParam(value="logo_url", required=false) String logo_url) 
+    											throws UnknownUserException, 
+    													UnknownAccountException, 
+    													MalformedURLException {
         //printGrantedAuthorities((Auth0JWTToken) principal);
         /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
@@ -113,7 +121,13 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	return DomainService.save(domain);
+    	DomainDao dao = new DomainDaoImpl();
+    	Domain domain = dao.find(key);
+    	domain.setDiscoveryBrowserName(browser_name);
+    	domain.setLogoUrl(logo_url);
+    	domain.setProtocol(protocol);
+    	
+    	return domain;
     }
     
     /**
@@ -126,7 +140,10 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="/select", method = RequestMethod.PUT)
     public @ResponseBody void selectDomain(HttpServletRequest request,
-    									@RequestBody DomainPOJO domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    									@RequestBody DomainPOJO domain) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
@@ -148,7 +165,7 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody List<? extends Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    public @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();

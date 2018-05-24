@@ -156,14 +156,17 @@ public class AccountPOJO extends Account{
 		return this.domains;
 	}
 	
+	@Override
 	public void setDomains(List<Domain> domains){
 		this.domains = domains;
 	}
 	
+	@Override
 	public void addDomain(Domain domain) {
 		this.domains.add(domain);
 	}
 	
+	@Override
 	public void removeDomain(Domain domain) {
 		int idx = -1;
 		boolean domain_found = false;
@@ -215,17 +218,5 @@ public class AccountPOJO extends Account{
 	@Override
 	public String generateKey() {
 		return getOrgName();
-	}
-
-	@Override
-	public List<HasDomain> getHasDomains() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public HasDomain addHasDomain(Domain domain) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

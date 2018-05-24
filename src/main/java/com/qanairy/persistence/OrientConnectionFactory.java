@@ -42,10 +42,10 @@ public class OrientConnectionFactory {
             Account.class,
             Domain.class,
             HasDomain.class}));
-		graphFactory = new OrientGraphFactory("remote:206.189.178.146/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000);
+		graphFactory = new OrientGraphFactory("remote:206.81.15.55/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000);
 		
 		
-		return new DelegatingFramedGraph<OrientGraph>(graphFactory.getTx(), true, types);
+		return new DelegatingFramedGraph<OrientGraph>(graphFactory.getNoTx(), true, types);
 		//return new OrientTransactionFactoryImpl(factory, annotationsSupported, basePaths);
 
 		

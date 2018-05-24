@@ -41,7 +41,7 @@ public class PageStateDaoImpl implements PageStateDao {
 				page_record.addElement(page_elem_dao.save(elem));
 			}
 		}
-
+		connection.close();
 		return page_record;
 	}
 

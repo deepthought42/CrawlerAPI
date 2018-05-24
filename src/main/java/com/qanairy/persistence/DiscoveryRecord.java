@@ -2,12 +2,15 @@ package com.qanairy.persistence;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.qanairy.persistence.serializers.DiscoveryRecordSerializer;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Property;
 
 /**
  * Representation of a {@link DiscoveryRecord} in graph database
  */
+@JsonSerialize(using = DiscoveryRecordSerializer.class)
 public abstract class DiscoveryRecord extends AbstractVertexFrame implements Persistable{
 
 	@Property("key")

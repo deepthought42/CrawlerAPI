@@ -15,7 +15,7 @@ public class DiscoveryRecordDaoImpl implements DiscoveryRecordDao {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void save(DiscoveryRecord record) {
+	public DiscoveryRecord save(DiscoveryRecord record) {
 		assert record != null;
 		DiscoveryRecord discovery_record = find(record.getKey());
 
@@ -33,6 +33,8 @@ public class DiscoveryRecordDaoImpl implements DiscoveryRecordDao {
 		discovery_record.setLastPathRanAt(record.getLastPathRanAt());
 		discovery_record.setTestCount(record.getTestCount());
 		discovery_record.setTotalPathCount(record.getTotalPathCount());
+		
+		return discovery_record;
 	}
 
 

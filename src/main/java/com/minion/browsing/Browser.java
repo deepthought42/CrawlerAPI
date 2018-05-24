@@ -94,12 +94,17 @@ public class Browser {
 	public Browser(String browser) throws MalformedURLException, NullPointerException {
 		assert browser != null;
 		
+		System.err.println("Opening browser");
 		int cnt = 0;
 		this.setBrowserName(browser);
 		while(driver == null && cnt < 20){
 			try{
 				if(browser.equals("chrome")){
+					System.err.println("Opening CHROME browser");
 					this.driver = openWithChrome();
+					
+					System.err.println("Opened CHROME");
+
 				}
 				else if(browser.equals("firefox")){
 					this.driver = openWithFirefox();
@@ -117,7 +122,6 @@ public class Browser {
 				break;
 			}
 			catch(UnreachableBrowserException e){
-				
 				log.error(e.getMessage());
 			}
 			catch(WebDriverException e){
@@ -314,6 +318,8 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
+		
+		System.err.println("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
 

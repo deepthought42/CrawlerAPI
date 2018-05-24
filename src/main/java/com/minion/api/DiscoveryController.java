@@ -125,7 +125,13 @@ public class DiscoveryController {
 	@RequestMapping(path="/start", method = RequestMethod.GET)
 	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request, 
 											   	  		@RequestParam(value="url", required=true) String url) 
-										   	  				throws MalformedURLException, UnknownAccountException, DiscoveryLimitReachedException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+										   	  				throws MalformedURLException, 
+										   	  						UnknownAccountException, 
+										   	  						DiscoveryLimitReachedException, 
+										   	  						AuthenticationException, 
+										   	  						InvalidRequestException, 
+										   	  						APIConnectionException, 
+										   	  						CardException, APIException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -205,15 +211,14 @@ public class DiscoveryController {
         
 		if(diffInMinutes > 1440){
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-				
+			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();	
 			DiscoveryRecord discovery_record = new DiscoveryRecordPOJO(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
-        	acct.getDiscoveryRecords().add(discovery_record);
         	
+			acct.addDiscoveryRecord(discovery_repo.save(discovery_record));
         	AccountDao acct_dao = new AccountDaoImpl();
         	acct_dao.save(acct);
                 	
 			WorkAllowanceStatus.register(acct.getKey());
-			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Map<String, Object> options = new HashMap<String, Object>();
 			options.put("browser", domain.getDiscoveryBrowserName());
@@ -242,6 +247,9 @@ public class DiscoveryController {
 			} catch (Exception e) {
 				log.error(e.getMessage());
 			}
+			
+			System.err.println("RETURNING DISCOVERY RECORD :: "+last_discovery_record);
+
 			return discovery_record;
 
 		}

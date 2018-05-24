@@ -61,18 +61,16 @@ public class PageStatePOJO extends PageState {
 		assert html != null;
 		assert html.length() > 0;
 		
-		setType("Page");
-		this.setSrc(html);
-		this.setType("Page");
-		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshots(browsers_screenshots);
-		this.setElements(elements);
-		this.setElementCounts(countTags(elements));
-		this.setLandable(false);
-		this.setImageWeight(0);
-		this.setType(PageState.class.getSimpleName());
+		setType(PageState.class.getSimpleName());
+		setSrc(html);
+		setUrl(new URL(url.replace("/#","")));
+		setBrowserScreenshots(browsers_screenshots);
+		setElements(elements);
+		setElementCounts(countTags(elements));
+		setLandable(false);
+		setImageWeight(0);
+		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
-
 	}
 	
 	/**
@@ -89,16 +87,15 @@ public class PageStatePOJO extends PageState {
 	public PageStatePOJO(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		
-		setType("Page");
-		this.setSrc(html);
-		this.setType("Page");
-		this.setUrl(new URL(url.replace("/#","")));
-		this.setBrowserScreenshots(browsers_screenshots);
-		this.setElements(elements);
-		this.setElementCounts(countTags(elements));
-		this.setLandable(false);
-		this.setImageWeight(0);
-		this.setType(PageState.class.getSimpleName());
+		setType(PageState.class.getSimpleName());
+		setSrc(html);
+		setUrl(new URL(url.replace("/#","")));
+		setBrowserScreenshots(browsers_screenshots);
+		setElements(elements);
+		setElementCounts(countTags(elements));
+		setLandable(false);
+		setImageWeight(0);
+		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
 	
@@ -116,7 +113,7 @@ public class PageStatePOJO extends PageState {
 	 */
 	public PageStatePOJO(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		setType("Page");
+		setType(PageState.class.getSimpleName());
 		setSrc(html);
 		setUrl(new URL(url.replace("/#","")));
 		setBrowserScreenshots(browsers_screenshots);
@@ -141,7 +138,6 @@ public class PageStatePOJO extends PageState {
 	 */
 	public PageStatePOJO(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		setType("Page");
 		setSrc(html);
 		setUrl(new URL(url.replace("/#","")));
 		setBrowserScreenshots(browsers_screenshots);

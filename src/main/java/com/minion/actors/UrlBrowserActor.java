@@ -32,7 +32,6 @@ import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dao.impl.TestDaoImpl;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.Group;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PathObject;
@@ -74,9 +73,11 @@ public class UrlBrowserActor extends UntypedActor {
 			Message<?> acct_msg = (Message<?>)message;
 
 			Browser browser = null;
+			System.err.println("Recieved data of type :: "+acct_msg.getData().getClass().getSimpleName());
 			if(acct_msg.getData() instanceof URL){
 
 				try{
+					System.err.println("URL received, browser opening  ::   "+acct_msg.getOptions().get("browser").toString());
 					browser = new Browser(acct_msg.getOptions().get("browser").toString());
 				}
 				catch(NullPointerException e){
@@ -156,6 +157,7 @@ public class UrlBrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
+		System.err.println("Generating landing page test");
 		browser.getDriver().get(((URL)msg.getData()).toString());
 
 	  	PageState page_obj = browser.buildPage();
@@ -167,8 +169,6 @@ public class UrlBrowserActor extends UntypedActor {
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_objects.add(page_obj);
 	  	
-		OrientConnectionFactory conn = new OrientConnectionFactory();
-
 		DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
 		DiscoveryRecord discovery_record = discovery_repo.find( msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());

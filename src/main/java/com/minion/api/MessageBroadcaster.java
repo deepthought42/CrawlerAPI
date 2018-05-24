@@ -51,13 +51,13 @@ public class MessageBroadcaster {
 			}
 		}
 
-		PageState result_page = null;
+		PageStatePOJO result_page = null;
 		try {
 			result_page = new PageStatePOJO("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		Test new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), result_page, test.getName());
+		TestPOJO new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), result_page, test.getName());
 		new_test.setBrowserStatuses(test.getBrowserStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
@@ -104,7 +104,7 @@ public class MessageBroadcaster {
 			}
 		}
 
-		Test new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), test.getResult(), test.getName());
+		TestPOJO new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), test.getResult(), test.getName());
 		new_test.setBrowserStatuses(test.getBrowserStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());

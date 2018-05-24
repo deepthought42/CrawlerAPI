@@ -178,8 +178,8 @@ public class TestPOJO extends Test{
 		return this.path_keys.add(key);
 	}
 	
-	public boolean addRecord(TestRecord record){
-		return this.records.add(record);
+	public void addRecord(TestRecord record){
+		this.records.add(record);
 	}
 	
 	public List<TestRecord> getRecords(){

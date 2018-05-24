@@ -39,7 +39,7 @@ public class TestRecordTests {
 			Assert.assertFalse(true);
 		}
 		
-		TestRecord test_record = new TestRecordPOJO(new Date(), true, browser_name, page, -1L);	
+		TestRecord test_record = new TestRecordPOJO(new Date(), null, browser_name, page, -1L);	
 		TestRecord test_record_record = test_record_dao.save(test_record);
 		
 		Assert.assertEquals(test_record_record.getPassing(), test_record.getPassing());

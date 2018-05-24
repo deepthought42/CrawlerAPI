@@ -76,10 +76,10 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		  	}
 		  	
 		  	OrientConnectionFactory conn = new OrientConnectionFactory();
-			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
-			DiscoveryRecord discovery_record = discovery_repo.find(acct_msg.getOptions().get("discovery_key").toString());
+			DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
+			DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 			discovery_record.setTestCount(discovery_record.getTestCount()+form_tests.size());
-			discovery_repo.save(discovery_record);
+
 			MessageBroadcaster.broadcastDiscoveryStatus(page.getUrl().getHost(), discovery_record);
 			System.err.println("Broadcasting discovery record now that we've added "+form_tests.size()+"        tests   ");
 			conn.close();

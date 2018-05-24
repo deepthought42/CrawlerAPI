@@ -47,10 +47,10 @@ public class TestDaoImpl implements TestDao {
 			test_record.addDomain(idomain);
 			 */
 		}
-		TestRecordDao test_record_record = new TestRecordDaoImpl();
+		TestRecordDao test_record_dao = new TestRecordDaoImpl();
 
 		for(TestRecord record : test.getRecords()){
-			test_record.addRecord(test_record_record.save(record));
+			test_record.addRecord(test_record_dao.save(record));
 		}
 		
 		List<Group> groups = new ArrayList<Group>();

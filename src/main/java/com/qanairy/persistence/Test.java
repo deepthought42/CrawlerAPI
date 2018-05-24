@@ -6,16 +6,19 @@ import java.util.List;
 import java.util.Map;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.qanairy.models.dao.PathObjectDao;
 import com.qanairy.models.dao.impl.PathObjectDaoImpl;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
+import com.qanairy.persistence.serializers.TestSerializer;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
  *
  */
+@JsonSerialize(using = TestSerializer.class)
 public abstract class Test extends AbstractVertexFrame implements Persistable{
 	/**
 	 * @return the key for the current test
@@ -148,12 +151,6 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	public abstract void removeGroup(Group group);
 	
 	/**
-	 * Adds a record to this test connecting it via edge with label "has"
-	 */
-	@Adjacency(direction=Direction.OUT, label="has_record")
-	public abstract boolean addRecord(TestRecord testRecord);
-	
-	/**
 	 * @return {@link Page} experienced as a result of executing the path
 	 */
 	@Adjacency(label="result")
@@ -170,7 +167,7 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 * @return {@link Iterator} of {@link TestRecord}s that this test "has"
 	 */
 	@Adjacency(direction=Direction.OUT, label="has_record")
-	public abstract Iterable<TestRecord> getRecords();
+	public abstract List<TestRecord> getRecords();
 	
 	/**
 	 * Sets the {@link TestRecord} that is the result of executing the path
@@ -178,6 +175,12 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	@Adjacency(direction=Direction.OUT, label="has_record")
 	public abstract void setRecords(List<TestRecord> page);
 
+	/**
+	 * Adds a record to this test connecting it via edge with label "has"
+	 */
+	@Adjacency(direction=Direction.OUT, label="has_record")
+	public abstract void addRecord(TestRecord testRecord);
+	
 	/**
 	 * 
 	 * @param browser_name name of browser (ie 'chrome', 'firefox')

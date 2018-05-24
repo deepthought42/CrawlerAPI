@@ -262,14 +262,14 @@ public class TestController {
      * 
      * @param itest
      */
-	private void updateLastTestRecordPassingStatus(Test itest) {
-		Iterator<TestRecord> itest_records = itest.getRecords().iterator();
+	private void updateLastTestRecordPassingStatus(Test test) {
+		Iterator<TestRecord> test_records = test.getRecords().iterator();
 		TestRecord record = null;
-		while(itest_records.hasNext()){
-			record = itest_records.next();
+		while(test_records.hasNext()){
+			record = test_records.next();
 		}
 		if(record != null){
-			record.setPassing(itest.getCorrect());
+			record.setPassing(test.getCorrect());
 		}
 	}
 

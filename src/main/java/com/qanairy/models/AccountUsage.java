@@ -1,5 +1,7 @@
 package com.qanairy.models;
 
+import com.qanairy.persistence.DiscoveryRecord;
+
 public class AccountUsage {
 	private int discovery_limit;
 	private int discoveries_used;
@@ -13,7 +15,7 @@ public class AccountUsage {
 		this.setTestsUsed(tests_used);
 	}
 
-	public int getDiscoveryaLimit() {
+	public int getDiscoveryLimit() {
 		return discovery_limit;
 	}
 

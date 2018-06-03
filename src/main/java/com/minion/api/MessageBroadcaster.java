@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.PageStatePOJO;
+import com.qanairy.persistence.Action;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
@@ -171,5 +172,18 @@ public class MessageBroadcaster {
         String discovery_json = mapper.writeValueAsString(record);
         
 		pusher.trigger(host, "discovery-status", discovery_json);
+	}
+
+	public static void broadcastAction(Action action, String host) throws JsonProcessingException {
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String discovery_json = mapper.writeValueAsString(action);
+        
+		pusher.trigger(host, "action", discovery_json);
 	}
 }

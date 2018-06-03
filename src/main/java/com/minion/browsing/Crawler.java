@@ -1,6 +1,7 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.PageAlert;
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.PageElement;
@@ -106,7 +108,7 @@ public class Crawler {
 	public static boolean performAction(Action action, PageElement elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
-		
+		MessageBroadcaster.broadcastAction(action, (new URL(driver.getCurrentUrl()).getHost()));
 		System.err.println("Last Element    :: "+elem);
 		System.err.println("Action   :: "+action);
 		try{

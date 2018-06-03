@@ -36,7 +36,7 @@ public class RuleDaoImpl implements RuleDao {
 		try{
 			record = connection.getTransaction().getFramedVertices("key", key, Rule.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find Rule record");
 		}
 		connection.close();
 		return record;

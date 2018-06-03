@@ -2,7 +2,6 @@ package com.qanairy.models.dao.impl;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-
 import com.qanairy.models.dao.AccountDao;
 import com.qanairy.models.dao.DomainDao;
 import com.qanairy.persistence.Account;
@@ -23,12 +22,12 @@ public class AccountDaoImpl implements AccountDao{
     	
 		Account account = null;
 		try{
+			//account = connection.getTransaction().traverse(g -> g.V().has("key", key)).next(Account.class);			
 			account = connection.getTransaction().getFramedVertices("key", key, Account.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find account record");
 		}
 		connection.close();
-
 		return account;
 	}
 
@@ -42,7 +41,7 @@ public class AccountDaoImpl implements AccountDao{
 		try{
 			account_record = connection.getTransaction().getFramedVertices("key", account.getKey(), Account.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find account record");
 		}
 		
 		if(account_record == null){
@@ -53,7 +52,7 @@ public class AccountDaoImpl implements AccountDao{
 			account_record.setOrgName(account.getOrgName());
 		}
 		
-		account_record.setLastDomain(account.getLastDomain());		
+		account_record.setLastDomain(account.getLastDomain());
 		account_record.setDiscoveryRecords(account.getDiscoveryRecords());
 		account_record.setTestRecords(account.getTestRecords());
 		account_record.setOnboardedSteps(account.getOnboardedSteps());

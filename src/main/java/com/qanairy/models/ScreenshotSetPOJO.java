@@ -11,10 +11,6 @@ public class ScreenshotSetPOJO extends ScreenshotSet {
 	private String full_screenshot;
 	private String viewport_screenshot;
 	
-	public String generateKey(ScreenshotSet obj) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(obj.getFullScreenshot())+":"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(obj.getViewportScreenshot());
-	}
-	
 	public ScreenshotSetPOJO(String full, String viewport, String browser_name){
 		this.full_screenshot = full;
 		this.viewport_screenshot = viewport;

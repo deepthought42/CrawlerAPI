@@ -30,7 +30,7 @@ public class AttributeDaoImpl implements AttributeDao {
 		try{
 			attr = connection.getTransaction().getFramedVertices("key", key, Attribute.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find attribute record");
 		}
 		connection.close();
 		return attr;

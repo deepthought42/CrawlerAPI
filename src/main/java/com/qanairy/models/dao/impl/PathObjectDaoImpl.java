@@ -41,6 +41,7 @@ public class PathObjectDaoImpl implements PathObjectDao {
 			path_obj = page_element_dao.save((PageElement)path_obj);
 		}
 		else if(path_obj instanceof Action){
+			System.err.println("Saving action...");
 			ActionDao action_dao = new ActionDaoImpl();
 			path_obj = action_dao.save((Action)path_obj);
 		}
@@ -55,7 +56,7 @@ public class PathObjectDaoImpl implements PathObjectDao {
 		try{
 			path_obj = connection.getTransaction().getFramedVertices("key", key, PathObject.class).next();
 		}catch(NoSuchElementException e){
-			log.error("Error requesting action record from database");
+			log.error("Error requesting path object record from database");
 		}
 		connection.close();
 		return path_obj;

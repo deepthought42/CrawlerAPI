@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Group;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
 
@@ -34,49 +34,45 @@ public class TestSerializer extends StdSerializer<Test> {
       throws IOException, JsonProcessingException {
   
         jgen.writeStartObject();
+       
         jgen.writeStringField("key", test.getKey());
         jgen.writeStringField("name", test.getName());
+    	jgen.writeNumberField("last_run_timestamp", test.getLastRunTimestamp().getTime());
         jgen.writeNumberField("run_time", test.getRunTime());
-        //jgen.writeNumberField("browser_statuses", test.getBrowserStatuses());
-        jgen.writeStartObject();
-        jgen.writeObjectFieldStart("allInfo");
+        if(test.getCorrect() != null){
+        	jgen.writeBooleanField("correct", test.getCorrect().booleanValue());
+        }
+        
+        jgen.writeObjectFieldStart("browser_statuses");
         for(String key : test.getBrowserStatuses().keySet()){
-	        jgen.writeObjectField(key, test.getBrowserStatuses().get(key));
-	        jgen.writeEndObject();
+        	jgen.writeObjectField(key, test.getBrowserStatuses().get(key));
+	        //jgen.writeEndObject();
     	}        
-        jgen.writeBooleanField("correct", test.getCorrect());
-        jgen.writeNumberField("last_run_timestamp", test.getLastRunTimestamp().getTime());
+        jgen.writeEndObject();
+        
 
         jgen.writeArrayFieldStart("path_keys");
-        jgen.writeStartArray();
         for (String key: test.getPathKeys()) {
         	jgen.writeString(key);
         }
         jgen.writeEndArray();
-        
-        jgen.writeArrayFieldStart("path_objects");
-        jgen.writeStartArray();
-        for (PathObject path_obj: test.getPathObjects()) {
-        	jgen.writeObject(path_obj);
+
+        System.err.println("test groups size :: "+test.getGroups());
+        jgen.writeArrayFieldStart("groups");
+        for (Group group: test.getGroups()) {
+        	System.err.println("test group :: "+group);
+        	jgen.writeObject(group);
         }
         jgen.writeEndArray();
+                
         
-
         jgen.writeArrayFieldStart("records");
-        jgen.writeStartArray();
         for (TestRecord test_record: test.getRecords()) {
         	jgen.writeObject(test_record);
         }
         jgen.writeEndArray();
-        
-        //jgen.writeStringField("test_records", test.getRecords());
-        
-        jgen.writeStartObject();
-        jgen.writeObjectFieldStart("result");
-        jgen.writeObject(test.getResult());
-        jgen.writeEndObject();
-        
-        //jgen.writeStringField("result", test.getResult());
+                
+        jgen.writeObjectField("result", test.getResult());        
         jgen.writeBooleanField("spans_multiple_domains", test.getSpansMultipleDomains());
 
         jgen.writeEndObject();

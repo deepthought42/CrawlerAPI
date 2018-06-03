@@ -36,8 +36,10 @@ import com.qanairy.models.TestPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.models.dao.impl.DomainDaoImpl;
+import com.qanairy.models.dao.impl.PageStateDaoImpl;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -184,13 +186,17 @@ public class BrowserActor extends UntypedActor {
 		DiscoveryRecord discovery_record = discovery_repo.find(msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-		
 		discovery_repo.save(discovery_record);
 		
+		PageStateDao page_state_dao = new PageStateDaoImpl();
+
 		DomainDao domain_repo = new DomainDaoImpl();
 		Domain domain = domain_repo.find(page_obj.getUrl().getHost());
 		domain.setTestCount(domain.getTestCount()+1);
+		domain.addPageState(page_state_dao.save(page_obj));
 		domain_repo.save(domain);
+		
+		MessageBroadcaster.broadcastPageState(page_obj, domain.getUrl());
 		
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
 		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
@@ -237,11 +243,16 @@ public class BrowserActor extends UntypedActor {
 		if(!ExploratoryPath.hasCycle(path_objects, result_page)){
 			/*path_keys.setIsUseful(false);
 	  	}
-	  	else{*/				
+	  	else{*/			
+			PageStateDao page_state_dao = new PageStateDaoImpl();
+
 	  		DomainDao domain_repo = new DomainDaoImpl();
 			Domain domain = domain_repo.find(browser.buildPage().getUrl().getHost());
 			domain.setTestCount(domain.getTestCount()+1);
+			domain.addPageState(page_state_dao.save(result_page));
 			domain_repo.save(domain);
+			
+			MessageBroadcaster.broadcastPageState(result_page, domain.getUrl());
 
 			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
 			DiscoveryRecord discovery_record = discovery_repo.find(acct_msg.getOptions().get("discovery_key").toString());

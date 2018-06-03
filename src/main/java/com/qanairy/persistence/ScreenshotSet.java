@@ -1,8 +1,14 @@
 package com.qanairy.persistence;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.qanairy.persistence.serializers.ScreenshotSetSerializer;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Property;
 
+/**
+ * 
+ */
+@JsonSerialize(using = ScreenshotSetSerializer.class)
 public abstract class ScreenshotSet extends AbstractVertexFrame implements Persistable {
 	@Property("key")
 	public abstract String getKey();

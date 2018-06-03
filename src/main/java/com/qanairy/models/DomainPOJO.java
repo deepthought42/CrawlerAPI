@@ -3,6 +3,7 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.List;
 import com.qanairy.persistence.Domain;
+import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestUser;
 
@@ -20,6 +21,7 @@ public class DomainPOJO extends Domain{
 	private String logo_url;
 	private List<TestUser> test_users;
 	private String discovery_browser;
+	private List<PageState> page_states;
 	
 	/**
 	 * 
@@ -31,24 +33,8 @@ public class DomainPOJO extends Domain{
 		setUrl(null);
 		setTests(new ArrayList<Test>());
 		setProtocol("http");
-		test_users = new ArrayList<TestUser>();
-		setDiscoveryBrowserName("");
-		setTestCount(0);
-		setKey(generateKey());
-	}
-	
-	/**
-	 * 
-	 * 
-	 * @param domain
-	 * @param organization
-	 */
-	@Deprecated
-	public DomainPOJO(String url, String protocol){
-		setUrl(url);
-		setTests(new ArrayList<Test>());
-		setProtocol(protocol);
-		test_users = new ArrayList<TestUser>();
+		this.test_users = new ArrayList<TestUser>();
+		setPageStates(new ArrayList<PageState>());
 		setDiscoveryBrowserName("");
 		setTestCount(0);
 		setKey(generateKey());
@@ -66,9 +52,10 @@ public class DomainPOJO extends Domain{
 		setLogoUrl(logo_url);
 		setTests(new ArrayList<Test>());
 		setProtocol(protocol);
-		test_users = new ArrayList<TestUser>();
+		this.test_users = new ArrayList<TestUser>();
 		setDiscoveryBrowserName(browser);
 		setTestCount(0);
+		setPageStates(new ArrayList<PageState>());
 		setKey(generateKey());
 	}
 	
@@ -90,9 +77,10 @@ public class DomainPOJO extends Domain{
 		setTests(tests);
 		setProtocol(protocol);
 		setLogoUrl(logo_url);
-		test_users = new ArrayList<TestUser>();
+		this.test_users = new ArrayList<TestUser>();
 		setDiscoveryBrowserName("");
 		setTestCount(test_count);
+		setPageStates(new ArrayList<PageState>());
 		setKey(generateKey());
 	}
 
@@ -121,11 +109,30 @@ public class DomainPOJO extends Domain{
 		setTests(tests);
 		setProtocol(protocol);
 		setLogoUrl(logo_url);
-		test_users = test_users;
+		setTestUsers(test_users);
 		setDiscoveryBrowserName(browser_name);
 		setTestCount(test_count);
+		setPageStates(new ArrayList<PageState>());
 		setKey(generateKey());
 	}
+	
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof Domain){
+			Domain domain = (Domain)o;
+			if(domain.getUrl().equals(this.getUrl())){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
 	
 	@Override
 	public String getUrl() {
@@ -155,22 +162,6 @@ public class DomainPOJO extends Domain{
 	@Override
 	public String getProtocol() {
 		return this.protocol;
-	}
-
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object o){
-		if(o instanceof Domain){
-			Domain domain = (Domain)o;
-			if(domain.getUrl().equals(this.getUrl())){
-				return true;
-			}
-		}
-		
-		return false;
 	}
 
 	/**
@@ -214,6 +205,10 @@ public class DomainPOJO extends Domain{
 		this.test_users.add(test_user);
 	}
 
+	public void setTestUsers(List<TestUser> test_users) {
+		this.test_users = new ArrayList<TestUser>(test_users);
+	}
+	
 	@Override
 	public String getDiscoveryBrowserName() {
 		return discovery_browser;
@@ -246,5 +241,20 @@ public class DomainPOJO extends Domain{
 	 */
 	public String generateKey() {
 		return getUrl().toString();
+	}
+
+	@Override
+	public List<PageState> getPageStates() {
+		return this.page_states;
+	}
+
+	@Override
+	public void setPageStates(List<PageState> states) {
+		this.page_states = states;
+	}
+
+	@Override
+	public void addPageState(PageState state) {
+		this.page_states.add(state);
 	}
 }

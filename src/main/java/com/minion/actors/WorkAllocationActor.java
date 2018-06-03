@@ -30,7 +30,6 @@ public class WorkAllocationActor extends UntypedActor {
 					String browser_name = acct_message.getOptions().get("browser").toString();
 					Message<?> msg = acct_message.clone();	
 					msg.getOptions().put("browser", browser_name);
-					boolean record_exists = false;
 					
 					if(acct_message.getData() instanceof ExploratoryPath){
 						final ActorRef exploratory_browser_actor = this.getContext().actorOf(Props.create(ExploratoryBrowserActor.class), "ExploratoryBrowserActor"+UUID.randomUUID());

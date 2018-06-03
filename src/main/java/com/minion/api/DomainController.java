@@ -2,6 +2,7 @@ package com.minion.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
@@ -24,6 +25,8 @@ import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.Domain;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 
@@ -215,16 +218,79 @@ public class DomainController {
 	    return domain;
 	}
     
-    /**
-     * Simple demonstration of how Principal info can be accessed
-     */
-    /*private void printGrantedAuthorities(final Auth0JWTToken principal) {
-        for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
-            final String authority = grantedAuthority.getAuthority();
-            logger.info(authority);
-        }
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="/page_states")
+    public @ResponseBody List<PageState> getAllPageStates(HttpServletRequest request, 
+    													  @RequestParam(value="host", required=true) String host) 
+    															throws UnknownAccountException {        
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = AccountService.find(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
+    	for(Domain domain : acct.getDomains()){
+    		if(domain.getUrl().equals(host)){
+    			return domain.getPageStates();
+    		}
+    	}
+	    return new ArrayList<PageState>();
     }
-    */	
+	
+	/**
+	 * 
+	 * @param request
+	 * @param host
+	 * 
+	 * @return a unique set of {@link PageElement}s belonging to all page states for the {@link Domain} with the given host
+	 * @throws UnknownAccountException
+	 */
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="/page_elements")
+    public @ResponseBody List<PageElement> getAllPageElements(HttpServletRequest request, 
+    													  @RequestParam(value="host", required=true) String host) 
+    															throws UnknownAccountException {        
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = AccountService.find(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
+    	List<PageElement> unique_page_elements = new ArrayList<PageElement>();
+    	List<PageElement> page_elements = new ArrayList<PageElement>();
+    	for(Domain domain : acct.getDomains()){
+    		for(PageState page_state : domain.getPageStates()){
+    			boolean element_exists = false;
+    			for(PageElement element : page_state.getElements()){
+    				for(PageElement unique : unique_page_elements){
+    					if(element.getKey().equals(unique.getKey())){
+    						element_exists = true;
+    					}
+    				}
+    				if(!element_exists){
+    					unique_page_elements.add(element);
+    				}
+    			}
+    			page_elements.addAll(page_state.getElements());
+    		}
+    	}    	
+    	
+	    return unique_page_elements;
+    }
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

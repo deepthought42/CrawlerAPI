@@ -40,20 +40,6 @@ public class TestPOJO extends Test{
 	private boolean is_running;
 	private long run_time_length;
 	private Map<String, Boolean> browser_passing_statuses;
-
-	/**
-	 * Construct a test with defaults of useful set to fault and 
-	 * spansMultipleDomains set to false
-	 */
-	public TestPOJO(){
-		this.setRecords(new ArrayList<TestRecord>());
-		this.setSpansMultipleDomains(false);
-		this.setGroups(new ArrayList<Group>());
-		this.setLastRunTimestamp(null);
-		this.setIsRunning(false);
-		this.setBrowserStatuses(new HashMap<String, Boolean>());
-		setKey(generateKey());
-	}
 	
 	/**
 	 * Constructs a test object
@@ -64,7 +50,7 @@ public class TestPOJO extends Test{
 	 * 
 	 * @pre path != null
 	 */
-	public TestPOJO(List<String> path_keys, List<PathObject> path_objects, PageState result, String name){
+	public TestPOJO(List< String> path_keys, List<PathObject> path_objects, PageState result, String name){
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -85,8 +71,7 @@ public class TestPOJO extends Test{
 		setRunTime(0L);
 	}
 
-
-	public TestPOJO(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running){
+	public TestPOJO(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains){
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -97,7 +82,7 @@ public class TestPOJO extends Test{
 		setResult(result);
 		setRecords(new ArrayList<TestRecord>());
 		setCorrect(null);
-		setSpansMultipleDomains(false);
+		setSpansMultipleDomains(spansMultipleDomains);
 		setGroups(new ArrayList<Group>());
 		setLastRunTimestamp(null);
 		setName(name);
@@ -166,11 +151,11 @@ public class TestPOJO extends Test{
 		this.name = name;
 	}
 	
-	public List<String> getPathKeys(){
+	public List< String> getPathKeys(){
 		return this.path_keys;
 	}
 	
-	public void setPathKeys(List<String> path_keys){
+	public void setPathKeys(List< String> path_keys){
 		this.path_keys = path_keys;
 	}
 	
@@ -228,8 +213,8 @@ public class TestPOJO extends Test{
 		this.groups = groups;
 	}
 	
-	public boolean addGroup(Group group){
-		return this.groups.add(group);
+	public void addGroup(Group group){
+		this.groups.add(group);
 	}
 	
 	@Override
@@ -315,24 +300,17 @@ public class TestPOJO extends Test{
 	 * @return
 	 */
 	public static Test clone(Test test){
-		Test clone_test = new TestPOJO();
+		Test clone_test = new TestPOJO(new ArrayList<String>(test.getPathKeys()),
+									   new ArrayList<PathObject>(test.getPathObjects()),
+									   test.getResult(),
+									   test.getName(), false, test.getSpansMultipleDomains());
 		
-		List<? extends PathObject> path_obj = test.getPathObjects();
-		List<String> path_keys = new ArrayList<String>();
-		for(PathObject obj : path_obj){
-			clone_test.addPathObject(obj);
-			path_keys.add(obj.getKey());
-		}
-		
-		clone_test.setPathKeys(path_keys);
-		clone_test.setKey(test.getKey());
-		clone_test.setSpansMultipleDomains(test.getSpansMultipleDomains());
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
 		clone_test.setGroups(new ArrayList<Group>(test.getGroups()));
 		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		clone_test.setCorrect(test.getCorrect());
-		clone_test.setName(test.getName());
 		clone_test.setRunTime(test.getRunTime());
+		
 		return clone_test;
 	}
 }

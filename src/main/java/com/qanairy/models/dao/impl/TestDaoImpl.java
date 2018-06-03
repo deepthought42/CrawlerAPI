@@ -25,18 +25,21 @@ public class TestDaoImpl implements TestDao {
 		assert test != null;
 		
 		Test test_record = find(test.getKey());
-		
+		System.err.println("SAVING TEST NOW      !!!!!!!!!!!!    ##############     !!!!!!!!!!!!!!!  ");
 		OrientConnectionFactory connection = new OrientConnectionFactory();
 		if(test_record == null){
 			test_record = connection.getTransaction().addFramedVertex(Test.class);
 			test_record.setKey(test.getKey());
 			test_record.setPathKeys(test.getPathKeys());
-			
+			test_record.setSpansMultipleDomains(test.getSpansMultipleDomains());
 			PageStateDao page_record = new PageStateDaoImpl();
 			test_record.setResult(page_record.save(test.getResult()));
 			
 			PathObjectDao path_obj_dao = new PathObjectDaoImpl();
+			System.err.println("Total path objects about to be saved :: "+test.getPathObjects().size());
 			for(PathObject obj: test.getPathObjects()){
+				System.err.println("Path object type :: "+obj.getType());
+				System.err.println("Path Object about to be saved :: "+obj);
 				PathObject path_obj = path_obj_dao.save(obj);
 				test_record.addPathObject(path_obj);
 			}
@@ -53,12 +56,21 @@ public class TestDaoImpl implements TestDao {
 			test_record.addRecord(test_record_dao.save(record));
 		}
 		
-		List<Group> groups = new ArrayList<Group>();
 		GroupDao group_repo = new GroupDaoImpl();
 		for(Group group : test.getGroups()){
-			groups.add(group_repo.save(group));
+			boolean exists = false;
+			for(Group group2 : test_record.getGroups()){
+				if(group2.getKey().equals(group.getKey())){
+					exists = true;
+				}
+			}
+			
+			if(!exists){
+				test_record.addGroup(group_repo.save(group));
+				//groups.add(group_repo.save(group));
+			}
 		}
-		test_record.setGroups(groups);
+		//test_record.setGroups(groups);
 		test_record.setLastRunTimestamp(test.getLastRunTimestamp());
 		test_record.setRunTime(test.getRunTime());
 		test_record.setName(test.getName());

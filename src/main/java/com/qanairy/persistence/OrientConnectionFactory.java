@@ -38,10 +38,6 @@ public class OrientConnectionFactory {
 	 * @return
 	 */
 	private DelegatingFramedGraph<OrientGraph> getConnection(){
-		Set<Class<?>> types = new HashSet<Class<?>>(Arrays.asList(new Class<?>[]{
-            Account.class,
-            Domain.class,
-            HasDomain.class}));
 		graphFactory = new OrientGraphFactory("remote:206.81.15.55/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000);
 		
 		

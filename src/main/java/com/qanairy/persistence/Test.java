@@ -5,14 +5,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.apache.tinkerpop.gremlin.structure.Direction;
-
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.qanairy.models.dao.PathObjectDao;
-import com.qanairy.models.dao.impl.PathObjectDaoImpl;
+import com.qanairy.persistence.serializers.TestSerializer;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
-import com.qanairy.persistence.serializers.TestSerializer;
 
 /**
  * Test object data access interface for use with tinkerpop/frames
@@ -94,27 +91,29 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	/**
 	 * @return whether or not this path goes into another domain
 	 */
-	@Property("spansMultipleDomains")
+	@Property("spans_multiple_domains")
 	public abstract boolean getSpansMultipleDomains();
 
 	/**
 	 * @return whether or not this path goes into another domain
 	 */
-	@Property("spansMultipleDomains")
+	@Property("spans_multiple_domains")
 	public abstract void setSpansMultipleDomains(boolean spanningMultipleDomains);
 
-	@Property("path_list")
+	@Property("path_keys")
 	public abstract void setPathKeys(List<String> path_obj_key_list);
 	
-	/**
-	 * @return {@link List} of {@link PathObject}s representing a path sequence
-	 */
 	@Property("path_keys")
 	public abstract List<String> getPathKeys();
+	
 	
 	@Adjacency(label="contains")
 	public abstract void addPathObject(PathObject path_obj);
 	
+
+	/**
+	 * @return {@link List} of {@link PathObject}s representing a path sequence
+	 */
 	@Adjacency(label="contains")
 	public abstract List<PathObject> getPathObjects();
 	
@@ -123,7 +122,7 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 * 
 	 * @return Correctness value. Null indicates value is unset.
 	 */
-	@Adjacency(direction=Direction.IN, label="test_group")
+	@Adjacency(label="test_group")
 	public abstract List<Group> getGroups();
 	
 	/**
@@ -131,7 +130,7 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 * 
 	 * @param correctness value
 	 */
-	@Adjacency(direction=Direction.IN, label="test_group")
+	@Adjacency(label="test_group")
 	public abstract void setGroups(List<Group> groups);
 	
 	/**
@@ -139,15 +138,15 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 * 
 	 * @param correctness value
 	 */
-	@Adjacency(direction=Direction.IN, label="test_group")
-	public abstract boolean addGroup(Group group);
+	@Adjacency(label="test_group")
+	public abstract void addGroup(Group group);
 	
 	/**
 	 * Sets correctness value of test
 	 * 
 	 * @param correctness value
 	 */
-	@Adjacency(direction=Direction.IN, label="test_group")
+	@Adjacency(label="test_group")
 	public abstract void removeGroup(Group group);
 	
 	/**
@@ -197,11 +196,11 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 * @return
 	 */
 	public PageState firstPage() {
-		PathObjectDao path_obj_dao = new PathObjectDaoImpl();
 		for(String key : this.getPathKeys()){
-			PathObject path_obj = path_obj_dao.find(key);
-			if(path_obj instanceof PageState){
-				return (PageState)path_obj;
+			for(PathObject path_obj: this.getPathObjects()){
+				if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
+					return (PageState)path_obj;
+				}
 			}
 		}
 		return null;
@@ -213,17 +212,13 @@ public abstract class Test extends AbstractVertexFrame implements Persistable{
 	 * @return
 	 */
 	public PageState findLastPage(){
-		List<String> path_keys = this.getPathKeys();
-		PageState page = null;
-
-		PathObjectDao path_obj_dao = new PathObjectDaoImpl();
-		for(String key : path_keys){
-			PathObject path_obj = path_obj_dao.find(key);
-			if(path_obj != null && path_obj.getType().equals("PageState")){
-				page = (PageState)path_obj;
+		for(int idx=this.getPathKeys().size()-1; idx >= 0; idx--){
+			for(PathObject path_obj: this.getPathObjects()){
+				if(path_obj.getKey().equals(this.getPathKeys().get(idx)) && path_obj.getType().equals("PageState")){
+					return (PageState)path_obj;
+				}
 			}
 		}
-
-		return page;
+		return null;
 	}
 }

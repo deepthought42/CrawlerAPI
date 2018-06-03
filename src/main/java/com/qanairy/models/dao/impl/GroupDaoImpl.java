@@ -28,7 +28,7 @@ public class GroupDaoImpl implements GroupDao {
 		try{
 			group = connection.getTransaction().getFramedVertices("key", key, Group.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find group record");
 		}
 		connection.close();
 		return group;

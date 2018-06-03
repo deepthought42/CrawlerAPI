@@ -1,5 +1,7 @@
 package com.qanairy.persistence;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.qanairy.persistence.serializers.PageStateSerializer;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
@@ -12,6 +14,7 @@ import java.util.Map;
  * Frames interface implementation of {@link PagePOJO}
  *
  */
+@JsonSerialize(using = PageStateSerializer.class)
 public abstract class PageState extends AbstractVertexFrame implements PathObject, Persistable {
 	@Property("key")
 	public abstract String getKey();
@@ -61,13 +64,15 @@ public abstract class PageState extends AbstractVertexFrame implements PathObjec
 	@Adjacency(label="browser_screenshots")
 	public abstract void addBrowserScreenshot(ScreenshotSet browser_screenshots);
 
+	@Adjacency(label="browser_screenshots")
+	public abstract void setBrowserScreenshots(List<ScreenshotSet> browser_screenshots);
+
 	@Adjacency(label="contains")
 	public abstract List<PageElement> getElements();
 	
 	@Adjacency(label="contains")
 	public abstract void addElement(PageElement elements);
 
-	public abstract void setBrowserScreenshots(List<ScreenshotSet> browser_screenshots);
-
+	@Adjacency(label="contains")
 	public abstract void setElements(List<PageElement> elements);
 }

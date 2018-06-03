@@ -27,15 +27,9 @@ public class AttributePOJO extends Attribute {
 		assert attrName != null;
 		assert vals != null;
 		
-		this.name = attrName;
-		this.vals = vals;
+		setName(attrName);
+		setVals(vals);
 		setKey(generateKey());
-	}
-	
-	public AttributePOJO(String key, String attrName, List<String> vals){
-		this.name = attrName;
-		this.vals = vals;
-		this.setKey(generateKey());
 	}
 	
 	/**
@@ -103,26 +97,32 @@ public class AttributePOJO extends Attribute {
         return hash;
     }
 
+	@Override
 	public void setKey(String key) {
 		this.key = key;
 	}
 
+	@Override
 	public String getKey() {
 		return this.key;
 	}
 
+	@Override
 	public String getName(){
 		return this.name;
 	}
 	
+	@Override
 	public void setName(String name){
 		this.name = name;
 	}
 	
+	@Override
 	public List<String> getVals(){
 		return this.vals;
 	}
 	
+	@Override
 	public void setVals(List<String> val_list){
 		this.vals = val_list;
 	}

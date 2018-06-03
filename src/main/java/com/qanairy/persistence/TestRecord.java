@@ -2,6 +2,8 @@ package com.qanairy.persistence;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.qanairy.persistence.serializers.TestRecordSerializer;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
@@ -9,6 +11,7 @@ import com.syncleus.ferma.annotations.Property;
 /**
  * 
  */
+@JsonSerialize(using = TestRecordSerializer.class)
 public abstract class TestRecord extends AbstractVertexFrame implements Persistable{
 	@Property("key")
 	public abstract String getKey();

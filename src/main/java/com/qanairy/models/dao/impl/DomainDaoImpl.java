@@ -3,9 +3,11 @@ package com.qanairy.models.dao.impl;
 import java.util.NoSuchElementException;
 
 import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.TestUserDao;
 import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.TestUser;
 
 /**
@@ -32,9 +34,34 @@ public class DomainDaoImpl implements DomainDao{
 		
 		TestUserDao test_user_dao = new TestUserDaoImpl();
 		for(TestUser test_user : domain.getTestUsers()){
-			domain_record.addTestUser(test_user_dao.save(test_user));
+			//check if page state exists for domain already
+			boolean already_connected = false;
+
+			for(TestUser test_user_record : domain_record.getTestUsers()){
+				if(test_user.getKey().equals(test_user_record.getKey())){
+					already_connected = true;
+				}
+			}
+			if(!already_connected){
+				domain_record.addTestUser(test_user_dao.save(test_user));
+			}
 		}
 
+		PageStateDao page_state_dao = new PageStateDaoImpl();
+		for(PageState page_state : domain.getPageStates()){
+			//check if page state exists for domain already
+			boolean already_connected = false;
+
+			for(PageState page_state_record : domain_record.getPageStates()){
+				if(page_state.getKey().equals(page_state_record.getKey())){
+					already_connected = true;
+				}
+			}
+			if(!already_connected){
+				domain_record.addPageState(page_state_dao.save(page_state));
+			}
+		}
+		
 		connection.close();
 		return domain_record;
 	}
@@ -47,7 +74,7 @@ public class DomainDaoImpl implements DomainDao{
 		try{
 			domain = connection.getTransaction().getFramedVertices("key", key, Domain.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find domain record");
 		}
 		connection.close();
 		return domain;

@@ -17,24 +17,32 @@ public class DiscoveryRecordDaoImpl implements DiscoveryRecordDao {
 	@Override
 	public DiscoveryRecord save(DiscoveryRecord record) {
 		assert record != null;
-		DiscoveryRecord discovery_record = find(record.getKey());
-
 		OrientConnectionFactory connection = new OrientConnectionFactory();
-		if(discovery_record == null){
-			System.out.println("Converting discovery record obj to db record");
-			discovery_record = connection.getTransaction().addFramedVertex(DiscoveryRecord.class);
-			discovery_record.setKey(record.getKey());
-			discovery_record.setStartTime(record.getStartTime());
-			discovery_record.setBrowserName(record.getBrowserName());
-			discovery_record.setDomainUrl(record.getDomainUrl());
-		}
-
-		discovery_record.setExaminedPathCount(record.getExaminedPathCount());
-		discovery_record.setLastPathRanAt(record.getLastPathRanAt());
-		discovery_record.setTestCount(record.getTestCount());
-		discovery_record.setTotalPathCount(record.getTotalPathCount());
+		boolean failed_to_update = false;
+		do{
+			try{
+				DiscoveryRecord discovery_record = find(record.getKey());
 		
-		return discovery_record;
+				if(discovery_record == null){
+					System.out.println("Converting discovery record obj to db record");
+					discovery_record = connection.getTransaction().addFramedVertex(DiscoveryRecord.class);
+					discovery_record.setKey(record.getKey());
+					discovery_record.setStartTime(record.getStartTime());
+					discovery_record.setBrowserName(record.getBrowserName());
+					discovery_record.setDomainUrl(record.getDomainUrl());
+				}
+		
+				discovery_record.setExaminedPathCount(record.getExaminedPathCount());
+				discovery_record.setLastPathRanAt(record.getLastPathRanAt());
+				discovery_record.setTestCount(record.getTestCount());
+				discovery_record.setTotalPathCount(record.getTotalPathCount());
+				
+				return discovery_record;
+			}catch(Exception e){
+				failed_to_update = true;
+			}
+		}while(failed_to_update);
+		return null;
 	}
 
 
@@ -49,7 +57,7 @@ public class DiscoveryRecordDaoImpl implements DiscoveryRecordDao {
 		try{
 			record = connection.getTransaction().getFramedVertices("key", key, DiscoveryRecord.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find discovery record");
 		}
 		connection.close();
 		return record;

@@ -4,10 +4,12 @@ import java.util.NoSuchElementException;
 
 import com.qanairy.models.dao.AttributeDao;
 import com.qanairy.models.dao.PageElementDao;
+import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.RuleDao;
 import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.Rule;
 
 /**
@@ -50,16 +52,36 @@ public class PageElementDaoImpl implements PageElementDao {
 		page_element_record.setScreenshot(element.getScreenshot());
 		
 		AttributeDao attribute_dao = new AttributeDaoImpl();
-		//page_element_record.setAttributes(element.getAttributes());
 		for(Attribute attribute : element.getAttributes()){
-			page_element_record.addAttribute(attribute_dao.save(attribute));
+			//check if page state exists for domain already
+			boolean already_connected = false;
+
+			for(Attribute attribute_record: page_element_record.getAttributes()){
+				if(attribute.getKey().equals(attribute_record.getKey())){
+					already_connected = true;
+				}
+			}
+			if(!already_connected){
+				page_element_record.addAttribute(attribute_dao.save(attribute));
+			}
 		}
 		
 		//page_element_record.setRules(element.getRules());
 		RuleDao rule_dao= new RuleDaoImpl();
 		for(Rule rule : element.getRules()){
-			page_element_record.addRule(rule_dao.save(rule));	
+			//check if page state exists for domain already
+			boolean already_connected = false;
+
+			for(Rule rule_record: page_element_record.getRules()){
+				if(rule.getKey().equals(rule_record.getKey())){
+					already_connected = true;
+				}
+			}
+			if(!already_connected){
+				page_element_record.addRule(rule_dao.save(rule));	
+			}
 		}
+		
 		
 		return page_element_record;
 	}
@@ -72,7 +94,7 @@ public class PageElementDaoImpl implements PageElementDao {
 		try{
 			attr = connection.getTransaction().getFramedVertices("key", key, PageElement.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find Page element record");
 		}
 		connection.close();
 		return attr;

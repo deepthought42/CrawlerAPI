@@ -10,7 +10,6 @@ import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,10 +37,8 @@ import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.Account;
-import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
@@ -123,7 +120,7 @@ public class DiscoveryController {
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
-	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request, 
+	public @ResponseBody DiscoveryRecordPOJO startDiscovery(HttpServletRequest request, 
 											   	  		@RequestParam(value="url", required=true) String url) 
 										   	  				throws MalformedURLException, 
 										   	  						UnknownAccountException, 
@@ -212,7 +209,7 @@ public class DiscoveryController {
 		if(diffInMinutes > 1440){
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
 			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();	
-			DiscoveryRecord discovery_record = new DiscoveryRecordPOJO(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
+			DiscoveryRecordPOJO discovery_record = new DiscoveryRecordPOJO(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	
 			acct.addDiscoveryRecord(discovery_repo.save(discovery_record));
         	AccountDao acct_dao = new AccountDaoImpl();
@@ -223,7 +220,8 @@ public class DiscoveryController {
 			Map<String, Object> options = new HashMap<String, Object>();
 			options.put("browser", domain.getDiscoveryBrowserName());
 	        options.put("discovery_key", discovery_record.getKey());
-
+	        options.put("host", domain.getUrl());
+	        
 			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
 			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
 
@@ -248,8 +246,6 @@ public class DiscoveryController {
 				log.error(e.getMessage());
 			}
 			
-			System.err.println("RETURNING DISCOVERY RECORD :: "+last_discovery_record);
-
 			return discovery_record;
 
 		}

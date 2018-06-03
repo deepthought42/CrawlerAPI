@@ -182,17 +182,18 @@ public class TestController {
     	Date start = new Date();
     	
 		DomainDao domain_repo = new DomainDaoImpl();
-		Domain idomain = domain_repo.find(url);
-
-		Iterator<Test> tests = idomain.getTests().iterator();
+		Domain domain = domain_repo.find(url);
+		
+		List<Test> tests = domain.getTests();
 		TestDao test_repo = new TestDaoImpl();
 		List<Test> unverified_tests = new ArrayList<Test>();
-		while(tests.hasNext()){
-			Test itest = tests.next();
-			if(itest.getCorrect() == null){
-				unverified_tests.add(test_repo.find(itest.getKey()));
+
+		for(Test test : tests){
+			if(test.getCorrect() == null){
+				unverified_tests.add(test_repo.find(test.getKey()));
 			}
 		}
+    	
     	Date end = new Date();
     	long diff = end.getTime() - start.getTime();
     	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
@@ -207,8 +208,8 @@ public class TestController {
 	 * @throws UnknownAccountException 
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
-	@RequestMapping(path="/setDiscoveredPassingStatus", method=RequestMethod.PUT)
-	public @ResponseBody Test setInitialCorrectness(HttpServletRequest request, 
+	@RequestMapping(path="/setPassingStatus", method=RequestMethod.PUT)
+	public @ResponseBody Test setPassingStatus(HttpServletRequest request, 
 													@RequestParam(value="key", required=true) String key, 
 													@RequestParam(value="browser", required=true) String browser_name,
 													@RequestParam(value="correct", required=true) boolean correct)
@@ -282,17 +283,20 @@ public class TestController {
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(method=RequestMethod.PUT)
 	public @ResponseBody void update(HttpServletRequest request,
-										@RequestBody(required=true) Test test){
-		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		@SuppressWarnings("unchecked")
-		Iterable<Test> tests = (Iterable<Test>) DataAccessObject.findByKey(test.getKey(), orient_connection, Test.class);
-		Iterator<Test> iter = tests.iterator();
-		Test test_record = null;
-		if(iter.hasNext()){
-			test_record = iter.next();
-			test_record.setName(test.getName());
-			test_record.setBrowserStatuses(test.getBrowserStatuses());
-			
+									@RequestParam(value="key", required=true) String key, 
+									@RequestParam(value="name", required=true) String name, 
+									@RequestParam(value="firefox", required=false) Boolean firefox,
+									@RequestParam(value="chrome", required=false) Boolean chrome){
+		TestDao test_dao = new TestDaoImpl();
+		Test test = test_dao.find(key);
+		
+		Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
+		browser_statuses.put("firefox", firefox);
+		browser_statuses.put("chrome", chrome);
+		
+		if(test != null){
+			test.setName(name);
+			test.setBrowserStatuses(browser_statuses);
 		}
 	}
 

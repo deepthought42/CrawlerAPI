@@ -43,13 +43,13 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public static PageState crawlPath(List<String> path, List<? extends PathObject> path_objects, Browser browser) throws NoSuchElementException, IOException{
+	public static PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser) throws NoSuchElementException, IOException{
 		assert browser != null;
-		assert path != null;
+		assert path_keys != null;
 
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//Ensure Order path objects
-		for(String path_obj_key : path){
+		for(String path_obj_key : path_keys){
 			for(PathObject obj : path_objects){
 				if(obj.getKey().equals(path_obj_key)){
 					ordered_path_objects.add(obj);
@@ -73,7 +73,6 @@ public class Crawler {
 
 		//skip first node since we should have already loaded it during initialization
 		for(PathObject current_obj: ordered_path_objects){
-
 			if(current_obj instanceof PageState){
 				//Do Nothing for now
 			}
@@ -84,6 +83,7 @@ public class Crawler {
 			else if(current_obj instanceof Action){
 				//boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
+				
 				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
 			}
 			else if(current_obj instanceof PageAlert){
@@ -107,6 +107,8 @@ public class Crawler {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 		
+		System.err.println("Last Element    :: "+elem);
+		System.err.println("Action   :: "+action);
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
@@ -115,7 +117,6 @@ public class Crawler {
 			} catch (InterruptedException e) {}
 		}
 		catch(StaleElementReferenceException e){
-			
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
 					+ action + ". ", e.getMessage());
 			wasPerformedSuccessfully = false;			

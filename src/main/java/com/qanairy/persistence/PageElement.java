@@ -5,11 +5,14 @@ import java.util.Map;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Adjacency;
 import com.syncleus.ferma.annotations.Property;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.serializers.PageElementSerializer;
 
 /**
  * 
  */
+@JsonSerialize(using = PageElementSerializer.class)
 public abstract class PageElement extends AbstractVertexFrame implements PathObject, Persistable{
 	@Property("key")
 	public abstract String getKey();
@@ -45,7 +48,7 @@ public abstract class PageElement extends AbstractVertexFrame implements PathObj
 	public abstract String getScreenshot();
 	
 	@Property("screenshot")
-	public abstract void setScreenshot(String cssMap);
+	public abstract void setScreenshot(String screenshot_url);
 	
 	@Adjacency(label="has_attribute")
 	public abstract List<Attribute> getAttributes();

@@ -1,6 +1,9 @@
 package com.qanairy.models.dao.impl;
 
+import java.util.List;
 import java.util.NoSuchElementException;
+
+import org.apache.commons.collections.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.qanairy.models.dao.ActionDao;
@@ -42,5 +45,11 @@ public class ActionDaoImpl implements ActionDao {
 		}
 		connection.close();
 		return attr;
+	}
+
+	@Override
+	public List<Action> getAll() {
+		OrientConnectionFactory connection = new OrientConnectionFactory();
+		return IteratorUtils.toList(connection.getTransaction().getFramedVertices("type", "Action", Action.class));
 	}
 }

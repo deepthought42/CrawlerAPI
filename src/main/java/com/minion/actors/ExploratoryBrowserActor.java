@@ -25,8 +25,10 @@ import com.qanairy.models.TestPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.models.dao.impl.DomainDaoImpl;
+import com.qanairy.models.dao.impl.PageStateDaoImpl;
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
@@ -77,14 +79,18 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 					DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
+
 					DiscoveryRecord discovery_record = discovery_repo.find(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 			  		discovery_record.setLastPathRanAt(new Date());
-					discovery_repo.save(discovery_record);
-					
+					DiscoveryRecordDao dao = new DiscoveryRecordDaoImpl();
+					dao.save(discovery_record);
+			  		
 					for(Action action : exploratory_path.getPossibleActions()){
 						ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
 						path.addPathObject(action);
+						path.addToPathKeys(action.getKey());
+						
 						final long pathCrawlStartTime = System.currentTimeMillis();
 						int tries = 0;
 						do{
@@ -93,19 +99,25 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
 								log.error("Error happened while exploratory actor attempted to crawl test");
+								e.printStackTrace();
 							}
 							tries++;
-						}while(result_page == null && tries < 5);
+							
+							try {
+								Thread.sleep(120000L);
+							} catch (InterruptedException e) {}
+						}while(result_page == null && tries < 10);
 						
 						do{
 							System.err.println("attempting is landable check. Attemp #"+tries);
 							
 							try{								
-								result_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), last_page));
+								result_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
 								break;
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
-								log.error("Error happened while exploratory actor attempted to crawl test");
+								log.error("Error happened while exploratory actor attempted to check landability of result page");
+								e.printStackTrace();
 							}
 							
 							tries++;
@@ -142,10 +154,15 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  			}
 					  		}while(results_match);
 					  		
+							PageStateDao page_state_dao = new PageStateDaoImpl();
+
 					  		Domain domain = domain_dao.find(domain_url);
 							domain.setTestCount(domain.getTestCount()+1);
+							domain.addPageState(page_state_dao.save(result_page));
 							domain_dao.save(domain);
 							
+							MessageBroadcaster.broadcastPageState(result_page, domain.getUrl());
+
 					  		createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
 							MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
@@ -242,6 +259,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	private ExploratoryPath buildParentPath(ExploratoryPath path, WebDriver driver){
 		PageElement elem = null;
 		int element_idx = -1;
+		
 		for(int idx = path.getPathObjects().size()-1; idx >= 0; idx--){
 			if(path.getPathObjects().get(idx).getType().equals("PageElement")){
 				elem = (PageElement)path.getPathObjects().get(idx);
@@ -250,6 +268,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			}
 		}
 		
+		System.err.println("Element index  ::   "+element_idx);
 		if(elem != null && element_idx > -1){
 			//get parent of element
 			WebElement web_elem = driver.findElement(By.xpath(elem.getXpath()));
@@ -261,6 +280,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			
 			PageElement parent_tag = new PageElementPOJO(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), Browser.loadCssProperties(parent) );
 			parent_path.getPathObjects().set(element_idx, parent_tag);
+			parent_path.getPathKeys().set(element_idx, parent_tag.getKey());
 			
 			return parent_path;
 		}

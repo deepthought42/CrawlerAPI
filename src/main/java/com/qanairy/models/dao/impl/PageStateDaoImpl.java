@@ -1,7 +1,10 @@
 package com.qanairy.models.dao.impl;
 
+import java.net.URL;
 import java.util.NoSuchElementException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.dao.PageElementDao;
 import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.ScreenshotSetDao;
@@ -39,6 +42,10 @@ public class PageStateDaoImpl implements PageStateDao {
 			PageElementDao page_elem_dao = new PageElementDaoImpl();
 			for(PageElement elem: page.getElements()){
 				page_record.addElement(page_elem_dao.save(elem));
+				try {
+					MessageBroadcaster.broadcastPageElement(elem, page_record.getUrl().getHost() );
+				} catch (JsonProcessingException e) {
+				}
 			}
 		}
 		connection.close();
@@ -53,7 +60,7 @@ public class PageStateDaoImpl implements PageStateDao {
 		try{
 			page_state = connection.getTransaction().getFramedVertices("key", key, PageState.class).next();
 		}catch(NoSuchElementException e){
-			System.err.println("could not find record");
+			System.err.println("could not find Page State record");
 		}
 		connection.close();
 		return page_state;

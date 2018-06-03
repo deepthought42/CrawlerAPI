@@ -3,16 +3,20 @@ package com.minion.actors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.qanairy.models.ActionPOJO;
 import com.qanairy.models.TestPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
+import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
+import com.qanairy.models.dao.impl.DomainDaoImpl;
+import com.qanairy.models.dao.impl.PageStateDaoImpl;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
@@ -22,10 +26,10 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.element.ComplexField;
+import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -43,55 +47,95 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			Test test = null;
+			
 			if(acct_msg.getData() instanceof Test){
-				test = (Test)acct_msg.getData();
-			}
-			else if(acct_msg.getData() instanceof Test){
-				test = ((Test)acct_msg.getData());
-			}
-			
-			//get first page in path
-			PageState page = test.firstPage();
-
-			int cnt = 0;
-		  	Browser browser = null;
-		  	
-		  	while(browser == null && cnt < 5){
-		  		try{
+				Test test = ((Test)acct_msg.getData());
+	
+				//get first page in path
+				PageState page = test.firstPage();
+	
+				int cnt = 0;
+			  	Browser browser = null;
+			  	
+			  	while(browser == null && cnt < 5){
+			  		try{
+				  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
+				  		browser.getDriver().get(page.getUrl().toString());
+						break;
+					}catch(NullPointerException e){
+						log.error(e.getMessage());
+					}
+					cnt++;
+				}	
+	
+				//PageState current_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
+			  	
+			  	List<Form> forms = Browser.extractAllForms(test.getResult(), browser);
+			  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+			  	System.err.println("FORM COUNT ::: "+forms.size());
+			  	for(Form form : forms){
+			  		path_object_lists.addAll(FormTestDiscoveryActor.generateAllFormTestPaths(test, form));
+			  	}
+			  	
+			  	//Evaluate all tests now
+			  	System.err.println("Constructing tests with path object lists   :::   "+path_object_lists.size());
+			  	List<Test> tests = new ArrayList<Test>();
+			  	for(List<PathObject> path_obj_list : path_object_lists){
+			  		List<String> path_keys = new ArrayList<String>(test.getPathKeys());
+			  		for(PathObject path_obj : path_obj_list){
+			  			path_keys.add(path_obj.getKey());
+			  		}
+			  		
+			  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
+			  		test_path_objects.addAll(path_obj_list);
+			  		
+			  		List<String> test_path_keys = new ArrayList<String>(test.getPathKeys());
+			  		test_path_keys.addAll(path_keys);
+			  		
+					final long pathCrawlStartTime = System.currentTimeMillis();
+					
+			  		System.err.println("Crawling potential form test path");
 			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
-					break;
-				}catch(NullPointerException e){
-					log.error(e.getMessage());
+			  		PageState result_page = Crawler.crawlPath(test_path_keys, test_path_objects, browser);
+				  	browser.close();
+					final long pathCrawlEndTime = System.currentTimeMillis();
+					
+					long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
+					
+				  	System.err.println("Looking up domain with url :: "+page.getUrl().toString());
+				  	System.err.println("Looking up domain with url :: "+page.getUrl().getHost());
+					
+				  	PageStateDao page_state_dao = new PageStateDaoImpl();
+
+			  		DomainDao domain_dao = new DomainDaoImpl();
+			  		Domain domain = domain_dao.find(page.getUrl().getHost());
+					domain.setTestCount(domain.getTestCount()+1);
+					domain.addPageState(page_state_dao.save(result_page));
+					domain_dao.save(domain);
+					
+			  		Test new_test = new TestPOJO(test_path_keys, test_path_objects, result_page, "Test #" + domain.getTestCount(), false, test.getSpansMultipleDomains());
+			  		new_test.setRunTime(crawl_time_in_ms);
+			  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
+			  		
+			  		tests.add(new_test);
+			  	}
+			  	
+				DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
+				DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
+				discovery_record.setTestCount(discovery_record.getTestCount()+tests.size());
+				
+				MessageBroadcaster.broadcastDiscoveryStatus(page.getUrl().getHost(), discovery_record);
+				System.err.println("Broadcasting discovery record now that we've added "+tests.size()+"        tests   ");
+				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+								
+			  	for(Test form_test : tests){
+			  		//send all tests to work allocator to be evaluated
+			  		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), form_test, acct_msg.getOptions());
+
+					//tell memory worker of test
+					memory_actor.tell(test_msg, getSelf());
 				}
-				cnt++;
-			}	
-
-			PageState current_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
-
-		  	List<Form> forms = Browser.extractAllForms(current_page, browser);
-		  	List<Test> form_tests = new ArrayList<Test>();
-		  	for(Form form : forms){
-		  		form_tests.addAll(FormTestDiscoveryActor.generateAllFormTests(test, form));
-		  	}
-		  	
-		  	OrientConnectionFactory conn = new OrientConnectionFactory();
-			DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
-			DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
-			discovery_record.setTestCount(discovery_record.getTestCount()+form_tests.size());
-
-			MessageBroadcaster.broadcastDiscoveryStatus(page.getUrl().getHost(), discovery_record);
-			System.err.println("Broadcasting discovery record now that we've added "+form_tests.size()+"        tests   ");
-			conn.close();
-			
-		  	final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-			for(Test expanded : form_tests){
-				//send all tests to work allocator to be evaluated
-				Message<Test> expanded_path_msg = new Message<Test>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
-				work_allocator.tell(expanded_path_msg, getSelf() );
 			}
-			
-		  	browser.close();
 		}
 	}
 	
@@ -102,10 +146,10 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param rule
 	 * @return
 	 */
-	public static List<Test> generateFormRuleTests(PageElement input_elem, Rule rule, PageElement submitField){
+	public static List<List<PathObject>> generateFormRuleTests(PageElement input_elem, Rule rule, PageElement submitField){
 		assert rule != null;
 		
-		List<Test> tests = new ArrayList<Test>();
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		if(rule.getType().equals(RuleType.REQUIRED)){
 			//generate required path for element type
 			tests.addAll(generateRequirementChecks(input_elem, true, submitField));
@@ -153,10 +197,10 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param rule
 	 * @return
 	 */
-	public static List<Test> generateInputRuleTests(PageElement input_elem, Rule rule){
+	public static List<List<PathObject>> generateInputRuleTests(PageElement input_elem, Rule rule){
 		assert rule != null;
 		
-		List<Test> tests = new ArrayList<Test>();
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
 			tests.addAll(generateAlphabeticRestrictionTests(input_elem, rule));
 		}
@@ -193,178 +237,178 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		return tests;
 	}
 	
-	public static List<Test> generateBoundaryTests(PageElement input){
+	public static List<List<PathObject>> generateBoundaryTests(PageElement input){
 		
 		return null;
 		
 	}
 	
-	public static List<Test> generateLengthBoundaryTests(PageElement input, Rule rule, PageElement submit){
-		List<Test> tests = new ArrayList<Test>();
+	public static List<List<PathObject>> generateLengthBoundaryTests(PageElement input, Rule rule, PageElement submit){
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 			
-			path.addPathObject(new ActionPOJO("sendKeys", short_str));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", short_str));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 	
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())+1);
-			path.addPathObject(new ActionPOJO("sendKeys", large_str));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", large_str));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 
-			path.addPathObject(new ActionPOJO("sendKeys", short_str));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", short_str));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())-1);
 
-			path.addPathObject(new ActionPOJO("sendKeys", large_str));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", large_str));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MAX_VALUE)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_VALUE)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 		}
 		return tests;
 		
 	}
 	
-	public static List<Test> generateValueBoundaryTests(PageElement input){
+	public static List<List<PathObject>> generateValueBoundaryTests(PageElement input){
 		return null;	
 	}
 	
-	public static List<Test> generateRequirementChecks(PageElement input, boolean isRequired, PageElement submit){
+	public static List<List<PathObject>> generateRequirementChecks(PageElement input, boolean isRequired, PageElement submit){
 		assert input.getName().equals("input");
 		
-		List<Test> tests = new ArrayList<Test>();
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		String input_type = input.getAttributes().get(input.getAttributes().indexOf("type")).getVals().get(0);
 		if(input_type.equals("text") ||
 				input_type.equals("textarea") ||
 				input_type.equals("email")){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("sendKeys", ""));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("sendKeys", ""));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			Test path_2 = new TestPOJO();
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("click", ""));
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("sendKeys", "a"));
-			path_2.addPathObject(submit);
-			path_2.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path_2);
+			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("click", ""));
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("sendKeys", "a"));
+			path_obj_list_2.add(submit);
+			path_obj_list_2.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list_2);
 		}
 		else if( input_type.equals("number")){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("sendKeys", ""));
-			path.addPathObject(submit);
-			path.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("sendKeys", ""));
+			path_obj_list.add(submit);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			Test path_2 = new TestPOJO();
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("click", ""));
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("sendKeys", "0"));
-			path_2.addPathObject(submit);
-			path_2.addPathObject(new ActionPOJO("click", ""));
-			tests.add(path_2);
+			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("click", ""));
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("sendKeys", "0"));
+			path_obj_list_2.add(submit);
+			path_obj_list_2.add(new ActionPOJO("click", ""));
+			tests.add(path_obj_list_2);
 		}
 		return tests;
 	}
@@ -375,108 +419,110 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param rule
 	 * @return
 	 */
-	private static List<Test> generateAlphabeticRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
+	private static List<List<PathObject>> generateAlphabeticRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		//generate single character str test		
-		List<Test> tests = new ArrayList<Test>();
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "abcdefghijklmopqrstuvwxyz"));
-		path.addPathObject(submit);
-		path.addPathObject(new ActionPOJO("click", ""));
-		tests.add(path);		
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "abcdefghijklmopqrstuvwxyz"));
+		path_obj_list.add(submit);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		tests.add(path_obj_list);		
 		return tests;
 	}
 
-	private static List<Test> generateNumericRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
-		List<Test> tests = new ArrayList<Test>();
+	private static List<List<PathObject>> generateNumericRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "0"));
-		path.addPathObject(submit);
-		path.addPathObject(new ActionPOJO("click", ""));
-		tests.add(path);
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "0"));
+		path_obj_list.add(submit);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		tests.add(path_obj_list);
 		
 		return tests;
 	}
 
-	private static List<Test> generateSpecialCharacterRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
+	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		//generate single character str test
-		List<Test> tests = new ArrayList<Test>();
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "!"));
-		path.addPathObject(submit);
-		path.addPathObject(new ActionPOJO("click", ""));
-		tests.add(path);
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "!"));
+		path_obj_list.add(submit);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		tests.add(path_obj_list);
 		
 		return tests;
 	}
 
-	private static List<Test> generateEnabledTests(PageElement input_elem, Rule rule, PageElement submit) {
+	private static List<List<PathObject>> generateEnabledTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<Test> generateReadOnlyTests(PageElement input_elem, Rule rule, PageElement submit) {
+	private static List<List<PathObject>> generateReadOnlyTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<Test> generatePatternTests(PageElement input_elem, Rule rule, PageElement submit) {
+	private static List<List<PathObject>> generatePatternTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<Test> generateEmailTests(PageElement input_elem, Rule rule, PageElement submit) {
-		List<Test> tests = new ArrayList<Test>();
+	private static List<List<PathObject>> generateEmailTests(PageElement input_elem, Rule rule, PageElement submit) {
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "!test@test.com"));
-		path.addPathObject(submit);
-		path.addPathObject(new ActionPOJO("click", ""));
-		tests.add(path);		
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "!test@test.com"));
+		path_obj_list.add(submit);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		tests.add(path_obj_list);		
 
 		//generate single character str test	
-		Test path1 = new TestPOJO();
-		path1.addPathObject(input_elem);
-		path1.addPathObject(new ActionPOJO("click", ""));
-		path1.addPathObject(input_elem);
-		path1.addPathObject(new ActionPOJO("sendKeys", "test!test.com"));
-		path1.addPathObject(submit);
-		path1.addPathObject(new ActionPOJO("click", ""));
-		tests.add(path1);
+		List<PathObject> path_obj_list1 = new ArrayList<PathObject>();
+		path_obj_list1.add(input_elem);
+		path_obj_list1.add(new ActionPOJO("click", ""));
+		path_obj_list1.add(input_elem);
+		path_obj_list1.add(new ActionPOJO("sendKeys", "test!test.com"));
+		path_obj_list1.add(submit);
+		path_obj_list1.add(new ActionPOJO("click", ""));
+		tests.add(path_obj_list1);
 
-		Test path2 = new TestPOJO();
-		path2.addPathObject(input_elem);
-		path2.addPathObject(new ActionPOJO("click", ""));
-		path2.addPathObject(input_elem);
-		path2.addPathObject(new ActionPOJO("sendKeys", "test@test"));
-		path2.addPathObject(submit);
-		path2.addPathObject(new ActionPOJO("click", ""));
-		tests.add(path2);
+		List<PathObject> path_obj_list2 = new ArrayList<PathObject>();
+		path_obj_list2.add(input_elem);
+		path_obj_list2.add(new ActionPOJO("click", ""));
+		path_obj_list2.add(input_elem);
+		path_obj_list2.add(new ActionPOJO("sendKeys", "test@test"));
+		path_obj_list2.add(submit);
+		path_obj_list2.add(new ActionPOJO("click", ""));
+		tests.add(path_obj_list2);
 		
 		return tests;
 	}
 	/**
 	 * 
-	 * @param path
+	 * @param test
 	 * @param form
 	 * @return
 	 */
-	public static List<Test> generateAllFormTests(Test test, Form form){
-		List<Test> form_tests = new ArrayList<Test>();
+	public static List<List<PathObject>> generateAllFormTestPaths(Test test, Form form){
+		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
+		System.err.println("FORM FIELDS COUNT     :::    "+form.getFormFields());
 		for(ComplexField complex_field: form.getFormFields()){
 			//for each field in the complex field generate a set of tests for all known rules
+			System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements());
 			for(FormField field : complex_field.getElements()){
 				PageElement input_elem = field.getInputElement();
 				
@@ -497,160 +543,159 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					continue;
 				}
 				
-				List<Rule> rules = field.getInputElement().getRules();
+				List<Rule> rules = ElementRuleExtractor.extractInputRules(input_elem);
+				System.err.println("Total RULES   :::   "+rules.size());
 				for(Rule rule : rules){
-					List<Test> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
-					for(Test curr_test : path_list){
-						Test clone_test = TestPOJO.clone(test);
-						form_tests.add(clone_test);
-					}
+					List<List<PathObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
+					form_tests.addAll(path_list);
 				}
+				System.err.println("FORM TESTS    :::   "+form_tests.size());
 			}
 		}
 		return form_tests;
 	}
 	
 
-	public static List<Test> generateLengthBoundaryTests(PageElement input, Rule rule){
-		List<Test> tests = new ArrayList<Test>();
+	public static List<List<PathObject>> generateLengthBoundaryTests(PageElement input, Rule rule){
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 			
-			path.addPathObject(new ActionPOJO("sendKeys", short_str));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", short_str));
+			tests.add(path_obj_list);
 
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())+1);
-			path.addPathObject(new ActionPOJO("sendKeys", large_str));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", large_str));
+			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
 			String short_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue()));
 
-			path.addPathObject(new ActionPOJO("sendKeys", short_str));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", short_str));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
 			String large_str = NumericRule.generateRandomAlphabeticString(Integer.parseInt(rule.getValue())-1);
 
-			path.addPathObject(new ActionPOJO("sendKeys", large_str));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", large_str));
+			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MAX_VALUE)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())+1)));
+			tests.add(path_obj_list);
 		}
 		else if(rule.getType().equals(RuleType.MIN_VALUE)){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length equal to MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue()))));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
+			path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
 			
 			//generate string with length that is 1 character greater than MAX_LENGTH
-			path.addPathObject(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
-			tests.add(path);
+			path_obj_list.add(new ActionPOJO("sendKeys", Integer.toString(Integer.parseInt(rule.getValue())-1)));
+			tests.add(path_obj_list);
 		}
 		return tests;
 		
 	}
 	
 	@Deprecated
-	public static List<Test> generateRequirementChecks(PageElement input, boolean isRequired){
+	public static List<List<PathObject>> generateRequirementChecks(PageElement input, boolean isRequired){
 		assert input.getName().equals("input");
 		
-		List<Test> tests = new ArrayList<Test>();
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		String input_type = input.getAttributes().get(input.getAttributes().indexOf("type")).getVals().get(0);
 		if(input_type.equals("text") ||
 				input_type.equals("textarea") ||
 				input_type.equals("email")){
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("sendKeys", ""));
-			tests.add(path);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("sendKeys", ""));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			Test path_2 = new TestPOJO();
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("click", ""));
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("sendKeys", "a"));
-			tests.add(path_2);
+			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("click", ""));
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("sendKeys", "a"));
+			tests.add(path_obj_list_2);
 		}
 		else if( input_type.equals("number")){
 
 			//generate empty string test
-			Test path = new TestPOJO();
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("click", ""));
-			path.addPathObject(input);
-			path.addPathObject(new ActionPOJO("sendKeys", ""));
-			tests.add(path);
+			List<PathObject> path_obj_list = new ArrayList<PathObject>();
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("click", ""));
+			path_obj_list.add(input);
+			path_obj_list.add(new ActionPOJO("sendKeys", ""));
+			tests.add(path_obj_list);
 			
 			//generate single character str test
-			Test path_2 = new TestPOJO();
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("click", ""));
-			path_2.addPathObject(input);
-			path_2.addPathObject(new ActionPOJO("sendKeys", "0"));
-			tests.add(path_2);
+			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("click", ""));
+			path_obj_list_2.add(input);
+			path_obj_list_2.add(new ActionPOJO("sendKeys", "0"));
+			tests.add(path_obj_list_2);
 		}
 		return tests;
 	}
@@ -661,97 +706,97 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * @param rule
 	 * @return
 	 */
-	private static List<Test> generateAlphabeticRestrictionTests(PageElement input_elem, Rule rule) {
+	private static List<List<PathObject>> generateAlphabeticRestrictionTests(PageElement input_elem, Rule rule) {
 		//generate single character str test		
-		List<Test> tests = new ArrayList<Test>();
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "a"));
-		tests.add(path);		
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "a"));
+		tests.add(path_obj_list);		
 		return tests;
 	}
 
-	private static List<Test> generateNumericRestrictionTests(PageElement input_elem, Rule rule) {
-		List<Test> tests = new ArrayList<Test>();
+	private static List<List<PathObject>> generateNumericRestrictionTests(PageElement input_elem, Rule rule) {
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "0"));
-		tests.add(path);
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "0"));
+		tests.add(path_obj_list);
 		
 		return tests;
 	}
 
-	private static List<Test> generateSpecialCharacterRestrictionTests(PageElement input_elem, Rule rule) {
+	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(PageElement input_elem, Rule rule) {
 		//generate single character str test
-		List<Test> tests = new ArrayList<Test>();
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "!"));
-		tests.add(path);
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "!"));
+		tests.add(path_obj_list);
 		
 		return tests;
 	}
 
-	private static List<Test> generateEnabledTests(PageElement input_elem, Rule rule) {
+	private static List<List<PathObject>> generateEnabledTests(PageElement input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<Test> generateReadOnlyTests(PageElement input_elem, Rule rule) {
+	private static List<List<PathObject>> generateReadOnlyTests(PageElement input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<Test> generatePatternTests(PageElement input_elem, Rule rule) {
+	private static List<List<PathObject>> generatePatternTests(PageElement input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<Test> generateEmailTests(PageElement input_elem, Rule rule) {
-		List<Test> tests = new ArrayList<Test>();
+	private static List<List<PathObject>> generateEmailTests(PageElement input_elem, Rule rule) {
+		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
-		Test path = new TestPOJO();
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("click", ""));
-		path.addPathObject(input_elem);
-		path.addPathObject(new ActionPOJO("sendKeys", "!test@test.com"));
-		tests.add(path);		
+		List<PathObject> path_obj_list = new ArrayList<PathObject>();
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("click", ""));
+		path_obj_list.add(input_elem);
+		path_obj_list.add(new ActionPOJO("sendKeys", "!test@test.com"));
+		tests.add(path_obj_list);		
 
 		//generate single character str test	
-		Test path1 = new TestPOJO();
-		path1.addPathObject(input_elem);
-		path1.addPathObject(new ActionPOJO("click", ""));
-		path1.addPathObject(input_elem);
-		path1.addPathObject(new ActionPOJO("sendKeys", "test!test.com"));
-		tests.add(path1);
+		List<PathObject> path_obj_list1 = new ArrayList<PathObject>();
+		path_obj_list1.add(input_elem);
+		path_obj_list1.add(new ActionPOJO("click", ""));
+		path_obj_list1.add(input_elem);
+		path_obj_list1.add(new ActionPOJO("sendKeys", "test!test.com"));
+		tests.add(path_obj_list1);
 
-		Test path2 = new TestPOJO();
-		path2.addPathObject(input_elem);
-		path2.addPathObject(new ActionPOJO("click", ""));
-		path2.addPathObject(input_elem);
-		path2.addPathObject(new ActionPOJO("sendKeys", "test@test"));
-		tests.add(path2);
+		List<PathObject> path_obj_list2 = new ArrayList<PathObject>();
+		path_obj_list2.add(input_elem);
+		path_obj_list2.add(new ActionPOJO("click", ""));
+		path_obj_list2.add(input_elem);
+		path_obj_list2.add(new ActionPOJO("sendKeys", "test@test"));
+		tests.add(path_obj_list2);
 		
-		Test path3 = new TestPOJO();
-		path3.addPathObject(input_elem);
-		path3.addPathObject(new ActionPOJO("click", ""));
-		path3.addPathObject(input_elem);
-		path3.addPathObject(new ActionPOJO("sendKeys", "test.test@test"));
-		tests.add(path3);
+		List<PathObject> path_obj_list3 = new ArrayList<PathObject>();
+		path_obj_list3.add(input_elem);
+		path_obj_list3.add(new ActionPOJO("click", ""));
+		path_obj_list3.add(input_elem);
+		path_obj_list3.add(new ActionPOJO("sendKeys", "test.test@test"));
+		tests.add(path_obj_list3);
 		
-		Test path4 = new TestPOJO();
-		path4.addPathObject(input_elem);
-		path4.addPathObject(new ActionPOJO("click", ""));
-		path4.addPathObject(input_elem);
-		path4.addPathObject(new ActionPOJO("sendKeys", "test_test@test"));
-		tests.add(path4);
+		List<PathObject> path_obj_list4 = new ArrayList<PathObject>();
+		path_obj_list4.add(input_elem);
+		path_obj_list4.add(new ActionPOJO("click", ""));
+		path_obj_list4.add(input_elem);
+		path_obj_list4.add(new ActionPOJO("sendKeys", "test_test@test"));
+		tests.add(path_obj_list4);
 		
 		return tests;
 	}

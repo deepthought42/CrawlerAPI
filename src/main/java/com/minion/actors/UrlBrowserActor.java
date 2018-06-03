@@ -18,7 +18,6 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.minion.browsing.Browser;
 import com.minion.structs.Message;
 import com.qanairy.models.GroupPOJO;
@@ -26,10 +25,10 @@ import com.qanairy.models.TestPOJO;
 import com.qanairy.models.TestRecordPOJO;
 import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dao.TestDao;
+import com.qanairy.models.dao.PageStateDao;
 import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 import com.qanairy.models.dao.impl.DomainDaoImpl;
-import com.qanairy.models.dao.impl.TestDaoImpl;
+import com.qanairy.models.dao.impl.PageStateDaoImpl;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.PageState;
@@ -72,27 +71,21 @@ public class UrlBrowserActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
-			Browser browser = null;
 			System.err.println("Recieved data of type :: "+acct_msg.getData().getClass().getSimpleName());
 			if(acct_msg.getData() instanceof URL){
-
-				try{
-					System.err.println("URL received, browser opening  ::   "+acct_msg.getOptions().get("browser").toString());
-					browser = new Browser(acct_msg.getOptions().get("browser").toString());
-				}
-				catch(NullPointerException e){
-					log.error(e.getMessage());
-					System.err.println("Failed to open connection to browser");
-					return;
-				}
-				
-				try{
-					generate_landing_page_test(browser, acct_msg);
-				}catch(Exception e){
-					log.error(e.getMessage());
-					e.printStackTrace();
-				}
-				browser.close();
+				boolean test_generated_successfully = false;
+				do{
+					try{
+						System.err.println("URL received, browser opening  ::   "+acct_msg.getOptions().get("browser").toString());
+						generate_landing_page_test(acct_msg);
+						break;
+					}
+					catch(Exception e){
+						e.printStackTrace();
+						log.error(e.getMessage());
+						System.err.println("Failed to create landing page test");
+					}
+				}while(!test_generated_successfully);
 		   }
 			//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 
@@ -105,8 +98,10 @@ public class UrlBrowserActor extends UntypedActor {
 	 * @param result_page
 	 */
 	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
+		assert path_keys != null;
+		assert path_objects != null;
+		
 		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
-		TestDao test_repo = new TestDaoImpl();
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
@@ -153,14 +148,16 @@ public class UrlBrowserActor extends UntypedActor {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public void generate_landing_page_test(Browser browser, Message<?> msg) throws MalformedURLException, IOException, NullPointerException{
-		assert browser != null;
+	public void generate_landing_page_test(Message<?> msg) throws MalformedURLException, IOException, NullPointerException{
 		assert msg != null;
 		
-		System.err.println("Generating landing page test");
-		browser.getDriver().get(((URL)msg.getData()).toString());
+		Browser browser = new Browser(msg.getOptions().get("browser").toString());
 
+		browser.getDriver().get(((URL)msg.getData()).toString());
+		System.err.println("building page");
 	  	PageState page_obj = browser.buildPage();
+	  	System.err.println("Page built");
+	  	browser.close();
 	  	page_obj.setLandable(true);
 	  	
 	  	List<String> path_keys = new ArrayList<String>();
@@ -169,6 +166,7 @@ public class UrlBrowserActor extends UntypedActor {
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_objects.add(page_obj);
 	  	
+	  	System.err.println("saving discovery record and domain");
 		DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
 		DiscoveryRecord discovery_record = discovery_repo.find( msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());
@@ -176,11 +174,18 @@ public class UrlBrowserActor extends UntypedActor {
 		discovery_record.setTestCount(discovery_record.getTestCount()+1);
 		discovery_repo.save(discovery_record);
 
+		PageStateDao page_state_dao = new PageStateDaoImpl();
+
 		DomainDao domain_dao = new DomainDaoImpl();
 		Domain domain = domain_dao.find(page_obj.getUrl().getHost());
 		domain.setTestCount(domain.getTestCount()+1);
+		domain.addPageState(page_state_dao.save(page_obj));
 		domain_dao.save(domain);
 		
+		System.err.println("broadcasting page state");
+		MessageBroadcaster.broadcastPageState(page_obj, domain.getUrl());
+
+		System.err.println("Broadcasting discovery status");
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
 		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 

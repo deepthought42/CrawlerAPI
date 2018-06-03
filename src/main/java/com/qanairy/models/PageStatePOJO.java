@@ -55,38 +55,14 @@ public class PageStatePOJO extends PageState {
 	 * 
 	 * @pre html != null && html.length() > 0
 	 * @pre elements != null
+	 * @pre browser_screenshots != null;
 	 */
 	public PageStatePOJO(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
 		assert elements != null;
 		assert html != null;
 		assert html.length() > 0;
-		
-		setType(PageState.class.getSimpleName());
-		setSrc(html);
-		setUrl(new URL(url.replace("/#","")));
-		setBrowserScreenshots(browsers_screenshots);
-		setElements(elements);
-		setElementCounts(countTags(elements));
-		setLandable(false);
-		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
-		setKey(generateKey());
-	}
-	
-	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null
-	 */
-	public PageStatePOJO(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
-		assert elements != null;
-		
+		assert browsers_screenshots != null;
+
 		setType(PageState.class.getSimpleName());
 		setSrc(html);
 		setUrl(new URL(url.replace("/#","")));
@@ -109,10 +85,14 @@ public class PageStatePOJO extends PageState {
 	 * @param isLandable
 	 * 
 	 * @pre elements != null;
+	 * @pre browser_screenshots != null;
+	 * 
 	 * @throws IOException
 	 */
 	public PageStatePOJO(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
+		assert browsers_screenshots != null;
+	
 		setType(PageState.class.getSimpleName());
 		setSrc(html);
 		setUrl(new URL(url.replace("/#","")));
@@ -123,30 +103,6 @@ public class PageStatePOJO extends PageState {
 		setImageWeight(0);
 		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
-	}
-	
-	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null;
-	 */
-	public PageStatePOJO(String key, String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
-		assert elements != null;
-		setSrc(html);
-		setUrl(new URL(url.replace("/#","")));
-		setBrowserScreenshots(browsers_screenshots);
-		setElements(elements);
-		setElementCounts(countTags(elements));
-		setLandable(isLandable);
-		setImageWeight(0);
-		setKey(key);
-		setType(PageState.class.getSimpleName());
 	}
 	
 	
@@ -222,14 +178,8 @@ public class PageStatePOJO extends PageState {
         String thatBrowserScreenshot = that.getBrowserScreenshots().get(0).getFullScreenshot();
         
         boolean screenshots_match = false;
-        /*for(ScreenshotSet screenshots : this.getBrowserScreenshots()){
-        	if(screenshots.getBrowserName().equals(anObject))
-        }
         
-        for(ScreenshotSet screenshots : this.getBrowserScreenshots()){
-        	
-        }
-        */
+        
         //for(String browser : that.getBrowserScreenshots().keySet()){
 		BufferedImage img1;
 		BufferedImage img2;
@@ -249,7 +199,7 @@ public class PageStatePOJO extends PageState {
     	else{
     		return true;
     	}
-        
+       
         
         //System.err.println("Screenshots match? :: "+screenshots_match);
         /*
@@ -282,7 +232,6 @@ public class PageStatePOJO extends PageState {
 	        }
         }
     	return false;
-    	
   	}
 	
 	/**

@@ -3,15 +3,10 @@ package com.minion.actors;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
 import com.minion.browsing.Browser;
@@ -76,7 +71,6 @@ public class TestingActor extends UntypedActor {
 					}
 				}while(tries < 5);
 
-				
 				if(!resulting_page.equals(expected_page)){
 					TestRecord record = new TestRecordPOJO(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);

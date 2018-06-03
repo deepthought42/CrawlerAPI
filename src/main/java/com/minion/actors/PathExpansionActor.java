@@ -3,7 +3,6 @@ package com.minion.actors;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -17,6 +16,7 @@ import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.Rule;
 import com.qanairy.persistence.Test;
 import com.minion.api.MessageBroadcaster;
@@ -54,12 +54,10 @@ public class PathExpansionActor extends UntypedActor {
 					PageState first_page = test.firstPage();
 					
 					if(!last_page.equals(first_page) && last_page.isLandable()){
-						OrientConnectionFactory conn = new OrientConnectionFactory();
 						DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
 						DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_dao.save(discovery_record);
-						conn.close();
 
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
@@ -71,13 +69,11 @@ public class PathExpansionActor extends UntypedActor {
 					
 					pathExpansions = PathExpansionActor.expandPath(test);
 					
-			  		OrientConnectionFactory conn = new OrientConnectionFactory();
 					DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
 					DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
 					discovery_dao.save(discovery_record);
 					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
-					conn.close();
 
 					for(ExploratoryPath expanded : pathExpansions){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
@@ -134,14 +130,19 @@ public class PathExpansionActor extends UntypedActor {
 					page_element.addRule(rule);
 				}
 				for(Rule rule : page_element.getRules()){
-					List<Test> tests = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+					List<List<PathObject>> tests = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
-					for(Test form_test: tests){
+					for(List<PathObject> path_obj_list: tests){
 						//iterate over all actions
-						Test new_test = TestPOJO.clone(test);
-						new_test.getPathObjects().addAll(form_test.getPathObjects());
+						List<PathObject> path_objects = new ArrayList<PathObject>(test.getPathObjects());
+						path_objects.addAll(path_obj_list);
+						
+						List<String> path_keys = new ArrayList<String>(test.getPathKeys());
+						for(PathObject path_obj : path_obj_list){
+							path_keys.add(path_obj.getKey());
+						}
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
+							ExploratoryPath action_path = new ExploratoryPath(path_keys, path_objects, action_list);
 							//check for element action sequence. 
 							//if one exists with one of the actions in the action_list
 							// 	 then skip this action path
@@ -159,6 +160,8 @@ public class PathExpansionActor extends UntypedActor {
 			else{
 				Test new_test = TestPOJO.clone(test);
 				new_test.addPathObject(page_element);
+				new_test.getPathKeys().add(page_element.getKey());
+
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){

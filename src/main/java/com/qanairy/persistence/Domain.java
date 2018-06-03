@@ -68,4 +68,13 @@ public abstract class Domain extends AbstractVertexFrame implements Persistable{
 
 	@Adjacency(label="has_test_user")
 	public abstract void addTestUser(TestUser test_user);
+
+	@Adjacency(label="contains_state")
+	public abstract List<PageState> getPageStates();
+
+	@Adjacency(label="contains_state")
+	public abstract void setPageStates(List<PageState> states);
+
+	@Adjacency(label="contains_state")
+	public abstract void addPageState(PageState state);
 }

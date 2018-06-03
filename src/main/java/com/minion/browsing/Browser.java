@@ -40,6 +40,8 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import com.minion.api.MessageBroadcaster;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -94,17 +96,12 @@ public class Browser {
 	public Browser(String browser) throws MalformedURLException, NullPointerException {
 		assert browser != null;
 		
-		System.err.println("Opening browser");
 		int cnt = 0;
 		this.setBrowserName(browser);
 		while(driver == null && cnt < 20){
 			try{
 				if(browser.equals("chrome")){
-					System.err.println("Opening CHROME browser");
 					this.driver = openWithChrome();
-					
-					System.err.println("Opened CHROME");
-
 				}
 				else if(browser.equals("firefox")){
 					this.driver = openWithFirefox();
@@ -234,7 +231,7 @@ public class Browser {
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
 		return driver;
 	}
@@ -254,7 +251,7 @@ public class Browser {
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
 		return driver;
 	}
@@ -270,7 +267,7 @@ public class Browser {
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
-	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 
 		return driver;
 	}
@@ -322,6 +319,7 @@ public class Browser {
 		System.err.println("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
+	    //driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 
 		return driver;
 	}
@@ -448,7 +446,7 @@ public class Browser {
 					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
 					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
 					tag.setScreenshot(screenshot);
-
+					
 					elementList.add(tag);
 				}
 			}catch(StaleElementReferenceException e){
@@ -586,9 +584,10 @@ public class Browser {
 	 */
 	public static List<Form> extractAllForms(PageState page, Browser browser){
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-
 		List<Form> form_list = new ArrayList<Form>();
+		
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
+		System.err.println("Form elements size    :::    "+form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			PageElement form_tag = new PageElementPOJO(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), Browser.loadCssProperties(form_elem) );
@@ -624,8 +623,9 @@ public class Browser {
 					}
 				}
 				*/
-				
+				System.err.println("GROUP INPUTS    :::   "+group_inputs.size());
 				for(FormField input_field : group_inputs){
+					
 					for(Rule rule : ElementRuleExtractor.extractInputRules(input_field.getInputElement())){
 						input_field.getInputElement().addRule(rule);
 					}
@@ -1003,14 +1003,11 @@ public class Browser {
 		for(int i = 0; i < attributeList.size(); i++){
 			String[] attributes = attributeList.get(i).split("::");
 			String[] attributeVals;
+
 			if(attributes.length > 1){
 				attributeVals = attributes[1].split(" ");
+				attr_lst.add(new AttributePOJO(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
 			}
-			else{
-				attributeVals = new String[0];
-			}
-			
-			attr_lst.add(new AttributePOJO(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
 		}
 		 return attr_lst;
 	}
@@ -1066,36 +1063,36 @@ public class Browser {
 	 */
 	public static boolean checkIfLandable(String browser_name, PageState page_state) {
 		boolean landable = false;
-
-		try{
-			Browser browser = new Browser(browser_name);
-			browser.getDriver().get(page_state.getUrl().toString());
+		boolean page_visited_successfully = true;
+		do{
 			try{
-				new WebDriverWait(browser.getDriver(), 360).until(
-						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			}catch(GridException e){
-				log.error(e.getMessage());
+				Browser browser = new Browser(browser_name);
+				browser.getDriver().get(page_state.getUrl().toString());
+				try{
+					new WebDriverWait(browser.getDriver(), 360).until(
+							webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+				}catch(GridException e){
+					log.error(e.getMessage());
+				}
+				catch(Exception e){
+					log.error(e.getMessage());
+				}
+				
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {}
+				
+				if(page_state.equals(browser.buildPage())){
+					landable = true;
+				}
+				browser.close();
+				break;
+			}catch(Exception e){
+				page_visited_successfully = false;
+				//e.printStackTrace();
+				log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
 			}
-			catch(Exception e){
-				log.error(e.getMessage());
-			}
-			
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {}
-			
-			if(page_state.equals(browser.buildPage())){
-				landable = true;
-			}
-			browser.close();
-		}catch(Exception e){
-			e.printStackTrace();
-			log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
-		}
-		
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {}
+		}while(!page_visited_successfully);
 		
 		return landable;
 	}

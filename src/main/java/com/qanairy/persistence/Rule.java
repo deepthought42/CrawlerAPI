@@ -1,8 +1,10 @@
 package com.qanairy.persistence;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.minion.browsing.form.FormField;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.serializers.RuleSerializer;
 import com.syncleus.ferma.AbstractVertexFrame;
 import com.syncleus.ferma.annotations.Property;
 
@@ -12,6 +14,7 @@ import com.syncleus.ferma.annotations.Property;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
+@JsonSerialize(using = RuleSerializer.class)
 public abstract class Rule extends AbstractVertexFrame implements Persistable {
 
 	@Property("key")

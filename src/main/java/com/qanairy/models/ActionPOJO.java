@@ -1,10 +1,7 @@
 package com.qanairy.models;
 
-import java.util.List;
-
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.PathObject;
-import com.qanairy.persistence.edges.PathEdge;
 
 /**
  * Defines an action in name only
@@ -14,7 +11,6 @@ public class ActionPOJO extends Action{
 	private String key;
 	private String value;
 	private String type;
-	private List<PathEdge> edges;
 	
 	/**
 	 * Construct empty action object

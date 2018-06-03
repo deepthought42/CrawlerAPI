@@ -4,35 +4,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.minion.browsing.ActionFactory;
-import com.qanairy.models.dao.AttributeDao;
-import com.qanairy.models.dao.impl.AttributeDaoImpl;
-import com.qanairy.persistence.Action;
 import com.qanairy.persistence.Attribute;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.Rule;
-import com.qanairy.persistence.edges.PathEdge;
-import com.syncleus.ferma.annotations.Incidence;
 
 /**
  * Contains all the pertinent information for an element on a page. A PageElement
  *  may be a Parent and/or child of another PageElement. This heirarchy is not
  *  maintained by PageElement though. 
  */
-public class PageElementPOJO extends PageElement implements PathObject{
+public class PageElementPOJO extends PageElement {
 	private static Logger log = LoggerFactory.getLogger(PageElementPOJO.class);
 
     private String key;
@@ -44,7 +29,6 @@ public class PageElementPOJO extends PageElement implements PathObject{
 	private List<Attribute> attributes;
 	private List<Rule> rules;
 	private String type;
-	private List<PathEdge> edges;
 			
 	public PageElementPOJO(){
 		setType("PageElement");
@@ -176,73 +160,58 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		this.text = text;
 	}
 	
+	@Override
 	public String getXpath() {
 		return xpath;
 	}
 	
+	@Override
 	public void setXpath(String xpath) {
 		this.xpath = xpath;
 	}
 
+	@Override
 	public Map<String, String> getCssValues() {
 		return cssValues;
 	}
 
+	@Override
 	public void setCssValues(Map<String, String> cssValues) {
 		this.cssValues = cssValues;
 	}
 	
+	@Override
 	public String getKey() {
 		return this.key;
 	}
 	
+	@Override
 	public void setKey(String key) {
 		this.key = key;
 	}
 	
+	@Override
 	public void setAttributes(List<Attribute> attribute_persist_list) {
 		this.attributes = attribute_persist_list;
 	}
 	
+	@Override
 	public List<Rule> getRules(){
 		return this.rules;
 	}
 
+	@Override
 	public void setRules(List<Rule> rules) {
 		this.rules = rules;
 	}
-	
-	public void addRules(List<Rule> rules) {
-		this.rules.addAll(rules);
-	}
-	
+
+	@Override
 	public void addRule(Rule rule) {
 		this.rules.add(rule);
 	}
-	
-	/**
-	 * Prints this elements xpath
-	 */
-	public String toString(){
-		return this.xpath;
-	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-    public int hashCode() {
-        int hash = 1;
-        hash = hash * 5 + name.hashCode();
-        hash = hash * 17 + text.hashCode();
-        hash = hash * 31 + xpath.hashCode();
-        
-        for(Attribute attr : attributes){
-        	hash = hash * 13 + attr.hashCode();
-        }
-        return hash;
-    }
 	
+	@Override
 	public List<Attribute> getAttributes() {
 		return attributes;
 	}
@@ -269,6 +238,66 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		return null;
 	}
 	
+
+	@Override
+	public void addAttribute(Attribute attribute) {
+		this.attributes.add(attribute);
+	}
+	
+	
+	@Override
+	public String getScreenshot() {
+		return this.screenshot;
+	}
+
+	@Override
+	public void setScreenshot(String screenshot) {
+		this.screenshot = screenshot;
+	}
+
+	@Override
+	public String getType() {
+		return this.type;
+	}
+
+	@Override
+	public void setType(String type) {
+		this.type = type;
+	}
+	
+	/**
+	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
+	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * 
+	 * @return
+	 */
+	public String generateKey() {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath());   
+	}
+	
+
+	/**
+	 * Prints this elements xpath
+	 */
+	public String toString(){
+		return this.xpath;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * 5 + name.hashCode();
+        hash = hash * 17 + text.hashCode();
+        hash = hash * 31 + xpath.hashCode();
+        
+        for(Attribute attr : attributes){
+        	hash = hash * 13 + attr.hashCode();
+        }
+        return hash;
+    }
 	/**
 	 * Checks if {@link PageElement elements} are equal
 	 * 
@@ -309,7 +338,7 @@ public class PageElementPOJO extends PageElement implements PathObject{
 			return false;
 		}
 		
-		areElementsEqual = this.cssMatches(that);
+		//areElementsEqual = this.cssMatches(that);
 		return areElementsEqual;
 	}
 
@@ -326,38 +355,5 @@ public class PageElementPOJO extends PageElement implements PathObject{
 		page_elem.setXpath(this.getXpath());
 		
 		return page_elem;
-	}
-
-	public String getScreenshot() {
-		return this.screenshot;
-	}
-
-	public void setScreenshot(String screenshot) {
-		this.screenshot = screenshot;
-	}
-
-	@Override
-	public String getType() {
-		return this.type;
-	}
-
-	@Override
-	public void setType(String type) {
-		this.type = type;
-	}
-
-	@Override
-	public void addAttribute(Attribute attribute) {
-		this.attributes.add(attribute);
-	}
-	
-	/**
-	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
-	 * as easy identity of {@link Test} when generated in the wild via discovery
-	 * 
-	 * @return
-	 */
-	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath());   
 	}
 }

@@ -99,19 +99,26 @@ public class TestPOJO extends Test{
 	 * @return
 	 */
 	public static Boolean isTestPassing(PageState expected_page, PageState new_result_page, Boolean last_test_passing_status){
-		if((last_test_passing_status != null && !last_test_passing_status) && expected_page.equals(new_result_page)){
+		if((last_test_passing_status != null && !last_test_passing_status) && expected_page.getKey().equals(new_result_page.getKey())){
+			System.err.println("LAST TEST PASSING STATUS ::  "+last_test_passing_status);
+			System.err.println("ARE PAGES EQUAL????     "+expected_page.equals(new_result_page));
 			last_test_passing_status = false; 
 		}
-		else if((last_test_passing_status == null || !last_test_passing_status) && !expected_page.equals(new_result_page)){
+		else if((last_test_passing_status == null || !last_test_passing_status) && !expected_page.getKey().equals(new_result_page.getKey())){
 			last_test_passing_status = null;
 		}
-		else if((last_test_passing_status != null && last_test_passing_status) && expected_page.equals(new_result_page)){
+		else if((last_test_passing_status != null && last_test_passing_status) && expected_page.getKey().equals(new_result_page.getKey())){
 			last_test_passing_status = true;
 		}
-		else if((last_test_passing_status != null && last_test_passing_status) && !expected_page.equals(new_result_page)){
+		else if((last_test_passing_status != null && last_test_passing_status) && expected_page.getKey().equals(new_result_page.getKey())){
+			System.err.println("Result page KEY      :::: "+new_result_page.getKey());
+			System.err.println("Expected page key    :::: "+expected_page.getKey());
+			System.err.println("LAST TEST PASSING STATUS ::  "+last_test_passing_status);
+			System.err.println("ARE PAGES EQUAL????     "+expected_page.equals(new_result_page));
 			last_test_passing_status = false;
 		}
 		
+		System.err.println("Return value from isTestPassing()   ........    "+last_test_passing_status);
 		return last_test_passing_status;
 	}
 	

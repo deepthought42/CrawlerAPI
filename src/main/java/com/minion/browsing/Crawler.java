@@ -1,6 +1,7 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.PageAlert;
 import com.qanairy.persistence.Action;
@@ -108,7 +110,13 @@ public class Crawler {
 	public static boolean performAction(Action action, PageElement elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
-		MessageBroadcaster.broadcastAction(action, (new URL(driver.getCurrentUrl()).getHost()));
+		try {
+			MessageBroadcaster.broadcastAction(action, (new URL(driver.getCurrentUrl()).getHost()));
+		} catch (JsonProcessingException e1) {
+			e1.printStackTrace();
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+		}
 		System.err.println("Last Element    :: "+elem);
 		System.err.println("Action   :: "+action);
 		try{

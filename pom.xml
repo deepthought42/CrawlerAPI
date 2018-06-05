@@ -281,7 +281,7 @@
 		<dependency>
 		    <groupId>com.stripe</groupId>
 		    <artifactId>stripe-java</artifactId>
-		    <version>5.34.0</version>
+		    <version>5.36.0</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.segment.analytics.java/analytics -->

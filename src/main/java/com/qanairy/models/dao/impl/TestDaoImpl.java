@@ -50,10 +50,20 @@ public class TestDaoImpl implements TestDao {
 			test_record.addDomain(idomain);
 			 */
 		}
+		
 		TestRecordDao test_record_dao = new TestRecordDaoImpl();
-
 		for(TestRecord record : test.getRecords()){
-			test_record.addRecord(test_record_dao.save(record));
+
+			boolean exists = false;
+			for(TestRecord record2 : test_record.getRecords()){
+				if(record2.getKey().equals(record.getKey())){
+					exists = true;
+				}
+			}
+			
+			if(!exists){
+				test_record.addRecord(test_record_dao.save(record));
+			}
 		}
 		
 		GroupDao group_repo = new GroupDaoImpl();
@@ -67,10 +77,9 @@ public class TestDaoImpl implements TestDao {
 			
 			if(!exists){
 				test_record.addGroup(group_repo.save(group));
-				//groups.add(group_repo.save(group));
 			}
 		}
-		//test_record.setGroups(groups);
+
 		test_record.setLastRunTimestamp(test.getLastRunTimestamp());
 		test_record.setRunTime(test.getRunTime());
 		test_record.setName(test.getName());

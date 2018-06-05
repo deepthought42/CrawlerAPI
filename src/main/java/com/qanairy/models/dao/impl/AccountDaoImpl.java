@@ -3,7 +3,9 @@ package com.qanairy.models.dao.impl;
 import java.util.List;
 import java.util.NoSuchElementException;
 import com.qanairy.models.dao.AccountDao;
+import com.qanairy.models.dao.DiscoveryRecordDao;
 import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.TestRecordDao;
 import com.qanairy.persistence.Account;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.Domain;
@@ -54,27 +56,53 @@ public class AccountDaoImpl implements AccountDao{
 		
 		account_record.setLastDomain(account.getLastDomain());
 		account_record.setDiscoveryRecords(account.getDiscoveryRecords());
-		account_record.setTestRecords(account.getTestRecords());
 		account_record.setOnboardedSteps(account.getOnboardedSteps());
-		
-		boolean exists = false;
-		for(Domain domain : account_record.getDomains()){
-			for(Domain domain2 : account.getDomains()){
-				if(domain.getKey().equals(domain2.getKey())){
+
+		DiscoveryRecordDao discovery_record_dao = new DiscoveryRecordDaoImpl();
+		for(DiscoveryRecord record : account.getDiscoveryRecords()){
+
+			boolean exists = false;
+			for(DiscoveryRecord record2 : account_record.getDiscoveryRecords()){
+				if(record2.getKey().equals(record.getKey())){
 					exists = true;
 				}
 			}
+			
+			if(!exists){
+				account_record.addDiscoveryRecord(discovery_record_dao.save(record));
+			}
 		}
 		
-		if(!exists){
-			DomainDao domain_dao = new DomainDaoImpl();
-			for(Domain domain : account.getDomains()){
-				//account_record.addDomain(domain_dao.save(domain));
+		TestRecordDao test_record_dao = new TestRecordDaoImpl();
+		for(TestRecord record : account.getTestRecords()){
+
+			boolean exists = false;
+			for(TestRecord record2 : account_record.getTestRecords()){
+				if(record2.getKey().equals(record.getKey())){
+					exists = true;
+				}
+			}
+			
+			if(!exists){
+				account_record.addTestRecord(test_record_dao.save(record));
+			}
+		}
+		
+		DomainDao domain_dao = new DomainDaoImpl();
+		for(Domain domain : account.getDomains()){
+
+			boolean exists = false;
+			for(Domain domain2 : account_record.getDomains()){
+				if(domain2.getKey().equals(domain.getKey())){
+					exists = true;
+				}
+			}
+			
+			if(!exists){
 				account_record.addDomain(domain_dao.save(domain));
 			}
 		}
 		
-		//connection.save();
 		connection.close();
 		return account_record;
 	}

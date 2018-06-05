@@ -128,6 +128,8 @@ public class TestingActor extends UntypedActor {
 
 		 try {		
 			page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
+			
+			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getCorrect());
 			passing = TestPOJO.isTestPassing(test.getResult(), page, test.getCorrect());
 			
 		    test.setBrowserStatus(browser.getBrowserName(), passing);
@@ -138,7 +140,7 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		test_record = new TestRecordPOJO(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
+		 test_record = new TestRecordPOJO(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

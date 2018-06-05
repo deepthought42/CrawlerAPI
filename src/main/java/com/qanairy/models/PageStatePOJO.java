@@ -43,7 +43,6 @@ public class PageStatePOJO extends PageState {
 	private Map<String, Integer> element_counts;
 
 	private String type;
-	
 	/**
  	 * Creates a page instance that is meant to contain information about a state of a webpage
  	 * 
@@ -179,8 +178,7 @@ public class PageStatePOJO extends PageState {
         
         boolean screenshots_match = false;
         
-        
-        //for(String browser : that.getBrowserScreenshots().keySet()){
+        System.err.println("Checking page equality");
 		BufferedImage img1;
 		BufferedImage img2;
     	
@@ -197,6 +195,7 @@ public class PageStatePOJO extends PageState {
     		}
     	}
     	else{
+    		log.info("PageState screenshots match");
     		return true;
     	}
        

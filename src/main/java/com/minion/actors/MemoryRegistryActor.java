@@ -37,16 +37,26 @@ public class MemoryRegistryActor extends UntypedActor{
 				TestDao test_repo = new TestDaoImpl();
 				test = test_repo.save(test);
 				DomainDao domain_dao = new DomainDaoImpl();
-				Domain domain = domain_dao.find(msg.getOptions().get("host").toString());
-				domain.addTest(test);
+				
+				String host_url = msg.getOptions().get("host").toString();
+				Domain domain = domain_dao.find(host_url);
+				boolean test_already_exists = false;
+				for(Test test_record : domain.getTests()){
+					if(test_record.getKey().equals(test.getKey())){
+						test_already_exists = true;
+					}
+				}
+				if(!test_already_exists){
+					domain.addTest(test);
+				}
 				domain.setTestCount(domain.getTestCount()+1);
 
 				
 				if(test.getBrowserStatuses() == null || test.getBrowserStatuses().isEmpty()){
-					MessageBroadcaster.broadcastDiscoveredTest(test, msg.getOptions().get("host").toString());
+					MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
 				}
 				else{
-					MessageBroadcaster.broadcastTest(test, msg.getOptions().get("host").toString());
+					MessageBroadcaster.broadcastTest(test, host_url);
 				}
 			}
 		}

@@ -2,7 +2,6 @@ package com.minion.api;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -64,9 +63,11 @@ import com.qanairy.models.StripeClient;
 import com.qanairy.models.dao.DomainDao;
 import com.qanairy.models.dao.GroupDao;
 import com.qanairy.models.dao.TestDao;
+import com.qanairy.models.dao.TestRecordDao;
 import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dao.impl.GroupDaoImpl;
 import com.qanairy.models.dao.impl.TestDaoImpl;
+import com.qanairy.models.dao.impl.TestRecordDaoImpl;
 
 /**
  * REST controller that defines endpoints to access tests
@@ -239,10 +240,9 @@ public class TestController {
     	
 		TestDao test_dao = new TestDaoImpl();
 		Test test = test_dao.find(key);
-		test.setCorrect(correct);
-		
 		Map<String, Boolean> browser_statuses = test.getBrowserStatuses();
 		browser_statuses.put(browser_name, correct);
+		test.setCorrect(correct);
 		test.setBrowserStatuses(browser_statuses);
 		
 		//update last TestRecord passes value
@@ -336,7 +336,7 @@ public class TestController {
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_type", required=true) String browser_type) 
+														  @RequestParam(value="browser_name", required=true) String browser_name) 
 																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -420,25 +420,32 @@ public class TestController {
     		TestRecord record = null;
 
 			Map<String, Boolean> browser_running_status = test.getBrowserStatuses();
-			browser_running_status.put(browser_type, null);
+			browser_running_status.put(browser_name, null);
 
 			test.setBrowserStatuses(browser_running_status);
-			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
 			
+			Map<String, Object> options = new HashMap<String, Object>();
+			options.put("host", test.firstPage().getUrl().getHost());
+			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, options);
+			System.err.println("Test message created for host :: "+options.get("host"));
 			//tell memory worker of test
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 			memory_actor.tell(test_msg, null);
 			
-			Browser browser = new Browser(browser_type.trim());
+			Browser browser = new Browser(browser_name.trim());
 			record = TestingActor.runTest(test, browser);
 			browser.close();
-
+System.err.println("TEST RUN RECORD PASSING STATUS  ??????     "+record.getPassing());
+			TestRecordDao test_record_dao = new TestRecordDaoImpl();
+			record = test_record_dao.save(record);
 			acct.addTestRecord(record);
 			AccountService.save(acct);
 			
-			test.addRecord(record);
-			boolean is_passing = true;
+    		test = test_dao.find(key);
+    		
+			test_results.put(test.getKey(), record);
+    		boolean is_passing = true;
 			//update overall passing status based on all browser passing statuses
 			for(Boolean status : test.getBrowserStatuses().values()){
 				if(status != null && !status){
@@ -446,13 +453,17 @@ public class TestController {
 					break;
 				}
 			}
+			Map<String, Boolean> browser_statuses = test.getBrowserStatuses();
+			browser_statuses.put(browser_name, is_passing);
+			
+			test.addRecord(record);
 			test.setCorrect(is_passing);
 			test.setLastRunTimestamp(new Date());
-			test_results.put(test.getKey(), record);
 			test.setRunTime(record.getRunTime());
-	
+			test.setBrowserStatuses(browser_statuses);
+			
 			//tell memory worker of test
-			test_msg = new Message<Test>(acct.getKey(), test, new HashMap<String, Object>());
+			test_msg = new Message<Test>(acct.getKey(), test, options);
 			memory_actor.tell(test_msg, null);
    		}
 		
@@ -471,7 +482,7 @@ public class TestController {
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
 														@RequestParam(value="url", required=true) String url,
-														@RequestParam(value="browser_type", required=true) String browser_type){		
+														@RequestParam(value="browser_name", required=true) String browser_name){		
 		List<Test> test_list = new ArrayList<Test>();
 		List<Test> group_list = new ArrayList<Test>();
 		TestDao test_dao = new TestDaoImpl();
@@ -488,7 +499,7 @@ public class TestController {
 		for(Test group_test : group_list){
 			Browser browser;
 			try {
-				browser = new Browser(browser_type);
+				browser = new Browser(browser_name);
 				TestRecord record = TestingActor.runTest(group_test, browser);
 				group_records.add(record);
 			} catch (IOException e) {

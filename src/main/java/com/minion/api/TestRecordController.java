@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
+import com.qanairy.persistence.Test;
+import com.qanairy.persistence.TestRecord;
 
 import java.util.ArrayList;
 import java.util.List;

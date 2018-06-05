@@ -2,11 +2,11 @@ package com.minion.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -19,9 +19,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.Account;
-import com.qanairy.models.Domain;
+import com.qanairy.models.DomainPOJO;
+import com.qanairy.models.dao.DomainDao;
+import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.Account;
+import com.qanairy.persistence.Domain;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 
@@ -35,12 +40,6 @@ public class DomainController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    protected AccountService accountService;
-    
-    @Autowired
-    protected DomainService domainService;
-
     /**
      * Create a new {@link Domain domain}
      * 
@@ -51,21 +50,17 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.POST)
     public @ResponseBody Domain create(HttpServletRequest request,
-    									@RequestBody(required = true) Domain domain) 
+							    		 @RequestParam(value="protocol", required=true) String protocol,
+							    		 @RequestParam(value="url", required=true) String url,
+							    		 @RequestParam(value="browser_name", required=true) String browser_name,
+							    		 @RequestParam(value="logo_url", required=false) String logo_url) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
-    	if(domain.getProtocol() == null ||
-    		domain.getUrl() == null ||
-    		domain.getDiscoveryBrowser() == null)
-		{
-			throw new RequiredFieldMissingException();
-		}
-    	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -75,23 +70,21 @@ public class DomainController {
     	}
     	
     	//check if domain should have a 'www.' or not. We do this for consistency of naming in the database
-    	int dot_idx = domain.getUrl().indexOf('.');
-    	int last_dot_idx = domain.getUrl().lastIndexOf('.');
+    	int dot_idx = url.indexOf('.');
+    	int last_dot_idx = url.lastIndexOf('.');
+    	String formatted_url = url;
     	if(dot_idx == last_dot_idx){
-    		domain.setUrl("www."+domain.getUrl());
+    		formatted_url = "www."+url;
     	}
-    	URL url_obj = new URL(domain.getProtocol()+"://"+domain.getUrl());
-		domain.setUrl(url_obj.getHost());
-
-		for(Domain acct_domain : acct.getDomains()){
-			if(acct_domain.getUrl().equals(domain.getUrl())){
-				throw new ExistingAccountDomainException();
-			}
-		}
+    	URL url_obj = new URL(protocol+"://"+formatted_url);
+		
+    	DomainPOJO domain_pojo = new DomainPOJO(protocol, url_obj.getHost(), browser_name, logo_url);
+		
+		Domain domain = DomainService.save(domain_pojo);
     	acct.addDomain(domain);
     	acct.setLastDomain(domain.getUrl());
-    	accountService.save(acct);
-    	return domainService.save(domain);
+    	AccountService.save(acct);
+    	return domain;
     }
 
     /**
@@ -104,7 +97,13 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(method = RequestMethod.PUT)
     public @ResponseBody Domain update(HttpServletRequest request,
-    									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+   		 								 @RequestParam(value="key", required=true) String key,
+							    		 @RequestParam(value="protocol", required=true) String protocol,
+								   		 @RequestParam(value="browser_name", required=true) String browser_name,
+								   		 @RequestParam(value="logo_url", required=false) String logo_url) 
+    											throws UnknownUserException, 
+    													UnknownAccountException, 
+    													MalformedURLException {
         //printGrantedAuthorities((Auth0JWTToken) principal);
         /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
             
@@ -116,7 +115,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -125,7 +124,13 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	return domainService.save(domain);
+    	DomainDao dao = new DomainDaoImpl();
+    	Domain domain = dao.find(key);
+    	domain.setDiscoveryBrowserName(browser_name);
+    	domain.setLogoUrl(logo_url);
+    	domain.setProtocol(protocol);
+    	
+    	return domain;
     }
     
     /**
@@ -138,14 +143,17 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="/select", method = RequestMethod.PUT)
     public @ResponseBody void selectDomain(HttpServletRequest request,
-    									@RequestBody Domain domain) throws UnknownUserException, UnknownAccountException, MalformedURLException {
+    									@RequestBody DomainPOJO domain) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -155,7 +163,7 @@ public class DomainController {
     	}
     	
     	acct.setLastDomain(domain.getUrl());
-    	accountService.save(acct);
+    	AccountService.save(acct);
     }
 
     @PreAuthorize("hasAuthority('read:domains')")
@@ -166,7 +174,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	
-    	Account acct = accountService.find(username);
+    	Account acct = AccountService.find(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -195,7 +203,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-		Account acct = accountService.find(username);
+		Account acct = AccountService.find(username);
 	
 		if(acct == null){
 			throw new UnknownAccountException();
@@ -204,22 +212,85 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}		
 		
-		Domain domain = domainService.get(key);
-		acct = accountService.deleteDomain(acct, domain);
+		Domain domain = DomainService.get(key);
+		AccountService.deleteDomain(acct, domain);
 		
 	    return domain;
 	}
     
-    /**
-     * Simple demonstration of how Principal info can be accessed
-     */
-    /*private void printGrantedAuthorities(final Auth0JWTToken principal) {
-        for(final GrantedAuthority grantedAuthority: principal.getAuthorities()) {
-            final String authority = grantedAuthority.getAuthority();
-            logger.info(authority);
-        }
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="/page_states")
+    public @ResponseBody List<PageState> getAllPageStates(HttpServletRequest request, 
+    													  @RequestParam(value="host", required=true) String host) 
+    															throws UnknownAccountException {        
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = AccountService.find(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
+    	for(Domain domain : acct.getDomains()){
+    		if(domain.getUrl().equals(host)){
+    			return domain.getPageStates();
+    		}
+    	}
+	    return new ArrayList<PageState>();
     }
-    */	
+	
+	/**
+	 * 
+	 * @param request
+	 * @param host
+	 * 
+	 * @return a unique set of {@link PageElement}s belonging to all page states for the {@link Domain} with the given host
+	 * @throws UnknownAccountException
+	 */
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="/page_elements")
+    public @ResponseBody List<PageElement> getAllPageElements(HttpServletRequest request, 
+    													  @RequestParam(value="host", required=true) String host) 
+    															throws UnknownAccountException {        
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = AccountService.find(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
+    	List<PageElement> unique_page_elements = new ArrayList<PageElement>();
+    	List<PageElement> page_elements = new ArrayList<PageElement>();
+    	for(Domain domain : acct.getDomains()){
+    		for(PageState page_state : domain.getPageStates()){
+    			boolean element_exists = false;
+    			for(PageElement element : page_state.getElements()){
+    				for(PageElement unique : unique_page_elements){
+    					if(element.getKey().equals(unique.getKey())){
+    						element_exists = true;
+    					}
+    				}
+    				if(!element_exists){
+    					unique_page_elements.add(element);
+    				}
+    			}
+    			page_elements.addAll(page_state.getElements());
+    		}
+    	}    	
+    	
+	    return unique_page_elements;
+    }
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)

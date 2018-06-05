@@ -1,12 +1,18 @@
 package com.qanairy.persistence;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
-import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
-import com.tinkerpop.frames.FramedGraph;
-import com.tinkerpop.frames.FramedGraphFactory;
+import com.qanairy.persistence.edges.HasDomain;
+import com.syncleus.ferma.DelegatingFramedGraph;
+import com.syncleus.ferma.FramedGraph;
+
 
 /**
  * Produces connections to the OrientDB instance
@@ -14,30 +20,34 @@ import com.tinkerpop.frames.FramedGraphFactory;
  */
 @Component
 public class OrientConnectionFactory {
-    private static Logger log = LoggerFactory.getLogger(OrientConnectionFactory.class);
+    @SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(OrientConnectionFactory.class);
         
-	FramedGraph<OrientGraphNoTx> current_tx = null;
+    DelegatingFramedGraph<OrientGraph> current_tx = null;
 	OrientGraphFactory graphFactory;
 	//private static String username = ConfigService.getProperty("db.username");
 	//private static String password = ConfigService.getProperty("db.password");
 	//private static String db_path = ConfigService.getProperty("db.serverurl");
 	
 	public OrientConnectionFactory(){
-		if(this.current_tx == null){
-			this.current_tx = getConnection();
-		}
+		this.current_tx = getConnection();
 	}
 	
 	/**
 	 * Opens connection to database
 	 * @return
 	 */
-	private FramedGraph<OrientGraphNoTx> getConnection(){
-		FramedGraphFactory factory = new FramedGraphFactory(); //Factories should be reused for performance and memory conservation.
-		graphFactory = new OrientGraphFactory("remote:159.89.234.103/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(1, 10000);
+	private DelegatingFramedGraph<OrientGraph> getConnection(){
+		graphFactory = new OrientGraphFactory("remote:206.81.15.55/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000);
+		
+		
+		return new DelegatingFramedGraph<OrientGraph>(graphFactory.getNoTx(), true, true);
+		//return new OrientTransactionFactoryImpl(factory, annotationsSupported, basePaths);
+
+		
+        //
 	    //graphFactory.setConnectionStrategy(OStorageRemote.CONNECTION_STRATEGY.ROUND_ROBIN_CONNECT.toString());
-		OrientGraphNoTx instance = graphFactory.getNoTx();
-		return factory.create(instance);
+		//return graphFactory.getTx();
 	}
 
 	
@@ -47,24 +57,18 @@ public class OrientConnectionFactory {
 	 * @param persistable_obj
 	 * @return if save was successful
 	 */
-	public boolean save(){
-		try{
-			//current_tx.commit();
-		}catch(Exception e){
-			log.error("failed to save record to OrientDB");
-			return false;
-		}
-		return true;
+	public void save(){
+		current_tx.tx().commit();
 	}
 	
 	public void close(){
-		graphFactory.close();
+		current_tx.tx().close();
 	}
 	
 	/**
 	 * @return current graph database transaction
 	 */
-	public FramedGraph<OrientGraphNoTx> getTransaction(){
+	public FramedGraph getTransaction(){
 		return this.current_tx;
 	}
 }

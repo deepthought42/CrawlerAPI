@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.minion.browsing.element.ComplexField;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElement;
+import com.qanairy.persistence.Attribute;
+import com.qanairy.persistence.PageElement;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser

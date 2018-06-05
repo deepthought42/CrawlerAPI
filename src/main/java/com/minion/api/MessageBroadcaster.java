@@ -1,21 +1,21 @@
 package com.minion.api;
 
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
-import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.Path;
-import com.qanairy.models.PathObject;
-import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
+import com.qanairy.models.PageStatePOJO;
+import com.qanairy.persistence.Action;
+import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Test;
+import com.qanairy.persistence.TestRecord;
+import com.qanairy.persistence.PageElement;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
@@ -32,15 +32,15 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveredTest(Test test) throws JsonProcessingException {	
+	public static void broadcastDiscoveredTest(Test test, String host) throws JsonProcessingException {	
 		List<PathObject> path_list = new ArrayList<PathObject>();
-		for(PathObject obj : test.getPath().getPath()){
-			if(obj != null && obj.getType().equals("Page")){
-				Page page_obj = (Page)obj;
+		for(PathObject obj : test.getPathObjects()){
+			if(obj != null && obj.getType().equals("PageState")){
+				PageState page_obj = (PageState)obj;
 								
-				Page page;
+				PageState page;
 				try {
-					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
+					page = new PageStatePOJO( "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
 					path_list.add(page);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -51,33 +51,28 @@ public class MessageBroadcaster {
 			}
 		}
 
-		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
-		Page result_page = null;
+		/*PageState result_page = null;
 		try {
-			result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
+			result_page = new PageStatePOJO("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		Test new_test = new Test(test.getKey(), path, result_page, test.getDomain(), test.getName());
-		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
+		Test new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), result_page, test.getName());
+		new_test.setBrowserStatuses(test.getBrowserStatuses());
 		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		new_test.setRunTime(test.getRunTime());
-		
+		new_test.setCorrect(test.getCorrect());
+		new_test.setRecords(test.getRecords());
+		new_test.setSpansMultipleDomains(test.getSpansMultipleDomains());
+*/
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
-		/*Gson gson = new Gson();
-        String test_json = gson.toJson(new_test);
-        */
-
-		String host = new_test.getDomain().getUrl();
-        
+        //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
+        String test_json = mapper.writeValueAsString(test);
 
-        //Object to JSON in String
-        String test_json = mapper.writeValueAsString(new_test);
-        
 		pusher.trigger(host, "test-discovered", test_json);
 	}
 	
@@ -87,51 +82,55 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTest(Test test) throws JsonProcessingException {	
-		List<PathObject> path_list = new ArrayList<PathObject>();
-		Path path_clone = Path.clone(test.getPath());
-		
-		for(PathObject obj : path_clone.getPath()){
-			if(obj != null && obj.getType().equals("Page")){
-				Page page_obj = (Page)obj;
-								
-				Page page;
-				try {
-					page = new Page(page_obj.getKey(), "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
-					path_list.add(page);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			else if(obj != null){
-				path_list.add(obj);
-			}
-		}
-
-		Path path = new Path(test.getPath().getKey(), test.getPath().isUseful(), test.getPath().getSpansMultipleDomains(), path_list);
-		Test new_test = new Test(test.getKey(), path, test.getResult(), test.getDomain(), test.getName());
-		new_test.setBrowserPassingStatuses(test.getBrowserPassingStatuses());
-		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
-		new_test.setRunTime(test.getRunTime());
-		try {
-			Page result_page = new Page("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
-			new_test.setResult(result_page);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		
+	public static void broadcastTest(Test test, String host) throws JsonProcessingException {	
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
-
-		String host = new_test.getDomain().getUrl();
         
         ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String
-        String test_json = mapper.writeValueAsString(new_test);
+        String test_json = mapper.writeValueAsString(test);
         
-		pusher.trigger(host, "test-run", test_json);
+		pusher.trigger(host, "test", test_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link Test} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastPageElement(PageElement page_element, String host) throws JsonProcessingException {	
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+        
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String page_element_json = mapper.writeValueAsString(page_element);
+        
+		pusher.trigger(host, "page_element", page_element_json);
+	}
+	
+	/**
+     * Message emitter that sends {@link Test} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastPageState(PageState page_state, String host) throws JsonProcessingException {	
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+        
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String page_state_json = mapper.writeValueAsString(page_state);
+        
+		pusher.trigger(host, "page_state", page_state_json);
 	}
 	
 	/**
@@ -173,5 +172,18 @@ public class MessageBroadcaster {
         String discovery_json = mapper.writeValueAsString(record);
         
 		pusher.trigger(host, "discovery-status", discovery_json);
+	}
+
+	public static void broadcastAction(Action action, String host) throws JsonProcessingException {
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String discovery_json = mapper.writeValueAsString(action);
+        
+		pusher.trigger(host, "action", discovery_json);
 	}
 }

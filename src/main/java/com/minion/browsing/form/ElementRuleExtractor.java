@@ -3,28 +3,26 @@ package com.minion.browsing.form;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
-import com.minion.browsing.Browser;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElement;
-import com.qanairy.rules.DisabledRule;
-import com.qanairy.rules.EmailPatternRule;
-import com.qanairy.rules.Rule;
-import com.qanairy.rules.NumericRule;
-import com.qanairy.rules.PatternRule;
-import com.qanairy.rules.ReadOnlyRule;
-import com.qanairy.rules.RequirementRule;
-import com.qanairy.rules.SpecialCharacterRestriction;
-import com.qanairy.rules.AlphabeticRestrictionRule;
-import com.qanairy.rules.Clickable;
-import com.qanairy.rules.RuleType;
+import com.qanairy.models.rules.AlphabeticRestrictionRule;
+import com.qanairy.models.rules.Clickable;
+import com.qanairy.models.rules.DisabledRule;
+import com.qanairy.models.rules.EmailPatternRule;
+import com.qanairy.models.rules.NumericRule;
+import com.qanairy.models.rules.PatternRule;
+import com.qanairy.models.rules.ReadOnlyRule;
+import com.qanairy.models.rules.RequirementRule;
+import com.qanairy.models.rules.RuleType;
+import com.qanairy.models.rules.SpecialCharacterRestriction;
+import com.qanairy.persistence.Attribute;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.Rule;
 
 public class ElementRuleExtractor {
 	private static Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);
 
 	public static List<Rule> extractInputRules(PageElement elem){
 		List<Rule> rules = new ArrayList<Rule>();
-
+		System.err.println("ELEMENT ATTRIBUTE COUNT :: "+elem.getAttributes());
 		for(Attribute attr : elem.getAttributes()){
 			if(attr.getName().trim().equalsIgnoreCase("required")){
 				Rule required = new RequirementRule();
@@ -34,7 +32,7 @@ public class ElementRuleExtractor {
 				Rule disabled = new DisabledRule();
 				rules.add(disabled);
 			}
-			else if(attr.getName().equalsIgnoreCase("type") && attr.contains("number")){
+			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().contains("number")){
 				Rule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
 				Rule special_character_rule = new SpecialCharacterRestriction();
 				

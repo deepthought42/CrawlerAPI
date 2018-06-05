@@ -1,13 +1,16 @@
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.minion.browsing.Browser;
-import com.qanairy.models.Domain;
-import com.qanairy.models.Page;
-import com.qanairy.models.Path;
+import com.qanairy.models.PageStatePOJO;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.ScreenshotSet;
 
 /**
  * 
@@ -25,13 +28,30 @@ public class BrowserTest {
 	
 	@Test(groups="Regression")
 	public void verifyTestConstructor(){
-		Page page  = new Page();
+		PageState page;
 		try {
-			page.setUrl(new URL("http://localhost"));
-		} catch (MalformedURLException e) {
+			page = new PageStatePOJO("<html>localhost</html>",
+					"http://localhost", 
+					new ArrayList<ScreenshotSet>(),
+					new ArrayList<PageElement>(), 
+					false);
+			
+			List<String> path_keys = new ArrayList<String>();
+			path_keys.add(page.getKey());
+			
+			List<PathObject> path_objects = new ArrayList<PathObject>();
+			path_objects.add(page);
+			
+			com.qanairy.persistence.Test test = new com.qanairy.models.TestPOJO(path_keys, path_objects, page, "Testing Test 1");
+			
+			Assert.assertEquals(test.getPathKeys().size(), path_keys.size());
+			Assert.assertEquals(test.getPathObjects().size(), path_objects.size());
+			Assert.assertEquals(test.getRunTime(), 0L);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		com.qanairy.models.Test test = new com.qanairy.models.Test(new Path(), new Page(), new Domain(page.getUrl().getProtocol(), page.getUrl().getHost(), "chrome",  null), "Testing Test 1");
-		Assert.assertTrue(test.getDomain().getUrl().toString().equals(page.getUrl().getHost()));
+		
+		
 	}
 }

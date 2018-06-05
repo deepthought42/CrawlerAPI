@@ -30,13 +30,13 @@ import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
-import com.qanairy.models.Account;
+import com.qanairy.models.AccountPOJO;
 import com.qanairy.models.AccountUsage;
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.QanairyUser;
 import com.qanairy.models.StripeClient;
-import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.persistence.Account;
+import com.qanairy.persistence.DiscoveryRecord;
+import com.qanairy.persistence.TestRecord;
 import com.qanairy.services.AccountService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
@@ -62,9 +62,6 @@ public class AccountController {
     @Autowired
     protected WebSecurityConfig appConfig;
 
-    @Autowired
-    protected AccountService account_service;
-    
     private StripeClient stripeClient;
 
     @Autowired
@@ -90,27 +87,22 @@ public class AccountController {
     	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	//Auth0Client auth = new Auth0Client();
     	//String username = auth.getUsername(auth_access_token);
-    	Account acct = this.account_service.find(username);
+    	Account acct = AccountService.find(username);
     	
     	//create account
         if(acct != null){
         	throw new AccountExistsException();
         }
-        
-        String plan = "4-disc-10000-test-90-trial";
-    	
-    	Plan new_plan = Plan.retrieve(plan);
+            	
+    	Plan new_plan = Plan.retrieve("4-disc-10000-test-90-trial");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
     	Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
     	
-    	acct = new Account(username, plan, customer.getId(), subscription.getId());
-        
-        //Create user
-        QanairyUser user = new QanairyUser(username);
-        acct.addUser(user);
+    	acct = new AccountPOJO(username, customer.getId(), subscription.getId());
+
 
         // Connect to Auth0 API and update user metadata
         /*HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
@@ -122,7 +114,7 @@ public class AccountController {
         Account new_account = null;
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        new_account = account_service.save(acct);
+        new_account = AccountService.save(acct);
         
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
@@ -134,7 +126,7 @@ public class AccountController {
     		);
     	
     	Map<String, String> account_signup_properties = new HashMap<String, String>();
-    	account_signup_properties.put("plan", new_account.getServicePackage());
+    	account_signup_properties.put("plan", subscription.getId());
     	analytics.enqueue(TrackMessage.builder("Signed Up")
     		    .userId(new_account.getKey())
     		    .properties(account_signup_properties)
@@ -148,7 +140,7 @@ public class AccountController {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-        Account acct = this.account_service.find(username);
+        Account acct = AccountService.find(username);
         if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -156,8 +148,8 @@ public class AccountController {
     		throw new MissingSubscriptionException();
     	}
         
-        acct.addOnboardingStep(step_name);
-        acct = account_service.save(acct);
+        acct.getOnboardedSteps().add(step_name);
+        acct = AccountService.save(acct);
         
         return acct.getOnboardedSteps();
     }
@@ -169,7 +161,7 @@ public class AccountController {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-        Account acct = this.account_service.find(username);
+        Account acct = AccountService.find(username);
         if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -190,7 +182,7 @@ public class AccountController {
     @RequestMapping(value ="/{id}", method = RequestMethod.GET)
     public Account get(final @PathVariable String key) {
         logger.info("get invoked");
-        return account_service.get(key);
+        return AccountService.get(key);
     }
 
 	@PreAuthorize("hasAuthority('update:accounts')")
@@ -198,7 +190,7 @@ public class AccountController {
     public Account update(final @PathVariable String key, 
     					  final @Validated @RequestBody Account account) {
         logger.info("update invoked");
-        return account_service.save(account);
+        return AccountService.save(account);
     }
     
 	@PreAuthorize("hasAuthority('delete:accounts')")
@@ -207,7 +199,7 @@ public class AccountController {
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	Account account = this.account_service.find(username);
+    	Account account = AccountService.find(username);
     					
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
@@ -220,7 +212,7 @@ public class AccountController {
         this.stripeClient.deleteCustomer(account.getCustomerToken());
         
 		//remove account
-		account_service.delete(account);
+        AccountService.delete(account);
         logger.info("update invoked");
     }
 	
@@ -230,7 +222,7 @@ public class AccountController {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-        Account acct = this.account_service.find(username);
+        Account acct = AccountService.find(username);
         if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -272,7 +264,7 @@ public class AccountController {
     	//check if account has exceeded allowed discovery threshold
     	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
     		Calendar cal = Calendar.getInstance(); 
-    		cal.setTime(record.getStartedAt()); 
+    		cal.setTime(record.getStartTime()); 
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
    

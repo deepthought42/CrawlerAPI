@@ -15,7 +15,7 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.form.FormField;
-import com.qanairy.models.Action;
+import com.qanairy.persistence.Action;
 
 /**
  * Represents a container with an input field as well as label

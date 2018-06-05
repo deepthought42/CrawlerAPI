@@ -8,19 +8,20 @@ import org.testng.annotations.Test;
 
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.Form;
-import com.qanairy.models.Page;
-import com.qanairy.rules.Rule;
-import com.qanairy.rules.NumericRestrictionRule;
-import com.qanairy.rules.NumericRule;
-import com.qanairy.rules.ReadOnlyRule;
-import com.qanairy.rules.RequirementRule;
-import com.qanairy.rules.SpecialCharacterRestriction;
-import com.qanairy.rules.AlphabeticRestrictionRule;
+import com.qanairy.models.rules.AlphabeticRestrictionRule;
+import com.qanairy.models.rules.NumericRestrictionRule;
+import com.qanairy.models.rules.NumericRule;
+import com.qanairy.models.rules.ReadOnlyRule;
+import com.qanairy.models.rules.RequirementRule;
+import com.qanairy.models.rules.SpecialCharacterRestriction;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.Rule;
 
 /**
  * A group of TestNG tests designed to verify the extraction of tests involving forms and rules on fields
  */
 public class FormTestExtractionTests {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(FormTestExtractionTests.class);
 
 	/**
@@ -32,7 +33,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser("chrome");
-			Page page = browser.buildPage();
+			PageState page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -67,7 +68,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser("chrome");
-			Page page = browser.buildPage();
+			PageState page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -108,7 +109,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser("chrome");
-			Page page = browser.buildPage();
+			PageState page = browser.buildPage();
 			System.err.println("Extracting forms");
 			List<Form> form = Browser.extractAllForms(page, browser);
 			
@@ -148,7 +149,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser("chrome");
-			Page page = browser.buildPage();
+			PageState page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			boolean readonly_restrict_rule = false;
@@ -179,7 +180,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser("chrome");
-			Page page = browser.buildPage();
+			PageState page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
@@ -211,7 +212,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			browser = new Browser("chrome");
-			Page page = browser.buildPage();
+			PageState page = browser.buildPage();
 			List<Form> form = Browser.extractAllForms(page, browser);
 
 			boolean max_value_rule = false;

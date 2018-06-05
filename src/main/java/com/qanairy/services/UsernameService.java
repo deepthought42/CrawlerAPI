@@ -1,7 +1,6 @@
 package com.qanairy.services;
 
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.dto.DomainRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

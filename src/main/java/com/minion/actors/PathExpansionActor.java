@@ -3,7 +3,6 @@ package com.minion.actors;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -12,20 +11,22 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-import com.qanairy.models.Test;
-import com.qanairy.models.dto.DiscoveryRecordRepository;
+import com.qanairy.persistence.Action;
+import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.rules.Rule;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
+import com.qanairy.persistence.Rule;
+import com.qanairy.persistence.Test;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
-import com.qanairy.models.Action;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.Path;
+import com.qanairy.models.TestPOJO;
+import com.qanairy.models.dao.DiscoveryRecordDao;
+import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -43,21 +44,20 @@ public class PathExpansionActor extends UntypedActor {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
 
-			if(acct_msg.getData() instanceof Path){				
-				Path path = (Path)acct_msg.getData();
+			if(acct_msg.getData() instanceof Test){				
+				Test test = (Test)acct_msg.getData();
 				
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
-				if((path.isUseful() && !path.getSpansMultipleDomains()) || path.size() == 1){
-					Page last_page = path.findLastPage();
-					Page first_page = path.firstPage();
+				if((!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
+						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
+					PageState last_page = test.findLastPage();
+					PageState first_page = test.firstPage();
 					
 					if(!last_page.equals(first_page) && last_page.isLandable()){
-						OrientConnectionFactory conn = new OrientConnectionFactory();
-						DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-						DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+						DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
+						DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						discovery_repo.save(conn, discovery_record);
-						conn.close();
+						discovery_dao.save(discovery_record);
 
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
@@ -67,15 +67,13 @@ public class PathExpansionActor extends UntypedActor {
 						return;
 					}
 					
-					pathExpansions = PathExpansionActor.expandPath(path);
+					pathExpansions = PathExpansionActor.expandPath(test);
 					
-			  		OrientConnectionFactory conn = new OrientConnectionFactory();
-					DiscoveryRecordRepository discovery_repo = new DiscoveryRecordRepository();
-					DiscoveryRecord discovery_record = discovery_repo.find(conn, acct_msg.getOptions().get("discovery_key").toString());
+					DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
+					DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
-					discovery_repo.save(conn, discovery_record);
+					discovery_dao.save(discovery_record);
 					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
-					conn.close();
 
 					for(ExploratoryPath expanded : pathExpansions){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
@@ -95,11 +93,11 @@ public class PathExpansionActor extends UntypedActor {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static ArrayList<ExploratoryPath> expandPath(Path path)  {
+	public static ArrayList<ExploratoryPath> expandPath(Test test)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		Page page = path.findLastPage();
+		PageState page = test.findLastPage();
 		if(page == null){
 			return null;
 		}
@@ -127,16 +125,24 @@ public class PathExpansionActor extends UntypedActor {
 			}
 			//check if page element is an input
 			if(page_element.getName().equals("input")){
-				page_element.addRules(ElementRuleExtractor.extractInputRules(page_element));
+				List<Rule> rules = ElementRuleExtractor.extractInputRules(page_element);
+				for(Rule rule : rules){
+					page_element.addRule(rule);
+				}
 				for(Rule rule : page_element.getRules()){
-					List<Path> paths = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+					List<List<PathObject>> tests = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
-					for(Path form_path: paths){
+					for(List<PathObject> path_obj_list: tests){
 						//iterate over all actions
-						Path new_path = Path.clone(path);
-						new_path.getPath().addAll(form_path.getPath());
+						List<PathObject> path_objects = new ArrayList<PathObject>(test.getPathObjects());
+						path_objects.addAll(path_obj_list);
+						
+						List<String> path_keys = new ArrayList<String>(test.getPathKeys());
+						for(PathObject path_obj : path_obj_list){
+							path_keys.add(path_obj.getKey());
+						}
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+							ExploratoryPath action_path = new ExploratoryPath(path_keys, path_objects, action_list);
 							//check for element action sequence. 
 							//if one exists with one of the actions in the action_list
 							// 	 then skip this action path
@@ -152,13 +158,15 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 			else{
-				Path new_path = Path.clone(path);
-				new_path.add(page_element);
+				Test new_test = TestPOJO.clone(test);
+				new_test.addPathObject(page_element);
+				new_test.getPathKeys().add(page_element.getKey());
+
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					
-					ExploratoryPath action_path = new ExploratoryPath(new_path.getPath(), action_list);
+					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 
 					//if one exists with one of the actions in the action_list

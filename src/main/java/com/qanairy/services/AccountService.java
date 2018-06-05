@@ -2,56 +2,42 @@ package com.qanairy.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import com.qanairy.models.Account;
-import com.qanairy.models.Domain;
-import com.qanairy.models.dto.AccountRepository;
-import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.models.dao.AccountDao;
+import com.qanairy.models.dao.impl.AccountDaoImpl;
+import com.qanairy.persistence.Account;
+import com.qanairy.persistence.Domain;
 
-@Service
+/**
+ * 
+ */
 public class AccountService {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    @SuppressWarnings("unused")
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    protected AccountRepository accountRepository;
-
-    @Autowired
-    public AccountService(final AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
-
-    public Account get(String key) {
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-        Account acct = accountRepository.find(connection, key);
-        connection.close();
+    public static Account get(String key) {
+    	AccountDao account_dao = new AccountDaoImpl();
+    	Account acct = account_dao.find(key);
         return acct;
     }
     
-    public Account save(Account account) {
-    	OrientConnectionFactory connection = new OrientConnectionFactory();
-        accountRepository.save(connection, account);
-        connection.close();
-        return account;
+    public static Account save(Account account) {
+    	AccountDao account_dao = new AccountDaoImpl();
+    	return account_dao.save(account);
     }
     
-    public Account find(String key){
-    	OrientConnectionFactory conn = new OrientConnectionFactory();
-    	Account acct = accountRepository.find(conn, key);
-    	conn.close();
-    	return acct;
+    public static Account find(String key){
+    	AccountDao account_dao = new AccountDaoImpl();
+    	return account_dao.find(key);
     }
 
-	public Account deleteDomain(Account account, Domain domain) {
-		OrientConnectionFactory conn = new OrientConnectionFactory();
-    	Account acct = accountRepository.deleteDomain(conn, account, domain);
-    	conn.close();
-    	return acct;
+	public static void deleteDomain(Account account, Domain domain) {
+		AccountDao account_dao = new AccountDaoImpl();
+    	account_dao.removeDomain(account, domain);
 	}
 
 
-	public void delete(Account account) {
-		OrientConnectionFactory conn = new OrientConnectionFactory();
-    	accountRepository.delete(conn, account.getKey()); 
-    	conn.close();
+	public static void delete(Account account) {
+		AccountDao account_dao = new AccountDaoImpl();
+    	account_dao.remove(account); 
    	}
 }

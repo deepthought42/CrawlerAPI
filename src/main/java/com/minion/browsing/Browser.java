@@ -40,17 +40,23 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import com.minion.api.MessageBroadcaster;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.Page;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.ScreenshotSet;
-import com.qanairy.models.dto.PageElementRepository;
+import com.qanairy.models.AttributePOJO;
+import com.qanairy.models.PageElementPOJO;
+import com.qanairy.models.PageStatePOJO;
+import com.qanairy.models.ScreenshotSetPOJO;
+import com.qanairy.persistence.Attribute;
+import com.qanairy.persistence.PageElement;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.Rule;
+import com.qanairy.persistence.ScreenshotSet;
 
 import ru.yandex.qatools.ashot.AShot;
 import ru.yandex.qatools.ashot.Screenshot;
@@ -113,7 +119,6 @@ public class Browser {
 				break;
 			}
 			catch(UnreachableBrowserException e){
-				
 				log.error(e.getMessage());
 			}
 			catch(WebDriverException e){
@@ -140,7 +145,7 @@ public class Browser {
 	 * @throws GridException 
 	 * @throws IOException 
 	 */
-	public Page buildPage() throws GridException, IOException{
+	public PageState buildPage() throws GridException, IOException{
 		URL page_url = new URL(this.getDriver().getCurrentUrl());
 		String src = this.getDriver().getPageSource();
 		String screenshot = "";
@@ -163,8 +168,8 @@ public class Browser {
 			visible_elements = new ArrayList<PageElement>();
 		}
 		List<ScreenshotSet> browser_screenshot = new ArrayList<ScreenshotSet>();
-		browser_screenshot.add(new ScreenshotSet(screenshot, viewport_screenshot_url, browser_name));
-		return new Page(src,
+		browser_screenshot.add(new ScreenshotSetPOJO(screenshot, viewport_screenshot_url, browser_name));
+		return new PageStatePOJO(src,
 						page_url.toString(),
 						browser_screenshot,
 						visible_elements);
@@ -226,7 +231,7 @@ public class Browser {
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
 		return driver;
 	}
@@ -246,7 +251,7 @@ public class Browser {
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
 		return driver;
 	}
@@ -262,7 +267,7 @@ public class Browser {
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
-	    driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 
 		return driver;
 	}
@@ -310,8 +315,11 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
+		
+		System.err.println("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
+	    //driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 
 		return driver;
 	}
@@ -428,17 +436,17 @@ public class Browser {
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 				
-				if(is_child && elem.getSize().getHeight() > 5 && elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+				if(is_child && elem.getSize().getHeight() > 5 && elem.isDisplayed() 
+						&& (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					
 					Dimension d = elem.getSize();
-					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
-					PageElementRepository page_elem_repo = new PageElementRepository();
+					PageElement tag = new PageElementPOJO(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
 					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
-					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), page_elem_repo.generateKey(tag));	
+					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
 					tag.setScreenshot(screenshot);
-
+					
 					elementList.add(tag);
 				}
 			}catch(StaleElementReferenceException e){
@@ -472,7 +480,7 @@ public class Browser {
 	 public static List<PageElement> getVisibleElementTree(WebDriver driver, String xpath) 
 															 throws WebDriverException{
 		WebElement body_elem = driver.findElement(By.xpath(xpath));
-		PageElement root_page_element = new PageElement(body_elem.getText(), this_xpath, body_elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(body_elem) );
+		PageElement root_page_element = new PageElement(body_elem.getText(), this_xpath, body_elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(body_elem) );
 		TreeNode<PageElement> root_page_element_node = new TreeNode<PageElement>(root_page_element);
 		Tree<PageElement> tree = new Tree<PageElement>(root_page_element_node);
 		
@@ -481,7 +489,7 @@ public class Browser {
 		List<TreeNode<PageElement>> page_element_nodes = new ArrayList<TreeNode<PageElement>>();
 		for(WebElement elem : web_elements){
 			//convert elem to PageElement
-			PageElement page_element = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
+			PageElement page_element = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
 			
 			//add page element to tree node list
 			page_element_nodes.add(new TreeNode<PageElement>(page_element));
@@ -517,7 +525,7 @@ public class Browser {
 				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
-					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(elem) );
+					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
 					try{
 						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));
 						elementList.add(tag);
@@ -574,20 +582,21 @@ public class Browser {
 	 * @param driver
 	 * @return
 	 */
-	public static List<Form> extractAllForms(Page page, Browser browser){
+	public static List<Form> extractAllForms(PageState page, Browser browser){
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-
 		List<Form> form_list = new ArrayList<Form>();
+		
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
+		System.err.println("Form elements size    :::    "+form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(form_elem) );
+			PageElement form_tag = new PageElementPOJO(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), Browser.loadCssProperties(form_elem) );
 			Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
 			List<PageElement> input_tags = new ArrayList<PageElement>(); 
 			for(WebElement input_elem : input_elements){
-				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()), PageElement.loadCssProperties(input_elem) );
+				PageElement input_tag = new PageElementPOJO(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()), Browser.loadCssProperties(input_elem) );
 				
 				boolean alreadySeen = false;
 				for(String xpath : form_xpath_list){
@@ -614,9 +623,12 @@ public class Browser {
 					}
 				}
 				*/
-				
+				System.err.println("GROUP INPUTS    :::   "+group_inputs.size());
 				for(FormField input_field : group_inputs){
-					input_field.getInputElement().addRules(ElementRuleExtractor.extractInputRules(input_field.getInputElement()));
+					
+					for(Rule rule : ElementRuleExtractor.extractInputRules(input_field.getInputElement())){
+						input_field.getInputElement().addRule(rule);
+					}
 				}
 				//combo_input.getElements().addAll(labels);
 				form.addFormField(combo_input);
@@ -635,7 +647,7 @@ public class Browser {
 	 */
 	private PageElement findFormSubmitButton(WebElement form_elem) {
 		WebElement submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
-		return new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), driver), submit_element.getTagName(), Browser.extractedAttributes(submit_element, (JavascriptExecutor)driver), PageElement.loadCssProperties(submit_element) );
+		return new PageElementPOJO(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), driver), submit_element.getTagName(), Browser.extractedAttributes(submit_element, (JavascriptExecutor)driver), Browser.loadCssProperties(submit_element) );
 	}
 
 	/**
@@ -645,14 +657,13 @@ public class Browser {
 		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();
-		input_ids.add(input_field.getInputElement().getAttribute("id").getVals().get(0));
+		input_ids.add(input_field.getInputElement().getAttributes().get(input_field.getInputElement().getAttributes().indexOf("id")).getVals().get(0));
 		
-		List<PageElement> label_tags = new ArrayList<PageElement>();
 		for(WebElement label_elem : label_elements){
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
+					PageElement label_tag = new PageElementPOJO(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
 					return label_tag;
 				}
 			}
@@ -669,7 +680,7 @@ public class Browser {
 		//get all ids for current inputs
 		List<String> input_ids = new ArrayList<String>();
 		for(FormField input : group_inputs){
-			input_ids.add(input.getInputElement().getAttribute("id").getVals().get(0));
+			input_ids.add(input.getInputElement().getAttributes().get(input.getInputElement().getAttributes().indexOf("id")).getVals().get(0));
 		}
 		
 		List<PageElement> label_tags = new ArrayList<PageElement>();
@@ -677,7 +688,7 @@ public class Browser {
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(label_elem) );
+					PageElement label_tag = new PageElementPOJO(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
 					label_tags.add(label_tag);
 					break;
 				}
@@ -732,7 +743,7 @@ public class Browser {
 				child_inputs = new ArrayList<FormField>();
 
 				for(WebElement child : children){
-					PageElement elem = new PageElement(child.getText(), Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), Browser.extractedAttributes(child, (JavascriptExecutor)driver), PageElement.loadCssProperties(child) );
+					PageElement elem = new PageElementPOJO(child.getText(), Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), Browser.extractedAttributes(child, (JavascriptExecutor)driver), Browser.loadCssProperties(child) );
 					FormField input_field = new FormField(elem);
 					child_inputs.add(input_field);
 				}
@@ -741,7 +752,7 @@ public class Browser {
 			}
 			else{
 				if(child_inputs.size() == 0){
-					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver), PageElement.loadCssProperties(page_elem) );
+					PageElement input_tag = new PageElementPOJO(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(page_elem) );
 					FormField input_field = new FormField(input_tag);
 					child_inputs.add(input_field);
 				}
@@ -751,7 +762,7 @@ public class Browser {
 		return child_inputs;
 	}
 	
-	public static List<Form> extractAllSelectOptions(Page page, WebDriver driver){
+	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
 		return null;
 	}
 	
@@ -762,13 +773,13 @@ public class Browser {
 	 * @param driver
 	 * @return
 	 */
-	public static List<PageElement> extractAllInputElements(Page page, WebDriver driver){
+	public static List<PageElement> extractAllInputElements(PageState page, WebDriver driver){
 		List<PageElement> choices = new ArrayList<PageElement>();
 		for(PageElement tag : page.getElements()){
 			//PageElement tag = (PageElement)elem;
 			if(tag.getName().equalsIgnoreCase("input")){
 				//List<Attribute> attr_list = tag.getAttributes();
-				Attribute attr = tag.getAttribute("type");
+				Attribute attr = tag.getAttributes().get(tag.getAttributes().indexOf("type"));
 				if(attr != null){
 					for(String attr_val : attr.getVals()){
 						if(attr_val.equalsIgnoreCase("checkbox")){
@@ -992,14 +1003,11 @@ public class Browser {
 		for(int i = 0; i < attributeList.size(); i++){
 			String[] attributes = attributeList.get(i).split("::");
 			String[] attributeVals;
+
 			if(attributes.length > 1){
 				attributeVals = attributes[1].split(" ");
+				attr_lst.add(new AttributePOJO(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
 			}
-			else{
-				attributeVals = new String[0];
-			}
-			
-			attr_lst.add(new Attribute(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
 		}
 		 return attr_lst;
 	}
@@ -1020,6 +1028,73 @@ public class Browser {
 	public static void outlineElement(PageElement page_element, WebDriver driver) {
 		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
+	}
+	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 */
+	public static Map<String, String> loadCssProperties(WebElement element){
+		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
+		Map<String, String> css_map = new HashMap<String, String>();
+		
+		for(String propertyName : cssList){
+			try{
+				String element_value = element.getCssValue(propertyName);
+				if(element_value != null){
+					css_map.put(propertyName, element_value);
+				}
+			}catch(Exception e){
+				
+			}
+		}
+		
+		return css_map;
+	}
+	
+	/**
+	 * 
+	 * @param browser_name
+	 * @param page_state
+	 * @return
+	 */
+	public static boolean checkIfLandable(String browser_name, PageState page_state) {
+		boolean landable = false;
+		boolean page_visited_successfully = true;
+		do{
+			try{
+				Browser browser = new Browser(browser_name);
+				browser.getDriver().get(page_state.getUrl().toString());
+				try{
+					new WebDriverWait(browser.getDriver(), 360).until(
+							webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+				}catch(GridException e){
+					log.error(e.getMessage());
+				}
+				catch(Exception e){
+					log.error(e.getMessage());
+				}
+				
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {}
+				
+				if(page_state.equals(browser.buildPage())){
+					landable = true;
+				}
+				browser.close();
+				break;
+			}catch(Exception e){
+				page_visited_successfully = false;
+				//e.printStackTrace();
+				log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
+			}
+		}while(!page_visited_successfully);
+		
+		return landable;
 	}
 	
 	public String getBrowserName() {

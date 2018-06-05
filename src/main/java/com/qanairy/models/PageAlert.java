@@ -8,16 +8,16 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
-import com.minion.actors.PathExpansionActor;
-import com.minion.browsing.IObjectValuationAccessor;
+import com.qanairy.persistence.PageState;
+import com.qanairy.persistence.PathObject;
 
 /**
  *
  */
-public class PageAlert extends PathObject implements IObjectValuationAccessor {
+public class PageAlert  {
 	private static Logger log = LoggerFactory.getLogger(PageAlert.class);
 
-	public Page page = null;
+	public PageState page = null;
 	public String choice;
 	public String message;
 	
@@ -30,7 +30,7 @@ public class PageAlert extends PathObject implements IObjectValuationAccessor {
 	 * @pre {"accept","reject"}.contains(alertChoice)
 	 * @pre message != null;
 	 */
-	public PageAlert(Page page, String alertChoice, String message){
+	public PageAlert(PageState page, String alertChoice, String message){
 		this.page = page;
 		this.choice = alertChoice;
 		this.message = message;
@@ -55,7 +55,7 @@ public class PageAlert extends PathObject implements IObjectValuationAccessor {
 		}
 	}
 	
-	public Page getPage(){
+	public PageState getPage(){
 		return this.page;
 	}
 	

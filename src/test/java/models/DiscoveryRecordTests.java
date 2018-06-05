@@ -5,10 +5,10 @@ import java.util.Date;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.dto.DiscoveryRecordRepository;
-import com.qanairy.persistence.IDiscoveryRecord;
-import com.qanairy.persistence.OrientConnectionFactory;
+import com.qanairy.models.DiscoveryRecordPOJO;
+import com.qanairy.models.dao.DiscoveryRecordDao;
+import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
+import com.qanairy.persistence.DiscoveryRecord;
 
 /**
  * Defines all tests for the service package POJO
@@ -21,30 +21,19 @@ public class DiscoveryRecordTests {
 	@Test(groups="Regression")
 	public void discoveryRecordCreateRecord(){
 		Date now = new Date();
-		DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", "www.qanairy-test.com");
-		DiscoveryRecordRepository discovery_record_repo = new DiscoveryRecordRepository();
+		DiscoveryRecord discovery_record = new DiscoveryRecordPOJO(now, "chrome", "www.qanairy-test.com");
+		DiscoveryRecordDao discovery_record_dao = new DiscoveryRecordDaoImpl();
 
-		IDiscoveryRecord created_discovery_record = discovery_record_repo.save(new OrientConnectionFactory(), discovery_record);
+		discovery_record_dao.save(discovery_record);
 		
-		Assert.assertTrue(created_discovery_record.getKey().equals(discovery_record_repo.generateKey(discovery_record)));
-		//Assert.assertTrue(created_discovery_record.getStartTime().equals(now));
-		Assert.assertTrue(created_discovery_record.getBrowserName().equals(discovery_record.getBrowserName()));
-	}
-	
-	/**
-	 * 
-	 */
-	@Test(groups="Regression")
-	public void accountUpdateRecord(){
-		Date now = new Date();
-		DiscoveryRecord discovery_record = new DiscoveryRecord(now, "chrome", "www.qanairy-test.com");
-		DiscoveryRecordRepository discovery_record_repo = new DiscoveryRecordRepository();
-		discovery_record.setKey(discovery_record_repo.generateKey(discovery_record));
-
-		OrientConnectionFactory conn = new OrientConnectionFactory();
-		IDiscoveryRecord updated_discovery_record = discovery_record_repo.save(conn, discovery_record);
-		conn.close();
-		Assert.assertTrue(updated_discovery_record.getStartTime().equals(now));
-		Assert.assertTrue(updated_discovery_record.getBrowserName().equals(discovery_record.getBrowserName()));
+		DiscoveryRecord created_record = discovery_record_dao.find(discovery_record.getKey());
+		Assert.assertTrue(created_record.getKey().equals(discovery_record.getKey()));
+		Assert.assertTrue(created_record.getBrowserName().equals(discovery_record.getBrowserName()));
+		Assert.assertTrue(created_record.getDomainUrl().equals(discovery_record.getDomainUrl()));
+		Assert.assertTrue(created_record.getLastPathRanAt().equals(discovery_record.getLastPathRanAt()));
+		Assert.assertTrue(created_record.getTestCount() == discovery_record.getTestCount());
+		Assert.assertTrue(created_record.getTotalPathCount() == discovery_record.getTotalPathCount());
+		Assert.assertTrue(created_record.getExaminedPathCount() == discovery_record.getExaminedPathCount());
+		Assert.assertTrue(created_record.getStartTime().equals(discovery_record.getStartTime()));
 	}
 }

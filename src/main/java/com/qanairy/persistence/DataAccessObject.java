@@ -1,5 +1,7 @@
 package com.qanairy.persistence;
 
+import java.util.Iterator;
+
 import org.mortbay.log.Log;
 import com.orientechnologies.common.io.OIOException;
 
@@ -13,9 +15,9 @@ public class DataAccessObject<V> {
 	 * @param generated_key
 	 * @return
 	 */
-	public static Iterable<?> findByKey(String generated_key, Class<?> clazz) {
+	public static Iterator<?> findByKey(String generated_key, Class<?> clazz) {
 		OrientConnectionFactory orient_connection = new OrientConnectionFactory();
-		Iterable<?> iter = orient_connection.getTransaction().getVertices(clazz.getSimpleName()+".key", generated_key, clazz);
+		Iterator<?> iter = orient_connection.getTransaction().getFramedVertices(clazz.getSimpleName()+".key", generated_key, clazz);
 		return iter;
 	}
 
@@ -27,14 +29,14 @@ public class DataAccessObject<V> {
 	 * @param generated_key
 	 * @return
 	 */
-	public static Iterable<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) throws OIOException {    	
-		return orient_connection.current_tx.getVertices(clazz.getSimpleName()+".key", generated_key, clazz);
+	public static Iterator<?> findByKey(String generated_key, OrientConnectionFactory orient_connection, Class<?> clazz) throws OIOException {    	
+		return orient_connection.current_tx.getFramedVertices(clazz.getSimpleName()+".key", generated_key, clazz);
 	}
 	
-	public static Iterable<?> findAll(OrientConnectionFactory conn, Class<?> clazz){
-		Iterable<?> vertices = null;
+	public static Iterator<?> findAll(OrientConnectionFactory conn, Class<?> clazz){
+		Iterator<?> vertices = null;
 		try{
-			vertices = conn.getTransaction().getVertices("@class", clazz.getSimpleName());//getVerticesOfClass(clazz.getSimpleName());
+			vertices = conn.getTransaction().getFramedVertices(clazz);
 		}catch(IllegalArgumentException e){
 			Log.warn(e.getMessage());
 		}

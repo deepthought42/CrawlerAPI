@@ -2,15 +2,13 @@ package com.minion.actors;
 
 import java.util.UUID;
 
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 
 import akka.actor.UntypedActor;
 
 /**
  * Agent that is responsible for persisting data in the OrientDB graph database. 
- * 
- * @author Brandon Kindred
  *
  */
 public class DatabaseAgent extends UntypedActor{
@@ -41,7 +39,7 @@ public class DatabaseAgent extends UntypedActor{
 	 * shutdown database connection.
 	 */
 	public void shutdown(){
-		this.graph.shutdown();
+		this.graph.close();
 	}
 
 	public UUID getActorId() {

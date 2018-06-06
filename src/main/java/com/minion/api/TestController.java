@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,10 +32,8 @@ import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.persistence.Account;
-import com.qanairy.persistence.DataAccessObject;
 import com.qanairy.persistence.Domain;
 import com.qanairy.persistence.Group;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
 import com.qanairy.services.AccountService;
@@ -48,8 +45,9 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
+import com.stripe.model.SubscriptionItem;
+import com.stripe.model.UsageRecord;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -352,48 +350,21 @@ public class TestController {
     	}
     	
     	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	Plan plan = subscription.getPlan();
+    	String subscription_item = null;
+    	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
+    		if(item.getPlan().getNickname().equals("test_runs")){
+    			subscription_item = item.getId();
+    		}
+    	}
+    	
+    	if(subscription_item==null){
+    		throw new MissingDiscoveryPlanException();
+    	}
+    	
     	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
     		throw new FreeTrialExpiredException();
     	}
-    	
-    	String plan_name = plan.getId();
-    	int test_index = plan_name.indexOf("-test");
-    	int disc_index = plan_name.indexOf("-disc-");
-
-    	int monthly_test_count = 0;
-    	int allowed_test_cnt = Integer.parseInt(plan_name.substring(disc_index+6, test_index));
-
-    	//Check if account has exceeded test run limit
-    	for(TestRecord record : acct.getTestRecords()){
-    		Calendar cal = Calendar.getInstance(); 
-    		cal.setTime(record.getRanAt()); 
-    		int month_started = cal.get(Calendar.MONTH);
-    		int year_started = cal.get(Calendar.YEAR);
-   
-    		Calendar c = Calendar.getInstance();
-    		int month_now = c.get(Calendar.MONTH);
-    		int year_now = c.get(Calendar.YEAR);
-
-    		if(month_started == month_now && year_started == year_now){
-    			monthly_test_count++;
-    		}
-    	}
-    	    	
-    	if(monthly_test_count > allowed_test_cnt){
-    		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-        	Map<String, String> traits = new HashMap<String, String>();
-            traits.put("email", username);     
-            traits.put("test_limit_reached", plan.getId());
-        	analytics.enqueue(IdentifyMessage.builder()
-        		    .userId(acct.getKey())
-        		    .traits(traits)
-        		);
-        	
-        	throw new TestLimitReachedException();
-    	}
-
-    	
+    	    	    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -418,6 +389,15 @@ public class TestController {
     		Test test = test_dao.find(key);
     		
     		TestRecord record = null;
+    		Date date = new Date();
+			long date_millis = date.getTime();
+			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
+	    	usageRecordParams.put("quantity", 1);
+	    	usageRecordParams.put("timestamp", date_millis/1000);
+	    	usageRecordParams.put("subscription_item", subscription_item);
+	    	usageRecordParams.put("action", "increment");
+
+	    	UsageRecord.create(usageRecordParams, null);
 
 			Map<String, Boolean> browser_running_status = test.getBrowserStatuses();
 			browser_running_status.put(browser_name, null);
@@ -436,7 +416,8 @@ public class TestController {
 			Browser browser = new Browser(browser_name.trim());
 			record = TestingActor.runTest(test, browser);
 			browser.close();
-System.err.println("TEST RUN RECORD PASSING STATUS  ??????     "+record.getPassing());
+			
+			System.err.println("TEST RUN RECORD PASSING STATUS  ??????     "+record.getPassing());
 			TestRecordDao test_record_dao = new TestRecordDaoImpl();
 			record = test_record_dao.save(record);
 			acct.addTestRecord(record);

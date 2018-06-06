@@ -19,6 +19,7 @@ import com.stripe.model.Customer;
 import com.stripe.model.DeletedCustomer;
 
 import com.stripe.model.Plan;
+import com.stripe.model.Product;
 import com.stripe.model.Subscription;
 
 @Component
@@ -56,6 +57,31 @@ public class StripeClient {
 		return Subscription.create(params);
     }
 
+    public Subscription subscribe(Plan discovery, Plan tests, Customer customer) 
+    		throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+    	Map<String, Object> discovery_plan = new HashMap<String, Object>();
+    	discovery_plan.put("plan", discovery.getId());
+
+    	Map<String, Object> test_plan = new HashMap<String, Object>();
+    	test_plan.put("plan", tests.getId());
+    	
+    	Map<String, Object> items = new HashMap<String, Object>();
+    	items.put("0", discovery_plan);
+    	items.put("1", test_plan);
+    	
+    	Map<String, Object> params = new HashMap<String, Object>();
+    	params.put("customer", customer.getId());
+    	params.put("items", items);
+    	
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.MONTH, 3);
+		Date date = c.getTime();
+		date.getTime();
+		params.put("trial_end", date.getTime()/1000);
+
+		return Subscription.create(params);
+    }
+    
     public Customer createCustomer(String token, String email) throws Exception {
         Map<String, Object> customerParams = new HashMap<String, Object>();
         customerParams.put("email", email);

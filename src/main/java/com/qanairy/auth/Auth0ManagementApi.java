@@ -24,9 +24,10 @@ public class Auth0ManagementApi {
 	private static String base_url = "https://qanairy.auth0.com/";
 	private static String audience_url = base_url + "api/v2/";
 	private static String api_token = "8hk4R5YJ4gO5xPZdjjMdy7YtUF8eA22F";
+	private ManagementAPI mgmt_api;
 	
 	public Auth0ManagementApi(String access_token){
-		ManagementAPI mgmt_api = new ManagementAPI(base_url, api_token);
+		this.mgmt_api = new ManagementAPI(base_url, api_token);
 	}
 	
 	public static String getToken() throws UnirestException{
@@ -79,5 +80,9 @@ public class Auth0ManagementApi {
 				  .asString();
 		
 		return response;
+	}
+
+	public ManagementAPI getApi() {
+		return mgmt_api;
 	}
 }

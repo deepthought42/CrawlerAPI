@@ -48,6 +48,7 @@ import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
+import com.stripe.model.Product;
 import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
 
@@ -94,12 +95,13 @@ public class AccountController {
         	throw new AccountExistsException();
         }
             	
-    	Plan new_plan = Plan.retrieve("4-disc-10000-test-90-trial");
+    	Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
+    	Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
-    	Subscription subscription = this.stripeClient.subscribe(new_plan, customer);
+    	Subscription subscription = this.stripeClient.subscribe(discovery_plan, test_plan, customer);
     	
     	acct = new AccountPOJO(username, customer.getId(), subscription.getId());
 

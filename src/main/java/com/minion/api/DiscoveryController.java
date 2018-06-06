@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,6 +51,8 @@ import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
+import com.stripe.model.SubscriptionItem;
+import com.stripe.model.UsageRecord;
 
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -136,64 +139,33 @@ public class DiscoveryController {
 		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
 
     	Account acct = AccountService.find(username);
-
+    	
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	
     	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	Plan plan = subscription.getPlan();
-
-    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
-    		throw new FreeTrialExpiredException();
+    	String subscription_item = null;
+    	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
+    		if(item.getPlan().getNickname().equals("Discovery")){
+    			subscription_item = item.getId();
+    		}
     	}
     	
-    	String plan_name = plan.getId();
-    	int disc_index = plan_name.indexOf("-disc");
-    	int allowed_discovery_cnt = Integer.parseInt(plan_name.substring(0, disc_index));
-    	
-    	int monthly_discovery_count = 0;
-    	//check if account has exceeded allowed discovery threshold
-    	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-    		Calendar cal = Calendar.getInstance(); 
-    		cal.setTime(record.getStartTime()); 
-    		int month_started = cal.get(Calendar.MONTH);
-    		int year_started = cal.get(Calendar.YEAR);
-   
-    		Calendar c = Calendar.getInstance();
-    		int month_now = c.get(Calendar.MONTH);
-    		int year_now = c.get(Calendar.YEAR);
-
-    		if(month_started == month_now && year_started == year_now){
-    			monthly_discovery_count++;
-    		}
+    	if(subscription_item==null){
+    		throw new MissingDiscoveryPlanException();
     	}
     	
 		DiscoveryRecord last_discovery_record = null;
-
-    	if(monthly_discovery_count > allowed_discovery_cnt){
-        	Map<String, String> traits = new HashMap<String, String>();
-            traits.put("email", username);     
-            traits.put("discovery_limit_reached", plan.getId());
-        	analytics.enqueue(IdentifyMessage.builder()
-        		    .userId(acct.getKey())
-        		    .traits(traits)
-        		);
-        	
-        	throw new DiscoveryLimitReachedException();
-    	}
-    	else{
-    		Date started_date = new Date(0L);
-    		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-    			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
-    				started_date = record.getStartTime();
-    				last_discovery_record = record;
-    			}
-    		}
-    	}
+		Date started_date = new Date(0L);
+		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
+				started_date = record.getStartTime();
+				last_discovery_record = record;
+			}
+		}
     	
     	DomainDao domain_dao = new DomainDaoImpl();
     	Domain domain = domain_dao.find(url); 
@@ -207,6 +179,15 @@ public class DiscoveryController {
     	String protocol = domain.getProtocol();
         
 		if(diffInMinutes > 1440){
+			Date date = new Date();
+			long date_millis = date.getTime();
+			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
+	    	usageRecordParams.put("quantity", 1);
+	    	usageRecordParams.put("timestamp", date_millis/1000);
+	    	usageRecordParams.put("subscription_item", subscription_item);
+	    	usageRecordParams.put("action", "increment");
+
+	    	UsageRecord.create(usageRecordParams, null);
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
 			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();	
 			DiscoveryRecordPOJO discovery_record = new DiscoveryRecordPOJO(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
@@ -308,6 +289,18 @@ class ExistingDiscoveryFoundException extends RuntimeException {
 
 	public ExistingDiscoveryFoundException() {
 		super("A discovery is already running");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class MissingDiscoveryPlanException extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public MissingDiscoveryPlanException() {
+		super("You are not subscribed to run discoveries. Upgrade now!");
 	}
 }
 

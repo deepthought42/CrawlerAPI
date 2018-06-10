@@ -47,7 +47,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public static PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser) throws NoSuchElementException, IOException{
+	public static PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws NoSuchElementException, IOException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -88,7 +88,7 @@ public class Crawler {
 				//boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
 				
-				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
+				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver(), host_channel);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -107,18 +107,17 @@ public class Crawler {
 	 * @param elemAction ElementAction pair
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static boolean performAction(Action action, PageElement elem, WebDriver driver){
+	public static boolean performAction(Action action, PageElement elem, WebDriver driver, String host_channel){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
-		try {
-			MessageBroadcaster.broadcastAction(action, (new URL(driver.getCurrentUrl()).getHost()));
-		} catch (JsonProcessingException e1) {
-			e1.printStackTrace();
-		} catch (MalformedURLException e1) {
-			e1.printStackTrace();
+		if(host_channel != null){
+			try {
+				MessageBroadcaster.broadcastAction(action, host_channel);
+			} catch (JsonProcessingException e1) {
+				e1.printStackTrace();
+			}
 		}
-		System.err.println("Last Element    :: "+elem);
-		System.err.println("Action   :: "+action);
+
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());

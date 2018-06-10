@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.api.MessageBroadcaster;
 
@@ -134,6 +135,9 @@ public class BrowserActor extends UntypedActor {
 		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf());
 		
+		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		path_expansion_actor.tell(test_msg, getSelf());
+		
 		return test;
 	}
 
@@ -186,29 +190,38 @@ public class BrowserActor extends UntypedActor {
 		DiscoveryRecord discovery_record = discovery_repo.find(msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-		discovery_repo.save(discovery_record);
+		//discovery_repo.save(discovery_record);
 		
 		PageStateDao page_state_dao = new PageStateDaoImpl();
-
+		
 		DomainDao domain_repo = new DomainDaoImpl();
 		Domain domain = domain_repo.find(page_obj.getUrl().getHost());
-		domain.setTestCount(domain.getTestCount()+1);
 		domain.addPageState(page_state_dao.save(page_obj));
-		domain_repo.save(domain);
+		
+		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
+		System.err.println("Broadcasting discovery status");
+
+		Test new_test = TestPOJO.clone(test);
+		Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), new_test, msg.getOptions());
+
+		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		path_expansion_actor.tell(test_msg, getSelf() );
+		
+		for(PageElement element : page_obj.getElements()){
+			try {
+				MessageBroadcaster.broadcastPageElement(element, domain.getUrl() );
+			} catch (JsonProcessingException e) {
+			}
+		}
+		//domain_repo.save(domain);
 		
 		MessageBroadcaster.broadcastPageState(page_obj, domain.getUrl());
 		
-		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
-		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
-
+		discovery_record = discovery_repo.find(msg.getOptions().get("discovery_key").toString());
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-		discovery_repo.save(discovery_record);
-		
-		Test new_test = TestPOJO.clone(test);
-		Message<Test> path_msg = new Message<Test>(msg.getAccountKey(), new_test, msg.getOptions());
-		
-		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
-		path_expansion_actor.tell(path_msg, getSelf() );
+		//discovery_repo.save(discovery_record);
+		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
 	}
 	
 	/**
@@ -227,7 +240,7 @@ public class BrowserActor extends UntypedActor {
 		final long pathCrawlStartTime = System.currentTimeMillis();
 		int tries = 0;
 		do{
-			result_page = Crawler.crawlPath(path_keys, path_objects, browser);
+			result_page = Crawler.crawlPath(path_keys, path_objects, browser, acct_msg.getOptions().get("host").toString());
 			tries++;
 			result_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
 		}while(result_page == null && tries < 5);
@@ -248,9 +261,8 @@ public class BrowserActor extends UntypedActor {
 
 	  		DomainDao domain_repo = new DomainDaoImpl();
 			Domain domain = domain_repo.find(browser.buildPage().getUrl().getHost());
-			domain.setTestCount(domain.getTestCount()+1);
 			domain.addPageState(page_state_dao.save(result_page));
-			domain_repo.save(domain);
+			//domain_repo.save(domain);
 			
 			MessageBroadcaster.broadcastPageState(result_page, domain.getUrl());
 
@@ -258,7 +270,7 @@ public class BrowserActor extends UntypedActor {
 			DiscoveryRecord discovery_record = discovery_repo.find(acct_msg.getOptions().get("discovery_key").toString());
 			discovery_record.setTestCount(discovery_record.getTestCount()+1);
 			discovery_record.setLastPathRanAt(new Date());
-			discovery_repo.save(discovery_record);
+			//discovery_repo.save(discovery_record);
 
 			createTest(path_keys, path_objects, result_page, crawl_time_in_ms, domain, acct_msg, discovery_record);
 	  	}

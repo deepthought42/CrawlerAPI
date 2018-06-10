@@ -1,12 +1,10 @@
 package com.minion.api;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
@@ -48,7 +44,6 @@ import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
-import com.stripe.model.Product;
 import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
 
@@ -94,9 +89,14 @@ public class AccountController {
         if(acct != null){
         	throw new AccountExistsException();
         }
-            	
-    	Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
-    	Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
+          
+        //STAGING
+     	//Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
+    	//Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
+    	
+    	//PRODUCTION
+    	Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
+    	Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
@@ -149,9 +149,10 @@ public class AccountController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-        
-        acct.getOnboardedSteps().add(step_name);
-        acct = AccountService.save(acct);
+        List<String> onboarding = acct.getOnboardedSteps();
+        onboarding.add(step_name);
+        acct.setOnboardedSteps(onboarding);
+        //acct = AccountService.save(acct);
         
         return acct.getOnboardedSteps();
     }
@@ -159,7 +160,6 @@ public class AccountController {
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
-        logger.info("get invoked");
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
@@ -232,19 +232,7 @@ public class AccountController {
     		throw new MissingSubscriptionException();
     	}
         
-        Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	Plan plan = subscription.getPlan();
-
-    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
-    		throw new FreeTrialExpiredException();
-    	}
-    	
-    	String plan_name = plan.getId();
-    	int disc_index = plan_name.indexOf("-disc");
-    	int test_index = plan_name.indexOf("-test");
-
     	int monthly_test_count = 0;
-    	int test_limit = Integer.parseInt(plan_name.substring(disc_index+6, test_index));
     	//Check if account has exceeded test run limit
     	for(TestRecord record : acct.getTestRecords()){
     		Calendar cal = Calendar.getInstance(); 
@@ -279,10 +267,9 @@ public class AccountController {
     		}
     	}
     	
-    	int discovery_limit = Integer.parseInt(plan_name.substring(0, disc_index));
         int discoveries_used = acct.getDiscoveryRecords().size();
         
-        return new AccountUsage(discovery_limit, discoveries_used, test_limit, tests_used);
+        return new AccountUsage(discoveries_used, tests_used);
     }
 }
 

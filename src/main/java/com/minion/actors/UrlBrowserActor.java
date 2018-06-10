@@ -10,6 +10,8 @@ import java.util.Random;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.api.MessageBroadcaster;
 
@@ -172,22 +174,31 @@ public class UrlBrowserActor extends UntypedActor {
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 		discovery_record.setTestCount(discovery_record.getTestCount()+1);
-		discovery_repo.save(discovery_record);
+		//discovery_repo.save(discovery_record);
 
 		PageStateDao page_state_dao = new PageStateDaoImpl();
 
 		DomainDao domain_dao = new DomainDaoImpl();
-		Domain domain = domain_dao.find(page_obj.getUrl().getHost());
-		domain.setTestCount(domain.getTestCount()+1);
+		System.err.println("Page url host :: "  + msg.getOptions().get("host").toString());
+		Domain domain = domain_dao.find( msg.getOptions().get("host").toString());
+		System.err.println("domain :: "+domain);
+		System.err.println("Domain test count   ::   "+domain.getTestCount());
 		domain.addPageState(page_state_dao.save(page_obj));
-		domain_dao.save(domain);
+		
+		for(PageElement element : page_obj.getElements()){
+			try {
+				MessageBroadcaster.broadcastPageElement(element, domain.getUrl() );
+			} catch (JsonProcessingException e) {
+			}
+		}
+		//domain_dao.save(domain);
 		
 		System.err.println("broadcasting page state");
 		MessageBroadcaster.broadcastPageState(page_obj, domain.getUrl());
+		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 		System.err.println("Broadcasting discovery status");
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
-		MessageBroadcaster.broadcastDiscoveryStatus(domain.getUrl(), discovery_record);
 
 		Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), test, msg.getOptions());
 

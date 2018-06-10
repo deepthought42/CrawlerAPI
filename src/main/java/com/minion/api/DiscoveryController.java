@@ -192,9 +192,10 @@ public class DiscoveryController {
 			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();	
 			DiscoveryRecordPOJO discovery_record = new DiscoveryRecordPOJO(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	
+	    	acct = AccountService.find(username);
 			acct.addDiscoveryRecord(discovery_repo.save(discovery_record));
-        	AccountDao acct_dao = new AccountDaoImpl();
-        	acct_dao.save(acct);
+        	//AccountDao acct_dao = new AccountDaoImpl();
+        	//acct_dao.save(acct);
                 	
 			WorkAllowanceStatus.register(acct.getKey());
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");

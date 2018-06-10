@@ -13,7 +13,6 @@ import akka.actor.UntypedActor;
 
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.OrientConnectionFactory;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
@@ -43,37 +42,44 @@ public class PathExpansionActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-
+			System.err.println("#################################################################");
+			System.err.println("Path expansion actor receieved a message");
+			System.err.println("#################################################################");
 			if(acct_msg.getData() instanceof Test){				
 				Test test = (Test)acct_msg.getData();
-				
+				System.err.println("Test received by Path expansions ");
+				System.err.println("#################################################################");
+
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				if((!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
 					PageState last_page = test.findLastPage();
 					PageState first_page = test.firstPage();
-					
+					System.err.println("path doesn't have cycle, doesn't span multiple domains");
 					if(!last_page.equals(first_page) && last_page.isLandable()){
+						System.err.println("last page doesn't match first page...");
 						DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
 						DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						discovery_dao.save(discovery_record);
+						//discovery_dao.save(discovery_record);
 
+						System.err.println("Sending URL to work allocator...");
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
 						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
 						work_allocator.tell(url_msg, getSelf() );
 						
-						MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+						System.err.println("Returning empty response....");
 						return;
 					}
 					
 					pathExpansions = PathExpansionActor.expandPath(test);
-					
+					System.err.println("identified path expansion count :: " + pathExpansions.size());
 					DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
 					DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
-					discovery_dao.save(discovery_record);
-					MessageBroadcaster.broadcastDiscoveryStatus(first_page.getUrl().getHost(), discovery_record);
+					//discovery_dao.save(discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					for(ExploratoryPath expanded : pathExpansions){
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());

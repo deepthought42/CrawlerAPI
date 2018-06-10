@@ -46,7 +46,7 @@ public class TestingActor extends UntypedActor {
 					int cnt = 0;
 					while(browser == null && cnt < 5){
 						try{
-							resulting_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser );
+							resulting_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 							break;
 						}catch(NullPointerException e){
 							log.error(e.getMessage());
@@ -127,7 +127,7 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 
 		 try {		
-			page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
+			page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
 			
 			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getCorrect());
 			passing = TestPOJO.isTestPassing(test.getResult(), page, test.getCorrect());

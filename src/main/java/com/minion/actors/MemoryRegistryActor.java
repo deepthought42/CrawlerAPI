@@ -49,8 +49,6 @@ public class MemoryRegistryActor extends UntypedActor{
 				if(!test_already_exists){
 					domain.addTest(test);
 				}
-				domain.setTestCount(domain.getTestCount()+1);
-
 				
 				if(test.getBrowserStatuses() == null || test.getBrowserStatuses().isEmpty()){
 					MessageBroadcaster.broadcastDiscoveredTest(test, host_url);

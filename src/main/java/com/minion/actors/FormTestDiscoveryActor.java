@@ -22,6 +22,7 @@ import com.qanairy.persistence.PageState;
 import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.Rule;
 import com.qanairy.persistence.Test;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -96,7 +97,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					
 			  		System.err.println("Crawling potential form test path");
 			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
-			  		PageState result_page = Crawler.crawlPath(test_path_keys, test_path_objects, browser);
+			  		PageState result_page = Crawler.crawlPath(test_path_keys, test_path_objects, browser, acct_msg.getOptions().get("host").toString());
 				  	browser.close();
 					final long pathCrawlEndTime = System.currentTimeMillis();
 					
@@ -109,9 +110,15 @@ public class FormTestDiscoveryActor extends UntypedActor {
 
 			  		DomainDao domain_dao = new DomainDaoImpl();
 			  		Domain domain = domain_dao.find(page.getUrl().getHost());
-					domain.setTestCount(domain.getTestCount()+1);
 					domain.addPageState(page_state_dao.save(result_page));
-					domain_dao.save(domain);
+					//domain_dao.save(domain);
+					
+					for(PageElement element : result_page.getElements()){
+						try {
+							MessageBroadcaster.broadcastPageElement(element, domain.getUrl() );
+						} catch (JsonProcessingException e) {
+						}
+					}
 					
 			  		Test new_test = new TestPOJO(test_path_keys, test_path_objects, result_page, "Test #" + domain.getTestCount(), false, test.getSpansMultipleDomains());
 			  		new_test.setRunTime(crawl_time_in_ms);
@@ -124,7 +131,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 				discovery_record.setTestCount(discovery_record.getTestCount()+tests.size());
 				
-				MessageBroadcaster.broadcastDiscoveryStatus(page.getUrl().getHost(), discovery_record);
+				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				System.err.println("Broadcasting discovery record now that we've added "+tests.size()+"        tests   ");
 				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 								

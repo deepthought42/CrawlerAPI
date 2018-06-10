@@ -26,6 +26,16 @@ public class BrowserTest {
 		Assert.assertTrue(clean_src.equals("<html><head></head></html>"));
 	}
 	
+	
+	@Test(groups="Regression")
+	public void verifyGenerateConcatForXpath(){
+		String src_example = "This is a embedded \"path\"";
+		String clean_src = Browser.generateConcatForXPath(src_example);// cleanSrc(src_example);
+		//System.err.println("clean src: " +clean_src);
+		Assert.assertTrue(clean_src.equals("concat('This is a embedded ', '\"', 'path', '\"', '')"));
+	}
+	
+	
 	@Test(groups="Regression")
 	public void verifyTestConstructor(){
 		PageState page;

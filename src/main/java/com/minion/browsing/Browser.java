@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-
 import javax.imageio.ImageIO;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.openqa.grid.common.exception.GridException;
@@ -40,8 +38,6 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
-import com.minion.api.MessageBroadcaster;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -70,7 +66,7 @@ public class Browser {
 
 	private WebDriver driver = null;
 	//private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
-	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "alt"};	
+	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
 
 	private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
 	private String url = "";
@@ -372,8 +368,7 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static Screenshot getFullScreenshot(WebDriver driver) throws IOException, GridException{
-		return new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000))
-				.takeScreenshot(driver);
+		return new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
 	}
 	
 	/**
@@ -958,7 +953,14 @@ public class Browser {
 		xpath += "//"+element.getTagName();
 		for(Attribute attr : Browser.extractedAttributes(element, (JavascriptExecutor)driver)){
 			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
-				attributeChecks.add("contains(@" + attr.getName() + ",\"" + ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()])).trim() + "\")");
+				
+				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
+				if(attribute_values.contains("\"")){
+					attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(attribute_values.trim())+ "\")");
+				}
+				else{
+					attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(attribute_values.trim()) + "\")");
+				}
 			}
 		}
 		if(attributeChecks.size()>0){
@@ -983,7 +985,7 @@ public class Browser {
 				element = parent;
 			}catch(InvalidSelectorException e){
 				parent = null;
-				e.printStackTrace();
+				log.error("Invalid selector exception occurred while generating xpath through parent nodes");
 				break;
 			}
 		}
@@ -992,6 +994,41 @@ public class Browser {
 		return xpath;
 	}
 	
+	public static String generateConcatForXPath(String a_xPathQueryString)
+	{
+	    String returnString = "";
+	    String searchString = a_xPathQueryString;
+	 
+	    int quotePos = searchString.indexOf("\"");
+	    if (quotePos == -1)
+	    {
+	        returnString = "'" + searchString + "'";
+	    }
+	    else
+	    {
+	        returnString = "concat(";
+	        while (quotePos != -1)
+	        {
+	            String subString = searchString.substring(0, quotePos);
+	            returnString += "'" + subString + "', ";
+        
+                //must be a double quote
+                returnString += "'\"', ";
+                System.err.println("search str length ::  "+searchString.length());
+                System.err.println("quote position :: " + quotePos);
+                searchString = searchString.substring(quotePos + 1,
+	                             searchString.length());
+	            quotePos = searchString.indexOf("\"");
+	        }
+	        returnString += "'" + searchString + "')";
+	    }
+	    return returnString;
+	}
+	
+	private static String escapeQuotes(String string) {
+		return string.replace("\'", "'");
+	}
+
 	/**
 	 * Loads attributes for this element into a list of {@link Attribute}s
 	 * 

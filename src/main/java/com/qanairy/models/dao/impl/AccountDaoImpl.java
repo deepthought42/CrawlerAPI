@@ -158,6 +158,6 @@ public class AccountDaoImpl implements AccountDao{
 	@Override
 	public void removeDomain(Account account, Domain domain) {
 		Account acct = find(account.getKey());
-		acct.getDomains().remove(domain);
+		acct.removeDomain(domain);
 	}
 }

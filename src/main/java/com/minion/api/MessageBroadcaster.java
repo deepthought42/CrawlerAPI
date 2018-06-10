@@ -4,19 +4,12 @@ package com.minion.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
-import com.qanairy.models.PageStatePOJO;
 import com.qanairy.persistence.Action;
 import com.qanairy.persistence.DiscoveryRecord;
 import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.Test;
 import com.qanairy.persistence.TestRecord;
 import com.qanairy.persistence.PageElement;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 /**
@@ -33,38 +26,6 @@ public class MessageBroadcaster {
      * @throws JsonProcessingException 
      */
 	public static void broadcastDiscoveredTest(Test test, String host) throws JsonProcessingException {	
-		List<PathObject> path_list = new ArrayList<PathObject>();
-		for(PathObject obj : test.getPathObjects()){
-			if(obj != null && obj.getType().equals("PageState")){
-				PageState page_obj = (PageState)obj;
-								
-				PageState page;
-				try {
-					page = new PageStatePOJO( "", page_obj.getUrl().toString(), page_obj.getBrowserScreenshots(), new ArrayList<PageElement>(), page_obj.isLandable());
-					path_list.add(page);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			else if(obj != null){
-				path_list.add(obj);
-			}
-		}
-
-		/*PageState result_page = null;
-		try {
-			result_page = new PageStatePOJO("", test.getResult().getUrl().toString(), test.getResult().getBrowserScreenshots(), new ArrayList<PageElement>());
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		Test new_test = new TestPOJO(test.getPathKeys(), test.getPathObjects(), result_page, test.getName());
-		new_test.setBrowserStatuses(test.getBrowserStatuses());
-		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
-		new_test.setRunTime(test.getRunTime());
-		new_test.setCorrect(test.getCorrect());
-		new_test.setRecords(test.getRecords());
-		new_test.setSpansMultipleDomains(test.getSpansMultipleDomains());
-*/
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
@@ -157,10 +118,10 @@ public class MessageBroadcaster {
 	/**
      * Message emitter that sends {@link DiscoveryRecord} to all registered clients
      * 
-     * @param record {@link Record} to be emitted to clients
+     * @param record {@link DiscoveryRecord} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveryStatus(String host, DiscoveryRecord record) throws JsonProcessingException {
+	public static void broadcastDiscoveryStatus(DiscoveryRecord record) throws JsonProcessingException {
 		
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
@@ -171,7 +132,7 @@ public class MessageBroadcaster {
         //Object to JSON in String
         String discovery_json = mapper.writeValueAsString(record);
         
-		pusher.trigger(host, "discovery-status", discovery_json);
+		pusher.trigger(record.getDomainUrl(), "discovery-status", discovery_json);
 	}
 
 	public static void broadcastAction(Action action, String host) throws JsonProcessingException {

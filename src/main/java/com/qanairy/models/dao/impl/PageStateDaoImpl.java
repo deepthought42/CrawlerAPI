@@ -1,8 +1,6 @@
 package com.qanairy.models.dao.impl;
 
-import java.net.URL;
 import java.util.NoSuchElementException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.dao.PageElementDao;
@@ -42,10 +40,6 @@ public class PageStateDaoImpl implements PageStateDao {
 			PageElementDao page_elem_dao = new PageElementDaoImpl();
 			for(PageElement elem: page.getElements()){
 				page_record.addElement(page_elem_dao.save(elem));
-				try {
-					MessageBroadcaster.broadcastPageElement(elem, page_record.getUrl().getHost() );
-				} catch (JsonProcessingException e) {
-				}
 			}
 		}
 		connection.close();

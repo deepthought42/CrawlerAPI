@@ -29,21 +29,12 @@ public class TestRecordPOJO extends TestRecord {
 	//Empty constructor for spring
 	public TestRecordPOJO(){}
 	
-	public TestRecordPOJO(Date ran_at, Boolean passes, String browser_name){
-		this.setRanAt(ran_at);
-		this.setResult(null);
-		this.setRunTime(-1L);
-		this.setPassing(passes);
-		this.setBrowser(browser_name);
-		setKey(generateKey());
-	}
-	
 	public TestRecordPOJO(Date ran_at, Boolean passes, String browser_name, PageState result, long run_time){
-		this.setRanAt(ran_at);
-		this.setResult(result);
-		this.setRunTime(run_time);
-		this.setPassing(passes);
-		this.setBrowser(browser_name);
+		setRanAt(ran_at);
+		setResult(result);
+		setRunTime(run_time);
+		setPassing(passes);
+		setBrowser(browser_name);
 		setKey(generateKey());
 	}
 	

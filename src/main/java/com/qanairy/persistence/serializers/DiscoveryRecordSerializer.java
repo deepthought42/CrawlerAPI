@@ -33,10 +33,10 @@ public class DiscoveryRecordSerializer extends StdSerializer<DiscoveryRecord> {
         jgen.writeStringField("browser_name", record.getBrowserName());
         jgen.writeNumberField("last_ran_at", record.getLastPathRanAt().getTime());
         jgen.writeNumberField("start_time", record.getStartTime().getTime());
-        jgen.writeNumberField("start_time", record.getTestCount());
+        jgen.writeNumberField("test_count", record.getTestCount());
         jgen.writeNumberField("path_count", record.getTotalPathCount());
-        jgen.writeNumberField("examined_path_cnt", record.getExaminedPathCount());
-        jgen.writeNumberField("total_path_cnt", record.getTotalPathCount());
+        jgen.writeNumberField("examined_path_count", record.getExaminedPathCount());
+        jgen.writeNumberField("total_path_count", record.getTotalPathCount());
         jgen.writeStringField("url", record.getDomainUrl());
 
         jgen.writeEndObject();

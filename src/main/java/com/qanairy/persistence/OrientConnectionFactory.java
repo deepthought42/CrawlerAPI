@@ -33,7 +33,8 @@ public class OrientConnectionFactory {
 	 */
 	private DelegatingFramedGraph<OrientGraph> getConnection(){
 		//graphFactory = new OrientGraphFactory("remote:206.81.15.55/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000);
-		graphFactory = new OrientGraphFactory("remote:159.89.234.103/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000); // staging
+		//graphFactory = new OrientGraphFactory("remote:159.89.234.103/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000); // staging
+		graphFactory = new OrientGraphFactory("remote:159.203.177.116/thoth", "root", "BP6*g^Cw_Kb=28_y").setupPool(10,1000); // production
 		
 		
 		return new DelegatingFramedGraph<OrientGraph>(graphFactory.getNoTx(), true, true);

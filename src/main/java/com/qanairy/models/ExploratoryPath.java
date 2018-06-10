@@ -238,11 +238,7 @@ public class ExploratoryPath {
 		List<String> path_keys = new ArrayList<String>(path.getPathKeys());
 		List<Action> possible_actions = new ArrayList<Action>(path.getPossibleActions());
 		
-		ExploratoryPath clone_path = new ExploratoryPath(path_keys, path_objects, possible_actions);
-		clone_path.setPathKeys(path_keys);
-		clone_path.setPathObjects(path_objects);
-		
-		return clone_path;
+		return new ExploratoryPath(path_keys, path_objects, possible_actions);
 	}
 	
 

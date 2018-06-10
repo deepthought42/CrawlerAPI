@@ -2,13 +2,10 @@ package com.qanairy.models;
 
 import java.util.Calendar;
 import java.util.Date;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import com.stripe.Stripe;
 import com.stripe.exception.APIConnectionException;
 import com.stripe.exception.APIException;
@@ -17,9 +14,7 @@ import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Customer;
 import com.stripe.model.DeletedCustomer;
-
 import com.stripe.model.Plan;
-import com.stripe.model.Product;
 import com.stripe.model.Subscription;
 
 @Component
@@ -27,8 +22,8 @@ public class StripeClient {
 
     @Autowired
     StripeClient() {
-        //Stripe.apiKey = "sk_live_Gx56wLPtGpq8JXcg9UWaRcv9";
-    	Stripe.apiKey = "sk_test_PWXpP3kfBOicqxW29nSilcK1";
+        Stripe.apiKey = "sk_live_Gx56wLPtGpq8JXcg9UWaRcv9";
+    	//Stripe.apiKey = "sk_test_PWXpP3kfBOicqxW29nSilcK1";
     }
     
     public void update_subscription(Plan plan, Subscription subscription) 

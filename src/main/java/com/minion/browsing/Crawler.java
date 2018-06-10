@@ -22,11 +22,11 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
+import com.qanairy.models.Action;
 import com.qanairy.models.PageAlert;
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -63,7 +63,6 @@ public class Crawler {
 		
 		PageElement last_element = null;
 
-		
 		browser.getDriver().get(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		try{
 			new WebDriverWait(browser.getDriver(), 360).until(

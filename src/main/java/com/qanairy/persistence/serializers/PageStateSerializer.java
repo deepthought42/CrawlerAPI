@@ -6,9 +6,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.ScreenshotSet;
+import com.qanairy.models.PageState;
+import com.qanairy.models.ScreenshotSet;
 
 public class PageStateSerializer  extends StdSerializer<PageState> {
 

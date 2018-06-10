@@ -10,32 +10,27 @@ import java.util.Random;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.actors.MemoryRegistryActor;
 import com.minion.api.MessageBroadcaster;
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import com.qanairy.persistence.Test;
-import com.qanairy.persistence.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.structs.Message;
-import com.qanairy.models.GroupPOJO;
-import com.qanairy.models.TestPOJO;
-import com.qanairy.models.TestRecordPOJO;
-import com.qanairy.models.dao.DiscoveryRecordDao;
-import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dao.PageStateDao;
-import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
-import com.qanairy.models.dao.impl.DomainDaoImpl;
-import com.qanairy.models.dao.impl.PageStateDaoImpl;
-import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PathObject;
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Domain;
+import com.qanairy.models.Group;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageStateRepository;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -47,7 +42,15 @@ public class UrlBrowserActor extends UntypedActor {
 	private static Random rand = new Random();
 	private UUID uuid = null;
 
-		
+	@Autowired
+	DiscoveryRecordRepository discovery_repo;
+	
+	@Autowired
+	DomainRepository domain_repo;
+	
+	@Autowired
+	PageStateRepository page_state_repo;
+	
 	/**
 	 * Gets a random number between 0 and size
 	 * @param size
@@ -103,12 +106,12 @@ public class UrlBrowserActor extends UntypedActor {
 		assert path_keys != null;
 		assert path_objects != null;
 		
-		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
+		Test test = new Test(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecordPOJO(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
@@ -131,7 +134,7 @@ public class UrlBrowserActor extends UntypedActor {
 			if(path_obj.getClass().equals(PageElement.class)){
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
-					test.addGroup(new GroupPOJO("form"));
+					test.addGroup(new Group("form"));
 					break;
 				}
 			}
@@ -169,21 +172,17 @@ public class UrlBrowserActor extends UntypedActor {
 	  	path_objects.add(page_obj);
 	  	
 	  	System.err.println("saving discovery record and domain");
-		DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
-		DiscoveryRecord discovery_record = discovery_repo.find( msg.getOptions().get("discovery_key").toString());
+		DiscoveryRecord discovery_record = discovery_repo.findByKey( msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 		discovery_record.setTestCount(discovery_record.getTestCount()+1);
 		//discovery_repo.save(discovery_record);
 
-		PageStateDao page_state_dao = new PageStateDaoImpl();
-
-		DomainDao domain_dao = new DomainDaoImpl();
 		System.err.println("Page url host :: "  + msg.getOptions().get("host").toString());
-		Domain domain = domain_dao.find( msg.getOptions().get("host").toString());
+		Domain domain = domain_repo.findByUrl( msg.getOptions().get("host").toString());
 		System.err.println("domain :: "+domain);
 		System.err.println("Domain test count   ::   "+domain.getTestCount());
-		domain.addPageState(page_state_dao.save(page_obj));
+		domain.addPageState(page_state_repo.save(page_obj));
 		
 		for(PageElement element : page_obj.getElements()){
 			try {

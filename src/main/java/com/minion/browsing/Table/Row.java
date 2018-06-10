@@ -1,9 +1,8 @@
 package com.minion.browsing.Table;
 
 import java.util.List;
-
 import com.minion.browsing.PageElementNode;
-import com.qanairy.persistence.PageElement;
+import com.qanairy.models.PageElement;
 
 /**
  *	Contains the {@link PageElementNode}s that make up a row in a [@link Table} within a {@link Page}. 

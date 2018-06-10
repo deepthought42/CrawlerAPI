@@ -3,18 +3,17 @@ package com.minion.actors;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import com.qanairy.persistence.Test;
-import com.qanairy.persistence.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.models.TestPOJO;
-import com.qanairy.models.TestRecordPOJO;
-import com.qanairy.persistence.PageState;
+import com.qanairy.models.PageState;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 
 /**
  * Handles retrieving tests
@@ -72,7 +71,7 @@ public class TestingActor extends UntypedActor {
 				}while(tries < 5);
 
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecordPOJO(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
 
@@ -85,10 +84,10 @@ public class TestingActor extends UntypedActor {
 					TestRecord record = null;
 
 					if(!test.getCorrect()){
-						record = new TestRecordPOJO(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 					else{
-						record = new TestRecordPOJO(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 
 					test.addRecord(record);
@@ -130,7 +129,7 @@ public class TestingActor extends UntypedActor {
 			page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
 			
 			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getCorrect());
-			passing = TestPOJO.isTestPassing(test.getResult(), page, test.getCorrect());
+			passing = Test.isTestPassing(test.getResult(), page, test.getCorrect());
 			
 		    test.setBrowserStatus(browser.getBrowserName(), passing);
 		 } catch (IOException e) {		
@@ -140,7 +139,7 @@ public class TestingActor extends UntypedActor {
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecordPOJO(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
+		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

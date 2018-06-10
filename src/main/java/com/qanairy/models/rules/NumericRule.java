@@ -1,8 +1,8 @@
 package com.qanairy.models.rules;
 
 import org.apache.commons.lang3.StringUtils;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+
+import com.qanairy.models.PageElement;
 
 
 /**

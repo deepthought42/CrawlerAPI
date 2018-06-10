@@ -1,11 +1,11 @@
 package com.qanairy.models.rules;
 
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
-import com.qanairy.persistence.Attribute;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.Attribute;
+import com.qanairy.models.PageElement;
+
+import org.slf4j.Logger;
 
 public class DisabledRule extends Rule{
 	private static Logger log = LoggerFactory.getLogger(DisabledRule.class);

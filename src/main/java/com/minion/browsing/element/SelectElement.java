@@ -2,12 +2,12 @@ package com.minion.browsing.element;
 
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+	import org.slf4j.LoggerFactory;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
-import com.qanairy.persistence.Attribute;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.Attribute;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.rules.Rule;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;

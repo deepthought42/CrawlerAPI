@@ -1,12 +1,11 @@
 package com.qanairy.persistence.serializers;
 
 import java.io.IOException;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.qanairy.persistence.Group;
+import com.qanairy.models.Group;
 
 public class GroupSerializer extends StdSerializer<Group> {
 

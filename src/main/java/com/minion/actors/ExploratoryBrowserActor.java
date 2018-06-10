@@ -6,47 +6,49 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.GroupPOJO;
-import com.qanairy.models.PageElementPOJO;
-import com.qanairy.models.TestPOJO;
-import com.qanairy.models.TestRecordPOJO;
-import com.qanairy.models.dao.DiscoveryRecordDao;
-import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dao.PageStateDao;
-import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
-import com.qanairy.models.dao.impl.DomainDaoImpl;
-import com.qanairy.models.dao.impl.PageStateDaoImpl;
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.OrientConnectionFactory;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
-import com.qanairy.persistence.Test;
-import com.qanairy.persistence.TestRecord;
+import com.qanairy.models.Group;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.DomainRepository;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
+/**
+ * 
+ */
 public class ExploratoryBrowserActor extends UntypedActor {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 
+	@Autowired
+	DiscoveryRecordRepository discovery_repo;
+	
+	@Autowired
+	DomainRepository domain_repo;
+	
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -65,9 +67,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 
-		  		OrientConnectionFactory conn = new OrientConnectionFactory();
-				DomainDao domain_dao = new DomainDaoImpl();	
-
 				browser = new Browser((String)acct_msg.getOptions().get("browser"));
 				
 				PageState last_page = exploratory_path.findLastPage();
@@ -77,12 +76,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
-					DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();
 					DiscoveryRecord discovery_record = null;
 					boolean error_while_saving = false;
 					do{
 						try{
-							discovery_record = discovery_repo.find(acct_msg.getOptions().get("discovery_key").toString());
+							discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 							discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 					  		discovery_record.setLastPathRanAt(new Date());
 					  		
@@ -132,39 +130,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							
 							tries++;
 						}while(tries < 5);
-						PageStateDao page_state_dao = new PageStateDaoImpl();
-						Domain domain = null;
-						boolean exception_occurred = false;
-						do{
-							try{
-						  		domain = domain_dao.find(acct_msg.getOptions().get("host").toString());
-								domain.setTestCount(domain.getTestCount()+1);
-							}catch(Exception e){
-								
-							}
-						}while(exception_occurred);
 						
-						exception_occurred = false;
-						do{
-							try{
-								domain = domain_dao.find(acct_msg.getOptions().get("host").toString());
-								
-								boolean exists = false;
-								for(PageState state : domain.getPageStates()){
-									if(state.getKey().equals(result_page.getKey())){
-										exists = true;
-									}
-								}
-
-								if(!exists){
-									domain.addPageState(page_state_dao.save(result_page));
-								}
-								exception_occurred = false;
-							}catch(Exception e){
-								exception_occurred = true;
-							}
-						}while(exception_occurred);
-						//domain_dao.save(domain);
+						Domain domain = domain_repo.findByUrl(acct_msg.getOptions().get("host").toString());
+						domain.setTestCount(domain.getTestCount()+1);
+						domain.addPageState(result_page);
+						domain_repo.save(domain);
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
@@ -215,7 +185,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						}
 					}
 				  	browser.close();
-				  	conn.close();
 				}
 
 				
@@ -233,13 +202,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @param result_page
 	 */
 	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
-		Test test = new TestPOJO(path_keys, path_objects, result_page, "Test #" + domain.getTestCount());							
+		Test test = new Test(path_keys, path_objects, result_page, "Test #" + domain.getTestCount());							
 
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecordPOJO(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
@@ -263,7 +232,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			if(path_obj.getClass().equals(PageElement.class)){
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
-					test.addGroup(new GroupPOJO("form"));
+					test.addGroup(new Group("form"));
 					break;
 				}
 			}
@@ -323,7 +292,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			System.err.println("parent path clone :: "+parent_path.getPathKeys().size());
 			String this_xpath = Browser.generateXpath(parent, "", new HashMap<String, Integer>(), driver); 
 			System.err.println("Generated xpath :: "+this_xpath);
-			PageElement parent_tag = new PageElementPOJO(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), Browser.loadCssProperties(parent) );
+			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), Browser.loadCssProperties(parent) );
 			System.err.println("setting path element object and key at index ::"+element_idx);
 			parent_path.getPathObjects().set(element_idx, parent_tag);
 			parent_path.getPathKeys().set(element_idx, parent_tag.getKey());

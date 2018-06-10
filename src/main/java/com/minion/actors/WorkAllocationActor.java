@@ -4,7 +4,7 @@ import java.net.URL;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.persistence.Test;
+import com.qanairy.models.Test;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;

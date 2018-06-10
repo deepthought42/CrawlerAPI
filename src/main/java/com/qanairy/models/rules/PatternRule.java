@@ -3,8 +3,7 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.PageElement;
 
 /**
  * Defines a regular expression based rule that applies to the entire text content(beginning to end) of a field.

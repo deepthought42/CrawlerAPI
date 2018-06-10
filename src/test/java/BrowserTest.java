@@ -6,10 +6,10 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.minion.browsing.Browser;
-import com.qanairy.models.PageStatePOJO;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.persistence.PageElement;
 import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
 import com.qanairy.persistence.ScreenshotSet;
 
 /**
@@ -40,7 +40,7 @@ public class BrowserTest {
 	public void verifyTestConstructor(){
 		PageState page;
 		try {
-			page = new PageStatePOJO("<html>localhost</html>",
+			page = new PageState("<html>localhost</html>",
 					"http://localhost", 
 					new ArrayList<ScreenshotSet>(),
 					new ArrayList<PageElement>(), 
@@ -52,7 +52,7 @@ public class BrowserTest {
 			List<PathObject> path_objects = new ArrayList<PathObject>();
 			path_objects.add(page);
 			
-			com.qanairy.persistence.Test test = new com.qanairy.models.TestPOJO(path_keys, path_objects, page, "Testing Test 1");
+			com.qanairy.persistence.Test test = new com.qanairy.models.Test(path_keys, path_objects, page, "Testing Test 1");
 			
 			Assert.assertEquals(test.getPathKeys().size(), path_keys.size());
 			Assert.assertEquals(test.getPathObjects().size(), path_objects.size());

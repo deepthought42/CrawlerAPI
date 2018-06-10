@@ -2,16 +2,13 @@ package com.minion.browsing.Table;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-
 import com.minion.browsing.Browser;
 import com.minion.browsing.PageElementNode;
-import com.qanairy.models.PageElementPOJO;
-import com.qanairy.persistence.PageElement;
+import com.qanairy.models.PageElement;
 
 public class Table {
 	public List<Row> headers;
@@ -43,12 +40,12 @@ public class Table {
 			Row row = new Row();
 			String row_xpath = "//tr["+ cnt + "]";
 			for(WebElement elem : header_cells){
-				PageElement page_elem = new PageElementPOJO(elem.getText(), Browser.generateXpath(elem, row_xpath, null, driver), elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
+				PageElement page_elem = new PageElement(elem.getText(), Browser.generateXpath(elem, row_xpath, null, driver), elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
 				PageElementNode<PageElement> node = new PageElementNode<PageElement>(page_elem);
 				//load all child elements into tree
 				List<WebElement> children = Browser.getChildElements(elem);
 				for(WebElement child_elem : children){
-					PageElement child_page_elem = new PageElementPOJO(child_elem.getText(), Browser.generateXpath(child_elem, row_xpath, null, driver), child_elem.getTagName(), Browser.extractedAttributes(child_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(child_elem));
+					PageElement child_page_elem = new PageElement(child_elem.getText(), Browser.generateXpath(child_elem, row_xpath, null, driver), child_elem.getTagName(), Browser.extractedAttributes(child_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(child_elem));
 					node.addChild(child_page_elem);
 				}
 				

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.qanairy.persistence.Action;
+import com.qanairy.models.Action;
 
 public class ActionSerializer extends StdSerializer<Action> {
 

@@ -6,26 +6,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
-import com.qanairy.persistence.Rule;
-import com.qanairy.persistence.Test;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
+import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.TestPOJO;
-import com.qanairy.models.dao.DiscoveryRecordDao;
-import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
+import com.qanairy.models.Test;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.rules.Rule;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -35,6 +33,9 @@ public class PathExpansionActor extends UntypedActor {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
+	@Autowired
+	DiscoveryRecordRepository discovery_repo;
+	
 	/**
      * {@inheritDoc}
      */
@@ -51,6 +52,8 @@ public class PathExpansionActor extends UntypedActor {
 				System.err.println("#################################################################");
 
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
+				DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+
 				if((!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
 					PageState last_page = test.findLastPage();
@@ -58,10 +61,8 @@ public class PathExpansionActor extends UntypedActor {
 					System.err.println("path doesn't have cycle, doesn't span multiple domains");
 					if(!last_page.equals(first_page) && last_page.isLandable()){
 						System.err.println("last page doesn't match first page...");
-						DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
-						DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						//discovery_dao.save(discovery_record);
+						discovery_repo.save(discovery_record);
 
 						System.err.println("Sending URL to work allocator...");
 						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
@@ -75,10 +76,8 @@ public class PathExpansionActor extends UntypedActor {
 					
 					pathExpansions = PathExpansionActor.expandPath(test);
 					System.err.println("identified path expansion count :: " + pathExpansions.size());
-					DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
-					DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
-					//discovery_dao.save(discovery_record);
+					discovery_repo.save(discovery_record);
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					for(ExploratoryPath expanded : pathExpansions){
@@ -164,7 +163,7 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 			else{
-				Test new_test = TestPOJO.clone(test);
+				Test new_test = Test.clone(test);
 				new_test.addPathObject(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 

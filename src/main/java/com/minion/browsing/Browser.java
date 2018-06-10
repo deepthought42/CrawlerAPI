@@ -44,15 +44,11 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
-import com.qanairy.models.AttributePOJO;
-import com.qanairy.models.PageElementPOJO;
-import com.qanairy.models.PageStatePOJO;
-import com.qanairy.models.ScreenshotSetPOJO;
-import com.qanairy.persistence.Attribute;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.Rule;
-import com.qanairy.persistence.ScreenshotSet;
+import com.qanairy.models.Attribute;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.ScreenshotSet;
+import com.qanairy.models.rules.Rule;
 
 import ru.yandex.qatools.ashot.AShot;
 import ru.yandex.qatools.ashot.Screenshot;
@@ -164,8 +160,8 @@ public class Browser {
 			visible_elements = new ArrayList<PageElement>();
 		}
 		List<ScreenshotSet> browser_screenshot = new ArrayList<ScreenshotSet>();
-		browser_screenshot.add(new ScreenshotSetPOJO(screenshot, viewport_screenshot_url, browser_name));
-		return new PageStatePOJO(src,
+		browser_screenshot.add(new ScreenshotSet(screenshot, viewport_screenshot_url, browser_name));
+		return new PageState(src,
 						page_url.toString(),
 						browser_screenshot,
 						visible_elements);
@@ -437,7 +433,7 @@ public class Browser {
 					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
 					
 					Dimension d = elem.getSize();
-					PageElement tag = new PageElementPOJO(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
+					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
 					BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
 					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
 					tag.setScreenshot(screenshot);
@@ -585,13 +581,13 @@ public class Browser {
 		System.err.println("Form elements size    :::    "+form_elements.size());
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-			PageElement form_tag = new PageElementPOJO(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), Browser.loadCssProperties(form_elem) );
+			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", Browser.extractedAttributes(form_elem, (JavascriptExecutor)browser.getDriver()), Browser.loadCssProperties(form_elem) );
 			Form form = new Form(form_tag, new ArrayList<ComplexField>(), browser.findFormSubmitButton(form_elem) );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
 			List<PageElement> input_tags = new ArrayList<PageElement>(); 
 			for(WebElement input_elem : input_elements){
-				PageElement input_tag = new PageElementPOJO(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()), Browser.loadCssProperties(input_elem) );
+				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), Browser.extractedAttributes(input_elem, (JavascriptExecutor)browser.getDriver()), Browser.loadCssProperties(input_elem) );
 				
 				boolean alreadySeen = false;
 				for(String xpath : form_xpath_list){
@@ -642,7 +638,7 @@ public class Browser {
 	 */
 	private PageElement findFormSubmitButton(WebElement form_elem) {
 		WebElement submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
-		return new PageElementPOJO(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), driver), submit_element.getTagName(), Browser.extractedAttributes(submit_element, (JavascriptExecutor)driver), Browser.loadCssProperties(submit_element) );
+		return new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), driver), submit_element.getTagName(), Browser.extractedAttributes(submit_element, (JavascriptExecutor)driver), Browser.loadCssProperties(submit_element) );
 	}
 
 	/**
@@ -658,7 +654,7 @@ public class Browser {
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElementPOJO(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
+					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
 					return label_tag;
 				}
 			}
@@ -683,7 +679,7 @@ public class Browser {
 			//check if input for attribute references an existing id on any of the current child_inputs
 			for(String id : input_ids){
 				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElementPOJO(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
+					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
 					label_tags.add(label_tag);
 					break;
 				}
@@ -738,7 +734,7 @@ public class Browser {
 				child_inputs = new ArrayList<FormField>();
 
 				for(WebElement child : children){
-					PageElement elem = new PageElementPOJO(child.getText(), Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), Browser.extractedAttributes(child, (JavascriptExecutor)driver), Browser.loadCssProperties(child) );
+					PageElement elem = new PageElement(child.getText(), Browser.generateXpath(child, "", new HashMap<String, Integer>(), driver), child.getTagName(), Browser.extractedAttributes(child, (JavascriptExecutor)driver), Browser.loadCssProperties(child) );
 					FormField input_field = new FormField(elem);
 					child_inputs.add(input_field);
 				}
@@ -747,7 +743,7 @@ public class Browser {
 			}
 			else{
 				if(child_inputs.size() == 0){
-					PageElement input_tag = new PageElementPOJO(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(page_elem) );
+					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver), page_elem.getTagName(), Browser.extractedAttributes(page_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(page_elem) );
 					FormField input_field = new FormField(input_tag);
 					child_inputs.add(input_field);
 				}
@@ -1043,7 +1039,7 @@ public class Browser {
 
 			if(attributes.length > 1){
 				attributeVals = attributes[1].split(" ");
-				attr_lst.add(new AttributePOJO(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
+				attr_lst.add(new Attribute(attributes[0].trim().replace("\'", "'"), Arrays.asList(attributeVals)));
 			}
 		}
 		 return attr_lst;

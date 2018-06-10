@@ -1,8 +1,6 @@
 package com.minion.browsing.element;
 
 import java.util.List;
-
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
@@ -12,10 +10,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.UnreachableBrowserException;
-
 import com.minion.browsing.ActionFactory;
 import com.minion.browsing.form.FormField;
-import com.qanairy.persistence.Action;
+import com.qanairy.models.Action;
 
 /**
  * Represents a container with an input field as well as label

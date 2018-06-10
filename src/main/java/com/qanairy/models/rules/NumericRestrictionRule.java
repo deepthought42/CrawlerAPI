@@ -3,8 +3,7 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.PageElement;
 
 /**
  * Defines a {@link Rule} where the numbers 1-9 cannot appear in a given value when evaluated

@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.auth.Auth0Client;
+import com.qanairy.models.Account;
 import com.qanairy.models.StripeClient;
-import com.qanairy.persistence.Account;
-import com.qanairy.services.AccountService;
+import com.qanairy.models.repository.AccountRepository;
 
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
@@ -22,6 +22,9 @@ import com.stripe.model.Subscription;
 public class SubscriptionController {
 
     private StripeClient stripeClient;
+    
+    @Autowired
+    AccountRepository account_repo;
     
     @Autowired
     SubscriptionController(StripeClient stripeClient) {
@@ -34,7 +37,7 @@ public class SubscriptionController {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
     	Plan new_plan = Plan.retrieve(plan);
     	Subscription subscription = Subscription.retrieve(acct.getSubscriptionToken());
     	

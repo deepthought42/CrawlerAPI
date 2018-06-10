@@ -4,10 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
-
 
 /**
  * A set of vertex objects that form a sequential movement through a graph

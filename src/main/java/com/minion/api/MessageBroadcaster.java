@@ -1,16 +1,16 @@
 package com.minion.api;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.Test;
-import com.qanairy.persistence.TestRecord;
-import com.qanairy.persistence.PageElement;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Defines methods for emitting data to subscribed clients

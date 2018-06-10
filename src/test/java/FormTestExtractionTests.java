@@ -1,21 +1,20 @@
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
-
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.testng.annotations.Test;
-
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.Form;
+import com.qanairy.models.PageState;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.NumericRestrictionRule;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.ReadOnlyRule;
 import com.qanairy.models.rules.RequirementRule;
+import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.SpecialCharacterRestriction;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.Rule;
+
 
 /**
  * A group of TestNG tests designed to verify the extraction of tests involving forms and rules on fields

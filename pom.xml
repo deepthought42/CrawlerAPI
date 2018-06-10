@@ -126,38 +126,13 @@
 		</dependency>
 
 
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-neo4j -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-data-neo4j</artifactId>
+		    <version>2.0.2.RELEASE</version>
+		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/com.orientechnologies/orientdb-core -->
-		<!-- <dependency>
-		    <groupId>com.orientechnologies</groupId>
-		    <artifactId>orientdb-core</artifactId>
-		    <version>2.2.17</version>
-		</dependency>
-		 -->
-
-		<!-- https://mvnrepository.com/artifact/com.orientechnologies/orientdb-gremlin -->
-		<dependency>
-		    <groupId>com.orientechnologies</groupId>
-		    <artifactId>orientdb-gremlin</artifactId>
-		    <version>2.2.35</version>
-		</dependency>
-
-								
-		<!-- https://mvnrepository.com/artifact/com.orientechnologies/orientdb-graphdb -->
-		<dependency>
-		    <groupId>com.orientechnologies</groupId>
-		    <artifactId>orientdb-graphdb</artifactId>
-		    <version>2.2.35</version>
-		</dependency>
-
-		
-		<!-- https://mvnrepository.com/artifact/com.orientechnologies/orientdb-client -->
-		<dependency>
-		    <groupId>com.orientechnologies</groupId>
-		    <artifactId>orientdb-client</artifactId>
-		    <version>2.2.35</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/ru.yandex.qatools.ashot/ashot -->
 		<dependency>
 		    <groupId>ru.yandex.qatools.ashot</groupId>
@@ -201,14 +176,6 @@
 			<version>2.4.2</version>
 		</dependency>
 
-		 
-		<!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-messaging -->
-		<!--  <dependency>
-		    <groupId>org.springframework.security</groupId>
-		    <artifactId>spring-security-messaging</artifactId>
-		    <version>4.2.0.RELEASE</version>
-		</dependency>
--->
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
@@ -229,12 +196,6 @@
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-web</artifactId>
 		    <version>${springboot.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-			<version>${springboot.version}</version>
 		</dependency>
  	
 		<!-- https://mvnrepository.com/artifact/com.auth0/auth0-spring-security-api -->

@@ -93,12 +93,12 @@ public class AccountController {
         }
           
         //STAGING
-     	//Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
-    	//Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
+     	Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
+    	Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
     	
     	//PRODUCTION
-    	Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
-    	Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
+    	//Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
+    	//Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
@@ -115,28 +115,28 @@ public class AccountController {
         }
         */
         //printGrantedAuthorities((Auth0JWTToken) principal);
-        Account new_account = null;
+
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
-        new_account = account_repo.save(acct);
+        acct = account_repo.save(acct);
         
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(new_account.getKey())
+    		    .userId(acct.getUsername())
     		    .traits(traits)
     		);
     	
     	Map<String, String> account_signup_properties = new HashMap<String, String>();
     	account_signup_properties.put("plan", subscription.getId());
     	analytics.enqueue(TrackMessage.builder("Signed Up")
-    		    .userId(new_account.getKey())
+    		    .userId(acct.getUsername())
     		    .properties(account_signup_properties)
     		);
     	
-        return ResponseEntity.accepted().body(new_account);
+        return ResponseEntity.accepted().body(acct);
     }
 
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
@@ -184,9 +184,9 @@ public class AccountController {
      */
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(value ="/{id}", method = RequestMethod.GET)
-    public Account get(final @PathVariable String key) {
+    public Account get(final @PathVariable String username) {
         logger.info("get invoked");
-        return account_repo.findByKey(key);
+        return account_repo.findByUsername(username);
     }
 
 	@PreAuthorize("hasAuthority('update:accounts')")

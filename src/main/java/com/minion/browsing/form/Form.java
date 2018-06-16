@@ -1,6 +1,8 @@
 package com.minion.browsing.form;
 
 import java.util.List;
+import java.util.Set;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.minion.browsing.element.ComplexField;
 import com.qanairy.models.Attribute;
@@ -40,7 +42,7 @@ public class Form {
 	 * @return {@link FormType}
 	 */
 	private FormType determineFormType(){
-		List<Attribute> attributes = this.form_tag.getAttributes();
+		Set<Attribute> attributes = this.form_tag.getAttributes();
 		for(Attribute attr: attributes){
 			for(String val : attr.getVals()){
 				if(val.contains("register") || (val.contains("sign") && val.contains("up"))){

@@ -12,16 +12,19 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.minion.actors.MemoryRegistryActor;
 import com.minion.api.MessageBroadcaster;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.qanairy.config.SpringExtension;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
@@ -33,11 +36,14 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.services.BrowserService;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
  *
  */
+@Component
+@Scope("prototype")
 public class BrowserActor extends UntypedActor {
 	private static Logger log = LoggerFactory.getLogger(BrowserActor.class.getName());
 
@@ -45,12 +51,19 @@ public class BrowserActor extends UntypedActor {
 	private UUID uuid = null;
 
 	@Autowired
-	DiscoveryRecordRepository discovery_repo;
+	private ActorSystem actor_system;
 	
 	@Autowired
-	DomainRepository domain_repo;
+	private DiscoveryRecordRepository discovery_repo;
 	
+	@Autowired
+	private DomainRepository domain_repo;
 	
+	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
+	private Crawler crawler;
 	/**
 	 * Gets a random number between 0 and size
 	 * @param size
@@ -130,10 +143,12 @@ public class BrowserActor extends UntypedActor {
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 		
 		//tell memory worker of test
-		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+		final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+				  .props("MemoryRegistration"), "memory_registration");
 		memory_actor.tell(test_msg, getSelf());
 		
-		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+				  .props("PathExpansionActor"), "path_expansion");
 		path_expansion_actor.tell(test_msg, getSelf());
 		
 		return test;
@@ -173,7 +188,7 @@ public class BrowserActor extends UntypedActor {
 		assert browser != null;
 		assert msg != null;
 		
-	  	PageState page_obj = browser.buildPage();
+	  	PageState page_obj = browser_service.buildPage(browser);
 
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
@@ -188,7 +203,7 @@ public class BrowserActor extends UntypedActor {
 		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 		discovery_repo.save(discovery_record);
 		
-		Domain domain = domain_repo.findByUrl(page_obj.getUrl().getHost());
+		Domain domain = domain_repo.findByHost((new URL(page_obj.getUrl())).getHost());
 		domain.addPageState(page_obj);
 		domain_repo.save(domain);
 		
@@ -198,7 +213,8 @@ public class BrowserActor extends UntypedActor {
 		Test new_test = Test.clone(test);
 		Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), new_test, msg.getOptions());
 
-		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+				  .props("PathExpansionActor"), "path_expansion");
 		path_expansion_actor.tell(test_msg, getSelf() );
 		
 		for(PageElement element : page_obj.getElements()){
@@ -234,9 +250,9 @@ public class BrowserActor extends UntypedActor {
 		final long pathCrawlStartTime = System.currentTimeMillis();
 		int tries = 0;
 		do{
-			result_page = Crawler.crawlPath(path_keys, path_objects, browser, acct_msg.getOptions().get("host").toString());
+			result_page = crawler.crawlPath(path_keys, path_objects, browser, acct_msg.getOptions().get("host").toString());
 			tries++;
-			result_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
+			result_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
 		}while(result_page == null && tries < 5);
 		final long pathCrawlEndTime = System.currentTimeMillis();
 		
@@ -251,7 +267,7 @@ public class BrowserActor extends UntypedActor {
 			/*path_keys.setIsUseful(false);
 	  	}
 	  	else{*/			
-			Domain domain = domain_repo.findByUrl(browser.buildPage().getUrl().getHost());
+			Domain domain = domain_repo.findByHost((new URL(browser_service.buildPage(browser).getUrl())).getHost());
 			domain.addPageState(result_page);
 			domain_repo.save(domain);
 			
@@ -260,7 +276,7 @@ public class BrowserActor extends UntypedActor {
 			DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 			discovery_record.setTestCount(discovery_record.getTestCount()+1);
 			discovery_record.setLastPathRanAt(new Date());
-			//discovery_repo.save(discovery_record);
+			discovery_repo.save(discovery_record);
 
 			createTest(path_keys, path_objects, result_page, crawl_time_in_ms, domain, acct_msg, discovery_record);
 	  	}

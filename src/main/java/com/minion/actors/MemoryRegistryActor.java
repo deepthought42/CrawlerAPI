@@ -2,7 +2,10 @@ package com.minion.actors;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
@@ -16,15 +19,20 @@ import com.qanairy.models.repository.TestRepository;
  *
  *
  */
+@Component
+@Scope("prototype")
 public class MemoryRegistryActor extends UntypedActor{
     @SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
 
     @Autowired
-    TestRepository test_repo;
+    private ActorSystem actor_system;
     
     @Autowired
-    DomainRepository domain_repo;
+    private TestRepository test_repo;
+    
+    @Autowired
+    private DomainRepository domain_repo;
     
 	/**
 	 * {@inheritDoc}
@@ -39,7 +47,7 @@ public class MemoryRegistryActor extends UntypedActor{
 				test = test_repo.save(test);
 				
 				String host_url = msg.getOptions().get("host").toString();
-				Domain domain = domain_repo.findByUrl(host_url);
+				Domain domain = domain_repo.findByHost(host_url);
 				boolean test_already_exists = false;
 				for(Test test_record : domain.getTests()){
 					if(test_record.getKey().equals(test.getKey())){

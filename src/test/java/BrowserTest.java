@@ -1,6 +1,9 @@
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.minion.browsing.Browser;
@@ -8,6 +11,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.ScreenshotSet;
+import com.qanairy.services.BrowserService;
 
 /**
  * 
@@ -27,7 +31,8 @@ public class BrowserTest {
 	@Test(groups="Regression")
 	public void verifyGenerateConcatForXpath(){
 		String src_example = "This is a embedded \"path\"";
-		String clean_src = Browser.generateConcatForXPath(src_example);// cleanSrc(src_example);
+		BrowserService service = new BrowserService();
+		String clean_src = service.generateConcatForXPath(src_example);// cleanSrc(src_example);
 		//System.err.println("clean src: " +clean_src);
 		Assert.assertTrue(clean_src.equals("concat('This is a embedded ', '\"', 'path', '\"', '')"));
 	}
@@ -36,8 +41,8 @@ public class BrowserTest {
 	@Test(groups="Regression")
 	public void verifyTestConstructor(){
 		try {
-			List<ScreenshotSet> screenshots = new ArrayList<ScreenshotSet>();
-			List<PageElement> elements = new ArrayList<PageElement>();
+			Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
+			Set<PageElement> elements = new HashSet<PageElement>();
 			
 			PageState page = new PageState("<html>localhost</html>",
 					"http://localhost", 

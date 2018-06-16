@@ -1,8 +1,6 @@
 package com.minion.browsing;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +16,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,13 +27,18 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.services.BrowserService;
 
 /**
  * Provides methods for crawling web pages using Selenium
  */
+@Component
 public class Crawler {
 	private static Logger log = LoggerFactory.getLogger(Crawler.class);
 
+	@Autowired
+	private BrowserService browser_service;
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 * 
@@ -47,7 +52,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public static PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws NoSuchElementException, IOException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws NoSuchElementException, IOException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -96,7 +101,7 @@ public class Crawler {
 			}
 		}
 		
-		return browser.buildPage();
+		return browser_service.buildPage(browser);
 	}
 	
 	/**

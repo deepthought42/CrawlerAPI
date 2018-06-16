@@ -9,8 +9,9 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class TestUser implements Persistable {
-	@Id 
-	@GeneratedValue 
+	
+	@GeneratedValue
+    @Id
 	private Long id;
 	
 	private String key;

@@ -2,7 +2,6 @@ package com.qanairy.models;
 
 import java.util.List;
 
-import org.apache.commons.collections4.ListUtils;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -12,13 +11,13 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class Attribute implements Persistable {
-	@Id 
-	@GeneratedValue 
+	@GeneratedValue
+    @Id 
 	private Long id;
 	
-	public String key;
-	public String name;
-	public List<String> vals;
+	private String key;
+	private String name;
+	private List<String> vals;
 	
 	public Attribute(){}
 	
@@ -60,9 +59,8 @@ public class Attribute implements Persistable {
 	public boolean equals(Object obj){
 		if(obj instanceof Attribute){
 			Attribute attr = (Attribute)obj;
-			
-			if(this.getName().equals(attr.getName())
-				&& ListUtils.subtract(this.getVals(), attr.getVals()).size() == 0){
+			//&& ListUtils.subtract(this.getVals(), attr.getVals()).size() == 0)
+			if(this.getName().equals(attr.getName())){
 				return true;
 			}
 		}
@@ -129,6 +127,6 @@ public class Attribute implements Persistable {
 	}
 	
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getVals().toString());
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getName())+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getVals().toString());
 	}
 }

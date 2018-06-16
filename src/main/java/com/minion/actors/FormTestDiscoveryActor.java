@@ -1,13 +1,17 @@
 package com.minion.actors;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
@@ -19,6 +23,7 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
+import com.qanairy.services.BrowserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
@@ -29,20 +34,31 @@ import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import akka.actor.ActorRef;
-import akka.actor.Props;
+import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 
 /**
  * Handles discovery and creation of various form tests
  */
+@Component
+@Scope("prototype")
 public class FormTestDiscoveryActor extends UntypedActor {
 	private static Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
 
 	@Autowired
-	DomainRepository domain_repo;
+	private ActorSystem actor_system;
 	
 	@Autowired
-	DiscoveryRecordRepository discovery_repo;
+	private DomainRepository domain_repo;
+	
+	@Autowired
+	private DiscoveryRecordRepository discovery_repo;
+
+	@Autowired
+	private Crawler crawler;
+	
+	@Autowired
+	private BrowserService browser_service;
 	
 	/**
 	 * {@inheritDoc}
@@ -74,7 +90,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	
 				//PageState current_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
 			  	
-			  	List<Form> forms = Browser.extractAllForms(test.getResult(), browser);
+			  	List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
 			  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 			  	System.err.println("FORM COUNT ::: "+forms.size());
 			  	for(Form form : forms){
@@ -100,16 +116,16 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					
 			  		System.err.println("Crawling potential form test path");
 			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
-			  		PageState result_page = Crawler.crawlPath(test_path_keys, test_path_objects, browser, acct_msg.getOptions().get("host").toString());
+			  		PageState result_page = crawler.crawlPath(test_path_keys, test_path_objects, browser, acct_msg.getOptions().get("host").toString());
 				  	browser.close();
 					final long pathCrawlEndTime = System.currentTimeMillis();
 					
 					long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
 					
 				  	System.err.println("Looking up domain with url :: "+page.getUrl().toString());
-				  	System.err.println("Looking up domain with url :: "+page.getUrl().getHost());
+				  	System.err.println("Looking up domain with url :: "+(new URL(page.getUrl())).getHost());
 					
-			  		Domain domain = domain_repo.findByUrl(page.getUrl().getHost());
+			  		Domain domain = domain_repo.findByHost((new URL(page.getUrl())).getHost());
 					domain.addPageState(result_page);
 					//domain_dao.save(domain);
 					
@@ -132,8 +148,9 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				
 				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				System.err.println("Broadcasting discovery record now that we've added "+tests.size()+"        tests   ");
-				final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-								
+				final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+						  .props("MemoryRegistration"), "memory_registration");
+
 			  	for(Test form_test : tests){
 			  		//send all tests to work allocator to be evaluated
 			  		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), form_test, acct_msg.getOptions());
@@ -371,51 +388,56 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		assert input.getName().equals("input");
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
-		String input_type = input.getAttributes().get(input.getAttributes().indexOf("type")).getVals().get(0);
-		if(input_type.equals("text") ||
-				input_type.equals("textarea") ||
-				input_type.equals("email")){
-			//generate empty string test
-			List<PathObject> path_obj_list = new ArrayList<PathObject>();
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("sendKeys", ""));
-			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
-			tests.add(path_obj_list);
-			
-			//generate single character str test
-			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("click", ""));
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("sendKeys", "a"));
-			path_obj_list_2.add(submit);
-			path_obj_list_2.add(new Action("click", ""));
-			tests.add(path_obj_list_2);
+		for(Attribute attribute: input.getAttributes()){
+			if(attribute.getName().equals("type")){
+				String input_type = attribute.getVals().get(0);
+				if(input_type.equals("text") ||
+						input_type.equals("textarea") ||
+						input_type.equals("email")){
+					//generate empty string test
+					List<PathObject> path_obj_list = new ArrayList<PathObject>();
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("sendKeys", ""));
+					path_obj_list.add(submit);
+					path_obj_list.add(new Action("click", ""));
+					tests.add(path_obj_list);
+					
+					//generate single character str test
+					List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("sendKeys", "a"));
+					path_obj_list_2.add(submit);
+					path_obj_list_2.add(new Action("click", ""));
+					tests.add(path_obj_list_2);
+				}
+				else if( input_type.equals("number")){
+					//generate empty string test
+					List<PathObject> path_obj_list = new ArrayList<PathObject>();
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("sendKeys", ""));
+					path_obj_list.add(submit);
+					path_obj_list.add(new Action("click", ""));
+					tests.add(path_obj_list);
+					
+					//generate single character str test
+					List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("sendKeys", "0"));
+					path_obj_list_2.add(submit);
+					path_obj_list_2.add(new Action("click", ""));
+					tests.add(path_obj_list_2);
+				}
+			}
 		}
-		else if( input_type.equals("number")){
-			//generate empty string test
-			List<PathObject> path_obj_list = new ArrayList<PathObject>();
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("sendKeys", ""));
-			path_obj_list.add(submit);
-			path_obj_list.add(new Action("click", ""));
-			tests.add(path_obj_list);
-			
-			//generate single character str test
-			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("click", ""));
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("sendKeys", "0"));
-			path_obj_list_2.add(submit);
-			path_obj_list_2.add(new Action("click", ""));
-			tests.add(path_obj_list_2);
-		}
+		
 		return tests;
 	}
 	
@@ -665,43 +687,47 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		assert input.getName().equals("input");
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
-		String input_type = input.getAttributes().get(input.getAttributes().indexOf("type")).getVals().get(0);
-		if(input_type.equals("text") ||
-				input_type.equals("textarea") ||
-				input_type.equals("email")){
-			//generate empty string test
-			List<PathObject> path_obj_list = new ArrayList<PathObject>();
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("sendKeys", ""));
-			tests.add(path_obj_list);
-			
-			//generate single character str test
-			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("click", ""));
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("sendKeys", "a"));
-			tests.add(path_obj_list_2);
-		}
-		else if( input_type.equals("number")){
+		for(Attribute attribute: input.getAttributes()){
+			if(attribute.getName().equals("type")){
+				String input_type = attribute.getVals().get(0);
+				if(input_type.equals("text") ||
+						input_type.equals("textarea") ||
+						input_type.equals("email")){
+					//generate empty string test
+					List<PathObject> path_obj_list = new ArrayList<PathObject>();
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("sendKeys", ""));
+					tests.add(path_obj_list);
+					
+					//generate single character str test
+					List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("sendKeys", "a"));
+					tests.add(path_obj_list_2);
+				}
+				else if( input_type.equals("number")){
 
-			//generate empty string test
-			List<PathObject> path_obj_list = new ArrayList<PathObject>();
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("click", ""));
-			path_obj_list.add(input);
-			path_obj_list.add(new Action("sendKeys", ""));
-			tests.add(path_obj_list);
-			
-			//generate single character str test
-			List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("click", ""));
-			path_obj_list_2.add(input);
-			path_obj_list_2.add(new Action("sendKeys", "0"));
-			tests.add(path_obj_list_2);
+					//generate empty string test
+					List<PathObject> path_obj_list = new ArrayList<PathObject>();
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("click", ""));
+					path_obj_list.add(input);
+					path_obj_list.add(new Action("sendKeys", ""));
+					tests.add(path_obj_list);
+					
+					//generate single character str test
+					List<PathObject> path_obj_list_2 = new ArrayList<PathObject>();
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("click", ""));
+					path_obj_list_2.add(input);
+					path_obj_list_2.add(new Action("sendKeys", "0"));
+					tests.add(path_obj_list_2);
+				}
+			}
 		}
 		return tests;
 	}

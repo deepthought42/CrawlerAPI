@@ -6,11 +6,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
-
+import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -30,28 +29,24 @@ import com.minion.browsing.Browser;
 @NodeEntity
 public class PageState implements Persistable, PathObject {
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
-	@Id 
-	@GeneratedValue 
+	
+	@GeneratedValue
+    @Id
 	private Long id;
 	
     private String key;
     private boolean landable = false;
-    
-	@Relationship(type = "HAS_SCREENSHOT", direction = Relationship.OUTGOING)
-	private List<ScreenshotSet> browser_screenshots;
-	
-	@JsonIgnore
 	private String src;
-	private URL url;
+	private String url;
 	private Integer total_weight;
 	private Integer image_weight;
-	
-	@Relationship(type = "HAS_ELEMENT", direction = Relationship.OUTGOING)
-	private List<PageElement> elements;
-	
-	private Map<String, Integer> element_counts;
-
 	private String type;
+	
+	@Relationship(type = "HAS_SCREENSHOT")
+	private Set<ScreenshotSet> browser_screenshots = new HashSet<>();
+	
+	@Relationship(type = "HAS_ELEMENT")
+	private Set<PageElement> elements = new HashSet<>();
 	
 	public PageState(){}
 	
@@ -68,7 +63,7 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre browser_screenshots != null;
 	 */
-	public PageState(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements) throws IOException {
+	public PageState(String html, String url, Set<ScreenshotSet> browsers_screenshots, Set<PageElement> elements) throws IOException {
 		assert elements != null;
 		assert html != null;
 		assert html.length() > 0;
@@ -76,10 +71,9 @@ public class PageState implements Persistable, PathObject {
 
 		setType(PageState.class.getSimpleName());
 		setSrc(html);
-		setUrl(new URL(url.replace("/#","")));
+		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browsers_screenshots);
 		setElements(elements);
-		setElementCounts(countTags(elements));
 		setLandable(false);
 		setImageWeight(0);
 		setType(PageState.class.getSimpleName());
@@ -100,16 +94,15 @@ public class PageState implements Persistable, PathObject {
 	 * 
 	 * @throws IOException
 	 */
-	public PageState(String html, String url, List<ScreenshotSet> browsers_screenshots, List<PageElement> elements, boolean isLandable) throws IOException {
+	public PageState(String html, String url, Set<ScreenshotSet> browsers_screenshots, Set<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		assert browsers_screenshots != null;
 	
 		setType(PageState.class.getSimpleName());
 		setSrc(html);
-		setUrl(new URL(url.replace("/#","")));
+		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browsers_screenshots);
 		setElements(elements);
-		setElementCounts(countTags(elements));
 		setLandable(isLandable);
 		setImageWeight(0);
 		setType(PageState.class.getSimpleName());
@@ -124,7 +117,7 @@ public class PageState implements Persistable, PathObject {
 	 * 
 	 * @return Hash of counts for all tag names in list of {@PageElement}s passed
 	 */
-	public Map<String, Integer> countTags(List<PageElement> tags){
+	public Map<String, Integer> countTags(Set<PageElement> tags){
 		Map<String, Integer> elem_cnts = new HashMap<String, Integer>();
 		for(PageElement tag : tags){
 			if(elem_cnts.containsKey(tag.getName())){
@@ -184,8 +177,8 @@ public class PageState implements Persistable, PathObject {
         
         PageState that = (PageState)o;
         
-        String thisBrowserScreenshot = this.getBrowserScreenshots().get(0).getFullScreenshot();
-        String thatBrowserScreenshot = that.getBrowserScreenshots().get(0).getFullScreenshot();
+        String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getFullScreenshot();
+        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getFullScreenshot();
         
         boolean screenshots_match = false;
         
@@ -274,8 +267,8 @@ public class PageState implements Persistable, PathObject {
 	 */
 	@Override
 	public PathObject clone() {
-		List<PageElement> elements = new ArrayList<PageElement>(getElements());
-		List<ScreenshotSet> screenshots = new ArrayList<ScreenshotSet>(getBrowserScreenshots());
+		Set<PageElement> elements = new HashSet<PageElement>(getElements());
+		Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>(getBrowserScreenshots());
 		
 		PageState page;
 		try {
@@ -320,12 +313,12 @@ public class PageState implements Persistable, PathObject {
 	}
 	
 	@JsonIgnore
-	public List<PageElement> getElements(){
+	public Set<PageElement> getElements(){
 		return this.elements;
 	}
 	
 	@JsonIgnore
-	public void setElements(List<PageElement> elements){
+	public void setElements(Set<PageElement> elements){
 		this.elements = elements;
 	}
 	
@@ -337,11 +330,11 @@ public class PageState implements Persistable, PathObject {
 		return this.landable;
 	}
 
-	public URL getUrl(){
+	public String getUrl(){
 		return this.url;
 	}
 	
-	public void setUrl(URL url){
+	public void setUrl(String url){
 		this.url = url;
 	}
 
@@ -353,14 +346,6 @@ public class PageState implements Persistable, PathObject {
 		this.total_weight = total_weight;
 	}
 
-	public Map<String, Integer> getElementCounts() {
-		return element_counts;
-	}
-
-	public void setElementCounts(Map<String, Integer> element_counts) {
-		this.element_counts = element_counts;
-	}
-
 	public Integer getImageWeight() {
 		return image_weight;
 	}
@@ -370,11 +355,11 @@ public class PageState implements Persistable, PathObject {
 	}
 
 	@JsonProperty("browser_screenshots")
-	public List<ScreenshotSet> getBrowserScreenshots() {
+	public Set<ScreenshotSet> getBrowserScreenshots() {
 		return browser_screenshots;
 	}
 
-	public void setBrowserScreenshots(List<ScreenshotSet> browser_screenshots) {
+	public void setBrowserScreenshots(Set<ScreenshotSet> browser_screenshots) {
 		this.browser_screenshots = browser_screenshots;
 	}
 

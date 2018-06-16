@@ -1,6 +1,5 @@
 package com.minion.api;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,11 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.repository.TestRecordRepository;
-import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.collections4.IteratorUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 
@@ -36,7 +33,7 @@ public class TestRecordController {
     @PreAuthorize("hasAuthority('read:test_records')")
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody List<TestRecord> getTestRecords(@RequestParam(value="url", required=true) Test test) {
-		return IteratorUtils.toList(test_record_repo.findAll().iterator());
+		return IterableUtils.toList(test_record_repo.findAll());
 	}
 
 }

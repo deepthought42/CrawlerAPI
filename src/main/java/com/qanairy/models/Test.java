@@ -3,14 +3,18 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.Relationship;
 
 /**
@@ -23,31 +27,34 @@ public class Test implements Persistable {
     @SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(Test.class);
 	
-    @Id 
-	@GeneratedValue 
+    @GeneratedValue
+    @Id
 	private Long id;
 	
 	private String key; 
 	private String name;
-	
-	@Relationship(type = "HAS_TEST_RECORD", direction = Relationship.OUTGOING)
-	private List<TestRecord> records;
-	private List<String> path_keys;
-	
-	@Relationship(type = "HAS_PATH_OBJECT", direction = Relationship.OUTGOING)
-	private List<PathObject> path_objects;
-	
-	@Relationship(type = "HAS_PAGE_STATE", direction = Relationship.OUTGOING)
-	private PageState result;
-	
 	private Boolean correct;
 	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
-	private List<Group> groups;
 	private Date last_run_time;
 	private boolean is_running;
 	private long run_time_length;
-	private Map<String, Boolean> browser_passing_statuses;
+	private List<String> path_keys;
+	
+	@Properties
+	private Map<String, Boolean> browser_passing_statuses = new HashMap<>();
+	
+	@Relationship(type = "HAS_TEST_RECORD")
+	private Set<TestRecord> records = new HashSet<>();
+	
+	@Relationship(type = "HAS_GROUP")
+	private Set<Group> groups = new HashSet<>();
+
+	@Relationship(type = "HAS_PATH_OBJECT")
+	private List<PathObject> path_objects = new ArrayList<>();
+	
+	@Relationship(type = "HAS_PAGE_STATE")
+	private PageState result;
 	
 	public Test(){}
 	
@@ -60,7 +67,7 @@ public class Test implements Persistable {
 	 * 
 	 * @pre path != null
 	 */
-	public Test(List< String> path_keys, List<PathObject> path_objects, PageState result, String name){
+	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name){
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -69,10 +76,10 @@ public class Test implements Persistable {
 		setPathKeys(path_keys);
 		setPathObjects(path_objects);
 		setResult(result);
-		setRecords(new ArrayList<TestRecord>());
+		setRecords(new HashSet<TestRecord>());
 		setCorrect(null);
 		setSpansMultipleDomains(false);
-		setGroups(new ArrayList<Group>());
+		setGroups(new HashSet<Group>());
 		setLastRunTimestamp(null);
 		setName(name);
 		setBrowserStatuses(new HashMap<String, Boolean>());
@@ -90,10 +97,10 @@ public class Test implements Persistable {
 		setPathKeys(path_keys);
 		setPathObjects(path_objects);
 		setResult(result);
-		setRecords(new ArrayList<TestRecord>());
+		setRecords(new HashSet<TestRecord>());
 		setCorrect(null);
 		setSpansMultipleDomains(spansMultipleDomains);
-		setGroups(new ArrayList<Group>());
+		setGroups(new HashSet<Group>());
 		setLastRunTimestamp(null);
 		setName(name);
 		setBrowserStatuses(new HashMap<String, Boolean>());
@@ -168,11 +175,11 @@ public class Test implements Persistable {
 		this.name = name;
 	}
 	
-	public List< String> getPathKeys(){
+	public List<String> getPathKeys(){
 		return this.path_keys;
 	}
 	
-	public void setPathKeys(List< String> path_keys){
+	public void setPathKeys(List<String> path_keys){
 		this.path_keys = path_keys;
 	}
 	
@@ -184,11 +191,11 @@ public class Test implements Persistable {
 		this.records.add(record);
 	}
 	
-	public List<TestRecord> getRecords(){
+	public Set<TestRecord> getRecords(){
 		return this.records;
 	}
 	
-	public void setRecords(List<TestRecord> records){
+	public void setRecords(Set<TestRecord> records){
 		this.records = records;
 	}
 	
@@ -222,11 +229,11 @@ public class Test implements Persistable {
 		this.spansMultipleDomains = spansMultipleDomains;
 	}
 
-	public List<Group> getGroups() {
+	public Set<Group> getGroups() {
 		return groups;
 	}
 
-	public void setGroups(List<Group> groups) {
+	public void setGroups(Set<Group> groups) {
 		this.groups = groups;
 	}
 	
@@ -361,7 +368,7 @@ public class Test implements Persistable {
 									   test.getName(), false, test.getSpansMultipleDomains());
 		
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
-		clone_test.setGroups(new ArrayList<Group>(test.getGroups()));
+		clone_test.setGroups(new HashSet<Group>(test.getGroups()));
 		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		clone_test.setCorrect(test.getCorrect());
 		clone_test.setRunTime(test.getRunTime());

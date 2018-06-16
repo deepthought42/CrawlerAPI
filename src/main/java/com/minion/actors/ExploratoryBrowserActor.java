@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -13,12 +12,15 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -31,23 +33,34 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.services.BrowserService;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
+import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 
 /**
  * 
  */
+@Component
+@Scope("prototype")
 public class ExploratoryBrowserActor extends UntypedActor {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 
 	@Autowired
-	DiscoveryRecordRepository discovery_repo;
+	private ActorSystem actor_system;
 	
 	@Autowired
-	DomainRepository domain_repo;
+	private DiscoveryRecordRepository discovery_repo;
 	
+	@Autowired
+	private DomainRepository domain_repo;
+	
+	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
+	private Crawler crawler;
 	
 	/**
 	 * {@inheritDoc}
@@ -68,9 +81,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 
 				browser = new Browser((String)acct_msg.getOptions().get("browser"));
-				
-				PageState last_page = exploratory_path.findLastPage();
-				
+								
 				if(exploratory_path.getPathObjects() != null){
 					PageState result_page = null;
 
@@ -103,7 +114,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						int tries = 0;
 						do{
 							try{
-								result_page = Crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+								result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
 								log.error("Error happened while exploratory actor attempted to crawl test");
@@ -120,7 +131,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							System.err.println("attempting is landable check. Attemp #"+tries);
 							
 							try{								
-								result_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
+								result_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
 								break;
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
@@ -131,7 +142,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							tries++;
 						}while(tries < 5);
 						
-						Domain domain = domain_repo.findByUrl(acct_msg.getOptions().get("host").toString());
+						Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 						domain.setTestCount(domain.getTestCount()+1);
 						domain.addPageState(result_page);
 						domain_repo.save(domain);
@@ -152,7 +163,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 					  		System.err.println("Starting building parent path");
 					  		do{
-					  			ExploratoryPath parent_path = buildParentPath(path, browser.getDriver());
+					  			ExploratoryPath parent_path = buildParentPath(path, browser);
 					  			if(parent_path == null){
 					  				System.err.println("Parent path is null  !!!!!!!!!!!!!!!");
 					  				break;
@@ -213,11 +224,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
 		//tell memory worker of test
-		final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+		final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+				  .props("MemoryRegistration"), "memory_registration");
 		memory_actor.tell(test_msg, getSelf());
 		
 		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PAT EXPANSION");
-		final ActorRef path_expansion_actor = this.getContext().actorOf(Props.create(PathExpansionActor.class), "PathExpansionActor"+UUID.randomUUID());
+		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+				  .props("PathExpansionActor"), "path_expansion");
 		path_expansion_actor.tell(test_msg, getSelf());
 	}
 	
@@ -253,7 +266,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 */
 	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException{
 		System.err.println("attempting to crawl test with length #########   "+path.getPathKeys().size());
-		PageState parent_result = Crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
+		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
 		return parent_result.equals(result_page);
 	}
 	
@@ -266,7 +279,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @param driver
 	 * @return
 	 */
-	private ExploratoryPath buildParentPath(ExploratoryPath path, WebDriver driver){
+	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser){
 		PageElement elem = null;
 		int element_idx = -1;
 		System.err.println("Path object length :::::   "+path.getPathObjects().size());
@@ -283,16 +296,16 @@ public class ExploratoryBrowserActor extends UntypedActor {
 		System.err.println("element index :: "+element_idx);
 		if(elem != null && element_idx > -1){
 			//get parent of element
-			WebElement web_elem = driver.findElement(By.xpath(elem.getXpath()));
+			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
 			System.err.println("Getting parent element...");
-			WebElement parent = Browser.getParentElement(web_elem);
+			WebElement parent = browser_service.getParentElement(web_elem);
 			System.err.println("Cloning exploratory path... ");
 			//clone test and swap page element with parent
 			ExploratoryPath parent_path = ExploratoryPath.clone(path);
 			System.err.println("parent path clone :: "+parent_path.getPathKeys().size());
-			String this_xpath = Browser.generateXpath(parent, "", new HashMap<String, Integer>(), driver); 
+			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver()); 
 			System.err.println("Generated xpath :: "+this_xpath);
-			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), Browser.extractedAttributes(parent, (JavascriptExecutor)driver), Browser.loadCssProperties(parent) );
+			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), browser_service.extractAttributes(parent, browser.getDriver()), Browser.loadCssProperties(parent) );
 			System.err.println("setting path element object and key at index ::"+element_idx);
 			parent_path.getPathObjects().set(element_idx, parent_tag);
 			parent_path.getPathKeys().set(element_idx, parent_tag.getKey());

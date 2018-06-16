@@ -1,7 +1,10 @@
 package com.qanairy.models;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -12,89 +15,81 @@ import org.neo4j.ogm.annotation.Relationship;
  * Defines the type of package paid for, which domains are registered and which Users belong to the account
  */
 @NodeEntity
-public class Account implements Persistable{
-	@Id 
-	@GeneratedValue 
+public class Account {
+	@GeneratedValue
+    @Id
 	private Long id;
-	
-	private String key;
-	private String org_name;
+	private String username;
 	private String customer_token;
 	private String subscription_token;
-	
-	@Relationship(type = "HAS_DOMAIN", direction = Relationship.OUTGOING)
-	private List<Domain> domains;
 	private String last_domain_url;
-
-	@Relationship(type = "HAS_DISCOVERY_RECORD", direction = Relationship.OUTGOING)
-	private List<DiscoveryRecord> discovery_records;
-	
-	@Relationship(type = "HAS_TEST_RECORD", direction = Relationship.OUTGOING)
-	private List<TestRecord> test_records;
 	private List<String> onboarded_steps;
+	
+	@Relationship(type = "HAS_DOMAIN")
+	private Set<Domain> domains = new HashSet<>();
+
+	@Relationship(type = "HAS_DISCOVERY_RECORD")
+	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
+	
+	@Relationship(type = "HAS_TEST_RECORD")
+	private Set<TestRecord> test_records = new HashSet<>();
 	
 	public Account(){}
 	
 	/**
 	 * 
-	 * @param org_name
+	 * @param username
 	 * @param customer_token
 	 * @param subscription_token
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String org_name, String customer_token, String subscription_token){
-		setOrgName(org_name);
+	public Account(String username, String customer_token, String subscription_token){
+		setUsername(username);
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
-		setDiscoveryRecords(new ArrayList<DiscoveryRecord>());
-		setDomains(new ArrayList<Domain>());
-		setTestRecords(new ArrayList<TestRecord>());
 		setOnboardedSteps(new ArrayList<String>());
-		setKey(generateKey());
 	}
 	
 	/**
 	 * 
-	 * @param org_name
+	 * @param username
 	 * @param payment_acct_num
 	 * @param users
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String org_name, String customer_token, String subscription_token, 
-					List<DiscoveryRecord> discovery_records, List<TestRecord> test_records, List<String> onboarded_steps){
+	public Account(String username, String customer_token, String subscription_token, 
+					Set<DiscoveryRecord> discovery_records, Set<TestRecord> test_records, List<String> onboarded_steps){
 		
-		setOrgName(org_name);
+		setUsername(username);
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
-		setDomains(new ArrayList<Domain>());
 		setDiscoveryRecords(discovery_records);
 		setTestRecords(test_records);
 		setOnboardedSteps(onboarded_steps);
-		setKey(generateKey());
 	}
 
 	/**
 	 * 
 	 * @param key
-	 * @param org_name
+	 * @param username
 	 * @param payment_acct_num
 	 * @param users
 	 * @param domains
 	 * @param last_domain_url
 	 * @param discovery_records
 	 */
-	public Account(String org_name, 
+	public Account(String username, 
 					String customer_token, 
 					String subscription_token, 
-					List<Domain> domains, 
+					Set<Domain> domains, 
 					String last_domain_url, 
-					List<DiscoveryRecord> discovery_records,
-					List<TestRecord> test_records, 
+					Set<DiscoveryRecord> discovery_records,
+					Set<TestRecord> test_records, 
 					List<String> onboarded_steps){
 		
-		setOrgName(org_name);
+		setUsername(username);
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
 		setDomains(domains);
@@ -102,15 +97,14 @@ public class Account implements Persistable{
 		setDiscoveryRecords(discovery_records);
 		setTestRecords(test_records);
 		setOnboardedSteps(onboarded_steps);
-		setKey(generateKey());
 	}
 		
-	public String getOrgName() {
-		return org_name;
+	public String getUsername() {
+		return username;
 	}
 
-	public void setOrgName(String org_name) {
-		this.org_name = org_name;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 	public String getCustomerToken() {
@@ -127,14 +121,6 @@ public class Account implements Persistable{
 
 	public void setSubscriptionToken(String subscription_token) {
 		this.subscription_token = subscription_token;
-	}
-	
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = generateKey();
 	}
 
 	public void setLastDomain(String domain_url) {
@@ -164,11 +150,11 @@ public class Account implements Persistable{
 		}
 	}
 	
-	public List<Domain> getDomains(){
+	public Set<Domain> getDomains(){
 		return this.domains;
 	}
 	
-	public void setDomains(List<Domain> domains){
+	public void setDomains(Set<Domain> domains){
 		this.domains = domains;
 	}
 	
@@ -192,11 +178,11 @@ public class Account implements Persistable{
 		}
 	}
 	
-	public List<DiscoveryRecord> getDiscoveryRecords() {
+	public Set<DiscoveryRecord> getDiscoveryRecords() {
 		return discovery_records;
 	}
 
-	public void setDiscoveryRecords(List<DiscoveryRecord> discovery_records) {
+	public void setDiscoveryRecords(Set<DiscoveryRecord> discovery_records) {
 		this.discovery_records = discovery_records;
 	}
 	
@@ -204,23 +190,15 @@ public class Account implements Persistable{
 		this.discovery_records.add(record);
 	}
 
-	public List<TestRecord> getTestRecords() {
+	public Set<TestRecord> getTestRecords() {
 		return test_records;
 	}
 
-	public void setTestRecords(List<TestRecord> test_records) {
+	public void setTestRecords(Set<TestRecord> test_records) {
 		this.test_records = test_records;
 	}
 
 	public void addTestRecord(TestRecord record) {
 		this.test_records.add(record);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String generateKey() {
-		return getOrgName();
 	}
 }

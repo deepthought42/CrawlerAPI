@@ -1,9 +1,10 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -15,42 +16,37 @@ import org.neo4j.ogm.annotation.Relationship;
  */
 @NodeEntity
 public class Domain implements Persistable{
-	@Id 
-	@GeneratedValue 
+	
+	@GeneratedValue
+    @Id
 	private Long id;
 	
-	private String domain;
-	
-	@Relationship(type = "HAS_TEST", direction = Relationship.OUTGOING)
-	private List<Test> tests;
+	private String host;
 	private int test_cnt;
 	private String key;
 	private String protocol;
 	private String logo_url;
-	
-	@Relationship(type = "HAS_TEST_USER", direction = Relationship.OUTGOING)
-	private List<TestUser> test_users;
 	private String discovery_browser;
 	
-	@Relationship(type = "HAS_PAGE_STATE", direction = Relationship.OUTGOING)
-	private List<PageState> page_states;
+	@Relationship(type = "HAS_TEST")
+	private Set<Test> tests = new HashSet<>();
 	
+	@Relationship(type = "HAS_TEST_USER")
+	private Set<TestUser> test_users = new HashSet<>();
+	
+	@Relationship(type = "HAS_PAGE_STATE")
+	private Set<PageState> page_states = new HashSet<>();
+	
+	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
+	private Set<Account> account = new HashSet<>();
+
 	/**
 	 * 
 	 * 
 	 * @param domain
 	 * @param organization
 	 */
-	public Domain(){
-		setUrl(null);
-		setTests(new ArrayList<Test>());
-		setProtocol("http");
-		this.test_users = new ArrayList<TestUser>();
-		setPageStates(new ArrayList<PageState>());
-		setDiscoveryBrowserName("");
-		setTestCount(0);
-		setKey(generateKey());
-	}
+	public Domain(){}
 	
 	/**
 	 * 
@@ -62,12 +58,9 @@ public class Domain implements Persistable{
 	public Domain( String protocol, String url, String browser, String logo_url){
 		setUrl(url);
 		setLogoUrl(logo_url);
-		setTests(new ArrayList<Test>());
 		setProtocol(protocol);
-		this.test_users = new ArrayList<TestUser>();
 		setDiscoveryBrowserName(browser);
 		setTestCount(0);
-		setPageStates(new ArrayList<PageState>());
 		setKey(generateKey());
 	}
 	
@@ -82,17 +75,15 @@ public class Domain implements Persistable{
 	 */
 	public Domain(String domain_url,
 					String logo_url,
-					List<Test> tests,
+					Set<Test> tests,
 					String protocol,
 					int test_count){
 		setUrl(domain_url);
 		setTests(tests);
 		setProtocol(protocol);
 		setLogoUrl(logo_url);
-		this.test_users = new ArrayList<TestUser>();
 		setDiscoveryBrowserName("");
 		setTestCount(test_count);
-		setPageStates(new ArrayList<PageState>());
 		setKey(generateKey());
 	}
 
@@ -112,9 +103,9 @@ public class Domain implements Persistable{
 	 */
 	public Domain(String domain_url,
 					String logo_url,
-					List<Test> tests,
+					Set<Test> tests,
 					String protocol,
-					List<TestUser> test_users,
+					Set<TestUser> test_users,
 					String browser_name,
 					int test_count){
 		setUrl(domain_url);
@@ -124,7 +115,6 @@ public class Domain implements Persistable{
 		setTestUsers(test_users);
 		setDiscoveryBrowserName(browser_name);
 		setTestCount(test_count);
-		setPageStates(new ArrayList<PageState>());
 		setKey(generateKey());
 	}
 	
@@ -147,18 +137,18 @@ public class Domain implements Persistable{
 
 	
 	public String getUrl() {
-		return domain;
+		return host;
 	}
 
-	public void setUrl(String domain) {
-		this.domain = domain;
+	public void setUrl(String host) {
+		this.host = host;
 	}
 
-	public List<Test> getTests() {
+	public Set<Test> getTests() {
 		return tests;
 	}
 
-	public void setTests(List<Test> tests) {
+	public void setTests(Set<Test> tests) {
 		this.tests = tests;
 	}
 
@@ -192,7 +182,7 @@ public class Domain implements Persistable{
 		this.logo_url = logo_url;
 	}
 
-	public List<TestUser> getTestUsers() {
+	public Set<TestUser> getTestUsers() {
 		return test_users;
 	}
 	
@@ -204,8 +194,8 @@ public class Domain implements Persistable{
 		this.test_users.add(test_user);
 	}
 
-	public void setTestUsers(List<TestUser> test_users) {
-		this.test_users = new ArrayList<TestUser>(test_users);
+	public void setTestUsers(Set<TestUser> test_users) {
+		this.test_users = new HashSet<TestUser>(test_users);
 	}
 	
 	public String getDiscoveryBrowserName() {
@@ -237,15 +227,23 @@ public class Domain implements Persistable{
 		return getUrl().toString();
 	}
 
-	public List<PageState> getPageStates() {
+	public Set<PageState> getPageStates() {
 		return this.page_states;
 	}
 
-	public void setPageStates(List<PageState> states) {
+	public void setPageStates(Set<PageState> states) {
 		this.page_states = states;
 	}
 
 	public void addPageState(PageState state) {
 		this.page_states.add(state);
+	}
+	
+	public Set<Account> getAccount() {
+		return account;
+	}
+
+	public void setAccount(Set<Account> account) {
+		this.account = account;
 	}
 }

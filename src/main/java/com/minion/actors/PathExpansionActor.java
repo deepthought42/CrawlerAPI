@@ -4,17 +4,22 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
+import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
@@ -29,10 +34,15 @@ import com.qanairy.models.rules.Rule;
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
  *
  */
+@Component
+@Scope("prototype")
 public class PathExpansionActor extends UntypedActor {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
+	@Autowired
+	private ActorSystem actor_system;
+	
 	@Autowired
 	DiscoveryRecordRepository discovery_repo;
 	
@@ -65,8 +75,10 @@ public class PathExpansionActor extends UntypedActor {
 						discovery_repo.save(discovery_record);
 
 						System.err.println("Sending URL to work allocator...");
-						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
+						final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+								  .props("WorkAllocaionActor"), "work_allocator");
+
+						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), new URL(last_page.getUrl()), acct_msg.getOptions());
 						work_allocator.tell(url_msg, getSelf() );
 						
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
@@ -81,7 +93,9 @@ public class PathExpansionActor extends UntypedActor {
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					for(ExploratoryPath expanded : pathExpansions){
-						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
+						final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+								  .props("WorkAllocaionActor"), "work_allocator");
+
 						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
 						
 						work_allocator.tell(expanded_path_msg, getSelf() );
@@ -107,7 +121,7 @@ public class PathExpansionActor extends UntypedActor {
 			return null;
 		}
 
-		List<PageElement> page_elements = page.getElements();
+		Set<PageElement> page_elements = page.getElements();
 		
 		//iterate over all elements
 		for(PageElement page_element : page_elements){

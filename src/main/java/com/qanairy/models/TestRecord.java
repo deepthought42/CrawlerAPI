@@ -22,18 +22,18 @@ public class TestRecord implements Persistable {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestRecord.class);
 
-	@Id 
-	@GeneratedValue 
+	@GeneratedValue
+    @Id
 	private Long id;
 	
 	private String key;
 	private Date ran_at;
 	private String browser;
 	private Boolean passing;
-	
+	private long run_time_length;
+
 	@Relationship(type = "HAS_RESULT", direction = Relationship.OUTGOING)
 	private PageState result;
-	private long run_time_length;
 	
 	//Empty constructor for spring
 	public TestRecord(){}

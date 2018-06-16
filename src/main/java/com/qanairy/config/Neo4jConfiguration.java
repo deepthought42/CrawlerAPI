@@ -13,9 +13,9 @@ import org.springframework.data.neo4j.web.support.OpenSessionInViewInterceptor;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@EnableNeo4jRepositories(basePackages = "com.deepthought.models.repository")
+@EnableNeo4jRepositories(basePackages = "com.qanairy.models.repository")
 @EnableTransactionManagement
-@ComponentScan({"com.qanairy.models.services"})
+@ComponentScan({"com.qanairy.models"})
 @EnableConfigurationProperties(Neo4jProperties.class)
 public class Neo4jConfiguration {
 
@@ -41,7 +41,7 @@ public class Neo4jConfiguration {
 
 	@Bean
 	public SessionFactory sessionFactory(org.neo4j.ogm.config.Configuration configuration) {
-		return new SessionFactory(configuration, "com.deepthought");
+		return new SessionFactory(configuration, "com.qanairy");
 	}
 
 	@Bean

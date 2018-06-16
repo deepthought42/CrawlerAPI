@@ -9,8 +9,9 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class Action implements Persistable, PathObject{
-	@Id 
-	@GeneratedValue 
+	
+	@GeneratedValue
+    @Id
 	private Long id;
 	
 	private String name;

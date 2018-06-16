@@ -14,6 +14,7 @@ import com.qanairy.models.rules.ReadOnlyRule;
 import com.qanairy.models.rules.RequirementRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.SpecialCharacterRestriction;
+import com.qanairy.services.BrowserService;
 
 
 /**
@@ -31,10 +32,11 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
+			BrowserService browser_service = new BrowserService();
 			browser = new Browser("chrome");
-			PageState page = browser.buildPage();
+			PageState page = browser_service.buildPage(browser);
 			System.err.println("Extracting forms");
-			List<Form> form = Browser.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms(page, browser);
 			
 			//System.err.println("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
@@ -66,10 +68,12 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
+			BrowserService browser_service = new BrowserService();
+
 			browser = new Browser("chrome");
-			PageState page = browser.buildPage();
+			PageState page = browser_service.buildPage(browser);
 			System.err.println("Extracting forms");
-			List<Form> form = Browser.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms(page, browser);
 			
 			//System.err.println("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
@@ -107,10 +111,11 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
+			BrowserService browser_service = new BrowserService();
 			browser = new Browser("chrome");
-			PageState page = browser.buildPage();
+			PageState page = browser_service.buildPage(browser);
 			System.err.println("Extracting forms");
-			List<Form> form = Browser.extractAllForms(page, browser);
+			List<Form> form = browser_service.extractAllForms(page, browser);
 			
 			//System.err.println("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
@@ -147,9 +152,10 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
+			BrowserService browser_service = new BrowserService();
 			browser = new Browser("chrome");
-			PageState page = browser.buildPage();
-			List<Form> form = Browser.extractAllForms(page, browser);
+			PageState page = browser_service.buildPage(browser);
+			List<Form> form = browser_service.extractAllForms(page, browser);
 
 			boolean readonly_restrict_rule = false;
 
@@ -178,9 +184,10 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
+			BrowserService browser_service = new BrowserService();
 			browser = new Browser("chrome");
-			PageState page = browser.buildPage();
-			List<Form> form = Browser.extractAllForms(page, browser);
+			PageState page = browser_service.buildPage(browser);
+			List<Form> form = browser_service.extractAllForms(page, browser);
 
 			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
 			boolean min_value_rule = false;
@@ -210,9 +217,10 @@ public class FormTestExtractionTests {
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {
+			BrowserService browser_service = new BrowserService();
 			browser = new Browser("chrome");
-			PageState page = browser.buildPage();
-			List<Form> form = Browser.extractAllForms(page, browser);
+			PageState page = browser_service.buildPage(browser);
+			List<Form> form = browser_service.extractAllForms(page, browser);
 
 			boolean max_value_rule = false;
 

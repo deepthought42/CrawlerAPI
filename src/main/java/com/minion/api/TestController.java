@@ -7,15 +7,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
+import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Set;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -36,6 +36,7 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.TestService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -73,19 +74,22 @@ public class TestController {
     private StripeClient stripeClient;
 
     @Autowired
-    DomainRepository domain_repo;
+    private DomainRepository domain_repo;
     
     @Autowired
-    AccountRepository account_repo;
+    private AccountRepository account_repo;
     
     @Autowired
-    TestRepository test_repo;
+    private TestRepository test_repo;
     
     @Autowired
-    TestRecordRepository test_record_repo;
+    private TestRecordRepository test_record_repo;
     
     @Autowired
-    GroupRepository group_repo;
+    private GroupRepository group_repo;
+    
+    @Autowired
+    private TestService test_service;
     
     @Autowired
     TestController(StripeClient stripeClient) {
@@ -102,12 +106,12 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(method = RequestMethod.GET)
-	public @ResponseBody List<Test> getTestByDomain(HttpServletRequest request, 
+	public @ResponseBody Set<Test> getTestByDomain(HttpServletRequest request, 
 													@RequestParam(value="url", required=true) String url) 
 															throws UnknownAccountException, DomainNotOwnedByAccountException {    	
-		Domain domain = domain_repo.findByUrl(url);
+		Domain domain = domain_repo.findByHost(url);
 		Iterator<Test> tests = domain.getTests().iterator();
-		List<Test> verified_tests = new ArrayList<Test>();
+		Set<Test> verified_tests = new HashSet<Test>();
 		
 		while(tests.hasNext()){
 			Test test = tests.next();
@@ -133,7 +137,7 @@ public class TestController {
 			   								 	 	@RequestParam(value="url", required=true) String url) 
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {    	
 		int failed_tests = 0;
-		Domain idomain = domain_repo.findByUrl(url);
+		Domain idomain = domain_repo.findByHost(url);
 		try{
 			Iterator<Test> tests = idomain.getTests().iterator();
 			
@@ -178,14 +182,14 @@ public class TestController {
 	 */
     @PreAuthorize("hasAuthority('read:tests')")
 	@RequestMapping(path="/unverified", method = RequestMethod.GET)
-	public @ResponseBody List<Test> getUnverifiedTests(HttpServletRequest request, 
+	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
     	Date start = new Date();
-   		Domain domain = domain_repo.findByUrl(url);
+   		Domain domain = domain_repo.findByHost(url);
 		
-		List<Test> tests = domain.getTests();
-		List<Test> unverified_tests = new ArrayList<Test>();
+		Set<Test> tests = domain.getTests();
+		Set<Test> unverified_tests = new HashSet<Test>();
 
 		for(Test test : tests){
 			if(test.getCorrect() == null){
@@ -232,7 +236,7 @@ public class TestController {
         traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getKey())
+    		    .userId(acct.getUsername())
     		    .traits(traits)
     		);
     	
@@ -241,6 +245,7 @@ public class TestController {
 		browser_statuses.put(browser_name, correct);
 		test.setCorrect(correct);
 		test.setBrowserStatuses(browser_statuses);
+		test_repo.save(test);
 		
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(test);
@@ -249,7 +254,7 @@ public class TestController {
 	   	Map<String, String> set_initial_correctness_props= new HashMap<String, String>();
 	   	set_initial_correctness_props.put("test_key", test.getKey());
 	   	analytics.enqueue(TrackMessage.builder("Set initial test status")
-	   		    .userId(acct.getKey())
+	   		    .userId(acct.getUsername())
 	   		    .properties(set_initial_correctness_props)
 	   		);
    	
@@ -289,12 +294,11 @@ public class TestController {
 		Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
 		browser_statuses.put("firefox", firefox);
 		browser_statuses.put("chrome", chrome);
-		
-		if(test != null){
-			test.setName(name);
-			test.setBrowserStatuses(browser_statuses);
-		}
-	}
+
+		test.setName(name);
+		test.setBrowserStatuses(browser_statuses);
+		test_repo.save(test);
+    }
 
     
 	/**
@@ -367,7 +371,7 @@ public class TestController {
         traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        
     	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getKey())
+    		    .userId(acct.getUsername())
     		    .traits(traits)
     		);
     	
@@ -375,7 +379,7 @@ public class TestController {
 	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
 	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
 	   	analytics.enqueue(TrackMessage.builder("Running tests")
-	   		    .userId(acct.getKey())
+	   		    .userId(acct.getUsername())
 	   		    .properties(run_test_batch_props)
 	   		);
 	   	
@@ -401,8 +405,8 @@ public class TestController {
 			test.setBrowserStatuses(browser_running_status);
 			
 			Map<String, Object> options = new HashMap<String, Object>();
-			options.put("host", test.firstPage().getUrl().getHost());
-			Message<Test> test_msg = new Message<Test>(acct.getKey(), test, options);
+			options.put("host", (new URL(test.firstPage().getUrl())).getHost());
+			Message<Test> test_msg = new Message<Test>(acct.getUsername(), test, options);
 			System.err.println("Test message created for host :: "+options.get("host"));
 			//tell memory worker of test
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
@@ -410,18 +414,16 @@ public class TestController {
 			memory_actor.tell(test_msg, null);
 			
 			Browser browser = new Browser(browser_name.trim());
-			record = TestingActor.runTest(test, browser);
+			record = test_service.runTest(test, browser);
 			browser.close();
 			
 			System.err.println("TEST RUN RECORD PASSING STATUS  ??????     "+record.getPassing());
 			record = test_record_repo.save(record);
 			acct.addTestRecord(record);
 			account_repo.save(acct);
-			
-    		test = test_repo.findByKey(key);
-    		
+			    		
 			test_results.put(test.getKey(), record);
-    		boolean is_passing = true;
+			boolean is_passing = true;
 			//update overall passing status based on all browser passing statuses
 			for(Boolean status : test.getBrowserStatuses().values()){
 				if(status != null && !status){
@@ -439,7 +441,7 @@ public class TestController {
 			test.setBrowserStatuses(browser_statuses);
 			
 			//tell memory worker of test
-			test_msg = new Message<Test>(acct.getKey(), test, options);
+			test_msg = new Message<Test>(acct.getUsername(), test, options);
 			memory_actor.tell(test_msg, null);
    		}
 		
@@ -454,13 +456,13 @@ public class TestController {
 	 * 
 	 * @return {@link TestRecord records} that define the results of the tests. 
 	 */
-    @PreAuthorize("hasAuthority('run:tests')")
+    /*@PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/runTestGroup/{group}", method = RequestMethod.POST)
 	public @ResponseBody List<TestRecord> runTestByGroup(@PathVariable("group") String group,
 														@RequestParam(value="url", required=true) String url,
 														@RequestParam(value="browser_name", required=true) String browser_name){		
-		List<Test> test_list = new ArrayList<Test>();
-		List<Test> group_list = new ArrayList<Test>();
+		Set<Test> test_list = new HashSet<Test>();
+		Set<Test> group_list = new HashSet<Test>();
 		test_list = test_repo.findByUrl(url);
 		
 		for(Test test : test_list){
@@ -484,7 +486,9 @@ public class TestController {
 		}
 		return group_records;
 	}
-	
+	*/
+    
+    
 	/**
 	 * Adds given group to test with given key
 	 * 
@@ -506,7 +510,7 @@ public class TestController {
 		
 		group = group_repo.save(group);
 		test.addGroup(group);
-		
+		test_repo.save(test);
 		return group;
 	}
 
@@ -525,6 +529,7 @@ public class TestController {
 		Test test = test_repo.findByKey(test_key);
 		Group group = group_repo.findByKey(group_key);
 		test.removeGroup(group);
+		test_repo.save(test);
 	}
 
 	/**
@@ -534,12 +539,12 @@ public class TestController {
 	 * 
 	 * @return
 	 */
-    @PreAuthorize("hasAuthority('read:groups')")
+    /*@PreAuthorize("hasAuthority('read:groups')")
 	@RequestMapping(path="/groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {
 		List<Group> groups = new ArrayList<Group>();
-		List<Test> test_list = test_repo.findByUrl(url);
+		Set<Test> test_list = test_repo.findByUrl(url);
 		
 		for(Test test : test_list){
 			if(test.getGroups() != null){
@@ -549,6 +554,7 @@ public class TestController {
 
 		return groups;
 	}
+	*/
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

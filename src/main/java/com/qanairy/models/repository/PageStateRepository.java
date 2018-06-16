@@ -9,4 +9,5 @@ import com.qanairy.models.PageState;
  */
 public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	public PageState findByKey(@Param("key") String key);
+	public PageState findBySrc(@Param("src") String src);
 }

@@ -5,6 +5,10 @@ import java.util.Date;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -14,14 +18,23 @@ import com.minion.structs.Message;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.services.BrowserService;
 
 /**
  * Handles retrieving tests
  *
  */
+@Component
+@Scope("prototype")
 public class TestingActor extends UntypedActor {
 	private static Logger log = LoggerFactory.getLogger(TestingActor.class);
 
+	@Autowired
+	private Crawler crawler;
+	
+	@Autowired
+	private BrowserService browser_service;
+	
     /**
      * Inputs
      * 
@@ -45,7 +58,7 @@ public class TestingActor extends UntypedActor {
 					int cnt = 0;
 					while(browser == null && cnt < 5){
 						try{
-							resulting_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+							resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 							break;
 						}catch(NullPointerException e){
 							log.error(e.getMessage());
@@ -62,7 +75,7 @@ public class TestingActor extends UntypedActor {
 				int tries=0;
 				do{
 					try{
-						resulting_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), resulting_page));
+						resulting_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), resulting_page));
 						break;
 					}catch(Exception e){
 						log.error(e.getMessage());
@@ -109,38 +122,5 @@ public class TestingActor extends UntypedActor {
 		}
 	}
 
-	/**		
-	 * Runs an {@code Test} 		
-	 * 		
-	 * @param test test to be ran		
-	 * 		
-	 * @pre test != null		
-	 * @return	{@link TestRecord} indicating passing status and {@link Page} if not passing 
-	 */		
-	 public static TestRecord runTest(Test test, Browser browser){				
-		 assert test != null;		
-	 			
-		 Boolean passing = null;		
-		 PageState page = null;
-		 TestRecord test_record = null;
-		 final long pathCrawlStartTime = System.currentTimeMillis();
-
-		 try {		
-			page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
-			
-			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getCorrect());
-			passing = Test.isTestPassing(test.getResult(), page, test.getCorrect());
-			
-		    test.setBrowserStatus(browser.getBrowserName(), passing);
-		 } catch (IOException e) {		
-			 log.error(e.getMessage());		
-		 }	
-		
-		 final long pathCrawlEndTime = System.currentTimeMillis();
-
-		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
-
-		 return test_record;		
-	 }
+	
 }

@@ -12,8 +12,8 @@ import org.neo4j.ogm.annotation.NodeEntity;
 @NodeEntity
 public class DiscoveryRecord implements Persistable {
 	
-	@Id 
-	@GeneratedValue 
+	@GeneratedValue
+    @Id
 	private Long id;
 	
 	private String key;
@@ -47,7 +47,7 @@ public class DiscoveryRecord implements Persistable {
 		assert browser_name != null;
 		assert domain_url != null;
 		assert test_cnt > -1;
-		assert total_path_count > 0;
+		assert total_cnt > 0;
 		
 		setStartTime(started_timestamp);
 		setBrowserName(browser_name);
@@ -64,7 +64,7 @@ public class DiscoveryRecord implements Persistable {
 	}
 	
 	public void setKey(String key) {
-		this.key = generateKey();
+		this.key = key;
 	}
 	
 	public Date getStartTime() {
@@ -124,6 +124,6 @@ public class DiscoveryRecord implements Persistable {
 	}
 	
 	public String generateKey() {
-		return getDomainUrl()+":"+getStartTime().toString();
+		return getDomainUrl()+":"+getStartTime();
 	}
 }

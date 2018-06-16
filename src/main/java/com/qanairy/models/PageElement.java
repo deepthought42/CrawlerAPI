@@ -1,13 +1,15 @@
 package com.qanairy.models;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.Relationship;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -21,23 +23,28 @@ import com.qanairy.models.rules.Rule;
  */
 @NodeEntity
 public class PageElement implements Persistable, PathObject {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageElement.class);
 
-	@Id 
-	@GeneratedValue 
-	private Long id;
+	@GeneratedValue
+    @Id
+    private Long id;
 	
     private String key;
     private String screenshot;
 	private String name;
 	private String text;
 	private String xpath;
-	private Map<String, String> cssValues;
-	
-	@Relationship(type = "HAS_ATTRIBUTE", direction = Relationship.OUTGOING)
-	private List<Attribute> attributes;
-	private List<Rule> rules;
 	private String type;
+	
+	@Properties
+	private Map<String, String> cssValues = new HashMap<>();
+	
+	@Relationship(type = "HAS_ATTRIBUTE")
+	private Set<Attribute> attributes = new HashSet<>();
+	
+	@Relationship(type = "HAS_RULE")
+	private Set<Rule> rules = new HashSet<>();
 			
 	public PageElement(){}
 	
@@ -54,7 +61,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @pre xpath != null
 	 * @pre name != null
 	 */
-	public PageElement(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map){
+	public PageElement(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -66,7 +73,7 @@ public class PageElement implements Persistable, PathObject {
 		setAttributes(attributes);
 		setText(text);
 		setCssValues(css_map);
-		setRules(new ArrayList<Rule>());
+		setRules(new HashSet<Rule>());
 		setKey(generateKey());
 	}
 	
@@ -85,7 +92,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @pre xpath != null
 	 * @pre name != null
 	 */
-	public PageElement(String text, String xpath, String name, List<Attribute> attributes, Map<String, String> css_map, List<Rule> rules){
+	public PageElement(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, Set<Rule> rules){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -106,10 +113,10 @@ public class PageElement implements Persistable, PathObject {
 	 */
 	public void printAttributes(){
 		System.out.print("+++++++++++++++++++++++++++++++++++++++");
-		for(int j=0; j < this.attributes.size(); j++){
-			System.out.print(this.attributes.get(j).getName() + " : ");
-			for(int i=0; i < attributes.get(j).getVals().size(); i++){
-				System.out.print( this.attributes.get(j).getVals().get(i) + " ");
+		for(Attribute attribute : this.attributes){
+			System.out.print(attribute.getName() + " : ");
+			for(int i=0; i < attribute.getVals().size(); i++){
+				System.out.print( attribute.getVals().get(i) + " ");
 			}
 		}
 		System.out.print("\n+++++++++++++++++++++++++++++++++++++++");
@@ -187,15 +194,15 @@ public class PageElement implements Persistable, PathObject {
 		this.key = key;
 	}
 	
-	public void setAttributes(List<Attribute> attribute_persist_list) {
+	public void setAttributes(Set<Attribute> attribute_persist_list) {
 		this.attributes = attribute_persist_list;
 	}
 	
-	public List<Rule> getRules(){
+	public Set<Rule> getRules(){
 		return this.rules;
 	}
 
-	public void setRules(List<Rule> rules) {
+	public void setRules(Set<Rule> rules) {
 		this.rules = rules;
 	}
 
@@ -203,7 +210,7 @@ public class PageElement implements Persistable, PathObject {
 		this.rules.add(rule);
 	}
 
-	public List<Attribute> getAttributes() {
+	public Set<Attribute> getAttributes() {
 		return attributes;
 	}
 	
@@ -257,7 +264,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath());   
+		return getXpath();   
 	}
 	
 
@@ -295,7 +302,7 @@ public class PageElement implements Persistable, PathObject {
         if (!(o instanceof PageElement)) return false;
         
         PageElement that = (PageElement)o;
-		List<Attribute> newPageElementAttributes = that.getAttributes();
+		Set<Attribute> newPageElementAttributes = that.getAttributes();
 		boolean areElementsEqual =  true;
 		
 		if(!this.getText().equals(that.getText())){

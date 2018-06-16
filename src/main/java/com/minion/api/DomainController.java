@@ -2,8 +2,9 @@ package com.minion.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.edges.HasDomain;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 
@@ -60,6 +62,7 @@ public class DomainController {
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
+    	System.err.println("AUTH ACCESS TOKEN    ::    "+auth_access_token);
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
@@ -81,12 +84,17 @@ public class DomainController {
     	}
     	URL url_obj = new URL(protocol+"://"+formatted_url);
 		
-    	Domain domain_pojo = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
+    	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
+		try{
+			domain = domain_repo.save(domain);
+		}catch(Exception e){
+			domain = domain_repo.findByHost(url_obj.getHost());
+		}
 		
-		Domain domain = domain_repo.save(domain_pojo);
     	acct.addDomain(domain);
-    	acct.setLastDomain(domain.getUrl());
+    	acct.setLastDomain(url_obj.getHost());
     	account_repo.save(acct);
+    	
     	return domain;
     }
 
@@ -170,12 +178,13 @@ public class DomainController {
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
+    	System.err.println("Auth access :: "+auth_access_token);
     	String username = auth.getUsername(auth_access_token);
-    	
+    	System.err.println("USERNAME      ::    "+username);
     	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -183,8 +192,14 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-
-	    return acct.getDomains();
+    	System.err.println("Account :: "+acct);
+    	System.err.println("Account username ::  " +acct.getUsername());
+    	System.err.println("Account subccription :: "+acct.getSubscriptionToken());
+    	System.err.println("ACCOUNT DOMAINS :: "+acct.getDomains().size());
+    	
+    	Set<Domain> domains = account_repo.getDomains(username);
+    	System.err.println("Domain size :: "+domains.size());
+	    return domains;
     }
     
 	/**
@@ -223,7 +238,7 @@ public class DomainController {
     
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_states")
-    public @ResponseBody List<PageState> getAllPageStates(HttpServletRequest request, 
+    public @ResponseBody Set<PageState> getAllPageStates(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -242,9 +257,9 @@ public class DomainController {
     	for(Domain domain : acct.getDomains()){
     		if(domain.getUrl().equals(host)){
     			return domain.getPageStates();
-    		}
+    		} 
     	}
-	    return new ArrayList<PageState>();
+	    return new HashSet<PageState>();
     }
 	
 	/**
@@ -257,7 +272,7 @@ public class DomainController {
 	 */
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_elements")
-    public @ResponseBody List<PageElement> getAllPageElements(HttpServletRequest request, 
+    public @ResponseBody Set<PageElement> getAllPageElements(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -273,8 +288,8 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-    	List<PageElement> unique_page_elements = new ArrayList<PageElement>();
-    	List<PageElement> page_elements = new ArrayList<PageElement>();
+    	Set<PageElement> unique_page_elements = new HashSet<PageElement>();
+    	Set<PageElement> page_elements = new HashSet<PageElement>();
     	for(Domain domain : acct.getDomains()){
     		for(PageState page_state : domain.getPageStates()){
     			boolean element_exists = false;

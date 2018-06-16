@@ -33,9 +33,13 @@ public class DisabledRule extends Rule{
 		 * 
 		 */
 	
-		Attribute attr = elem.getAttributes().get(elem.getAttributes().indexOf("disabled"));
-		System.err.println("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
-		return attr.getVals().size() == 0;
+		for(Attribute attribute: elem.getAttributes()){
+			if(attribute.getName().equals("disabled")){
+				System.err.println("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
+				return attribute.getVals().size() == 0;
+			}
+		}
+		return null;
 	}
 
 	@Override

@@ -11,8 +11,9 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class Group implements Persistable{
-	@Id 
-	@GeneratedValue 
+	
+	@GeneratedValue
+    @Id
 	private Long id;
 	
 	private String key;

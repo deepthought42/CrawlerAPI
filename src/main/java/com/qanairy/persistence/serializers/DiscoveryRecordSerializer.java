@@ -28,7 +28,6 @@ public class DiscoveryRecordSerializer extends StdSerializer<DiscoveryRecord> {
       throws IOException, JsonProcessingException {
   
         jgen.writeStartObject();
-        jgen.writeStringField("key", record.getKey());
         jgen.writeStringField("browser_name", record.getBrowserName());
         jgen.writeNumberField("last_ran_at", record.getLastPathRanAt().getTime());
         jgen.writeNumberField("start_time", record.getStartTime().getTime());

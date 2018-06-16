@@ -3,6 +3,7 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 
 /**
@@ -24,9 +25,13 @@ public class SpecialCharacterRestriction extends Rule {
 	@Override
 	public Boolean evaluate(PageElement elem) {
 		Pattern pattern = Pattern.compile(this.value);
-
-        Matcher matcher = pattern.matcher(elem.getAttributes().get(elem.getAttributes().indexOf("val")).getVals().toString());
-		return matcher.matches();
+		for(Attribute attribute: elem.getAttributes()){
+			if(attribute.getName().equals("vals")){
+		        Matcher matcher = pattern.matcher(attribute.getVals().toString());
+				return matcher.matches();
+			}
+		}
+		return null;
 	}
 	
 	@Override

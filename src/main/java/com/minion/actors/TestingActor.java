@@ -18,7 +18,9 @@ import com.minion.structs.Message;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.TestStatus;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.TestService;
 
 /**
  * Handles retrieving tests
@@ -31,6 +33,9 @@ public class TestingActor extends UntypedActor {
 
 	@Autowired
 	private Crawler crawler;
+	
+	@Autowired
+	private TestService test_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -84,34 +89,29 @@ public class TestingActor extends UntypedActor {
 				}while(tries < 5);
 
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+					TestRecord record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
-
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-					//tell memory worker of path
-					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-					memory_actor.tell(test_msg, getSelf() );
 				}
 				else{
 					TestRecord record = null;
 
-					if(!test.getCorrect()){
-						record = new TestRecord(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+					if(test.getCorrect().equals(TestStatus.FAILING)){
+						record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 					else{
-						record = new TestRecord(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+						record = new TestRecord(new Date(), TestStatus.PASSING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 
 					test.addRecord(record);
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-
-					//tell memory worker of test record
-					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-					memory_actor.tell(test_msg, getSelf() );
 				}
-
-			  	browser.close();
+				
+				//tell memory worker of test record
+				//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+				//memory_actor.tell(test_msg, getSelf() );
+			  	test_service.save(test, acct_msg.getOptions().get("host").toString());
+				browser.close();
 			}
 			else{
 				log.warn("ERROR : Message contains unknown format");

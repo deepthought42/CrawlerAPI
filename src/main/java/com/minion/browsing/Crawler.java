@@ -27,6 +27,7 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -38,6 +39,9 @@ public class Crawler {
 
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private ActionRepository action_repo;
 	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
@@ -91,8 +95,19 @@ public class Crawler {
 			else if(current_obj instanceof Action){
 				//boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
-				
-				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver(), host_channel);
+				Action action_record = action_repo.findByKey(action.getKey());
+				if(action_record==null){
+					action = action_repo.save(action);
+					try {
+						MessageBroadcaster.broadcastAction(action, host_channel);
+					} catch (JsonProcessingException e1) {
+						e1.printStackTrace();
+					}
+				}
+				else{
+					action = action_record;
+				}
+				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -108,19 +123,11 @@ public class Crawler {
 	 * Executes the given {@link ElementAction element action} pair such that
 	 * the action is executed against the element 
 	 * 
-	 * @param elemAction ElementAction pair
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static boolean performAction(Action action, PageElement elem, WebDriver driver, String host_channel){
+	public static boolean performAction(Action action, PageElement elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
-		if(host_channel != null){
-			try {
-				MessageBroadcaster.broadcastAction(action, host_channel);
-			} catch (JsonProcessingException e1) {
-				e1.printStackTrace();
-			}
-		}
 
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));

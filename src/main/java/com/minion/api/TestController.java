@@ -8,15 +8,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -24,9 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-
-import com.minion.actors.MemoryRegistryActor;
-import com.minion.actors.TestingActor;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
 import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
@@ -48,13 +42,7 @@ import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.UsageRecord;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-
 import com.minion.browsing.Browser;
-import com.minion.structs.Message;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -62,6 +50,7 @@ import com.qanairy.models.Group;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.TestStatus;
 
 /**
  * REST controller that defines endpoints to access tests
@@ -81,9 +70,6 @@ public class TestController {
     
     @Autowired
     private TestRepository test_repo;
-    
-    @Autowired
-    private TestRecordRepository test_record_repo;
     
     @Autowired
     private GroupRepository group_repo;
@@ -109,18 +95,7 @@ public class TestController {
 	public @ResponseBody Set<Test> getTestByDomain(HttpServletRequest request, 
 													@RequestParam(value="url", required=true) String url) 
 															throws UnknownAccountException, DomainNotOwnedByAccountException {    	
-		Domain domain = domain_repo.findByHost(url);
-		Iterator<Test> tests = domain.getTests().iterator();
-		Set<Test> verified_tests = new HashSet<Test>();
-		
-		while(tests.hasNext()){
-			Test test = tests.next();
-			if(test.getCorrect() != null){
-				verified_tests.add(test_repo.findByKey(test.getKey()));
-			}
-		}
-		
-		return verified_tests;
+		return domain_repo.getVerifiedTests(url);
     }
 
     /**
@@ -137,13 +112,13 @@ public class TestController {
 			   								 	 	@RequestParam(value="url", required=true) String url) 
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {    	
 		int failed_tests = 0;
-		Domain idomain = domain_repo.findByHost(url);
+		Domain domain = domain_repo.findByHost(url);
 		try{
-			Iterator<Test> tests = idomain.getTests().iterator();
+			Iterator<Test> tests = domain.getTests().iterator();
 			
 			while(tests.hasNext()){
-				Test itest = tests.next();
-				if(itest.getCorrect() != null && itest.getCorrect() == false){
+				Test test = tests.next();
+				if(!test.getCorrect().equals("UNVERIFIED") && !test.getCorrect().equals("FAILING")){
 					failed_tests++;
 				}
 			}
@@ -185,22 +160,24 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	Date start = new Date();
-   		Domain domain = domain_repo.findByHost(url);
+    	return domain_repo.getUnverifiedTests(url);
+    	
+   		/*Domain domain = domain_repo.findByHost(url);
 		
 		Set<Test> tests = domain.getTests();
 		Set<Test> unverified_tests = new HashSet<Test>();
 
 		for(Test test : tests){
 			if(test.getCorrect() == null){
-				unverified_tests.add(test_repo.findByKey(test.getKey()));
+				unverified_tests.add(test);
 			}
 		}
     	
     	Date end = new Date();
     	long diff = end.getTime() - start.getTime();
     	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
-		return unverified_tests;
+    	*/
+		//return unverified_tests;
 	}
 
 	/**
@@ -215,7 +192,7 @@ public class TestController {
 	public @ResponseBody Test setPassingStatus(HttpServletRequest request, 
 													@RequestParam(value="key", required=true) String key, 
 													@RequestParam(value="browser", required=true) String browser_name,
-													@RequestParam(value="correct", required=true) boolean correct)
+													@RequestParam(value="correct", required=true) TestStatus status)
 															throws UnknownAccountException{
     	
     	//make sure domain belongs to user account first
@@ -241,14 +218,12 @@ public class TestController {
     		);
     	
 		Test test = test_repo.findByKey(key);
-		Map<String, Boolean> browser_statuses = test.getBrowserStatuses();
-		browser_statuses.put(browser_name, correct);
-		test.setCorrect(correct);
-		test.setBrowserStatuses(browser_statuses);
-		test_repo.save(test);
-		
+		System.err.println("Test status :: "+status);
+		test.setCorrect(status);
+		test.getBrowserStatuses().put(browser_name, status.toString());
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(test);
+		test_repo.save(test);
 		
 	   	//Fire discovery started event	
 	   	Map<String, String> set_initial_correctness_props= new HashMap<String, String>();
@@ -266,13 +241,19 @@ public class TestController {
      * @param itest
      */
 	private void updateLastTestRecordPassingStatus(Test test) {
-		Iterator<TestRecord> test_records = test.getRecords().iterator();
-		TestRecord record = null;
-		while(test_records.hasNext()){
-			record = test_records.next();
+		Set<TestRecord> test_records = test.getRecords();
+		Date last_ran_at = new Date(0L);
+		TestRecord last_record = null;
+		for(TestRecord test_record : test_records){
+			Date time = test_record.getRanAt();
+			if(time.after(last_ran_at)){
+				last_ran_at = time;
+				last_record = test_record;
+			}
 		}
-		if(record != null){
-			record.setPassing(test.getCorrect());
+		
+		if(last_record != null){
+			last_record.setPassing(test.getCorrect());
 		}
 	}
 
@@ -287,13 +268,13 @@ public class TestController {
 	public @ResponseBody void update(HttpServletRequest request,
 									@RequestParam(value="key", required=true) String key, 
 									@RequestParam(value="name", required=true) String name, 
-									@RequestParam(value="firefox", required=false) Boolean firefox,
-									@RequestParam(value="chrome", required=false) Boolean chrome){
+									@RequestParam(value="firefox", required=false) TestStatus firefox,
+									@RequestParam(value="chrome", required=false) TestStatus chrome){
 		Test test = test_repo.findByKey(key);
 		
-		Map<String, Boolean> browser_statuses = new HashMap<String, Boolean>();
-		browser_statuses.put("firefox", firefox);
-		browser_statuses.put("chrome", chrome);
+		Map<String, String> browser_statuses = new HashMap<String, String>();
+		browser_statuses.put("firefox", firefox.toString());
+		browser_statuses.put("chrome", chrome.toString());
 
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);
@@ -308,9 +289,9 @@ public class TestController {
 	 * @return
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
-	@RequestMapping(path="/updateName/{key}", method=RequestMethod.PUT)
+	@RequestMapping(path="/updateName", method=RequestMethod.PUT)
 	public @ResponseBody Test updateName(HttpServletRequest request, 
-										 @PathVariable(value="key", required=true) String key, 
+										 @RequestParam(value="key", required=true) String key, 
 										 @RequestParam(value="name", required=true) String name){
 		Test test = test_repo.findByKey(key);
 		test.setName(name);
@@ -398,13 +379,8 @@ public class TestController {
 	    	usageRecordParams.put("action", "increment");
 
 	    	UsageRecord.create(usageRecordParams, null);
-
-			Map<String, Boolean> browser_running_status = test.getBrowserStatuses();
-			browser_running_status.put(browser_name, null);
-
-			test.setBrowserStatuses(browser_running_status);
 			
-			Map<String, Object> options = new HashMap<String, Object>();
+			/*Map<String, Object> options = new HashMap<String, Object>();
 			options.put("host", (new URL(test.firstPage().getUrl())).getHost());
 			Message<Test> test_msg = new Message<Test>(acct.getUsername(), test, options);
 			System.err.println("Test message created for host :: "+options.get("host"));
@@ -412,37 +388,36 @@ public class TestController {
 			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
 			memory_actor.tell(test_msg, null);
-			
+			*/
+	    	
 			Browser browser = new Browser(browser_name.trim());
 			record = test_service.runTest(test, browser);
 			browser.close();
 			
-			System.err.println("TEST RUN RECORD PASSING STATUS  ??????     "+record.getPassing());
-			record = test_record_repo.save(record);
-			acct.addTestRecord(record);
-			account_repo.save(acct);
+			test.addRecord(record);
+	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
 			    		
 			test_results.put(test.getKey(), record);
-			boolean is_passing = true;
+			TestStatus is_passing = TestStatus.PASSING;
 			//update overall passing status based on all browser passing statuses
-			for(Boolean status : test.getBrowserStatuses().values()){
-				if(status != null && !status){
-					is_passing = false;
+			for(String status : test.getBrowserStatuses().values()){
+				if(status.equals(TestStatus.UNVERIFIED) || status.equals(TestStatus.FAILING)){
+					is_passing = TestStatus.FAILING;
 					break;
 				}
 			}
-			Map<String, Boolean> browser_statuses = test.getBrowserStatuses();
-			browser_statuses.put(browser_name, is_passing);
+			Map<String, String> browser_statuses = test.getBrowserStatuses();
+			browser_statuses.put(browser_name, is_passing.toString());
 			
 			test.addRecord(record);
 			test.setCorrect(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());
 			test.setBrowserStatuses(browser_statuses);
-			
-			//tell memory worker of test
-			test_msg = new Message<Test>(acct.getUsername(), test, options);
-			memory_actor.tell(test_msg, null);
+			test_repo.save(test);
+
+			acct.addTestRecord(record);
+			account_repo.save(acct);
    		}
 		
 		return test_results;
@@ -509,8 +484,8 @@ public class TestController {
 		Test test = test_repo.findByKey(key);
 		
 		group = group_repo.save(group);
-		test.addGroup(group);
-		test_repo.save(test);
+		test.getGroups().add(group);
+		test = test_repo.save(test);
 		return group;
 	}
 

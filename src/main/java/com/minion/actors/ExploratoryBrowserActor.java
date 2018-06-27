@@ -5,8 +5,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
+
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -31,9 +32,14 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.TestStatus;
+import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageStateRepository;
+import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.TestService;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -57,7 +63,19 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	private DomainRepository domain_repo;
 	
 	@Autowired
+	private PageStateRepository page_state_repo;
+	
+	@Autowired
+	private TestRepository test_repo;
+	
+	@Autowired
+	private ActionRepository action_repo;
+	
+	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private TestService test_service;
 	
 	@Autowired
 	private Crawler crawler;
@@ -75,13 +93,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	public void onReceive(Object message) throws NullPointerException, NoSuchElementException, IOException {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-
 			Browser browser = null;
 			if (acct_msg.getData() instanceof ExploratoryPath){
 				ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-
 				browser = new Browser((String)acct_msg.getOptions().get("browser"));
-								
+
 				if(exploratory_path.getPathObjects() != null){
 					PageState result_page = null;
 
@@ -94,12 +110,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 							discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 					  		discovery_record.setLastPathRanAt(new Date());
-					  		
+					  		discovery_record = discovery_repo.save(discovery_record);
 							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					  		error_while_saving = false;
 					  		break;
-							//discovery_record_repo.save(discovery_record);
 						}catch(Exception e){
 							error_while_saving = true;
 						}
@@ -107,6 +122,10 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					
 					for(Action action : exploratory_path.getPossibleActions()){
 						ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
+						Action action_record = action_repo.findByKey(action.getKey());
+						if(action_record != null){
+							action = action_record;
+						}
 						path.addPathObject(action);
 						path.addToPathKeys(action.getKey());
 						
@@ -114,7 +133,10 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						int tries = 0;
 						do{
 							try{
+								System.err.println("Crawling path");
 								result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+								PageState page_record = page_state_repo.findByKey(result_page.getKey());
+
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
 								log.error("Error happened while exploratory actor attempted to crawl test");
@@ -123,15 +145,14 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							tries++;
 							
 							try {
-								Thread.sleep(120000L);
+								Thread.sleep(60000L);
 							} catch (InterruptedException e) {}
 						}while(result_page == null && tries < 10);
 						
-						do{
-							System.err.println("attempting is landable check. Attemp #"+tries);
-							
+						do{							
 							try{								
 								result_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
+						  		result_page = page_state_repo.save(result_page);
 								break;
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
@@ -141,11 +162,8 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							
 							tries++;
 						}while(tries < 5);
-						
+					  	
 						Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
-						domain.setTestCount(domain.getTestCount()+1);
-						domain.addPageState(result_page);
-						domain_repo.save(domain);
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
@@ -159,38 +177,36 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  		test.setIsUseful(true);
 					  		*/
 					  		boolean results_match = false;
+					  		ExploratoryPath last_path = null;
 					  		//crawl test and get result
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 					  		System.err.println("Starting building parent path");
 					  		do{
-					  			ExploratoryPath parent_path = buildParentPath(path, browser);
-					  			if(parent_path == null){
-					  				System.err.println("Parent path is null  !!!!!!!!!!!!!!!");
-					  				break;
-					  			}
-					  			System.err.println("parent test length @@@@@@@@   "+parent_path);
-					  			Browser new_browser = new Browser(browser.getBrowserName());
-					  			System.err.println("Retrieved new browser");
-					  			results_match = doesPathProduceExpectedResult(parent_path, result_page, new_browser, domain.getUrl());
-					  			new_browser.close();
+					  			try{
+					  				ExploratoryPath parent_path = buildParentPath(path, browser);
 					  			
-					  			if(results_match){
-					  				path = parent_path;
+						  			if(parent_path == null){
+						  				break;
+						  			}
+						  			Browser new_browser = new Browser(browser.getBrowserName());
+					  				results_match = doesPathProduceExpectedResult(parent_path, result_page, new_browser, domain.getUrl());
+					  			
+						  			if(results_match){
+						  				last_path=path;
+						  				path = parent_path;
+						  			}
+					  				new_browser.close();
+					  			}catch(Exception e){
+					  				browser = new Browser(browser.getBrowserName());
+					  				results_match = false;
 					  			}
 					  		}while(results_match);
-							
-							MessageBroadcaster.broadcastPageState(result_page, domain.getUrl());
-							
-							for(PageElement element : result_page.getElements()){
-								try {
-									MessageBroadcaster.broadcastPageElement(element, domain.getUrl() );
-								} catch (JsonProcessingException e) {
-								}
-							}
-					  		
-							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
-							createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
+					  		if(last_path == null){
+					  			last_path = path;
+					  		}
+					  		
+							createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
 							
 							break;
 						}
@@ -211,26 +227,29 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * Generates {@link Test Tests} for test
 	 * @param test
 	 * @param result_page
+	 * @throws JsonProcessingException 
 	 */
-	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
-		Test test = new Test(path_keys, path_objects, result_page, "Test #" + domain.getTestCount());							
+	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) throws JsonProcessingException {
+		Test test = new Test(path_keys, path_objects, result_page, null);							
 
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
 		//tell memory worker of test
-		final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-				  .props("MemoryRegistration"), "memory_registration");
+		/*final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+				  .props("memoryRegistryActor"), "memory_registration"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf());
-		
-		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PAT EXPANSION");
+		*/
+		test_service.save(test, acct_msg.getOptions().get("host").toString());
+
+		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
 		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-				  .props("PathExpansionActor"), "path_expansion");
+				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 		path_expansion_actor.tell(test_msg, getSelf());
 	}
 	
@@ -246,6 +265,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
+					test_repo.save(test);
 					break;
 				}
 			}
@@ -282,37 +302,37 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser){
 		PageElement elem = null;
 		int element_idx = -1;
-		System.err.println("Path object length :::::   "+path.getPathObjects().size());
-		System.err.println("Path keys length :::::   "+path.getPathKeys().size());
-		
-		for(int idx = path.getPathObjects().size()-1; idx >= 0; idx--){
+
+		for(PathObject obj : path.getPathObjects()){
+			if(obj.getType().equals("PageElement")){
+				elem = (PageElement)obj;
+			}
+		}
+
+		/*
+		 for(int idx = path.getPathKeys().size()-1; idx >= 0; idx--){
 			if(path.getPathObjects().get(idx).getType().equals("PageElement")){
-				elem = (PageElement)path.getPathObjects().get(idx);
+				elem = (PageElement)obj;
 				element_idx = idx;
 				break;
 			}
 		}
-		System.err.println("element :: "+elem);
-		System.err.println("element index :: "+element_idx);
-		if(elem != null && element_idx > -1){
+		*/
+		
+		if(elem != null){
 			//get parent of element
 			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
-			System.err.println("Getting parent element...");
 			WebElement parent = browser_service.getParentElement(web_elem);
-			System.err.println("Cloning exploratory path... ");
+
 			//clone test and swap page element with parent
 			ExploratoryPath parent_path = ExploratoryPath.clone(path);
-			System.err.println("parent path clone :: "+parent_path.getPathKeys().size());
 			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver()); 
-			System.err.println("Generated xpath :: "+this_xpath);
 			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), browser_service.extractAttributes(parent, browser.getDriver()), Browser.loadCssProperties(parent) );
-			System.err.println("setting path element object and key at index ::"+element_idx);
-			parent_path.getPathObjects().set(element_idx, parent_tag);
+			//parent_path.getPathObjects().set(element_idx, parent_tag);
+			
 			parent_path.getPathKeys().set(element_idx, parent_tag.getKey());
-			System.err.println("RETURN PARENT PATH !!!!!!! !!!!!  !!! !!! !!!!!!@@@@@@!!!!!");
 			return parent_path;
 		}
-		System.err.println("returning a null parent path...................");
 		return null;
 	}
 }

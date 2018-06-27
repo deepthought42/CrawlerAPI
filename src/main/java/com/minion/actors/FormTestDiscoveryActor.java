@@ -1,30 +1,28 @@
 package com.minion.actors;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.BrowserService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.qanairy.services.TestService;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -33,8 +31,6 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 
 /**
@@ -44,12 +40,6 @@ import akka.actor.UntypedActor;
 @Scope("prototype")
 public class FormTestDiscoveryActor extends UntypedActor {
 	private static Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
-
-	@Autowired
-	private ActorSystem actor_system;
-	
-	@Autowired
-	private DomainRepository domain_repo;
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
@@ -59,6 +49,9 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private TestService test_service;
 	
 	/**
 	 * {@inheritDoc}
@@ -92,10 +85,14 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	
 			  	List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
 			  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
-			  	System.err.println("FORM COUNT ::: "+forms.size());
 			  	for(Form form : forms){
 			  		path_object_lists.addAll(FormTestDiscoveryActor.generateAllFormTestPaths(test, form));
 			  	}
+			  	
+			  	try{
+			  		browser.close();
+			  	}
+			  	catch(Exception e){}
 			  	
 			  	//Evaluate all tests now
 			  	System.err.println("Constructing tests with path object lists   :::   "+path_object_lists.size());
@@ -109,47 +106,135 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
 			  		test_path_objects.addAll(path_obj_list);
 			  		
-			  		List<String> test_path_keys = new ArrayList<String>(test.getPathKeys());
-			  		test_path_keys.addAll(path_keys);
+			  		for(PathObject obj : path_obj_list){
+			  			System.err.println("****************************************************");
+			  			System.err.println("Object type :: "+obj.getType());
+			  			System.err.println("****************************************************");
+			  			if(obj.getType().equals("PageState")){
+			  				PageState page_state = (PageState)obj;
+			  				System.err.println("page key :: "+page_state.getKey());
+			  				System.err.println("page source :: "+page_state.getSrc().length());
+			  				System.err.println("page type :: "+page_state.getType());
+			  				System.err.println("page url :: "+page_state.getUrl());
+			  				System.err.println("page image weight :: "+page_state.getImageWeight());
+			  				System.err.println("page total weigth :: "+page_state.getTotalWeight());
+			  				
+			  				for(ScreenshotSet screenshot_set : page_state.getBrowserScreenshots()){
+			  					System.err.println("Screenshot key :: "+screenshot_set.getKey());
+			  					System.err.println("Screenshot viewport :: "+screenshot_set.getViewportScreenshot());
+			  					System.err.println("Screesnhot browser :: "+screenshot_set.getBrowser());
+			  				}
+			  				
+			  				for(PageElement elem : page_state.getElements()){
+			  					System.err.println(""+elem.getKey());
+				  				System.err.println(""+elem.getName());
+				  				System.err.println(""+elem.getScreenshot());
+				  				System.err.println(""+elem.getText());
+				  				System.err.println(""+elem.getType());
+				  				System.err.println(""+elem.getXpath());
+
+				  				for(Attribute attr : elem.getAttributes()){
+				  					System.err.println("Attribute key "+attr.getKey());
+				  					System.err.println("Attribute name :: "+attr.getName());
+					  				System.err.println("Page Element :: " +attr.getVals().size());
+				  				}
+				  				
+				  				for(String key : elem.getCssValues().keySet()){
+
+					  				System.err.println("css values ::  "+key + "     ;;;       "+elem.getCssValues().get(key));
+					  					
+				  				}
+				  				System.err.println("Page Element css values ::  "+elem.getCssValues());
+				  				for(Rule rule : elem.getRules()){
+				  					System.err.println("Rule key :: "+rule.getKey());
+				  					System.err.println("Rule value :: "+rule.getValue());
+				  					System.err.println("Rule type :: "+rule.getType());
+				  				}
+			  				}
+			  				System.err.println(""+page_state.getElements());
+			  				
+			  			}
+			  			else if(obj.getType().equals("PageElement")){
+			  				PageElement page_elem = (PageElement)obj;
+			  				System.err.println("Page Element key :: "+page_elem.getKey());
+			  				/*System.err.println("Page Element name :: "+page_elem.getName());
+			  				page_elem.setScreenshot("page_elem_still_needs_screenshot_taken.jpg");
+			  				System.err.println("Page Element screenshot ::  "+page_elem.getScreenshot());
+
+			  				System.err.println("Page Element Text ::  "+page_elem.getText());
+			  				System.err.println("Page Element type :: "+page_elem.getType());
+			  				System.err.println("Page Element xpath "+page_elem.getXpath());
+			  				
+			  				for(Attribute attr : page_elem.getAttributes()){
+			  					System.err.println("Attribute key "+attr.getKey());
+			  					System.err.println("Attribute name :: "+attr.getName());
+				  				System.err.println("Page Element :: " +attr.getVals().size());
+			  				}
+			  				
+			  				for(String key : page_elem.getCssValues().keySet()){
+
+				  				System.err.println("css values ::  "+key + "     ;;;       "+page_elem.getCssValues().get(key));
+				  					
+			  				}
+			  				System.err.println("Page Element css values ::  "+page_elem.getCssValues());
+			  				for(Rule rule : page_elem.getRules()){
+			  					System.err.println("Rule key :: "+rule.getKey());
+			  					System.err.println("Rule value :: "+rule.getValue());
+			  					System.err.println("Rule type :: "+rule.getType());
+			  				}
+			  				*/
+			  			}
+			  			else if(obj.getType().equals("Action")){
+			  				Action action = (Action)obj;
+			  				System.err.println("Action Key :: " +action.getKey());
+			  				/*System.err.println("Action name :: "+action.getName());
+			  				System.err.println("Action value :: " +action.getValue());
+			  				System.err.println("Action type :: " + action.getType());
+			  				*/
+			  			}
+			  		}
 			  		
 					final long pathCrawlStartTime = System.currentTimeMillis();
 					
 			  		System.err.println("Crawling potential form test path");
 			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
-			  		PageState result_page = crawler.crawlPath(test_path_keys, test_path_objects, browser, acct_msg.getOptions().get("host").toString());
-				  	browser.close();
-					final long pathCrawlEndTime = System.currentTimeMillis();
+			  		PageState result_page = crawler.crawlPath(path_keys, test_path_objects, browser, acct_msg.getOptions().get("host").toString());
 					
+			  		
+			  		final long pathCrawlEndTime = System.currentTimeMillis();
 					long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
 					
-				  	System.err.println("Looking up domain with url :: "+page.getUrl().toString());
-				  	System.err.println("Looking up domain with url :: "+(new URL(page.getUrl())).getHost());
+					try{
+				  		browser.close();
+				  	}
+				  	catch(Exception e){}
 					
-			  		Domain domain = domain_repo.findByHost((new URL(page.getUrl())).getHost());
-					domain.addPageState(result_page);
-					//domain_dao.save(domain);
-					
-					for(PageElement element : result_page.getElements()){
-						try {
-							MessageBroadcaster.broadcastPageElement(element, domain.getUrl() );
-						} catch (JsonProcessingException e) {
-						}
-					}
-					
-			  		Test new_test = new Test(test_path_keys, test_path_objects, result_page, "Test #" + domain.getTestCount(), false, test.getSpansMultipleDomains());
+			  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
+					//Test new_test = new Test(path_keys, test_path_objects, result_page, null);							
+
 			  		new_test.setRunTime(crawl_time_in_ms);
 			  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 			  		
+			  		System.err.println("Saving form test.................");
+			  		System.err.println("Test service :: "+test_service);
+			  		System.err.println("new Test ........... "+new_test.getPathKeys().size());
+			  		System.err.println("HOST   ::::::   "+acct_msg.getOptions().get("host").toString());
+			  		new_test = test_service.save(new_test, acct_msg.getOptions().get("host").toString());
 			  		tests.add(new_test);
+			  		
+			  		System.err.println("********************************************************");
+					DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+					discovery_record.setTestCount(discovery_record.getTestCount()+1);
+					discovery_record = discovery_repo.save(discovery_record);
+					System.err.println("saving discovery record ");
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+				  	System.err.println("********************************************************");
 			  	}
 			  	
-				DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
-				discovery_record.setTestCount(discovery_record.getTestCount()+tests.size());
-				
-				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				System.err.println("Broadcasting discovery record now that we've added "+tests.size()+"        tests   ");
-				final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-						  .props("MemoryRegistration"), "memory_registration");
+
+				/*final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+						  .props("memoryRegistryActor"), "memory_registration_actor"+UUID.randomUUID());
 
 			  	for(Test form_test : tests){
 			  		//send all tests to work allocator to be evaluated
@@ -158,6 +243,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					//tell memory worker of test
 					memory_actor.tell(test_msg, getSelf());
 				}
+				*/
 			}
 		}
 	}
@@ -175,6 +261,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		if(rule.getType().equals(RuleType.REQUIRED)){
 			//generate required path for element type
+			System.err.println("Generating requirements check tests");
 			tests.addAll(generateRequirementChecks(input_elem, true, submitField));
 		}
 		else if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
@@ -547,10 +634,10 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 */
 	public static List<List<PathObject>> generateAllFormTestPaths(Test test, Form form){
 		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
-		System.err.println("FORM FIELDS COUNT     :::    "+form.getFormFields());
+		System.err.println("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		for(ComplexField complex_field: form.getFormFields()){
 			//for each field in the complex field generate a set of tests for all known rules
-			System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements());
+			System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements().size());
 			for(FormField field : complex_field.getElements()){
 				PageElement input_elem = field.getInputElement();
 				
@@ -568,11 +655,12 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				}
 				
 				if(field_exists){
+					System.err.println("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
 					continue;
 				}
 				
 				List<Rule> rules = ElementRuleExtractor.extractInputRules(input_elem);
-				System.err.println("Total RULES   :::   "+rules.size());
+				log.info("Total RULES   :::   "+rules.size());
 				for(Rule rule : rules){
 					List<List<PathObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 					form_tests.addAll(path_list);

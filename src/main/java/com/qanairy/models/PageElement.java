@@ -73,7 +73,6 @@ public class PageElement implements Persistable, PathObject {
 		setAttributes(attributes);
 		setText(text);
 		setCssValues(css_map);
-		setRules(new HashSet<Rule>());
 		setKey(generateKey());
 	}
 	
@@ -330,7 +329,7 @@ public class PageElement implements Persistable, PathObject {
 			return false;
 		}
 		
-		//areElementsEqual = this.cssMatches(that);
+		areElementsEqual = this.cssMatches(that);
 		return areElementsEqual;
 	}
 

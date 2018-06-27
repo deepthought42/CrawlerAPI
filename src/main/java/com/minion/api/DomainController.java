@@ -25,7 +25,6 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.edges.HasDomain;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 
@@ -61,9 +60,7 @@ public class DomainController {
 							    		 @RequestParam(value="logo_url", required=false) String logo_url) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	
-    	System.err.println("AUTH ACCESS TOKEN    ::    "+auth_access_token);
-    	Auth0Client auth = new Auth0Client();
+       	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -182,9 +179,7 @@ public class DomainController {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
-    	System.err.println("Auth access :: "+auth_access_token);
     	String username = auth.getUsername(auth_access_token);
-    	System.err.println("USERNAME      ::    "+username);
     	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -192,10 +187,6 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	System.err.println("Account :: "+acct);
-    	System.err.println("Account username ::  " +acct.getUsername());
-    	System.err.println("Account subccription :: "+acct.getSubscriptionToken());
-    	System.err.println("ACCOUNT DOMAINS :: "+acct.getDomains().size());
     	
     	Set<Domain> domains = account_repo.getDomains(username);
     	System.err.println("Domain size :: "+domains.size());
@@ -241,25 +232,26 @@ public class DomainController {
     public @ResponseBody Set<PageState> getAllPageStates(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
+    	//Auth0Client auth = new Auth0Client();
+    	//String username = auth.getUsername(auth_access_token);
     	
-    	Account acct = account_repo.findByUsername(username);
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
+    	//Account acct = account_repo.findByUsername(username);
+    	//if(acct == null){
+    	//	throw new UnknownAccountException();
+    	//}
+    	//else if(acct.getSubscriptionToken() == null){
+    	//	throw new MissingSubscriptionException();
+    	//}
 
-    	for(Domain domain : acct.getDomains()){
-    		if(domain.getUrl().equals(host)){
-    			return domain.getPageStates();
-    		} 
-    	}
-	    return new HashSet<PageState>();
+		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
+		Set<PageState> page_states = domain_repo.getPageStates(host);
+		System.err.println("###### PAGE STATE COUNT :: "+page_states.size());
+		return page_states;
+    	
+    			
+	    //return new HashSet<PageState>();
     }
 	
 	/**
@@ -288,10 +280,10 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-    	Set<PageElement> unique_page_elements = new HashSet<PageElement>();
+    	/*Set<PageElement> unique_page_elements = new HashSet<PageElement>();
     	Set<PageElement> page_elements = new HashSet<PageElement>();
     	for(Domain domain : acct.getDomains()){
-    		for(PageState page_state : domain.getPageStates()){
+    		for(PageState page_state : domain_repo.getPageStates(host)){
     			boolean element_exists = false;
     			for(PageElement element : page_state.getElements()){
     				for(PageElement unique : unique_page_elements){
@@ -305,9 +297,15 @@ public class DomainController {
     			}
     			page_elements.addAll(page_state.getElements());
     		}
-    	}    	
-    	
-	    return unique_page_elements;
+    	} 
+    	*/
+    	System.err.println("$$$$$$ GETTING PAGE ELEMENTS FOR HOST :: "+host);
+		Set<PageElement> page_elements = domain_repo.getPageElements(host);
+		System.err.println("###### PAGE ELEMENT COUNT :: "+page_elements.size());
+		return page_elements;
+    	//	    return domain_repo.getPageElements();
+
+	    //return unique_page_elements;
     }
 }
 

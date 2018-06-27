@@ -5,7 +5,7 @@ import akka.actor.Actor;
 import akka.actor.IndirectActorProducer;
 
 public class SpringActorProducer implements IndirectActorProducer {
-	 
+	
     private ApplicationContext applicationContext;
  
     private String beanActorName;
@@ -14,9 +14,6 @@ public class SpringActorProducer implements IndirectActorProducer {
       String beanActorName) {
         this.applicationContext = applicationContext;
         this.beanActorName = beanActorName;
-
-    	System.err.println("ApplicationContext INIT ::   "+applicationContext);
-    	System.err.println("Bean actor name INIT :: "+beanActorName);
     }
  
     @Override
@@ -26,8 +23,6 @@ public class SpringActorProducer implements IndirectActorProducer {
  
     @Override
     public Class<? extends Actor> actorClass() {
-    	System.err.println("ApplicationContext ::   "+applicationContext);
-    	System.err.println("Bean actor name :: "+beanActorName);
         return (Class<? extends Actor>) applicationContext
           .getType(beanActorName);
     }

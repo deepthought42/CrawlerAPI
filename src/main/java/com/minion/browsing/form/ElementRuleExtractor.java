@@ -23,7 +23,6 @@ public class ElementRuleExtractor {
 
 	public static List<Rule> extractInputRules(PageElement elem){
 		List<Rule> rules = new ArrayList<Rule>();
-		System.err.println("ELEMENT ATTRIBUTE COUNT :: "+elem.getAttributes());
 		for(Attribute attr : elem.getAttributes()){
 			if(attr.getName().trim().equalsIgnoreCase("required")){
 				Rule required = new RequirementRule();

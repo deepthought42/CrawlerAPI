@@ -34,9 +34,6 @@ public class Domain implements Persistable{
 	@Relationship(type = "HAS_TEST_USER")
 	private Set<TestUser> test_users = new HashSet<>();
 	
-	@Relationship(type = "HAS_PAGE_STATE")
-	private Set<PageState> page_states = new HashSet<>();
-	
 	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
 	private Set<Account> account = new HashSet<>();
 
@@ -225,18 +222,6 @@ public class Domain implements Persistable{
 	@Override
 	public String generateKey() {
 		return getUrl().toString();
-	}
-
-	public Set<PageState> getPageStates() {
-		return this.page_states;
-	}
-
-	public void setPageStates(Set<PageState> states) {
-		this.page_states = states;
-	}
-
-	public void addPageState(PageState state) {
-		this.page_states.add(state);
 	}
 	
 	public Set<Account> getAccount() {

@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
@@ -40,9 +39,6 @@ import com.minion.browsing.form.Form;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.models.repository.AttributeRepository;
-import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.PageStateRepository;
 import ru.yandex.qatools.ashot.AShot;
 import ru.yandex.qatools.ashot.Screenshot;
 import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
@@ -54,15 +50,6 @@ import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 public class Browser {
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
 
-	@Autowired
-	private AttributeRepository attribute_repo;
-	
-	@Autowired
-	private PageElementRepository page_element_repo;
-	
-	@Autowired
-	private PageStateRepository page_state_repo;
-	
 	private WebDriver driver = null;
 	//private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
 
@@ -134,56 +121,6 @@ public class Browser {
 	public WebDriver getDriver(){
 		return this.driver;
 	}
-
-	/**
-	 * 
-	 * @return
-	 * @throws GridException 
-	 * @throws IOException 
-	 */
-	/*public PageState buildPage() throws GridException, IOException{
-		URL page_url = new URL(this.getDriver().getCurrentUrl());
-		String src = this.getDriver().getPageSource();
-		String screenshot = "";
-
-		Set<PageElement> visible_elements = new HashSet<PageElement>();
-		String viewport_screenshot_url = null;
-		String src_hash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getDriver().getPageSource());
-		try{
-			System.err.println("getting viewport screenshot");
-			File viewport_screenshot = Browser.getViewportScreenshot(driver);
-			System.err.println("Uploading screenshot to S3");
-			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(ImageIO.read(viewport_screenshot), page_url.getHost(), src_hash, "viewport");
-
-			System.err.println("Getting full screenshot");
-			Screenshot img = Browser.getFullScreenshot(this.getDriver());
-			System.err.println("Uploading full screenshot to S3");
-			screenshot = UploadObjectSingleOperation.saveImageToS3(img.getImage(), page_url.getHost(), src_hash, "full");
-			System.err.println("Getting visible elements");
-			visible_elements = getVisibleElements(driver, "", img.getImage());
-		}catch(IOException e){
-			log.error(e.getMessage());
-		}
-	
-		if(visible_elements == null){
-			visible_elements = new HashSet<PageElement>();
-		}
-		System.err.println("returning browser screenshot");
-		Set<ScreenshotSet> browser_screenshot = new HashSet<ScreenshotSet>();
-		browser_screenshot.add(new ScreenshotSet(screenshot, viewport_screenshot_url, browser_name));
-		
-		PageState page_state = new PageState(src,
-				page_url.toString(),
-				browser_screenshot,
-				visible_elements);
-		PageState record = page_state_repo.findByKey(page_state.getKey());
-		
-		if(record != null){
-			return record;
-		}
-		return page_state;
-	}
-*/
 
 
 	/**
@@ -400,98 +337,6 @@ public class Browser {
 
 		return page_screenshot.getSubimage(point.getX(), point.getY(), elemWidth, elemHeight);
 	}
-	 
-	
-	
-	 
-	
-	
-	/**
-	 * Retreives all elements on a given page that are visible. In this instance we take 
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also 
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *  
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 * @throws IOException 
-	 */
-	/*
-	 public static Set<PageElement> getVisibleElementTree(WebDriver driver, String xpath) 
-															 throws WebDriverException{
-		WebElement body_elem = driver.findElement(By.xpath(xpath));
-		PageElement root_page_element = new PageElement(body_elem.getText(), this_xpath, body_elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(body_elem) );
-		TreeNode<PageElement> root_page_element_node = new TreeNode<PageElement>(root_page_element);
-		Tree<PageElement> tree = new Tree<PageElement>(root_page_element_node);
-		
-		//get all children of body_elem
-		List<WebElement> web_elements = body_elem.findElements(By.xpath("./"));
-		List<TreeNode<PageElement>> page_element_nodes = new ArrayList<TreeNode<PageElement>>();
-		for(WebElement elem : web_elements){
-			//convert elem to PageElement
-			PageElement page_element = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(body_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
-			
-			//add page element to tree node list
-			page_element_nodes.add(new TreeNode<PageElement>(page_element));
-		}
-		
-		root_page_element_node.addChildNodes(page_element_nodes);
-		
-		for(TreeNode<PageElement> element : root_page_element_node.getChildNodes()){
-			Set<PageElement> child_elements = getVisibleElementTree(driver, element.getRoot().getXpath());
-			element.addChildNodes(child_elements);
-		}
-		
-		
-		
-		
-		List<WebElement> child_elements = driver.findElements(By.xpath(xpath+"/"));
-
-		HashSet<PageElement> elementList = new HashSet<PageElement>();
-		if(pageElements.size() == 0){
-			return elementList;
-		}
-		
-		String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
-
-		
-		
-		
-		
-		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-		for(WebElement elem : pageElements){
-			
-			try{
-				if(elem.isDisplayed() && (elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
-						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
-					String this_xpath = Browser.generateXpath(elem, xpath, xpath_map, driver); 
-					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), Browser.extractedAttributes(elem, (JavascriptExecutor)driver), Browser.loadCssProperties(elem) );
-					try{
-						//tag.setScreenshot(Browser.capturePageElementScreenshot(elem, tag, driver));
-						elementList.add(tag);
-					}
-					catch(Exception e){
-						log.error(e.getMessage());
-					}
-
-				}
-			}catch(StaleElementReferenceException e){
-				log.error(e.getMessage());
-			}
-			catch(RasterFormatException e){
-				log.error(e.getMessage());
-			}
-			catch(GridException e){
-				log.error(e.getMessage());
-			}
-		}
-		log.debug("Total elements that are visible on page :: "
-					+ elementList.size() + "; with url "+driver.getCurrentUrl());
-
-		return elementList;
-	}
-
-	*/
 	
 	/**
 	 * Checks if element is visible in a given screenshot
@@ -513,168 +358,11 @@ public class Browser {
 
 	    return x2 <= x && y2 <= y && weD.getWidth()>0 && weD.getHeight()>0;
 	}
-
-
-	/**
-	 * 
-	 */
-	/*
-	public static PageElement findLabelForInput(WebElement form_elem, FormField input_field, WebDriver driver) throws NullPointerException{
-		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
-		//get all ids for current inputs
-		List<String> input_ids = new ArrayList<String>();
-		input_ids.add(input_field.getInputElement().getAttributes().get(input_field.getInputElement().getAttributes().indexOf("id")).getVals().get(0));
-		
-		for(WebElement label_elem : label_elements){
-			//check if input for attribute references an existing id on any of the current child_inputs
-			for(String id : input_ids){
-				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
-					return label_tag;
-				}
-			}
-		}
-		
-		return null;
-	}
-	*/
-	
-	/**
-	 * 
-	 */
-	/*public static Set<PageElement> findLabelsForInputs(WebElement form_elem, List<FormField> group_inputs, WebDriver driver){
-		List<WebElement> label_elements = form_elem.findElements(By.xpath(".//label"));
-		//get all ids for current inputs
-		List<String> input_ids = new ArrayList<String>();
-		for(FormField input : group_inputs){
-			input_ids.add(input.getInputElement().getAttributes().get(input.getInputElement().getAttributes().indexOf("id")).getVals().get(0));
-		}
-		
-		Set<PageElement> label_tags = new HashSet<PageElement>();
-		for(WebElement label_elem : label_elements){
-			//check if input for attribute references an existing id on any of the current child_inputs
-			for(String id : input_ids){
-				if(label_elem.getAttribute("for").equals(id)){
-					PageElement label_tag = new PageElement(label_elem.getText(), generateXpath(label_elem, "", new HashMap<String, Integer>(), driver), label_elem.getTagName(), Browser.extractedAttributes(label_elem, (JavascriptExecutor)driver), Browser.loadCssProperties(label_elem) );
-					label_tags.add(label_tag);
-					break;
-				}
-			}
-		}
-				
-		return label_tags;
-	}
-	*/
-	
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
 		return null;
 	}
 	
-	/**
-	 * Extracts all form input fields
-	 * 
-	 * @param page
-	 * @param driver
-	 * @return
-	 */
-	/*
-	public static Set<PageElement> extractAllInputElements(PageState page, WebDriver driver){
-		Set<PageElement> choices = new HashSet<PageElement>();
-		for(PageElement tag : page.getElements()){
-			//PageElement tag = (PageElement)elem;
-			if(tag.getName().equalsIgnoreCase("input")){
-				//Set<Attribute> attr_list = tag.getAttributes();
-				Attribute attr = tag.getAttributes().get(tag.getAttributes().indexOf("type"));
-				if(attr != null){
-					for(String attr_val : attr.getVals()){
-						if(attr_val.equalsIgnoreCase("checkbox")){
-							//CheckboxField field = new CheckboxField(tag);
-							
-							//String[] id_vals = tag.getAttributeValues("id");
-							
-							//get label 
-							//PageElement label = findLabelFor(page.getElements(), id_vals );
-							
-							//field.setLabel(label);
-							
-							choices.add(tag);
-							break;
-						}
-						else if(attr_val.equalsIgnoreCase("radio")){
-							//RadioField field = new RadioField(tag);
-							
-							//String[] id_vals = tag.getAttributeValues("id");
-							
-							//get label 
-							//PageElement label = findLabelFor(page.getElements(), id_vals );
-							//field.setRadio(tag);
-							//field.setRadio_label(label);
-							//attempt to identify label
-							
-							choices.add(tag);
-							break;
-						}
-						else if(attr_val.equalsIgnoreCase("text")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("textarea")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("color")){
-							choices.add(tag);
-	
-						}
-						else if(attr_val.equalsIgnoreCase("email")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("file")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("image")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("month")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("number")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("password")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("range")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("reset")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("search")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("submit")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("tel")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("time")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("url")){
-							choices.add(tag);
-						}
-						else if(attr_val.equalsIgnoreCase("week")){
-							choices.add(tag);
-						}
-					}
-				}
-			}
-		}
-		
-		return choices;
-	}
-	*/
 	
 	public static PageElement findLabelFor(Set<PageElement> elements, String for_id){
 		for(PageElement elem : elements){

@@ -41,8 +41,8 @@ public class Action implements Persistable, PathObject{
 	 */
 	public Action(String action_name, String value) {
 		setType("Action");
-		this.name = action_name;
-		this.value = value;
+		setName(action_name);
+		setValue(value);
 		this.setKey(generateKey());
 	}
 	

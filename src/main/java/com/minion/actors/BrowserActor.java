@@ -19,7 +19,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -34,9 +33,13 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.TestStatus;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageStateRepository;
+import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.TestService;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -60,7 +63,16 @@ public class BrowserActor extends UntypedActor {
 	private DomainRepository domain_repo;
 	
 	@Autowired
+	private PageStateRepository page_state_repo;
+
+	@Autowired
+	private TestRepository test_repo;
+	
+	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private TestService test_service;
 	
 	@Autowired
 	private Crawler crawler;
@@ -130,25 +142,27 @@ public class BrowserActor extends UntypedActor {
 	 * Generates {@link Test Tests} for path
 	 * @param path
 	 * @param result_page
+	 * @throws JsonProcessingException 
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) {
-		Test test = new Test(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) throws JsonProcessingException {
+		Test test = new Test(path_keys, path_objects, result_page, null);							
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 		
 		//tell memory worker of test
-		final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-				  .props("MemoryRegistration"), "memory_registration");
+		/*final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+				  .props("memoryRegistryActor"), "memory_registration"+UUID.randomUUID());
 		memory_actor.tell(test_msg, getSelf());
-		
+		*/
+		test_service.save(test, acct_msg.getOptions().get("host").toString());
 		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-				  .props("PathExpansionActor"), "path_expansion");
+				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 		path_expansion_actor.tell(test_msg, getSelf());
 		
 		return test;
@@ -166,6 +180,7 @@ public class BrowserActor extends UntypedActor {
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
+					test_repo.save(test);
 					break;
 				}
 			}
@@ -189,47 +204,46 @@ public class BrowserActor extends UntypedActor {
 		assert msg != null;
 		
 	  	PageState page_obj = browser_service.buildPage(browser);
+	  	page_obj.setLandable(true);
 
+	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
+	  	if(page_record == null){
+	  		page_obj = page_state_repo.save(page_obj);
+	  		MessageBroadcaster.broadcastPageState(page_obj, msg.getOptions().get("host").toString());
+	  	}
+	  	else{
+	  		page_obj = page_record;
+	  	}
+	  	
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
 	  	
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 		path_objects.add(page_obj);
-	  		  	
-	  	page_obj.setLandable(true);
-
+		
 		DiscoveryRecord discovery_record = discovery_repo.findByKey(msg.getOptions().get("discovery_key").toString());
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 		discovery_repo.save(discovery_record);
 		
 		Domain domain = domain_repo.findByHost((new URL(page_obj.getUrl())).getHost());
-		domain.addPageState(page_obj);
-		domain_repo.save(domain);
+		//domain.addPageState(page_obj);
+		//domain_repo.save(domain);
 		
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, domain, msg, discovery_record);
-		System.err.println("Broadcasting discovery status");
 
 		Test new_test = Test.clone(test);
 		Message<Test> test_msg = new Message<Test>(msg.getAccountKey(), new_test, msg.getOptions());
 
 		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-				  .props("PathExpansionActor"), "path_expansion");
+				  .props("pathExpansionActor"), "path_expansion");
 		path_expansion_actor.tell(test_msg, getSelf() );
-		
-		for(PageElement element : page_obj.getElements()){
-			try {
-				MessageBroadcaster.broadcastPageElement(element, domain.getUrl() );
-			} catch (JsonProcessingException e) {
-			}
-		}
+
 		//domain_repo.save(domain);
-		
-		MessageBroadcaster.broadcastPageState(page_obj, domain.getUrl());
-		
+				
 		discovery_record = discovery_repo.findByKey(msg.getOptions().get("discovery_key").toString());
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-		//discovery_repo.save(discovery_record);
+		discovery_repo.save(discovery_record);
 		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 	}
@@ -253,6 +267,15 @@ public class BrowserActor extends UntypedActor {
 			result_page = crawler.crawlPath(path_keys, path_objects, browser, acct_msg.getOptions().get("host").toString());
 			tries++;
 			result_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
+			
+			PageState page_state_record = page_state_repo.findByKey(result_page.getKey());
+		  	if(page_state_record != null){
+		  		result_page= page_state_record;
+		  	}
+		  	else{
+		  		page_state_repo.save(result_page);
+		  	}
+		  	
 		}while(result_page == null && tries < 5);
 		final long pathCrawlEndTime = System.currentTimeMillis();
 		
@@ -268,11 +291,9 @@ public class BrowserActor extends UntypedActor {
 	  	}
 	  	else{*/			
 			Domain domain = domain_repo.findByHost((new URL(browser_service.buildPage(browser).getUrl())).getHost());
-			domain.addPageState(result_page);
-			domain_repo.save(domain);
+			//domain.addPageState(result_page);
+			//domain_repo.save(domain);
 			
-			MessageBroadcaster.broadcastPageState(result_page, domain.getUrl());
-
 			DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 			discovery_record.setTestCount(discovery_record.getTestCount()+1);
 			discovery_record.setLastPathRanAt(new Date());

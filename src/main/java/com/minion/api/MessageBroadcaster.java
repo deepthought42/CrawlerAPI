@@ -122,7 +122,8 @@ public class MessageBroadcaster {
      * @throws JsonProcessingException 
      */
 	public static void broadcastDiscoveryStatus(DiscoveryRecord record) throws JsonProcessingException {
-		
+		log.info("broadcasting discovery status");
+
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);

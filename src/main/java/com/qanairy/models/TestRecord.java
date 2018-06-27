@@ -29,7 +29,7 @@ public class TestRecord implements Persistable {
 	private String key;
 	private Date ran_at;
 	private String browser;
-	private Boolean passing;
+	private TestStatus passing;
 	private long run_time_length;
 
 	@Relationship(type = "HAS_RESULT", direction = Relationship.OUTGOING)
@@ -38,11 +38,11 @@ public class TestRecord implements Persistable {
 	//Empty constructor for spring
 	public TestRecord(){}
 	
-	public TestRecord(Date ran_at, Boolean passes, String browser_name, PageState result, long run_time){
+	public TestRecord(Date ran_at, TestStatus status, String browser_name, PageState result, long run_time){
 		setRanAt(ran_at);
 		setResult(result);
 		setRunTime(run_time);
-		setPassing(passes);
+		setPassing(status);
 		setBrowser(browser_name);
 		setKey(generateKey());
 	}
@@ -72,15 +72,15 @@ public class TestRecord implements Persistable {
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public Boolean getPassing(){
+	public TestStatus getPassing(){
 		return this.passing;
 	}
 	
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public void setPassing(Boolean passing){
-		this.passing = passing;
+	public void setPassing(TestStatus status){
+		this.passing = status;
 	}
 	
 	public String getKey() {

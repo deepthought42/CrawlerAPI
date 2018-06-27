@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.qanairy.models.DiscoveryRecord;
@@ -19,9 +18,11 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.TestStatus;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
+import com.qanairy.models.repository.TestRepository;
 
 @Component
 public class TestCreatorService {
@@ -34,6 +35,9 @@ public class TestCreatorService {
 	
 	@Autowired
 	PageStateRepository page_state_repo;
+	
+	@Autowired
+	private TestRepository test_repo;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -57,18 +61,23 @@ public class TestCreatorService {
 		browser.getDriver().get(url);
 		System.err.println("building page");
 	  	PageState page_obj = browser_service.buildPage(browser);
+	  	page_obj.setLandable(true);
+
+	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
+	  	if(page_record == null){
+	  		page_obj = page_state_repo.save(page_obj);
+	  		MessageBroadcaster.broadcastPageState(page_obj, host);
+	  	}
+	  	else{
+	  		page_obj = page_record;
+	  	}
 	  	System.err.println("Page built");
 	  	browser.close();
-	  	page_obj.setLandable(true);
 	  	
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
 	  	
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
-	  	PageState page_obj_record = page_state_repo.findByKey(page_obj.getKey());
-	  	if(page_obj_record != null){
-	  		page_obj = page_obj_record;
-	  	}
 	  	path_objects.add(page_obj);
 	  	
 	  	System.err.println("saving discovery record and domain disco key :: "+discovery_key);
@@ -83,22 +92,12 @@ public class TestCreatorService {
 		System.err.println("Page url host :: "  + host);
 		Domain domain = domain_repo.findByHost( host);
 		System.err.println("domain :: "+domain);
-		System.err.println("Domain test count   ::   "+domain.getTestCount());
-		domain.addPageState(page_obj);
 		
-		for(PageElement element : page_obj.getElements()){
-			try {
-				MessageBroadcaster.broadcastPageElement(element, domain.getUrl() );
-			} catch (JsonProcessingException e) {
-			}
-		}
-		domain_repo.save(domain);
-		
-		System.err.println("broadcasting page state");
-		MessageBroadcaster.broadcastPageState(page_obj, domain.getUrl());
 		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
+		
 		System.err.println("Broadcasting discovery status");
+		System.err.println("result page elements count :: "+page_obj.getElements().size());
 		return createTest(path_keys, path_objects, page_obj, 1L, domain ,discovery_record, browser_name);
 	}
 	
@@ -111,12 +110,12 @@ public class TestCreatorService {
 		assert path_keys != null;
 		assert path_objects != null;
 		
-		Test test = new Test(path_keys, path_objects, result_page, "Test #"+domain.getTestCount());							
+		Test test = new Test(path_keys, path_objects, result_page, null);						
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), null, browser_name, test.getResult(), crawl_time);
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
 		return test;
@@ -134,6 +133,7 @@ public class TestCreatorService {
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
+					test_repo.save(test);
 					break;
 				}
 			}

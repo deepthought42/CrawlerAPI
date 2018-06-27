@@ -1,7 +1,6 @@
 package com.qanairy.models;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
@@ -17,32 +16,14 @@ public class ScreenshotSet implements Persistable {
 	
 	private String key;
 	private String browser_name;
-	private String full_screenshot;
 	private String viewport_screenshot;
 	
 	public ScreenshotSet(){}
 	
-	public ScreenshotSet(String full, String viewport, String browser_name){
-		this.full_screenshot = full;
+	public ScreenshotSet(String viewport, String browser_name){
 		this.viewport_screenshot = viewport;
 		this.setBrowser(browser_name);
 		setKey(generateKey());
-	}
-	
-	public ScreenshotSet(String key, String full, String viewport, String browser_name){
-		this.key = key;
-		this.full_screenshot = full;
-		this.viewport_screenshot = viewport;
-		this.setBrowser(browser_name);
-		setKey(generateKey());
-	}
-	
-	public String getFullScreenshot() {
-		return full_screenshot;
-	}
-
-	public void setFullScreenshot(String full_screenshot) {
-		this.full_screenshot = full_screenshot;
 	}
 
 	public String getViewportScreenshot() {
@@ -70,6 +51,6 @@ public class ScreenshotSet implements Persistable {
 	}
 	
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getFullScreenshot())+":"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getViewportScreenshot());
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(org.apache.commons.codec.digest.DigestUtils.sha256Hex(getViewportScreenshot()));
 	}
 }

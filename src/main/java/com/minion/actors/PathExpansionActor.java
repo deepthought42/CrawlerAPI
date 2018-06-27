@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
@@ -53,13 +51,9 @@ public class PathExpansionActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			System.err.println("#################################################################");
-			System.err.println("Path expansion actor receieved a message");
-			System.err.println("#################################################################");
+			
 			if(acct_msg.getData() instanceof Test){				
 				Test test = (Test)acct_msg.getData();
-				System.err.println("Test received by Path expansions ");
-				System.err.println("#################################################################");
 
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
@@ -67,38 +61,33 @@ public class PathExpansionActor extends UntypedActor {
 				if((!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
 					PageState last_page = test.findLastPage();
-					PageState first_page = test.firstPage();
-					System.err.println("path doesn't have cycle, doesn't span multiple domains");
-					if(!last_page.equals(first_page) && last_page.isLandable()){
-						System.err.println("last page doesn't match first page...");
+					
+					if(!last_page.equals(test.getResult()) && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						discovery_repo.save(discovery_record);
+						discovery_record = discovery_repo.save(discovery_record);
 
-						System.err.println("Sending URL to work allocator...");
 						final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-								  .props("WorkAllocaionActor"), "work_allocator");
+								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
-						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), new URL(last_page.getUrl()), acct_msg.getOptions());
+						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), new URL(test.getResult().getUrl()), acct_msg.getOptions());
 						work_allocator.tell(url_msg, getSelf() );
-						
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-						System.err.println("Returning empty response....");
 						return;
 					}
-					
-					pathExpansions = PathExpansionActor.expandPath(test);
-					System.err.println("identified path expansion count :: " + pathExpansions.size());
-					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
-					discovery_repo.save(discovery_record);
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-					for(ExploratoryPath expanded : pathExpansions){
-						final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-								  .props("WorkAllocaionActor"), "work_allocator");
-
-						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
-						
-						work_allocator.tell(expanded_path_msg, getSelf() );
+					else{
+						pathExpansions = PathExpansionActor.expandPath(test);
+						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
+						discovery_record = discovery_repo.save(discovery_record);
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+	
+						for(ExploratoryPath expanded : pathExpansions){
+							final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+	
+							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
+							
+							work_allocator.tell(expanded_path_msg, getSelf() );
+						}
 					}
 				}	
 			}
@@ -116,15 +105,14 @@ public class PathExpansionActor extends UntypedActor {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		PageState page = test.findLastPage();
+		PageState page = test.getResult();
 		if(page == null){
 			return null;
 		}
 
-		Set<PageElement> page_elements = page.getElements();
-		
 		//iterate over all elements
-		for(PageElement page_element : page_elements){
+		System.err.println("Page elements for expansion :: "+page.getElements().size());
+		for(PageElement page_element : page.getElements()){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -177,14 +165,19 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 			else{
+				System.err.println("cloning test for expansion");
 				Test new_test = Test.clone(test);
+				if(test.getPathKeys().size() > 1){
+					new_test.addPathKey(test.getResult().getKey());
+					new_test.addPathObject(test.getResult());
+				}
 				new_test.addPathObject(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
+				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-					
 					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 

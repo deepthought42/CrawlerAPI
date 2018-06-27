@@ -1,6 +1,8 @@
 package com.minion.actors;
 
 import java.net.URL;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import com.minion.structs.Message;
 import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Test;
 import com.qanairy.services.TestCreatorService;
+import com.qanairy.services.TestService;
+
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
  *
@@ -28,6 +32,9 @@ public class UrlBrowserActor extends UntypedActor {
 	
 	@Autowired
 	private TestCreatorService test_creator_service;
+	
+	@Autowired
+	private TestService test_service;
 
 	/**
 	 * {@inheritDoc}
@@ -49,26 +56,26 @@ public class UrlBrowserActor extends UntypedActor {
 						String url = ((URL)acct_msg.getData()).toString();
 						
 						Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
+						test_service.save(test, host);
+						
 						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
+						/*
 						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-								  .props("PathExpansionActor"), "path_expansion");
+								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						path_expansion_actor.tell(test_msg, getSelf() );
-
+						*/
+						
 						final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-								  .props("FormTestDiscoveryActor"), "form_test_discovery");
+								  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
 						form_test_discoverer.tell(test_msg, getSelf() );
 												
-						//tell memory worker of test
-						final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-								  .props("MemoryRegistration"), "memory_registration");
-						memory_actor.tell(test_msg, getSelf());
+						
 						break;
 					}
 					catch(Exception e){
 						e.printStackTrace();
 						log.error(e.getMessage());
-						System.err.println("Failed to create landing page test");
 					}
 				}while(!test_generated_successfully);
 		   }

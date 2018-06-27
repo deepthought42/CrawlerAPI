@@ -33,7 +33,7 @@ public class Test implements Persistable {
 	
 	private String key; 
 	private String name;
-	private Boolean correct;
+	private TestStatus correct;
 	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
 	private Date last_run_time;
@@ -42,7 +42,7 @@ public class Test implements Persistable {
 	private List<String> path_keys;
 	
 	@Properties
-	private Map<String, Boolean> browser_passing_statuses = new HashMap<>();
+	private Map<String, String> browser_passing_statuses = new HashMap<>();
 	
 	@Relationship(type = "HAS_TEST_RECORD")
 	private Set<TestRecord> records = new HashSet<>();
@@ -53,7 +53,7 @@ public class Test implements Persistable {
 	@Relationship(type = "HAS_PATH_OBJECT")
 	private List<PathObject> path_objects = new ArrayList<>();
 	
-	@Relationship(type = "HAS_PAGE_STATE")
+	@Relationship(type = "HAS_RESULT")
 	private PageState result;
 	
 	public Test(){}
@@ -77,12 +77,12 @@ public class Test implements Persistable {
 		setPathObjects(path_objects);
 		setResult(result);
 		setRecords(new HashSet<TestRecord>());
-		setCorrect(null);
+		setCorrect(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(false);
 		setGroups(new HashSet<Group>());
-		setLastRunTimestamp(null);
+		setLastRunTimestamp(new Date());
 		setName(name);
-		setBrowserStatuses(new HashMap<String, Boolean>());
+		setBrowserStatuses(new HashMap<String, String>());
 		setIsRunning(false);
 		setKey(generateKey());
 		setRunTime(0L);
@@ -98,12 +98,12 @@ public class Test implements Persistable {
 		setPathObjects(path_objects);
 		setResult(result);
 		setRecords(new HashSet<TestRecord>());
-		setCorrect(null);
+		setCorrect(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(spansMultipleDomains);
 		setGroups(new HashSet<Group>());
-		setLastRunTimestamp(null);
+		setLastRunTimestamp(new Date());
 		setName(name);
-		setBrowserStatuses(new HashMap<String, Boolean>());
+		setBrowserStatuses(new HashMap<String, String>());
 		setIsRunning(false);
 		setKey(generateKey());
 		setRunTime(0L);
@@ -115,27 +115,20 @@ public class Test implements Persistable {
 	 * @param record
 	 * @return
 	 */
-	public static Boolean isTestPassing(PageState expected_page, PageState new_result_page, Boolean last_test_passing_status){
-		if((last_test_passing_status != null && !last_test_passing_status) && expected_page.getKey().equals(new_result_page.getKey())){
-			System.err.println("LAST TEST PASSING STATUS ::  "+last_test_passing_status);
-			System.err.println("ARE PAGES EQUAL????     "+expected_page.equals(new_result_page));
-			last_test_passing_status = false; 
+	public static TestStatus isTestPassing(PageState expected_page, PageState new_result_page, TestStatus last_test_passing_status){
+		if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.FAILING)) && expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.FAILING; 
 		}
-		else if((last_test_passing_status == null || !last_test_passing_status) && !expected_page.getKey().equals(new_result_page.getKey())){
-			last_test_passing_status = null;
+		else if((last_test_passing_status.equals(TestStatus.UNVERIFIED) || last_test_passing_status.equals(TestStatus.FAILING)) && !expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.UNVERIFIED;
 		}
-		else if((last_test_passing_status != null && last_test_passing_status) && expected_page.getKey().equals(new_result_page.getKey())){
-			last_test_passing_status = true;
+		else if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.PASSING)) && expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.PASSING;
 		}
-		else if((last_test_passing_status != null && last_test_passing_status) && expected_page.getKey().equals(new_result_page.getKey())){
-			System.err.println("Result page KEY      :::: "+new_result_page.getKey());
-			System.err.println("Expected page key    :::: "+expected_page.getKey());
-			System.err.println("LAST TEST PASSING STATUS ::  "+last_test_passing_status);
-			System.err.println("ARE PAGES EQUAL????     "+expected_page.equals(new_result_page));
-			last_test_passing_status = false;
+		else if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.PASSING)) && expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.FAILING;
 		}
 		
-		System.err.println("Return value from isTestPassing()   ........    "+last_test_passing_status);
 		return last_test_passing_status;
 	}
 	
@@ -151,12 +144,12 @@ public class Test implements Persistable {
 		return false;
 	}
 
-	public Boolean getCorrect(){
+	public TestStatus getCorrect(){
 		return this.correct;
 	}
 	
-	public void setCorrect(Boolean correct){
-		this.correct = correct;
+	public void setCorrect(TestStatus status){
+		this.correct = status;
 	}
 	
 	public String getKey(){
@@ -279,11 +272,11 @@ public class Test implements Persistable {
 		this.is_running = is_running;
 	}
 
-	public Map<String, Boolean> getBrowserStatuses() {
+	public Map<String, String> getBrowserStatuses() {
 		return browser_passing_statuses;
 	}
 
-	public void setBrowserStatuses(Map<String, Boolean> browser_passing_statuses) {
+	public void setBrowserStatuses(Map<String, String> browser_passing_statuses) {
 		this.browser_passing_statuses = browser_passing_statuses;
 	}
 
@@ -295,7 +288,7 @@ public class Test implements Persistable {
 		return this.path_objects;
 	}
 
-	private void setPathObjects(List<PathObject> path_objects) {
+	public void setPathObjects(List<PathObject> path_objects) {
 		this.path_objects = path_objects;
 	}
 	
@@ -306,7 +299,7 @@ public class Test implements Persistable {
 	 * 
 	 * @pre browser_name != null
 	 */
-	public void setBrowserStatus(String browser_name, Boolean status){
+	public void setBrowserStatus(String browser_name, String status){
 		assert browser_name != null;
 		getBrowserStatuses().put(browser_name, status);
 	}
@@ -365,7 +358,9 @@ public class Test implements Persistable {
 		Test clone_test = new Test(new ArrayList<String>(test.getPathKeys()),
 									   new ArrayList<PathObject>(test.getPathObjects()),
 									   test.getResult(),
-									   test.getName(), false, test.getSpansMultipleDomains());
+									   test.getName(), 
+									   false, 
+									   test.getSpansMultipleDomains());
 		
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
 		clone_test.setGroups(new HashSet<Group>(test.getGroups()));

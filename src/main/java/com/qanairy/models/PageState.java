@@ -35,11 +35,13 @@ public class PageState implements Persistable, PathObject {
 	private Long id;
 	
     private String key;
-    private boolean landable = false;
+    private boolean landable;
+    
+    @JsonIgnore
 	private String src;
 	private String url;
-	private Integer total_weight;
-	private Integer image_weight;
+	private int total_weight;
+	private int image_weight;
 	private String type;
 	
 	@Relationship(type = "HAS_SCREENSHOT")
@@ -63,16 +65,16 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre browser_screenshots != null;
 	 */
-	public PageState(String html, String url, Set<ScreenshotSet> browsers_screenshots, Set<PageElement> elements) throws IOException {
+	public PageState(String html, String url, Set<ScreenshotSet> browser_screenshots , Set<PageElement> elements) throws IOException {
 		assert elements != null;
 		assert html != null;
 		assert html.length() > 0;
-		assert browsers_screenshots != null;
+		assert browser_screenshots  != null;
 
 		setType(PageState.class.getSimpleName());
 		setSrc(html);
 		setUrl(url.replace("/#",""));
-		setBrowserScreenshots(browsers_screenshots);
+		setBrowserScreenshots(browser_screenshots );
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
@@ -94,14 +96,14 @@ public class PageState implements Persistable, PathObject {
 	 * 
 	 * @throws IOException
 	 */
-	public PageState(String html, String url, Set<ScreenshotSet> browsers_screenshots, Set<PageElement> elements, boolean isLandable) throws IOException {
+	public PageState(String html, String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
-		assert browsers_screenshots != null;
+		assert browser_screenshots != null;
 	
 		setType(PageState.class.getSimpleName());
 		setSrc(html);
 		setUrl(url.replace("/#",""));
-		setBrowserScreenshots(browsers_screenshots);
+		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
@@ -177,12 +179,13 @@ public class PageState implements Persistable, PathObject {
         
         PageState that = (PageState)o;
         
-        String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getFullScreenshot();
-        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getFullScreenshot();
+        String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
+        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();
         
         boolean screenshots_match = false;
         
-        System.err.println("Checking page equality");
+        /*
+        System.err.println("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
 		BufferedImage img1;
 		BufferedImage img2;
     	
@@ -202,18 +205,17 @@ public class PageState implements Persistable, PathObject {
     		log.info("PageState screenshots match");
     		return true;
     	}
-       
+       	*/
         
         //System.err.println("Screenshots match? :: "+screenshots_match);
-        /*
-        System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
+        
+        /*System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         System.err.println("Page 1 length :: "+this.getElements().size());
         System.err.println("Page 2 length :: "+that.getElements().size());
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        //NOTE ::: THE FOLLOWING COMMENTED CODE CAN BE USED TO TEST PAGE EQUALITY BASED ON PAGE ELEMENTS
         if(this.getElements().size() == that.getElements().size()){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
@@ -224,13 +226,9 @@ public class PageState implements Persistable, PathObject {
 	        	if(elem.equals(page_elements.get(elem.getXpath()))){
 	        		page_elements.remove(elem.getXpath());
 	        	}
-	        	else{
-	        		System.err.println("PAGE ELEMENTS ARE NOT EQUAL");
-	        	}
 	        }
 	        
 	        if(page_elements.isEmpty()){
-	        	System.err.println("Page elements map is empty. Pages are EQUAL!!!!");
 	        	return true;
 	        }
         }
@@ -354,7 +352,6 @@ public class PageState implements Persistable, PathObject {
 		this.image_weight = image_weight;
 	}
 
-	@JsonProperty("browser_screenshots")
 	public Set<ScreenshotSet> getBrowserScreenshots() {
 		return browser_screenshots;
 	}

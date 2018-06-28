@@ -339,6 +339,26 @@ public class Browser {
 	}
 	
 	/**
+	 * 
+	 * @param screenshot
+	 * @param elem
+	 * @return
+	 * @throws IOException
+	 */
+	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point, WebDriver driver) throws IOException{
+		// Get width and height of the element
+		int elemWidth = dimension.getWidth();
+		int elemHeight = dimension.getHeight();
+
+		JavascriptExecutor executor = (JavascriptExecutor) driver;
+		Long viewport_offset = (Long) executor.executeScript("return window.pageYOffset;");
+		System.err.println("Viewport y offset :: "+viewport_offset);
+		int y_coord = point.getY()-viewport_offset.intValue();
+		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
+	}
+	
+	
+	/**
 	 * Checks if element is visible in a given screenshot
 	 * 
 	 * @param screenshot
@@ -437,7 +457,7 @@ public class Browser {
 		for(String propertyName : cssList){
 			try{
 				String element_value = element.getCssValue(propertyName);
-				if(element_value != null){
+				if(element_value != null && !element_value.isEmpty()){
 					css_map.put(propertyName, element_value);
 				}
 			}catch(Exception e){

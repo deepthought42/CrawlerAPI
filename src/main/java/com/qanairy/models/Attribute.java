@@ -11,6 +11,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class Attribute implements Persistable {
+	
 	@GeneratedValue
     @Id 
 	private Long id;

@@ -21,10 +21,12 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.internal.Locatable;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -426,14 +428,30 @@ public class BrowserService {
 			Set<PageElement> input_tags = new HashSet<PageElement>(); 
 			for(WebElement input_elem : input_elements){
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver()), input_elem.getTagName(), extractAttributes(input_elem, browser.getDriver()), Browser.loadCssProperties(input_elem) );
-				Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
 				
+  				PageElement elem_record = page_element_repo.findByKey(input_tag.getKey());
+				if(elem_record == null){
+					input_tag = page_element_repo.save(input_tag);
+  				}
+  				
+				Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
 				//System.err.println("Screenshot url :: "+screenshot_sub);
-			/*	File viewport = Browser.getViewportScreenshot(browser.getDriver());
-				BufferedImage img = Browser.getElementScreenshot(ImageIO.read(viewport), input_elem.getSize(), input_elem.getLocation());
+				File viewport = Browser.getViewportScreenshot(browser.getDriver());
+				
+				System.err.println("INPUT ELEMENT SIZE DIMENSION :: "+input_elem.getSize().getHeight()+"  :   "+input_elem.getSize().getWidth());
+				System.err.println("INPUT ELEMENT XY coordinates :: "+input_elem.getLocation().getX()+"  :   "+input_elem.getLocation().getY());
+				BufferedImage reader = ImageIO.read(viewport);
+				
+				System.err.println("VIEWPORT SCREENSHOT SIZE DIMENSION :: "+reader.getHeight()+"  :   "+reader.getWidth());
+				System.err.println("Screenshotting element :: "+input_tag.getXpath());
+				
+				if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
+					continue;
+				}
+				BufferedImage img = Browser.getElementScreenshot(ImageIO.read(viewport), input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
 				String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(browser.getDriver().getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(input_elem.getTagName()+input_elem.getText()), input_tag.getKey());	
-				*/
-				input_tag.setScreenshot("missing_elem_screenshot.jpg");
+				
+				input_tag.setScreenshot(screenshot);
 				
 				System.err.println("########  !!!!!!!!!!!!!!  DONT FORGET TO FIX SCREENSHOTS FOR FORM TEST ELEMENTS !!!!!!!!!!!!!  ######");
 

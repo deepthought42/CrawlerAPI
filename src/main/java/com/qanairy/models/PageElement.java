@@ -71,6 +71,7 @@ public class PageElement implements Persistable, PathObject {
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
+		setScreenshot("");
 		setText(text);
 		setCssValues(css_map);
 		setKey(generateKey());
@@ -101,6 +102,7 @@ public class PageElement implements Persistable, PathObject {
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
+		setScreenshot("");
 		setText(text);
 		setCssValues(css_map);
 		setRules(rules);

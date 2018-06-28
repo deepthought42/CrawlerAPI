@@ -15,9 +15,10 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.Test;
+import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
@@ -52,6 +53,12 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	
 	@Autowired
 	private TestService test_service;
+	
+	@Autowired
+	private PageElementRepository page_element_repo;
+	
+	@Autowired
+	private ActionRepository action_repo;
 	
 	/**
 	 * {@inheritDoc}
@@ -104,77 +111,36 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  		}
 			  		
 			  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
-			  		test_path_objects.addAll(path_obj_list);
-			  		
 			  		for(PathObject obj : path_obj_list){
 			  			System.err.println("****************************************************");
 			  			System.err.println("Object type :: "+obj.getType());
 			  			System.err.println("****************************************************");
-			  			if(obj.getType().equals("PageState")){
-			  				PageState page_state = (PageState)obj;
-			  				System.err.println("page key :: "+page_state.getKey());
-			  				System.err.println("page source :: "+page_state.getSrc().length());
-			  				System.err.println("page type :: "+page_state.getType());
-			  				System.err.println("page url :: "+page_state.getUrl());
-			  				System.err.println("page image weight :: "+page_state.getImageWeight());
-			  				System.err.println("page total weigth :: "+page_state.getTotalWeight());
-			  				
-			  				for(ScreenshotSet screenshot_set : page_state.getBrowserScreenshots()){
-			  					System.err.println("Screenshot key :: "+screenshot_set.getKey());
-			  					System.err.println("Screenshot viewport :: "+screenshot_set.getViewportScreenshot());
-			  					System.err.println("Screesnhot browser :: "+screenshot_set.getBrowser());
-			  				}
-			  				
-			  				for(PageElement elem : page_state.getElements()){
-			  					System.err.println(""+elem.getKey());
-				  				System.err.println(""+elem.getName());
-				  				System.err.println(""+elem.getScreenshot());
-				  				System.err.println(""+elem.getText());
-				  				System.err.println(""+elem.getType());
-				  				System.err.println(""+elem.getXpath());
-
-				  				for(Attribute attr : elem.getAttributes()){
-				  					System.err.println("Attribute key "+attr.getKey());
-				  					System.err.println("Attribute name :: "+attr.getName());
-					  				System.err.println("Page Element :: " +attr.getVals().size());
-				  				}
-				  				
-				  				for(String key : elem.getCssValues().keySet()){
-
-					  				System.err.println("css values ::  "+key + "     ;;;       "+elem.getCssValues().get(key));
-					  					
-				  				}
-				  				System.err.println("Page Element css values ::  "+elem.getCssValues());
-				  				for(Rule rule : elem.getRules()){
-				  					System.err.println("Rule key :: "+rule.getKey());
-				  					System.err.println("Rule value :: "+rule.getValue());
-				  					System.err.println("Rule type :: "+rule.getType());
-				  				}
-			  				}
-			  				System.err.println(""+page_state.getElements());
-			  				
-			  			}
-			  			else if(obj.getType().equals("PageElement")){
+			  			if(obj.getType().equals("PageElement")){
 			  				PageElement page_elem = (PageElement)obj;
 			  				System.err.println("Page Element key :: "+page_elem.getKey());
-			  				/*System.err.println("Page Element name :: "+page_elem.getName());
-			  				page_elem.setScreenshot("page_elem_still_needs_screenshot_taken.jpg");
-			  				System.err.println("Page Element screenshot ::  "+page_elem.getScreenshot());
-
-			  				System.err.println("Page Element Text ::  "+page_elem.getText());
-			  				System.err.println("Page Element type :: "+page_elem.getType());
-			  				System.err.println("Page Element xpath "+page_elem.getXpath());
+			  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
 			  				
+			  				System.err.println("elem key :: "+page_elem.getKey());
+			  				System.err.println("elem name : "+page_elem.getName());
+			  				//page_elem.setScreenshot("this_is_a_temp_value.jpg");
+			  				System.err.println("elem screenshot : "+page_elem.getScreenshot());
+			  				System.err.println("elem text :: "+page_elem.getText());
+			  				System.err.println("elem text is null :: "+(page_elem.getText()==null));
+			  				System.err.println("elem type : "+page_elem.getType());
+			  				System.err.println("elem xpath : "+page_elem.getXpath());
+
 			  				for(Attribute attr : page_elem.getAttributes()){
 			  					System.err.println("Attribute key "+attr.getKey());
 			  					System.err.println("Attribute name :: "+attr.getName());
-				  				System.err.println("Page Element :: " +attr.getVals().size());
+				  				System.err.println("Attribute values :: " +attr.getVals().size());
+				  				
+				  				for(String val : attr.getVals()){
+				  					System.err.println("val :: "+val);
+				  				}
 			  				}
 			  				
 			  				for(String key : page_elem.getCssValues().keySet()){
-
 				  				System.err.println("css values ::  "+key + "     ;;;       "+page_elem.getCssValues().get(key));
-				  					
 			  				}
 			  				System.err.println("Page Element css values ::  "+page_elem.getCssValues());
 			  				for(Rule rule : page_elem.getRules()){
@@ -182,17 +148,22 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  					System.err.println("Rule value :: "+rule.getValue());
 			  					System.err.println("Rule type :: "+rule.getType());
 			  				}
-			  				*/
+			  				
+			  				test_path_objects.add(elem_record);
 			  			}
 			  			else if(obj.getType().equals("Action")){
 			  				Action action = (Action)obj;
 			  				System.err.println("Action Key :: " +action.getKey());
-			  				/*System.err.println("Action name :: "+action.getName());
-			  				System.err.println("Action value :: " +action.getValue());
-			  				System.err.println("Action type :: " + action.getType());
-			  				*/
+			  				Action action_record = action_repo.findByKey(obj.getKey());
+			  				if(action_record == null){
+			  					action_record = action_repo.save(action);
+			  				}
+			  				test_path_objects.add(action_record);
 			  			}
 			  		}
+			  		//test_path_objects.addAll(path_obj_list);
+			  		
+			  		System.err.println("Path object list size :: "+path_obj_list);
 			  		
 					final long pathCrawlStartTime = System.currentTimeMillis();
 					

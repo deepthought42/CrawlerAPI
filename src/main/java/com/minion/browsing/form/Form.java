@@ -19,21 +19,11 @@ public class Form {
 	private PageElement submit_field;
 	private FormType type;
 	
-	/**
-	 * Constructs new Form object with form_fields
-	 * @param form_fields
-	 */
-	public Form(PageElement form_tag, List<ComplexField> form_fields){
-		this.setFormTag(form_tag);
-		this.form_fields = form_fields;
-		this.setType(determineFormType());
-	}
-	
 	public Form(PageElement form_tag, List<ComplexField> form_fields, PageElement submit_field){
-		this.setFormTag(form_tag);
-		this.form_fields = form_fields;
-		this.submit_field = submit_field;
-		this.setType(determineFormType());
+		setFormTag(form_tag);
+		setFormFields(form_fields);
+		setSubmitField(submit_field);
+		setType(determineFormType());
 	}
 	
 	/**
@@ -101,5 +91,4 @@ public class Form {
 	public void setType(FormType type) {
 		this.type = type;
 	}
-
 }

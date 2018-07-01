@@ -274,6 +274,7 @@ public class BrowserActor extends UntypedActor {
 		  	}
 		  	else{
 		  		page_state_repo.save(result_page);
+		  		MessageBroadcaster.broadcastPageState(result_page, acct_msg.getOptions().get("host").toString());
 		  	}
 		  	
 		}while(result_page == null && tries < 5);

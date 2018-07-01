@@ -40,7 +40,7 @@ public class ActionController {
     @PreAuthorize("hasAuthority('read:actions')")
     @RequestMapping(method = RequestMethod.GET)
     public List<Action> getAll() {
-        logger.info("get invoked");
+        logger.info("finding all actions");
         return IterableUtils.toList(action_repo.findAll());
     }
 }

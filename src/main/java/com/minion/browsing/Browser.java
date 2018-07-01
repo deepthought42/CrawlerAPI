@@ -332,10 +332,39 @@ public class Browser {
 	 */
 	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point) throws IOException{
 		// Get width and height of the element
-		int elemWidth = dimension.getWidth();
-		int elemHeight = dimension.getHeight();
-
-		return page_screenshot.getSubimage(point.getX(), point.getY(), elemWidth, elemHeight);
+		int elem_width = dimension.getWidth();
+		int elem_height = dimension.getHeight();
+		int point_x = point.getX();
+		int point_y = point.getY();
+		
+		if( (elem_width + 10 + point_x) < page_screenshot.getWidth()){
+			elem_width = elem_width+10;
+		}
+		else{
+			elem_width = page_screenshot.getWidth() - elem_width - point_x;
+		}
+		
+		if((elem_height + 10 + point_y) < page_screenshot.getHeight()){
+			elem_height = elem_height+10;
+		}
+		else{
+			elem_height = page_screenshot.getHeight() - elem_height - point_y;
+		}
+		
+		if( (point_x - 10) >= 0){
+			point_x = point_x - 10;
+		}
+		else{
+			point_x = 0;
+		}
+		
+		if( (point_y - 10) >= 0){
+			point_y = point_y - 10;
+		}
+		else{
+			point_y = 0;
+		}
+		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	
 	/**

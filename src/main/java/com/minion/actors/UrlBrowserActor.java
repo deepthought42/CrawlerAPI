@@ -60,11 +60,9 @@ public class UrlBrowserActor extends UntypedActor {
 						
 						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-						/*
 						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						path_expansion_actor.tell(test_msg, getSelf() );
-						*/
 						
 						final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
 								  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());

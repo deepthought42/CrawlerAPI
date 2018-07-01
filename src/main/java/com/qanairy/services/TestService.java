@@ -48,12 +48,14 @@ public class TestService {
 		 PageState page = null;
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
-
+		 System.err.println("Test :: "+test);
+		 System.err.println("TEST KEY S:: " + test.getPathKeys().size());
+		 System.err.println("browser :: " + browser);
 		 try {
 			page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
 			
-			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getCorrect());
-			passing = Test.isTestPassing(test.getResult(), page, test.getCorrect());
+			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getStatus()); 
+			passing = Test.isTestPassing(test.getResult(), page, test.getStatus());
 			
 		    test.setBrowserStatus(browser.getBrowserName(), passing.toString());
 		 } catch (IOException e) {		

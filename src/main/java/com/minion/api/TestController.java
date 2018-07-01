@@ -118,7 +118,7 @@ public class TestController {
 			
 			while(tests.hasNext()){
 				Test test = tests.next();
-				if(!test.getCorrect().equals("UNVERIFIED") && !test.getCorrect().equals("FAILING")){
+				if(!test.getStatus().equals("UNVERIFIED") && !test.getStatus().equals("FAILING")){
 					failed_tests++;
 				}
 			}
@@ -192,7 +192,7 @@ public class TestController {
 	public @ResponseBody Test setPassingStatus(HttpServletRequest request, 
 													@RequestParam(value="key", required=true) String key, 
 													@RequestParam(value="browser", required=true) String browser_name,
-													@RequestParam(value="correct", required=true) TestStatus status)
+													@RequestParam(value="status", required=true) TestStatus status)
 															throws UnknownAccountException{
     	
     	//make sure domain belongs to user account first
@@ -219,7 +219,8 @@ public class TestController {
     	
 		Test test = test_repo.findByKey(key);
 		System.err.println("Test status :: "+status);
-		test.setCorrect(status);
+		System.err.println("Test :: "+test.getKey());
+		test.setStatus(status);
 		test.getBrowserStatuses().put(browser_name, status.toString());
 		//update last TestRecord passes value
 		updateLastTestRecordPassingStatus(test);
@@ -253,7 +254,7 @@ public class TestController {
 		}
 		
 		if(last_record != null){
-			last_record.setPassing(test.getCorrect());
+			last_record.setPassing(test.getStatus());
 		}
 	}
 
@@ -367,6 +368,7 @@ public class TestController {
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	
     	for(String key : test_keys){
+    		System.err.println("Looking up test by key :: "+key);
     		Test test = test_repo.findByKey(key);
     		
     		TestRecord record = null;
@@ -410,7 +412,7 @@ public class TestController {
 			browser_statuses.put(browser_name, is_passing.toString());
 			
 			test.addRecord(record);
-			test.setCorrect(is_passing);
+			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());
 			test.setBrowserStatuses(browser_statuses);
@@ -481,10 +483,17 @@ public class TestController {
     		throw new EmptyGroupNameException();
     	}
 		Group group = new Group(name.toLowerCase(), description);
-		Test test = test_repo.findByKey(key);
 		
-		group = group_repo.save(group);
+		Group group_record = group_repo.findByKey(group.getKey());
+		if(group_record == null){
+			group = group_repo.save(group);
+		}
+		else{
+			group = group_record;
+		}
+		Test test = test_repo.findByKey(key);
 		test.getGroups().add(group);
+		
 		test = test_repo.save(test);
 		return group;
 	}

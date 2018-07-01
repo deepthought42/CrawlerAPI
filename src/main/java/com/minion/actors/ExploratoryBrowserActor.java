@@ -135,18 +135,18 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							try{
 								System.err.println("Crawling path");
 								result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
-								PageState page_record = page_state_repo.findByKey(result_page.getKey());
-
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
 								log.error("Error happened while exploratory actor attempted to crawl test");
 								e.printStackTrace();
+								
+								try {
+									Thread.sleep(60000L);
+								} catch (InterruptedException e1) {}
 							}
 							tries++;
 							
-							try {
-								Thread.sleep(60000L);
-							} catch (InterruptedException e) {}
+
 						}while(result_page == null && tries < 10);
 						
 						do{							

@@ -71,50 +71,60 @@ public class Crawler {
 		}
 		
 		PageElement last_element = null;
+	
+		boolean path_deviation = false;
+		do{
+			path_deviation = false;
 
-		browser.getDriver().get(((PageState)ordered_path_objects.get(0)).getUrl().toString());
-		try{
-			new WebDriverWait(browser.getDriver(), 360).until(
-					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		}catch(GridException e){
-			log.error(e.getMessage());
-		}
-		catch(Exception e){
-			log.error(e.getMessage());
-		}
+			browser.getDriver().get(((PageState)ordered_path_objects.get(0)).getUrl().toString());
+			try{
+				new WebDriverWait(browser.getDriver(), 360).until(
+						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			}catch(GridException e){
+				log.error(e.getMessage());
+			}
+			catch(Exception e){
+				log.error(e.getMessage());
+			}
 
-		//skip first node since we should have already loaded it during initialization
-		for(PathObject current_obj: ordered_path_objects){
-			if(current_obj instanceof PageState){
-				//Do Nothing for now
-			}
-			else if(current_obj instanceof PageElement){
-				last_element = (PageElement) current_obj;
-			}
-			//String is action in this context
-			else if(current_obj instanceof Action){
-				//boolean actionPerformedSuccessfully;
-				Action action = (Action)current_obj;
-				Action action_record = action_repo.findByKey(action.getKey());
-				if(action_record==null){
-					action = action_repo.save(action);
-					try {
-						MessageBroadcaster.broadcastAction(action, host_channel);
-					} catch (JsonProcessingException e1) {
-						e1.printStackTrace();
+			//skip first node since we should have already loaded it during initialization
+			for(PathObject current_obj: ordered_path_objects){
+				if(current_obj instanceof PageState){
+					if(!browser_service.buildPage(browser).equals(current_obj)){
+						path_deviation = true;
+						break;
 					}
+					//Do Nothing for now
 				}
-				else{
-					action = action_record;
+				else if(current_obj instanceof PageElement){
+					last_element = (PageElement) current_obj;
 				}
-				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
+				//String is action in this context
+				else if(current_obj instanceof Action){
+					//boolean actionPerformedSuccessfully;
+					Action action = (Action)current_obj;
+					Action action_record = action_repo.findByKey(action.getKey());
+					if(action_record==null){
+						action = action_repo.save(action);
+						try {
+							MessageBroadcaster.broadcastAction(action, host_channel);
+						} catch (JsonProcessingException e1) {
+							e1.printStackTrace();
+						}
+					}
+					else{
+						action = action_record;
+					}
+					
+					boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
+				}
+				else if(current_obj instanceof PageAlert){
+					log.debug("Current path node is a PageAlert");
+					PageAlert alert = (PageAlert)current_obj;
+					alert.performChoice(browser.getDriver());
+				}
 			}
-			else if(current_obj instanceof PageAlert){
-				log.debug("Current path node is a PageAlert");
-				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
-			}
-		}
+		}while(path_deviation);
 		
 		return browser_service.buildPage(browser);
 	}

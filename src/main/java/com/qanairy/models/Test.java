@@ -10,6 +10,9 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.joda.time.DateTime;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -33,7 +36,7 @@ public class Test implements Persistable {
 	
 	private String key; 
 	private String name;
-	private TestStatus correct;
+	private TestStatus status;
 	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
 	private Date last_run_time;
@@ -50,6 +53,7 @@ public class Test implements Persistable {
 	@Relationship(type = "HAS_GROUP")
 	private Set<Group> groups = new HashSet<>();
 
+	@JsonIgnore
 	@Relationship(type = "HAS_PATH_OBJECT")
 	private List<PathObject> path_objects = new ArrayList<>();
 	
@@ -77,7 +81,7 @@ public class Test implements Persistable {
 		setPathObjects(path_objects);
 		setResult(result);
 		setRecords(new HashSet<TestRecord>());
-		setCorrect(TestStatus.UNVERIFIED);
+		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(false);
 		setGroups(new HashSet<Group>());
 		setLastRunTimestamp(new Date());
@@ -98,7 +102,7 @@ public class Test implements Persistable {
 		setPathObjects(path_objects);
 		setResult(result);
 		setRecords(new HashSet<TestRecord>());
-		setCorrect(TestStatus.UNVERIFIED);
+		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(spansMultipleDomains);
 		setGroups(new HashSet<Group>());
 		setLastRunTimestamp(new Date());
@@ -144,12 +148,12 @@ public class Test implements Persistable {
 		return false;
 	}
 
-	public TestStatus getCorrect(){
-		return this.correct;
+	public TestStatus getStatus(){
+		return this.status;
 	}
 	
-	public void setCorrect(TestStatus status){
-		this.correct = status;
+	public void setStatus(TestStatus status){
+		this.status = status;
 	}
 	
 	public String getKey(){
@@ -345,7 +349,7 @@ public class Test implements Persistable {
 		String path_key =  String.join("::", getPathKeys());
 		path_key += getResult().getKey();
 		
-		return path_key;
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(path_key);
 	}
 	
 	/**
@@ -365,7 +369,7 @@ public class Test implements Persistable {
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
 		clone_test.setGroups(new HashSet<Group>(test.getGroups()));
 		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());
-		clone_test.setCorrect(test.getCorrect());
+		clone_test.setStatus(test.getStatus());
 		clone_test.setRunTime(test.getRunTime());
 		
 		return clone_test;

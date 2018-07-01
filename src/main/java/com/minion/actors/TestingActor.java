@@ -96,7 +96,7 @@ public class TestingActor extends UntypedActor {
 				else{
 					TestRecord record = null;
 
-					if(test.getCorrect().equals(TestStatus.FAILING)){
+					if(test.getStatus().equals(TestStatus.FAILING)){
 						record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 					else{

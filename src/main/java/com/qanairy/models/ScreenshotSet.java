@@ -21,8 +21,8 @@ public class ScreenshotSet implements Persistable {
 	public ScreenshotSet(){}
 	
 	public ScreenshotSet(String viewport, String browser_name){
-		this.viewport_screenshot = viewport;
-		this.setBrowser(browser_name);
+		setViewportScreenshot(viewport);
+		setBrowser(browser_name);
 		setKey(generateKey());
 	}
 
@@ -51,6 +51,6 @@ public class ScreenshotSet implements Persistable {
 	}
 	
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(org.apache.commons.codec.digest.DigestUtils.sha256Hex(getViewportScreenshot()));
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getViewportScreenshot());
 	}
 }

@@ -4,13 +4,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.imageio.ImageIO;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -19,7 +17,6 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.minion.browsing.Browser;
 
 /**
@@ -416,6 +413,10 @@ public class PageState implements Persistable, PathObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getSrc());   
+		String key = "";
+		for(PageElement element : getElements()){
+			key += element.getKey()+element.getAttributes().hashCode()+element.getCssValues().hashCode();
+		}
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 }

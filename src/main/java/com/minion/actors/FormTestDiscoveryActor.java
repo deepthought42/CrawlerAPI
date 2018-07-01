@@ -18,7 +18,6 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
@@ -55,9 +54,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	private TestService test_service;
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
-	
-	@Autowired
 	private ActionRepository action_repo;
 	
 	/**
@@ -87,8 +83,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					}
 					cnt++;
 				}	
-	
-				//PageState current_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser);
 			  	
 			  	List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
 			  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
@@ -102,7 +96,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	catch(Exception e){}
 			  	
 			  	//Evaluate all tests now
-			  	System.err.println("Constructing tests with path object lists   :::   "+path_object_lists.size());
 			  	List<Test> tests = new ArrayList<Test>();
 			  	for(List<PathObject> path_obj_list : path_object_lists){
 			  		List<String> path_keys = new ArrayList<String>(test.getPathKeys());
@@ -112,65 +105,28 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  		
 			  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
 			  		for(PathObject obj : path_obj_list){
-			  			System.err.println("****************************************************");
-			  			System.err.println("Object type :: "+obj.getType());
-			  			System.err.println("****************************************************");
 			  			if(obj.getType().equals("PageElement")){
 			  				PageElement page_elem = (PageElement)obj;
-			  				System.err.println("Page Element key :: "+page_elem.getKey());
-			  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
+			  				//PageElement elem_record = page_element_repo.findByKey(obj.getKey());
 			  				
-			  				System.err.println("elem key :: "+page_elem.getKey());
-			  				System.err.println("elem name : "+page_elem.getName());
-			  				//page_elem.setScreenshot("this_is_a_temp_value.jpg");
-			  				System.err.println("elem screenshot : "+page_elem.getScreenshot());
-			  				System.err.println("elem text :: "+page_elem.getText());
-			  				System.err.println("elem text is null :: "+(page_elem.getText()==null));
-			  				System.err.println("elem type : "+page_elem.getType());
-			  				System.err.println("elem xpath : "+page_elem.getXpath());
-
-			  				for(Attribute attr : page_elem.getAttributes()){
-			  					System.err.println("Attribute key "+attr.getKey());
-			  					System.err.println("Attribute name :: "+attr.getName());
-				  				System.err.println("Attribute values :: " +attr.getVals().size());
-				  				
-				  				for(String val : attr.getVals()){
-				  					System.err.println("val :: "+val);
-				  				}
-			  				}
-			  				
-			  				for(String key : page_elem.getCssValues().keySet()){
-				  				System.err.println("css values ::  "+key + "     ;;;       "+page_elem.getCssValues().get(key));
-			  				}
-			  				System.err.println("Page Element css values ::  "+page_elem.getCssValues());
-			  				for(Rule rule : page_elem.getRules()){
-			  					System.err.println("Rule key :: "+rule.getKey());
-			  					System.err.println("Rule value :: "+rule.getValue());
-			  					System.err.println("Rule type :: "+rule.getType());
-			  				}
-			  				
-			  				test_path_objects.add(elem_record);
+			  				test_path_objects.add(page_elem);
 			  			}
 			  			else if(obj.getType().equals("Action")){
 			  				Action action = (Action)obj;
-			  				System.err.println("Action Key :: " +action.getKey());
 			  				Action action_record = action_repo.findByKey(obj.getKey());
 			  				if(action_record == null){
 			  					action_record = action_repo.save(action);
+			  					MessageBroadcaster.broadcastAction(action_record, acct_msg.getOptions().get("host").toString());
 			  				}
 			  				test_path_objects.add(action_record);
 			  			}
 			  		}
-			  		//test_path_objects.addAll(path_obj_list);
-			  		
-			  		System.err.println("Path object list size :: "+path_obj_list);
 			  		
 					final long pathCrawlStartTime = System.currentTimeMillis();
 					
 			  		System.err.println("Crawling potential form test path");
 			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
 			  		PageState result_page = crawler.crawlPath(path_keys, test_path_objects, browser, acct_msg.getOptions().get("host").toString());
-					
 			  		
 			  		final long pathCrawlEndTime = System.currentTimeMillis();
 					long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
@@ -181,40 +137,19 @@ public class FormTestDiscoveryActor extends UntypedActor {
 				  	catch(Exception e){}
 					
 			  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
-					//Test new_test = new Test(path_keys, test_path_objects, result_page, null);							
 
 			  		new_test.setRunTime(crawl_time_in_ms);
 			  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 			  		
-			  		System.err.println("Saving form test.................");
-			  		System.err.println("Test service :: "+test_service);
-			  		System.err.println("new Test ........... "+new_test.getPathKeys().size());
-			  		System.err.println("HOST   ::::::   "+acct_msg.getOptions().get("host").toString());
 			  		new_test = test_service.save(new_test, acct_msg.getOptions().get("host").toString());
 			  		tests.add(new_test);
 			  		
-			  		System.err.println("********************************************************");
-					DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+			  		DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					discovery_record = discovery_repo.save(discovery_record);
 					System.err.println("saving discovery record ");
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-				  	System.err.println("********************************************************");
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
 			  	}
-			  	
-				System.err.println("Broadcasting discovery record now that we've added "+tests.size()+"        tests   ");
-
-				/*final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-						  .props("memoryRegistryActor"), "memory_registration_actor"+UUID.randomUUID());
-
-			  	for(Test form_test : tests){
-			  		//send all tests to work allocator to be evaluated
-			  		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), form_test, acct_msg.getOptions());
-
-					//tell memory worker of test
-					memory_actor.tell(test_msg, getSelf());
-				}
-				*/
 			}
 		}
 	}

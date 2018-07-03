@@ -206,7 +206,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  			last_path = path;
 					  		}
 					  		
-							createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
+							createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
 							
 							break;
 						}
@@ -301,23 +301,14 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 */
 	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser){
 		PageElement elem = null;
-		int element_idx = -1;
+		int element_idx = 0;
 
 		for(PathObject obj : path.getPathObjects()){
 			if(obj.getType().equals("PageElement")){
 				elem = (PageElement)obj;
 			}
+			element_idx++;
 		}
-
-		/*
-		 for(int idx = path.getPathKeys().size()-1; idx >= 0; idx--){
-			if(path.getPathObjects().get(idx).getType().equals("PageElement")){
-				elem = (PageElement)obj;
-				element_idx = idx;
-				break;
-			}
-		}
-		*/
 		
 		if(elem != null){
 			//get parent of element
@@ -328,7 +319,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			ExploratoryPath parent_path = ExploratoryPath.clone(path);
 			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver()); 
 			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), browser_service.extractAttributes(parent, browser.getDriver()), Browser.loadCssProperties(parent) );
-			//parent_path.getPathObjects().set(element_idx, parent_tag);
 			
 			parent_path.getPathKeys().set(element_idx, parent_tag.getKey());
 			return parent_path;

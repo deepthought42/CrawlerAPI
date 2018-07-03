@@ -131,7 +131,7 @@ public class PathExpansionActor extends UntypedActor {
 				continue;
 			}
 			//check if page element is an input
-			if(page_element.getName().equals("input")){
+			else if(page_element.getName().equals("input")){
 				List<Rule> rules = ElementRuleExtractor.extractInputRules(page_element);
 				for(Rule rule : rules){
 					page_element.addRule(rule);
@@ -165,7 +165,6 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 			else{
-				System.err.println("cloning test for expansion");
 				Test new_test = Test.clone(test);
 				if(test.getPathKeys().size() > 1){
 					new_test.addPathKey(test.getResult().getKey());

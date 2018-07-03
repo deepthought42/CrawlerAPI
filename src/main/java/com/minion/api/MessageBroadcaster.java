@@ -7,6 +7,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastPageElement(PageElement page_element, String host) throws JsonProcessingException {	
+	public static void broadcastPathObject(PathObject path_object, String host) throws JsonProcessingException {	
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
@@ -70,28 +71,9 @@ public class MessageBroadcaster {
         ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String
-        String page_element_json = mapper.writeValueAsString(page_element);
+        String path_object_json = mapper.writeValueAsString(path_object);
         
-		pusher.trigger(host, "page_element", page_element_json);
-	}
-	
-	/**
-     * Message emitter that sends {@link Test} to all registered clients
-     * 
-     * @param test {@link Test} to be emitted to clients
-     * @throws JsonProcessingException 
-     */
-	public static void broadcastPageState(PageState page_state, String host) throws JsonProcessingException {	
-		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
-		pusher.setCluster("us2");
-		pusher.setEncrypted(true);
-        
-        ObjectMapper mapper = new ObjectMapper();
-
-        //Object to JSON in String
-        String page_state_json = mapper.writeValueAsString(page_state);
-        
-		pusher.trigger(host, "page_state", page_state_json);
+		pusher.trigger(host, "path_object", path_object_json);
 	}
 	
 	/**
@@ -134,18 +116,5 @@ public class MessageBroadcaster {
         String discovery_json = mapper.writeValueAsString(record);
         
 		pusher.trigger(record.getDomainUrl(), "discovery-status", discovery_json);
-	}
-
-	public static void broadcastAction(Action action, String host) throws JsonProcessingException {
-		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
-		pusher.setCluster("us2");
-		pusher.setEncrypted(true);
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        //Object to JSON in String
-        String discovery_json = mapper.writeValueAsString(action);
-        
-		pusher.trigger(host, "action", discovery_json);
 	}
 }

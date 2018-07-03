@@ -46,6 +46,7 @@ import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.repository.AttributeRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
+import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
 
 /**
@@ -61,6 +62,9 @@ public class BrowserService {
 	
 	@Autowired
 	private PageElementRepository page_element_repo;
+	
+	@Autowired
+	private ScreenshotSetRepository screenshot_set_repo;
 	
 	@Autowired
 	private AttributeRepository attribute_repo;
@@ -93,14 +97,15 @@ public class BrowserService {
 			visible_elements = new HashSet<PageElement>();
 		}
 		ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
-		/*ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
+		
+		ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
 		if(screenshot_record != null){
 			screenshot_set = screenshot_record;
 		}
 		else{
 			screenshot_set = screenshot_set_repo.save(screenshot_set);
 		}
-		*/
+		
 		Set<ScreenshotSet> browser_screenshot = new HashSet<ScreenshotSet>();
 		browser_screenshot.add(screenshot_set);
 		
@@ -115,7 +120,7 @@ public class BrowserService {
 		}
 		else{
 			page_state = page_state_repo.save(page_state);
-			MessageBroadcaster.broadcastPageState(page_state, page_url.getHost().toString());
+			MessageBroadcaster.broadcastPathObject(page_state, page_url.getHost().toString());
 		}
 		
 		return page_state;
@@ -142,23 +147,24 @@ public class BrowserService {
 		
 		String page_url = driver.getCurrentUrl();
 		System.err.println("PAGE URL FOR ELEM VISIBLITY :: "+page_url);
-		
+		System.err.println("building xpath for      " + pageElements.size() + "    elements");
+
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
-			
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 
 				if(is_child && elem.getSize().getHeight() > 0 && elem.isDisplayed()
-						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html")){
+						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
+						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
 					//(elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
 
-					String this_xpath = generateXpath(elem, xpath, xpath_map, driver); 
-					
-					try{
-						PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), extractAttributes(elem, driver), Browser.loadCssProperties(elem) );
-	
+					try{	
 						BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
+
+						String this_xpath = generateXpath(elem, xpath, xpath_map, driver); 
+
+						PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), extractAttributes(elem, driver), Browser.loadCssProperties(elem) );
 
 						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
 
@@ -171,14 +177,13 @@ public class BrowserService {
 						else{
 							tag.setScreenshot(screenshot);
 							tag = page_element_repo.save(tag);
-							MessageBroadcaster.broadcastPageElement(tag, host);
+							MessageBroadcaster.broadcastPathObject(tag, host);
 						}
-						
 						
 						elementList.add(tag);
 					}
 					catch(RasterFormatException e){
-						//System.err.println("Raster Format Exception : "+e.getMessage());
+						log.warn("Raster Format Exception : "+e.getMessage());
 					}
 
 				}
@@ -227,7 +232,7 @@ public class BrowserService {
 	 * @param elem	{@linkplain WebElement) to get parent of
 	 * @return parent {@linkplain WebElement)
 	 */
-	public static WebElement getParentElement(WebElement elem) throws WebDriverException{
+	public WebElement getParentElement(WebElement elem) throws WebDriverException{
 		return elem.findElement(By.xpath(".."));
 	}
 	
@@ -238,7 +243,7 @@ public class BrowserService {
 	 */
 	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
-		
+
 		xpath += "//"+element.getTagName();
 		for(Attribute attr : extractAttributes(element, driver)){
 			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
@@ -263,23 +268,23 @@ public class BrowserService {
 			xpath += "]";
 		}
 		
-		WebElement parent = null;
-		while(!element.getTagName().equals("html")){
+		WebElement parent = element;
+		while(!parent.getTagName().equals("html") && !parent.getTagName().equals("body") && parent != null){
 			try{
-				parent = element.findElement(By.xpath(".."));
-				if(parent == null){
-					break;
-				}
+				parent = getParentElement(parent);
 				xpath = "/" + parent.getTagName() + xpath;
-				element = parent;
+				
+				if(driver.findElements(By.xpath("/"+xpath)).size() == 1){
+					return "/"+xpath;
+				}
 			}catch(InvalidSelectorException e){
 				parent = null;
 				log.error("Invalid selector exception occurred while generating xpath through parent nodes");
 				break;
 			}
 		}
-		
-		xpath = uniqifyXpath(element, xpathHash, xpath);
+		xpath = "/"+xpath;
+		xpath = uniqifyXpath(element, xpathHash, xpath, driver);
 		return xpath;
 	}
 	
@@ -380,18 +385,29 @@ public class BrowserService {
 	 * 
 	 * @return
 	 */
-	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath){
+	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath, WebDriver driver){
 		try {
-			List<WebElement> elements = elem.findElements(By.xpath(xpath));
+			List<WebElement> elements = driver.findElements(By.xpath(xpath));
 			
 			if(elements.size()>1){
 				int count = 1;
+				for(WebElement element : elements){
+					if(element.getTagName().equals(elem.getTagName())
+							&& element.getText().equals(elem.getText())){
+						return "("+xpath+")[" + count + "]";	
+					}					
+					count++;
+				}
+				
+				
+				/*
 				if(xpathHash.containsKey(xpath)){
 					count = xpathHash.get(xpath);
 					count += 1;
 				}
 				xpathHash.put(xpath, count);
 				xpath = "("+xpath+")[" + count + "]";
+				*/
 			}
 			
 		}catch(InvalidSelectorException e){
@@ -417,7 +433,10 @@ public class BrowserService {
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form"), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem) );
+			
+			System.err.println("EXTACTED FORM ELEMENT WITH TEXT   : "+form_elem.getText());
+
+			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem) );
 			Form form = new Form(form_tag, new ArrayList<ComplexField>(), findFormSubmitButton(form_elem, browser) );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
@@ -445,7 +464,7 @@ public class BrowserService {
 					else{
 						elem_record.setScreenshot(screenshot);
 						elem_record = page_element_repo.save(elem_record); 
-						MessageBroadcaster.broadcastPageElement(elem_record, host);
+						MessageBroadcaster.broadcastPathObject(elem_record, host);
 					}
 				}
 

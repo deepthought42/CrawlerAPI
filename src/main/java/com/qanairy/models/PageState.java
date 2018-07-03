@@ -225,6 +225,7 @@ public class PageState implements Persistable, PathObject {
 	        	}
 	        }
 	        
+	        System.err.println("PAGE ELEMENT DIFF :: "+page_elements.size());
 	        if(page_elements.isEmpty()){
 	        	return true;
 	        }

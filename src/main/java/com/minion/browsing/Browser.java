@@ -341,14 +341,14 @@ public class Browser {
 			elem_width = elem_width+10;
 		}
 		else{
-			elem_width = page_screenshot.getWidth() - elem_width - point_x;
+			elem_width = page_screenshot.getWidth() - point_x;
 		}
 		
 		if((elem_height + 10 + point_y) < page_screenshot.getHeight()){
 			elem_height = elem_height+10;
 		}
 		else{
-			elem_height = page_screenshot.getHeight() - elem_height - point_y;
+			elem_height = page_screenshot.getHeight() - point_y;
 		}
 		
 		if( (point_x - 10) >= 0){

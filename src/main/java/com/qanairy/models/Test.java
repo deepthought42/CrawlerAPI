@@ -83,7 +83,6 @@ public class Test implements Persistable {
 		setRecords(new HashSet<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(false);
-		setGroups(new HashSet<Group>());
 		setLastRunTimestamp(new Date());
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
@@ -104,7 +103,6 @@ public class Test implements Persistable {
 		setRecords(new HashSet<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(spansMultipleDomains);
-		setGroups(new HashSet<Group>());
 		setLastRunTimestamp(new Date());
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
@@ -288,10 +286,12 @@ public class Test implements Persistable {
 		this.path_objects.add(path_obj);
 	}
 
+	@JsonIgnore
 	public List<PathObject> getPathObjects() {
 		return this.path_objects;
 	}
 
+	@JsonIgnore
 	public void setPathObjects(List<PathObject> path_objects) {
 		this.path_objects = path_objects;
 	}
@@ -367,7 +367,7 @@ public class Test implements Persistable {
 									   test.getSpansMultipleDomains());
 		
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
-		clone_test.setGroups(new HashSet<Group>(test.getGroups()));
+		clone_test.setGroups(new HashSet<>(test.getGroups()));
 		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());
 		clone_test.setStatus(test.getStatus());
 		clone_test.setRunTime(test.getRunTime());

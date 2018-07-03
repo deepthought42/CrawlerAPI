@@ -209,7 +209,7 @@ public class BrowserActor extends UntypedActor {
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 	  		page_obj = page_state_repo.save(page_obj);
-	  		MessageBroadcaster.broadcastPageState(page_obj, msg.getOptions().get("host").toString());
+	  		MessageBroadcaster.broadcastPathObject(page_obj, msg.getOptions().get("host").toString());
 	  	}
 	  	else{
 	  		page_obj = page_record;
@@ -274,7 +274,7 @@ public class BrowserActor extends UntypedActor {
 		  	}
 		  	else{
 		  		page_state_repo.save(result_page);
-		  		MessageBroadcaster.broadcastPageState(result_page, acct_msg.getOptions().get("host").toString());
+		  		MessageBroadcaster.broadcastPathObject(result_page, acct_msg.getOptions().get("host").toString());
 		  	}
 		  	
 		}while(result_page == null && tries < 5);

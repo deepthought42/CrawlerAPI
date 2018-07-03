@@ -107,7 +107,7 @@ public class Crawler {
 					if(action_record==null){
 						action = action_repo.save(action);
 						try {
-							MessageBroadcaster.broadcastAction(action, host_channel);
+							MessageBroadcaster.broadcastPathObject(action, host_channel);
 						} catch (JsonProcessingException e1) {
 							e1.printStackTrace();
 						}

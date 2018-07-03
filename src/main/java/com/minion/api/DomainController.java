@@ -24,6 +24,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
@@ -249,6 +250,33 @@ public class DomainController {
 		Set<PageState> page_states = domain_repo.getPageStates(host);
 		System.err.println("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
+    	
+    			
+	    //return new HashSet<PageState>();
+    }
+
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="/path")
+    public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
+    													  @RequestParam(value="host", required=true) String host) 
+    															throws UnknownAccountException {        
+    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	//Auth0Client auth = new Auth0Client();
+    	//String username = auth.getUsername(auth_access_token);
+    	
+    	//Account acct = account_repo.findByUsername(username);
+    	//if(acct == null){
+    	//	throw new UnknownAccountException();
+    	//}
+    	//else if(acct.getSubscriptionToken() == null){
+    	//	throw new MissingSubscriptionException();
+    	//}
+
+		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
+		Set<PathObject> page_objects = domain_repo.getPathObjects(host);
+		System.err.println("###### PATH OBJECT COUNT :: "+page_objects.size());
+		return page_objects;
     	
     			
 	    //return new HashSet<PageState>();

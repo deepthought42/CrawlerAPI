@@ -116,7 +116,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  				Action action_record = action_repo.findByKey(obj.getKey());
 			  				if(action_record == null){
 			  					action_record = action_repo.save(action);
-			  					MessageBroadcaster.broadcastAction(action_record, acct_msg.getOptions().get("host").toString());
+			  					MessageBroadcaster.broadcastPathObject(action_record, acct_msg.getOptions().get("host").toString());
 			  				}
 			  				test_path_objects.add(action_record);
 			  			}
@@ -147,7 +147,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  		DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					discovery_record = discovery_repo.save(discovery_record);
-					System.err.println("saving discovery record ");
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
 			  	}
 			}

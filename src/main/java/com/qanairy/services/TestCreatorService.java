@@ -66,7 +66,7 @@ public class TestCreatorService {
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 	  		page_obj = page_state_repo.save(page_obj);
-	  		MessageBroadcaster.broadcastPageState(page_obj, host);
+	  		MessageBroadcaster.broadcastPathObject(page_obj, host);
 	  	}
 	  	else{
 	  		page_obj = page_record;
@@ -80,18 +80,13 @@ public class TestCreatorService {
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_objects.add(page_obj);
 	  	
-	  	System.err.println("saving discovery record and domain disco key :: "+discovery_key);
-	  	System.err.println("saving discovery record and domain disco repo :: "+discovery_repo);
-
-		DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
+	  	DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
 		discovery_record.setLastPathRanAt(new Date());
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 		discovery_record.setTestCount(discovery_record.getTestCount()+1);
 		discovery_record = discovery_repo.save(discovery_record);
 
-		System.err.println("Page url host :: "  + host);
 		Domain domain = domain_repo.findByHost( host);
-		System.err.println("domain :: "+domain);
 		
 		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 

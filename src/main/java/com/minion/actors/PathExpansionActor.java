@@ -74,9 +74,10 @@ public class PathExpansionActor extends UntypedActor {
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						return;
 					}
-					else{
+					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){						
 						pathExpansions = PathExpansionActor.expandPath(test);
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
+						discovery_record.getExpandedPageState().add(test.getResult().getKey());
 						discovery_record = discovery_repo.save(discovery_record);
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 	

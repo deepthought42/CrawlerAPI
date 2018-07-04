@@ -3,26 +3,43 @@ package com.minion.actors;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import com.qanairy.persistence.Test;
-import com.qanairy.persistence.TestRecord;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.models.TestPOJO;
-import com.qanairy.models.TestRecordPOJO;
-import com.qanairy.persistence.PageState;
+import com.qanairy.models.PageState;
+import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
+import com.qanairy.models.TestStatus;
+import com.qanairy.services.BrowserService;
+import com.qanairy.services.TestService;
 
 /**
  * Handles retrieving tests
  *
  */
+@Component
+@Scope("prototype")
 public class TestingActor extends UntypedActor {
 	private static Logger log = LoggerFactory.getLogger(TestingActor.class);
 
+	@Autowired
+	private Crawler crawler;
+	
+	@Autowired
+	private TestService test_service;
+	
+	@Autowired
+	private BrowserService browser_service;
+	
     /**
      * Inputs
      * 
@@ -46,7 +63,7 @@ public class TestingActor extends UntypedActor {
 					int cnt = 0;
 					while(browser == null && cnt < 5){
 						try{
-							resulting_page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+							resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 							break;
 						}catch(NullPointerException e){
 							log.error(e.getMessage());
@@ -63,7 +80,7 @@ public class TestingActor extends UntypedActor {
 				int tries=0;
 				do{
 					try{
-						resulting_page.setLandable(Browser.checkIfLandable(acct_msg.getOptions().get("browser").toString(), resulting_page));
+						resulting_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), resulting_page));
 						break;
 					}catch(Exception e){
 						log.error(e.getMessage());
@@ -72,34 +89,29 @@ public class TestingActor extends UntypedActor {
 				}while(tries < 5);
 
 				if(!resulting_page.equals(expected_page)){
-					TestRecord record = new TestRecordPOJO(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+					TestRecord record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					record.setRunTime(pathCrawlRunTime);
 					test.addRecord(record);
-
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-					//tell memory worker of path
-					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-					memory_actor.tell(test_msg, getSelf() );
 				}
 				else{
 					TestRecord record = null;
 
-					if(!test.getCorrect()){
-						record = new TestRecordPOJO(new Date(), false, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+					if(test.getStatus().equals(TestStatus.FAILING)){
+						record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 					else{
-						record = new TestRecordPOJO(new Date(), true, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
+						record = new TestRecord(new Date(), TestStatus.PASSING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 					}
 
 					test.addRecord(record);
-					Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-
-					//tell memory worker of test record
-					final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-					memory_actor.tell(test_msg, getSelf() );
 				}
-
-			  	browser.close();
+				
+				//tell memory worker of test record
+				//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
+				//memory_actor.tell(test_msg, getSelf() );
+			  	test_service.save(test, acct_msg.getOptions().get("host").toString());
+				browser.close();
 			}
 			else{
 				log.warn("ERROR : Message contains unknown format");
@@ -110,38 +122,5 @@ public class TestingActor extends UntypedActor {
 		}
 	}
 
-	/**		
-	 * Runs an {@code Test} 		
-	 * 		
-	 * @param test test to be ran		
-	 * 		
-	 * @pre test != null		
-	 * @return	{@link TestRecord} indicating passing status and {@link Page} if not passing 
-	 */		
-	 public static TestRecord runTest(Test test, Browser browser){				
-		 assert test != null;		
-	 			
-		 Boolean passing = null;		
-		 PageState page = null;
-		 TestRecord test_record = null;
-		 final long pathCrawlStartTime = System.currentTimeMillis();
-
-		 try {		
-			page = Crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
-			
-			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getCorrect());
-			passing = TestPOJO.isTestPassing(test.getResult(), page, test.getCorrect());
-			
-		    test.setBrowserStatus(browser.getBrowserName(), passing);
-		 } catch (IOException e) {		
-			 log.error(e.getMessage());		
-		 }	
-		
-		 final long pathCrawlEndTime = System.currentTimeMillis();
-
-		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecordPOJO(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
-
-		 return test_record;		
-	 }
+	
 }

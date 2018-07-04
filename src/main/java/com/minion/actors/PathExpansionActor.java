@@ -6,35 +6,44 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
+import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
-
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
-import com.qanairy.persistence.Rule;
-import com.qanairy.persistence.Test;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
+import com.qanairy.config.SpringExtension;
+import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.TestPOJO;
-import com.qanairy.models.dao.DiscoveryRecordDao;
-import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
+import com.qanairy.models.Test;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.rules.Rule;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
  *
  */
+@Component
+@Scope("prototype")
 public class PathExpansionActor extends UntypedActor {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
+	@Autowired
+	private ActorSystem actor_system;
+	
+	@Autowired
+	DiscoveryRecordRepository discovery_repo;
+	
 	/**
      * {@inheritDoc}
      */
@@ -42,50 +51,44 @@ public class PathExpansionActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		if(message instanceof Message){
 			Message<?> acct_msg = (Message<?>)message;
-			System.err.println("#################################################################");
-			System.err.println("Path expansion actor receieved a message");
-			System.err.println("#################################################################");
+			
 			if(acct_msg.getData() instanceof Test){				
 				Test test = (Test)acct_msg.getData();
-				System.err.println("Test received by Path expansions ");
-				System.err.println("#################################################################");
 
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
+				DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+
 				if((!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
 					PageState last_page = test.findLastPage();
-					PageState first_page = test.firstPage();
-					System.err.println("path doesn't have cycle, doesn't span multiple domains");
-					if(!last_page.equals(first_page) && last_page.isLandable()){
-						System.err.println("last page doesn't match first page...");
-						DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
-						DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
+					
+					if(!last_page.equals(test.getResult()) && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						//discovery_dao.save(discovery_record);
+						discovery_record = discovery_repo.save(discovery_record);
 
-						System.err.println("Sending URL to work allocator...");
-						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), last_page.getUrl(), acct_msg.getOptions());
+						final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+
+						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), new URL(test.getResult().getUrl()), acct_msg.getOptions());
 						work_allocator.tell(url_msg, getSelf() );
-						
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-						System.err.println("Returning empty response....");
 						return;
 					}
-					
-					pathExpansions = PathExpansionActor.expandPath(test);
-					System.err.println("identified path expansion count :: " + pathExpansions.size());
-					DiscoveryRecordDao discovery_dao = new DiscoveryRecordDaoImpl();
-					DiscoveryRecord discovery_record = discovery_dao.find(acct_msg.getOptions().get("discovery_key").toString());
-					discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
-					//discovery_dao.save(discovery_record);
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-					for(ExploratoryPath expanded : pathExpansions){
-						final ActorRef work_allocator = this.getContext().actorOf(Props.create(WorkAllocationActor.class), "workAllocator"+UUID.randomUUID());
-						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
-						
-						work_allocator.tell(expanded_path_msg, getSelf() );
+					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){						
+						pathExpansions = PathExpansionActor.expandPath(test);
+						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
+						discovery_record.getExpandedPageState().add(test.getResult().getKey());
+						discovery_record = discovery_repo.save(discovery_record);
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+	
+						for(ExploratoryPath expanded : pathExpansions){
+							final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+	
+							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
+							
+							work_allocator.tell(expanded_path_msg, getSelf() );
+						}
 					}
 				}	
 			}
@@ -103,15 +106,14 @@ public class PathExpansionActor extends UntypedActor {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		PageState page = test.findLastPage();
+		PageState page = test.getResult();
 		if(page == null){
 			return null;
 		}
 
-		List<PageElement> page_elements = page.getElements();
-		
 		//iterate over all elements
-		for(PageElement page_element : page_elements){
+		System.err.println("Page elements for expansion :: "+page.getElements().size());
+		for(PageElement page_element : page.getElements()){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -130,7 +132,7 @@ public class PathExpansionActor extends UntypedActor {
 				continue;
 			}
 			//check if page element is an input
-			if(page_element.getName().equals("input")){
+			else if(page_element.getName().equals("input")){
 				List<Rule> rules = ElementRuleExtractor.extractInputRules(page_element);
 				for(Rule rule : rules){
 					page_element.addRule(rule);
@@ -164,14 +166,18 @@ public class PathExpansionActor extends UntypedActor {
 				}
 			}
 			else{
-				Test new_test = TestPOJO.clone(test);
+				Test new_test = Test.clone(test);
+				if(test.getPathKeys().size() > 1){
+					new_test.addPathKey(test.getResult().getKey());
+					new_test.addPathObject(test.getResult());
+				}
 				new_test.addPathObject(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
+				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-					
 					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 

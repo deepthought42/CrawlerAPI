@@ -3,15 +3,13 @@ package com.minion.structs;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Test;
+import com.qanairy.models.Action;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.Test;
 
 
 /**
  * Holds elements in a map, that is keyed by element action sequence and content. 
- * 
- * @author Brandon Kindred
  *
  */
 public class TestMapper {

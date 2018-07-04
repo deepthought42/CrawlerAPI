@@ -2,11 +2,10 @@ package com.minion.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
-
-import akka.actor.ActorSystem;
 
 
 
@@ -14,7 +13,8 @@ import akka.actor.ActorSystem;
  * Initializes the system and launches it. 
  *
  */
-@SpringBootApplication
+
+@SpringBootApplication(exclude={Neo4jDataAutoConfiguration.class})
 @ComponentScan(basePackages = {"com.minion","com.qanairy"})
 @PropertySources({
 	@PropertySource("classpath:application.properties"),
@@ -24,26 +24,7 @@ public class EntryPoint {
 
 	public static void main(String[] args){
         SpringApplication.run(EntryPoint.class, args);
-
-        final ActorSystem system = ActorSystem.create("Qanairy-api");
    	}
-	
-/*
-    @Bean
-    public RequestContextListener requestContextListener() {
-        return new RequestContextListener();
-    }
-    
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurerAdapter() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/").allowedOrigins("http://alpha.qanairy.com");
-            }
-        };
-    }
-    */
 }
 
 

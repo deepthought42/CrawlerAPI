@@ -1,20 +1,21 @@
 package com.minion.api;
 
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.qanairy.config.WebSecurityConfig;
-import com.qanairy.persistence.Action;
-import com.qanairy.services.ActionService;
+import com.qanairy.models.Action;
+import com.qanairy.models.repository.ActionRepository;
 
 /**
  *	API for interacting with {@link User} data
@@ -23,7 +24,10 @@ import com.qanairy.services.ActionService;
 @RequestMapping("/actions")
 public class ActionController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
+	@Autowired
+	private ActionRepository action_repo;
+	
     @Autowired
     protected WebSecurityConfig appConfig;
     
@@ -36,8 +40,8 @@ public class ActionController {
     @PreAuthorize("hasAuthority('read:actions')")
     @RequestMapping(method = RequestMethod.GET)
     public List<Action> getAll() {
-        logger.info("get invoked");
-        return ActionService.getAll();
+        logger.info("finding all actions");
+        return IterableUtils.toList(action_repo.findAll());
     }
 }
 

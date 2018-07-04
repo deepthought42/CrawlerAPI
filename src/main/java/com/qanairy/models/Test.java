@@ -1,0 +1,377 @@
+package com.qanairy.models;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.joda.time.DateTime;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Properties;
+import org.neo4j.ogm.annotation.Relationship;
+
+/**
+ * Defines the path of a test, the result and the expected values to determine if a test was 
+ * successful or not
+ *
+ */
+@NodeEntity
+public class Test implements Persistable {
+    @SuppressWarnings("unused")
+	private static Logger log = LoggerFactory.getLogger(Test.class);
+	
+    @GeneratedValue
+    @Id
+	private Long id;
+	
+	private String key; 
+	private String name;
+	private TestStatus status;
+	private boolean isUseful = false;
+	private boolean spansMultipleDomains = false;
+	private Date last_run_time;
+	private boolean is_running;
+	private long run_time_length;
+	private List<String> path_keys;
+	
+	@Properties
+	private Map<String, String> browser_passing_statuses = new HashMap<>();
+	
+	@Relationship(type = "HAS_TEST_RECORD")
+	private Set<TestRecord> records = new HashSet<>();
+	
+	@Relationship(type = "HAS_GROUP")
+	private Set<Group> groups = new HashSet<>();
+
+	@JsonIgnore
+	@Relationship(type = "HAS_PATH_OBJECT")
+	private List<PathObject> path_objects = new ArrayList<>();
+	
+	@Relationship(type = "HAS_RESULT")
+	private PageState result;
+	
+	public Test(){}
+	
+	/**
+	 * Constructs a test object
+	 * 
+	 * @param path {@link Path} that will be used to determine what the expected path should be
+ 	 * @param result
+	 * @param domain
+	 * 
+	 * @pre path != null
+	 */
+	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name){
+		assert path_keys != null;
+		assert !path_keys.isEmpty();
+		assert path_objects != null;
+		assert !path_objects.isEmpty();
+		
+		setPathKeys(path_keys);
+		setPathObjects(path_objects);
+		setResult(result);
+		setRecords(new HashSet<TestRecord>());
+		setStatus(TestStatus.UNVERIFIED);
+		setSpansMultipleDomains(false);
+		setLastRunTimestamp(new Date());
+		setName(name);
+		setBrowserStatuses(new HashMap<String, String>());
+		setIsRunning(false);
+		setKey(generateKey());
+		setRunTime(0L);
+	}
+
+	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains){
+		assert path_keys != null;
+		assert !path_keys.isEmpty();
+		assert path_objects != null;
+		assert !path_objects.isEmpty();
+		
+		setPathKeys(path_keys);
+		setPathObjects(path_objects);
+		setResult(result);
+		setRecords(new HashSet<TestRecord>());
+		setStatus(TestStatus.UNVERIFIED);
+		setSpansMultipleDomains(spansMultipleDomains);
+		setLastRunTimestamp(new Date());
+		setName(name);
+		setBrowserStatuses(new HashMap<String, String>());
+		setIsRunning(false);
+		setKey(generateKey());
+		setRunTime(0L);
+	}
+	
+	/**
+	 * Checks if a {@code TestRecord} snapshot of a {@code Test} is passing or not
+	 * 
+	 * @param record
+	 * @return
+	 */
+	public static TestStatus isTestPassing(PageState expected_page, PageState new_result_page, TestStatus last_test_passing_status){
+		if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.FAILING)) && expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.FAILING; 
+		}
+		else if((last_test_passing_status.equals(TestStatus.UNVERIFIED) || last_test_passing_status.equals(TestStatus.FAILING)) && !expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.UNVERIFIED;
+		}
+		else if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.PASSING)) && expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.PASSING;
+		}
+		else if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.PASSING)) && expected_page.getKey().equals(new_result_page.getKey())){
+			last_test_passing_status = TestStatus.FAILING;
+		}
+		
+		return last_test_passing_status;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof Test){
+			
+		}
+		
+		return false;
+	}
+
+	public TestStatus getStatus(){
+		return this.status;
+	}
+	
+	public void setStatus(TestStatus status){
+		this.status = status;
+	}
+	
+	public String getKey(){
+		return this.key;
+	}
+	
+	public void setKey(String key){
+		this.key = key;
+	}
+	
+	public String getName(){
+		return this.name;
+	}
+	
+	public void setName(String name){
+		this.name = name;
+	}
+	
+	public List<String> getPathKeys(){
+		return this.path_keys;
+	}
+	
+	public void setPathKeys(List<String> path_keys){
+		this.path_keys = path_keys;
+	}
+	
+	public boolean addPathKey(String key) {
+		return this.path_keys.add(key);
+	}
+	
+	public void addRecord(TestRecord record){
+		this.records.add(record);
+	}
+	
+	public Set<TestRecord> getRecords(){
+		return this.records;
+	}
+	
+	public void setRecords(Set<TestRecord> records){
+		this.records = records;
+	}
+	
+	/**
+	 * @return result of running the test. Can be either null or have a {@link PageState} set
+	 */
+	public PageState getResult(){
+		return this.result;
+	}
+	
+	/**
+	 * @param result_page expected {@link PageState} state after running through path
+	 */
+	public void setResult(PageState result_page){
+		this.result = result_page;
+	}
+
+	public boolean isUseful() {
+		return isUseful;
+	}
+
+	public void setUseful(boolean isUseful) {
+		this.isUseful = isUseful;
+	}
+
+	public boolean getSpansMultipleDomains() {
+		return spansMultipleDomains;
+	}
+
+	public void setSpansMultipleDomains(boolean spansMultipleDomains) {
+		this.spansMultipleDomains = spansMultipleDomains;
+	}
+
+	public Set<Group> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(Set<Group> groups) {
+		this.groups = groups;
+	}
+	
+	public void addGroup(Group group){
+		this.groups.add(group);
+	}
+	
+	public void removeGroup(Group group) {
+		//remove edge between test and group
+		this.groups.remove(group);
+	}
+	
+	/**
+	 * @return date timestamp of when test was last ran
+	 */
+	public Date getLastRunTimestamp(){
+		return this.last_run_time;
+	}
+	
+	/**
+	 * sets date timestamp of when test was last ran
+	 * 
+	 * @param timestamp of last run as a {@link DateTime}
+	 */
+	public void setLastRunTimestamp(Date timestamp){
+		this.last_run_time = timestamp;
+	}
+
+	public void setRunTime(long pathCrawlRunTime) {
+		this.run_time_length = pathCrawlRunTime;
+		
+	}
+	
+	public long getRunTime() {
+		return this.run_time_length;
+	}
+
+	public boolean isRunning() {
+		return is_running;
+	}
+
+	public void setIsRunning(boolean is_running) {
+		this.is_running = is_running;
+	}
+
+	public Map<String, String> getBrowserStatuses() {
+		return browser_passing_statuses;
+	}
+
+	public void setBrowserStatuses(Map<String, String> browser_passing_statuses) {
+		this.browser_passing_statuses = browser_passing_statuses;
+	}
+
+	public void addPathObject(PathObject path_obj) {
+		this.path_objects.add(path_obj);
+	}
+
+	@JsonIgnore
+	public List<PathObject> getPathObjects() {
+		return this.path_objects;
+	}
+
+	@JsonIgnore
+	public void setPathObjects(List<PathObject> path_objects) {
+		this.path_objects = path_objects;
+	}
+	
+	/**
+	 * 
+	 * @param browser_name name of browser (ie 'chrome', 'firefox')
+	 * @param status boolean indicating passing or failing
+	 * 
+	 * @pre browser_name != null
+	 */
+	public void setBrowserStatus(String browser_name, String status){
+		assert browser_name != null;
+		getBrowserStatuses().put(browser_name, status);
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public PageState firstPage() {
+		for(String key : this.getPathKeys()){
+			for(PathObject path_obj: this.getPathObjects()){
+				if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
+					return (PageState)path_obj;
+				}
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Gets the last Vertex in a path that is of type {@link PageState}
+	 * 
+	 * @return
+	 */
+	public PageState findLastPage(){
+		for(int idx=this.getPathKeys().size()-1; idx >= 0; idx--){
+			for(PathObject path_obj: this.getPathObjects()){
+				if(path_obj.getKey().equals(this.getPathKeys().get(idx)) && path_obj.getType().equals("PageState")){
+					return (PageState)path_obj;
+				}
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
+	 * as easy identity of {@link Test} when generated in the wild via discovery
+	 * 
+	 * @return
+	 */
+	public String generateKey() {
+		String path_key =  String.join("::", getPathKeys());
+		path_key += getResult().getKey();
+		
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(path_key);
+	}
+	
+	/**
+	 * Clone {@link Test} object
+	 * 
+	 * @param path
+	 * @return
+	 */
+	public static Test clone(Test test){
+		Test clone_test = new Test(new ArrayList<String>(test.getPathKeys()),
+									   new ArrayList<PathObject>(test.getPathObjects()),
+									   test.getResult(),
+									   test.getName(), 
+									   false, 
+									   test.getSpansMultipleDomains());
+		
+		clone_test.setBrowserStatuses(test.getBrowserStatuses());
+		clone_test.setGroups(new HashSet<>(test.getGroups()));
+		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());
+		clone_test.setStatus(test.getStatus());
+		clone_test.setRunTime(test.getRunTime());
+		
+		return clone_test;
+	}
+}

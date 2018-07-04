@@ -1,16 +1,13 @@
 package com.minion.browsing.element;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
-import com.qanairy.persistence.Attribute;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
-
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.remote.UnreachableBrowserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.qanairy.models.Attribute;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.rules.Rule;
 
 public class SelectElement extends PageElement {
     @SuppressWarnings("unused")
@@ -107,13 +104,13 @@ public class SelectElement extends PageElement {
 	}
 
 	@Override
-	public List<Attribute> getAttributes() {
+	public Set<Attribute> getAttributes() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void setAttributes(List<Attribute> attributes) {
+	public void setAttributes(Set<Attribute> attributes) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -125,7 +122,7 @@ public class SelectElement extends PageElement {
 	}
 
 	@Override
-	public void setRules(List<Rule> rules) {
+	public void setRules(Set<Rule> rules) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -137,17 +134,17 @@ public class SelectElement extends PageElement {
 	}
 
 	@Override
-	public List<Rule> getRules() {
+	public Set<Rule> getRules() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	/*
 	private HtmlTag select_element;
-	private List<HtmlTag> option_elements;
+	private Set<HtmlTag> option_elements;
 	private HtmlTag label_element;
 	
-	public SelectElement(HtmlTag select_tag, List<HtmlTag> options, HtmlTag label){
+	public SelectElement(HtmlTag select_tag, Set<HtmlTag> options, HtmlTag label){
 		assert select_tag.getName().equals("select");
 		assert label.getName().equals("label");
 		
@@ -164,11 +161,11 @@ public class SelectElement extends PageElement {
 		this.select_element = selectElement;
 	}
 
-	public List<HtmlTag> getOptionElements() {
+	public Set<HtmlTag> getOptionElements() {
 		return option_elements;
 	}
 
-	public void setOptionElements(List<HtmlTag> optionElements) {
+	public void setOptionElements(Set<HtmlTag> optionElements) {
 		this.option_elements = optionElements;
 	}
 

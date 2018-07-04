@@ -3,8 +3,8 @@ package com.minion.browsing.form;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.rules.Rule;
 
 /**
  * Defines a complex element grouping of input and label for a field contained within a form. 

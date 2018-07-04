@@ -1,8 +1,9 @@
 package com.qanairy.models.rules;
 
 import org.apache.commons.lang3.StringUtils;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+
+import com.qanairy.models.Attribute;
+import com.qanairy.models.PageElement;
 
 
 /**
@@ -53,18 +54,22 @@ public class NumericRule extends Rule{
 	 */
 	@Override
 	public Boolean evaluate(PageElement elem) {
-		String field_value = elem.getAttributes().get(elem.getAttributes().indexOf("val")).getVals().toString();
-		if(this.getType().equals(RuleType.MAX_LENGTH)){
-			return field_value.length() <= Integer.parseInt(this.getValue());
-		}
-		else if(this.getType().equals(RuleType.MIN_LENGTH)){
-			return field_value.length() >= Integer.parseInt(this.getValue());
-		}
-		else if(this.getType().equals(RuleType.MIN_VALUE)){
-			return Integer.parseInt(field_value) >= Integer.parseInt(this.getValue());
-		}
-		else if(this.getType().equals(RuleType.MAX_VALUE)){
-			return Integer.parseInt(field_value)  <= Integer.parseInt(this.getValue());
+		for(Attribute attribute: elem.getAttributes()){
+			if(attribute.getName().equals("val")){
+				String field_value = attribute.getVals().toString();
+				if(this.getType().equals(RuleType.MAX_LENGTH)){
+					return field_value.length() <= Integer.parseInt(this.getValue());
+				}
+				else if(this.getType().equals(RuleType.MIN_LENGTH)){
+					return field_value.length() >= Integer.parseInt(this.getValue());
+				}
+				else if(this.getType().equals(RuleType.MIN_VALUE)){
+					return Integer.parseInt(field_value) >= Integer.parseInt(this.getValue());
+				}
+				else if(this.getType().equals(RuleType.MAX_VALUE)){
+					return Integer.parseInt(field_value)  <= Integer.parseInt(this.getValue());
+				}
+			}
 		}
 		return false;
 	}

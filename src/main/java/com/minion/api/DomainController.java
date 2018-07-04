@@ -2,11 +2,13 @@ package com.minion.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -16,19 +18,16 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.DomainPOJO;
-import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dao.impl.DomainDaoImpl;
+import com.qanairy.models.Account;
+import com.qanairy.models.Domain;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.persistence.Account;
-import com.qanairy.persistence.Domain;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.services.AccountService;
-import com.qanairy.services.DomainService;
+import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.models.repository.DomainRepository;
 
 /**
  *	API endpoints for interacting with {@link Domain} data
@@ -40,6 +39,12 @@ public class DomainController {
 	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+	@Autowired
+	AccountRepository account_repo;
+	
+	@Autowired
+	DomainRepository domain_repo;
+	
     /**
      * Create a new {@link Domain domain}
      * 
@@ -56,11 +61,10 @@ public class DomainController {
 							    		 @RequestParam(value="logo_url", required=false) String logo_url) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	
-    	Auth0Client auth = new Auth0Client();
+       	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -78,12 +82,17 @@ public class DomainController {
     	}
     	URL url_obj = new URL(protocol+"://"+formatted_url);
 		
-    	DomainPOJO domain_pojo = new DomainPOJO(protocol, url_obj.getHost(), browser_name, logo_url);
+    	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
+		try{
+			domain = domain_repo.save(domain);
+		}catch(Exception e){
+			domain = domain_repo.findByHost(url_obj.getHost());
+		}
 		
-		Domain domain = DomainService.save(domain_pojo);
     	acct.addDomain(domain);
-    	acct.setLastDomain(domain.getUrl());
-    	AccountService.save(acct);
+    	acct.setLastDomain(url_obj.getHost());
+    	account_repo.save(acct);
+    	
     	return domain;
     }
 
@@ -115,7 +124,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -124,8 +133,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	DomainDao dao = new DomainDaoImpl();
-    	Domain domain = dao.find(key);
+    	Domain domain = domain_repo.findByKey(key);
     	domain.setDiscoveryBrowserName(browser_name);
     	domain.setLogoUrl(logo_url);
     	domain.setProtocol(protocol);
@@ -143,7 +151,7 @@ public class DomainController {
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="/select", method = RequestMethod.PUT)
     public @ResponseBody void selectDomain(HttpServletRequest request,
-    									@RequestBody DomainPOJO domain) 
+    									@RequestBody Domain domain) 
     											throws UnknownUserException, 
 														UnknownAccountException, 
 														MalformedURLException {
@@ -153,7 +161,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -163,26 +171,27 @@ public class DomainController {
     	}
     	
     	acct.setLastDomain(domain.getUrl());
-    	AccountService.save(acct);
+    	account_repo.save(acct);
     }
 
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
-    public @ResponseBody List<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
+    public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
-    	
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-
-	    return acct.getDomains();
+    	
+    	Set<Domain> domains = account_repo.getDomains(username);
+    	System.err.println("Domain size :: "+domains.size());
+	    return domains;
     }
     
 	/**
@@ -203,7 +212,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-		Account acct = AccountService.find(username);
+		Account acct = account_repo.findByUsername(username);
 	
 		if(acct == null){
 			throw new UnknownAccountException();
@@ -212,36 +221,65 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}		
 		
-		Domain domain = DomainService.get(key);
-		AccountService.deleteDomain(acct, domain);
+		Domain domain = domain_repo.findByKey(key);
+		acct.getDomains().remove(domain);
+		account_repo.save(acct);
 		
 	    return domain;
 	}
     
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_states")
-    public @ResponseBody List<PageState> getAllPageStates(HttpServletRequest request, 
+    public @ResponseBody Set<PageState> getAllPageStates(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
+    	//Auth0Client auth = new Auth0Client();
+    	//String username = auth.getUsername(auth_access_token);
     	
-    	Account acct = AccountService.find(username);
-    	if(acct == null){
-    		throw new UnknownAccountException();
-    	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
+    	//Account acct = account_repo.findByUsername(username);
+    	//if(acct == null){
+    	//	throw new UnknownAccountException();
+    	//}
+    	//else if(acct.getSubscriptionToken() == null){
+    	//	throw new MissingSubscriptionException();
+    	//}
 
-    	for(Domain domain : acct.getDomains()){
-    		if(domain.getUrl().equals(host)){
-    			return domain.getPageStates();
-    		}
-    	}
-	    return new ArrayList<PageState>();
+		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
+		Set<PageState> page_states = domain_repo.getPageStates(host);
+		System.err.println("###### PAGE STATE COUNT :: "+page_states.size());
+		return page_states;
+    	
+    			
+	    //return new HashSet<PageState>();
+    }
+
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="/path")
+    public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
+    													  @RequestParam(value="host", required=true) String host) 
+    															throws UnknownAccountException {        
+    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	//Auth0Client auth = new Auth0Client();
+    	//String username = auth.getUsername(auth_access_token);
+    	
+    	//Account acct = account_repo.findByUsername(username);
+    	//if(acct == null){
+    	//	throw new UnknownAccountException();
+    	//}
+    	//else if(acct.getSubscriptionToken() == null){
+    	//	throw new MissingSubscriptionException();
+    	//}
+
+		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
+		Set<PathObject> page_objects = domain_repo.getPathObjects(host);
+		System.err.println("###### PATH OBJECT COUNT :: "+page_objects.size());
+		return page_objects;
+    	
+    			
+	    //return new HashSet<PageState>();
     }
 	
 	/**
@@ -254,7 +292,7 @@ public class DomainController {
 	 */
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_elements")
-    public @ResponseBody List<PageElement> getAllPageElements(HttpServletRequest request, 
+    public @ResponseBody Set<PageElement> getAllPageElements(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -262,7 +300,7 @@ public class DomainController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -270,10 +308,10 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-    	List<PageElement> unique_page_elements = new ArrayList<PageElement>();
-    	List<PageElement> page_elements = new ArrayList<PageElement>();
+    	/*Set<PageElement> unique_page_elements = new HashSet<PageElement>();
+    	Set<PageElement> page_elements = new HashSet<PageElement>();
     	for(Domain domain : acct.getDomains()){
-    		for(PageState page_state : domain.getPageStates()){
+    		for(PageState page_state : domain_repo.getPageStates(host)){
     			boolean element_exists = false;
     			for(PageElement element : page_state.getElements()){
     				for(PageElement unique : unique_page_elements){
@@ -287,9 +325,15 @@ public class DomainController {
     			}
     			page_elements.addAll(page_state.getElements());
     		}
-    	}    	
-    	
-	    return unique_page_elements;
+    	} 
+    	*/
+    	System.err.println("$$$$$$ GETTING PAGE ELEMENTS FOR HOST :: "+host);
+		Set<PageElement> page_elements = domain_repo.getPageElements(host);
+		System.err.println("###### PAGE ELEMENT COUNT :: "+page_elements.size());
+		return page_elements;
+    	//	    return domain_repo.getPageElements();
+
+	    //return unique_page_elements;
     }
 }
 

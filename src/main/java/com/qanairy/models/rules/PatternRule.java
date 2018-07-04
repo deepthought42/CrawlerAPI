@@ -3,8 +3,8 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.Attribute;
+import com.qanairy.models.PageElement;
 
 /**
  * Defines a regular expression based rule that applies to the entire text content(beginning to end) of a field.
@@ -20,9 +20,14 @@ public class PatternRule extends Rule {
 	 */
 	@Override
 	public Boolean evaluate(PageElement elem) {
-		String pattern = "/^" + elem.getAttributes().get(elem.getAttributes().indexOf("vals")).getVals().toString() + " $/";
-		Matcher matcher = Pattern.compile(this.value).matcher(pattern);
-	    return matcher.matches();
+		for(Attribute attribute: elem.getAttributes()){
+			if(attribute.getName().equals("vals")){
+				String pattern = "/^" + attribute.getVals().toString() + " $/";
+				Matcher matcher = Pattern.compile(this.value).matcher(pattern);
+			    return matcher.matches();
+			}
+		}
+		return null;
 	}
 	
 	public PatternRule(String pattern){

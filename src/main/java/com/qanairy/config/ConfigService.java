@@ -1,16 +1,32 @@
 package com.qanairy.config;
 
-import java.security.InvalidParameterException;
-import java.text.MessageFormat;
+import org.springframework.beans.factory.annotation.Autowired;
+import static com.qanairy.config.SpringExtension.SPRING_EXTENSION_PROVIDER;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 
+import akka.actor.ActorSystem;
+
+/**
+ * 
+ */
+@Configuration
+@ComponentScan
 public class ConfigService {
      
-    public static String getProperty(String key){
-    	String prop = System.getenv(key);
-    	if(prop == null){
-            throw new InvalidParameterException(MessageFormat.format("Missing value for key {0}!", key));
-    	}
-    	
-    	return prop;
+	@Autowired
+    private ApplicationContext applicationContext;
+ 
+	@Autowired
+    private AkkaConfig akkaConfig;
+	
+    @Bean
+    public ActorSystem actorSystem() {
+        ActorSystem system = ActorSystem.create("MinionActorSystem");
+        SPRING_EXTENSION_PROVIDER.get(system)
+          .initialize(applicationContext);
+        return system;
     }
 }

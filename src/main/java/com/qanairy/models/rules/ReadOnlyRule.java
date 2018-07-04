@@ -1,7 +1,6 @@
 package com.qanairy.models.rules;
 
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.PageElement;
 
 /**
  * Creates a read-only {@link FormRule} on a {@link FormField}  

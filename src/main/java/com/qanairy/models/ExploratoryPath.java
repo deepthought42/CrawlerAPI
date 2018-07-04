@@ -2,11 +2,8 @@ package com.qanairy.models;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -78,7 +75,7 @@ public class ExploratoryPath {
 		//iterate through pages to see if any match
 		for(PathObject path_obj : path_obj_list){			
 			if(path_obj instanceof PageState){
-				if(((PageState)path_obj).equals(page)){
+				if(path_obj.getKey().equals(page.getKey())){
 					return true;
 				}
 			}

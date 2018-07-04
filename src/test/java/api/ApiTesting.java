@@ -6,8 +6,9 @@ import static org.hamcrest.Matchers.*;
 import org.hamcrest.Matchers;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.jayway.restassured.response.Response;
 import static com.jayway.restassured.RestAssured.*;
 import org.testng.asserts.SoftAssert;
@@ -28,13 +29,13 @@ public class ApiTesting
 	protected static final String JSON = "application/json";
 	protected static final String XML = "application/xml";
 	protected static String accessTokenValue = "";
-	protected final static Logger LOGGER = Logger.getLogger("ApiTesting");
+	private static final Logger LOGGER = LoggerFactory.getLogger("API Testing");
 	protected SoftAssert softAssert = new SoftAssert();
 	
 	
 	@BeforeClass
 	public void Setup() throws Exception {
-		PropertyConfigurator.configure("Log4j.properties");
+		//PropertyConfigurator.configure("Log4j.properties");
 	}
 	
 

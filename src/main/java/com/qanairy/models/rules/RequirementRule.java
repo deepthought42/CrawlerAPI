@@ -1,7 +1,6 @@
 package com.qanairy.models.rules;
 
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.Rule;
+import com.qanairy.models.PageElement;
 
 public class RequirementRule extends Rule{
 		

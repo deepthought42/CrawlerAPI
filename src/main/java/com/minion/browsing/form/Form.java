@@ -1,12 +1,12 @@
 package com.minion.browsing.form;
 
 import java.util.List;
-
+import java.util.Set;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.minion.browsing.element.ComplexField;
-import com.qanairy.persistence.Attribute;
-import com.qanairy.persistence.PageElement;
+import com.qanairy.models.Attribute;
+import com.qanairy.models.PageElement;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser
@@ -19,21 +19,11 @@ public class Form {
 	private PageElement submit_field;
 	private FormType type;
 	
-	/**
-	 * Constructs new Form object with form_fields
-	 * @param form_fields
-	 */
-	public Form(PageElement form_tag, List<ComplexField> form_fields){
-		this.setFormTag(form_tag);
-		this.form_fields = form_fields;
-		this.setType(determineFormType());
-	}
-	
 	public Form(PageElement form_tag, List<ComplexField> form_fields, PageElement submit_field){
-		this.setFormTag(form_tag);
-		this.form_fields = form_fields;
-		this.submit_field = submit_field;
-		this.setType(determineFormType());
+		setFormTag(form_tag);
+		setFormFields(form_fields);
+		setSubmitField(submit_field);
+		setType(determineFormType());
 	}
 	
 	/**
@@ -42,7 +32,7 @@ public class Form {
 	 * @return {@link FormType}
 	 */
 	private FormType determineFormType(){
-		List<Attribute> attributes = this.form_tag.getAttributes();
+		Set<Attribute> attributes = this.form_tag.getAttributes();
 		for(Attribute attr: attributes){
 			for(String val : attr.getVals()){
 				if(val.contains("register") || (val.contains("sign") && val.contains("up"))){
@@ -101,5 +91,4 @@ public class Form {
 	public void setType(FormType type) {
 		this.type = type;
 	}
-
 }

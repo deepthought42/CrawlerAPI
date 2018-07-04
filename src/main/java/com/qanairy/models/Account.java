@@ -1,0 +1,204 @@
+package com.qanairy.models;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
+
+/**
+ * Defines the type of package paid for, which domains are registered and which Users belong to the account
+ */
+@NodeEntity
+public class Account {
+	@GeneratedValue
+    @Id
+	private Long id;
+	private String username;
+	private String customer_token;
+	private String subscription_token;
+	private String last_domain_url;
+	private List<String> onboarded_steps;
+	
+	@Relationship(type = "HAS_DOMAIN")
+	private Set<Domain> domains = new HashSet<>();
+
+	@Relationship(type = "HAS_DISCOVERY_RECORD")
+	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
+	
+	@Relationship(type = "HAS_TEST_RECORD")
+	private Set<TestRecord> test_records = new HashSet<>();
+	
+	public Account(){}
+	
+	/**
+	 * 
+	 * @param username
+	 * @param customer_token
+	 * @param subscription_token
+	 * 
+	 * @pre users != null
+	 */
+	public Account(String username, String customer_token, String subscription_token){
+		setUsername(username);
+		setCustomerToken(customer_token);
+		setSubscriptionToken(subscription_token);
+		setOnboardedSteps(new ArrayList<String>());
+	}
+	
+	/**
+	 * 
+	 * @param username
+	 * @param payment_acct_num
+	 * @param users
+	 * 
+	 * @pre users != null
+	 */
+	public Account(String username, String customer_token, String subscription_token, 
+					Set<DiscoveryRecord> discovery_records, Set<TestRecord> test_records, List<String> onboarded_steps){
+		
+		setUsername(username);
+		setCustomerToken(customer_token);
+		setSubscriptionToken(subscription_token);
+		setDiscoveryRecords(discovery_records);
+		setTestRecords(test_records);
+		setOnboardedSteps(onboarded_steps);
+	}
+
+	/**
+	 * 
+	 * @param key
+	 * @param username
+	 * @param payment_acct_num
+	 * @param users
+	 * @param domains
+	 * @param last_domain_url
+	 * @param discovery_records
+	 */
+	public Account(String username, 
+					String customer_token, 
+					String subscription_token, 
+					Set<Domain> domains, 
+					String last_domain_url, 
+					Set<DiscoveryRecord> discovery_records,
+					Set<TestRecord> test_records, 
+					List<String> onboarded_steps){
+		
+		setUsername(username);
+		setCustomerToken(customer_token);
+		setSubscriptionToken(subscription_token);
+		setDomains(domains);
+		setLastDomain(last_domain_url);
+		setDiscoveryRecords(discovery_records);
+		setTestRecords(test_records);
+		setOnboardedSteps(onboarded_steps);
+	}
+		
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getCustomerToken() {
+		return customer_token;
+	}
+
+	public void setCustomerToken(String customer_token) {
+		this.customer_token = customer_token;
+	}
+	
+	public String getSubscriptionToken() {
+		return subscription_token;
+	}
+
+	public void setSubscriptionToken(String subscription_token) {
+		this.subscription_token = subscription_token;
+	}
+
+	public void setLastDomain(String domain_url) {
+		this.last_domain_url = domain_url;
+	}
+	
+	public String getLastDomain(){
+		return this.last_domain_url;
+	}
+
+	public List<String> getOnboardedSteps() {
+		return onboarded_steps;
+	}
+
+	public void setOnboardedSteps(List<String> onboarded_steps) {
+		if(onboarded_steps == null){
+			this.onboarded_steps = new ArrayList<String>();
+		}
+		else{
+			this.onboarded_steps = onboarded_steps;
+		}
+	}
+	
+	public void addOnboardingStep(String step_name) {
+		if(!this.onboarded_steps.contains(step_name)){
+			this.onboarded_steps.add(step_name);
+		}
+	}
+	
+	public Set<Domain> getDomains(){
+		return this.domains;
+	}
+	
+	public void setDomains(Set<Domain> domains){
+		this.domains = domains;
+	}
+	
+	public void addDomain(Domain domain) {
+		this.domains.add(domain);
+	}
+	
+	public void removeDomain(Domain domain) {
+		int idx = -1;
+		boolean domain_found = false;
+		for(Domain curr_domain : this.domains){
+			if(curr_domain.getKey().equals(domain.getKey())){
+				domain_found = true;
+				break;
+			}
+			idx++;
+		}
+		
+		if(domain_found){
+			this.domains.remove(idx);
+		}
+	}
+	
+	public Set<DiscoveryRecord> getDiscoveryRecords() {
+		return discovery_records;
+	}
+
+	public void setDiscoveryRecords(Set<DiscoveryRecord> discovery_records) {
+		this.discovery_records = discovery_records;
+	}
+	
+	public void addDiscoveryRecord(DiscoveryRecord record){
+		this.discovery_records.add(record);
+	}
+
+	public Set<TestRecord> getTestRecords() {
+		return test_records;
+	}
+
+	public void setTestRecords(Set<TestRecord> test_records) {
+		this.test_records = test_records;
+	}
+
+	public void addTestRecord(TestRecord record) {
+		this.test_records.add(record);
+	}
+}

@@ -1,8 +1,6 @@
 package com.minion.browsing;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,22 +16,33 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
+import com.qanairy.models.Action;
 import com.qanairy.models.PageAlert;
-import com.qanairy.persistence.Action;
-import com.qanairy.persistence.PageElement;
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
+import com.qanairy.models.repository.ActionRepository;
+import com.qanairy.services.BrowserService;
 
 /**
  * Provides methods for crawling web pages using Selenium
  */
+@Component
 public class Crawler {
 	private static Logger log = LoggerFactory.getLogger(Crawler.class);
 
+	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
+	private ActionRepository action_repo;
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 * 
@@ -47,7 +56,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public static PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws NoSuchElementException, IOException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws NoSuchElementException, IOException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -62,61 +71,73 @@ public class Crawler {
 		}
 		
 		PageElement last_element = null;
+	
+		boolean path_deviation = false;
+		do{
+			path_deviation = false;
 
-		
-		browser.getDriver().get(((PageState)ordered_path_objects.get(0)).getUrl().toString());
-		try{
-			new WebDriverWait(browser.getDriver(), 360).until(
-					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		}catch(GridException e){
-			log.error(e.getMessage());
-		}
-		catch(Exception e){
-			log.error(e.getMessage());
-		}
+			browser.getDriver().get(((PageState)ordered_path_objects.get(0)).getUrl().toString());
+			try{
+				new WebDriverWait(browser.getDriver(), 360).until(
+						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			}catch(GridException e){
+				log.error(e.getMessage());
+			}
+			catch(Exception e){
+				log.error(e.getMessage());
+			}
 
-		//skip first node since we should have already loaded it during initialization
-		for(PathObject current_obj: ordered_path_objects){
-			if(current_obj instanceof PageState){
-				//Do Nothing for now
+			//skip first node since we should have already loaded it during initialization
+			for(PathObject current_obj: ordered_path_objects){
+				if(current_obj instanceof PageState){
+					if(!browser_service.buildPage(browser).equals(current_obj)){
+						path_deviation = true;
+						break;
+					}
+					//Do Nothing for now
+				}
+				else if(current_obj instanceof PageElement){
+					last_element = (PageElement) current_obj;
+				}
+				//String is action in this context
+				else if(current_obj instanceof Action){
+					//boolean actionPerformedSuccessfully;
+					Action action = (Action)current_obj;
+					Action action_record = action_repo.findByKey(action.getKey());
+					if(action_record==null){
+						action = action_repo.save(action);
+						try {
+							MessageBroadcaster.broadcastPathObject(action, host_channel);
+						} catch (JsonProcessingException e1) {
+							e1.printStackTrace();
+						}
+					}
+					else{
+						action = action_record;
+					}
+					
+					boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
+				}
+				else if(current_obj instanceof PageAlert){
+					log.debug("Current path node is a PageAlert");
+					PageAlert alert = (PageAlert)current_obj;
+					alert.performChoice(browser.getDriver());
+				}
 			}
-			else if(current_obj instanceof PageElement){
-				last_element = (PageElement) current_obj;
-			}
-			//String is action in this context
-			else if(current_obj instanceof Action){
-				//boolean actionPerformedSuccessfully;
-				Action action = (Action)current_obj;
-				
-				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver(), host_channel);
-			}
-			else if(current_obj instanceof PageAlert){
-				log.debug("Current path node is a PageAlert");
-				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
-			}
-		}
+		}while(path_deviation);
 		
-		return browser.buildPage();
+		return browser_service.buildPage(browser);
 	}
 	
 	/**
 	 * Executes the given {@link ElementAction element action} pair such that
 	 * the action is executed against the element 
 	 * 
-	 * @param elemAction ElementAction pair
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static boolean performAction(Action action, PageElement elem, WebDriver driver, String host_channel){
+	public static boolean performAction(Action action, PageElement elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
-		if(host_channel != null){
-			try {
-				MessageBroadcaster.broadcastAction(action, host_channel);
-			} catch (JsonProcessingException e1) {
-				e1.printStackTrace();
-			}
-		}
 
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));

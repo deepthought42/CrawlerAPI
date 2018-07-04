@@ -8,9 +8,6 @@ import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
-import com.qanairy.persistence.PageState;
-import com.qanairy.persistence.PathObject;
-
 /**
  *
  */

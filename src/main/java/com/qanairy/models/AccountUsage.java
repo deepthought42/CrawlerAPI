@@ -1,8 +1,11 @@
 package com.qanairy.models;
 
+import org.neo4j.ogm.annotation.Transient;
+
 /**
  * 
  */
+@Transient
 public class AccountUsage {
 	private int discovery_limit;
 	private int discoveries_used;

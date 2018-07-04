@@ -7,10 +7,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,39 +19,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
-import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.models.DiscoveryRecordPOJO;
+import com.qanairy.config.SpringExtension;
+import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Domain;
 import com.qanairy.models.StripeClient;
-import com.qanairy.models.dao.AccountDao;
-import com.qanairy.models.dao.DiscoveryRecordDao;
-import com.qanairy.models.dao.DomainDao;
-import com.qanairy.models.dao.impl.AccountDaoImpl;
-import com.qanairy.models.dao.impl.DiscoveryRecordDaoImpl;
-import com.qanairy.models.dao.impl.DomainDaoImpl;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.persistence.Account;
-import com.qanairy.persistence.DiscoveryRecord;
-import com.qanairy.persistence.Domain;
-import com.qanairy.services.AccountService;
+import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.DomainRepository;
 import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.APIConnectionException;
 import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.UsageRecord;
-
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;
@@ -61,7 +50,7 @@ import scala.concurrent.duration.Duration;
 import akka.util.Timeout;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
+
 
 
 /**
@@ -75,6 +64,18 @@ public class DiscoveryController {
     private StripeClient stripeClient;
 
     @Autowired
+    AccountRepository account_repo;
+    
+    @Autowired
+    DomainRepository domain_repo;
+    
+    @Autowired
+    private ActorSystem actor_system;
+    
+    @Autowired
+    DiscoveryRecordRepository discovery_repo; 
+    
+    @Autowired
     DiscoveryController(StripeClient stripeClient) {
         this.stripeClient = stripeClient;
     }
@@ -87,7 +88,7 @@ public class DiscoveryController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -123,7 +124,7 @@ public class DiscoveryController {
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
-	public @ResponseBody DiscoveryRecordPOJO startDiscovery(HttpServletRequest request, 
+	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request, 
 											   	  		@RequestParam(value="url", required=true) String url) 
 										   	  				throws MalformedURLException, 
 										   	  						UnknownAccountException, 
@@ -138,7 +139,7 @@ public class DiscoveryController {
     	String username = auth.getUsername(auth_access_token);
 		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
 
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
     	
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -167,8 +168,7 @@ public class DiscoveryController {
 			}
 		}
     	
-    	DomainDao domain_dao = new DomainDaoImpl();
-    	Domain domain = domain_dao.find(url); 
+    	Domain domain = domain_repo.findByHost(url); 
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
@@ -189,24 +189,23 @@ public class DiscoveryController {
 
 	    	UsageRecord.create(usageRecordParams, null);
         	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-			DiscoveryRecordDao discovery_repo = new DiscoveryRecordDaoImpl();	
-			DiscoveryRecordPOJO discovery_record = new DiscoveryRecordPOJO(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	
-	    	acct = AccountService.find(username);
-			acct.addDiscoveryRecord(discovery_repo.save(discovery_record));
-        	//AccountDao acct_dao = new AccountDaoImpl();
-        	//acct_dao.save(acct);
+			acct.addDiscoveryRecord(discovery_record);
+			acct = account_repo.save(acct);
                 	
-			WorkAllowanceStatus.register(acct.getKey());
-			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
+			WorkAllowanceStatus.register(acct.getUsername());
+			//ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Map<String, Object> options = new HashMap<String, Object>();
 			options.put("browser", domain.getDiscoveryBrowserName());
 	        options.put("discovery_key", discovery_record.getKey());
 	        options.put("host", domain.getUrl());
-	        
-			Message<URL> message = new Message<URL>(acct.getKey(), new URL(protocol+"://"+domain_url), options);
-			ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
+			Message<URL> message = new Message<URL>(acct.getUsername(), new URL(protocol+"://"+domain_url), options);
+			//ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
 
+			ActorRef workAllocationActor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+			
 		    //Fire discovery started event	
 			Map<String, String> traits = new HashMap<String, String>();
 	        traits.put("email", username);    
@@ -215,7 +214,7 @@ public class DiscoveryController {
 	        traits.put("discovery_started", "true");
 	    	traits.put("discovery_key", discovery_record.getKey());
 	        analytics.enqueue(TrackMessage.builder("Started Discovery")
-	    		    .userId(acct.getKey())
+	    		    .userId(acct.getUsername())
 	    		    .properties(traits)
 	    		);
 
@@ -241,7 +240,7 @@ public class DiscoveryController {
 	    	discovery_started_props.put("already_running", "true");
 	    	
 	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")
-	    		    .userId(acct.getKey())
+	    		    .userId(acct.getUsername())
 	    		    .properties(discovery_started_props)
 	    		);
 
@@ -266,7 +265,7 @@ public class DiscoveryController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = AccountService.find(username);
+    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -274,7 +273,7 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
-		WorkAllowanceStatus.haltWork(acct.getKey()); 
+		WorkAllowanceStatus.haltWork(acct.getUsername()); 
 		
 		return null;
 	}

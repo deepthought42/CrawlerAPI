@@ -1,6 +1,10 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -24,6 +28,7 @@ public class DiscoveryRecord implements Persistable {
 	private int total_path_count;
 	private int examined_path_count;
 	private int test_cnt;
+	private List<String> expanded_page_state = new ArrayList<>();
 
 	public DiscoveryRecord(){}
 	
@@ -125,5 +130,13 @@ public class DiscoveryRecord implements Persistable {
 	
 	public String generateKey() {
 		return getDomainUrl()+":"+getStartTime();
+	}
+
+	public List<String> getExpandedPageState() {
+		return expanded_page_state;
+	}
+
+	public void setExpandedPageState(List<String> expanded_page_state) {
+		this.expanded_page_state = expanded_page_state;
 	}
 }

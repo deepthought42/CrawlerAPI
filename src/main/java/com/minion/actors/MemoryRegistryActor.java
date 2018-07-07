@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
@@ -25,9 +24,6 @@ import com.qanairy.models.repository.TestRepository;
 public class MemoryRegistryActor extends UntypedActor{
     @SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
-
-    @Autowired
-    private ActorSystem actor_system;
     
     @Autowired
     private TestRepository test_repo;

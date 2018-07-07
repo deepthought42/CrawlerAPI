@@ -58,8 +58,9 @@ public class Browser {
 	private String browser_name; 
     //private static final String DISCOVERY_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
 	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-    private static final String HUB_IP_ADDRESS= "104.131.30.168";
-    
+    private static final String HUB_IP_ADDRESS= "167.99.0.121";
+    //private static final String HUB_IP_ADDRESS= "10.136.96.247";
+
     public Browser(){}
     
 	/**
@@ -112,6 +113,9 @@ public class Browser {
 			}
 
 			cnt++;
+			try {
+				Thread.sleep(30000L);
+			} catch (InterruptedException e1) {}
 		}
 	}
 	
@@ -305,10 +309,10 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static File getViewportScreenshot(WebDriver driver) throws IOException, GridException{
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {}
-		
+//		try {
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e) {}
+//		
 		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 	}
 	

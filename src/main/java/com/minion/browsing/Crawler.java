@@ -75,7 +75,6 @@ public class Crawler {
 		boolean path_deviation = false;
 		do{
 			path_deviation = false;
-
 			browser.getDriver().get(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 			try{
 				new WebDriverWait(browser.getDriver(), 360).until(
@@ -86,7 +85,12 @@ public class Crawler {
 			catch(Exception e){
 				log.error(e.getMessage());
 			}
-
+//
+//			try {
+//				Thread.sleep(2000L);
+//			} catch (InterruptedException e) {}
+//			
+			
 			//skip first node since we should have already loaded it during initialization
 			for(PathObject current_obj: ordered_path_objects){
 				if(current_obj instanceof PageState){
@@ -142,9 +146,9 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {}
+//			try {
+//				Thread.sleep(3000);
+//			} catch (InterruptedException e) {}
 		}
 		catch(StaleElementReferenceException e){
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "

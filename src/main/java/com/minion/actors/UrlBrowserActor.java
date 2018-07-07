@@ -1,5 +1,7 @@
 package com.minion.actors;
 
+import static com.qanairy.models.SpringExtension.SpringExtProvider;
+
 import java.net.URL;
 import java.util.UUID;
 
@@ -13,7 +15,6 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 import com.minion.structs.Message;
-import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Test;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
@@ -60,14 +61,14 @@ public class UrlBrowserActor extends UntypedActor {
 						
 						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						path_expansion_actor.tell(test_msg, getSelf() );
 						
-						final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+						final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
 						form_test_discoverer.tell(test_msg, getSelf() );
-												
+
 						
 						break;
 					}

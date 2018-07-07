@@ -78,15 +78,6 @@ public class TestingActor extends UntypedActor {
 				PageState expected_page = test.getResult();
 				
 				int tries=0;
-				do{
-					try{
-						resulting_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), resulting_page));
-						break;
-					}catch(Exception e){
-						log.error(e.getMessage());
-						resulting_page.setLandable(false);
-					}
-				}while(tries < 5);
 
 				if(!resulting_page.equals(expected_page)){
 					TestRecord record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
@@ -120,7 +111,5 @@ public class TestingActor extends UntypedActor {
 		else{
 			log.warn("ERROR : Did not receive a Message object");
 		}
-	}
-
-	
+	}	
 }

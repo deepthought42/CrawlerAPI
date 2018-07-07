@@ -45,6 +45,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
     	 .forRS256(audience, issuer)
     	 //.forHS256(audience, issuer, secret.getBytes())
          .configure(http).cors().and().csrf().disable().authorizeRequests()
+         .antMatchers(HttpMethod.GET, "/actuator/info").permitAll()
+         .antMatchers(HttpMethod.GET, "/actuator/health").permitAll()
          .antMatchers(HttpMethod.POST, "/accounts").permitAll()
          .anyRequest().authenticated();
     	/*http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()

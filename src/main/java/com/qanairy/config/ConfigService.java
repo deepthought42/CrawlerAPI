@@ -1,11 +1,12 @@
 package com.qanairy.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import static com.qanairy.config.SpringExtension.SPRING_EXTENSION_PROVIDER;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+
+import static com.qanairy.models.SpringExtension.SpringExtProvider;
 
 import akka.actor.ActorSystem;
 
@@ -13,20 +14,20 @@ import akka.actor.ActorSystem;
  * 
  */
 @Configuration
-@ComponentScan
+@ComponentScan({"com.qanairy.models"})
 public class ConfigService {
      
 	@Autowired
     private ApplicationContext applicationContext;
- 
-	@Autowired
-    private AkkaConfig akkaConfig;
 	
-    @Bean
-    public ActorSystem actorSystem() {
-        ActorSystem system = ActorSystem.create("MinionActorSystem");
-        SPRING_EXTENSION_PROVIDER.get(system)
-          .initialize(applicationContext);
-        return system;
-    }
+	/**
+	   * Actor system singleton for this application.
+	   */
+	  @Bean
+	  public ActorSystem actorSystem() {
+	    ActorSystem system = ActorSystem.create("QanairyActorSystem");
+	    // initialize the application context in the Akka Spring Extension
+	    SpringExtProvider.get(system).initialize(applicationContext);
+	    return system;
+	  }
 }

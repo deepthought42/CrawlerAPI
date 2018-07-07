@@ -66,19 +66,20 @@ public class ExploratoryPath {
 	 * @param path
 	 * @return true if sequence appears more than once
 	 */
-	public static boolean hasCycle(List<PathObject> path_obj_list, PageState page){
-		if(path_obj_list.size() == 1){
+	public static boolean hasCycle(List<String> path_key_list, PageState page){
+		if(path_key_list.size() == 1){
 			return false;
 		}
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		for(PathObject path_obj : path_obj_list){			
-			if(path_obj instanceof PageState){
-				if(path_obj.getKey().equals(page.getKey())){
+		for(String key : path_key_list){			
+				System.err.println("path object key :: "+key);
+				System.err.println("Page key :: "+page.getKey());
+				System.err.println("DO PATH OBJECT KEYS MATCH :: "+page.getKey()==key);
+				if(key.equals(page.getKey())){
 					return true;
 				}
-			}
 		}
 		return false;
 	}

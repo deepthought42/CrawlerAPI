@@ -3,6 +3,7 @@ package com.minion.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,7 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
@@ -58,7 +60,8 @@ public class DomainController {
 							    		 @RequestParam(value="protocol", required=true) String protocol,
 							    		 @RequestParam(value="url", required=true) String url,
 							    		 @RequestParam(value="browser_name", required=true) String browser_name,
-							    		 @RequestParam(value="logo_url", required=false) String logo_url) 
+							    		 @RequestParam(value="logo_url", required=false) String logo_url,
+							    		 @RequestParam(value="test_users", required=false) List<TestUser> users) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
        	Auth0Client auth = new Auth0Client();

@@ -24,9 +24,9 @@ public class TestWriter {
 	 * @return
 	 */
 	public String createTest(){
-		List<PathObject> pathIterator = test.getPathObjects();
+		List<PathObject> path_Objects_list = test.getPathObjects();
 		ArrayList<String> testStatements = new ArrayList<String>();
-		for(PathObject obj : pathIterator){
+		for(PathObject obj : path_Objects_list){
 			//Integer graph_idx = (Integer) pathIterator.next();
 			//Vertex<?> vertex = graph.getVertices().get(graph_idx);
 			IStatementFactory statement = new ElementStatement();

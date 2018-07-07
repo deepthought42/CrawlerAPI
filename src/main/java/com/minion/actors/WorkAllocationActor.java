@@ -1,5 +1,7 @@
 package com.minion.actors;
 
+import static com.qanairy.models.SpringExtension.SpringExtProvider;
+
 import java.net.URL;
 import java.util.UUID;
 
@@ -8,14 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.config.SpringExtension;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Test;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
 import com.minion.structs.Message;
+import static com.qanairy.models.SpringExtension.SpringExtProvider;
 
 
 /**
@@ -25,67 +28,44 @@ import com.minion.structs.Message;
  */
 @Component
 @Scope("prototype")
-public class WorkAllocationActor extends UntypedActor {
+public class WorkAllocationActor extends AbstractActor  {
 	private static Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
 
 	@Autowired
 	ActorSystem actor_system;
 	
+	
 	@Override
-	public void onReceive(Object message) throws Exception {
-		if(message instanceof Message){
-			Message<?> acct_message = (Message<?>)message;
-			//if(WorkAllowanceStatus.checkStatus(acct_message.getAccountKey())){
-				if(acct_message.getData() instanceof ExploratoryPath ||
-						acct_message.getData() instanceof URL){
-					String browser_name = acct_message.getOptions().get("browser").toString();
-					Message<?> msg = acct_message.clone();	
-					msg.getOptions().put("browser", browser_name);
-					
-					if(acct_message.getData() instanceof ExploratoryPath){
-						final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-								  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-						exploratory_browser_actor.tell(msg, getSelf() );
-					}
-					/*else if(acct_message.getData() instanceof Path){
-						path = (Path)acct_message.getData();
-						Path path_record = repo.find(connection, repo.generateKey(path));
-						if(path_record != null){
-							record_exists = true;
-							path = path_record;
-						}
-						else{
-							path.setKey(repo.generateKey(path));
-						}
+	public Receive createReceive() {
+		return receiveBuilder()
+				.match(Message.class, acct_message -> {
+					if(acct_message.getData() instanceof ExploratoryPath ||
+							acct_message.getData() instanceof URL){
+						String browser_name = acct_message.getOptions().get("browser").toString();
+						Message<?> msg = acct_message.clone();	
+						msg.getOptions().put("browser", browser_name);
 						
-						final ActorRef browser_actor = this.getContext().actorOf(Props.create(BrowserActor.class), "BrowserActor"+UUID.randomUUID());
-						browser_actor.tell(msg, getSelf() );						
+						if(acct_message.getData() instanceof ExploratoryPath){
+							final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
+							exploratory_browser_actor.tell(msg, getSelf() );
+						}
+						else if(acct_message.getData() instanceof URL){
+							log.info("Sending URL to UrlBrowserActor");
+							final ActorRef url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
+							//final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
+							url_browser_actor.tell(msg, getSelf() );
+						}
 					}
-					*/
-					else if(acct_message.getData() instanceof URL){
-						log.info("Sending URL to UrlBrowserActor");
-						final ActorRef url_browser_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-								  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
-						//final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
-						url_browser_actor.tell(msg, getSelf() );
+					else if(acct_message.getData() instanceof Test){					
+						final ActorRef testing_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("testingActor"), "testing_actor"+UUID.randomUUID());
+						testing_actor.tell(acct_message, getSelf() );
 					}
-				}
-				else if(acct_message.getData() instanceof Test){					
-					final ActorRef testing_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-							  .props("testingActor"), "testing_actor"+UUID.randomUUID());
-					testing_actor.tell(acct_message, getSelf() );
-				}
-				getSender().tell("Status: ok", getSelf());
-
-			/*}
-			else{
-				log.warn("Work allocation actor did not start any work due to account key not having a runnable status");
-				getSender().tell("Account not allowed to run discovery", getSelf());
-			}
-			*/
-		}
-		else{
-			getSender().tell("did not recieve Message Object", getSelf());
-		}
+					getSender().tell("Status: ok", getSelf());
+				})
+				.matchAny(o -> log.info("received unknown message"))
+				.build();
 	}
 }

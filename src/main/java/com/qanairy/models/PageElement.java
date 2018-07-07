@@ -233,7 +233,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath()+":"+getText());   
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath()+":"+getText()+":"+getType());   
 	}
 	
 

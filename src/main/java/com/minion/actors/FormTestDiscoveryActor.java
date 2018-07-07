@@ -18,6 +18,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
@@ -56,6 +57,9 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	@Autowired
 	private ActionRepository action_repo;
 	
+	@Autowired
+	private PageElementRepository page_element_repo;
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -80,6 +84,10 @@ public class FormTestDiscoveryActor extends UntypedActor {
 						break;
 					}catch(NullPointerException e){
 						log.error(e.getMessage());
+//						try {
+//							Thread.sleep(30000L);
+//						} catch (InterruptedException e1) {}
+						
 					}
 					cnt++;
 				}	
@@ -99,16 +107,18 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	List<Test> tests = new ArrayList<Test>();
 			  	for(List<PathObject> path_obj_list : path_object_lists){
 			  		List<String> path_keys = new ArrayList<String>(test.getPathKeys());
-			  		for(PathObject path_obj : path_obj_list){
-			  			path_keys.add(path_obj.getKey());
-			  		}
 			  		
 			  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
 			  		for(PathObject obj : path_obj_list){
+			  			path_keys.add(obj.getKey());
+
 			  			if(obj.getType().equals("PageElement")){
 			  				PageElement page_elem = (PageElement)obj;
-			  				//PageElement elem_record = page_element_repo.findByKey(obj.getKey());
-			  				
+			  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
+			  				if(elem_record == null){
+			  					elem_record = page_element_repo.save(page_elem);
+			  					MessageBroadcaster.broadcastPathObject(elem_record, acct_msg.getOptions().get("host").toString());
+			  				}
 			  				test_path_objects.add(page_elem);
 			  			}
 			  			else if(obj.getType().equals("Action")){

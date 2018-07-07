@@ -24,14 +24,12 @@ import com.minion.actors.WorkAllocationActor;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
-import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
@@ -50,6 +48,7 @@ import scala.concurrent.duration.Duration;
 import akka.util.Timeout;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import static com.qanairy.models.SpringExtension.SpringExtProvider;
 
 
 
@@ -71,9 +70,6 @@ public class DiscoveryController {
     
     @Autowired
     private ActorSystem actor_system;
-    
-    @Autowired
-    DiscoveryRecordRepository discovery_repo; 
     
     @Autowired
     DiscoveryController(StripeClient stripeClient) {
@@ -201,9 +197,8 @@ public class DiscoveryController {
 	        options.put("discovery_key", discovery_record.getKey());
 	        options.put("host", domain.getUrl());
 			Message<URL> message = new Message<URL>(acct.getUsername(), new URL(protocol+"://"+domain_url), options);
-			//ActorRef workAllocationActor = actor_system.actorOf(Props.create(WorkAllocationActor.class), "workAllocationActor"+UUID.randomUUID());
 
-			ActorRef workAllocationActor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+			ActorRef workAllocationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 			
 		    //Fire discovery started event	

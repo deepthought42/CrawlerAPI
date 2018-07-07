@@ -1,6 +1,9 @@
 package com.minion.actors;
 
+import static com.qanairy.models.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +24,6 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -30,6 +32,7 @@ import com.qanairy.models.Group;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.SpringExtension;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestStatus;
@@ -103,22 +106,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
-					DiscoveryRecord discovery_record = null;
-					boolean error_while_saving = false;
-					do{
-						try{
-							discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
-							discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-					  		discovery_record.setLastPathRanAt(new Date());
-					  		discovery_record = discovery_repo.save(discovery_record);
-							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-					  		error_while_saving = false;
-					  		break;
-						}catch(Exception e){
-							error_while_saving = true;
-						}
-					}while(error_while_saving);
 					
 					for(Action action : exploratory_path.getPossibleActions()){
 						ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
@@ -135,33 +122,18 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							try{
 								System.err.println("Crawling path");
 								result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+								break;
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
 								log.error("Error happened while exploratory actor attempted to crawl test");
 								e.printStackTrace();
 								
-								try {
-									Thread.sleep(60000L);
-								} catch (InterruptedException e1) {}
+//								try {
+//									Thread.sleep(10000L);
+//								} catch (InterruptedException e1) {}
 							}
 							tries++;
-							
-
-						}while(result_page == null && tries < 10);
-						
-						do{							
-							try{								
-								result_page.setLandable(browser_service.checkIfLandable(acct_msg.getOptions().get("browser").toString(), result_page));
-						  		result_page = page_state_repo.save(result_page);
-								break;
-							}catch(NullPointerException e){
-								browser = new Browser(browser.getBrowserName());
-								log.error("Error happened while exploratory actor attempted to check landability of result page");
-								e.printStackTrace();
-							}
-							
-							tries++;
-						}while(tries < 5);
+						}while(result_page == null && tries < 30);
 					  	
 						Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 						
@@ -169,13 +141,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 					
-						if(!ExploratoryPath.hasCycle(path.getPathObjects(), result_page)){
-					  		/*test.setIsUseful(false);
-					  		continue;
-					  	}
-					  	else{
-					  		test.setIsUseful(true);
-					  		*/
+						if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
 					  		boolean results_match = false;
 					  		ExploratoryPath last_path = null;
 					  		//crawl test and get result
@@ -206,11 +172,25 @@ public class ExploratoryBrowserActor extends UntypedActor {
 					  			last_path = path;
 					  		}
 					  		
-							createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg, discovery_record);
-							
+							createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg);
+							DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+							discovery_record.setTestCount(discovery_record.getTestCount()+1);
+					  		discovery_repo.save(discovery_record);
 							break;
 						}
 					}
+					DiscoveryRecord discovery_record = null;
+					try{
+						discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+				  		discovery_record.setLastPathRanAt(new Date());
+				  		discovery_record = discovery_repo.save(discovery_record);
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
+				  	}catch(Exception e){
+					
+					}
+					
 				  	browser.close();
 				}
 
@@ -229,7 +209,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @param result_page
 	 * @throws JsonProcessingException 
 	 */
-	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg, DiscoveryRecord discovery ) throws JsonProcessingException {
+	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg ) throws JsonProcessingException {
 		Test test = new Test(path_keys, path_objects, result_page, null);							
 
 		test.setRunTime(crawl_time);
@@ -238,17 +218,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 		
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
+		test = test_service.save(test, acct_msg.getOptions().get("host").toString());
+
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-		//tell memory worker of test
-		/*final ActorRef memory_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
-				  .props("memoryRegistryActor"), "memory_registration"+UUID.randomUUID());
-		memory_actor.tell(test_msg, getSelf());
-		*/
-		test_service.save(test, acct_msg.getOptions().get("host").toString());
 
 		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
-		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 		path_expansion_actor.tell(test_msg, getSelf());
 	}
@@ -319,6 +295,17 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			ExploratoryPath parent_path = ExploratoryPath.clone(path);
 			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver()); 
 			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), browser_service.extractAttributes(parent, browser.getDriver()), Browser.loadCssProperties(parent) );
+			
+			//Ensure Order path objects
+			int idx = 0;
+			for(PathObject obj : parent_path.getPathObjects()){
+				if(obj.getKey().equals(parent_tag)){
+					break;
+				}
+				idx++;
+			}
+			
+			parent_path.getPathObjects().set(idx, parent_tag);
 			
 			parent_path.getPathKeys().set(element_idx, parent_tag.getKey());
 			return parent_path;

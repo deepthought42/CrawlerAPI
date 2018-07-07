@@ -1,14 +1,16 @@
 package com.qanairy.models;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.imageio.ImageIO;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -179,30 +181,24 @@ public class PageState implements Persistable, PathObject {
         String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
         String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();
         
-        boolean screenshots_match = false;
+        boolean pages_match = false;
         
-        /*
+        
         System.err.println("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
 		BufferedImage img1;
 		BufferedImage img2;
     	
-    	if(!thisBrowserScreenshot.equals(thatBrowserScreenshot)){
-    		try {
-    			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
-    			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
-    			screenshots_match = compareImages(img1, img2);
-    			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+screenshots_match);
-    	        return screenshots_match;
-    		} catch (IOException e1) {
-    			e1.printStackTrace();
-    			System.err.println("YO THE FULL PAGE SCREENSHOT COMPARISON THINGY ISN'T WORKING!!!!!!  HALP!!!!!!!!!!");
-    		}
-    	}
-    	else{
-    		log.info("PageState screenshots match");
-    		return true;
-    	}
-       	*/
+		try {
+			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
+			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
+			pages_match = compareImages(img1, img2);
+			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			System.err.println("YO THE FULL PAGE SCREENSHOT COMPARISON THINGY ISN'T WORKING!!!!!!  HALP!!!!!!!!!!");
+		}
+
+       	
         
         //System.err.println("Screenshots match? :: "+screenshots_match);
         
@@ -213,7 +209,7 @@ public class PageState implements Persistable, PathObject {
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        if(this.getElements().size() == that.getElements().size()){
+        if(pages_match && this.getElements().size() == that.getElements().size()){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
 	        	page_elements.put(elem.getXpath(), elem);
@@ -227,10 +223,10 @@ public class PageState implements Persistable, PathObject {
 	        
 	        System.err.println("PAGE ELEMENT DIFF :: "+page_elements.size());
 	        if(page_elements.isEmpty()){
-	        	return true;
+	        	pages_match = true;
 	        }
         }
-    	return false;
+    	return pages_match;
   	}
 	
 	/**
@@ -376,10 +372,10 @@ public class PageState implements Persistable, PathObject {
 		this.elements.add(element);
 	}
 
-	private static String getFileChecksum(MessageDigest digest, File file) throws IOException
+	private static String getFileChecksum(MessageDigest digest, String url) throws IOException
 	{
 	    //Get file input stream for reading the file content
-	    FileInputStream fis = new FileInputStream(file);
+	    FileInputStream fis = new FileInputStream(url);
 	     
 	    //Create byte array to read data in chunks
 	    byte[] byteArray = new byte[1024];
@@ -414,6 +410,13 @@ public class PageState implements Persistable, PathObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
+		/*
+		*/
+		/*try{
+			return getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+		}
+		catch(Exception e){}
+		*/
 		String key = "";
 		for(PageElement element : getElements()){
 			key += element.getKey()+element.getAttributes().hashCode()+element.getCssValues().hashCode();

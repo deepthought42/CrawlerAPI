@@ -119,6 +119,7 @@ public class BrowserService {
 			page_state = page_record;	
 		}
 		else{
+			page_state.setLandable(checkIfLandable(browser.getBrowserName(), page_state));
 			page_state = page_state_repo.save(page_state);
 			MessageBroadcaster.broadcastPathObject(page_state, page_url.getHost().toString());
 		}
@@ -146,8 +147,6 @@ public class BrowserService {
 		}
 		
 		String page_url = driver.getCurrentUrl();
-		System.err.println("PAGE URL FOR ELEM VISIBLITY :: "+page_url);
-		System.err.println("building xpath for      " + pageElements.size() + "    elements");
 
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
@@ -157,34 +156,27 @@ public class BrowserService {
 				if(is_child && elem.getSize().getHeight() > 0 && elem.isDisplayed()
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
 						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
-					//(elem.getAttribute("backface-visibility")==null || !elem.getAttribute("backface-visiblity").equals("hidden"))
+					String this_xpath = generateXpath(elem, xpath, xpath_map, driver); 
 
-					try{	
-						BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
+					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), extractAttributes(elem, driver), Browser.loadCssProperties(elem) );
+					PageElement tag_record = page_element_repo.findByKey(tag.getKey());
+					if(tag_record == null){
+						try{							
+							BufferedImage img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
+							String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
 
-						String this_xpath = generateXpath(elem, xpath, xpath_map, driver); 
-
-						PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), extractAttributes(elem, driver), Browser.loadCssProperties(elem) );
-
-						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha256Hex(driver.getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(elem.getTagName()+elem.getText()), tag.getKey());	
-
-						PageElement tag_record = page_element_repo.findByKey(tag.getKey());
-						if(tag_record != null){
-							tag = tag_record;
-							tag.setScreenshot(screenshot);
-							tag = page_element_repo.save(tag);
-						}
-						else{
 							tag.setScreenshot(screenshot);
 							tag = page_element_repo.save(tag);
 							MessageBroadcaster.broadcastPathObject(tag, host);
 						}
-						
-						elementList.add(tag);
+						catch(RasterFormatException e){
+							log.warn("Raster Format Exception : "+e.getMessage());
+						}
 					}
-					catch(RasterFormatException e){
-						log.warn("Raster Format Exception : "+e.getMessage());
+					else{
+						tag = tag_record;
 					}
+					elementList.add(tag);
 
 				}
 			}catch(StaleElementReferenceException e){
@@ -609,10 +601,10 @@ public class BrowserService {
 					log.error(e.getMessage());
 				}
 
-				try {
-					Thread.sleep(2000L);
-				} catch (InterruptedException e) {}
-				
+//				try {
+//					Thread.sleep(3000L);
+//				} catch (InterruptedException e) {}
+//				
 				if(page_state.equals(buildPage(browser))){
 					landable = true;
 				}

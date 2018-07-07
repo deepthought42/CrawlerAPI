@@ -1,11 +1,14 @@
 package com.minion.actors;
 
+import static com.qanairy.models.SpringExtension.SpringExtProvider;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -17,7 +20,6 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
-import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
@@ -58,15 +60,13 @@ public class PathExpansionActor extends UntypedActor {
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 
-				if((!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
-						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
-					PageState last_page = test.findLastPage();
-					
-					if(!last_page.equals(test.getResult()) && test.getResult().isLandable()){
+				if((!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
+						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){					
+					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
 
-						final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
 						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), new URL(test.getResult().getUrl()), acct_msg.getOptions());
@@ -82,7 +82,7 @@ public class PathExpansionActor extends UntypedActor {
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 	
 						for(ExploratoryPath expanded : pathExpansions){
-							final ActorRef work_allocator = actor_system.actorOf(SpringExtension.SPRING_EXTENSION_PROVIDER.get(actor_system)
+							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 	
 							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
@@ -143,11 +143,11 @@ public class PathExpansionActor extends UntypedActor {
 					for(List<PathObject> path_obj_list: tests){
 						//iterate over all actions
 						List<PathObject> path_objects = new ArrayList<PathObject>(test.getPathObjects());
-						path_objects.addAll(path_obj_list);
 						
 						List<String> path_keys = new ArrayList<String>(test.getPathKeys());
 						for(PathObject path_obj : path_obj_list){
 							path_keys.add(path_obj.getKey());
+							path_objects.add(path_obj);
 						}
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 							ExploratoryPath action_path = new ExploratoryPath(path_keys, path_objects, action_list);
@@ -168,10 +168,10 @@ public class PathExpansionActor extends UntypedActor {
 			else{
 				Test new_test = Test.clone(test);
 				if(test.getPathKeys().size() > 1){
-					new_test.addPathKey(test.getResult().getKey());
-					new_test.addPathObject(test.getResult());
+					new_test.getPathKeys().add(test.getResult().getKey());
+					new_test.getPathObjects().add(test.getResult());
 				}
-				new_test.addPathObject(page_element);
+				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));

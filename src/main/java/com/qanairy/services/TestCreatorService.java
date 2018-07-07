@@ -59,6 +59,10 @@ public class TestCreatorService {
 		Browser browser = new Browser(browser_name);
 
 		browser.getDriver().get(url);
+//		try {
+//			Thread.sleep(2000L);
+//		} catch (InterruptedException e) {}
+//		
 		System.err.println("building page");
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	page_obj.setLandable(true);

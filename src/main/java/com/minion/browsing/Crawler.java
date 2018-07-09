@@ -84,12 +84,10 @@ public class Crawler {
 			}
 			catch(Exception e){
 				log.error(e.getMessage());
-			}
-//
-//			try {
-//				Thread.sleep(2000L);
-//			} catch (InterruptedException e) {}
-//			
+			}			
+			try {
+				Thread.sleep(5000L);
+			} catch (InterruptedException e) {}
 			
 			//skip first node since we should have already loaded it during initialization
 			for(PathObject current_obj: ordered_path_objects){

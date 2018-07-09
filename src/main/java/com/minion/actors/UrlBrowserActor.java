@@ -1,6 +1,6 @@
 package com.minion.actors;
 
-import static com.qanairy.models.SpringExtension.SpringExtProvider;
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
 import java.util.UUID;

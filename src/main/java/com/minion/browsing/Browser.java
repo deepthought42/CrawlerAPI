@@ -54,12 +54,11 @@ public class Browser {
 	//private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
 
 	private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
-	private String url = "";
 	private String browser_name; 
     //private static final String DISCOVERY_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
 	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-    private static final String HUB_IP_ADDRESS= "167.99.0.121";
-    //private static final String HUB_IP_ADDRESS= "10.136.96.247";
+    //private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
+    private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
 
     public Browser(){}
     
@@ -176,7 +175,7 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithFirefox() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 	    DesiredCapabilities cap = DesiredCapabilities.firefox();
 	    cap.setBrowserName("firefox");
 		cap.setJavascriptEnabled(true);
@@ -196,7 +195,7 @@ public class Browser {
 	 * @throws MalformedURLException 
 	 */
 	public static WebDriver openWithOpera() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 	    DesiredCapabilities cap = DesiredCapabilities.opera();
 	    cap.setBrowserName("opera");
 		cap.setJavascriptEnabled(true);
@@ -215,7 +214,7 @@ public class Browser {
 	 * @return safari web driver
 	 */
 	public static WebDriver openWithSafari() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
@@ -231,7 +230,7 @@ public class Browser {
 	 * @return internet explorer web driver
 	 */
 	public static WebDriver openWithInternetExplorer() throws MalformedURLException, UnreachableBrowserException, GridException {
-		String node = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), capabilities);
@@ -269,7 +268,7 @@ public class Browser {
 		}*/
 		
 		System.err.println("Requesting chrome remote driver from hub");
-        String hub_node_url = "http://"+HUB_IP_ADDRESS+":4444/wd/hub";
+        String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
 	    //driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 
@@ -348,24 +347,28 @@ public class Browser {
 			elem_width = page_screenshot.getWidth() - point_x;
 		}
 		
-		if((elem_height + 10 + point_y) < page_screenshot.getHeight()){
-			elem_height = elem_height+10;
+		if((elem_height + 5 + point_y) < page_screenshot.getHeight()){
+			elem_height = elem_height+5;
 		}
 		else{
 			elem_height = page_screenshot.getHeight() - point_y;
 		}
 		
 		if( (point_x - 10) >= 0){
+			elem_width = elem_width + 10;
 			point_x = point_x - 10;
 		}
 		else{
+			elem_width += point_x;
 			point_x = 0;
 		}
 		
 		if( (point_y - 10) >= 0){
+			elem_height = elem_height + 10;
 			point_y = point_y - 10;
 		}
 		else{
+			elem_height += point_y;
 			point_y = 0;
 		}
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);

@@ -274,7 +274,8 @@ public class PageElement implements Persistable, PathObject {
 		Set<Attribute> newPageElementAttributes = that.getAttributes();
 		boolean areElementsEqual =  true;
 		
-		if(!this.getText().equals(that.getText())){
+		if(!this.getName().equals(that.getName()) || !this.getText().equals(that.getText())
+				|| !this.getKey().equals(that.getKey())){
 			return false;
 		}
 		

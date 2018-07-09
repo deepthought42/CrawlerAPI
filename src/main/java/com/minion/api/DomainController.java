@@ -2,6 +2,7 @@ package com.minion.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
@@ -29,6 +31,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DomainRepository;
 
 /**
@@ -42,10 +45,10 @@ public class DomainController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
-	AccountRepository account_repo;
+	private AccountRepository account_repo;
 	
 	@Autowired
-	DomainRepository domain_repo;
+	private DomainRepository domain_repo;
 	
     /**
      * Create a new {@link Domain domain}
@@ -277,14 +280,27 @@ public class DomainController {
     	//}
 
 		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
-		Set<PathObject> page_objects = domain_repo.getPathObjects(host);
-		System.err.println("###### PATH OBJECT COUNT :: "+page_objects.size());
-		return page_objects;
+		
+		Set<PageState> path_obj = domain_repo.getPageStates(host);
+		Set<PageElement> page_elem = domain_repo.getPageElements(host);
+		Set<Action> actions = domain_repo.getActions(host);
+		Set<PathObject> path_objects = merge(path_obj, page_elem, actions);
+
+		
+		//path_objects.addAll(action_repo.getActions);
+		System.err.println("###### PATH OBJECT COUNT :: "+path_objects.size());
+		return path_objects;
     	
     			
 	    //return new HashSet<PageState>();
     }
 	
+	public static <T> Set<T> merge(Collection<? extends T>... collections) {
+	    Set<T> newSet = new HashSet<T>();
+	    for (Collection<? extends T> collection : collections)
+	        newSet.addAll(collection);
+	    return newSet;
+	}
 	/**
 	 * 
 	 * @param request

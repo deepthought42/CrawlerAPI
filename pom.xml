@@ -125,6 +125,11 @@
 			<version>${akka.version}</version>
 		</dependency>
 
+		<dependency>
+		  <groupId>com.typesafe.akka</groupId>
+		  <artifactId>akka-cluster_2.12</artifactId>
+		  <version>${akka.version}</version>
+		</dependency>
 
 	 	<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
 		<dependency>

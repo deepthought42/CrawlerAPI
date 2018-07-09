@@ -5,6 +5,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
@@ -48,7 +51,6 @@ import scala.concurrent.duration.Duration;
 import akka.util.Timeout;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import static com.qanairy.models.SpringExtension.SpringExtProvider;
 
 
 

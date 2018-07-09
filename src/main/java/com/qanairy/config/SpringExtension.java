@@ -1,7 +1,6 @@
-package com.qanairy.models;
+package com.qanairy.config;
 
 import org.springframework.context.ApplicationContext;
-import com.qanairy.config.SpringActorProducer;
 
 import akka.actor.AbstractExtensionId;
 import akka.actor.ExtendedActorSystem;
@@ -28,6 +27,10 @@ public class SpringExtension extends
     return new SpringExt();
   }
 
+  public static SpringExtension getInstance() {
+      return SpringExtProvider;
+  }
+  
   /**
    * The Extension implementation.
    */

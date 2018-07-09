@@ -64,6 +64,9 @@ public class ActionFactory {
 		else if(action.equals("mouseover")){
 			builder.moveToElement(elem);
 		}
+//		try {
+//			Thread.sleep(3000);
+//		} catch (InterruptedException e) {}
 		
 		builder.perform();
 	}

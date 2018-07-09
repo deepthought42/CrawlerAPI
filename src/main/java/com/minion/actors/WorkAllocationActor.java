@@ -1,6 +1,6 @@
 package com.minion.actors;
 
-import static com.qanairy.models.SpringExtension.SpringExtProvider;
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
 import java.util.UUID;
@@ -16,9 +16,12 @@ import com.qanairy.models.Test;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.UntypedActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
+import akka.cluster.ClusterEvent.UnreachableMember;
+
 import com.minion.structs.Message;
-import static com.qanairy.models.SpringExtension.SpringExtProvider;
 
 
 /**
@@ -30,7 +33,21 @@ import static com.qanairy.models.SpringExtension.SpringExtProvider;
 @Scope("prototype")
 public class WorkAllocationActor extends AbstractActor  {
 	private static Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
+	Cluster cluster = Cluster.get(getContext().getSystem());
 
+	  //subscribe to cluster changes
+	  @Override
+	  public void preStart() {
+	    cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	        MemberEvent.class, UnreachableMember.class);
+	  }
+
+	  //re-subscribe when restart
+	  @Override
+	  public void postStop() {
+	    cluster.unsubscribe(getSelf());
+	  }
+	  
 	@Autowired
 	ActorSystem actor_system;
 	

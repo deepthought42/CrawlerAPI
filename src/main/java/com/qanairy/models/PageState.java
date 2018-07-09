@@ -177,25 +177,22 @@ public class PageState implements Persistable, PathObject {
         if (!(o instanceof PageState)) return false;
         
         PageState that = (PageState)o;
-        
-        String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
-        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();
-        
         boolean pages_match = false;
-        
-        
-        System.err.println("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
-		BufferedImage img1;
-		BufferedImage img2;
-    	
+
 		try {
+			String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
+	        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();	        
+	        
+	        System.err.println("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
+			BufferedImage img1;
+			BufferedImage img2;
+			
 			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
 			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
 			pages_match = compareImages(img1, img2);
 			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
 		} catch (IOException e1) {
 			e1.printStackTrace();
-			System.err.println("YO THE FULL PAGE SCREENSHOT COMPARISON THINGY ISN'T WORKING!!!!!!  HALP!!!!!!!!!!");
 		}
 
        	
@@ -209,7 +206,7 @@ public class PageState implements Persistable, PathObject {
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        if(pages_match && this.getElements().size() == that.getElements().size()){
+        if(!pages_match && this.getElements().size() == that.getElements().size()){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
 	        	page_elements.put(elem.getXpath(), elem);

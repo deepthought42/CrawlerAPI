@@ -84,10 +84,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 						break;
 					}catch(NullPointerException e){
 						log.error(e.getMessage());
-//						try {
-//							Thread.sleep(30000L);
-//						} catch (InterruptedException e1) {}
-						
 					}
 					cnt++;
 				}	

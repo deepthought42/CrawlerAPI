@@ -1,6 +1,6 @@
 package com.minion.actors;
 
-import static com.qanairy.models.SpringExtension.SpringExtProvider;
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 
 import org.openqa.selenium.By;
@@ -24,7 +25,9 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
@@ -32,7 +35,6 @@ import com.qanairy.models.Group;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.SpringExtension;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestStatus;
@@ -154,14 +156,13 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						  			if(parent_path == null){
 						  				break;
 						  			}
-						  			Browser new_browser = new Browser(browser.getBrowserName());
-					  				results_match = doesPathProduceExpectedResult(parent_path, result_page, new_browser, domain.getUrl());
+						  			//Browser new_browser = new Browser(browser.getBrowserName());
+					  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, domain.getUrl());
 					  			
 						  			if(results_match){
 						  				last_path=path;
 						  				path = parent_path;
 						  			}
-					  				new_browser.close();
 					  			}catch(Exception e){
 					  				browser = new Browser(browser.getBrowserName());
 					  				results_match = false;
@@ -179,14 +180,12 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							break;
 						}
 					}
-					DiscoveryRecord discovery_record = null;
+					DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+			  		discovery_record.setLastPathRanAt(new Date());
+			  		discovery_record = discovery_repo.save(discovery_record);
 					try{
-						discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
-						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-				  		discovery_record.setLastPathRanAt(new Date());
-				  		discovery_record = discovery_repo.save(discovery_record);
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
 				  	}catch(Exception e){
 					
 					}
@@ -293,8 +292,9 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 			//clone test and swap page element with parent
 			ExploratoryPath parent_path = ExploratoryPath.clone(path);
-			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver()); 
-			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), browser_service.extractAttributes(parent, browser.getDriver()), Browser.loadCssProperties(parent) );
+			Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
+			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
+			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent) );
 			
 			//Ensure Order path objects
 			int idx = 0;

@@ -59,10 +59,10 @@ public class TestCreatorService {
 		Browser browser = new Browser(browser_name);
 
 		browser.getDriver().get(url);
-//		try {
-//			Thread.sleep(2000L);
-//		} catch (InterruptedException e) {}
-//		
+		try {
+			Thread.sleep(5000L);
+		} catch (InterruptedException e) {}
+		
 		System.err.println("building page");
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	page_obj.setLandable(true);
@@ -76,7 +76,10 @@ public class TestCreatorService {
 	  		page_obj = page_record;
 	  	}
 	  	System.err.println("Page built");
-	  	browser.close();
+	  	
+	  	try{
+	  		browser.close();
+	  	}catch(Exception e){}
 	  	
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
@@ -94,7 +97,6 @@ public class TestCreatorService {
 		
 		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
-		
 		System.err.println("Broadcasting discovery status");
 		System.err.println("result page elements count :: "+page_obj.getElements().size());
 		return createTest(path_keys, path_objects, page_obj, 1L, domain ,discovery_record, browser_name);

@@ -1,6 +1,6 @@
 package com.minion.actors;
 
-import static com.qanairy.models.SpringExtension.SpringExtProvider;
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -74,7 +74,7 @@ public class PathExpansionActor extends UntypedActor {
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						return;
 					}
-					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){						
+					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){					
 						pathExpansions = PathExpansionActor.expandPath(test);
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
 						discovery_record.getExpandedPageState().add(test.getResult().getKey());
@@ -89,6 +89,9 @@ public class PathExpansionActor extends UntypedActor {
 							
 							work_allocator.tell(expanded_path_msg, getSelf() );
 						}
+					}
+					else{
+						System.err.println("");
 					}
 				}	
 			}

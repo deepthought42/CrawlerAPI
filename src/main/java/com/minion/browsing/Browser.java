@@ -58,8 +58,11 @@ public class Browser {
     //private static final String DISCOVERY_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
 	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
     //private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
-    private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
+    //private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
 
+	//STAGING HUB ADDRESS
+	private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
+	
     public Browser(){}
     
 	/**
@@ -125,6 +128,21 @@ public class Browser {
 		return this.driver;
 	}
 
+	public void navigateTo(String url){
+		getDriver().get(url);
+		try{
+			new WebDriverWait(getDriver(), 360).until(
+					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+		}catch(GridException e){
+			log.error(e.getMessage());
+		}
+		catch(Exception e){
+			log.error(e.getMessage());
+		}			
+		try {
+			Thread.sleep(5000L);
+		} catch (InterruptedException e) {}
+	}
 
 	/**
 	 * Removes canvas element added by Selenium when taking screenshots
@@ -308,10 +326,6 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static File getViewportScreenshot(WebDriver driver) throws IOException, GridException{
-//		try {
-//			Thread.sleep(2000);
-//		} catch (InterruptedException e) {}
-//		
 		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 	}
 	

@@ -75,27 +75,13 @@ public class Crawler {
 		boolean path_deviation = false;
 		do{
 			path_deviation = false;
-			browser.getDriver().get(((PageState)ordered_path_objects.get(0)).getUrl().toString());
-			try{
-				new WebDriverWait(browser.getDriver(), 360).until(
-						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			}catch(GridException e){
-				log.error(e.getMessage());
-			}
-			catch(Exception e){
-				log.error(e.getMessage());
-			}			
-			try {
-				Thread.sleep(5000L);
-			} catch (InterruptedException e) {}
+			browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 			
 			//skip first node since we should have already loaded it during initialization
 			for(PathObject current_obj: ordered_path_objects){
 				if(current_obj instanceof PageState){
-					if(!browser_service.buildPage(browser).equals(current_obj)){
-						path_deviation = true;
-						break;
-					}
+					path_deviation = !browser_service.doScreenshotsMatch(browser, (PageState)current_obj);
+					
 					//Do Nothing for now
 				}
 				else if(current_obj instanceof PageElement){
@@ -144,9 +130,9 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-//			try {
-//				Thread.sleep(3000);
-//			} catch (InterruptedException e) {}
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {}
 		}
 		catch(StaleElementReferenceException e){
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "

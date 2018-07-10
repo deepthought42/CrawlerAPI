@@ -49,10 +49,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter  {
          .antMatchers(HttpMethod.GET, "/actuator/health").permitAll()
          .antMatchers(HttpMethod.POST, "/accounts").permitAll()
          .anyRequest().authenticated();
-    	/*http.cors().and().addFilterAfter(new SimpleCORSFilter(), Auth0CORSFilter.class).authorizeRequests()
-    		.antMatchers("/realtime/**").permitAll()
-    		.anyRequest().authenticated();
-    		*/
     }
     
     @Bean

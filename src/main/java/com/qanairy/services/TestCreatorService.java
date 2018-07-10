@@ -58,17 +58,14 @@ public class TestCreatorService {
 		
 		Browser browser = new Browser(browser_name);
 
-		browser.getDriver().get(url);
-		try {
-			Thread.sleep(5000L);
-		} catch (InterruptedException e) {}
+		browser.navigateTo(url);
 		
 		System.err.println("building page");
 	  	PageState page_obj = browser_service.buildPage(browser);
-	  	page_obj.setLandable(true);
 
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
+		  	page_obj.setLandable(true);
 	  		page_obj = page_state_repo.save(page_obj);
 	  		MessageBroadcaster.broadcastPathObject(page_obj, host);
 	  	}

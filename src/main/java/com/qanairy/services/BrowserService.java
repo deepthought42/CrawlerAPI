@@ -82,7 +82,7 @@ public class BrowserService {
 		String src = browser.getDriver().getPageSource();
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		String src_hash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(browser.getDriver().getPageSource());
+		String src_hash = org.apache.commons.codec.digest.DigestUtils.sha256Hex(src);
 		File viewport_screenshot = null;
 		try{
 			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
@@ -589,9 +589,7 @@ public class BrowserService {
 
 			try{
 				Browser landable_browser = new Browser(browser.getBrowserName());
-				landable_browser.getDriver().get(page_state.getUrl().toString());
-				new WebDriverWait(landable_browser.getDriver(), 360).until(
-						webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+				landable_browser.navigateTo(page_state.getUrl());
 				page_visited_successfully = true;
 				if(page_state.equals(buildPage(landable_browser))){
 					landable= true;
@@ -632,5 +630,31 @@ public class BrowserService {
 		
 		System.err.println("is page state landable  ?? :: "+landable);
 		return landable;
+	}
+	
+	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
+		File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+		
+		ScreenshotSet page_screenshot = null;
+		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
+			if(screenshot.getBrowser().equals(browser.getBrowserName())){
+				page_screenshot = screenshot;
+			}
+		}
+		boolean pages_match = false;
+		try {
+			BufferedImage img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));
+			BufferedImage img2 = ImageIO.read(viewport_screenshot);
+			pages_match = PageState.compareImages(img1, img2);
+			if(pages_match){
+				return true;
+			}
+			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			System.err.println("YO THE FULL PAGE SCREENSHOT COMPARISON THINGY ISN'T WORKING!!!!!!  HALP!!!!!!!!!!");
+		}
+		
+		return false;
 	}
 }

@@ -80,7 +80,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	while(browser == null && cnt < 5){
 			  		try{
 				  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
-				  		browser.getDriver().get(page.getUrl().toString());
+				  		browser.navigateTo(page.getUrl());
 						break;
 					}catch(NullPointerException e){
 						log.error(e.getMessage());

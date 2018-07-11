@@ -74,12 +74,9 @@ public class ExploratoryPath {
 		//extract all pages
 		//iterate through pages to see if any match
 		for(String key : path_key_list){			
-				System.err.println("path object key :: "+key);
-				System.err.println("Page key :: "+page.getKey());
-				System.err.println("DO PATH OBJECT KEYS MATCH :: "+page.getKey()==key);
-				if(key.equals(page.getKey())){
-					return true;
-				}
+			if(key.equals(page.getKey())){
+				return true;
+			}
 		}
 		return false;
 	}

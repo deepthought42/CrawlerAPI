@@ -37,17 +37,20 @@ public class UploadObjectSingleOperation {
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
         try {
-        	ByteArrayOutputStream os = new ByteArrayOutputStream();
-        	ImageIO.write(image, "png", os);
-        	byte[] buffer = os.toByteArray();
-        	InputStream is = new ByteArrayInputStream(buffer);
-        	ObjectMetadata meta = new ObjectMetadata();
-        	meta.setContentLength(buffer.length);
-            log.debug("Uploading a new object to S3 from a file: "+ image);
-            s3client.putObject(new PutObjectRequest(
-             		                 bucketName, domain+"/"+page_key+"/"+image_type+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
-            
+        	if(!s3client.doesObjectExist(bucketName, domain+"/"+page_key+"/"+image_type+".png")){
+	        	ByteArrayOutputStream os = new ByteArrayOutputStream();
+	        	ImageIO.write(image, "png", os);
+	        	byte[] buffer = os.toByteArray();
+	        	InputStream is = new ByteArrayInputStream(buffer);
+	        	ObjectMetadata meta = new ObjectMetadata();
+	        	meta.setContentLength(buffer.length);
+	        	
+	            log.debug("Uploading a new object to S3 from a file: "+ image);
+	            s3client.putObject(new PutObjectRequest(
+	             		                 bucketName, domain+"/"+page_key+"/"+image_type+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
+        	}
             filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+"/"+image_type+".png";
+
          } catch (AmazonServiceException ase) {
             log.error("Caught an AmazonServiceException, which " +
             		"means your request made it " +
@@ -66,7 +69,51 @@ public class UploadObjectSingleOperation {
                     "such as not being able to access the network.");
             log.error("Error Message: " + ace.getMessage());
         } catch (IOException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        return filepath;
+    }
+	
+	public static String saveImageToS3(BufferedImage image, String domain, String page_key) {
+		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");
+		String filepath = null;
+		// credentials=new ProfileCredentialsProvider().getCredentials();
+        AmazonS3 s3client = new AmazonS3Client(credentials);
+        try {
+        	if(!s3client.doesObjectExist(bucketName, domain+"/"+page_key+".png")){
+	        	ByteArrayOutputStream os = new ByteArrayOutputStream();
+	        	ImageIO.write(image, "png", os);
+	        	byte[] buffer = os.toByteArray();
+	        	InputStream is = new ByteArrayInputStream(buffer);
+	        	ObjectMetadata meta = new ObjectMetadata();
+	        	meta.setContentLength(buffer.length);
+	        	
+	            log.debug("Uploading a new object to S3 from a file: "+ image);
+	            s3client.putObject(new PutObjectRequest(
+	             		                 bucketName, domain+"/"+page_key+".png", is, meta).withCannedAcl(CannedAccessControlList.PublicRead));
+	            
+        	}
+            filepath = "https://s3-us-west-2.amazonaws.com/qanairy/"+domain+"/"+page_key+".png";
+
+         } catch (AmazonServiceException ase) {
+            log.error("Caught an AmazonServiceException, which " +
+            		"means your request made it " +
+                    "to Amazon S3, but was rejected with an error response" +
+                    " for some reason.");
+            log.error("Error Message:    " + ase.getMessage());
+            log.error("HTTP Status Code: " + ase.getStatusCode());
+            log.error("AWS Error Code:   " + ase.getErrorCode());
+            log.error("Error Type:       " + ase.getErrorType());
+            log.error("Request ID:       " + ase.getRequestId());
+        } catch (AmazonClientException ace) {
+            log.error("Caught an AmazonClientException, which " +
+            		"means the client encountered " +
+                    "an internal error while trying to " +
+                    "communicate with S3, " +
+                    "such as not being able to access the network.");
+            log.error("Error Message: " + ace.getMessage());
+        } catch (IOException e) {
 			e.printStackTrace();
 		}
         

@@ -1,16 +1,22 @@
 package com.qanairy.models;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import javax.imageio.ImageIO;
+import javax.xml.bind.DatatypeConverter;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -190,7 +196,7 @@ public class PageState implements Persistable, PathObject {
 			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
 			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
 			pages_match = compareImages(img1, img2);
-			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
+			System.err.println("DO THE SCREENSHOTS MATCH FOR PAGE EQUALITY????        ::::     "+pages_match);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -369,22 +375,22 @@ public class PageState implements Persistable, PathObject {
 		this.elements.add(element);
 	}
 
-	private static String getFileChecksum(MessageDigest digest, String url) throws IOException
+	public static String getFileChecksum(MessageDigest digest, String url) throws IOException
 	{
 	    //Get file input stream for reading the file content
-	    FileInputStream fis = new FileInputStream(url);
-	     
+	    //FileInputStream fis = new FileInputStream(url);
+	    InputStream is = new URL(url).openStream(); 
 	    //Create byte array to read data in chunks
 	    byte[] byteArray = new byte[1024];
 	    int bytesCount = 0;
 	      
 	    //Read file data and update in message digest
-	    while ((bytesCount = fis.read(byteArray)) != -1) {
+	    while ((bytesCount = is.read(byteArray)) != -1) {
 	        digest.update(byteArray, 0, bytesCount);
 	    };
 	     
 	    //close the stream; We don't need it now.
-	    fis.close();
+	    is.close();
 	     
 	    //Get the hash's bytes
 	    byte[] bytes = digest.digest();
@@ -401,23 +407,43 @@ public class PageState implements Persistable, PathObject {
 	   return sb.toString();
 	}
 	
+	public static String getFileChecksum(BufferedImage bufferedImage) throws IOException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		boolean foundWriter = ImageIO.write(bufferedImage, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
+		byte[] bytes = baos.toByteArray();
+	    //Get file input stream for reading the file content
+	    
+	    try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
+			byte[] thedigest = sha.digest(baos.toByteArray());
+	        return DatatypeConverter.printHexBinary(thedigest);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	    return "";
+	}
+		
 	/**
 	 * {@inheritDoc}
 	 * 
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		/*
-		*/
 		/*try{
 			return getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 		}
-		catch(Exception e){}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 		*/
+		//return "";
 		String key = "";
 		for(PageElement element : getElements()){
-			key += element.getKey()+element.getAttributes().hashCode()+element.getCssValues().hashCode();
+			key += element.getKey();
 		}
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		
 	}
 }

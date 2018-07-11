@@ -41,7 +41,7 @@ public class WorkAllocationActor extends AbstractActor  {
 	    cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
 	        MemberEvent.class, UnreachableMember.class);
 	  }
-
+	
 	  //re-subscribe when restart
 	  @Override
 	  public void postStop() {

@@ -2,10 +2,13 @@ package com.qanairy.services;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
@@ -49,12 +52,15 @@ public class TestCreatorService {
 	 * 
 	 * @throws MalformedURLException
 	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 * 
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
 	public Test generate_landing_page_test(String browser_name, String discovery_key, String host, String url) 
-			throws MalformedURLException, IOException, NullPointerException{
+			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		Browser browser = new Browser(browser_name);
 

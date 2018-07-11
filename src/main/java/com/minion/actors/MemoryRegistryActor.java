@@ -6,13 +6,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
+import akka.actor.AbstractActor.Receive;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
+import akka.cluster.ClusterEvent.UnreachableMember;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+
 import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
 import com.qanairy.models.Domain;
+import com.qanairy.models.PageElement;
+import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageElementRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.BrowserService;
 
 /**
  * Handles the saving of records into orientDB
@@ -21,53 +36,86 @@ import com.qanairy.models.repository.TestRepository;
  */
 @Component
 @Scope("prototype")
-public class MemoryRegistryActor extends UntypedActor{
-    @SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(MemoryRegistryActor.class);
-    
-    @Autowired
-    private TestRepository test_repo;
-    
-    @Autowired
-    private DomainRepository domain_repo;
-    
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void onReceive(Object message) throws Exception {
-		System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		System.err.println("Memory registry actor recieved a message");
-		if(message instanceof Message){
-			Message<?> msg = (Message<?>)message;
-			//Retains lists of productive, unproductive, and unknown value {@link Path}s.
-			if(msg.getData() instanceof Test){
-				System.err.println("Test message received by memory registry actor");
-				Test test = (Test)msg.getData();
-				
-				String host_url = msg.getOptions().get("host").toString();
-				Test record = test_repo.findByKey(test.getKey());
-				
-				if(record == null){
-					System.err.println("Test REPO :: "+test_repo);
-					System.err.println("Test ::  "+test);
-					test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
-					Domain domain = domain_repo.findByHost(host_url);
-					domain.addTest(test);
-					domain_repo.save(domain);
-					
-					if(test.getBrowserStatuses() == null || test.getBrowserStatuses().isEmpty()){
-						MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
-					}
-					else {
-						MessageBroadcaster.broadcastTest(test, host_url);
-					}
-				}
-				else{
-					test = record;
-				}
-			}
-		}
-		else unhandled(message);
+public class MemoryRegistryActor extends AbstractActor{
+	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
+	Cluster cluster = Cluster.get(getContext().getSystem());
+
+	public static Props props() {
+	  return Props.create(LandabilityChecker.class);
 	}
+	
+	@Autowired
+	BrowserService browser_service;
+	
+	@Autowired
+	DomainRepository domain_repo;
+	
+	@Autowired
+	TestRepository test_repo;
+	
+	@Autowired
+	PageStateRepository page_repo;
+	
+	@Autowired
+	PageElementRepository element_repo;
+	
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+	
+	//re-subscribe when restart
+	@Override
+	public void postStop() {
+	  cluster.unsubscribe(getSelf());
+	}
+
+	@Override
+	public Receive createReceive() {
+		return receiveBuilder()
+				.match(Message.class, msg -> {
+					if(msg.getData() instanceof PageState){
+						PageState page = (PageState)msg.getData();
+						if(page_repo.findByKey(page.getKey()) == null){
+							page_repo.save(page);
+						}
+					}
+					else if(msg.getData() instanceof Test){
+						System.err.println("Test message received by memory registry actor");
+						Test test = (Test)msg.getData();
+						
+						String host_url = msg.getOptions().get("host").toString();
+						Test record = test_repo.findByKey(test.getKey());
+						
+						if(record == null){
+							System.err.println("Test REPO :: "+test_repo);
+							System.err.println("Test ::  "+test);
+							test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
+							Domain domain = domain_repo.findByHost(host_url);
+							domain.addTest(test);
+							domain_repo.save(domain);
+							
+							if(test.getBrowserStatuses() == null || test.getBrowserStatuses().isEmpty()){
+								MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
+							}
+							else {
+								MessageBroadcaster.broadcastTest(test, host_url);
+							}
+						}
+						else{
+							test = record;
+						}
+					}
+					else if(msg.getData() instanceof PageElement){
+						PageElement elem = (PageElement)msg.getData();
+						if(element_repo.findByKey(elem.getKey()) == null){
+							element_repo.save(elem);
+						}
+					}
+				})
+				.matchAny(o -> log.info("received unknown message"))
+				.build();	
+		}
 }

@@ -6,4 +6,6 @@ import com.qanairy.models.PageElement;
 
 public interface PageElementRepository extends Neo4jRepository<PageElement, Long> {
 	public PageElement findByKey(@Param("key") String key);
+	
+	public PageElement findByTextAndName(@Param("text") String text, @Param("name") String name);
 }

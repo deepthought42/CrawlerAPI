@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,6 +17,9 @@ import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -312,13 +316,16 @@ public class TestController {
      * @throws APIConnectionException 
      * @throws InvalidRequestException 
      * @throws AuthenticationException 
+     * @throws NoSuchAlgorithmException 
+     * @throws WebDriverException 
+     * @throws GridException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser_name", required=true) String browser_name) 
-																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();

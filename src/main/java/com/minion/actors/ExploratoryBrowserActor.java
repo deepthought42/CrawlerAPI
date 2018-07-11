@@ -3,6 +3,8 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,8 +13,12 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +27,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.minion.actors.LandabilityChecker.BrowserPageState;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -127,22 +134,38 @@ public class ExploratoryBrowserActor extends UntypedActor {
 								break;
 							}catch(NullPointerException e){
 								browser = new Browser(browser.getBrowserName());
-								log.error("Error happened while exploratory actor attempted to crawl test");
+								log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
 								e.printStackTrace();
-								
-//								try {
-//									Thread.sleep(10000L);
-//								} catch (InterruptedException e1) {}
+							} catch (GridException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (WebDriverException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (NoSuchAlgorithmException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
 							tries++;
-						}while(result_page == null && tries < 30);
-					  	
+						}while(result_page == null && tries < 5);
+					
+						//have page checked for landability
+						BrowserPageState bps = new BrowserPageState(result_page, browser.getBrowserName());
+						final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
+						landibility_checker.tell(bps, ActorRef.noSender() );
+						
 						Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 					
+						System.err.println("PATH LENGTH :: "+path.getPathKeys().size());
+						System.err.println("path keys :: "+path.getPathKeys());
+						System.err.println("RESULT KEY :: "+result_page.getKey());
+						System.err.println("Has cycle :: "+ExploratoryPath.hasCycle(path.getPathKeys(), result_page));
+
 						if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
 					  		boolean results_match = false;
 					  		ExploratoryPath last_path = null;
@@ -258,8 +281,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * 
 	 * @throws NoSuchElementException
 	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */
-	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException{
+	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
 		System.err.println("attempting to crawl test with length #########   "+path.getPathKeys().size());
 		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
 		return parent_result.equals(result_page);
@@ -294,7 +320,8 @@ public class ExploratoryBrowserActor extends UntypedActor {
 			ExploratoryPath parent_path = ExploratoryPath.clone(path);
 			Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
 			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
-			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent) );
+			String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), parent);
+			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent), screenshot_url );
 			
 			//Ensure Order path objects
 			int idx = 0;

@@ -2,7 +2,6 @@ package com.qanairy.models;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -12,8 +11,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.DatatypeConverter;
@@ -77,7 +74,7 @@ public class PageState implements Persistable, PathObject {
 		assert browser_screenshots  != null;
 
 		setType(PageState.class.getSimpleName());
-		setSrc(html);
+		setSrc("");
 		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browser_screenshots );
 		setElements(elements);
@@ -106,7 +103,7 @@ public class PageState implements Persistable, PathObject {
 		assert browser_screenshots != null;
 	
 		setType(PageState.class.getSimpleName());
-		setSrc(html);
+		setSrc("");
 		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
@@ -183,9 +180,18 @@ public class PageState implements Persistable, PathObject {
         if (!(o instanceof PageState)) return false;
         
         PageState that = (PageState)o;
-        boolean pages_match = false;
-
-		try {
+        
+        
+        System.err.println("###############################################################");
+        System.err.println("THIS PAGE KEY :: "+this.getKey());
+        System.err.println("THAT PAGE KEY :: "+that.getKey());
+        System.err.println("###############################################################");
+        
+        return this.getKey().equals(that.getKey());
+		/*try {
+			System.err.println("This browser screenshot :: "+this.getBrowserScreenshots().size());
+			System.err.println("NEXT BROSEWR SCREENSHOT :: "+this.getBrowserScreenshots().iterator().next());
+			System.err.println("Viewport screenshot :: "+this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 			String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
 	        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();	        
 	        
@@ -200,9 +206,7 @@ public class PageState implements Persistable, PathObject {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-
-       	
-        
+		*/
         //System.err.println("Screenshots match? :: "+screenshots_match);
         
         /*System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
@@ -212,7 +216,7 @@ public class PageState implements Persistable, PathObject {
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        if(!pages_match && this.getElements().size() == that.getElements().size()){
+        /*if(!pages_match && this.getElements().size() == that.getElements().size()){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
 	        	page_elements.put(elem.getXpath(), elem);
@@ -230,6 +234,7 @@ public class PageState implements Persistable, PathObject {
 	        }
         }
     	return pages_match;
+    	*/
   	}
 	
 	/**
@@ -377,9 +382,8 @@ public class PageState implements Persistable, PathObject {
 
 	public static String getFileChecksum(MessageDigest digest, String url) throws IOException
 	{
-	    //Get file input stream for reading the file content
-	    //FileInputStream fis = new FileInputStream(url);
-	    InputStream is = new URL(url).openStream(); 
+		InputStream is = new URL(url).openStream(); 
+
 	    //Create byte array to read data in chunks
 	    byte[] byteArray = new byte[1024];
 	    int bytesCount = 0;
@@ -403,7 +407,7 @@ public class PageState implements Persistable, PathObject {
 	        sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
 	    }
 	     
-	    //return complete hash
+	   //return complete hash
 	   return sb.toString();
 	}
 	
@@ -412,7 +416,6 @@ public class PageState implements Persistable, PathObject {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		boolean foundWriter = ImageIO.write(bufferedImage, "png", baos);
 		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-		byte[] bytes = baos.toByteArray();
 	    //Get file input stream for reading the file content
 	    
 	    try {
@@ -431,19 +434,20 @@ public class PageState implements Persistable, PathObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		/*try{
+		try{
 			return getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
-		*/
+		return "";
 		//return "";
-		String key = "";
+		/*String key = "";
 		for(PageElement element : getElements()){
 			key += element.getKey();
 		}
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		*/
 		
 	}
 }

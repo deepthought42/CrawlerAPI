@@ -265,22 +265,7 @@ public class DomainController {
     @RequestMapping(method = RequestMethod.GET, path="/path")
     public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
-    															throws UnknownAccountException {        
-    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	
-    	//Auth0Client auth = new Auth0Client();
-    	//String username = auth.getUsername(auth_access_token);
-    	
-    	//Account acct = account_repo.findByUsername(username);
-    	//if(acct == null){
-    	//	throw new UnknownAccountException();
-    	//}
-    	//else if(acct.getSubscriptionToken() == null){
-    	//	throw new MissingSubscriptionException();
-    	//}
-
-		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
-		
+    															throws UnknownAccountException {        		
 		Set<PageState> path_obj = domain_repo.getPageStates(host);
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
@@ -288,7 +273,6 @@ public class DomainController {
 
 		
 		//path_objects.addAll(action_repo.getActions);
-		System.err.println("###### PATH OBJECT COUNT :: "+path_objects.size());
 		return path_objects;
     	
     			
@@ -327,25 +311,6 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-    	/*Set<PageElement> unique_page_elements = new HashSet<PageElement>();
-    	Set<PageElement> page_elements = new HashSet<PageElement>();
-    	for(Domain domain : acct.getDomains()){
-    		for(PageState page_state : domain_repo.getPageStates(host)){
-    			boolean element_exists = false;
-    			for(PageElement element : page_state.getElements()){
-    				for(PageElement unique : unique_page_elements){
-    					if(element.getKey().equals(unique.getKey())){
-    						element_exists = true;
-    					}
-    				}
-    				if(!element_exists){
-    					unique_page_elements.add(element);
-    				}
-    			}
-    			page_elements.addAll(page_state.getElements());
-    		}
-    	} 
-    	*/
     	System.err.println("$$$$$$ GETTING PAGE ELEMENTS FOR HOST :: "+host);
 		Set<PageElement> page_elements = domain_repo.getPageElements(host);
 		System.err.println("###### PAGE ELEMENT COUNT :: "+page_elements.size());

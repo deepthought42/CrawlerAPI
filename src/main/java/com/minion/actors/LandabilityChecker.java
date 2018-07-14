@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
 import com.minion.structs.Message;
 import com.qanairy.models.PageState;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
 
 import akka.actor.AbstractActor;
@@ -35,6 +36,9 @@ public class LandabilityChecker extends AbstractActor{
 	public static Props props() {
 	  return Props.create(LandabilityChecker.class);
 	}
+	
+	@Autowired
+	PageStateRepository page_state_repo;
 	
 	@Autowired
 	BrowserService browser_service;
@@ -67,10 +71,14 @@ public class LandabilityChecker extends AbstractActor{
 						try{
 							Browser landable_browser = new Browser(bps.browser_name);
 							landable_browser.navigateTo(page_state.getUrl());
-							page_visited_successfully = true;
+							System.err.println("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
 							if(page_state.equals(browser_service.buildPage(landable_browser))){
+								page_state.setLandable(true);
+								page_state_repo.save(page_state);
 								landable= true;
 							}
+							page_visited_successfully = true;
+
 							landable_browser.close();
 
 						}catch(GridException e){

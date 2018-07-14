@@ -164,6 +164,7 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
+    	System.err.println("DOmain repo :: "+domain_repo);
     	return domain_repo.getUnverifiedTests(url);
     	
    		/*Domain domain = domain_repo.findByHost(url);

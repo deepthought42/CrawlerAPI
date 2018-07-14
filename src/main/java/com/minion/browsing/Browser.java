@@ -354,8 +354,8 @@ public class Browser {
 		int point_x = point.getX();
 		int point_y = point.getY();
 		
-		if( (elem_width + 10 + point_x) < page_screenshot.getWidth()){
-			elem_width = elem_width+10;
+		if( (elem_width + 5 + point_x) < page_screenshot.getWidth()){
+			elem_width = elem_width+5;
 		}
 		else{
 			elem_width = page_screenshot.getWidth() - point_x;
@@ -368,18 +368,18 @@ public class Browser {
 			elem_height = page_screenshot.getHeight() - point_y;
 		}
 		
-		if( (point_x - 10) >= 0){
-			elem_width = elem_width + 10;
-			point_x = point_x - 10;
+		if( (point_x - 5) >= 0){
+			elem_width = elem_width + 5;
+			point_x = point_x - 5;
 		}
 		else{
 			elem_width += point_x;
 			point_x = 0;
 		}
 		
-		if( (point_y - 10) >= 0){
-			elem_height = elem_height + 10;
-			point_y = point_y - 10;
+		if( (point_y - 5) >= 0){
+			elem_height = elem_height + 5;
+			point_y = point_y - 5;
 		}
 		else{
 			elem_height += point_y;

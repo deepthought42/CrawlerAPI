@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -115,7 +116,22 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 					//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 					//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
+					int start_idx = 0;
+					int idx = 0;
+					for(PathObject path_obj : exploratory_path.getPathObjects()){
+						if(path_obj instanceof PageState){
+							PageState page = page_state_repo.findByKey(path_obj.getKey());
+							if(page.isLandable()){
+								start_idx=idx;
+								break;
+							}
+							idx++;
+						}
+					}
 					
+					if(start_idx > 0){
+						exploratory_path.setPathObjects(exploratory_path.getPathObjects().subList(start_idx, exploratory_path.getPathObjects().size()));
+					}
 					for(Action action : exploratory_path.getPossibleActions()){
 						ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
 						Action action_record = action_repo.findByKey(action.getKey());
@@ -150,6 +166,8 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						}while(result_page == null && tries < 5);
 					
 						//have page checked for landability
+						System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page.getBrowserScreenshots().size());
+
 						BrowserPageState bps = new BrowserPageState(result_page, browser.getBrowserName());
 						final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
@@ -161,11 +179,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 						long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 					
-						System.err.println("PATH LENGTH :: "+path.getPathKeys().size());
-						System.err.println("path keys :: "+path.getPathKeys());
-						System.err.println("RESULT KEY :: "+result_page.getKey());
-						System.err.println("Has cycle :: "+ExploratoryPath.hasCycle(path.getPathKeys(), result_page));
-
 						if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
 					  		boolean results_match = false;
 					  		ExploratoryPath last_path = null;
@@ -286,7 +299,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 	 * @throws GridException 
 	 */
 	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
-		System.err.println("attempting to crawl test with length #########   "+path.getPathKeys().size());
 		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
 		return parent_result.equals(result_page);
 	}

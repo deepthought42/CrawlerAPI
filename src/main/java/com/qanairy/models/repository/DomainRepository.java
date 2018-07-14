@@ -20,7 +20,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Domain findByKey(@Param("key") String key);
 	public Domain findByHost(@Param("host") String host);
 	
-	@Query("MATCH a=(p:PageState)-[:HAS_SCREENSHOT]->() WHERE  (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) AND ( (:Test)-[:HAS_PATH_OBJECT]->(p) OR (:Test)-[:HAS_RESULT]->(p)) RETURN a")
+	@Query("MATCH a=(p:PageState)-[:HAS_SCREENSHOT]->() WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) AND (:Test)-[:HAS_PATH_OBJECT]->(p) RETURN a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(p:PageElement) RETURN p")
@@ -36,7 +36,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Set<Test> getTests(@Param("domain_host") String host);
 
 	//CURRENT QUERY DOESN"T WORK THE COMMENTED ONE DOES
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->() MATCH c=(p)-[]->() WHERE t.status='UNVERIFIED' RETURN a,b,c as d")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[:HAS_TEST_RECORD]->() MATCH c=(p)-[:HAS_SCREENSHOT]->() WHERE t.status='UNVERIFIED' RETURN a,b,c as d")
 	//@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[:HAS_TEST_RECORD]->(:TestRecord) MATCH c=(t)-[:HAS_GROUP]->(:Group) WHERE t.status='UNVERIFIED' RETURN a,b,c as c")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host);
 

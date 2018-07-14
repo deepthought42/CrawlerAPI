@@ -90,9 +90,6 @@ public class PathExpansionActor extends UntypedActor {
 							work_allocator.tell(expanded_path_msg, getSelf() );
 						}
 					}
-					else{
-						System.err.println("");
-					}
 				}	
 			}
 		}

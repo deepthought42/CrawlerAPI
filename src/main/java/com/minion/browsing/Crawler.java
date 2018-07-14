@@ -29,6 +29,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.repository.ActionRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -43,6 +44,9 @@ public class Crawler {
 	
 	@Autowired
 	private ActionRepository action_repo;
+	
+	@Autowired
+	private PageStateRepository page_state_repo;
 	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
@@ -79,6 +83,14 @@ public class Crawler {
 		//skip first node since we should have already loaded it during initialization
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
+				PageState current_page = (PageState)current_obj;
+				try {
+					Thread.sleep(10000L);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
 				if(!browser_service.doScreenshotsMatch(browser, (PageState)current_obj)){
 					throw new NullPointerException();
 				}

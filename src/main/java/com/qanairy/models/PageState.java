@@ -181,12 +181,6 @@ public class PageState implements Persistable, PathObject {
         
         PageState that = (PageState)o;
         
-        
-        System.err.println("###############################################################");
-        System.err.println("THIS PAGE KEY :: "+this.getKey());
-        System.err.println("THAT PAGE KEY :: "+that.getKey());
-        System.err.println("###############################################################");
-        
         return this.getKey().equals(that.getKey());
 		/*try {
 			System.err.println("This browser screenshot :: "+this.getBrowserScreenshots().size());

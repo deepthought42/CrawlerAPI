@@ -84,13 +84,6 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState current_page = (PageState)current_obj;
-				try {
-					Thread.sleep(10000L);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
 				if(!browser_service.doScreenshotsMatch(browser, (PageState)current_obj)){
 					throw new NullPointerException();
 				}

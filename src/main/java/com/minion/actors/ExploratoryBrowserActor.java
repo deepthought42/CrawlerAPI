@@ -192,7 +192,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						  			if(parent_path == null){
 						  				break;
 						  			}
-						  			//Browser new_browser = new Browser(browser.getBrowserName());
 					  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, domain.getUrl());
 					  			
 						  			if(results_match){
@@ -216,6 +215,7 @@ public class ExploratoryBrowserActor extends UntypedActor {
 							break;
 						}
 					}
+					
 					DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 			  		discovery_record.setLastPathRanAt(new Date());

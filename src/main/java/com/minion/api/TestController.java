@@ -1,7 +1,6 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,13 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
-import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
-import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.TestService;
 import com.segment.analytics.Analytics;
@@ -43,9 +40,6 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Subscription;
-import com.stripe.model.SubscriptionItem;
-import com.stripe.model.UsageRecord;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
@@ -340,14 +334,14 @@ public class TestController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
+    	/*Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
     	String subscription_item = null;
     	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
     		if(item.getPlan().getNickname().equals("test_runs")){
     			subscription_item = item.getId();
     		}
     	}
-    	
+
     	if(subscription_item==null){
     		throw new MissingDiscoveryPlanException();
     	}
@@ -355,7 +349,7 @@ public class TestController {
     	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
     		throw new FreeTrialExpiredException();
     	}
-    	    	    	
+	   */	    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -378,8 +372,9 @@ public class TestController {
     	for(String key : test_keys){
     		System.err.println("Looking up test by key :: "+key);
     		Test test = test_repo.findByKey(key);
-    		
     		TestRecord record = null;
+    		
+    		/*
     		Date date = new Date();
 			long date_millis = date.getTime();
 			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
@@ -389,17 +384,7 @@ public class TestController {
 	    	usageRecordParams.put("action", "increment");
 
 	    	UsageRecord.create(usageRecordParams, null);
-			
-			/*Map<String, Object> options = new HashMap<String, Object>();
-			options.put("host", (new URL(test.firstPage().getUrl())).getHost());
-			Message<Test> test_msg = new Message<Test>(acct.getUsername(), test, options);
-			System.err.println("Test message created for host :: "+options.get("host"));
-			//tell memory worker of test
-			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-			memory_actor.tell(test_msg, null);
-			*/
-	    	
+*/
 			Browser browser = new Browser(browser_name.trim());
 			record = test_service.runTest(test, browser);
 			browser.close();

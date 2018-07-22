@@ -57,11 +57,13 @@ public class Browser {
 	private String browser_name; 
     //private static final String DISCOVERY_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
 	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-    //private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
-    //private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
+    
+	// PRODUCTION HUB ADDRESS
+	private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
+	//private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
 
 	//STAGING HUB ADDRESS
-	private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
+	//private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
 	
     public Browser(){}
     
@@ -354,8 +356,8 @@ public class Browser {
 		int point_x = point.getX();
 		int point_y = point.getY();
 		
-		if( (elem_width + 10 + point_x) < page_screenshot.getWidth()){
-			elem_width = elem_width+10;
+		if( (elem_width + 5 + point_x) < page_screenshot.getWidth()){
+			elem_width = elem_width+5;
 		}
 		else{
 			elem_width = page_screenshot.getWidth() - point_x;
@@ -368,18 +370,18 @@ public class Browser {
 			elem_height = page_screenshot.getHeight() - point_y;
 		}
 		
-		if( (point_x - 10) >= 0){
-			elem_width = elem_width + 10;
-			point_x = point_x - 10;
+		if( (point_x - 5) >= 0){
+			elem_width = elem_width + 5;
+			point_x = point_x - 5;
 		}
 		else{
 			elem_width += point_x;
 			point_x = 0;
 		}
 		
-		if( (point_y - 10) >= 0){
-			elem_height = elem_height + 10;
-			point_y = point_y - 10;
+		if( (point_y - 5) >= 0){
+			elem_height = elem_height + 5;
+			point_y = point_y - 5;
 		}
 		else{
 			elem_height += point_y;

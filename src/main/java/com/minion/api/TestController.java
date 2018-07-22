@@ -1,13 +1,13 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,19 +16,21 @@ import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
-import com.qanairy.api.exceptions.FreeTrialExpiredException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
-import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.TestService;
 import com.segment.analytics.Analytics;
@@ -39,9 +41,6 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Subscription;
-import com.stripe.model.SubscriptionItem;
-import com.stripe.model.UsageRecord;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
@@ -50,7 +49,6 @@ import com.qanairy.models.Group;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.TestStatus;
 
 /**
  * REST controller that defines endpoints to access tests
@@ -160,6 +158,7 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
+    	System.err.println("DOmain repo :: "+domain_repo);
     	return domain_repo.getUnverifiedTests(url);
     	
    		/*Domain domain = domain_repo.findByHost(url);
@@ -269,13 +268,13 @@ public class TestController {
 	public @ResponseBody void update(HttpServletRequest request,
 									@RequestParam(value="key", required=true) String key, 
 									@RequestParam(value="name", required=true) String name, 
-									@RequestParam(value="firefox", required=false) TestStatus firefox,
-									@RequestParam(value="chrome", required=false) TestStatus chrome){
+									@RequestParam(value="firefox", required=false) String firefox_status,
+									@RequestParam(value="chrome", required=false) String chrome_status){
 		Test test = test_repo.findByKey(key);
 		
 		Map<String, String> browser_statuses = new HashMap<String, String>();
-		browser_statuses.put("firefox", firefox.toString());
-		browser_statuses.put("chrome", chrome.toString());
+		browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toLowerCase()).toString());
+		browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toLowerCase()).toString());
 
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);
@@ -312,13 +311,16 @@ public class TestController {
      * @throws APIConnectionException 
      * @throws InvalidRequestException 
      * @throws AuthenticationException 
+     * @throws NoSuchAlgorithmException 
+     * @throws WebDriverException 
+     * @throws GridException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser_name", required=true) String browser_name) 
-																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -332,14 +334,14 @@ public class TestController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
+    	/*Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
     	String subscription_item = null;
     	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
     		if(item.getPlan().getNickname().equals("test_runs")){
     			subscription_item = item.getId();
     		}
     	}
-    	
+
     	if(subscription_item==null){
     		throw new MissingDiscoveryPlanException();
     	}
@@ -347,7 +349,7 @@ public class TestController {
     	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
     		throw new FreeTrialExpiredException();
     	}
-    	    	    	
+	   */	    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -370,8 +372,9 @@ public class TestController {
     	for(String key : test_keys){
     		System.err.println("Looking up test by key :: "+key);
     		Test test = test_repo.findByKey(key);
-    		
     		TestRecord record = null;
+    		
+    		/*
     		Date date = new Date();
 			long date_millis = date.getTime();
 			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
@@ -381,17 +384,7 @@ public class TestController {
 	    	usageRecordParams.put("action", "increment");
 
 	    	UsageRecord.create(usageRecordParams, null);
-			
-			/*Map<String, Object> options = new HashMap<String, Object>();
-			options.put("host", (new URL(test.firstPage().getUrl())).getHost());
-			Message<Test> test_msg = new Message<Test>(acct.getUsername(), test, options);
-			System.err.println("Test message created for host :: "+options.get("host"));
-			//tell memory worker of test
-			ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-			final ActorRef memory_actor = actor_system.actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-			memory_actor.tell(test_msg, null);
-			*/
-	    	
+*/
 			Browser browser = new Browser(browser_name.trim());
 			record = test_service.runTest(test, browser);
 			browser.close();

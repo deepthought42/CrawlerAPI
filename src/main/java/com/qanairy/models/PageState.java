@@ -1,16 +1,19 @@
 package com.qanairy.models;
 
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
+import javax.xml.bind.DatatypeConverter;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -50,6 +53,36 @@ public class PageState implements Persistable, PathObject {
 	private Set<PageElement> elements = new HashSet<>();
 	
 	public PageState(){}
+
+	/**
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre html != null && html.length() > 0
+	 * @pre elements != null
+	 * @pre browser_screenshots != null;
+	 */
+	public PageState(String html, String url , Set<PageElement> elements) throws IOException {
+		assert elements != null;
+		assert html != null;
+		assert html.length() > 0;
+		assert browser_screenshots  != null;
+
+		setType(PageState.class.getSimpleName());
+		setSrc("");
+		setUrl(url.replace("/#",""));
+		setElements(elements);
+		setLandable(false);
+		setImageWeight(0);
+		setType(PageState.class.getSimpleName());
+		setKey(generateKey());
+	}
+
 	
 	/**
  	 * Creates a page instance that is meant to contain information about a state of a webpage
@@ -71,7 +104,7 @@ public class PageState implements Persistable, PathObject {
 		assert browser_screenshots  != null;
 
 		setType(PageState.class.getSimpleName());
-		setSrc(html);
+		setSrc("");
 		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browser_screenshots );
 		setElements(elements);
@@ -100,7 +133,7 @@ public class PageState implements Persistable, PathObject {
 		assert browser_screenshots != null;
 	
 		setType(PageState.class.getSimpleName());
-		setSrc(html);
+		setSrc("");
 		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
@@ -177,9 +210,12 @@ public class PageState implements Persistable, PathObject {
         if (!(o instanceof PageState)) return false;
         
         PageState that = (PageState)o;
-        boolean pages_match = false;
-
-		try {
+        
+        boolean pages_match = this.getKey().equals(that.getKey());
+		/*try {
+			System.err.println("This browser screenshot :: "+this.getBrowserScreenshots().size());
+			System.err.println("NEXT BROSEWR SCREENSHOT :: "+this.getBrowserScreenshots().iterator().next());
+			System.err.println("Viewport screenshot :: "+this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 			String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
 	        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();	        
 	        
@@ -190,13 +226,11 @@ public class PageState implements Persistable, PathObject {
 			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
 			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
 			pages_match = compareImages(img1, img2);
-			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
+			System.err.println("DO THE SCREENSHOTS MATCH FOR PAGE EQUALITY????        ::::     "+pages_match);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-
-       	
-        
+		*/
         //System.err.println("Screenshots match? :: "+screenshots_match);
         
         /*System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
@@ -213,17 +247,19 @@ public class PageState implements Persistable, PathObject {
 	        }
 	        
 	        for(PageElement elem : this.getElements()){
-	        	if(elem.equals(page_elements.get(elem.getXpath()))){
-	        		page_elements.remove(elem.getXpath());
-	        	}
+        		page_elements.remove(elem.getXpath());
 	        }
 	        
 	        System.err.println("PAGE ELEMENT DIFF :: "+page_elements.size());
 	        if(page_elements.isEmpty()){
 	        	pages_match = true;
 	        }
+	        else{
+	        	pages_match = false;
+	        }
         }
     	return pages_match;
+    	
   	}
 	
 	/**
@@ -369,22 +405,21 @@ public class PageState implements Persistable, PathObject {
 		this.elements.add(element);
 	}
 
-	private static String getFileChecksum(MessageDigest digest, String url) throws IOException
+	public static String getFileChecksum(MessageDigest digest, String url) throws IOException
 	{
-	    //Get file input stream for reading the file content
-	    FileInputStream fis = new FileInputStream(url);
-	     
+		InputStream is = new URL(url).openStream(); 
+
 	    //Create byte array to read data in chunks
 	    byte[] byteArray = new byte[1024];
 	    int bytesCount = 0;
 	      
 	    //Read file data and update in message digest
-	    while ((bytesCount = fis.read(byteArray)) != -1) {
+	    while ((bytesCount = is.read(byteArray)) != -1) {
 	        digest.update(byteArray, 0, bytesCount);
 	    };
 	     
 	    //close the stream; We don't need it now.
-	    fis.close();
+	    is.close();
 	     
 	    //Get the hash's bytes
 	    byte[] bytes = digest.digest();
@@ -397,27 +432,47 @@ public class PageState implements Persistable, PathObject {
 	        sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
 	    }
 	     
-	    //return complete hash
+	   //return complete hash
 	   return sb.toString();
 	}
 	
+	public static String getFileChecksum(BufferedImage bufferedImage) throws IOException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		boolean foundWriter = ImageIO.write(bufferedImage, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
+	    //Get file input stream for reading the file content
+	    
+	    try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
+			byte[] thedigest = sha.digest(baos.toByteArray());
+	        return DatatypeConverter.printHexBinary(thedigest);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	    return "";
+	}
+		
 	/**
 	 * {@inheritDoc}
 	 * 
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		/*
-		*/
-		/*try{
+		try{
 			return getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 		}
-		catch(Exception e){}
-		*/
-		String key = "";
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		return "";
+		//return "";
+		/*String key = "";
 		for(PageElement element : getElements()){
-			key += element.getKey()+element.getAttributes().hashCode()+element.getCssValues().hashCode();
+			key += element.getKey();
 		}
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		*/
+		
 	}
 }

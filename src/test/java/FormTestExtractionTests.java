@@ -1,7 +1,10 @@
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import org.slf4j.LoggerFactory;
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.testng.annotations.Test;
 import com.minion.browsing.Browser;
@@ -26,9 +29,12 @@ public class FormTestExtractionTests {
 
 	/**
 	 * Tests if {@link RequirementRule} can be extracted on a required field
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */
 	@Test
-	public void testRequirementRuleExtractions(){
+	public void testRequirementRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
@@ -62,9 +68,12 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */
 	@Test
-	public void testNumericRestrictionRuleExtractions(){
+	public void testNumericRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
@@ -105,9 +114,12 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */
 	@Test
-	public void testAlphabeticRestrictionRuleExtractions(){
+	public void testAlphabeticRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
@@ -146,9 +158,12 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */
 	@Test
-	public void testReadonlyRestrictionRuleExtractions(){
+	public void testReadonlyRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
@@ -178,9 +193,12 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */
 	@Test
-	public void testMinValueRuleExtractions(){
+	public void testMinValueRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
@@ -211,9 +229,12 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */
 	@Test
-	public void testMaxValueRuleExtractions(){
+	public void testMaxValueRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {

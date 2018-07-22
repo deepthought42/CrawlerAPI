@@ -1,6 +1,7 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.repository.ActionRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -43,6 +45,9 @@ public class Crawler {
 	@Autowired
 	private ActionRepository action_repo;
 	
+	@Autowired
+	private PageStateRepository page_state_repo;
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 * 
@@ -50,13 +55,15 @@ public class Crawler {
 	 * @param browser
 	 * @return {@link Page result_page} state that resulted from crawling path
 	 * 
-	 * @throws java.util.NoSuchElementException
 	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 * 
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws NoSuchElementException, IOException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -71,49 +78,62 @@ public class Crawler {
 		}
 		
 		PageElement last_element = null;
-	
-		boolean path_deviation = false;
-		do{
-			path_deviation = false;
-			browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
-			
-			//skip first node since we should have already loaded it during initialization
-			for(PathObject current_obj: ordered_path_objects){
-				if(current_obj instanceof PageState){
-					path_deviation = !browser_service.doScreenshotsMatch(browser, (PageState)current_obj);
+		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
+		
+		PageState current_page_state = null;
+		//skip first node since we should have already loaded it during initialization
+		for(PathObject current_obj: ordered_path_objects){
+			if(current_obj instanceof PageState){
+				PageState expected_page = (PageState)current_obj;
+				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
+				System.err.println("CHECKING IF PAGE STATE HAS RECORD IN DB.....");
+				if(page_record != null){
+					System.err.println("Page record is not null");
+					expected_page = page_record;
 					
-					//Do Nothing for now
 				}
-				else if(current_obj instanceof PageElement){
-					last_element = (PageElement) current_obj;
-				}
-				//String is action in this context
-				else if(current_obj instanceof Action){
-					//boolean actionPerformedSuccessfully;
-					Action action = (Action)current_obj;
-					Action action_record = action_repo.findByKey(action.getKey());
-					if(action_record==null){
-						action = action_repo.save(action);
-						try {
-							MessageBroadcaster.broadcastPathObject(action, host_channel);
-						} catch (JsonProcessingException e1) {
-							e1.printStackTrace();
-						}
-					}
-					else{
-						action = action_record;
-					}
-					
-					boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
-				}
-				else if(current_obj instanceof PageAlert){
-					log.debug("Current path node is a PageAlert");
-					PageAlert alert = (PageAlert)current_obj;
-					alert.performChoice(browser.getDriver());
+				System.err.println("Page screenshots :: "+expected_page.getBrowserScreenshots().size());
+				System.err.println("Page screenshot url :: "+expected_page.getBrowserScreenshots().iterator().next().getKey());
+				boolean screenshot_matches = false;
+				int cnt = 0;
+				
+				do{
+					current_page_state = browser_service.buildPage(browser);
+					screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
+					cnt++;
+					try {
+						Thread.sleep(400);
+					} catch (InterruptedException e) {}
+				}while(!screenshot_matches && cnt < 5);
+				
+				if(!screenshot_matches){
+					throw new NullPointerException();
 				}
 			}
-		}while(path_deviation);
-		
+			else if(current_obj instanceof PageElement){
+				last_element = (PageElement) current_obj;
+			}
+			//String is action in this context
+			else if(current_obj instanceof Action){
+				//boolean actionPerformedSuccessfully;
+				Action action = (Action)current_obj;
+				Action action_record = action_repo.findByKey(action.getKey());
+				if(action_record==null){
+					action = action_repo.save(action);
+				}
+				else{
+					action = action_record;
+				}
+				
+				performAction(action, last_element, browser.getDriver());
+			}
+			else if(current_obj instanceof PageAlert){
+				log.debug("Current path node is a PageAlert");
+				PageAlert alert = (PageAlert)current_obj;
+				alert.performChoice(browser.getDriver());
+			}
+		}
+
 		return browser_service.buildPage(browser);
 	}
 	
@@ -131,7 +151,7 @@ public class Crawler {
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(25000L);
 			} catch (InterruptedException e) {}
 		}
 		catch(StaleElementReferenceException e){

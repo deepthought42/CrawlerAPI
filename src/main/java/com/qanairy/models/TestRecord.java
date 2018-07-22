@@ -9,6 +9,8 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qanairy.models.enums.TestStatus;
+
 /**
  * A {@link Test} record for reflecting an execution of a test 
  * indicating whether the execution is aligned with the test and therefore passing

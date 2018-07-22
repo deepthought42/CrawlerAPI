@@ -15,7 +15,11 @@ import org.springframework.stereotype.Component;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
+import akka.cluster.ClusterEvent.UnreachableMember;
+
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -36,7 +40,7 @@ import com.qanairy.models.rules.Rule;
  */
 @Component
 @Scope("prototype")
-public class PathExpansionActor extends UntypedActor {
+public class PathExpansionActor extends AbstractActor {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
@@ -50,18 +54,28 @@ public class PathExpansionActor extends UntypedActor {
      * {@inheritDoc}
      */
 	@Override
-	public void onReceive(Object message) throws Exception {
-		if(message instanceof Message){
-			Message<?> acct_msg = (Message<?>)message;
+	public Receive createReceive() {
+		return receiveBuilder()
+				.match(Message.class, message -> {
 			
-			if(acct_msg.getData() instanceof Test){				
-				Test test = (Test)acct_msg.getData();
+			if(message.getData() instanceof Test){				
+				Test test = (Test)message.getData();
 
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
-				DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 
-				if((!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
-						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){					
+				if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost())) && 
+						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
+						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
+					
+					//Send test to simplifier
+					//when simplifier returns simplified test
+					// if path is a single page 
+					//		then send path to urlBrowserActor
+					
+					//	expand path
+					// 	send expanded path to work allocator
+					
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
@@ -69,7 +83,7 @@ public class PathExpansionActor extends UntypedActor {
 						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
-						Message<URL> url_msg = new Message<URL>(acct_msg.getAccountKey(), new URL(test.getResult().getUrl()), acct_msg.getOptions());
+						Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(test.getResult().getUrl()), message.getOptions());
 						work_allocator.tell(url_msg, getSelf() );
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						return;
@@ -85,17 +99,28 @@ public class PathExpansionActor extends UntypedActor {
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 	
-							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(acct_msg.getAccountKey(), expanded, acct_msg.getOptions());
+							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 							
 							work_allocator.tell(expanded_path_msg, getSelf() );
 						}
 					}
-					else{
-						System.err.println("");
-					}
 				}	
 			}
-		}
+		})
+		.match(MemberUp.class, mUp -> {
+			log.info("Member is Up: {}", mUp.member());
+		})
+		.match(UnreachableMember.class, mUnreachable -> {
+			log.info("Member detected as unreachable: {}", mUnreachable.member());
+		})
+		.match(MemberRemoved.class, mRemoved -> {
+			log.info("Member is Removed: {}", mRemoved.member());
+		})	
+		.matchAny(o -> {
+			System.err.println("o class :: "+o.getClass().getName());
+			log.info("received unknown message");
+		})
+		.build();
 	}
 	
     /**

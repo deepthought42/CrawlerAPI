@@ -7,6 +7,7 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.minion.browsing.element.ComplexField;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.enums.FormType;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser
@@ -36,7 +37,7 @@ public class Form {
 		for(Attribute attr: attributes){
 			for(String val : attr.getVals()){
 				if(val.contains("register") || (val.contains("sign") && val.contains("up"))){
-					return FormType.REGISTER;
+					return FormType.REGISTRATION;
 				}
 				else if(val.contains("login") || (val.contains("sign") && val.contains("in"))){
 					return FormType.LOGIN;
@@ -45,7 +46,7 @@ public class Form {
 					return FormType.SEARCH;
 				}
 				else if(val.contains("reset") && val.contains("password")){
-					return FormType.RESET_PASSWORD;
+					return FormType.PASSWORD_RESET;
 				}
 				else if(val.contains("payment") || val.contains("credit")){
 					return FormType.PAYMENT;
@@ -53,7 +54,7 @@ public class Form {
 			}
 		}
 		
-		return FormType.GENERAL_RECORD;
+		return FormType.LEAD;
 	}
 	
 	public List<ComplexField> getFormFields() {

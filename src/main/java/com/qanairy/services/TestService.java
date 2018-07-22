@@ -1,8 +1,11 @@
 package com.qanairy.services;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +17,10 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.TestStatus;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
 
@@ -40,8 +44,11 @@ public class TestService {
 	 * 		
 	 * @pre test != null		
 	 * @return	{@link TestRecord} indicating passing status and {@link Page} if not passing 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
 	 */		
-	 public TestRecord runTest(Test test, Browser browser){				
+	 public TestRecord runTest(Test test, Browser browser) throws GridException, WebDriverException, NoSuchAlgorithmException{				
 		 assert test != null;		
 	 			
 		 TestStatus passing = null;		
@@ -89,6 +96,10 @@ public class TestService {
 			else {
 				System.err.println("Broadcasting Test...");
 				MessageBroadcaster.broadcastTest(test, host_url);
+			}
+			
+			for(PathObject path_obj : test.getPathObjects()){
+				MessageBroadcaster.broadcastPathObject(path_obj, host_url);
 			}
 		}
 		else{

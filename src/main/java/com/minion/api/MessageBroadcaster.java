@@ -3,10 +3,8 @@ package com.minion.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
-import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.PageState;
+import com.qanairy.models.FormRecord;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
  * Defines methods for emitting data to subscribed clients
  */
 public class MessageBroadcaster {
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(MessageBroadcaster.class);
 	
     /**
@@ -36,6 +33,24 @@ public class MessageBroadcaster {
         String test_json = mapper.writeValueAsString(test);
 
 		pusher.trigger(host, "test-discovered", test_json);
+	}
+
+    /**
+     * Message emitter that sends {@link Form} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastDiscoveredForm(FormRecord form, String host) throws JsonProcessingException {	
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+        //Object to JSON in String        
+        ObjectMapper mapper = new ObjectMapper();
+        String form_json = mapper.writeValueAsString(form);
+
+		pusher.trigger(host, "discovered-form", form_json);
 	}
 	
 	/**
@@ -116,5 +131,20 @@ public class MessageBroadcaster {
         String discovery_json = mapper.writeValueAsString(record);
         
 		pusher.trigger(record.getDomainUrl(), "discovery-status", discovery_json);
+	}
+
+	public static void broadcastFormRecord(FormRecord form_record, String host) throws JsonProcessingException {
+		log.info("broadcasting discovery status");
+
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String form_json = mapper.writeValueAsString(form_record);
+        
+		pusher.trigger(host, "form-record", form_json);
 	}
 }

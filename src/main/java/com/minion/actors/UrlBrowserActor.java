@@ -75,6 +75,12 @@ public class UrlBrowserActor extends AbstractActor {
 										  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
 								form_test_discoverer.tell(test_msg, getSelf() );
 		
+								/*Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
+
+								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+								form_test_discoverer.tell(page_state_msg, getSelf() );
+		*/
 								
 								break;
 							}

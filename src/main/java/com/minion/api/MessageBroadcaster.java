@@ -34,6 +34,24 @@ public class MessageBroadcaster {
 
 		pusher.trigger(host, "test-discovered", test_json);
 	}
+
+    /**
+     * Message emitter that sends {@link Form} to all registered clients
+     * 
+     * @param test {@link Test} to be emitted to clients
+     * @throws JsonProcessingException 
+     */
+	public static void broadcastDiscoveredForm(FormRecord form, String host) throws JsonProcessingException {	
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+
+        //Object to JSON in String        
+        ObjectMapper mapper = new ObjectMapper();
+        String form_json = mapper.writeValueAsString(form);
+
+		pusher.trigger(host, "discovered-form", form_json);
+	}
 	
 	/**
      * Message emitter that sends {@link Test} to all registered clients

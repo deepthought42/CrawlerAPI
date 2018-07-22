@@ -1,15 +1,11 @@
 package com.minion.actors;
 
-import java.awt.image.BufferedImage;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -18,8 +14,6 @@ import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
-import com.qanairy.models.Test;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -44,9 +38,6 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private BrowserService browser_service;
-	
-	@Autowired
-	private PageElementRepository page_element_repo;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -96,13 +87,11 @@ public class FormDiscoveryActor extends AbstractActor{
 								//for each field in the complex field generate a set of tests for all known rules
 								System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements().size());
 								for(FormField field : complex_field.getElements()){
-									PageElement input_elem = field.getInputElement();
-									
-									List<Rule> rules = ElementRuleExtractor.extractInputRules(input_elem);
+									List<Rule> rules = ElementRuleExtractor.extractInputRules(field.getInputElement());
 									
 									log.info("Total RULES   :::   "+rules.size());
 									for(Rule rule : rules){
-										input_elem.addRule(rule);
+										field.getInputElement().addRule(rule);
 									}
 								}
 							}

@@ -100,15 +100,6 @@ public class TestPathSimplifier extends AbstractActor{
 									Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(page_state.getUrl()), message.getOptions());
 									work_allocator.tell(url_msg, getSelf() );
 									
-									/*									
-									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), new_test, message.getOptions());
-
-									
-									System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
-									final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-									path_expansion_actor.tell(test_msg, getSelf());
-									*/
 									new_path.clear();
 									path_keys.clear();
 								}
@@ -117,10 +108,13 @@ public class TestPathSimplifier extends AbstractActor{
 							}
 						}
 						
+						test.setPathKeys(path_keys);
+						test.setPathObjects(new_path);
+						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 						System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
 						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-						path_expansion_actor.tell(message, getSelf());
+						path_expansion_actor.tell(test_msg, getSelf());
 					}
 				})
 				.match(MemberUp.class, mUp -> {

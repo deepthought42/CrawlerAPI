@@ -52,20 +52,20 @@ public class UrlBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 			
-					System.err.println("Recieved data of type :: "+acct_msg.getData().getClass().getSimpleName());
-					if(acct_msg.getData() instanceof URL){
+					System.err.println("Recieved data of type :: "+message.getData().getClass().getSimpleName());
+					if(message.getData() instanceof URL){
 						boolean test_generated_successfully = false;
 						do{
 							try{
-								String browser = acct_msg.getOptions().get("browser").toString();
-								String discovery_key = acct_msg.getOptions().get("discovery_key").toString();
-								String host = acct_msg.getOptions().get("host").toString();
-								String url = ((URL)acct_msg.getData()).toString();
+								String browser = message.getOptions().get("browser").toString();
+								String discovery_key = message.getOptions().get("discovery_key").toString();
+								String host = message.getOptions().get("host").toString();
+								String url = ((URL)message.getData()).toString();
 								
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
 								test_service.save(test, host);
 								
-								Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 		
 								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());

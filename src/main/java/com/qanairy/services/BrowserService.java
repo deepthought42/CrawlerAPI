@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.minion.actors.AwsS3ScreenshotUploader.ElementScreenshotUpload;
 import com.minion.actors.LandabilityChecker.BrowserPageState;
 import com.minion.api.MessageBroadcaster;
 import com.minion.aws.UploadObjectSingleOperation;
@@ -43,10 +44,12 @@ import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
+import com.qanairy.models.FormRecord;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.repository.AttributeRepository;
+import com.qanairy.models.repository.FormRecordRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.ScreenshotSetRepository;
@@ -78,8 +81,50 @@ public class BrowserService {
 	@Autowired
 	private AttributeRepository attribute_repo;
 	
+	@Autowired
+	private FormRecordRepository form_record_repo;
+	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
 
+	/**
+	 * 
+	 * @param browser_name
+	 * @param page_state
+	 * @return
+	 * @throws IOException 
+	 * @throws GridException 
+	 */
+	public boolean checkIfLandable(Browser browser, PageState page_state) throws GridException, IOException {
+		boolean landable = false;
+
+		boolean page_visited_successfully = false;
+		int cnt  = 0;
+		do{
+			page_visited_successfully = false;
+
+			try{
+				Browser landable_browser = new Browser(browser.getBrowserName());
+				landable_browser.navigateTo(page_state.getUrl());
+				page_visited_successfully = true;
+				if(page_state.equals(buildPage(landable_browser))){
+					landable= true;
+				}
+				landable_browser.close();
+
+			}catch(GridException e){
+				log.error(e.getMessage());
+			}
+			catch(Exception e){
+				log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
+				log.error(e.getMessage());
+			}
+			cnt++;
+		}while(!page_visited_successfully && cnt < 3);
+		
+		System.err.println("is page state landable  ?? :: "+landable);
+		return landable;
+	}
+	
 	/**
 	 * 
 	 * @return
@@ -119,19 +164,20 @@ public class BrowserService {
 		HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
 		screenshots.add(screenshot_set);
 		
-		PageState page_state = new PageState("",
-				page_url.toString(),
-				screenshots,
-				visible_elements);
-		PageState page_record = page_state_repo.findByKey(page_state.getKey());
 		
+		PageState page_record = page_state_repo.findByKey(page_key.toLowerCase());
+		PageState page_state = null;
 		if(page_record != null){
-			page_state = page_record;	
+			page_state = page_record;
+			page_state.getBrowserScreenshots().add(screenshot_set);
 		}
 		else{
-			page_state.getBrowserScreenshots().add(screenshot_set);
-			page_state = page_state_repo.save(page_state);
+			page_state = new PageState("",
+					page_url.toString(),
+					screenshots,
+					visible_elements);
 			
+			//page_state.setLandable(checkIfLandable(browser, page_state));
 			System.err.println("Page state is new. Checking landability");
 			//have page checked for landability
 			System.err.println("PAGE EQUALITY BROWSER SCREENSHOTS :: "+page_state.getBrowserScreenshots().size());
@@ -142,9 +188,9 @@ public class BrowserService {
 			landibility_checker.tell(bps, ActorRef.noSender() );
 			
 			System.err.println("Broadcasting page state as path object");
-			MessageBroadcaster.broadcastPathObject(page_state, page_url.getHost().toString());
 		}
-		
+		System.err.println("PAGE LOADED :: "+page_record);
+
 		return page_state;
 	}
 
@@ -167,6 +213,7 @@ public class BrowserService {
 		if(pageElements.size() == 0){
 			return elementList;
 		}
+		
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
@@ -195,11 +242,16 @@ public class BrowserService {
 	
 						String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
 						Map<String, String> css_props = Browser.loadCssProperties(elem);
-						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-						PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot );
+						
+						//String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+						PageElement tag = new PageElement(checksum.toLowerCase(), elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props);
 						tag_record = page_element_repo.save(tag);
-
-						MessageBroadcaster.broadcastPathObject(tag_record, host);		
+						
+						final ActorRef screenshot_uploader = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("awsS3ScreenshotUploader"), "Aws_s3_screenshot_uploader"+UUID.randomUUID());
+					
+						ElementScreenshotUpload screenshot_upload = new ElementScreenshotUpload(img, (new URL(driver.getCurrentUrl())), checksum.toLowerCase(), "element_screenshot");
+						screenshot_uploader.tell(screenshot_upload, ActorRef.noSender() );
 					}
 					
 					if(!elementList.contains(tag_record)){
@@ -439,7 +491,7 @@ public class BrowserService {
 	public List<Form> extractAllForms(PageState page, Browser browser) throws IOException{
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		List<Form> form_list = new ArrayList<Form>();
-		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
+
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
@@ -491,7 +543,6 @@ public class BrowserService {
 					else{
 						elem_record.setScreenshot(screenshot);
 						elem_record = page_element_repo.save(elem_record); 
-						MessageBroadcaster.broadcastPathObject(elem_record, host);
 					}
 				}
 
@@ -532,7 +583,11 @@ public class BrowserService {
 				form.addFormField(combo_input);
 				input_tags.add(input_tag);
 			}
-						
+			FormRecord form_record = new FormRecord(form_elem.getAttribute("innerHTML"), input_tags , page_screenshot ,page);
+			form_record = form_record_repo.save(form_record);
+			
+			MessageBroadcaster.broadcastFormRecord(form_record, new URL(browser.getDriver().getCurrentUrl()).getHost());
+			
 			form_list.add(form);
 		}
 		return form_list;
@@ -671,11 +726,18 @@ public class BrowserService {
 		File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
+		System.err.println("page state screenshots :: "+page_state.getBrowserScreenshots().size());
 		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
+			System.err.println("Screenshot browser :: "+screenshot.getBrowser());
+			System.err.println("current browser name :: "+browser.getBrowserName());
 			if(screenshot.getBrowser().equals(browser.getBrowserName())){
+				System.err.println("Browser name matches screenshot browser!");
 				page_screenshot = screenshot;
 			}
 		}
+		System.err.println("#################################################################");
+		System.err.println("Page screenshot for matching :: "+page_screenshot);
+		System.err.println("Page screenshot Viewport url for matching :: "+page_screenshot.getViewportScreenshot());
 		boolean pages_match = false;
 		try {
 			BufferedImage img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));

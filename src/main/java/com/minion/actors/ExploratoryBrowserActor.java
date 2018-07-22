@@ -3,19 +3,13 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.imageio.ImageIO;
-
-import org.apache.commons.lang3.ArrayUtils;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -33,7 +27,6 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.config.SpringExtension;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -45,7 +38,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.TestStatus;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
@@ -153,9 +146,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 								log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
 								e.printStackTrace();
 							} catch (GridException e) {
+								browser = new Browser(browser.getBrowserName());
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							} catch (WebDriverException e) {
+								browser = new Browser(browser.getBrowserName());
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							} catch (NoSuchAlgorithmException e) {
@@ -166,13 +161,11 @@ public class ExploratoryBrowserActor extends UntypedActor {
 						}while(result_page == null && tries < 5);
 					
 						//have page checked for landability
+						System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page);
+
+						System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page.getBrowserScreenshots());
 						System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page.getBrowserScreenshots().size());
 
-						BrowserPageState bps = new BrowserPageState(result_page, browser.getBrowserName());
-						final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-						landibility_checker.tell(bps, ActorRef.noSender() );
-						
 						Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 						
 						final long pathCrawlEndTime = System.currentTimeMillis();
@@ -225,7 +218,6 @@ public class ExploratoryBrowserActor extends UntypedActor {
 				  	}catch(Exception e){
 					
 					}
-					
 				  	browser.close();
 				}
 
@@ -257,11 +249,17 @@ public class ExploratoryBrowserActor extends UntypedActor {
 
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
+		/*System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO Test Simplifier");
+		final ActorRef test_simplifier = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("testPathSimplifier"), "test_simplifier"+UUID.randomUUID());
+		test_simplifier.tell(test_msg, getSelf());
+	*/
 
 		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
 		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 		path_expansion_actor.tell(test_msg, getSelf());
+
 	}
 	
 	/**

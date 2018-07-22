@@ -3,8 +3,6 @@ package com.qanairy.models;
 /**
  * A data wrapper for messages to be passed around between actors. This wrapper includes in the account
  * key for a request alongside data so that actors can keep track of who they are performing work for.
- * 
- * @author Brandon Kindred
  *
  * @param <T> data object that is being passed inside of message
  */

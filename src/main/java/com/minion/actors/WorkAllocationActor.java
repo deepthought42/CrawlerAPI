@@ -19,6 +19,8 @@ import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
@@ -81,7 +83,19 @@ public class WorkAllocationActor extends AbstractActor  {
 					}
 					getSender().tell("Status: ok", getSelf());
 				})
-				.matchAny(o -> log.info("received unknown message"))
+				.match(MemberUp.class, mUp -> {
+					log.info("Member is Up: {}", mUp.member());
+				})
+				.match(UnreachableMember.class, mUnreachable -> {
+					log.info("Member detected as unreachable: {}", mUnreachable.member());
+				})
+				.match(MemberRemoved.class, mRemoved -> {
+					log.info("Member is Removed: {}", mRemoved.member());
+				})	
+				.matchAny(o -> {
+					System.err.println("o class :: "+o.getClass().getName());
+					log.info("received unknown message");
+				})
 				.build();
 	}
 }

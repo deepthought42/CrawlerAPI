@@ -144,7 +144,7 @@ public class DomainController {
     	domain.setLogoUrl(logo_url);
     	domain.setProtocol(protocol);
     	
-    	return domain;
+    	return domain_repo.save(domain);
     }
     
     /**

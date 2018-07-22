@@ -243,15 +243,15 @@ public class BrowserService {
 						String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
 						Map<String, String> css_props = Browser.loadCssProperties(elem);
 						
-						//String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-						PageElement tag = new PageElement(checksum.toLowerCase(), elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props);
+						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+						PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
 						tag_record = page_element_repo.save(tag);
 						
-						final ActorRef screenshot_uploader = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("awsS3ScreenshotUploader"), "Aws_s3_screenshot_uploader"+UUID.randomUUID());
+						//final ActorRef screenshot_uploader = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						//		  .props("awsS3ScreenshotUploader"), "Aws_s3_screenshot_uploader"+UUID.randomUUID());
 					
-						ElementScreenshotUpload screenshot_upload = new ElementScreenshotUpload(img, (new URL(driver.getCurrentUrl())), checksum.toLowerCase(), "element_screenshot");
-						screenshot_uploader.tell(screenshot_upload, ActorRef.noSender() );
+						//ElementScreenshotUpload screenshot_upload = new ElementScreenshotUpload(img, (new URL(driver.getCurrentUrl())), checksum.toLowerCase(), "element_screenshot");
+						//screenshot_uploader.tell(screenshot_upload, ActorRef.noSender() );
 					}
 					
 					if(!elementList.contains(tag_record)){

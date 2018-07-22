@@ -14,6 +14,12 @@ import org.springframework.stereotype.Component;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
+import akka.actor.AbstractActor.Receive;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
+import akka.cluster.ClusterEvent.UnreachableMember;
+
 import com.minion.structs.Message;
 import com.qanairy.models.Test;
 import com.qanairy.services.TestCreatorService;
@@ -25,7 +31,7 @@ import com.qanairy.services.TestService;
  */
 @Component
 @Scope("prototype")
-public class UrlBrowserActor extends UntypedActor {
+public class UrlBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
 	
 	@Autowired
@@ -42,44 +48,58 @@ public class UrlBrowserActor extends UntypedActor {
 	 * 
 	 */
 	@Override
-	public void onReceive(Object message) throws Exception {
-		if(message instanceof Message){
-			Message<?> acct_msg = (Message<?>)message;
-
-			System.err.println("Recieved data of type :: "+acct_msg.getData().getClass().getSimpleName());
-			if(acct_msg.getData() instanceof URL){
-				boolean test_generated_successfully = false;
-				do{
-					try{
-						String browser = acct_msg.getOptions().get("browser").toString();
-						String discovery_key = acct_msg.getOptions().get("discovery_key").toString();
-						String host = acct_msg.getOptions().get("host").toString();
-						String url = ((URL)acct_msg.getData()).toString();
-						
-						Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
-						test_service.save(test, host);
-						
-						Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-
-						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-						path_expansion_actor.tell(test_msg, getSelf() );
-						
-						final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
-						form_test_discoverer.tell(test_msg, getSelf() );
-
-						
-						break;
-					}
-					catch(Exception e){
-						e.printStackTrace();
-						log.error(e.getMessage());
-					}
-				}while(!test_generated_successfully);
-		   }
-			//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
-
-		}else unhandled(message);
+	public Receive createReceive() {
+		return receiveBuilder()
+				.match(Message.class, message -> {
+			
+					System.err.println("Recieved data of type :: "+acct_msg.getData().getClass().getSimpleName());
+					if(acct_msg.getData() instanceof URL){
+						boolean test_generated_successfully = false;
+						do{
+							try{
+								String browser = acct_msg.getOptions().get("browser").toString();
+								String discovery_key = acct_msg.getOptions().get("discovery_key").toString();
+								String host = acct_msg.getOptions().get("host").toString();
+								String url = ((URL)acct_msg.getData()).toString();
+								
+								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
+								test_service.save(test, host);
+								
+								Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+		
+								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+								path_expansion_actor.tell(test_msg, getSelf() );
+								
+								final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
+								form_test_discoverer.tell(test_msg, getSelf() );
+		
+								
+								break;
+							}
+							catch(Exception e){
+								e.printStackTrace();
+								log.error(e.getMessage());
+							}
+						}while(!test_generated_successfully);
+				   }
+					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
+		
+				})
+				.match(MemberUp.class, mUp -> {
+					log.info("Member is Up: {}", mUp.member());
+				})
+				.match(UnreachableMember.class, mUnreachable -> {
+					log.info("Member detected as unreachable: {}", mUnreachable.member());
+				})
+				.match(MemberRemoved.class, mRemoved -> {
+					log.info("Member is Removed: {}", mRemoved.member());
+				})	
+				.matchAny(o -> {
+					System.err.println("o class :: "+o.getClass().getName());
+					log.info("received unknown message");
+				})
+				.build();
 	}
 }

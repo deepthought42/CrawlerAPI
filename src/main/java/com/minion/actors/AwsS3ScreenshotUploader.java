@@ -12,7 +12,6 @@ import com.qanairy.models.repository.PageElementRepository;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;

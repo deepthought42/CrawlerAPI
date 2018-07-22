@@ -32,14 +32,17 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
-import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
+import akka.cluster.ClusterEvent.UnreachableMember;
 
 /**
  * Handles discovery and creation of various form tests
  */
 @Component
 @Scope("prototype")
-public class FormTestDiscoveryActor extends UntypedActor {
+public class FormTestDiscoveryActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(FormTestDiscoveryActor.class);
 	
 	@Autowired
@@ -64,12 +67,12 @@ public class FormTestDiscoveryActor extends UntypedActor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void onReceive(Object message) throws Exception {
-		if(message instanceof Message){
-			Message<?> acct_msg = (Message<?>)message;
+	public Receive createReceive() {
+		return receiveBuilder()
+				.match(Message.class, message -> {
 			
-			if(acct_msg.getData() instanceof Test){
-				Test test = ((Test)acct_msg.getData());
+			if(message.getData() instanceof Test){
+				Test test = ((Test)message.getData());
 	
 				//get first page in path
 				PageState page = test.firstPage();
@@ -79,7 +82,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  	
 			  	while(browser == null && cnt < 5){
 			  		try{
-				  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
+				  		browser = new Browser(message.getOptions().get("browser").toString());
 				  		browser.navigateTo(page.getUrl());
 						break;
 					}catch(NullPointerException e){
@@ -121,7 +124,7 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  				Action action_record = action_repo.findByKey(obj.getKey());
 			  				if(action_record == null){
 			  					action_record = action_repo.save(action);
-			  					MessageBroadcaster.broadcastPathObject(action_record, acct_msg.getOptions().get("host").toString());
+			  					MessageBroadcaster.broadcastPathObject(action_record, message.getOptions().get("host").toString());
 			  				}
 			  				test_path_objects.add(action_record);
 			  			}
@@ -130,8 +133,8 @@ public class FormTestDiscoveryActor extends UntypedActor {
 					final long pathCrawlStartTime = System.currentTimeMillis();
 					
 			  		System.err.println("Crawling potential form test path");
-			  		browser = new Browser(acct_msg.getOptions().get("browser").toString());
-			  		PageState result_page = crawler.crawlPath(path_keys, test_path_objects, browser, acct_msg.getOptions().get("host").toString());
+			  		browser = new Browser(message.getOptions().get("browser").toString());
+			  		PageState result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
 			  		
 			  		final long pathCrawlEndTime = System.currentTimeMillis();
 					long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
@@ -146,16 +149,30 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  		new_test.setRunTime(crawl_time_in_ms);
 			  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 			  		
-			  		new_test = test_service.save(new_test, acct_msg.getOptions().get("host").toString());
+			  		new_test = test_service.save(new_test, message.getOptions().get("host").toString());
 			  		tests.add(new_test);
 			  		
-			  		DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+			  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					discovery_record = discovery_repo.save(discovery_record);
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
 			  	}
 			}
-		}
+		})
+		.match(MemberUp.class, mUp -> {
+			log.info("Member is Up: {}", mUp.member());
+		})
+		.match(UnreachableMember.class, mUnreachable -> {
+			log.info("Member detected as unreachable: {}", mUnreachable.member());
+		})
+		.match(MemberRemoved.class, mRemoved -> {
+			log.info("Member is Removed: {}", mRemoved.member());
+		})	
+		.matchAny(o -> {
+			System.err.println("o class :: "+o.getClass().getName());
+			log.info("received unknown message");
+		})
+		.build();
 	}
 	
 	/**

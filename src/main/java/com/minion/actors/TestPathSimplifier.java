@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,10 +26,16 @@ import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+/**
+ * Simplifies tests by chopping up tests based on the landability of a page state as well as checking if other 
+ * tests already contain the action-element pairings to either reduce a test in size or eliminate it as a duplicate.
+ */
 @Component
 @Scope("prototype")
 public class TestPathSimplifier extends AbstractActor{
@@ -87,12 +94,21 @@ public class TestPathSimplifier extends AbstractActor{
 									Test new_test = new Test(path_keys, new_path, page_state, test.getName());
 									new_test = test_service.save(new_test, message.getOptions().get("host").toString());
 									
+									final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+
+									Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(page_state.getUrl()), message.getOptions());
+									work_allocator.tell(url_msg, getSelf() );
+									
+									/*									
 									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), new_test, message.getOptions());
 
+									
 									System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
 									final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 									path_expansion_actor.tell(test_msg, getSelf());
+									*/
 									new_path.clear();
 									path_keys.clear();
 								}
@@ -107,7 +123,19 @@ public class TestPathSimplifier extends AbstractActor{
 						path_expansion_actor.tell(message, getSelf());
 					}
 				})
-				.matchAny(o -> log.info("received unknown message"))
+				.match(MemberUp.class, mUp -> {
+					log.info("Member is Up: {}", mUp.member());
+				})
+				.match(UnreachableMember.class, mUnreachable -> {
+					log.info("Member detected as unreachable: {}", mUnreachable.member());
+				})
+				.match(MemberRemoved.class, mRemoved -> {
+					log.info("Member is Removed: {}", mRemoved.member());
+				})	
+				.matchAny(o -> {
+					System.err.println("o class :: "+o.getClass().getName());
+					log.info("received unknown message");
+				})
 				.build();
 	}
 	

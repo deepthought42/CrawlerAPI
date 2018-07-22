@@ -1,24 +1,22 @@
 package com.minion.actors;
 
 import org.openqa.grid.common.exception.GridException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
-import com.minion.structs.Message;
 import com.qanairy.models.PageState;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -33,15 +31,15 @@ public class LandabilityChecker extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 	Cluster cluster = Cluster.get(getContext().getSystem());
 
-	public static Props props() {
-	  return Props.create(LandabilityChecker.class);
-	}
-	
 	@Autowired
 	PageStateRepository page_state_repo;
 	
 	@Autowired
 	BrowserService browser_service;
+	
+	public static Props props() {
+		return Props.create(LandabilityChecker.class);
+	}
 	
 	//subscribe to cluster changes
 	@Override
@@ -94,6 +92,15 @@ public class LandabilityChecker extends AbstractActor{
 					
 					System.err.println("is page state landable  ?? :: "+landable);
 					//return landable;
+				})
+				.match(MemberUp.class, mUp -> {
+					log.info("Member is Up: {}", mUp.member());
+				})
+				.match(UnreachableMember.class, mUnreachable -> {
+					log.info("Member detected as unreachable: {}", mUnreachable.member());
+				})
+				.match(MemberRemoved.class, mRemoved -> {
+					log.info("Member is Removed: {}", mRemoved.member());
 				})
 				.matchAny(o -> log.info("received unknown message"))
 				.build();

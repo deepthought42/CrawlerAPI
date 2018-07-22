@@ -1,13 +1,14 @@
-package com.qanairy.models;
+package com.qanairy.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public enum TestStatus {
-	PASSING("passing"), FAILING("failing"), UNVERIFIED("unverified");
+public enum FormType {
+	LOGIN("login"), REGISTRATION("registration"), CONTACT_COMPANY("contact_company"), SUBSCRIBE("subscribe"), 
+	LEAD("lead"), SEARCH("search"), PASSWORD_RESET("password_reset"), PAYMENT("payment");
 	
 	private String shortName;
 
-    TestStatus (String shortName) {
+    FormType (String shortName) {
         this.shortName = shortName;
     }
 
@@ -17,11 +18,11 @@ public enum TestStatus {
     }
 
     @JsonCreator
-    public static TestStatus create (String value) {
+    public static FormType create (String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }
-        for(TestStatus v : values()) {
+        for(FormType v : values()) {
             if(value.equals(v.getShortName())) {
                 return v;
             }

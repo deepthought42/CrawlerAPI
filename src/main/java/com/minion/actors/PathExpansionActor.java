@@ -61,7 +61,16 @@ public class PathExpansionActor extends UntypedActor {
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 
 				if((!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
-						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){					
+						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){		
+					
+					//Send test to simplifier
+					//when simplifier returns simplified test
+					// if path is a single page 
+					//		then send path to urlBrowserActor
+					
+					//	expand path
+					// 	send expanded path to work allocator
+					
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);

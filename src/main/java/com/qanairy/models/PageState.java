@@ -53,6 +53,36 @@ public class PageState implements Persistable, PathObject {
 	private Set<PageElement> elements = new HashSet<>();
 	
 	public PageState(){}
+
+	/**
+ 	 * Creates a page instance that is meant to contain information about a state of a webpage
+ 	 * 
+	 * @param html
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre html != null && html.length() > 0
+	 * @pre elements != null
+	 * @pre browser_screenshots != null;
+	 */
+	public PageState(String html, String url , Set<PageElement> elements) throws IOException {
+		assert elements != null;
+		assert html != null;
+		assert html.length() > 0;
+		assert browser_screenshots  != null;
+
+		setType(PageState.class.getSimpleName());
+		setSrc("");
+		setUrl(url.replace("/#",""));
+		setElements(elements);
+		setLandable(false);
+		setImageWeight(0);
+		setType(PageState.class.getSimpleName());
+		setKey(generateKey());
+	}
+
 	
 	/**
  	 * Creates a page instance that is meant to contain information about a state of a webpage
@@ -181,7 +211,7 @@ public class PageState implements Persistable, PathObject {
         
         PageState that = (PageState)o;
         
-        return this.getKey().equals(that.getKey());
+        boolean pages_match = this.getKey().equals(that.getKey());
 		/*try {
 			System.err.println("This browser screenshot :: "+this.getBrowserScreenshots().size());
 			System.err.println("NEXT BROSEWR SCREENSHOT :: "+this.getBrowserScreenshots().iterator().next());
@@ -210,25 +240,26 @@ public class PageState implements Persistable, PathObject {
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        /*if(!pages_match && this.getElements().size() == that.getElements().size()){
+        if(!pages_match && this.getElements().size() == that.getElements().size()){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
 	        	page_elements.put(elem.getXpath(), elem);
 	        }
 	        
 	        for(PageElement elem : this.getElements()){
-	        	if(elem.equals(page_elements.get(elem.getXpath()))){
-	        		page_elements.remove(elem.getXpath());
-	        	}
+        		page_elements.remove(elem.getXpath());
 	        }
 	        
 	        System.err.println("PAGE ELEMENT DIFF :: "+page_elements.size());
 	        if(page_elements.isEmpty()){
 	        	pages_match = true;
 	        }
+	        else{
+	        	pages_match = false;
+	        }
         }
     	return pages_match;
-    	*/
+    	
   	}
 	
 	/**

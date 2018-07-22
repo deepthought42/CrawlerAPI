@@ -57,11 +57,13 @@ public class Browser {
 	private String browser_name; 
     //private static final String DISCOVERY_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
 	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-    //private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
-    //private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
+    
+	// PRODUCTION HUB ADDRESS
+	private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
+	//private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
 
 	//STAGING HUB ADDRESS
-	private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
+	//private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
 	
     public Browser(){}
     

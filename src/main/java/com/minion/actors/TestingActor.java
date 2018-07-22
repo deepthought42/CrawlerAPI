@@ -18,7 +18,7 @@ import com.minion.structs.Message;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.TestStatus;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 
@@ -96,11 +96,7 @@ public class TestingActor extends UntypedActor {
 
 					test.addRecord(record);
 				}
-				
-				//tell memory worker of test record
-				//Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-				//final ActorRef memory_actor = this.getContext().actorOf(Props.create(MemoryRegistryActor.class), "MemoryRegistration"+UUID.randomUUID());
-				//memory_actor.tell(test_msg, getSelf() );
+
 			  	test_service.save(test, acct_msg.getOptions().get("host").toString());
 				browser.close();
 			}

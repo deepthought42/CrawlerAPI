@@ -21,7 +21,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.TestStatus;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
@@ -73,7 +73,6 @@ public class TestCreatorService {
 	  	if(page_record == null){
 		  	page_obj.setLandable(true);
 	  		page_obj = page_state_repo.save(page_obj);
-	  		MessageBroadcaster.broadcastPathObject(page_obj, host);
 	  	}
 	  	else{
 	  		page_obj = page_record;

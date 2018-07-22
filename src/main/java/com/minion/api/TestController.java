@@ -27,6 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
@@ -48,7 +49,6 @@ import com.qanairy.models.Group;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.TestStatus;
 
 /**
  * REST controller that defines endpoints to access tests
@@ -268,13 +268,13 @@ public class TestController {
 	public @ResponseBody void update(HttpServletRequest request,
 									@RequestParam(value="key", required=true) String key, 
 									@RequestParam(value="name", required=true) String name, 
-									@RequestParam(value="firefox", required=false) TestStatus firefox,
-									@RequestParam(value="chrome", required=false) TestStatus chrome){
+									@RequestParam(value="firefox", required=false) String firefox_status,
+									@RequestParam(value="chrome", required=false) String chrome_status){
 		Test test = test_repo.findByKey(key);
 		
 		Map<String, String> browser_statuses = new HashMap<String, String>();
-		browser_statuses.put("firefox", firefox.toString());
-		browser_statuses.put("chrome", chrome.toString());
+		browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toLowerCase()).toString());
+		browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toLowerCase()).toString());
 
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);

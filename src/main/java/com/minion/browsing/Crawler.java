@@ -80,11 +80,33 @@ public class Crawler {
 		PageElement last_element = null;
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
+		PageState current_page_state = null;
 		//skip first node since we should have already loaded it during initialization
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
-				PageState current_page = (PageState)current_obj;
-				if(!browser_service.doScreenshotsMatch(browser, (PageState)current_obj)){
+				PageState expected_page = (PageState)current_obj;
+				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
+				System.err.println("CHECKING IF PAGE STATE HAS RECORD IN DB.....");
+				if(page_record != null){
+					System.err.println("Page record is not null");
+					expected_page = page_record;
+					
+				}
+				System.err.println("Page screenshots :: "+expected_page.getBrowserScreenshots().size());
+				System.err.println("Page screenshot url :: "+expected_page.getBrowserScreenshots().iterator().next().getKey());
+				boolean screenshot_matches = false;
+				int cnt = 0;
+				
+				do{
+					current_page_state = browser_service.buildPage(browser);
+					screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
+					cnt++;
+					try {
+						Thread.sleep(400);
+					} catch (InterruptedException e) {}
+				}while(!screenshot_matches && cnt < 5);
+				
+				if(!screenshot_matches){
 					throw new NullPointerException();
 				}
 			}
@@ -98,17 +120,12 @@ public class Crawler {
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
 					action = action_repo.save(action);
-					try {
-						MessageBroadcaster.broadcastPathObject(action, host_channel);
-					} catch (JsonProcessingException e1) {
-						e1.printStackTrace();
-					}
 				}
 				else{
 					action = action_record;
 				}
 				
-				boolean actionPerformedSuccessfully = performAction(action, last_element, browser.getDriver());
+				performAction(action, last_element, browser.getDriver());
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -116,7 +133,7 @@ public class Crawler {
 				alert.performChoice(browser.getDriver());
 			}
 		}
-		
+
 		return browser_service.buildPage(browser);
 	}
 	
@@ -134,7 +151,7 @@ public class Crawler {
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
 			try {
-				Thread.sleep(10000L);
+				Thread.sleep(25000L);
 			} catch (InterruptedException e) {}
 		}
 		catch(StaleElementReferenceException e){

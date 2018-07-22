@@ -266,16 +266,17 @@ public class DomainController {
     public @ResponseBody Set<PathObject> getAllPathObjects(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
-		Set<PageState> path_obj = domain_repo.getPageStates(host);
+		Set<PageState> page_state = domain_repo.getPageStates(host);
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
-		Set<PathObject> path_objects = merge(path_obj, page_elem, actions);
+		Set<PathObject> path_objects = new HashSet<PathObject>();//merge(page_state, page_elem, actions);
 
-		
+		path_objects.addAll(page_state);
+		path_objects.addAll(page_elem);
+		path_objects.addAll(actions);
 		//path_objects.addAll(action_repo.getActions);
 		return path_objects;
-    	
-    			
+	
 	    //return new HashSet<PageState>();
     }
 	

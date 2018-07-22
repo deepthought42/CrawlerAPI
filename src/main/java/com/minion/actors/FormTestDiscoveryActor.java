@@ -113,7 +113,6 @@ public class FormTestDiscoveryActor extends UntypedActor {
 			  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
 			  				if(elem_record == null){
 			  					elem_record = page_element_repo.save(page_elem);
-			  					MessageBroadcaster.broadcastPathObject(elem_record, acct_msg.getOptions().get("host").toString());
 			  				}
 			  				test_path_objects.add(page_elem);
 			  			}

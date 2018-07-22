@@ -66,6 +66,37 @@ public class PageElement implements Persistable, PathObject {
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
 	 */
+	public PageElement(String key, String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map){
+		assert attributes != null;
+		assert css_map != null;
+		assert xpath != null;
+		assert name != null;
+		
+		setKey(key);
+		setType("PageElement");
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setScreenshot("");
+		setText(text);
+		setCssValues(css_map);
+	}
+	
+	/**
+	 * 
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * 
+	 * @pre attributes != null
+	 * @pre css_map != null
+	 * @pre xpath != null
+	 * @pre name != null
+	 * @pre screenshot_url != null
+	 * @pre !screenshot_url.isEmpty()
+	 */
 	public PageElement(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url){
 		assert attributes != null;
 		assert css_map != null;

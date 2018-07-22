@@ -35,6 +35,9 @@ public class WorkAllocationActor extends AbstractActor  {
 	private static Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
 	Cluster cluster = Cluster.get(getContext().getSystem());
 
+	@Autowired
+	ActorSystem actor_system;
+	
 	  //subscribe to cluster changes
 	  @Override
 	  public void preStart() {
@@ -47,10 +50,6 @@ public class WorkAllocationActor extends AbstractActor  {
 	  public void postStop() {
 	    cluster.unsubscribe(getSelf());
 	  }
-	  
-	@Autowired
-	ActorSystem actor_system;
-	
 	
 	@Override
 	public Receive createReceive() {

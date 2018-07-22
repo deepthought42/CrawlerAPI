@@ -17,9 +17,10 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.TestStatus;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
 
@@ -95,6 +96,10 @@ public class TestService {
 			else {
 				System.err.println("Broadcasting Test...");
 				MessageBroadcaster.broadcastTest(test, host_url);
+			}
+			
+			for(PathObject path_obj : test.getPathObjects()){
+				MessageBroadcaster.broadcastPathObject(path_obj, host_url);
 			}
 		}
 		else{

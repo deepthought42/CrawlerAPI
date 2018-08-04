@@ -1,44 +1,26 @@
 package com.minion.actors;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.minion.browsing.Browser;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
-import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 
@@ -131,19 +113,19 @@ public class FormDiscoveryActor extends AbstractActor{
 					        String form_json = mapper.writeValueAsString(form);
 					        
 					        
+					        /*
 					        CloseableHttpClient client = HttpClients.createDefault();
-					        HttpPost httpPost = new HttpPost("http://www.example.com");
+					        HttpPost httpPost = new HttpPost("http://rl.qanairy.com");
 					     
-					        String json = "{"+id+":1,"+name+":"+John+"}";
-					        StringEntity entity = new StringEntity(json);
+					        //String json = "{"+id+":1,"+name+":"+John+"}";
+					        StringEntity entity = new StringEntity(form_json);
 					        httpPost.setEntity(entity);
 					        httpPost.setHeader("Accept", "application/json");
 					        httpPost.setHeader("Content-type", "application/json");
 					     
 					        CloseableHttpResponse response = client.execute(httpPost);
-					        assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
 					        client.close();
-					        
+					        */
 					        
 					        
 						  	byte[] out = form_json.getBytes(StandardCharsets.UTF_8);

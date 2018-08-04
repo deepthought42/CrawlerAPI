@@ -132,7 +132,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	int length = out.length;
 
 						  	System.err.println("Requesting prediction for form from RL system");
-						  	URL url = new URL("https://rl.qanairy.com/predict");
+						  	URL url = new URL("http://rl.qanairy.com/predict");
 						  	URLConnection con = url.openConnection();
 						  	HttpURLConnection http = (HttpURLConnection)con;
 						  	http.setFixedLengthStreamingMode(length);

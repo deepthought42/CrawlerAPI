@@ -81,10 +81,6 @@ public class AccountController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create( @RequestParam(value="user_email", required=true) String username) 
     												throws Exception{        
-
-    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	//Auth0Client auth = new Auth0Client();
-    	//String username = auth.getUsername(auth_access_token);
     	Account acct = account_repo.findByUsername(username);
     	
     	//create account

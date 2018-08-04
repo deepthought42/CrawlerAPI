@@ -240,7 +240,7 @@ public class PageState implements Persistable, PathObject {
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         
-        if(!pages_match && this.getElements().size() == that.getElements().size()){
+        if(!pages_match ){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
 	        	page_elements.put(elem.getXpath(), elem);
@@ -249,13 +249,23 @@ public class PageState implements Persistable, PathObject {
 	        for(PageElement elem : this.getElements()){
         		page_elements.remove(elem.getXpath());
 	        }
-	        
+
+	        System.err.println("#####################################################################################");
 	        System.err.println("PAGE ELEMENT DIFF :: "+page_elements.size());
 	        if(page_elements.isEmpty()){
 	        	pages_match = true;
 	        }
 	        else{
-	        	pages_match = false;
+	        	System.err.println("TOTAL ELEMENTS FOR Both :: " + (this.getElements().size()+that.getElements().size())/2);
+	        	System.err.println("difference percentage :: "+(page_elements.size()/((this.getElements().size()+that.getElements().size())/2)));
+	        	System.err.println("###################################################################################");
+	        	
+	        	if( (page_elements.size()/((this.getElements().size()+that.getElements().size())/2)) > 0.7){
+		        	pages_match = false;	
+	        	}
+	        	else{
+	        		pages_match = true;
+	        	}
 	        }
         }
     	return pages_match;

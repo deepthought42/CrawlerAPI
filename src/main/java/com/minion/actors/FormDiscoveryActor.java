@@ -1,11 +1,35 @@
 package com.minion.actors;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.minion.browsing.Browser;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
@@ -82,7 +106,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  	
 					  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
 					  	for(Form form : forms){
-	
+					  		String rl_response = "";
 						  	for(ComplexField complex_field: form.getFormFields()){
 								//for each field in the complex field generate a set of tests for all known rules
 								System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements().size());
@@ -100,7 +124,58 @@ public class FormDiscoveryActor extends AbstractActor{
 						  		browser.close();
 						  	}
 						  	catch(Exception e){}
+						  	
+						  	ObjectMapper mapper = new ObjectMapper();
 
+					        //Object to JSON in String
+					        String form_json = mapper.writeValueAsString(form);
+					        
+					        
+					        CloseableHttpClient client = HttpClients.createDefault();
+					        HttpPost httpPost = new HttpPost("http://www.example.com");
+					     
+					        String json = "{"+id+":1,"+name+":"+John+"}";
+					        StringEntity entity = new StringEntity(json);
+					        httpPost.setEntity(entity);
+					        httpPost.setHeader("Accept", "application/json");
+					        httpPost.setHeader("Content-type", "application/json");
+					     
+					        CloseableHttpResponse response = client.execute(httpPost);
+					        assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
+					        client.close();
+					        
+					        
+					        
+						  	byte[] out = form_json.getBytes(StandardCharsets.UTF_8);
+						  	int length = out.length;
+
+						  	System.err.println("Requesting prediction for form from RL system");
+						  	URL url = new URL("https://rl.qanairy.com/predict");
+						  	URLConnection con = url.openConnection();
+						  	HttpURLConnection http = (HttpURLConnection)con;
+						  	http.setFixedLengthStreamingMode(length);
+						  	http.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+						  	http.connect();
+						  	try(OutputStream os = http.getOutputStream()) {
+						  	    os.write(out);
+						  	}
+
+						  	int status = http.getResponseCode();
+						  	System.err.println("Recieved status code from RL :: "+status);
+						  	
+					        switch (status) {
+					            case 200:
+					            case 201:
+					                BufferedReader br = new BufferedReader(new InputStreamReader(http.getInputStream()));
+					                StringBuilder sb = new StringBuilder();
+					                String line;
+					                while ((line = br.readLine()) != null) {
+					                    sb.append(line+"\n");
+					                }
+					                br.close();
+					                rl_response = sb.toString();
+					                System.err.println("Response received from RL system :: "+rl_response);
+					        }
 					  	}
 					}
 				})

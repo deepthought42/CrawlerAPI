@@ -51,8 +51,6 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
-			
-					System.err.println("Recieved data of type :: "+message.getData().getClass().getSimpleName());
 					if(message.getData() instanceof URL){
 						boolean test_generated_successfully = false;
 						do{
@@ -103,7 +101,6 @@ public class UrlBrowserActor extends AbstractActor {
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

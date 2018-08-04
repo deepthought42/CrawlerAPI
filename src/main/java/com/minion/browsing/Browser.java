@@ -404,7 +404,6 @@ public class Browser {
 
 		JavascriptExecutor executor = (JavascriptExecutor) driver;
 		Long viewport_offset = (Long) executor.executeScript("return window.pageYOffset;");
-		System.err.println("Viewport y offset :: "+viewport_offset);
 		int y_coord = point.getY()-viewport_offset.intValue();
 		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
 	}

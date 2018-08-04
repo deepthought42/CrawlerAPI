@@ -5,6 +5,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import com.minion.structs.Message;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
@@ -52,6 +54,9 @@ public class TestPathSimplifier extends AbstractActor{
 	private PageStateRepository page_state_repo;
 	
 	@Autowired
+	private DomainRepository domain_repo;
+	
+	@Autowired
 	private ActorSystem actor_system;
 	
 	public static Props props() {
@@ -82,7 +87,18 @@ public class TestPathSimplifier extends AbstractActor{
 						List<PathObject> new_path = new ArrayList<PathObject>();
 						List<String> path_keys = new ArrayList<String>();
 						
-						for(PathObject path_obj : test.getPathObjects()){
+						List<PathObject> path_objects = new ArrayList<PathObject>();
+						for(String key : test.getPathKeys()){
+							for(PathObject obj : test.getPathObjects()){
+								if(obj.getKey().equals(key)){
+									path_objects.add(obj);
+									break;
+								}
+							}
+						}
+						
+						
+						for(PathObject path_obj : path_objects){
 							if(path_obj instanceof PageState){
 								PageState page_state = (PageState)path_obj;
 								//clear known path if page is landable
@@ -91,9 +107,6 @@ public class TestPathSimplifier extends AbstractActor{
 								//return landable;
 								
 								if(page_state.isLandable()){
-									Test new_test = new Test(path_keys, new_path, page_state, test.getName());
-									new_test = test_service.save(new_test, message.getOptions().get("host").toString());
-									
 									final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
@@ -108,9 +121,33 @@ public class TestPathSimplifier extends AbstractActor{
 							}
 						}
 						
+						//check if test has any element action pairs that have been seen in another test already
+						//if there is a duplication, then check which test is longer and choose for the shortest test. 
+						//	Then eliminate the element action pair along with resulting page state from all other tests 
+						/*
+						Set<Test> tests = domain_repo.getTests(message.getOptions().get("host").toString());
+						 
+						for(Test existing_test : tests){
+							for(int existing_test_path_idx = 0; existing_test_path_idx<existing_test.getPathKeys().size(); existing_test_path_idx++){
+								int seq_cnt = 0;
+								for(int test_path_idx=0; test_path_idx<test.getPathKeys().size(); test_path_idx++){
+									if(existing_test.getPathKeys().get(existing_test_path_idx).equals(test.getPathKeys().get(test_path_idx))){
+										existing_test_path_idx++;
+										seq_cnt++;
+									}
+									else {
+									}
+								}
+							}
+						}
+						*/
 						test.setPathKeys(path_keys);
-						test.setPathObjects(new_path);
+						test.setPathObjects(path_objects);
+						test.setKey(test.generateKey());
+						
+						//Test new_test = new Test(path_keys, new_path, test.getResult(), test.getName());
 						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
+						
 						System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
 						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
@@ -127,7 +164,6 @@ public class TestPathSimplifier extends AbstractActor{
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

@@ -169,7 +169,6 @@ public class BrowserService {
 		PageState page_state = null;
 		if(page_record != null){
 			page_state = page_record;
-			page_state.getBrowserScreenshots().add(screenshot_set);
 		}
 		else{
 			page_state = new PageState("",
@@ -180,17 +179,12 @@ public class BrowserService {
 			//page_state.setLandable(checkIfLandable(browser, page_state));
 			System.err.println("Page state is new. Checking landability");
 			//have page checked for landability
-			System.err.println("PAGE EQUALITY BROWSER SCREENSHOTS :: "+page_state.getBrowserScreenshots().size());
 			BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
 
 			final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
 			landibility_checker.tell(bps, ActorRef.noSender() );
-			
-			System.err.println("Broadcasting page state as path object");
 		}
-		System.err.println("PAGE LOADED :: "+page_record);
-
 		return page_state;
 	}
 
@@ -235,23 +229,16 @@ public class BrowserService {
 						continue;
 					}
 					
-					PageElement tag_record = page_element_repo.findByKey(checksum.toLowerCase());
+					Set<Attribute> attributes = extractAttributes(elem, driver);
+					Map<String, String> css_props = Browser.loadCssProperties(elem);
+					String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
+					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 
-					if(tag_record == null){
-						Set<Attribute> attributes = extractAttributes(elem, driver);
-	
-						String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
-						Map<String, String> css_props = Browser.loadCssProperties(elem);
-						
-						String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-						PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
+					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
+					PageElement tag_record = page_element_repo.findByKey(tag.getKey());
+
+					if(tag_record == null){					
 						tag_record = page_element_repo.save(tag);
-						
-						//final ActorRef screenshot_uploader = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						//		  .props("awsS3ScreenshotUploader"), "Aws_s3_screenshot_uploader"+UUID.randomUUID());
-					
-						//ElementScreenshotUpload screenshot_upload = new ElementScreenshotUpload(img, (new URL(driver.getCurrentUrl())), checksum.toLowerCase(), "element_screenshot");
-						//screenshot_uploader.tell(screenshot_upload, ActorRef.noSender() );
 					}
 					
 					if(!elementList.contains(tag_record)){
@@ -554,7 +541,7 @@ public class BrowserService {
 				}
 				
 				if(alreadySeen){
-					System.err.println("page element already seen before extracting form elements");
+					//System.err.println("page element already seen before extracting form elements");
 					continue;
 				}						
 				
@@ -728,16 +715,12 @@ public class BrowserService {
 		ScreenshotSet page_screenshot = null;
 		System.err.println("page state screenshots :: "+page_state.getBrowserScreenshots().size());
 		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
-			System.err.println("Screenshot browser :: "+screenshot.getBrowser());
-			System.err.println("current browser name :: "+browser.getBrowserName());
 			if(screenshot.getBrowser().equals(browser.getBrowserName())){
 				System.err.println("Browser name matches screenshot browser!");
 				page_screenshot = screenshot;
 			}
 		}
-		System.err.println("#################################################################");
-		System.err.println("Page screenshot for matching :: "+page_screenshot);
-		System.err.println("Page screenshot Viewport url for matching :: "+page_screenshot.getViewportScreenshot());
+		
 		boolean pages_match = false;
 		try {
 			BufferedImage img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));

@@ -93,12 +93,12 @@ public class AccountController {
         }
           
         //STAGING
-     	//Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
-    	//Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
+     	Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
+    	Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
     	
     	//PRODUCTION
-    	Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
-    	Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
+    	//Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
+    	//Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);

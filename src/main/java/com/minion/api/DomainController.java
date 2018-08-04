@@ -252,7 +252,6 @@ public class DomainController {
     	//	throw new MissingSubscriptionException();
     	//}
 
-		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
 		Set<PageState> page_states = domain_repo.getPageStates(host);
 		System.err.println("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
@@ -312,7 +311,6 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-    	System.err.println("$$$$$$ GETTING PAGE ELEMENTS FOR HOST :: "+host);
 		Set<PageElement> page_elements = domain_repo.getPageElements(host);
 		System.err.println("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;

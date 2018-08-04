@@ -88,12 +88,9 @@ public class Crawler {
 				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
 				System.err.println("CHECKING IF PAGE STATE HAS RECORD IN DB.....");
 				if(page_record != null){
-					System.err.println("Page record is not null");
 					expected_page = page_record;
 					
 				}
-				System.err.println("Page screenshots :: "+expected_page.getBrowserScreenshots().size());
-				System.err.println("Page screenshot url :: "+expected_page.getBrowserScreenshots().iterator().next().getKey());
 				boolean screenshot_matches = false;
 				int cnt = 0;
 				

@@ -40,7 +40,7 @@ public class TestCreatorService {
 	PageStateRepository page_state_repo;
 	
 	@Autowired
-	private TestRepository test_repo;
+	private TestService test_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -99,7 +99,6 @@ public class TestCreatorService {
 		
 		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
-		System.err.println("Broadcasting discovery status");
 		System.err.println("result page elements count :: "+page_obj.getElements().size());
 		return createTest(path_keys, path_objects, page_obj, 1L, domain ,discovery_record, browser_name);
 	}
@@ -136,7 +135,7 @@ public class TestCreatorService {
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_repo.save(test);
+					test_service.save(test, test.firstPage().getUrl());
 					break;
 				}
 			}

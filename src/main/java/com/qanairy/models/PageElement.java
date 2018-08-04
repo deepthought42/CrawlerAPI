@@ -271,7 +271,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		try {
+		/*try {
 			return PageState.getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getScreenshot());
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -282,7 +282,8 @@ public class PageElement implements Persistable, PathObject {
 		}
 
 		return "";
-		//return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath()+":"+getText()+":"+getType());   
+		*/
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath()+":"+getText());   
 	}
 	
 

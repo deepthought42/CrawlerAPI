@@ -68,15 +68,9 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 					HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
 					screenshots.add(screenshot_set);
 					*/
-					System.err.println("looking up page element with key :: "+screenshot_upload.page_elem_key);
 					PageElement page_elem_record = page_element_repo.findByKey(screenshot_upload.page_elem_key);
-					
-					System.err.println("Page element loaded : "+page_elem_record);
 					page_elem_record.setScreenshot(viewport_screenshot_url);
-					
-					System.err.println("Screenshot url has been set ");
 					page_elem_record = page_element_repo.save(page_elem_record);
-					System.err.println("page element saved!");
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

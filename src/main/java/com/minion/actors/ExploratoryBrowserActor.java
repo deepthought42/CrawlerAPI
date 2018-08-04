@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.minion.actors.AwsS3ScreenshotUploader.ElementScreenshotUpload;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -50,7 +49,6 @@ import com.qanairy.services.TestService;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.AbstractActor.Receive;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -166,11 +164,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								}while(result_page == null && tries < 5);
 							
 								//have page checked for landability
-								System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page);
-		
-								System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page.getBrowserScreenshots());
-								System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page.getBrowserScreenshots().size());
-		
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 								
 								final long pathCrawlEndTime = System.currentTimeMillis();
@@ -182,7 +175,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-							  		System.err.println("Starting building parent path");
 							  		do{
 							  			try{
 							  				ExploratoryPath parent_path = buildParentPath(path, browser);
@@ -243,7 +235,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();
@@ -293,7 +284,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_repo.save(test);
+					test_service.save(test, test.firstPage().getUrl()); 
 					break;
 				}
 			}

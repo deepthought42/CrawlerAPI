@@ -1,6 +1,5 @@
 package com.qanairy.models;
 
-import java.util.List;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -15,7 +14,8 @@ public class FormRecord {
 	@GeneratedValue
     @Id
 	private Long id;
-	
+
+	private String key;
 	private String src;
 	private Set<PageElement> elements;
 	private String screenshot_url;
@@ -37,6 +37,11 @@ public class FormRecord {
 		this.setScreenshotUrl(screenshot_url);
 		this.setPageState(page_state);
 		this.setFormType(form_type);
+		this.setKey(generateKey(src));
+	}
+
+	private String generateKey(String src) {
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(src); 
 	}
 
 	public String getSrc() {
@@ -77,5 +82,13 @@ public class FormRecord {
 
 	public void setFormType(FormType form_type) {
 		this.form_type = form_type;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 }

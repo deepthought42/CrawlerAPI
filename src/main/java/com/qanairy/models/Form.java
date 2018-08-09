@@ -1,12 +1,10 @@
-package com.minion.browsing.form;
+package com.qanairy.models;
 
 import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import com.minion.browsing.element.ComplexField;
-import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElement;
 import com.qanairy.models.enums.FormType;
 
 /**

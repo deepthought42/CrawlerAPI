@@ -35,8 +35,9 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import com.minion.browsing.form.Form;
+
 import com.qanairy.models.Attribute;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import ru.yandex.qatools.ashot.AShot;
@@ -59,11 +60,11 @@ public class Browser {
 	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
     
 	// PRODUCTION HUB ADDRESS
-	private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
+	//private static final String HUB_IP_ADDRESS= "178.128.152.151:4444";
 	//private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
 
 	//STAGING HUB ADDRESS
-	//private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
+	private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
 	
     public Browser(){}
     
@@ -271,8 +272,9 @@ public class Browser {
 		//options.setHeadless(true);
 		DesiredCapabilities cap = DesiredCapabilities.chrome();
 		cap.setCapability(ChromeOptions.CAPABILITY, options);
-
+		
 		cap.setJavascriptEnabled(true);
+		
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
 
 		//cap.setCapability("screenshot", true);

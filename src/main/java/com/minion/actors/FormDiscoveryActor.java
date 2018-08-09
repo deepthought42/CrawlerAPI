@@ -9,17 +9,21 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
-import com.minion.browsing.form.Form;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
+import com.qanairy.models.Form;
+import com.qanairy.models.FormRecord;
 import com.qanairy.models.PageState;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -132,7 +136,8 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	int length = out.length;
 
 						  	System.err.println("Requesting prediction for form from RL system");
-						  	URL url = new URL("http://rl.qanairy.com/predict");
+						  	//STAGING URL
+						  	URL url = new URL("http://198.211.117.122/predict");
 						  	URLConnection con = url.openConnection();
 						  	HttpURLConnection http = (HttpURLConnection)con;
 						  	http.setFixedLengthStreamingMode(length);
@@ -158,6 +163,15 @@ public class FormDiscoveryActor extends AbstractActor{
 					                rl_response = sb.toString();
 					                System.err.println("Response received from RL system :: "+rl_response);
 					        }
+					        String src = "";
+					        WebElement element = browser.getDriver().findElement(By.xpath(form.getFormTag().getXpath()));
+					        src = element.getAttribute("innerHTML");
+
+					        FormRecord form_record = new FormRecord(src, form,"screenshot_url", page_state);
+					        form_record.setForm(form);
+					        
+						  	MessageBroadcaster.broadcastDiscoveredForm(form_record, (new URL(page_state.getUrl()).getHost()));
+
 					  	}
 					}
 				})

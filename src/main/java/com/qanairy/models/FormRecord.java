@@ -17,12 +17,23 @@ public class FormRecord {
 
 	private String key;
 	private String src;
+	@Deprecated
 	private Set<PageElement> elements;
 	private String screenshot_url;
 	private PageState page_state;
+	
+	
 	private FormType form_type;
+	private Form form;
 	
 	public FormRecord(){}
+	
+	public FormRecord(String src, Form form, String screenshot_url, PageState page_state){
+		this.setSrc(src);
+		this.setForm(form);
+		this.setScreenshotUrl(screenshot_url);
+		this.setPageState(page_state);
+	}
 	
 	public FormRecord(String src, Set<PageElement> elements, String screenshot_url, PageState page_state){
 		this.setSrc(src);
@@ -52,10 +63,12 @@ public class FormRecord {
 		this.src = src;
 	}
 
+	@Deprecated
 	public Set<PageElement> getElements() {
 		return elements;
 	}
 
+	@Deprecated
 	public void setElements(Set<PageElement> elements) {
 		this.elements = elements;
 	}
@@ -90,5 +103,13 @@ public class FormRecord {
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public Form getForm() {
+		return form;
+	}
+
+	public void setForm(Form form) {
+		this.form = form;
 	}
 }

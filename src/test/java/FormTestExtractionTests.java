@@ -8,7 +8,7 @@ import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.testng.annotations.Test;
 import com.minion.browsing.Browser;
-import com.minion.browsing.form.Form;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.NumericRestrictionRule;

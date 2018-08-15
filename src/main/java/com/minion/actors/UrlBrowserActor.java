@@ -22,6 +22,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
 import com.qanairy.models.Test;
+import com.qanairy.models.PageState;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 
@@ -65,20 +66,31 @@ public class UrlBrowserActor extends AbstractActor {
 								
 								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 		
+								/**  path expansion temorarily disabled
+								 */
+								/*
 								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 								path_expansion_actor.tell(test_msg, getSelf() );
+								*/
 								
-								final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								
+								
+								
+								/*final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
 								form_test_discoverer.tell(test_msg, getSelf() );
-		
-								/*Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
+								*/
+								System.err.println("test result :: "+test.getResult());
+								System.err.println("message account key :: "+message.getAccountKey());
+								System.err.println("message options "+ message.getOptions());
+	
+								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 
 								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								form_test_discoverer.tell(page_state_msg, getSelf() );
-		*/
+								form_discoverer.tell(page_state_msg, getSelf() );
+		
 								
 								break;
 							}

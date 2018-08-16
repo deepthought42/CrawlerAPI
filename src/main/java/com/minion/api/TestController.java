@@ -289,9 +289,12 @@ public class TestController {
 		Test test = test_repo.findByKey(key);
 		
 		Map<String, String> browser_statuses = new HashMap<String, String>();
-		browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toLowerCase()).toString());
-		browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toLowerCase()).toString());
-
+		if(firefox_status!=null && !firefox_status.isEmpty()){
+			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toLowerCase()).toString());
+		}
+		if(chrome_status!=null && !chrome_status.isEmpty()){
+			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toLowerCase()).toString());
+		}
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);
 		test_repo.save(test);

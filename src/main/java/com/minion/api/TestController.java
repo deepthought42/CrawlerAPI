@@ -264,6 +264,22 @@ public class TestController {
 	 * @return
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(path="/archive", method=RequestMethod.PUT)
+	public @ResponseBody void archiveTest(HttpServletRequest request,
+									@RequestParam(value="key", required=true) String key){
+		Test test = test_repo.findByKey(key);
+
+		test.setArchived(true);
+		test_repo.save(test);
+    }
+    
+	/**
+	 * Updates a test
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(method=RequestMethod.PUT)
 	public @ResponseBody void update(HttpServletRequest request,
 									@RequestParam(value="key", required=true) String key, 

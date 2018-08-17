@@ -290,10 +290,10 @@ public class TestController {
 		
 		Map<String, String> browser_statuses = new HashMap<String, String>();
 		if(firefox_status!=null && !firefox_status.isEmpty()){
-			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toLowerCase()).toString());
+			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
 		}
 		if(chrome_status!=null && !chrome_status.isEmpty()){
-			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toLowerCase()).toString());
+			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
 		}
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);

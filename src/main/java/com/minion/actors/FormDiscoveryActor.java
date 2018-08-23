@@ -18,13 +18,14 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import com.qanairy.models.Form;
 import com.qanairy.models.FormRecord;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.FormStatus;
+import com.qanairy.models.enums.FormType;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 
@@ -93,16 +94,14 @@ public class FormDiscoveryActor extends AbstractActor{
 					  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
 					  	for(Form form : forms){
 					  		String rl_response = "";
-						  	for(ComplexField complex_field: form.getFormFields()){
+						  	for(FormField field: form.getFormFields()){
 								//for each field in the complex field generate a set of tests for all known rules
-								System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements().size());
-								for(FormField field : complex_field.getElements()){
-									List<Rule> rules = ElementRuleExtractor.extractInputRules(field.getInputElement());
-									
-									log.info("Total RULES   :::   "+rules.size());
-									for(Rule rule : rules){
-										field.getInputElement().addRule(rule);
-									}
+								List<Rule> rules = ElementRuleExtractor.extractInputRules(field.getInputElement());
+								
+								log.info("Total RULES   :::   "+rules.size());
+								for(Rule rule : rules){
+									field.getInputElement().addRule(rule);
+								
 								}
 							}
 						  	
@@ -167,11 +166,14 @@ public class FormDiscoveryActor extends AbstractActor{
 					        WebElement element = browser.getDriver().findElement(By.xpath(form.getFormTag().getXpath()));
 					        src = element.getAttribute("innerHTML");
 
-					        FormRecord form_record = new FormRecord(src, form,"screenshot_url", page_state);
+					        FormType[] form_types = new FormType[1];
+							form_types[0] = FormType.LOGIN;
+							double[] weights = new double[1];
+							weights[0] = 0.3;
+					        FormRecord form_record = new FormRecord(src, form, "screenshot_url", page_state, weights, form_types, FormStatus.DISCOVERED);
 					        form_record.setForm(form);
 					        
 						  	MessageBroadcaster.broadcastDiscoveredForm(form_record, (new URL(page_state.getUrl()).getHost()));
-
 					  	}
 					}
 				})

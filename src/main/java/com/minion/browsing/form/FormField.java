@@ -3,6 +3,10 @@ package com.minion.browsing.form;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.qanairy.models.PageElement;
 import com.qanairy.models.rules.Rule;
 
@@ -11,10 +15,16 @@ import com.qanairy.models.rules.Rule;
  * Also contains list of rules which can be enforced on the object
  * 
  */
+@NodeEntity
 public class FormField {
+	
+	@GeneratedValue
+    @Id
+	private Long id;
+	
+	private String key;
 	private List<Rule> rules;
 	private PageElement form_field;
-	private PageElement field_label;
 	
 	/**
 	 * Constructs new FormField
@@ -24,8 +34,13 @@ public class FormField {
 	public FormField(PageElement form_field){
 		this.form_field = form_field;
 		this.rules = new ArrayList<Rule>();
+		setKey(generateKey());
 	}
 	
+	private String generateKey() {
+		return form_field.getKey()+"::"+rules.hashCode();
+	}
+
 	/**
 	 * Constructs new FormField
 	 * 
@@ -85,11 +100,12 @@ public class FormField {
 	public void performAction(String action){
 		
 	}
-	public PageElement getFieldLabel() {
-		return field_label;
+
+	public String getKey() {
+		return key;
 	}
-	
-	public void setFieldLabel(PageElement field_label) {
-		this.field_label = field_label;
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 }

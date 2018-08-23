@@ -1,11 +1,12 @@
 package com.qanairy.models;
 
-import java.util.Set;
+import java.util.Date;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
+import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 
 @NodeEntity
@@ -17,37 +18,43 @@ public class FormRecord {
 
 	private String key;
 	private String src;
-	@Deprecated
-	private Set<PageElement> elements;
 	private String screenshot_url;
+	private String name;
+	private double[] predictions;
+	private FormType[] type_options;
+	private Date date_discovered;
+	private FormStatus status;
 	private PageState page_state;
-	
-	
 	private FormType form_type;
 	private Form form;
 	
 	public FormRecord(){}
 	
-	public FormRecord(String src, Form form, String screenshot_url, PageState page_state){
+	public FormRecord(String src, Form form, String screenshot_url, PageState page_state, 
+					  double[] predictions, FormType[] type_options, FormStatus status){
 		this.setSrc(src);
 		this.setForm(form);
 		this.setScreenshotUrl(screenshot_url);
 		this.setPageState(page_state);
+		this.setPredictions(predictions);
+		this.setTypeOptions(type_options);
+		this.setStatus(status);
+		this.setKey(generateKey(src));
 	}
-	
-	public FormRecord(String src, Set<PageElement> elements, String screenshot_url, PageState page_state){
+
+	public FormRecord(String src, Form form, String screenshot_url, PageState page_state, 
+					  FormType form_type, String name, Date date_discovered, FormStatus status, 
+					  double[] predictions, FormType[] type_options){
 		this.setSrc(src);
-		this.setElements(elements);
-		this.setScreenshotUrl(screenshot_url);
-		this.setPageState(page_state);
-	}
-	
-	public FormRecord(String src, Set<PageElement> elements, String screenshot_url, PageState page_state, FormType form_type){
-		this.setSrc(src);
-		this.setElements(elements);
+		this.setForm(form);
 		this.setScreenshotUrl(screenshot_url);
 		this.setPageState(page_state);
 		this.setFormType(form_type);
+		this.setName(name);
+		this.setDateDiscovered(date_discovered);
+		this.setStatus(status);
+		this.setPredictions(predictions);
+		this.setTypeOptions(type_options);
 		this.setKey(generateKey(src));
 	}
 
@@ -61,16 +68,6 @@ public class FormRecord {
 
 	public void setSrc(String src) {
 		this.src = src;
-	}
-
-	@Deprecated
-	public Set<PageElement> getElements() {
-		return elements;
-	}
-
-	@Deprecated
-	public void setElements(Set<PageElement> elements) {
-		this.elements = elements;
 	}
 
 	public String getScreenshotUrl() {
@@ -111,5 +108,45 @@ public class FormRecord {
 
 	public void setForm(Form form) {
 		this.form = form;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Date getDateDiscovered() {
+		return date_discovered;
+	}
+
+	public void setDateDiscovered(Date date_discovered) {
+		this.date_discovered = date_discovered;
+	}
+
+	public FormStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(FormStatus status) {
+		this.status = status;
+	}
+
+	public double[] getPrediction() {
+		return predictions;
+	}
+
+	public void setPredictions(double[] predictions) {
+		this.predictions = predictions;
+	}
+
+	public FormType[] getTypeOptions() {
+		return type_options;
+	}
+
+	public void setTypeOptions(FormType[] type_options) {
+		this.type_options = type_options;
 	}
 }

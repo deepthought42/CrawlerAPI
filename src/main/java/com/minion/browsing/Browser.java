@@ -64,7 +64,7 @@ public class Browser {
 	//private static final String HUB_IP_ADDRESS= "10.136.10.117:4444";
 
 	//STAGING HUB ADDRESS
-	private static final String HUB_IP_ADDRESS="159.65.181.180:4444";
+	private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
 	
     public Browser(){}
     

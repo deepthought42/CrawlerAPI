@@ -2,13 +2,12 @@ package com.qanairy.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public enum FormType {
-	LOGIN("login"), REGISTRATION("registration"), CONTACT_COMPANY("contact_company"), SUBSCRIBE("subscribe"), 
-	LEAD("lead"), SEARCH("search"), PASSWORD_RESET("password_reset"), PAYMENT("payment"), UNKNOWN("unknown");
+public enum FormStatus {
+	DISCOVERED("discovered"), ACTION_REQUIRED("action_required"), CLASSIFIED("classified");
 	
 	private String shortName;
 
-    FormType (String shortName) {
+	FormStatus (String shortName) {
         this.shortName = shortName;
     }
 
@@ -18,11 +17,11 @@ public enum FormType {
     }
 
     @JsonCreator
-    public static FormType create (String value) {
+    public static FormStatus create (String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }
-        for(FormType v : values()) {
+        for(FormStatus v : values()) {
             if(value.equals(v.getShortName())) {
                 return v;
             }

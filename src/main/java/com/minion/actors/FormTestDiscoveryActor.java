@@ -28,7 +28,6 @@ import com.qanairy.services.TestService;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
@@ -562,38 +561,35 @@ public class FormTestDiscoveryActor extends AbstractActor {
 	public static List<List<PathObject>> generateAllFormTestPaths(Test test, Form form){
 		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
 		System.err.println("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
-		for(ComplexField complex_field: form.getFormFields()){
-			//for each field in the complex field generate a set of tests for all known rules
-			System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements().size());
-			for(FormField field : complex_field.getElements()){
-				PageElement input_elem = field.getInputElement();
-				
-				boolean field_exists = false;
-				
-				//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
-				for(PathObject path_obj : test.getPathObjects()){
-					if(path_obj instanceof PageElement){
-						PageElement page_elem = (PageElement)path_obj;
-						if(page_elem.equals(input_elem)){
-							field_exists = true;
-							break;
-						}
+		//for each field in the complex field generate a set of tests for all known rules
+		for(FormField field : form.getFormFields()){
+			PageElement input_elem = field.getInputElement();
+			
+			boolean field_exists = false;
+			
+			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
+			for(PathObject path_obj : test.getPathObjects()){
+				if(path_obj instanceof PageElement){
+					PageElement page_elem = (PageElement)path_obj;
+					if(page_elem.equals(input_elem)){
+						field_exists = true;
+						break;
 					}
 				}
-				
-				if(field_exists){
-					System.err.println("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
-					continue;
-				}
-				
-				List<Rule> rules = ElementRuleExtractor.extractInputRules(input_elem);
-				log.info("Total RULES   :::   "+rules.size());
-				for(Rule rule : rules){
-					List<List<PathObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
-					form_tests.addAll(path_list);
-				}
-				System.err.println("FORM TESTS    :::   "+form_tests.size());
 			}
+			
+			if(field_exists){
+				System.err.println("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
+				continue;
+			}
+			
+			List<Rule> rules = ElementRuleExtractor.extractInputRules(input_elem);
+			log.info("Total RULES   :::   "+rules.size());
+			for(Rule rule : rules){
+				List<List<PathObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
+				form_tests.addAll(path_list);
+			}
+			System.err.println("FORM TESTS    :::   "+form_tests.size());
 		}
 		return form_tests;
 	}

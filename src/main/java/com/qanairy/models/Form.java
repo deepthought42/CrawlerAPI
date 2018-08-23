@@ -3,28 +3,44 @@ package com.qanairy.models;
 import java.util.List;
 import java.util.Set;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
-import com.minion.browsing.element.ComplexField;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.minion.browsing.form.FormField;
 import com.qanairy.models.enums.FormType;
 
 /**
  * Represents a form tag and the encompassed inputs in a web browser
  */
+@NodeEntity
 public class Form {
+	
+	@GeneratedValue
+    @Id
+	private Long id;
+	
 	private static Logger log = LoggerFactory.getLogger(Form.class);
 
+	private String key;
 	private PageElement form_tag;
-	private List<ComplexField> form_fields;
+	private List<FormField> form_fields;
 	private PageElement submit_field;
 	private FormType type;
 	
-	public Form(PageElement form_tag, List<ComplexField> form_fields, PageElement submit_field){
+	public Form(PageElement form_tag, List<FormField> form_fields, PageElement submit_field){
 		setFormTag(form_tag);
 		setFormFields(form_fields);
 		setSubmitField(submit_field);
 		setType(determineFormType());
+		setKey(generateKey());
 	}
 	
+	private String generateKey() {
+		return ""+getFormFields().hashCode();
+	}
+
 	/**
 	 * Returns the {@link FormType} of the form based on attribute values on the form tag
 	 * 
@@ -55,16 +71,20 @@ public class Form {
 		return FormType.LEAD;
 	}
 	
-	public List<ComplexField> getFormFields() {
+	public List<FormField> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(ComplexField form_field) {
+	public boolean addFormField(FormField form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public void setFormFields(List<ComplexField> form_fields) {
-		this.form_fields = form_fields;
+	public boolean addFormFields(List<FormField> form_field) {
+		return this.form_fields.addAll(form_field);
+	}
+	
+	public void setFormFields(List<FormField> form_fields2) {
+		this.form_fields = form_fields2;
 	}
 
 	public PageElement getSubmitField() {
@@ -89,5 +109,13 @@ public class Form {
 
 	public void setType(FormType type) {
 		this.type = type;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 }

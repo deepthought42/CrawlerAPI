@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.util.Arrays;
 import java.util.Date;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -17,22 +18,20 @@ public class FormRecord {
 	private Long id;
 
 	private String key;
-	private String src;
 	private String screenshot_url;
 	private String name;
 	private double[] predictions;
-	private FormType[] type_options;
+	private String[] type_options;
 	private Date date_discovered;
-	private FormStatus status;
+	private String status;
 	private PageState page_state;
-	private FormType form_type;
+	private String type;
 	private Form form;
 	
 	public FormRecord(){}
 	
 	public FormRecord(String src, Form form, String screenshot_url, PageState page_state, 
 					  double[] predictions, FormType[] type_options, FormStatus status){
-		this.setSrc(src);
 		this.setForm(form);
 		this.setScreenshotUrl(screenshot_url);
 		this.setPageState(page_state);
@@ -45,11 +44,10 @@ public class FormRecord {
 	public FormRecord(String src, Form form, String screenshot_url, PageState page_state, 
 					  FormType form_type, String name, Date date_discovered, FormStatus status, 
 					  double[] predictions, FormType[] type_options){
-		this.setSrc(src);
 		this.setForm(form);
 		this.setScreenshotUrl(screenshot_url);
 		this.setPageState(page_state);
-		this.setFormType(form_type);
+		this.setType(form_type);
 		this.setName(name);
 		this.setDateDiscovered(date_discovered);
 		this.setStatus(status);
@@ -60,14 +58,6 @@ public class FormRecord {
 
 	private String generateKey(String src) {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(src); 
-	}
-
-	public String getSrc() {
-		return src;
-	}
-
-	public void setSrc(String src) {
-		this.src = src;
 	}
 
 	public String getScreenshotUrl() {
@@ -86,12 +76,15 @@ public class FormRecord {
 		this.page_state = page_state;
 	}
 
-	public FormType getFormType() {
-		return form_type;
+	public FormType getType() {
+		if(type != null){
+			return FormType.valueOf(type.toUpperCase());
+		}
+		return null;
 	}
 
-	public void setFormType(FormType form_type) {
-		this.form_type = form_type;
+	public void setType(FormType form_type) {
+		this.type = form_type.toString();
 	}
 
 	public String getKey() {
@@ -127,11 +120,11 @@ public class FormRecord {
 	}
 
 	public FormStatus getStatus() {
-		return status;
+		return FormStatus.valueOf(status.toUpperCase());
 	}
 
 	public void setStatus(FormStatus status) {
-		this.status = status;
+		this.status = status.toString();
 	}
 
 	public double[] getPrediction() {
@@ -143,10 +136,14 @@ public class FormRecord {
 	}
 
 	public FormType[] getTypeOptions() {
+		FormType[] type_options = new FormType[this.type_options.length];
+		for(int idx=0; idx<this.type_options.length; idx++){
+			type_options[idx] = FormType.valueOf(this.type_options[idx].toUpperCase());
+		}
 		return type_options;
 	}
 
 	public void setTypeOptions(FormType[] type_options) {
-		this.type_options = type_options;
+	    this.type_options = Arrays.stream(type_options).map(Enum::name).toArray(String[]::new);
 	}
 }

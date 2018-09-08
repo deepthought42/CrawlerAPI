@@ -2,13 +2,14 @@ package com.minion.actors;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
-import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
 import com.qanairy.models.Form;
 import com.qanairy.models.FormRecord;
+import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
@@ -49,6 +50,9 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	ElementRuleExtractor extractor;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -94,21 +98,16 @@ public class FormDiscoveryActor extends AbstractActor{
 					  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
 					  	for(Form form : forms){
 					  		String rl_response = "";
-						  	for(FormField field: form.getFormFields()){
+						  	for(PageElement field: form.getFormFields()){
 								//for each field in the complex field generate a set of tests for all known rules
-								List<Rule> rules = ElementRuleExtractor.extractInputRules(field.getInputElement());
+						  		List<Rule> rules = extractor.extractInputRules(field);
 								
 								log.info("Total RULES   :::   "+rules.size());
 								for(Rule rule : rules){
-									field.getInputElement().addRule(rule);
+									field.addRule(rule);
 								
 								}
 							}
-						  	
-						  	try{
-						  		browser.close();
-						  	}
-						  	catch(Exception e){}
 						  	
 						  	ObjectMapper mapper = new ObjectMapper();
 
@@ -130,29 +129,26 @@ public class FormDiscoveryActor extends AbstractActor{
 					        client.close();
 					        */
 					        
-					        
-						  	byte[] out = form_json.getBytes(StandardCharsets.UTF_8);
-						  	int length = out.length;
-
+					        System.err.println("FORM JSON :: "+form_json);
+						  	
 						  	System.err.println("Requesting prediction for form from RL system");
 						  	//STAGING URL
-						  	URL url = new URL("http://198.211.117.122/predict");
-						  	URLConnection con = url.openConnection();
-						  	HttpURLConnection http = (HttpURLConnection)con;
-						  	http.setFixedLengthStreamingMode(length);
-						  	http.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-						  	http.connect();
-						  	try(OutputStream os = http.getOutputStream()) {
-						  	    os.write(out);
-						  	}
+						  	HttpClient httpClient = HttpClientBuilder.create().build(); //Use this instead 
 
-						  	int status = http.getResponseCode();
-						  	System.err.println("Recieved status code from RL :: "+status);
+						  	 HttpPost request = new HttpPost("http://198.211.117.122/predict");
+						     StringEntity params =new StringEntity(form_json);
+						     request.addHeader("content-type", "application/json; charset=UTF-8");
+						     request.setEntity(params);
+						     HttpResponse response = httpClient.execute(request);
+
+						  	System.err.println("Recieved status code from RL :: "+response.getStatusLine().getStatusCode());
+						  	int status = response.getStatusLine().getStatusCode();
 						  	
 					        switch (status) {
 					            case 200:
 					            case 201:
-					                BufferedReader br = new BufferedReader(new InputStreamReader(http.getInputStream()));
+					            	
+					                BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 					                StringBuilder sb = new StringBuilder();
 					                String line;
 					                while ((line = br.readLine()) != null) {
@@ -163,17 +159,26 @@ public class FormDiscoveryActor extends AbstractActor{
 					                System.err.println("Response received from RL system :: "+rl_response);
 					        }
 					        String src = "";
+					        
+					        System.err.println("form tag :: "+form.getFormTag());
+					        System.err.println("form tax xpath :: "+form.getFormTag().getXpath());
+					        
 					        WebElement element = browser.getDriver().findElement(By.xpath(form.getFormTag().getXpath()));
 					        src = element.getAttribute("innerHTML");
 
+						  	
+						  	try{
+						  		browser.close();
+						  	}
+						  	catch(Exception e){}
+						  	
 					        FormType[] form_types = new FormType[1];
 							form_types[0] = FormType.LOGIN;
 							double[] weights = new double[1];
 							weights[0] = 0.3;
 					        FormRecord form_record = new FormRecord(src, form, "screenshot_url", page_state, weights, form_types, FormStatus.DISCOVERED);
-					        form_record.setForm(form);
 					        
-						  	MessageBroadcaster.broadcastDiscoveredForm(form_record, (new URL(page_state.getUrl()).getHost()));
+						  	MessageBroadcaster.broadcastDiscoveredForm(form_record, message.getOptions().get("host").toString());
 					  	}
 					}
 				})

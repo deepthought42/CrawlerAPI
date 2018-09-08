@@ -1,12 +1,21 @@
 package com.qanairy.models.rules;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.qanairy.models.PageElement;
 
 /**
  * Creates a read-only {@link FormRule} on a {@link FormField}  
  *
  */
+@NodeEntity
 public class ReadOnlyRule extends Rule {
+	@GeneratedValue
+    @Id
+	private Long id;
+	
 	private String key;
 	private RuleType type;
 	private String value;

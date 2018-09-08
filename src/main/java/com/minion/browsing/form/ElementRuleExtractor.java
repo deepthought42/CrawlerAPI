@@ -3,9 +3,19 @@ package com.minion.browsing.form;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
+import com.qanairy.models.repository.AlphabeticRestrictionRuleRepository;
+import com.qanairy.models.repository.DisabledRuleRepository;
+import com.qanairy.models.repository.EmailPatternRuleRepository;
+import com.qanairy.models.repository.NumericRuleRepository;
+import com.qanairy.models.repository.PatternRuleRepository;
+import com.qanairy.models.repository.ReadOnlyRuleRepository;
+import com.qanairy.models.repository.RequirementRuleRepository;
+import com.qanairy.models.repository.SpecialCharacterRestrictionRuleRepository;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.Clickable;
 import com.qanairy.models.rules.DisabledRule;
@@ -18,62 +28,140 @@ import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.models.rules.SpecialCharacterRestriction;
 
+@Service
 public class ElementRuleExtractor {
 	private static Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);
 
-	public static List<Rule> extractInputRules(PageElement elem){
+	@Autowired 
+	private RequirementRuleRepository requirement_rule_repo;
+	
+	@Autowired 
+	private DisabledRuleRepository disabled_rule_repo;
+	
+	@Autowired 
+	private AlphabeticRestrictionRuleRepository alphabet_restriction_rule_repo;
+	
+	@Autowired 
+	private SpecialCharacterRestrictionRuleRepository special_character_rule_repo;
+	
+	@Autowired 
+	private ReadOnlyRuleRepository read_only_rule_repo;
+	
+	@Autowired 
+	private NumericRuleRepository numeric_rule_repo;
+	
+	@Autowired 
+	private EmailPatternRuleRepository email_pattern_rule_repo;
+	
+	@Autowired 
+	private PatternRuleRepository pattern_rule_repo;
+	
+	public List<Rule> extractInputRules(PageElement elem){
 		List<Rule> rules = new ArrayList<Rule>();
 		for(Attribute attr : elem.getAttributes()){
+			Rule rule = null;
+			Rule rule_record = null;
 			if(attr.getName().trim().equalsIgnoreCase("required")){
-				Rule required = new RequirementRule();
-				rules.add(required);
+				rule = new RequirementRule();
+				rule_record = requirement_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().trim().equalsIgnoreCase("disabled")){
-				Rule disabled = new DisabledRule();
-				rules.add(disabled);
+				rule = new DisabledRule();
+				rule_record = disabled_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().contains("number")){
-				Rule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
-				Rule special_character_rule = new SpecialCharacterRestriction();
-				
+				AlphabeticRestrictionRule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
 				rules.add(alphabetic_restriction_rule);
+				rule_record = alphabet_restriction_rule_repo.findByKey(alphabetic_restriction_rule.getKey());
+				if(rule_record == null){
+					rules.add(alphabetic_restriction_rule);
+				}
+				else{
+					rules.add(rule_record);
+				}
+				
+				Rule special_character_rule = new SpecialCharacterRestriction();
 				rules.add(special_character_rule);
+				Rule rule_record2 = special_character_rule_repo.findByKey(rule.getKey());
+				if(rule_record == null){
+					rules.add(special_character_rule);
+				}
+				else{
+					rules.add(rule_record2);
+				}
+				continue;
 			}
 			else if(attr.getName().equalsIgnoreCase("readonly")){
-				rules.add(new ReadOnlyRule());
+				rule = new ReadOnlyRule();
+				rule_record = read_only_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("min")){
-				Rule min_val = new NumericRule(RuleType.MIN_VALUE, attr.getVals().get(0));
-				rules.add(min_val);
+				rule = new NumericRule(RuleType.MIN_VALUE, attr.getVals().get(0));
+				rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("max")){
-				Rule max_val = new NumericRule(RuleType.MAX_VALUE, attr.getVals().get(0));
-				rules.add(max_val);
+				rule = new NumericRule(RuleType.MAX_VALUE, attr.getVals().get(0));
+				rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			}
 			//minlength only works for certain frameworks such as angularjs that support it as a custom html5 attribute
 			else if(attr.getName().equalsIgnoreCase("minlength")){
-				NumericRule min_length = new NumericRule(RuleType.MIN_LENGTH, attr.getVals().get(0));
-				rules.add(min_length);
+				rule = new NumericRule(RuleType.MIN_LENGTH, attr.getVals().get(0));
+				rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("maxlength")){
-				NumericRule max_length = new NumericRule(RuleType.MAX_LENGTH, attr.getVals().get(0));
-				rules.add(max_length);
+				rule = new NumericRule(RuleType.MAX_LENGTH, attr.getVals().get(0));
+				rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().get(0).equalsIgnoreCase("email")){
+				rule = new EmailPatternRule();
+				System.err.println("email rule :: "+rule);
 				EmailPatternRule email_rule = new EmailPatternRule();
-				rules.add(email_rule);
+				System.err.println("email pattern rule :: "+email_rule);
+				
+				System.err.println("EMAIL RULE REPO :: "+email_pattern_rule_repo);
+
+				rule_record = email_pattern_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("pattern")){
 				String regex_str = attr.getVals().get(0);
-				PatternRule pattern_rule = new PatternRule(regex_str);
-				rules.add(pattern_rule);
+				rule = new PatternRule(regex_str);
+				rule_record = pattern_rule_repo.findByKey(rule.getKey());
+			}
+			else{
+				System.err.println("Unable to identify rule with type "+attr.getName());
+				continue;
+			}
+			System.err.println("RULE :: "+rule);
+			System.err.println("rule repo key :: "+rule.getKey());
+			System.err.println("RULE RECORD :: "+rule_record);
+			
+			boolean already_exists = false;
+			for(Rule temp_rule: rules){
+				if(rule_record == null){
+					if(temp_rule.getKey().equals(rule.getKey())){
+						already_exists = true;
+					}
+				}
+				else{
+					if(temp_rule.getKey().equals(rule_record.getKey())){
+						already_exists = true;
+					}
+				}
+			}
+			if(!already_exists){
+				if(rule_record == null){
+					rules.add(rule);
+				}
+				else{
+					rules.add(rule_record);
+				}
 			}
 		}
 		
 		return rules;
 	}
 
-	public static List<Rule> extractMouseRules(PageElement page_element) {
+	public List<Rule> extractMouseRules(PageElement page_element) {
 		List<Rule> rules = new ArrayList<Rule>();
 
 		//iterate over possible mouse actions. 

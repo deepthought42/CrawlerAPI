@@ -3,6 +3,10 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 
@@ -10,8 +14,12 @@ import com.qanairy.models.PageElement;
  * Verifies that an element doesn't have any special characters in its value
  *
  */
+@NodeEntity
 public class SpecialCharacterRestriction extends Rule {
-
+	@GeneratedValue
+    @Id
+	private Long id;
+	
 	private String key;
 	private String value;
 	private RuleType type;

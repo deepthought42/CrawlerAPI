@@ -50,6 +50,9 @@ public class PathExpansionActor extends AbstractActor {
 	@Autowired
 	DiscoveryRecordRepository discovery_repo;
 	
+	@Autowired
+	private ElementRuleExtractor extractor;
+	
 	/**
      * {@inheritDoc}
      */
@@ -89,7 +92,7 @@ public class PathExpansionActor extends AbstractActor {
 						return;
 					}
 					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){					
-						pathExpansions = PathExpansionActor.expandPath(test);
+						pathExpansions = expandPath(test);
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
 						discovery_record.getExpandedPageState().add(test.getResult().getKey());
 						discovery_record = discovery_repo.save(discovery_record);
@@ -129,7 +132,7 @@ public class PathExpansionActor extends AbstractActor {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static ArrayList<ExploratoryPath> expandPath(Test test)  {
+	public ArrayList<ExploratoryPath> expandPath(Test test)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
@@ -160,7 +163,7 @@ public class PathExpansionActor extends AbstractActor {
 			}
 			//check if page element is an input
 			else if(page_element.getName().equals("input")){
-				List<Rule> rules = ElementRuleExtractor.extractInputRules(page_element);
+				List<Rule> rules = extractor.extractInputRules(page_element);
 				for(Rule rule : rules){
 					page_element.addRule(rule);
 				}

@@ -69,7 +69,7 @@ public class FormRecordController {
 										@RequestParam(value="form_type", required=true) String form_type) throws IOException {
     	
     	FormRecord form_record = form_record_repo.findByKey(key);
-    	form_record.setFormType(FormType.valueOf(form_type));
+    	form_record.setType(FormType.valueOf(form_type));
     	form_record = form_record_repo.save(form_record);
     	
     	//send form with label for learning to RL system

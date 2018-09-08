@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.minion.actors.LandabilityChecker.BrowserPageState;
-import com.minion.api.MessageBroadcaster;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -54,6 +53,7 @@ import com.qanairy.models.repository.FormRecordRepository;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
+import com.qanairy.models.repository.RuleRepository;
 import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
 
@@ -88,6 +88,15 @@ public class BrowserService {
 	
 	@Autowired
 	private FormRepository form_repo;
+	
+	@Autowired
+	private RuleRepository rule_repo;
+	
+	@Autowired
+	private AttributeRepository attr_repo;
+	
+	@Autowired
+	private ElementRuleExtractor extractor;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
 
@@ -498,8 +507,12 @@ public class BrowserService {
 			}
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
+			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
+			if(tag != null){
+				form_tag = tag;
+			}
 			
-			Form form = new Form(form_tag, new ArrayList<FormField>(), findFormSubmitButton(form_elem, browser) );
+			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser) );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
 			for(WebElement input_elem : input_elements){
@@ -549,7 +562,7 @@ public class BrowserService {
 					continue;
 				}						
 				
-				List<FormField> group_inputs = constructGrouping(input_elem, browser.getDriver());
+				List<PageElement> group_inputs = constructGrouping(input_elem, browser.getDriver());
 				
 				//Set<PageElement> labels = findLabelsForInputs(form_elem, group_inputs, browser.getDriver());
 				/*for(FormField input_field : group_inputs){
@@ -563,11 +576,11 @@ public class BrowserService {
 				}
 				*/
 				System.err.println("GROUP INPUTS    :::   "+group_inputs.size());
-				for(FormField input_field : group_inputs){
-					for(Rule rule : ElementRuleExtractor.extractInputRules(input_field.getInputElement())){
+				for(PageElement page_elem : group_inputs){
+					for(Rule rule : extractor.extractInputRules(page_elem)){
 						System.err.println(" RULE     :::   "+ rule);
-						System.err.println("INPUT ELEMENT "+input_field.getInputElement());
-						input_field.getInputElement().addRule(rule);
+						System.err.println("INPUT ELEMENT "+page_elem);
+						page_elem.addRule(rule);
 					}
 				}
 				//combo_input.getElements().addAll(labels);
@@ -576,9 +589,9 @@ public class BrowserService {
 			
 			System.err.println("Key :: "+form.getKey());
 			System.err.println("form fields :: "+form.getFormFields());
-			for(FormField field : form.getFormFields()){
+			for(PageElement field : form.getFormFields()){
 				System.err.println("key :: "+field.getKey());
-				System.err.println("input element :: "+field.getInputElement());
+				System.err.println("input element :: "+field);
 				System.err.println("Rules :: "+field.getRules());
 				for(Rule rule : field.getRules()){
 					System.err.println("key  ::::      "+rule.getKey());
@@ -589,6 +602,13 @@ public class BrowserService {
 				System.err.println("");
 			}
 			System.err.println("form tag :: "+form.getFormTag());
+			System.err.println("form tag key :: "+form.getFormTag().getKey());
+			System.err.println(""+form.getFormTag().getName());
+			System.err.println(""+form.getFormTag().getScreenshot());
+			System.err.println(""+form.getFormTag().getText());
+			System.err.println(""+form.getFormTag().getType());
+			System.err.println(""+form.getFormTag().getXpath());
+			
 			System.err.println("submit field :: "+form.getSubmitField());
 			System.err.println("form type ::   "+form.getType());
 			
@@ -598,33 +618,20 @@ public class BrowserService {
 			double[] weights = new double[1];
 			weights[0] = 0.3;
 			
-			form = form_repo.save(form);
-			FormRecord form_record = new FormRecord(form_elem.getAttribute("innerHTML"), form , page_screenshot ,null, weights, form_types, FormStatus.DISCOVERED);
+			FormRecord form_record = new FormRecord(form_elem.getAttribute("innerHTML"), form , page_screenshot ,page, weights, form_types, FormStatus.DISCOVERED);
 			System.err.println("Form record :: "+form_record);
 			System.err.println("form_record_repo :: "+form_record_repo);
 			System.err.println("FORM :: "+form_record.getForm());
 			
-			/*
+			
 			System.err.println("FORM :: "+form_record.getForm().getType());
 			System.err.println(""+form_record.getForm().getSubmitField());
 			System.err.println(""+form_record.getForm().getFormTag());
 			System.err.println(""+form_record.getForm().getFormFields().size());
 			
-			for(ComplexField field : form_record.getForm().getFormFields()){
-				System.err.println("form field elements "+field.getElements());
-				for(FormField form_field : field.getElements()){
-					System.err.println("" + form_field.getInputElement());
-					System.err.println("" + form_field.getRules());
-					
-					for(Rule rule : form_field.getRules()){
-						System.err.println("rule :: "+rule);
-					}
-					form_field.setRules(null);
-				}
-			}
 			System.err.println("");
 			System.err.println("");
-			*/
+			
 			
 			System.err.println("page screenshot :: "+form_record.getScreenshotUrl());
 			/*System.err.println("page ::  "+form_record.getPageState());
@@ -653,12 +660,16 @@ public class BrowserService {
 				System.err.println(" FORM TYPE          :::::     "+type);
 			}
 			System.err.println("weights :: "+ form_record.getPrediction());
-			form_record.setFormType(FormType.UNKNOWN);
+			form_record.setType(FormType.UNKNOWN);
 			System.err.println("form types :: "+form_record.getTypeOptions());
 			System.err.println("form status :: "+form_record.getStatus());
 			System.err.println("key :: "+form_record.getKey());
-			System.err.println("form type ::  " + form_record.getFormType());
-
+			System.err.println("form type ::  " + form_record.getType());
+			System.err.println("form date discovered :: "+form_record.getDateDiscovered());
+			System.err.println("form record key :: "+form_record.getKey());
+			System.err.println("form record name :: "+form_record.getName());
+			System.err.println("form record screenshot url :: "+form_record.getScreenshotUrl());
+			
 			for(FormType type : form_record.getTypeOptions()){
 				System.err.println("Type option    :: " + type);
 			}
@@ -672,11 +683,66 @@ public class BrowserService {
 
 			System.err.println("record repo :: "+form_record_repo);
 			System.err.println("form record :: "+form_record);
+			System.err.println("Page state :: "+form_record.getPageState());
+			System.err.println("Form tag :: " + form_record.getForm().getFormTag());
+			System.err.println("FORM SUBMIT :: "+ form_record.getForm().getSubmitField());
 			
-			form_record = form_record_repo.save(form_record);
+			page_state_repo.save(form_record.getPageState());
+			page_element_repo.save(form_record.getForm().getFormTag());
+			page_element_repo.save(form_record.getForm().getSubmitField());
 			
-			MessageBroadcaster.broadcastFormRecord(form_record, new URL(browser.getDriver().getCurrentUrl()).getHost());
+			for(PageElement elem : form_record.getForm().getFormFields()){
+				System.err.println("element key :: "+elem.getKey());
+				System.err.println("element name :: "+elem.getName());
+				System.err.println("element screenshot :: "+elem.getScreenshot());
+				System.err.println("element text :: "+elem.getText());
+				System.err.println("element type :: "+elem.getType());
+				System.err.println("element xpath :: "+elem.getXpath());
+				System.err.println("element attributes :: "+elem.getAttributes());
+				for(Attribute attr : elem.getAttributes()){
+					System.err.println("attr :: "+attr.getKey());
+					System.err.println("attr :: "+attr.getName());
+					System.err.println("attr :: "+attr.getClass());
+					System.err.println("attr :: "+attr.getVals());
+					attr_repo.save(attr);
+				}
+				System.err.println("element rules :: "+elem.getRules());
+				for(Rule rule : elem.getRules()){
+					System.err.println("rule :: "+rule.getKey());
+					System.err.println("rule :: "+rule.getValue());
+					System.err.println("rule :: "+rule.getType());
+					System.err.println("rule :: "+rule.getClass());
+					System.err.println("rule :: "+rule);
+					System.err.println("Rule repo :: "+rule_repo);
+					Rule rule_record = rule_repo.findByKey(rule.getKey());
+					System.err.println("rule record :: "+rule_record);
+					if(rule_record == null){
+						rule = rule_repo.save(rule);
+					}
+					else{
+						rule = rule_record;
+					}
+				}
+				System.err.println("element css values :: "+elem.getCssValues());
+				
+				PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+				if(elem_record == null){
+					page_element_repo.save(elem);
+				}
+			}
 			
+			Form form_db_record = form_repo.findByKey(form_record.getForm().getKey());
+			
+			if(form_db_record == null){
+				form_repo.save(form_record.getForm());
+			}
+			
+			FormRecord form_record_record = form_record_repo.findByKey(form_record.getKey());
+			
+			if(form_record_record == null){
+				form_record = form_record_repo.save(form_record);
+			}
+						
 			form_list.add(form);
 		}
 		return form_list;
@@ -691,9 +757,9 @@ public class BrowserService {
 	 * @param driver
 	 * @return
 	 */
-	public List<FormField> constructGrouping(WebElement page_elem, WebDriver driver){
+	public List<PageElement> constructGrouping(WebElement page_elem, WebDriver driver){
 
-		List<FormField> child_inputs = new ArrayList<FormField>();
+		List<PageElement> child_inputs = new ArrayList<PageElement>();
 
 		String input_type = page_elem.getAttribute("type");
 		WebElement parent = null;
@@ -722,18 +788,29 @@ public class BrowserService {
 				e.printStackTrace();
 				break;
 			}
+			
 			if(allChildrenMatch){
 				//create list with new elements
 				List<WebElement> children = parent.findElements(By.xpath(".//input"));
-				child_inputs = new ArrayList<FormField>();
+				child_inputs = new ArrayList<PageElement>();
 
 				for(WebElement child : children){
 					Set<Attribute> attributes = extractAttributes(child, driver);
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(driver, child);
 
 					PageElement elem = new PageElement(child.getText(), generateXpath(child, "", new HashMap<String, Integer>(), driver, attributes), child.getTagName(), attributes, Browser.loadCssProperties(child), screenshot_url );
-					FormField input_field = new FormField(elem);
-					child_inputs.add(input_field);
+					PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+					
+					if(elem_record != null){
+						elem=elem_record;
+					}
+					else{
+						elem = page_element_repo.save(elem);
+					}
+					
+					//FormField input_field = new FormField(elem);
+					
+					child_inputs.add(elem);
 				}
 				
 				page_elem = parent;
@@ -744,8 +821,17 @@ public class BrowserService {
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(driver, page_elem);
 
 					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver, attributes), page_elem.getTagName(), attributes, Browser.loadCssProperties(page_elem), screenshot_url );
+					PageElement elem_record = page_element_repo.findByKey(input_tag.getKey());
+					if(elem_record != null){
+						input_tag=elem_record;
+					}
+					else{
+						input_tag = page_element_repo.save(input_tag);
+					}
+					
 					FormField input_field = new FormField(input_tag);
-					child_inputs.add(input_field);
+					
+					child_inputs.add(input_tag);
 				}
 			}
 		}while(allChildrenMatch);
@@ -762,7 +848,12 @@ public class BrowserService {
 		WebElement submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
 		Set<Attribute> attributes = extractAttributes(submit_element, browser.getDriver());
 		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem);
-		return new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url );
+		PageElement elem = new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url );
+		PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+		if(elem_record != null){
+			elem = elem_record;
+		}
+		return elem;
 	}
 	
 	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem){

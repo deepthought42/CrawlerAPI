@@ -42,6 +42,8 @@ public class BrowserTest {
 	public void verifyTestConstructor(){
 		try {
 			Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
+			screenshots.add(new ScreenshotSet("http://qanairy.com", "chrome"));
+
 			Set<PageElement> elements = new HashSet<PageElement>();
 			
 			PageState page = new PageState("<html>localhost</html>",

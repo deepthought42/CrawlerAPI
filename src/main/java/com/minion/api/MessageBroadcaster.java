@@ -42,6 +42,7 @@ public class MessageBroadcaster {
      * @throws JsonProcessingException 
      */
 	public static void broadcastDiscoveredForm(FormRecord form, String host) throws JsonProcessingException {	
+		System.err.println("Broadcasting discovered form !!!");
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
@@ -49,8 +50,9 @@ public class MessageBroadcaster {
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         String form_json = mapper.writeValueAsString(form);
-
-		pusher.trigger(host, "discovered-form", form_json);
+        System.err.println("host ::   "+host);
+		pusher.trigger(host.trim(), "discovered-form", form_json);
+		System.err.println("broadcasted a discovered form");
 	}
 	
 	/**
@@ -131,20 +133,5 @@ public class MessageBroadcaster {
         String discovery_json = mapper.writeValueAsString(record);
         
 		pusher.trigger(record.getDomainUrl(), "discovery-status", discovery_json);
-	}
-
-	public static void broadcastFormRecord(FormRecord form_record, String host) throws JsonProcessingException {
-		log.info("broadcasting discovery status");
-
-		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
-		pusher.setCluster("us2");
-		pusher.setEncrypted(true);
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        //Object to JSON in String
-        String form_json = mapper.writeValueAsString(form_record);
-        
-		pusher.trigger(host, "form-record", form_json);
 	}
 }

@@ -62,6 +62,9 @@ public class FormTestDiscoveryActor extends AbstractActor {
 	@Autowired
 	private PageElementRepository page_element_repo;
 	
+	@Autowired
+	private ElementRuleExtractor extractor;
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -558,12 +561,11 @@ public class FormTestDiscoveryActor extends AbstractActor {
 	 * @param form
 	 * @return
 	 */
-	public static List<List<PathObject>> generateAllFormTestPaths(Test test, Form form){
+	public List<List<PathObject>> generateAllFormTestPaths(Test test, Form form){
 		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
 		System.err.println("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		//for each field in the complex field generate a set of tests for all known rules
-		for(FormField field : form.getFormFields()){
-			PageElement input_elem = field.getInputElement();
+		for(PageElement input_elem : form.getFormFields()){
 			
 			boolean field_exists = false;
 			
@@ -582,8 +584,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 				System.err.println("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
 				continue;
 			}
-			
-			List<Rule> rules = ElementRuleExtractor.extractInputRules(input_elem);
+			List<Rule> rules = extractor.extractInputRules(input_elem);
 			log.info("Total RULES   :::   "+rules.size());
 			for(Rule rule : rules){
 				List<List<PathObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());

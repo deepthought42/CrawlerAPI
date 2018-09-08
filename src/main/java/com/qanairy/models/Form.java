@@ -8,7 +8,6 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.minion.browsing.form.FormField;
 import com.qanairy.models.enums.FormType;
 
 /**
@@ -25,11 +24,13 @@ public class Form {
 
 	private String key;
 	private PageElement form_tag;
-	private List<FormField> form_fields;
+	private List<PageElement> form_fields;
 	private PageElement submit_field;
-	private FormType type;
+	private String type;
 	
-	public Form(PageElement form_tag, List<FormField> form_fields, PageElement submit_field){
+	public Form(){}
+	
+	public Form(PageElement form_tag, List<PageElement> form_fields, PageElement submit_field){
 		setFormTag(form_tag);
 		setFormFields(form_fields);
 		setSubmitField(submit_field);
@@ -71,19 +72,19 @@ public class Form {
 		return FormType.LEAD;
 	}
 	
-	public List<FormField> getFormFields() {
+	public List<PageElement> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(FormField form_field) {
+	public boolean addFormField(PageElement form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public boolean addFormFields(List<FormField> form_field) {
+	public boolean addFormFields(List<PageElement> form_field) {
 		return this.form_fields.addAll(form_field);
 	}
 	
-	public void setFormFields(List<FormField> form_fields2) {
+	public void setFormFields(List<PageElement> form_fields2) {
 		this.form_fields = form_fields2;
 	}
 
@@ -104,11 +105,11 @@ public class Form {
 	}
 
 	public FormType getType() {
-		return type;
+		return FormType.valueOf(type.toUpperCase());
 	}
 
 	public void setType(FormType type) {
-		this.type = type;
+		this.type = type.toString();
 	}
 
 	public String getKey() {

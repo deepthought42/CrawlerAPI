@@ -11,9 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -25,14 +27,15 @@ import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.FormRepository;
 
 /**
  *	API endpoints for interacting with {@link Domain} data
@@ -49,6 +52,9 @@ public class DomainController {
 	
 	@Autowired
 	private DomainRepository domain_repo;
+	
+	@Autowired
+	private FormRepository form_repo;
 	
     /**
      * Create a new {@link Domain domain}
@@ -285,6 +291,7 @@ public class DomainController {
 	        newSet.addAll(collection);
 	    return newSet;
 	}
+	
 	/**
 	 * 
 	 * @param request
@@ -317,6 +324,37 @@ public class DomainController {
     	//	    return domain_repo.getPageElements();
 
 	    //return unique_page_elements;
+    }
+	
+	/**
+	 * 
+	 * @param request
+	 * @param host
+	 * 
+	 * @return a unique set of {@link PageElement}s belonging to all page states for the {@link Domain} with the given host
+	 * @throws UnknownAccountException
+	 */
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="{domain_key}/forms")
+    public @ResponseBody List<Form> getAllForms(HttpServletRequest request, 
+												  @RequestParam(value="host", required=true) String host,
+												  @PathVariable("domain_key") String domain_key) 
+														throws UnknownAccountException {        
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = account_repo.findByUsername(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
+    	domain_repo.getForms(host);
+        return IterableUtils.toList(form_repo.findAll());
     }
 }
 

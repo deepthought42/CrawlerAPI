@@ -52,6 +52,9 @@ public class PageState implements Persistable, PathObject {
 	@Relationship(type = "HAS_ELEMENT")
 	private Set<PageElement> elements = new HashSet<>();
 	
+	@Relationship(type = "HAS_FORM")
+	private Set<Form> forms = new HashSet<>();
+	
 	public PageState(){}
 
 	/**
@@ -484,5 +487,18 @@ public class PageState implements Persistable, PathObject {
 		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 		*/
 		
+	}
+
+	public void addForm(Form form) {
+		for(Form temp_form: this.forms){
+			if(temp_form.getKey().equals(form.getKey())){
+				return;
+			}
+		}
+		this.forms.add(form);
+	}
+	
+	public Set<Form> getForms(){
+		return this.forms;
 	}
 }

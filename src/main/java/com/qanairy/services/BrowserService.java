@@ -42,14 +42,12 @@ import com.minion.util.ArrayUtility;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
-import com.qanairy.models.FormRecord;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AttributeRepository;
-import com.qanairy.models.repository.FormRecordRepository;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
@@ -84,16 +82,10 @@ public class BrowserService {
 	private AttributeRepository attribute_repo;
 	
 	@Autowired
-	private FormRecordRepository form_record_repo;
-	
-	@Autowired
 	private FormRepository form_repo;
 	
 	@Autowired
 	private RuleRepository rule_repo;
-	
-	@Autowired
-	private AttributeRepository attr_repo;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -512,7 +504,13 @@ public class BrowserService {
 				form_tag = tag;
 			}
 			
-			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser) );
+			FormType[] form_types = new FormType[1];
+			form_types[0] = FormType.LOGIN;
+			double[] weights = new double[1];
+			weights[0] = 0.3;
+			
+			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
+									"Form #1", weights, form_types, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED, "" );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
 			for(WebElement input_elem : input_elements){
@@ -587,135 +585,26 @@ public class BrowserService {
 				form.addFormFields(group_inputs);
 			}
 			
-			System.err.println("Key :: "+form.getKey());
-			System.err.println("form fields :: "+form.getFormFields());
-			for(PageElement field : form.getFormFields()){
-				System.err.println("key :: "+field.getKey());
-				System.err.println("input element :: "+field);
-				System.err.println("Rules :: "+field.getRules());
-				for(Rule rule : field.getRules()){
-					System.err.println("key  ::::      "+rule.getKey());
-					System.err.println("value   ::::  "+rule.getValue());
-					System.err.println("type ::::  "+rule.getType());
-					System.err.println("class   :::::   "+rule.getClass());
-				}
-				System.err.println("");
-			}
-			System.err.println("form tag :: "+form.getFormTag());
-			System.err.println("form tag key :: "+form.getFormTag().getKey());
-			System.err.println(""+form.getFormTag().getName());
-			System.err.println(""+form.getFormTag().getScreenshot());
-			System.err.println(""+form.getFormTag().getText());
-			System.err.println(""+form.getFormTag().getType());
-			System.err.println(""+form.getFormTag().getXpath());
-			
-			System.err.println("submit field :: "+form.getSubmitField());
-			System.err.println("form type ::   "+form.getType());
-			
-			
-			FormType[] form_types = new FormType[1];
-			form_types[0] = FormType.LOGIN;
-			double[] weights = new double[1];
-			weights[0] = 0.3;
-			
-			FormRecord form_record = new FormRecord(form_elem.getAttribute("innerHTML"), form , page_screenshot ,page, weights, form_types, FormStatus.DISCOVERED);
-			System.err.println("Form record :: "+form_record);
-			System.err.println("form_record_repo :: "+form_record_repo);
-			System.err.println("FORM :: "+form_record.getForm());
-			
-			
-			System.err.println("FORM :: "+form_record.getForm().getType());
-			System.err.println(""+form_record.getForm().getSubmitField());
-			System.err.println(""+form_record.getForm().getFormTag());
-			System.err.println(""+form_record.getForm().getFormFields().size());
-			
-			System.err.println("");
-			System.err.println("");
-			
-			
-			System.err.println("page screenshot :: "+form_record.getScreenshotUrl());
-			/*System.err.println("page ::  "+form_record.getPageState());
-			
-			
-			System.err.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
-
-			System.err.println("PAGE STATE");
-			System.err.println("+++++++++++++++++++++++++++++++++++++++++++++++++++");
-			System.err.println("");
-			System.err.println("page_state :: " + page.getKey());
-			System.err.println(""+page.getType());
-			System.err.println(""+page.getUrl());
-			for(PageElement elem : page.getElements()){
-				System.err.println("element key :: "+elem.getKey());
-			}
-			System.err.println("");
-			System.err.println("");
-			*/
-			
-			for(double d: form_record.getPrediction()){
+						
+			for(double d: form.getPrediction()){
 				System.err.println("PREDICTION ::: "+d);
 			}
 			
-			for(FormType type : form_record.getTypeOptions()){
+			for(FormType type : form.getTypeOptions()){
 				System.err.println(" FORM TYPE          :::::     "+type);
 			}
-			System.err.println("weights :: "+ form_record.getPrediction());
-			form_record.setType(FormType.UNKNOWN);
-			System.err.println("form types :: "+form_record.getTypeOptions());
-			System.err.println("form status :: "+form_record.getStatus());
-			System.err.println("key :: "+form_record.getKey());
-			System.err.println("form type ::  " + form_record.getType());
-			System.err.println("form date discovered :: "+form_record.getDateDiscovered());
-			System.err.println("form record key :: "+form_record.getKey());
-			System.err.println("form record name :: "+form_record.getName());
-			System.err.println("form record screenshot url :: "+form_record.getScreenshotUrl());
+			System.err.println("weights :: "+ form.getPrediction());
+			form.setType(FormType.UNKNOWN);
 			
-			for(FormType type : form_record.getTypeOptions()){
-				System.err.println("Type option    :: " + type);
-			}
+			form.setDateDiscovered(new Date());
+			System.err.println("form record discovered date :: "+form.getDateDiscovered());
 			
-			form_record.setDateDiscovered(new Date());
-			System.err.println("form record discovered date :: "+form_record.getDateDiscovered());
+			form.setName("Form #1");
+			System.err.println("name :: "+form.getName());
 			
-			form_record.setName("Form #1");
-			System.err.println("name :: "+form_record.getName());
-			
-
-			System.err.println("record repo :: "+form_record_repo);
-			System.err.println("form record :: "+form_record);
-			System.err.println("Page state :: "+form_record.getPageState());
-			System.err.println("Form tag :: " + form_record.getForm().getFormTag());
-			System.err.println("FORM SUBMIT :: "+ form_record.getForm().getSubmitField());
-			
-			page_state_repo.save(form_record.getPageState());
-			page_element_repo.save(form_record.getForm().getFormTag());
-			page_element_repo.save(form_record.getForm().getSubmitField());
-			
-			for(PageElement elem : form_record.getForm().getFormFields()){
-				System.err.println("element key :: "+elem.getKey());
-				System.err.println("element name :: "+elem.getName());
-				System.err.println("element screenshot :: "+elem.getScreenshot());
-				System.err.println("element text :: "+elem.getText());
-				System.err.println("element type :: "+elem.getType());
-				System.err.println("element xpath :: "+elem.getXpath());
-				System.err.println("element attributes :: "+elem.getAttributes());
-				for(Attribute attr : elem.getAttributes()){
-					System.err.println("attr :: "+attr.getKey());
-					System.err.println("attr :: "+attr.getName());
-					System.err.println("attr :: "+attr.getClass());
-					System.err.println("attr :: "+attr.getVals());
-					attr_repo.save(attr);
-				}
-				System.err.println("element rules :: "+elem.getRules());
+			for(PageElement elem : form.getFormFields()){
 				for(Rule rule : elem.getRules()){
-					System.err.println("rule :: "+rule.getKey());
-					System.err.println("rule :: "+rule.getValue());
-					System.err.println("rule :: "+rule.getType());
-					System.err.println("rule :: "+rule.getClass());
-					System.err.println("rule :: "+rule);
-					System.err.println("Rule repo :: "+rule_repo);
 					Rule rule_record = rule_repo.findByKey(rule.getKey());
-					System.err.println("rule record :: "+rule_record);
 					if(rule_record == null){
 						rule = rule_repo.save(rule);
 					}
@@ -723,7 +612,6 @@ public class BrowserService {
 						rule = rule_record;
 					}
 				}
-				System.err.println("element css values :: "+elem.getCssValues());
 				
 				PageElement elem_record = page_element_repo.findByKey(elem.getKey());
 				if(elem_record == null){
@@ -731,16 +619,10 @@ public class BrowserService {
 				}
 			}
 			
-			Form form_db_record = form_repo.findByKey(form_record.getForm().getKey());
+			Form form_db_record = form_repo.findByKey(form.getKey());
 			
 			if(form_db_record == null){
-				form_repo.save(form_record.getForm());
-			}
-			
-			FormRecord form_record_record = form_record_repo.findByKey(form_record.getKey());
-			
-			if(form_record_record == null){
-				form_record = form_record_repo.save(form_record);
+				form_repo.save(form);
 			}
 						
 			form_list.add(form);

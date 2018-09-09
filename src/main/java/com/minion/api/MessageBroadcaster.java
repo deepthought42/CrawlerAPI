@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.FormRecord;
+import com.qanairy.models.Form;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -41,7 +41,7 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastDiscoveredForm(FormRecord form, String host) throws JsonProcessingException {	
+	public static void broadcastDiscoveredForm(Form form, String host) throws JsonProcessingException {	
 		System.err.println("Broadcasting discovered form !!!");
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");

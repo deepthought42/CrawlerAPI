@@ -337,7 +337,6 @@ public class DomainController {
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="{domain_key}/forms")
     public @ResponseBody List<Form> getAllForms(HttpServletRequest request, 
-												  @RequestParam(value="host", required=true) String host,
 												  @PathVariable("domain_key") String domain_key) 
 														throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -352,8 +351,8 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-
-    	domain_repo.getForms(host);
+    	Domain domain = domain_repo.findByKey(domain_key);
+    	domain_repo.getForms(domain.getUrl());
         return IterableUtils.toList(form_repo.findAll());
     }
 }

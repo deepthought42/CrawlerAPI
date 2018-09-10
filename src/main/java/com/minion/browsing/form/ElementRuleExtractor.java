@@ -1,7 +1,10 @@
 package com.minion.browsing.form;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -57,6 +60,7 @@ public class ElementRuleExtractor {
 	private PatternRuleRepository pattern_rule_repo;
 	
 	public List<Rule> extractInputRules(PageElement elem){
+		Map<String, Boolean> input_rules = new HashMap<String, Boolean>();
 		List<Rule> rules = new ArrayList<Rule>();
 		for(Attribute attr : elem.getAttributes()){
 			Rule rule = null;
@@ -113,7 +117,8 @@ public class ElementRuleExtractor {
 				rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().get(0).equalsIgnoreCase("email")){
-				rule = new EmailPatternRule();
+				rule = new EmailPatternRule();					
+			
 				System.err.println("email rule :: "+rule);
 				EmailPatternRule email_rule = new EmailPatternRule();
 				System.err.println("email pattern rule :: "+email_rule);
@@ -134,27 +139,16 @@ public class ElementRuleExtractor {
 			System.err.println("RULE :: "+rule);
 			System.err.println("rule repo key :: "+rule.getKey());
 			System.err.println("RULE RECORD :: "+rule_record);
-			
-			boolean already_exists = false;
-			for(Rule temp_rule: rules){
-				if(rule_record == null){
-					if(temp_rule.getKey().equals(rule.getKey())){
-						already_exists = true;
-					}
-				}
-				else{
-					if(temp_rule.getKey().equals(rule_record.getKey())){
-						already_exists = true;
-					}
-				}
-			}
-			if(!already_exists){
+			System.err.println("INPUT RULES ::  "+ input_rules.keySet().size());
+			System.err.println("RULE TYPE   ::  "+rule.getType().toString());
+			if(input_rules.containsKey(rule.getType().toString()) && input_rules.get(rule.getType().toString()) != true){
 				if(rule_record == null){
 					rules.add(rule);
 				}
 				else{
 					rules.add(rule_record);
 				}
+				input_rules.put(rule.getType().toString(), true);
 			}
 		}
 		

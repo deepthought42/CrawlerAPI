@@ -504,13 +504,11 @@ public class BrowserService {
 				form_tag = tag;
 			}
 			
-			FormType[] form_types = new FormType[1];
-			form_types[0] = FormType.LOGIN;
 			double[] weights = new double[1];
 			weights[0] = 0.3;
 			
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
-									"Form #1", weights, form_types, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED, "" );
+									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED, "" );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
 			for(WebElement input_elem : input_elements){

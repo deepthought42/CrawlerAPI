@@ -17,6 +17,8 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,7 +156,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						    builder.addTextBody("json_object", form_json);
 						    builder.addTextBody("input_vocab_label", "html");
 						    builder.addTextBody("output_vocab_label", "form_type");
-						    builder.addTextBody("new_output_features", Arrays.toString(Arrays.stream(FormType.values()).map(Enum::name).toArray(String[]::new)));
+						    builder.addTextBody("new_output_features", Arrays.toString(Arrays.stream(form.getTypeOptions()).map(Enum::name).toArray(String[]::new)));
 						    
 						    HttpEntity multipart = builder.build();
 						    httpPost.setEntity(multipart);
@@ -193,7 +195,10 @@ public class FormDiscoveryActor extends AbstractActor{
 					                }
 					                br.close();
 					                rl_response = sb.toString();
-					                System.err.println("Response received from RL system :: "+rl_response);
+					                System.err.println("Response received from RL system :: "+rl_response);	
+					                break;
+					            case 500:
+					            	return;
 					        }
 						    client.close();
 
@@ -201,16 +206,36 @@ public class FormDiscoveryActor extends AbstractActor{
 					        
 					        System.err.println("form tag :: "+form.getFormTag());
 					        System.err.println("form tax xpath :: "+form.getFormTag().getXpath());
+					        JSONObject obj = new JSONObject(rl_response);
+					        System.err.println("RL RESPONSE OBJ :: " + obj);
+					        JSONArray prediction = obj.optJSONArray("prediction");
+					        long memory_id = obj.getLong("id");
 					        
+					        if (prediction == null) { /*...*/ }
+
+						     // Create an int array to accomodate the numbers.
+						     double[] weights = new double[prediction.length()];
+	
+						     // Extract numbers from JSON array.
+						     for (int i = 0; i < prediction.length(); ++i) {
+						         weights[i] = prediction.optDouble(i);
+						     }			
+						     					        
+					        //predict_array = ((List<Double>)prediction).toArray();
+					        //List<Double> predict = (List<Double>)prediction;
+					        System.err.println("PREDICTION     ::::     "+prediction);
+					        System.err.println("PREDICTION WEIGHTS    ::::     "+weights.length + "   :::::  "+Arrays.toString(weights));
 					        WebElement element = browser.getDriver().findElement(By.xpath(form.getFormTag().getXpath()));
 					        src = element.getAttribute("innerHTML");
-
+					        
+					        //form.setPredictions(predict);
 						  	
 						  	try{
 						  		browser.close();
 						  	}
 						  	catch(Exception e){}
-						  	
+						  	form.setMemoryId(memory_id);
+						  	form.setPredictions(weights);
 						  	page_state.addForm(form);
 						  	page_state_repo.save(page_state);
 					        //FormRecord form_record = new FormRecord(src, form, "screenshot_url", page_state, weights, form_types, FormStatus.DISCOVERED);

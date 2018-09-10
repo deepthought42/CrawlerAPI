@@ -27,6 +27,7 @@ public class Form {
 	private Long id;
 
 	private String key;
+	private Long memory_id;
 	private String screenshot_url;
 	private String name;
 	private double[] predictions;
@@ -188,5 +189,13 @@ public class Form {
 
 	public void setTypeOptions(FormType[] type_options) {
 	    this.type_options = Arrays.stream(type_options).map(Enum::name).toArray(String[]::new);
+	}
+
+	public Long getMemoryId() {
+		return memory_id;
+	}
+
+	public void setMemoryId(Long memory_id) {
+		this.memory_id = memory_id;
 	}
 }

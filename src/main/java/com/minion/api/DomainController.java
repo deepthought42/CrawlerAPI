@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -355,6 +356,61 @@ public class DomainController {
     	domain_repo.getForms(domain.getUrl());
         return IterableUtils.toList(form_repo.findAll());
     }
+	
+	
+	//USERS ENDPOINTS
+	
+	/**
+	 * Create a new test user and add it to the domain
+	 * @param request
+	 * @param domain_id
+	 * @param username
+	 * @param password
+	 * @param role
+	 * 
+	 * 
+	 * @throws UnknownUserException
+	 * @throws UnknownAccountException
+	 * @throws MalformedURLException
+	 */
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="/domain/{domain_id}/users", method = RequestMethod.POST)
+    public @ResponseBody void addUser(HttpServletRequest request,
+    									@RequestParam long domain_id,
+    									@RequestParam(value="username", required=true) String username,
+    									@RequestParam(value="password", required=true) String password,
+    									@RequestParam(value="role", required=true) String role) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
+    	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+    	if(optional_domain.isPresent()){
+    		Domain domain = optional_domain.get();
+    		TestUser user = new TestUser(username, password, role);
+    		domain.addTestUser(user);
+    		domain_repo.save(domain);
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
+    }
+    
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="/domain/{domain_id}/users", method = RequestMethod.GET)
+    public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
+    									@RequestParam long domain_id) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
+    	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+    	if(optional_domain.isPresent()){
+    		Domain domain = optional_domain.get();
+    		return domain_repo.getTestUsers(domain.getUrl());
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
+    }
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
@@ -364,6 +420,16 @@ class RequiredFieldMissingException extends RuntimeException {
 
 	public RequiredFieldMissingException() {
 		super("Please fill in or select all required fields.");
+	}
+}
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class DomainNotFoundException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public DomainNotFoundException() {
+		super("Domain could not be found.");
 	}
 }
 

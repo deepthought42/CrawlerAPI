@@ -13,6 +13,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestUser;
 
 /**
  * 
@@ -49,4 +50,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
 	public int getTestCount(@Param("domain_host") String host);
+
+	@Query("MATCH a=(u:User) WHERE (:Domain{host:{domain_host}})-[:HAS]->(:User) RETURN a")
+	public Set<TestUser> getTestUsers(@Param("domain_host") String host);
+
 }

@@ -230,4 +230,8 @@ public class Domain implements Persistable{
 	public void setAccount(Set<Account> account) {
 		this.account = account;
 	}
+	
+	public long getId(){
+		return this.id;
+	}
 }

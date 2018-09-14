@@ -51,7 +51,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
 	public int getTestCount(@Param("domain_host") String host);
 
-	@Query("MATCH a=(u:User) WHERE (:Domain{host:{domain_host}})-[:HAS]->(:User) RETURN a")
+	@Query("MATCH a=(u:TestUser) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST_USER]->(:TestUser) RETURN a")
 	public Set<TestUser> getTestUsers(@Param("domain_host") String host);
 
 }

@@ -18,12 +18,14 @@ public class TestUser implements Persistable {
 	private String username;
 	private String password;
 	private String role;
+	private boolean enabled;
 	
 	public TestUser(){}
 	
-	public TestUser(String username, String password, String role){
+	public TestUser(String username, String password, String role, boolean isEnabled){
 		setUsername(username);
 		setPassword(password);
+		setIsEnabled(isEnabled);
 		setKey(generateKey());
 	}
 	
@@ -59,6 +61,13 @@ public class TestUser implements Persistable {
 		this.password = password;
 	}
 	
+	public void setIsEnabled(boolean isEnabled){
+		this.enabled = isEnabled;
+	}
+	
+	public boolean isEnabled(){
+		return this.enabled;
+	}
 
 	/**
 	 * {@inheritDoc}

@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.PathParam;
+
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -374,19 +376,20 @@ public class DomainController {
 	 * @throws MalformedURLException
 	 */
     @PreAuthorize("hasAuthority('create:domains')")
-    @RequestMapping(path="/domain/{domain_id}/users", method = RequestMethod.POST)
+    @RequestMapping(path="/{domain_id}/users", method = RequestMethod.POST)
     public @ResponseBody void addUser(HttpServletRequest request,
-    									@RequestParam long domain_id,
+    									@PathVariable(value="domain_id", required=true) long domain_id,
     									@RequestParam(value="username", required=true) String username,
     									@RequestParam(value="password", required=true) String password,
-    									@RequestParam(value="role", required=true) String role) 
+    									@RequestParam(value="role", required=false) String role,
+    									@RequestParam(value="enabled", required=true) boolean enabled) 
     											throws UnknownUserException, 
 														UnknownAccountException, 
 														MalformedURLException {
     	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		TestUser user = new TestUser(username, password, role);
+    		TestUser user = new TestUser(username, password, role, enabled);
     		domain.addTestUser(user);
     		domain_repo.save(domain);
     	}
@@ -396,16 +399,18 @@ public class DomainController {
     }
     
     @PreAuthorize("hasAuthority('create:domains')")
-    @RequestMapping(path="/domain/{domain_id}/users", method = RequestMethod.GET)
+    @RequestMapping(path="/{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
-    									@RequestParam long domain_id) 
+    									@PathVariable(value="domain_id", required=true) long domain_id) 
     											throws UnknownUserException, 
 														UnknownAccountException, 
 														MalformedURLException {
     	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		return domain_repo.getTestUsers(domain.getUrl());
+    		System.err.println("domain :: "+domain.getUrl());
+    		System.err.println("domain.getKey() :: "+domain.getKey());    		
+    		return domain_repo.getTestUsers(domain.getKey());
     	}
     	else{
     		throw new DomainNotFoundException();

@@ -20,7 +20,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Domain findByKey(@Param("key") String key);
 	public Domain findByHost(@Param("host") String host);
 	
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PAGE_STATE]->(p:PageState) RETURN p")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(p:PageState) MATCH a=(p)-[r:HAS_SCREENSHOT]->(s:ScreenshotSet) RETURN p,r,s")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
 	@Query("MATCH a=(p:PageState)-[:HAS_SCREENSHOT]->() WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN a")

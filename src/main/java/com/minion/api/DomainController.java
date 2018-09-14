@@ -31,7 +31,6 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DomainRepository;
 
 /**
@@ -267,6 +266,8 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_repo.getPageStates(host);
+		System.err.println("PAGE STATE SIZE 1 :: "+page_state.size());
+
 		Set<PageState> test_results = domain_repo.getResults(host);		
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);

@@ -262,6 +262,22 @@ public class TestController {
 	 * @return
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(path="/archive", method=RequestMethod.PUT)
+	public @ResponseBody void archiveTest(HttpServletRequest request,
+									@RequestParam(value="key", required=true) String key){
+		Test test = test_repo.findByKey(key);
+
+		test.setArchived(true);
+		test_repo.save(test);
+    }
+    
+	/**
+	 * Updates a test
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(method=RequestMethod.PUT)
 	public @ResponseBody void update(HttpServletRequest request,
 									@RequestParam(value="key", required=true) String key, 
@@ -271,9 +287,12 @@ public class TestController {
 		Test test = test_repo.findByKey(key);
 		
 		Map<String, String> browser_statuses = new HashMap<String, String>();
-		browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toLowerCase()).toString());
-		browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toLowerCase()).toString());
-
+		if(firefox_status!=null && !firefox_status.isEmpty()){
+			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
+		}
+		if(chrome_status!=null && !chrome_status.isEmpty()){
+			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
+		}
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);
 		test_repo.save(test);

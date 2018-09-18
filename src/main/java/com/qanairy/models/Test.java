@@ -40,8 +40,9 @@ public class Test implements Persistable {
 	private TestStatus status;
 	private boolean isUseful = false;
 	private boolean spansMultipleDomains = false;
-	private Date last_run_time;
 	private boolean is_running;
+	private boolean archived;
+	private Date last_run_time;
 	private long run_time_length;
 	private List<String> path_keys;
 	
@@ -374,5 +375,13 @@ public class Test implements Persistable {
 		clone_test.setRunTime(test.getRunTime());
 		
 		return clone_test;
+	}
+
+	public boolean isArchived() {
+		return archived;
+	}
+
+	public void setArchived(boolean is_archived) {
+		this.archived = is_archived;
 	}
 }

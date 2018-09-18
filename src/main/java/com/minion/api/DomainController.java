@@ -1,15 +1,20 @@
 package com.minion.api;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.websocket.server.PathParam;
 
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -25,8 +30,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
+import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
@@ -36,9 +44,13 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.FormRepository;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 /**
  *	API endpoints for interacting with {@link Domain} data
@@ -59,6 +71,10 @@ public class DomainController {
 	@Autowired
 	private FormRepository form_repo;
 	
+	@Autowired
+    private ActorSystem actor_system;
+	    
+	   
     /**
      * Create a new {@link Domain domain}
      * 
@@ -399,7 +415,7 @@ public class DomainController {
     }
     
     @PreAuthorize("hasAuthority('create:domains')")
-    @RequestMapping(path="/{domain_id}/users", method = RequestMethod.GET)
+    @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
     									@PathVariable(value="domain_id", required=true) long domain_id) 
     											throws UnknownUserException, 
@@ -415,6 +431,76 @@ public class DomainController {
     	else{
     		throw new DomainNotFoundException();
     	}
+    }
+    
+    /**
+     * Retrieves {@link FormRecord account} with a given key
+     * 
+     * @param key account key
+     * @return {@link FormRecord account}
+     * @throws IOException 
+     * @throws UnknownAccountException 
+     */
+
+	@PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="{domain_id}/forms", method = RequestMethod.PUT)
+    public @ResponseBody void updateForm(HttpServletRequest request,
+    							 @PathVariable(value="domain_id", required=true) long domain_id,
+    							 @RequestParam(value="key", required=true) String key,
+    							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
+		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = account_repo.findByUsername(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+		
+		Form form_record = form_repo.findByKey(key);
+
+		Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+    	if(optional_domain.isPresent()){
+    		Domain domain = optional_domain.get();
+    		System.err.println("domain :: "+domain.getUrl());
+    		System.err.println("domain.getKey() :: "+domain.getKey());    		
+    		
+        	System.err.println("FORM RECORD TYPE :: "+form_record.getType());
+        	System.err.println("FORM TYPE :: "+form_type);
+        	if(!form_record.getType().equals(FormType.create(form_type.toLowerCase()))){
+        		
+    	        //learn from form classification
+    	        DeepthoughtApi.learn(form_record, false);
+    	        
+        		
+        	}
+        	else {
+        		//this is an ok start, but this should actually involve a check for if the last form type
+        		//  was machine predicted or not. If it was, then the system should learn, if not then it shouldn't
+        		DeepthoughtApi.learn(form_record, true);
+        	}
+        	
+        	form_record.setType(FormType.create(form_type.toLowerCase()));
+    		//start form test creation actor
+    		Map<String, Object> options = new HashMap<String, Object>();
+			options.put("browser", domain.getDiscoveryBrowserName());
+	        options.put("host", domain.getUrl());
+	        Message<Form> form_msg = new Message<Form>(acct.getUsername(), form_record, options);
+
+    		final ActorRef form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
+    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
+		
+    	
+    	form_record = form_repo.save(form_record);
     }
 }
 

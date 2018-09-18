@@ -37,8 +37,6 @@ public class TestingActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 	
-	@Autowired
-	private BrowserService browser_service;
 	
     /**
      * Inputs

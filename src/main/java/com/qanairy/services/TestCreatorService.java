@@ -25,7 +25,6 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
-import com.qanairy.models.repository.TestRepository;
 
 @Component
 public class TestCreatorService {

@@ -168,7 +168,7 @@ public class PathExpansionActor extends AbstractActor {
 					page_element.addRule(rule);
 				}
 				for(Rule rule : page_element.getRules()){
-					List<List<PathObject>> tests = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+					List<List<PathObject>> tests = GeneralFormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
 					for(List<PathObject> path_obj_list: tests){
 						//iterate over all actions

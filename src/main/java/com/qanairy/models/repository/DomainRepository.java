@@ -41,7 +41,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Set<Form> getForms(@Param("domain_host") String host);
 	
 	//CURRENT QUERY DOESN"T WORK THE COMMENTED ONE DOES
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[:HAS_TEST_RECORD]->() MATCH c=(p)-[:HAS_SCREENSHOT]->() WHERE t.status='UNVERIFIED' RETURN a,b,c as d")
+	@Query("MATCH (:Domain{host:'app.qanairy.com'})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH c=(p)-[:HAS_SCREENSHOT]->() WHERE t.status='UNVERIFIED' RETURN a,c as d")
 	//@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[:HAS_TEST_RECORD]->(:TestRecord) MATCH c=(t)-[:HAS_GROUP]->(:Group) WHERE t.status='UNVERIFIED' RETURN a,b,c as c")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host);
 

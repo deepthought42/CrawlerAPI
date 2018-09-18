@@ -1,15 +1,11 @@
 package com.minion.actors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.actor.AbstractActor;
-import akka.actor.AbstractActor.Receive;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;

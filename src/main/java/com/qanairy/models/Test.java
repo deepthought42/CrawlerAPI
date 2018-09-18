@@ -89,6 +89,7 @@ public class Test implements Persistable {
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
 		setIsRunning(false);
+		setArchived(false);
 		setKey(generateKey());
 		setRunTime(0L);
 	}
@@ -109,6 +110,7 @@ public class Test implements Persistable {
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
 		setIsRunning(false);
+		setArchived(false);
 		setKey(generateKey());
 		setRunTime(0L);
 	}

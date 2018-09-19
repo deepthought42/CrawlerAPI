@@ -94,6 +94,10 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 
 								exploratory_path.addPathObject(username_elem);
 								exploratory_path.addToPathKeys(username_elem.getKey());
+
+								System.err.println("****************************************************************************");
+								System.err.println("USERNAME ELEMENT :::   "+username_elem.getKey());
+								System.err.println("****************************************************************************");
 								Action type_username = new Action("sendKeys", user.getUsername());
 								Action action_record = action_repo.findByKey(type_username.getKey());
 								if(action_record != null){
@@ -106,7 +110,11 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								//  get password element and add it to the path
 								PageElement password_elem = findInputElementByAttribute(elements, "password");
-								System.err.println("PASSWORD ELEMENT :::   "+password_elem);
+
+								System.err.println("****************************************************************************");
+								System.err.println("PASSWORD ELEMENT :::   "+password_elem.getKey());
+
+								System.err.println("****************************************************************************");
 								//  add typing action to path with value equal to user.password	
 								if(password_elem == null){
 									System.err.println("could not find password !!!!!!!!");
@@ -128,12 +136,13 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								exploratory_path.addToPathKeys(form.getSubmitField().getKey());
 								
 								List<Action> action_list = new ArrayList<Action>();
-								Action submit_login = new Action("click");
+								Action submit_login = new Action("click", "");
 								action_record = action_repo.findByKey(submit_login.getKey());
 								if(action_record != null){
 									submit_login= action_record;
 								}
 								
+								action_list.add(submit_login);
 								exploratory_path.setPossibleActions(action_list);
 								
 								PageState result_page = null;
@@ -203,14 +212,15 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		path_objects.add(page);
 		path_keys.add(page.getKey());
 		
-		return new ExploratoryPath(path_keys, path_objects, null);
+		return new ExploratoryPath(path_keys, path_objects, new ArrayList<Action>());
 	}
 
 	private PageElement findInputElementByAttribute(List<PageElement> elements, String search_val) {
 		for(PageElement element : elements){
-			boolean isUsername = false;
 			//check if element is type email
-			if(element.getType().contains(search_val))
+			if(element.getType().contains(search_val)){
+				return element;
+			}
 			
 			//check if element has value username in any attributes
 			for(Attribute attribute : element.getAttributes()){
@@ -224,13 +234,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 				return element;
 			}
 			else if(element.getXpath().contains(search_val)){
-				return element;
-			}
-
-			//if any of the above apply, then set isUsername flag to true
-			isUsername = true;
-			
-			if(isUsername){
 				return element;
 			}
 		}

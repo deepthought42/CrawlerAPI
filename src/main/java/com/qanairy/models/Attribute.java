@@ -128,6 +128,6 @@ public class Attribute implements Persistable {
 	}
 	
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getName())+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getVals().toString());
+		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(getName())+org.apache.commons.codec.digest.DigestUtils.sha256Hex(getVals().toString());
 	}
 }

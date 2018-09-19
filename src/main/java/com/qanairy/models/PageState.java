@@ -473,7 +473,7 @@ public class PageState implements Persistable, PathObject {
 	 */
 	public String generateKey() {
 		try{
-			return getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+			return getFileChecksum(MessageDigest.getInstance("SHA-512"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -484,7 +484,7 @@ public class PageState implements Persistable, PathObject {
 		for(PageElement element : getElements()){
 			key += element.getKey();
 		}
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(key);
 		*/
 		
 	}

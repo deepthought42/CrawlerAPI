@@ -220,7 +220,7 @@ public class Domain implements Persistable{
 	 */
 	@Override
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl().toString());
+		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(getUrl().toString());
 	}
 	
 	public Set<Account> getAccount() {

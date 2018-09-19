@@ -57,7 +57,7 @@ public class FormRecord {
 	}
 
 	private String generateKey(String src) {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(src); 
+		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(src); 
 	}
 
 	public String getScreenshotUrl() {

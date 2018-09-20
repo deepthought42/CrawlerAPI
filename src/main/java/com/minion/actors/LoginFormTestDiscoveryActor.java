@@ -143,7 +143,16 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								}
 								
 								action_list.add(submit_login);
-								exploratory_path.setPossibleActions(action_list);
+
+								System.err.println("*********************************************************");
+								System.err.println("ACTION LIST :: "+submit_login.getKey());
+								System.err.println("ACTION LIST :: "+submit_login.getName());
+								System.err.println("ACTION LIST :: "+action_list.size());
+								System.err.println("*********************************************************");
+								
+								//exploratory_path.setPossibleActions(action_list);
+								exploratory_path.addPathObject(submit_login);
+								exploratory_path.addToPathKeys(submit_login.getKey());
 								
 								PageState result_page = null;
 								Browser browser = new Browser((String)message.getOptions().get("browser"));

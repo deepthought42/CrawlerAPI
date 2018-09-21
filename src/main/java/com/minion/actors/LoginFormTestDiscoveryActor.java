@@ -111,15 +111,16 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								//  get password element and add it to the path
 								PageElement password_elem = findInputElementByAttribute(elements, "password");
 
+								if(password_elem == null){
+									System.err.println("could not find password !!!!!!!!");
+									//throw error that cannot find password field
+								}
 								System.err.println("****************************************************************************");
 								System.err.println("PASSWORD ELEMENT :::   "+password_elem.getKey());
 
 								System.err.println("****************************************************************************");
 								//  add typing action to path with value equal to user.password	
-								if(password_elem == null){
-									System.err.println("could not find password !!!!!!!!");
-									//throw error that cannot find password field
-								}
+								
 								exploratory_path.addPathObject(password_elem);
 								exploratory_path.addToPathKeys(password_elem.getKey());
 								Action type_password = new Action("sendKeys", user.getPassword());

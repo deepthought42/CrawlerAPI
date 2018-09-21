@@ -102,7 +102,7 @@ public class DeepthoughtApi {
 	    builder.addTextBody("memory_id", form.getMemoryId().toString());
 	    builder.addTextBody("feature_value", form.getType().toString());
 	    
-	    builder.addTextBody("isRewarded", Boolean.toString(isRewarded));
+	    //builder.addTextBody("isRewarded", Boolean.toString(isRewarded));
 	    builder.addTextBody("new_output_features", Arrays.toString(Arrays.stream(form.getTypeOptions()).map(Enum::name).toArray(String[]::new)));
 	    
 	    HttpEntity multipart = builder.build();

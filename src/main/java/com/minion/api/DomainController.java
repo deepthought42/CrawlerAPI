@@ -477,19 +477,13 @@ public class DomainController {
     		
         	System.err.println("FORM RECORD TYPE :: "+form_record.getType());
         	System.err.println("FORM TYPE :: "+form_type);
-        	if(!form_record.getType().equals(FormType.create(form_type.toLowerCase()))){
-        		
-    	        //learn from form classification
-    	        DeepthoughtApi.learn(form_record, false);
-    	        
-        		
-        	}
-        	else {
-        		//this is an ok start, but this should actually involve a check for if the last form type
-        		//  was machine predicted or not. If it was, then the system should learn, if not then it shouldn't
-        		DeepthoughtApi.learn(form_record, true);
-        	}
         	
+        	//this is an ok start, but this should actually involve a check for if the last form type
+    		//  was machine predicted or not. If it was, then the system should learn, if not then it shouldn't
+    	
+	        //learn from form classification    
+        	DeepthoughtApi.learn(form_record, false);
+	        
         	form_record.setType(FormType.create(form_type.toLowerCase()));
     		//start form test creation actor
     		Map<String, Object> options = new HashMap<String, Object>();

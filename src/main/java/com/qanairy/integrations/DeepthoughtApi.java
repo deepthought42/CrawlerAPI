@@ -14,7 +14,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qanairy.models.Form;
 
@@ -90,7 +89,7 @@ public class DeepthoughtApi {
 	  	 form.setPredictions(weights);
 	}
 	
-	public static void learn(Form form, boolean isRewarded) throws UnsupportedOperationException, IOException{
+	public static void learn(Form form) throws UnsupportedOperationException, IOException{
 		System.err.println("FORM ::    "+form);
 		System.err.println("FORM MEMORY ID   :::   "+form.getMemoryId());
 	  	System.err.println("Requesting prediction for form from RL system");

@@ -482,7 +482,7 @@ public class DomainController {
     		//  was machine predicted or not. If it was, then the system should learn, if not then it shouldn't
     	
 	        //learn from form classification    
-        	DeepthoughtApi.learn(form_record, false);
+        	DeepthoughtApi.learn(form_record);
 	        
         	form_record.setType(FormType.create(form_type.toLowerCase()));
     		//start form test creation actor

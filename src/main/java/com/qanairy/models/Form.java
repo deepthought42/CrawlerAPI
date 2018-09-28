@@ -28,7 +28,6 @@ public class Form {
 
 	private String key;
 	private Long memory_id;
-	private String screenshot_url;
 	private String name;
 	private double[] predictions;
 	private String[] type_options;
@@ -54,7 +53,6 @@ public class Form {
 		setTypeOptions(type_options);
 		setDateDiscovered(date_discovered);
 		setStatus(status);
-		setScreenshotUrl(screenshot_url);
 		setKey(generateKey());
 	}
 	
@@ -90,14 +88,6 @@ public class Form {
 		}
 		
 		return FormType.LEAD;
-	}
-	
-	public String getScreenshotUrl() {
-		return screenshot_url;
-	}
-
-	public void setScreenshotUrl(String screenshot_url) {
-		this.screenshot_url = screenshot_url;
 	}
 	
 	public String getName() {

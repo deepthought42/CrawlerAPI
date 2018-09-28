@@ -44,7 +44,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Set<Form> getForms(@Param("domain_host") String host);
 	
 	//CURRENT QUERY DOESN"T WORK THE COMMENTED ONE DOES
-	@Query("MATCH (:Domain{host:'app.qanairy.com'})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH c=(p)-[:HAS_SCREENSHOT]->() WHERE t.status='UNVERIFIED' RETURN a,c as d")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH c=(p)-[:HAS_SCREENSHOT]->() WHERE t.status='UNVERIFIED' RETURN a,c as d")
 	//@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[:HAS_TEST_RECORD]->(:TestRecord) MATCH c=(t)-[:HAS_GROUP]->(:Group) WHERE t.status='UNVERIFIED' RETURN a,b,c as c")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host);
 
@@ -54,7 +54,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
 	public int getTestCount(@Param("domain_host") String host);
 
-	@Query("MATCH a=(u:TestUser) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST_USER]->(:TestUser) RETURN a")
-	public Set<TestUser> getTestUsers(@Param("domain_host") String host);
+	@Query("MATCH (:Domain{key:{domain_key}})-[:HAS_TEST_USER]->(t:TestUser) RETURN t")
+	public Set<TestUser> getTestUsers(@Param("domain_key") String domain_key);
 
 }

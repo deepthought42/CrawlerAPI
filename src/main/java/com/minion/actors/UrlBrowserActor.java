@@ -66,21 +66,12 @@ public class UrlBrowserActor extends AbstractActor {
 								
 								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 		
-								/**  path expansion temorarily disabled
+								/**  path expansion temporarily disabled
 								 */
-								/*
 								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 								path_expansion_actor.tell(test_msg, getSelf() );
-								*/
-								
-								
-								
-								
-								/*final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
-								form_test_discoverer.tell(test_msg, getSelf() );
-								*/
+
 								System.err.println("test result :: "+test.getResult());
 								System.err.println("message account key :: "+message.getAccountKey());
 								System.err.println("message options "+ message.getOptions());

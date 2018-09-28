@@ -411,9 +411,22 @@ public class DomainController {
     	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		TestUser user = new TestUser(username, password, role, enabled);
-    		domain.addTestUser(user);
-    		domain_repo.save(domain);
+    		Set<TestUser> test_users = domain_repo.getTestUsers(domain.getKey());
+    		
+    		boolean exists = false;
+    		for(TestUser user : test_users){
+    			if(user.getUsername().equals(username)){
+    				exists = true;
+    				break;
+    			}
+    		}
+    		
+    		System.err.println("Test user does not exist for domain yet");
+    		if(!exists){
+	    		TestUser user = new TestUser(username, password, role, enabled);
+	    		domain.addTestUser(user);
+	    		domain_repo.save(domain);
+    		}
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -430,9 +443,9 @@ public class DomainController {
     	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		System.err.println("domain :: "+domain.getUrl());
-    		System.err.println("domain.getKey() :: "+domain.getKey());    		
-    		return domain_repo.getTestUsers(domain.getKey());
+    		Set<TestUser> users = domain_repo.getTestUsers(domain.getKey());
+
+    		return users;
     	}
     	else{
     		throw new DomainNotFoundException();

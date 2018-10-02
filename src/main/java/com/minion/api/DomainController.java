@@ -44,10 +44,12 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.FormRepository;
+import com.qanairy.models.repository.TestUserRepository;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -67,6 +69,9 @@ public class DomainController {
 	
 	@Autowired
 	private DomainRepository domain_repo;
+	
+	@Autowired
+	private TestUserRepository test_user_repo;
 	
 	@Autowired
 	private FormRepository form_repo;
@@ -433,6 +438,47 @@ public class DomainController {
     	}
     }
     
+    /**
+	 * Create a new test user and add it to the domain
+	 * @param request
+	 * @param domain_id
+	 * @param username
+	 * @param password
+	 * @param role
+	 * 
+	 * 
+	 * @throws UnknownUserException
+	 * @throws UnknownAccountException
+	 * @throws MalformedURLException
+	 */
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="/{domain_id}/users", method = RequestMethod.PUT)
+    public @ResponseBody void updateUser(HttpServletRequest request,
+    									@PathVariable(value="domain_id", required=true) long domain_id,
+    									@RequestParam(value="user_id", required=true) long user_id,
+    									@RequestParam(value="username", required=true) String username,
+    									@RequestParam(value="password", required=true) String password,
+    									@RequestParam(value="role", required=false) String role,
+    									@RequestParam(value="enabled", required=true) boolean enabled) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
+    	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
+    	if(optional_user.isPresent()){
+    		TestUser test_user = optional_user.get();
+    		    		
+    		System.err.println("Test user does not exist for domain yet");
+    		test_user.setIsEnabled(enabled);
+    		test_user.setPassword(password);
+    		test_user.setRole(role);
+    		test_user.setUsername(username);
+    		test_user_repo.save(test_user);
+    	}
+    	else{
+    		throw new TestUserNotFoundException();
+    	}
+    }
+    
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
@@ -466,6 +512,7 @@ public class DomainController {
     public @ResponseBody void updateForm(HttpServletRequest request,
     							 @PathVariable(value="domain_id", required=true) long domain_id,
     							 @RequestParam(value="key", required=true) String key,
+    							 @RequestParam(value="name", required=false) String name,
     							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
@@ -482,22 +529,21 @@ public class DomainController {
 		
 		Form form_record = form_repo.findByKey(key);
 
+		if(name!=null && !name.isEmpty()){
+			form_record.setName(name);
+		}
+		form_record.setType(FormType.create(form_type.toLowerCase()));
+    	form_record.setStatus(FormStatus.CLASSIFIED);
+    	
+        //learn from form classification    
+    	DeepthoughtApi.learn(form_record);
+    
+    	form_record = form_repo.save(form_record);
+
 		Optional<Domain> optional_domain = domain_repo.findById(domain_id);
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		System.err.println("domain :: "+domain.getUrl());
-    		System.err.println("domain.getKey() :: "+domain.getKey());    		
-    		
-        	System.err.println("FORM RECORD TYPE :: "+form_record.getType());
-        	System.err.println("FORM TYPE :: "+form_type);
-        	
-        	//this is an ok start, but this should actually involve a check for if the last form type
-    		//  was machine predicted or not. If it was, then the system should learn, if not then it shouldn't
-    	
-	        //learn from form classification    
-        	DeepthoughtApi.learn(form_record);
-	        
-        	form_record.setType(FormType.create(form_type.toLowerCase()));
+        		
     		//start form test creation actor
     		Map<String, Object> options = new HashMap<String, Object>();
 			options.put("browser", domain.getDiscoveryBrowserName());
@@ -511,9 +557,6 @@ public class DomainController {
     	else{
     		throw new DomainNotFoundException();
     	}
-		
-    	
-    	form_record = form_repo.save(form_record);
     }
 }
 
@@ -534,6 +577,16 @@ class DomainNotFoundException extends RuntimeException {
 
 	public DomainNotFoundException() {
 		super("Domain could not be found.");
+	}
+}
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class TestUserNotFoundException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public TestUserNotFoundException() {
+		super("Test user could not be found.");
 	}
 }
 

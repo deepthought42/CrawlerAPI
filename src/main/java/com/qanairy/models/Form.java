@@ -57,7 +57,7 @@ public class Form {
 	}
 	
 	private String generateKey() {
-		return ""+getFormFields().hashCode()+""+getFormTag().hashCode()+""+getSubmitField().hashCode()+""+getDateDiscovered();
+		return "form::"+getFormFields().hashCode()+""+getFormTag().hashCode()+""+getSubmitField().hashCode()+""+getDateDiscovered();
 	}
 
 	/**

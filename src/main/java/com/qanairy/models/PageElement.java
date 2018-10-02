@@ -237,19 +237,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		/*try {
-			return PageState.getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getScreenshot());
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return "";
-		*/
-		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(getXpath()+":"+getText());   
+		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getXpath()+":"+getText());   
 	}
 	
 

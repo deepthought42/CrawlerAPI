@@ -353,7 +353,7 @@ public class Test implements Persistable {
 		String path_key =  String.join("::", getPathKeys());
 		path_key += getResult().getKey();
 		
-		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(path_key);
+		return "test::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(path_key);
 	}
 	
 	/**

@@ -473,7 +473,7 @@ public class PageState implements Persistable, PathObject {
 	 */
 	public String generateKey() {
 		try{
-			return getFileChecksum(MessageDigest.getInstance("SHA-512"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+			return "pagestate::"+getFileChecksum(MessageDigest.getInstance("SHA-512"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 		}
 		catch(Exception e){
 			e.printStackTrace();

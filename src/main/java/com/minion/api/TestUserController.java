@@ -44,14 +44,12 @@ public class TestUserController {
 	 * @throws UnknownAccountException
 	 * @throws MalformedURLException
 	 */
-    @PreAuthorize("hasAuthority('create:domains')")
+    @PreAuthorize("hasAuthority('create:test_user')")
     @RequestMapping(path="/{user_id}", method = RequestMethod.PUT)
     public @ResponseBody void updateUser(HttpServletRequest request,
     									@PathVariable(value="user_id", required=true) long user_id,
     									@RequestParam(value="test_user", required=true) TestUser test_user) 
-    											throws UnknownUserException, 
-														UnknownAccountException, 
-														MalformedURLException {
+    											throws UnknownUserException {
     	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
     	if(optional_user.isPresent()){
     		TestUser test_user_record = optional_user.get();

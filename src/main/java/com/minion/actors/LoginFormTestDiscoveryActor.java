@@ -90,14 +90,10 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										//throw error that cannot find username field
 									}
 								}
-								System.err.println("USERNAME ELEMENT :::   "+username_elem);
 
 								exploratory_path.addPathObject(username_elem);
 								exploratory_path.addToPathKeys(username_elem.getKey());
 
-								System.err.println("****************************************************************************");
-								System.err.println("USERNAME ELEMENT :::   "+username_elem.getKey());
-								System.err.println("****************************************************************************");
 								Action type_username = new Action("sendKeys", user.getUsername());
 								Action action_record = action_repo.findByKey(type_username.getKey());
 								if(action_record != null){
@@ -115,10 +111,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									System.err.println("could not find password !!!!!!!!");
 									//throw error that cannot find password field
 								}
-								System.err.println("****************************************************************************");
-								System.err.println("PASSWORD ELEMENT :::   "+password_elem.getKey());
-
-								System.err.println("****************************************************************************");
+								
 								//  add typing action to path with value equal to user.password	
 								
 								exploratory_path.addPathObject(password_elem);

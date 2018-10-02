@@ -438,47 +438,6 @@ public class DomainController {
     	}
     }
     
-    /**
-	 * Create a new test user and add it to the domain
-	 * @param request
-	 * @param domain_id
-	 * @param username
-	 * @param password
-	 * @param role
-	 * 
-	 * 
-	 * @throws UnknownUserException
-	 * @throws UnknownAccountException
-	 * @throws MalformedURLException
-	 */
-    @PreAuthorize("hasAuthority('create:domains')")
-    @RequestMapping(path="/{domain_id}/users", method = RequestMethod.PUT)
-    public @ResponseBody void updateUser(HttpServletRequest request,
-    									@PathVariable(value="domain_id", required=true) long domain_id,
-    									@RequestParam(value="user_id", required=true) long user_id,
-    									@RequestParam(value="username", required=true) String username,
-    									@RequestParam(value="password", required=true) String password,
-    									@RequestParam(value="role", required=false) String role,
-    									@RequestParam(value="enabled", required=true) boolean enabled) 
-    											throws UnknownUserException, 
-														UnknownAccountException, 
-														MalformedURLException {
-    	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
-    	if(optional_user.isPresent()){
-    		TestUser test_user = optional_user.get();
-    		    		
-    		System.err.println("Test user does not exist for domain yet");
-    		test_user.setIsEnabled(enabled);
-    		test_user.setPassword(password);
-    		test_user.setRole(role);
-    		test_user.setUsername(username);
-    		test_user_repo.save(test_user);
-    	}
-    	else{
-    		throw new TestUserNotFoundException();
-    	}
-    }
-    
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
@@ -577,16 +536,6 @@ class DomainNotFoundException extends RuntimeException {
 
 	public DomainNotFoundException() {
 		super("Domain could not be found.");
-	}
-}
-
-@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-class TestUserNotFoundException extends RuntimeException {
-
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public TestUserNotFoundException() {
-		super("Test user could not be found.");
 	}
 }
 

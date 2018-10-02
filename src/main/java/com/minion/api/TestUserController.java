@@ -1,0 +1,81 @@
+package com.minion.api;
+
+import java.net.MalformedURLException;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.omg.CORBA.UnknownUserException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import com.qanairy.models.TestUser;
+import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.repository.TestUserRepository;
+
+/**
+ * REST controller that defines endpoints to access test users
+ */
+@Controller
+@RequestMapping("/test_users")
+public class TestUserController {
+
+	@Autowired
+	private TestUserRepository test_user_repo;
+	
+	/**
+	 * Create a new test user and add it to the domain
+	 * @param request
+	 * @param domain_id
+	 * @param username
+	 * @param password
+	 * @param role
+	 * 
+	 * 
+	 * @throws UnknownUserException
+	 * @throws UnknownAccountException
+	 * @throws MalformedURLException
+	 */
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="/{user_id}", method = RequestMethod.PUT)
+    public @ResponseBody void updateUser(HttpServletRequest request,
+    									@PathVariable(value="user_id", required=true) long user_id,
+    									@RequestParam(value="test_user", required=true) TestUser test_user) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
+    	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
+    	if(optional_user.isPresent()){
+    		TestUser test_user_record = optional_user.get();
+    		    		
+    		System.err.println("Test user does not exist for domain yet");
+    		test_user_record.setIsEnabled(test_user.isEnabled());
+    		test_user_record.setPassword(test_user.getPassword());
+    		test_user_record.setRole(test_user.getRole());
+    		test_user_record.setUsername(test_user.getUsername());
+    		test_user_repo.save(test_user_record);
+    	}
+    	else{
+    		throw new TestUserNotFoundException();
+    	}
+    }
+}
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class TestUserNotFoundException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public TestUserNotFoundException() {
+		super("Test user could not be found.");
+	}
+}
+

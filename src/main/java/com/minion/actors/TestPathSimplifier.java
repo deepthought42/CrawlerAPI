@@ -5,7 +5,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,6 @@ import com.minion.structs.Message;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.PageStateRepository;
-import com.qanairy.services.BrowserService;
-import com.qanairy.services.TestService;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -43,18 +38,6 @@ import akka.event.LoggingAdapter;
 public class TestPathSimplifier extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 	Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private BrowserService browser_service;
-	
-	@Autowired
-	private TestService test_service;
-	
-	@Autowired
-	private PageStateRepository page_state_repo;
-	
-	@Autowired
-	private DomainRepository domain_repo;
 	
 	@Autowired
 	private ActorSystem actor_system;

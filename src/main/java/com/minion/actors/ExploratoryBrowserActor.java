@@ -141,7 +141,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								int tries = 0;
 								do{
 									try{
-										System.err.println("Crawling path");
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
@@ -247,8 +246,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @throws JsonProcessingException 
 	 */
 	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg ) throws JsonProcessingException {
+		
 		Test test = new Test(path_keys, path_objects, result_page, null);							
-
+		Test test_db = test_repo.findByKey(test.getKey());
+		if(test_db != null){
+			test = test_db;
+		}
+		
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
@@ -263,13 +267,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		final ActorRef test_simplifier = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("testPathSimplifier"), "test_simplifier"+UUID.randomUUID());
 		test_simplifier.tell(test_msg, getSelf());
-	
-
-		/*System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
-		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-		path_expansion_actor.tell(test_msg, getSelf());
-		 */
 	}
 	
 	/**

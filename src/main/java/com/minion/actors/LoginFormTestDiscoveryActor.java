@@ -63,17 +63,19 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					//check that message data is of type Form and that the form type is set to login
-					
+					System.err.println("login form test discovery actor is up!");
 					if(message.getData() instanceof Form){
 						Form form = (Form)message.getData();
 						Domain domain = domain_service.findByHost(message.getOptions().get("host").toString());
 						//check if form type is set to login
 						if(form.getType().equals(FormType.LOGIN)){
+							System.err.println("FORM TYPE IS    LOGIN");
 							//get current domain from options list within message
 							//  generate path leading to current form
 							
 							//get users for current domain
 							Set<TestUser> test_users = domain_service.getTestUsers(domain);
+							System.err.println("generating tests for "+test_users.size()+"   users");
 							for(TestUser user : test_users){
 								ExploratoryPath exploratory_path = initializeFormTest(form);
 
@@ -163,20 +165,17 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										e.printStackTrace();
 									} catch (GridException e) {
 										browser = new Browser(browser.getBrowserName());
-										// TODO Auto-generated catch block
 										e.printStackTrace();
 									} catch (WebDriverException e) {
 										browser = new Browser(browser.getBrowserName());
-										// TODO Auto-generated catch block
 										e.printStackTrace();
 									} catch (NoSuchAlgorithmException e) {
-										// TODO Auto-generated catch block
 										e.printStackTrace();
 									}
 									tries++;
-								}while(result_page == null && tries < 5);
+								}while(result_page == null && tries < 3);
 							
-								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, "successful login test");
+								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
 								Test test_record = test_repo.findByKey(test.getKey());
 								if(test_record == null){
 									test = test_repo.save(test);

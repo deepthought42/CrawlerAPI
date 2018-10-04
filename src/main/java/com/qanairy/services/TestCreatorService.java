@@ -3,6 +3,7 @@ package com.qanairy.services;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -71,6 +72,7 @@ public class TestCreatorService {
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 		  	page_obj.setLandable(true);
+		  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
 	  		page_obj = page_state_repo.save(page_obj);
 	  	}
 	  	else{

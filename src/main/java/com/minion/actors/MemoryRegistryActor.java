@@ -37,7 +37,7 @@ public class MemoryRegistryActor extends AbstractActor{
 	Cluster cluster = Cluster.get(getContext().getSystem());
 
 	public static Props props() {
-	  return Props.create(LandabilityChecker.class);
+	  return Props.create(MemoryRegistryActor.class);
 	}
 	
 	@Autowired

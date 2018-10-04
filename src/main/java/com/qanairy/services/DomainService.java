@@ -5,7 +5,6 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.minion.browsing.Crawler;
 import com.qanairy.models.Domain;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.repository.DomainRepository;
@@ -17,7 +16,7 @@ public class DomainService {
 	private DomainRepository domain_repo;
 	
 	public Set<TestUser> getTestUsers(Domain domain) {
-		return domain_repo.getTestUsers(domain.getUrl());
+		return domain_repo.getTestUsers(domain.getKey());
 	}
 
 	public Domain findByHost(String host) {

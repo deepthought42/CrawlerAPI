@@ -92,17 +92,18 @@ public class DeepthoughtApi {
 	public static void learn(Form form) throws UnsupportedOperationException, IOException{
 		System.err.println("FORM ::    "+form);
 		System.err.println("FORM MEMORY ID   :::   "+form.getMemoryId());
+		System.err.println("feature value :: "+form.getType());
 	  	System.err.println("Requesting prediction for form from RL system");
 	  	
 	  	CloseableHttpClient client = HttpClients.createDefault();
-	    HttpPost httpPost = new HttpPost("http://198.211.117.122:9080/rl/predict");
+	    HttpPost httpPost = new HttpPost("http://198.211.117.122:9080/rl/learn");
 	 
 	    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 	    builder.addTextBody("memory_id", form.getMemoryId().toString());
 	    builder.addTextBody("feature_value", form.getType().toString());
 	    
 	    //builder.addTextBody("isRewarded", Boolean.toString(isRewarded));
-	    builder.addTextBody("new_output_features", Arrays.toString(Arrays.stream(form.getTypeOptions()).map(Enum::name).toArray(String[]::new)));
+	    //builder.addTextBody("new_output_features", Arrays.toString(Arrays.stream(form.getTypeOptions()).map(Enum::name).toArray(String[]::new)));
 	    
 	    HttpEntity multipart = builder.build();
 	    httpPost.setEntity(multipart);
@@ -128,6 +129,10 @@ public class DeepthoughtApi {
                 rl_response = sb.toString();
                 System.err.println("Response received from RL system :: "+rl_response);	
                 break;
+            case 400:
+            	System.err.println("***********************************************************");
+            	System.err.println("RL returned a 400");
+            	System.err.println("***********************************************************");
             case 500:
             	return;
         }

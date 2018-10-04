@@ -365,9 +365,9 @@ public class DomainController {
 	 * @throws UnknownAccountException
 	 */
 	@PreAuthorize("hasAuthority('read:domains')")
-    @RequestMapping(method = RequestMethod.GET, path="{domain_key}/forms")
+    @RequestMapping(method = RequestMethod.GET, path="{domain_id}/forms")
     public @ResponseBody List<Form> getAllForms(HttpServletRequest request, 
-												  @PathVariable("domain_key") String domain_key) 
+												@PathVariable(value="domain_id", required=true) long domain_id)
 														throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
@@ -381,9 +381,14 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	Domain domain = domain_repo.findByKey(domain_key);
-    	domain_repo.getForms(domain.getUrl());
-        return IterableUtils.toList(form_repo.findAll());
+    	Optional<Domain> domain = domain_repo.findById(domain_id);
+    	if(domain.isPresent()){
+    		domain_repo.getForms(domain.get().getUrl());
+    		return IterableUtils.toList(form_repo.findAll());
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
     }
 	
 	
@@ -488,35 +493,43 @@ public class DomainController {
 		
 		Form form_record = form_repo.findByKey(key);
 
-		if(name!=null && !name.isEmpty()){
-			form_record.setName(name);
+		if(form_record == null){
+			throw new FormNotFoundException();
 		}
-		form_record.setType(FormType.create(form_type.toLowerCase()));
-    	form_record.setStatus(FormStatus.CLASSIFIED);
-    	
-        //learn from form classification    
-    	DeepthoughtApi.learn(form_record);
-    
-    	form_record = form_repo.save(form_record);
-
-		Optional<Domain> optional_domain = domain_repo.findById(domain_id);
-    	if(optional_domain.isPresent()){
-    		Domain domain = optional_domain.get();
-        		
-    		//start form test creation actor
-    		Map<String, Object> options = new HashMap<String, Object>();
-			options.put("browser", domain.getDiscoveryBrowserName());
-	        options.put("host", domain.getUrl());
-	        Message<Form> form_msg = new Message<Form>(acct.getUsername(), form_record, options);
-
-    		final ActorRef form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
-    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
-    	}
-    	else{
-    		throw new DomainNotFoundException();
-    	}
-    }
+		else{
+			if(name!=null && !name.isEmpty()){
+				form_record.setName(name);
+			}
+			form_record.setType(FormType.create(form_type.toLowerCase()));
+	    	form_record.setStatus(FormStatus.CLASSIFIED);
+	    	
+	        //learn from form classification    
+	    	DeepthoughtApi.learn(form_record);
+	    
+	    	form_record = form_repo.save(form_record);
+	
+			Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+			System.err.println("Does the domain exist :: "+optional_domain.isPresent());
+	    	if(optional_domain.isPresent()){
+	    		Domain domain = optional_domain.get();
+	        		
+	    		System.err.println("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
+	    		//start form test creation actor
+	    		Map<String, Object> options = new HashMap<String, Object>();
+				options.put("browser", domain.getDiscoveryBrowserName());
+		        options.put("host", domain.getUrl());
+		        Message<Form> form_msg = new Message<Form>(acct.getUsername(), form_record, options);
+	
+		        System.err.println("Sending form message  :: "+form_msg.toString());
+	    		final ActorRef form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+	  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
+	    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
+	    	}
+	    	else{
+	    		throw new DomainNotFoundException();
+	    	}
+		}
+	}
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
@@ -536,6 +549,16 @@ class DomainNotFoundException extends RuntimeException {
 
 	public DomainNotFoundException() {
 		super("Domain could not be found.");
+	}
+}
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class FormNotFoundException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public FormNotFoundException() {
+		super("Form could not be found.");
 	}
 }
 

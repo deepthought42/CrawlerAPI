@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -30,6 +32,7 @@ import com.minion.browsing.Browser;
  */
 @NodeEntity
 public class PageState implements Persistable, PathObject {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 	
 	@GeneratedValue
@@ -38,6 +41,7 @@ public class PageState implements Persistable, PathObject {
 	
     private String key;
     private boolean landable;
+    private LocalDateTime last_landability_check;
     
     @JsonIgnore
 	private String src;
@@ -373,6 +377,11 @@ public class PageState implements Persistable, PathObject {
 	}
 	
 	public void setUrl(String url){
+		/*int param_idx = url.indexOf('?');
+		if(param_idx >= 0){
+			url = url.substring(0, param_idx);
+		}
+		*/
 		this.url = url;
 	}
 
@@ -500,5 +509,13 @@ public class PageState implements Persistable, PathObject {
 	
 	public Set<Form> getForms(){
 		return this.forms;
+	}
+
+	public LocalDateTime getLastLandabilityCheck() {
+		return last_landability_check;
+	}
+
+	public void setLastLandabilityCheck(LocalDateTime last_landability_check_timestamp) {
+		this.last_landability_check = last_landability_check_timestamp;
 	}
 }

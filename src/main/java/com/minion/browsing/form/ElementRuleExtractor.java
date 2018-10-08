@@ -133,7 +133,6 @@ public class ElementRuleExtractor {
 				rule_record = pattern_rule_repo.findByKey(rule.getKey());
 			}
 			else{
-				System.err.println("Unable to identify rule with type "+attr.getName());
 				continue;
 			}
 			System.err.println("RULE :: "+rule);

@@ -28,7 +28,6 @@ import com.qanairy.services.TestService;
 import com.minion.structs.Message;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -37,9 +36,6 @@ import akka.event.LoggingAdapter;
 
 public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-
-	@Autowired
-	private ActorSystem actor_system;
 	
 	@Autowired
 	private Crawler crawler;
@@ -85,7 +81,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							}
 							cnt++;
 						}	
-					  	
+	
 					  	List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
 					  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					  	for(Form form : forms){

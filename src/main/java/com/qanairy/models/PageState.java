@@ -1,22 +1,26 @@
 package com.qanairy.models;
 
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.Deflater;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.codec.binary.Hex;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -246,7 +250,7 @@ public class PageState implements Persistable, PathObject {
         System.err.println("Page 2 length :: "+that.getElements().size());
         System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
-        
+        /*
         if(!pages_match ){
 	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
 	        for(PageElement elem : that.getElements()){
@@ -257,16 +261,10 @@ public class PageState implements Persistable, PathObject {
         		page_elements.remove(elem.getXpath());
 	        }
 
-	        System.err.println("#####################################################################################");
-	        System.err.println("PAGE ELEMENT DIFF :: "+page_elements.size());
 	        if(page_elements.isEmpty()){
 	        	pages_match = true;
 	        }
 	        else{
-	        	System.err.println("TOTAL ELEMENTS FOR Both :: " + (this.getElements().size()+that.getElements().size())/2);
-	        	System.err.println("difference percentage :: "+(page_elements.size()/((this.getElements().size()+that.getElements().size())/2)));
-	        	System.err.println("###################################################################################");
-	        	
 	        	if( (page_elements.size()/((this.getElements().size()+that.getElements().size())/2)) > 0.7){
 		        	pages_match = false;	
 	        	}
@@ -275,8 +273,8 @@ public class PageState implements Persistable, PathObject {
 	        	}
 	        }
         }
+        */
     	return pages_match;
-    	
   	}
 	
 	/**
@@ -429,8 +427,71 @@ public class PageState implements Persistable, PathObject {
 
 	public static String getFileChecksum(MessageDigest digest, String url) throws IOException
 	{
-		InputStream is = new URL(url).openStream(); 
-
+		//InputStream is = new URL(url).openStream(); 
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		BufferedImage img = ImageIO.read(new URL(url));
+		
+		//turn image to grayscale
+		//get image width and height
+		int width = img.getWidth();
+		int height = img.getHeight();
+		
+		/*
+		for(int y = 0; y < height; y++){
+		  for(int x = 0; x < width; x++){
+			  int p = img.getRGB(x,y);
+			  int a = (p>>24)&0xff;
+			  int r = (p>>16)&0xff;
+			  int g = (p>>8)&0xff;
+			  int b = p&0xff;
+			  
+			  int avg = (r+g+b)/3;
+			  p = (a<<24) | (avg<<16) | (avg<<8) | avg;
+			  img.setRGB(x, y, p);
+		  }
+		}
+	*/
+		// creates output image
+		BufferedImage outputImage = null;
+        // creates output image
+        if(height/10 > 100 && width/10 > 100){
+        	outputImage = new BufferedImage(width/10, height/10, img.getType());
+ 
+	        // scales the input image to the output image
+	        Graphics2D g2d = outputImage.createGraphics();
+	        g2d.drawImage(img, 0, 0, width/10, height/10, null);
+	        g2d.dispose();
+	 
+        }
+        else{
+        	outputImage = img;
+        }
+		boolean foundWriter = ImageIO.write(outputImage, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
+    
+		String image_hex = Hex.encodeHexString(baos.toByteArray());
+		StringBuilder sb = new StringBuilder();
+		for(int idx = 0; idx<image_hex.length(); idx+=97){
+			if(sb.toString().length() > 512){
+				break;
+			}
+			sb.append(image_hex.charAt(idx));			
+		}
+		
+	    return sb.toString();
+		
+		
+		/*
+		 try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
+			byte[] thedigest = sha.digest(baos.toByteArray());
+	        return DatatypeConverter.printHexBinary(thedigest);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	    return "";
+	    */
+	    /*
 	    //Create byte array to read data in chunks
 	    byte[] byteArray = new byte[1024];
 	    int bytesCount = 0;
@@ -456,10 +517,67 @@ public class PageState implements Persistable, PathObject {
 	     
 	   //return complete hash
 	   return sb.toString();
+	   */
 	}
 	
-	public static String getFileChecksum(BufferedImage bufferedImage) throws IOException
-	{
+	public static String getFileChecksum(BufferedImage buff_img) throws IOException
+	{			
+		BufferedImage img = new BufferedImage(buff_img.getWidth(), buff_img.getHeight(), buff_img.getType());
+	    Graphics graphics = img.getGraphics();
+	    graphics.drawImage(buff_img, 0, 0, null);
+	    graphics.dispose();
+	    //InputStream is = new URL(url).openStream(); 
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		
+		//turn image to grayscale
+		//get image width and height
+		int width = img.getWidth();
+		int height = img.getHeight();
+		
+/*
+        for(int y = 0; y < height; y++){
+		  for(int x = 0; x < width; x++){
+			  int p = img.getRGB(x,y);
+			  int a = (p>>24)&0xff;
+			  int r = (p>>16)&0xff;
+			  int g = (p>>8)&0xff;
+			  int b = p&0xff;
+			  
+			  int avg = (r+g+b)/3;
+			  p = (a<<24) | (avg<<16) | (avg<<8) | avg;
+			  img.setRGB(x, y, p);
+		  }
+		}
+  */      
+        BufferedImage outputImage = null;
+        // creates output image
+        if(height/10 > 100 && width/10 > 100){
+	        outputImage = new BufferedImage(width/10, height/10, img.getType());
+	 
+	        // scales the input image to the output image
+	        Graphics2D g2d = outputImage.createGraphics();
+	        g2d.drawImage(outputImage, 0, 0, width/10, height/10, null);
+	        g2d.dispose();
+        }
+        else{
+        	outputImage = img;
+        }		
+		boolean foundWriter = ImageIO.write(outputImage, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
+
+		String image_hex = Hex.encodeHexString(baos.toByteArray());
+
+		StringBuilder sb = new StringBuilder();
+
+		for(int idx = 0; idx<image_hex.length(); idx+=97){
+			if(sb.toString().length() > 512){
+				break;
+			}
+			sb.append(image_hex.charAt(idx));
+			
+		}
+        return sb.toString();
+		/*
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		boolean foundWriter = ImageIO.write(bufferedImage, "png", baos);
 		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
@@ -473,6 +591,7 @@ public class PageState implements Persistable, PathObject {
 			e.printStackTrace();
 		}
 	    return "";
+	    */
 	}
 		
 	/**
@@ -482,7 +601,8 @@ public class PageState implements Persistable, PathObject {
 	 */
 	public String generateKey() {
 		try{
-			return "pagestate::"+getFileChecksum(MessageDigest.getInstance("SHA-512"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+			String key ="pagestate::"+getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+			return key;
 		}
 		catch(Exception e){
 			e.printStackTrace();

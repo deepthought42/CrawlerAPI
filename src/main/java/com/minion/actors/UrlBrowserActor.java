@@ -63,6 +63,19 @@ public class UrlBrowserActor extends AbstractActor {
 								
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
 								test_service.save(test, host);
+		
+								System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+								System.err.println("test result :: "+test.getResult());
+								System.err.println("message account key :: "+message.getAccountKey());
+								System.err.println("message options "+ message.getOptions());
+								System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+								
+								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
+
+								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+								form_discoverer.tell(page_state_msg, getSelf() );
+		
 								
 								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 		
@@ -71,17 +84,6 @@ public class UrlBrowserActor extends AbstractActor {
 								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 								path_expansion_actor.tell(test_msg, getSelf() );
-
-								System.err.println("test result :: "+test.getResult());
-								System.err.println("message account key :: "+message.getAccountKey());
-								System.err.println("message options "+ message.getOptions());
-	
-								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
-
-								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								form_discoverer.tell(page_state_msg, getSelf() );
-		
 								
 								break;
 							}

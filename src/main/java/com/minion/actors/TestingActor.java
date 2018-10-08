@@ -64,6 +64,7 @@ public class TestingActor extends AbstractActor {
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 									break;
 								}catch(NullPointerException e){
+									browser = new Browser(browser.getBrowserName());
 									log.error(e.getMessage());
 								}
 								cnt++;

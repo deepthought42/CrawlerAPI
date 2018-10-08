@@ -7,6 +7,7 @@ import java.awt.image.RasterFormatException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -136,8 +137,14 @@ public class BrowserService {
 	 * @return
 	 * @throws GridException 
 	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
+	 * 
+	 * @pre browser != null
+	 * @post page_state != null
 	 */
-	public PageState buildPage(Browser browser) throws GridException, IOException{
+	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
+		assert browser != null;
+				
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
 		String page_key = "";
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
@@ -145,52 +152,66 @@ public class BrowserService {
 		File viewport_screenshot = null;
 		try{
 			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-			page_key = PageState.getFileChecksum(ImageIO.read(viewport_screenshot)); 
+			page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
 			System.err.println("Getting visible elements...");
 			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(viewport_screenshot), page_url.getHost());
+			
+			for(PageElement elem : visible_elements){
+				System.err.println("ELEMENT :: "+elem);
+			}
 		}catch(IOException e){
 			log.error(e.getMessage());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	
 		if(visible_elements == null){
 			visible_elements = new HashSet<PageElement>();
 		}
 
-		viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(ImageIO.read(viewport_screenshot), page_url.getHost(), page_key, "viewport");
-		ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
-		
-		ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
-		if(screenshot_record != null){
-			screenshot_set = screenshot_record;
-		}
-		else{
-			screenshot_set = screenshot_set_repo.save(screenshot_set);
-		}
-		
-		HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
-		screenshots.add(screenshot_set);
-		
-		
-		PageState page_record = page_state_repo.findByKey(page_key.toLowerCase());
 		PageState page_state = null;
+		PageState page_record = null;
+		try{
+			page_record = page_state_repo.findByKey("pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot)));
+		}
+		catch(Exception e){
+			
+		}
 		if(page_record != null){
+			System.err.println("BROWSER SERVICE LOADED PAGE STATE RECORD");
 			page_state = page_record;
 		}
 		else{
+			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(ImageIO.read(viewport_screenshot), page_url.getHost(), page_key, "viewport");
+			
+			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
+			
+			ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
+			if(screenshot_record != null){
+				screenshot_set = screenshot_record;
+			}
+			else{
+				screenshot_set = screenshot_set_repo.save(screenshot_set);
+			}
+			
+			HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
+			screenshots.add(screenshot_set);
+			
 			page_state = new PageState("",
 					page_url.toString(),
 					screenshots,
 					visible_elements);
-			
-			//page_state.setLandable(checkIfLandable(browser, page_state));
-			System.err.println("Page state is new. Checking landability");
-			//have page checked for landability
-			BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
-
-			final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-			landibility_checker.tell(bps, ActorRef.noSender() );
 		}
+		//page_state.setLandable(checkIfLandable(browser, page_state));
+		//have page checked for landability
+		System.err.println("PAGE STATE during build is ... :: "+page_state);
+		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
+
+		final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
+		landibility_checker.tell(bps, ActorRef.noSender() );
+		
 		return page_state;
 	}
 
@@ -233,6 +254,9 @@ public class BrowserService {
 					catch(RasterFormatException e){
 						log.warn("Raster Format Exception : "+e.getMessage());
 						continue;
+					}
+					catch(Exception e){
+						
 					}
 					
 					Set<Attribute> attributes = extractAttributes(elem, driver);
@@ -479,9 +503,9 @@ public class BrowserService {
 	 * @param tag
 	 * @param driver
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public List<Form> extractAllForms(PageState page, Browser browser) throws IOException{
+	public List<Form> extractAllForms(PageState page, Browser browser) throws Exception{
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		List<Form> form_list = new ArrayList<Form>();
 
@@ -493,22 +517,26 @@ public class BrowserService {
 
 			String page_screenshot = "";
 			for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
+				System.err.println("screenshot browser  ::   "+screenshot.getBrowser());
+				System.err.println("browser browsername ::   "+browser.getBrowserName());
 				if(screenshot.getBrowser().equals(browser.getBrowserName())){
 					page_screenshot = screenshot.getViewportScreenshot();
 				}
 			}
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
+			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
 			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
 			if(tag != null){
 				form_tag = tag;
 			}
-			
+			form_tag.setScreenshot(screenshot_url);
+
 			double[] weights = new double[1];
 			weights[0] = 0.3;
 			
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
-									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED, "" );
+									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
 			for(WebElement input_elem : input_elements){
@@ -534,7 +562,13 @@ public class BrowserService {
 						continue;
 					}
 					BufferedImage img = Browser.getElementScreenshot(ImageIO.read(viewport), input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
-					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), org.apache.commons.codec.digest.DigestUtils.sha512Hex(browser.getDriver().getPageSource())+"/"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(input_elem.getTagName()+input_elem.getText()), input_tag.getKey());
+					String screenshot= null;
+					try {
+						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), PageState.getFileChecksum(img), input_tag.getKey());
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
 					if(elem_record == null){
 						input_tag.setScreenshot(screenshot);
@@ -636,8 +670,9 @@ public class BrowserService {
 	 * @param page_elem
 	 * @param driver
 	 * @return
+	 * @throws Exception 
 	 */
-	public List<PageElement> constructGrouping(WebElement page_elem, WebDriver driver){
+	public List<PageElement> constructGrouping(WebElement page_elem, WebDriver driver) throws Exception{
 
 		List<PageElement> child_inputs = new ArrayList<PageElement>();
 
@@ -723,8 +758,9 @@ public class BrowserService {
 	 * locates and returns the form submit button 
 	 * @param form_elem
 	 * @return
+	 * @throws Exception 
 	 */
-	private PageElement findFormSubmitButton(WebElement form_elem, Browser browser) {
+	private PageElement findFormSubmitButton(WebElement form_elem, Browser browser) throws Exception {
 		WebElement submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
 		Set<Attribute> attributes = extractAttributes(submit_element, browser.getDriver());
 		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem);
@@ -736,7 +772,7 @@ public class BrowserService {
 		return elem;
 	}
 	
-	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem){
+	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem) throws Exception{
 		BufferedImage img = null;
 		String checksum = "";
 		String screenshot_url = "";
@@ -748,18 +784,15 @@ public class BrowserService {
 		}
 		catch(RasterFormatException e){
 			log.warn("Raster Format Exception : "+e.getMessage());
-			e.printStackTrace();
 		} catch (GridException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("IOException occurred while retrieving and uploading "+e.getMessage());
 		}
 		return screenshot_url;
 	}
 	
-	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem, BufferedImage page_img){
+	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem, BufferedImage page_img) throws Exception{
 		BufferedImage img = null;
 		String checksum = "";
 		String screenshot_url = "";
@@ -771,13 +804,10 @@ public class BrowserService {
 		}
 		catch(RasterFormatException e){
 			log.warn("Raster Format Exception : "+e.getMessage());
-			e.printStackTrace();
 		} catch (GridException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("IOException occurred while retrieving and uploading "+e.getMessage());
 		}
 		return screenshot_url;
 	}

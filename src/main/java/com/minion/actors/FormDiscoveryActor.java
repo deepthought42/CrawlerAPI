@@ -1,5 +1,6 @@
 package com.minion.actors;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,32 +86,44 @@ public class FormDiscoveryActor extends AbstractActor{
 							}
 							cnt++;
 						}	
+					  
 					  	
 					  	page_state = page_state_repo.findByKey(page_state.getKey());
-					  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-					  	for(Form form : forms){
-						  	for(PageElement field: form.getFormFields()){
-								//for each field in the complex field generate a set of tests for all known rules
-						  		List<Rule> rules = rule_extractor.extractInputRules(field);
-								
-								log.info("Total RULES   :::   "+rules.size());
-								for(Rule rule : rules){
-									field.addRule(rule);
-								
+					  
+					  	try{
+						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+						  	for(Form form : forms){
+							  	for(PageElement field: form.getFormFields()){
+									//for each field in the complex field generate a set of tests for all known rules
+							  		List<Rule> rules = rule_extractor.extractInputRules(field);
+									
+									log.info("Total RULES   :::   "+rules.size());
+									for(Rule rule : rules){
+										field.addRule(rule);
+									
+									}
 								}
-							}
-						  							  	
-						    DeepthoughtApi.predict(form);
-					       
-						  	try{
-						  		browser.close();
+							  							  	
+							    DeepthoughtApi.predict(form);
+						       
+							  	try{
+							  		browser.close();
+							  	}
+							  	catch(Exception e){}
+							  	
+							  	page_state.addForm(form);
+							  	page_state_repo.save(page_state);
+						        
+							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 						  	}
-						  	catch(Exception e){}
-						  	
-						  	page_state.addForm(form);
-						  	page_state_repo.save(page_state);
-					        
-						  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
+					  	}
+					  	catch(NoSuchAlgorithmException e){
+					  		e.printStackTrace();
+					  	}
+					  	catch(Exception e){
+					  		log.error("exception occurred while performing form discovery");
+					  		browser = new Browser(message.getOptions().get("browser").toString());
+					  		browser.navigateTo(page_state.getUrl());
 					  	}
 					}
 				})

@@ -1,5 +1,10 @@
 package com.minion.actors;
 
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.openqa.grid.common.exception.GridException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -59,39 +64,60 @@ public class LandabilityChecker extends AbstractActor{
 		return receiveBuilder()
 				.match(BrowserPageState.class, bps -> {
 					PageState page_state = bps.page;
-					boolean landable = false;
+
+					PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
+					if(page_state_record != null){
+						page_state = page_state_record;
+					}
+					if(page_state.getLastLandabilityCheck() != null){
+
+						Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
+						Duration minimum_diff = Duration.ofHours(24);
+						if(time_diff.compareTo(minimum_diff) <= 0){
+							log.info("Last landability check occurred less than 24 hours ago");
+							postStop();
+							return;
+						}
+					}
 
 					boolean page_visited_successfully = false;
 					int cnt  = 0;
 					do{
 						page_visited_successfully = false;
-
+						
 						try{
+							page_state_record = page_state_repo.findByKey(page_state.getKey());
+							if(page_state_record != null){
+								System.err.println("Landability checker found page state with key :: "+page_state.getKey());
+								page_state = page_state_record;
+							}
 							Browser landable_browser = new Browser(bps.browser_name);
 							landable_browser.navigateTo(page_state.getUrl());
 							System.err.println("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
 							if(page_state.equals(browser_service.buildPage(landable_browser))){
 								page_state.setLandable(true);
-								page_state_repo.save(page_state);
-								landable= true;
 							}
+							page_state.setLastLandabilityCheck(LocalDateTime.now());
 							page_visited_successfully = true;
-
+							page_state_repo.save(page_state);
 							landable_browser.close();
 
 						}catch(GridException e){
 							log.error(e.getMessage());
 						}
-						catch(Exception e){
+						catch(NoSuchAlgorithmException e){
 							log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
+							log.error(e.getMessage());
+						}
+						catch(ClientException e){
 							log.error(e.getMessage());
 						}
 
 						cnt++;
 					}while(!page_visited_successfully && cnt < 3);
 					
-					System.err.println("is page state landable  ?? :: "+landable);
-					//return landable;
+					System.err.println("is page state landable  ?? :: "+page_state.isLandable());
+					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

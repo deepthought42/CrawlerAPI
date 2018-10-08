@@ -43,7 +43,7 @@ public class Form {
 	
 	public Form(PageElement form_tag, List<PageElement> form_fields, PageElement submit_field, 
 				String name, double[] predictions, FormType[] type_options, FormType type, Date date_discovered, 
-				FormStatus status, String screenshot_url){
+				FormStatus status){
 		setFormTag(form_tag);
 		setFormFields(form_fields);
 		setSubmitField(submit_field);

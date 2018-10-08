@@ -25,8 +25,7 @@ public class DeepthoughtApi {
         //Object to JSON in String
         String form_json = mapper.writeValueAsString(form);
         
-        System.err.println("FORM JSON :: "+form_json);
-	  	System.err.println("Requesting prediction for form from RL system");
+        System.err.println("Requesting prediction for form from RL system");
 	  	
 	  	CloseableHttpClient client = HttpClients.createDefault();
 	    HttpPost httpPost = new HttpPost("http://198.211.117.122:9080/rl/predict");

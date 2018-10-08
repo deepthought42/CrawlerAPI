@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -49,7 +48,6 @@ import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.FormRepository;
-import com.qanairy.models.repository.TestUserRepository;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -69,9 +67,6 @@ public class DomainController {
 	
 	@Autowired
 	private DomainRepository domain_repo;
-	
-	@Autowired
-	private TestUserRepository test_user_repo;
 	
 	@Autowired
 	private FormRepository form_repo;
@@ -239,9 +234,9 @@ public class DomainController {
 	 * @throws UnknownAccountException 
 	 */
 	@PreAuthorize("hasAuthority('delete:domains')")
-	@RequestMapping(method = RequestMethod.DELETE)
-	public @ResponseBody Domain remove(HttpServletRequest request,
-									   @RequestParam(value="key", required=true) String key) 
+	@RequestMapping(method = RequestMethod.DELETE, path="/{domain_id}")
+	public @ResponseBody void remove(HttpServletRequest request,
+										@PathVariable(value="domain_id", required=true) long domain_id)
 								   throws UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -257,11 +252,10 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}		
 		
-		Domain domain = domain_repo.findByKey(key);
-		acct.getDomains().remove(domain);
-		account_repo.save(acct);
-		
-	    return domain;
+		Optional<Domain> domain = domain_repo.findById(domain_id);
+		if(domain.isPresent()){
+			account_repo.removeDomain(acct.getUsername(), domain.get().getKey());
+		}
 	}
     
 	@PreAuthorize("hasAuthority('read:domains')")
@@ -296,17 +290,16 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_repo.getPageStates(host);
-		System.err.println("PAGE STATE SIZE 1 :: "+page_state.size());
-
+		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		System.err.println("retreived   "+page_state.size()+"      page states");
+		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		Set<PageState> test_results = domain_repo.getResults(host);		
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
 		Set<PathObject> path_objects = new HashSet<PathObject>();//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(page_state);
-		System.err.println("PAGE STATE SIZE :: "+page_state.size());
 		path_objects.addAll(test_results);
-		System.err.println("Page results size :: "+test_results.size());
 		path_objects.addAll(page_elem);
 		path_objects.addAll(actions);
 		//path_objects.addAll(action_repo.getActions);
@@ -366,7 +359,7 @@ public class DomainController {
 	 */
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="{domain_id}/forms")
-    public @ResponseBody List<Form> getAllForms(HttpServletRequest request, 
+    public @ResponseBody Set<Form> getAllForms(HttpServletRequest request, 
 												@PathVariable(value="domain_id", required=true) long domain_id)
 														throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -383,8 +376,7 @@ public class DomainController {
     	}
     	Optional<Domain> domain = domain_repo.findById(domain_id);
     	if(domain.isPresent()){
-    		domain_repo.getForms(domain.get().getUrl());
-    		return IterableUtils.toList(form_repo.findAll());
+    		return domain_repo.getForms(domain.get().getUrl());
     	}
     	else{
     		throw new DomainNotFoundException();

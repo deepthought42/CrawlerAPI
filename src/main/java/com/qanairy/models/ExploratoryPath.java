@@ -64,20 +64,36 @@ public class ExploratoryPath {
 	 * Checks if the path has 2 pages that are the equal
 	 * 
 	 * @param path
+	 * 
+	 * @pre path_key_list != null
+	 * @pre !path_key_list.isEmpty()
+	 * @pre page != null
+	 * 
 	 * @return true if sequence appears more than once
 	 */
 	public static boolean hasCycle(List<String> path_key_list, PageState page){
+		assert page != null;
+		assert path_key_list != null;
+		assert !path_key_list.isEmpty();
+		
 		if(path_key_list.size() == 1){
 			return false;
 		}
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		for(String key : path_key_list){			
+		int matches = 0;
+		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		System.err.println("RESULT PAGE URL TO BE CHECKED FOR DURING CYCLE :: "+page.getKey());
+		for(String key : path_key_list){
+			System.err.println("PATH KEY :: "+key);
 			if(key.equals(page.getKey())){
+				System.err.println("HAS CYCLE Page :: "+page);
 				return true;
 			}
 		}
+
+		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		return false;
 	}
 

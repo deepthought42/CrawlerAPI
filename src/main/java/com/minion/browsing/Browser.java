@@ -36,6 +36,7 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
@@ -60,12 +61,12 @@ public class Browser {
 	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
     
 	// PRODUCTION HUB ADDRESS
-	//private static final String HUB_IP_ADDRESS= "142.93.192.184:4444";
+	private static final String HUB_IP_ADDRESS= "142.93.192.184:4444";
 	//private static final String HUB_IP_ADDRESS= "10.136.111.115:4444";
 
 
 	//STAGING HUB ADDRESS
-	private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
+	//private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
 	
     public Browser(){}
     
@@ -88,7 +89,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 20){
+		while(driver == null && cnt < 60){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -105,8 +106,8 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
-
-				break;
+				
+				return;
 			}
 			catch(UnreachableBrowserException e){
 				log.error(e.getMessage());
@@ -119,9 +120,7 @@ public class Browser {
 			}
 
 			cnt++;
-			try {
-				Thread.sleep(30000L);
-			} catch (InterruptedException e1) {}
+			Timing.pauseThread(15000L);
 		}
 	}
 	
@@ -142,10 +141,8 @@ public class Browser {
 		}
 		catch(Exception e){
 			log.error(e.getMessage());
-		}			
-		try {
-			Thread.sleep(5000L);
-		} catch (InterruptedException e) {}
+		}	
+		Timing.pauseThread(5000L);
 	}
 
 	/**
@@ -293,8 +290,8 @@ public class Browser {
 		System.err.println("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
-	    //driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
-
+	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
+	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
 	}
 	
@@ -359,14 +356,14 @@ public class Browser {
 		int point_x = point.getX();
 		int point_y = point.getY();
 		
-		if( (elem_width + 5 + point_x) < page_screenshot.getWidth()){
+		if( (elem_width + point_x) < page_screenshot.getWidth()){
 			elem_width = elem_width+5;
 		}
 		else{
 			elem_width = page_screenshot.getWidth() - point_x;
 		}
 		
-		if((elem_height + 5 + point_y) < page_screenshot.getHeight()){
+		if((elem_height + point_y) < page_screenshot.getHeight()){
 			elem_height = elem_height+5;
 		}
 		else{
@@ -374,8 +371,8 @@ public class Browser {
 		}
 		
 		if( (point_x - 5) >= 0){
-			elem_width = elem_width + 5;
-			point_x = point_x - 5;
+			elem_width += 5;
+			point_x -= 5;
 		}
 		else{
 			elem_width += point_x;
@@ -383,11 +380,11 @@ public class Browser {
 		}
 		
 		if( (point_y - 5) >= 0){
-			elem_height = elem_height + 5;
-			point_y = point_y - 5;
+			//elem_height += 5;
+			point_y -= 5;
 		}
 		else{
-			elem_height += point_y;
+			//elem_height += point_y;
 			point_y = 0;
 		}
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);

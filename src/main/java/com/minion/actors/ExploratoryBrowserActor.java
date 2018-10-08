@@ -135,8 +135,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								exploratory_path.setPathObjects(exploratory_path.getPathObjects().subList(start_idx, exploratory_path.getPathObjects().size()));
 							}
 
-							System.err.println("Exploratory Path key path size :: "+exploratory_path.getPathKeys().size());
-							System.err.println("Exploratory Path object path size :: "+exploratory_path.getPathObjects().size());
 							for(Action action : exploratory_path.getPossibleActions()){
 								ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
 								Action action_record = action_repo.findByKey(action.getKey());
@@ -151,9 +149,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								do{
 									try{
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
-										System.err.println("RESULT PAGE WAS RETURNED AS :: "+result_page);
-										System.err.println("crawler returned url for result page :: "+result_page.getUrl());
-
 									}catch(NullPointerException e){
 										Timing.pauseThread(10000L);
 										browser = new Browser(browser.getBrowserName());
@@ -169,6 +164,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									} catch (NoSuchAlgorithmException e) {
 										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									}
+									catch(Exception e){
+										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
+									}
 
 									tries++;
 								}while(result_page == null && tries < 10);
@@ -177,24 +175,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 								
 								final long pathCrawlEndTime = System.currentTimeMillis();
-		
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								System.err.println("Checking if exploratory path has a cycle");
-								for(String key : path.getPathKeys()){
-									if(key.equals(result_page.getKey())){
-										System.err.println("Result page key exists in path :: "+result_page.getKey());
-									}
-								}
-								
-								System.err.println("path.getPathObject ::: "+path.getPathObjects().size());
-								for(PathObject obj: path.getPathObjects()){
-									if(obj.getKey().equals(result_page.getKey())){
-										System.err.println("Result page exists Path Objects :: "+result_page.getKey());
-									}
-								}
-
-								System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
@@ -302,9 +284,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO Test Simplifier");
+		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO path expansion actor");
 		final ActorRef test_simplifier = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("testPathSimplifier"), "test_simplifier"+UUID.randomUUID());
+				  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
 		test_simplifier.tell(test_msg, getSelf());
 	}
 	

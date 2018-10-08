@@ -83,12 +83,9 @@ public class ExploratoryPath {
 		//extract all pages
 		//iterate through pages to see if any match
 		int matches = 0;
-		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		System.err.println("RESULT PAGE URL TO BE CHECKED FOR DURING CYCLE :: "+page.getKey());
+		System.err.println("Checking if exploratory path has a cycle");
 		for(String key : path_key_list){
-			System.err.println("PATH KEY :: "+key);
 			if(key.equals(page.getKey())){
-				System.err.println("HAS CYCLE Page :: "+page);
 				return true;
 			}
 		}

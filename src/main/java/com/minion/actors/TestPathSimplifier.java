@@ -131,7 +131,7 @@ public class TestPathSimplifier extends AbstractActor{
 						//Test new_test = new Test(path_keys, new_path, test.getResult(), test.getName());
 						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 						
-						System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
+						System.err.println("!!!!!!!!!!!!!!!!!!     TEST PATH SIMPLIFIER ACTOR SENDING TEST TO PATH EXPANSION");
 						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						path_expansion_actor.tell(test_msg, getSelf());

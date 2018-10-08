@@ -59,10 +59,10 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		assert browser != null;
 		assert path_keys != null;
-
+		
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//Ensure Order path objects
 		for(String path_obj_key : path_keys){
@@ -98,7 +98,7 @@ public class Crawler {
 				}while(!screenshot_matches && cnt < 5);
 				
 				if(!screenshot_matches){
-					throw new PagesAreNotMatchingPointerException();
+					throw new PagesAreNotMatchingException();
 				}
 			}
 			else if(current_obj instanceof PageElement){
@@ -141,7 +141,7 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-			Timing.pauseThread(2000L);
+			Timing.pauseThread(5000L);
 		}
 		catch(StaleElementReferenceException e){
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
@@ -160,10 +160,10 @@ public class Crawler {
 	}
 }
 
-class PagesAreNotMatchingPointerException extends RuntimeException {
+class PagesAreNotMatchingException extends RuntimeException {
 	private static final long serialVersionUID = 7200878662560716215L;
 
-	public PagesAreNotMatchingPointerException() {
+	public PagesAreNotMatchingException() {
 		super("Expected page and actual page did not match.");
 	}
 }

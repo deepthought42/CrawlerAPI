@@ -99,8 +99,6 @@ public class TestCreatorService {
 		Domain domain = domain_repo.findByHost( host);
 		
 		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-		System.err.println("result page elements count :: "+page_obj.getElements().size());
 		return createTest(path_keys, path_objects, page_obj, 1L, domain ,discovery_record, browser_name);
 	}
 	

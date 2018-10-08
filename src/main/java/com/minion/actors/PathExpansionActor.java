@@ -83,7 +83,7 @@ public class PathExpansionActor extends AbstractActor {
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
-
+						System.err.println("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
 						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
@@ -101,9 +101,14 @@ public class PathExpansionActor extends AbstractActor {
 							discovery_record = discovery_record2;
 						}
 						int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
+						System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
+						System.err.println("expected total path count :: "+new_total_path_count);
 						discovery_record.setTotalPathCount(new_total_path_count);
 						discovery_record.getExpandedPageState().add(test.getResult().getKey());
 						discovery_record = discovery_repo.save(discovery_record);
+
+						System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
+						
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 	
 						for(ExploratoryPath expanded : pathExpansions){

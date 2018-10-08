@@ -155,15 +155,10 @@ public class BrowserService {
 			page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
 			System.err.println("Getting visible elements...");
 			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(viewport_screenshot), page_url.getHost());
-			
-			for(PageElement elem : visible_elements){
-				System.err.println("ELEMENT :: "+elem);
-			}
 		}catch(IOException e){
 			log.error(e.getMessage());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 	
 		if(visible_elements == null){
@@ -179,7 +174,6 @@ public class BrowserService {
 			
 		}
 		if(page_record != null){
-			System.err.println("BROWSER SERVICE LOADED PAGE STATE RECORD");
 			page_state = page_record;
 		}
 		else{
@@ -205,7 +199,6 @@ public class BrowserService {
 		}
 		//page_state.setLandable(checkIfLandable(browser, page_state));
 		//have page checked for landability
-		System.err.println("PAGE STATE during build is ... :: "+page_state);
 		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
 
 		final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)

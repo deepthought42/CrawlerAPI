@@ -78,10 +78,6 @@ public class UploadObjectSingleOperation {
     }
 	
 	public static String saveImageToS3(BufferedImage image, String domain, String page_key) {
-		System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	    System.err.println("IMAGE HEX STRING 2 :: "+page_key);
-		System.err.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	   
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();

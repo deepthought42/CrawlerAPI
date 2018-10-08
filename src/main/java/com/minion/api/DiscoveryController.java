@@ -169,14 +169,10 @@ public class DiscoveryController {
     	Domain domain = domain_repo.findByHost(url); 
 
     	Date now = new Date();
-    	long diffInMinutes = 10000;
-    	if(last_discovery_record != null){
-    		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
-    	}
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
         
-		if(diffInMinutes > 1440){
+		if(last_discovery_record!= null && (last_discovery_record.getExaminedPathCount()/last_discovery_record.getTotalPathCount()) < 1.0){
 			Date date = new Date();
 			long date_millis = date.getTime();
 			Map<String, Object> usageRecordParams = new HashMap<String, Object>();

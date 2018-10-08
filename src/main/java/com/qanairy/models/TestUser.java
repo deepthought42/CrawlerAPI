@@ -12,7 +12,7 @@ public class TestUser{
 	
 	@GeneratedValue
     @Id
-	private Long id;
+	private long id;
 	
 	private String username;
 	private String password;
@@ -25,6 +25,10 @@ public class TestUser{
 		setUsername(username);
 		setPassword(password);
 		setIsEnabled(isEnabled);
+	}
+	
+	public long getId(){
+		return this.id;
 	}
 	
 	public String getUsername(){

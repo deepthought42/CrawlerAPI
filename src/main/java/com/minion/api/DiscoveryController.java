@@ -10,9 +10,11 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.actors.WorkAllocationActor;
+import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
@@ -31,6 +34,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.StripeClient;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
@@ -155,6 +159,13 @@ public class DiscoveryController {
     	
     	if(subscription_item==null){
     		throw new MissingDiscoveryPlanException();
+    	}
+    	
+    	//check if user has exceeded freemium plan
+    	Date date = new Date();
+    	Set<DiscoveryRecord> discovery_records = account_repo.getDiscoveryRecordsByMonth(username, date.getMonth());
+    	if(discovery_records.size() > 50){
+    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
     	
 		DiscoveryRecord last_discovery_record = null;
@@ -310,17 +321,5 @@ class DiscoveryLimitReachedException extends RuntimeException {
 
 	public DiscoveryLimitReachedException() {
 		super("You’ve reached your discovery limit. Upgrade your account now!");
-	}
-}
-
-@ResponseStatus(HttpStatus.CONFLICT)
-class PaymentDueException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7200878662560716216L;
-
-	public PaymentDueException() {
-		super("There was an issue processing your payment. Please update your payment details");
 	}
 }

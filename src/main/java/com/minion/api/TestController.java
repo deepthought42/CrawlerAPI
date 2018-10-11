@@ -41,9 +41,11 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
+import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.StripeClient;
@@ -338,7 +340,8 @@ public class TestController {
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_name", required=true) String browser_name) 
+														  @RequestParam(value="browser", required=true) String browser,
+														  @RequestParam(value="host_url", required=true) String host) 
 																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -351,6 +354,12 @@ public class TestController {
     	}
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
+    	}
+    	
+    	Date date = new Date();
+    	Set<TestRecord> test_records = domain_repo.getTestsByMonth(host, date.getMonth());
+    	if(test_records.size() > 250){
+    		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
     	}
     	
     	/*Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
@@ -404,9 +413,9 @@ public class TestController {
 
 	    	UsageRecord.create(usageRecordParams, null);
 */
-			Browser browser = new Browser(browser_name.trim());
-			record = test_service.runTest(test, browser);
-			browser.close();
+			Browser browser_dto = new Browser(browser.trim());
+			record = test_service.runTest(test, browser_dto);
+			browser_dto.close();
 			
 			test.addRecord(record);
 	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
@@ -421,7 +430,7 @@ public class TestController {
 				}
 			}
 			Map<String, String> browser_statuses = test.getBrowserStatuses();
-			browser_statuses.put(browser_name, is_passing.toString());
+			browser_statuses.put(browser, is_passing.toString());
 			
 			test.addRecord(record);
 			test.setStatus(is_passing);

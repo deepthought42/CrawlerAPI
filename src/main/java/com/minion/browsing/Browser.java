@@ -496,6 +496,23 @@ public class Browser {
 	}
 	
 	/**
+	 * Finds page element by xpath
+	 * 
+	 * @param xpath
+	 * 
+	 * @return {@link WebElement} located at the provided xpath
+	 * 
+	 * @pre xpath != null
+	 * @pre !xpath.isEmpty()
+	 */
+	public WebElement findWebElementByXpath(String xpath){
+		assert xpath != null;
+		assert !xpath.isEmpty();
+		
+		return driver.findElement(By.xpath(xpath));
+	}
+	
+	/**
 	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
 	 * 
 	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS

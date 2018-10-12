@@ -29,12 +29,10 @@ public class FormTestExtractionTests {
 
 	/**
 	 * Tests if {@link RequirementRule} can be extracted on a required field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testRequirementRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testRequirementRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
@@ -68,12 +66,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testNumericRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testNumericRestrictionRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
@@ -114,12 +110,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testAlphabeticRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testAlphabeticRestrictionRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
@@ -158,12 +152,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testReadonlyRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testReadonlyRestrictionRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
@@ -193,12 +185,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testMinValueRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testMinValueRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
@@ -229,12 +219,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testMaxValueRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testMaxValueRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {

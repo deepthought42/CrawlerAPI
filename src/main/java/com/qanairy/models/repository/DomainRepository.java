@@ -40,7 +40,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p) MATCH b=(t)-[]->() MATCH c=(p)-[]->() RETURN a,b,c as d")
 	public Set<Test> getTests(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host})-[:HAS_TEST]->(t:Test) MATCH (t)-[]->(p:PageState) MATCH (p)-[]->(f:Form) return f")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[]->(p:PageState) MATCH (p)-[]->(f:Form) MATCH a=(f)-[:FORM__TAG]->() MATCH b=()-[:SUBMIT__FIELD]->() MATCH c=(f)-[:FORM__FIELDS]->()  return a,b,c as d")
 	public Set<Form> getForms(@Param("domain_host") String host);
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH c=(p)-[:HAS_SCREENSHOT]->() RETURN a,c as d")

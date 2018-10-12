@@ -493,8 +493,11 @@ public class DomainController {
 				form_record.setName(name);
 			}
 			form_record.setType(FormType.create(form_type.toLowerCase()));
-	    	form_record.setStatus(FormStatus.CLASSIFIED);
-	    	
+			
+			if(!form_record.getType().equals(FormType.UNKNOWN)){
+				form_record.setStatus(FormStatus.CLASSIFIED);
+			}
+			
 	        //learn from form classification    
 	    	DeepthoughtApi.learn(form_record);
 	    

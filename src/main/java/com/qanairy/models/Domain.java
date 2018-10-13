@@ -186,8 +186,8 @@ public class Domain implements Persistable{
 		this.test_users.remove(test_user);
 	}
 	
-	public void addTestUser(TestUser test_user) {
-		this.test_users.add(test_user);
+	public boolean addTestUser(TestUser test_user) {
+		return this.test_users.add(test_user);
 	}
 
 	public void setTestUsers(Set<TestUser> test_users) {

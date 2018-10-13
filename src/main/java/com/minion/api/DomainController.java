@@ -48,6 +48,7 @@ import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.FormRepository;
+import com.qanairy.models.repository.TestUserRepository;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -74,6 +75,8 @@ public class DomainController {
 	@Autowired
     private ActorSystem actor_system;
 	    
+	@Autowired
+	private TestUserRepository test_user_repo;
 	   
     /**
      * Create a new {@link Domain domain}
@@ -401,7 +404,7 @@ public class DomainController {
 	 */
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="/{domain_id}/users", method = RequestMethod.POST)
-    public @ResponseBody void addUser(HttpServletRequest request,
+    public @ResponseBody TestUser addUser(HttpServletRequest request,
     									@PathVariable(value="domain_id", required=true) long domain_id,
     									@RequestParam(value="username", required=true) String username,
     									@RequestParam(value="password", required=true) String password,
@@ -411,28 +414,38 @@ public class DomainController {
 														UnknownAccountException, 
 														MalformedURLException {
     	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+    	
+		System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+    	System.err.println("starting to add user");
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
+    		System.err.println("domain : "+domain);
     		Set<TestUser> test_users = domain_repo.getTestUsers(domain.getKey());
     		
-    		boolean exists = false;
+    		System.err.println("Test users : "+test_users.size());
     		for(TestUser user : test_users){
     			if(user.getUsername().equals(username)){
-    				exists = true;
-    				break;
+    				System.err.println("User exists, returning user : "+user);
+    				return user;
     			}
     		}
     		
     		System.err.println("Test user does not exist for domain yet");
-    		if(!exists){
-	    		TestUser user = new TestUser(username, password, role, enabled);
-	    		domain.addTestUser(user);
-	    		domain_repo.save(domain);
-    		}
+    		
+    		TestUser user = new TestUser(username, password, role, enabled);
+    		System.err.println("SAVING TEST USER "+user);
+    		user = test_user_repo.save(user);
+    		Set<TestUser> users = new HashSet<TestUser>();
+    		users.add(user);
+    		System.err.println("created test user :: "+user);
+    		domain.setTestUsers(users);
+			System.err.println("domain.testusers :: "+domain.getTestUsers());
+    		System.err.println("added test user to domain");
+    		domain = domain_repo.save(domain);
+    		System.err.println("saved domain :: "+domain.getKey());
+    		return user;
     	}
-    	else{
-    		throw new DomainNotFoundException();
-    	}
+		throw new DomainNotFoundException();
     }
     
     @PreAuthorize("hasAuthority('create:domains')")

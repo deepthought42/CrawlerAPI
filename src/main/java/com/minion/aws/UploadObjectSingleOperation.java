@@ -129,7 +129,7 @@ public class UploadObjectSingleOperation {
         AmazonS3 s3client = new AmazonS3Client(credentials);
         
         try {
-            System.err.println("Uploading a new object to S3 from a filen: "+url);
+            log.info("Uploading a new object to S3 from a filen: "+url);
             S3Object object = s3client.getObject(new GetObjectRequest(bucketName, url));
             InputStream objectData = object.getObjectContent();
             

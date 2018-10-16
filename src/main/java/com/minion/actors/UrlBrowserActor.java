@@ -64,11 +64,11 @@ public class UrlBrowserActor extends AbstractActor {
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
 								test_service.save(test, host);
 		
-								System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								System.err.println("test result :: "+test.getResult());
-								System.err.println("message account key :: "+message.getAccountKey());
-								System.err.println("message options "+ message.getOptions());
-								System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+								log.info("test result :: "+test.getResult());
+								log.info("message account key :: "+message.getAccountKey());
+								log.info("message options "+ message.getOptions());
+								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 

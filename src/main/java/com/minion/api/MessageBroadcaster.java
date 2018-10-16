@@ -42,7 +42,7 @@ public class MessageBroadcaster {
      * @throws JsonProcessingException 
      */
 	public static void broadcastDiscoveredForm(Form form, String host) throws JsonProcessingException {	
-		System.err.println("Broadcasting discovered form !!!");
+		log.info("Broadcasting discovered form !!!");
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
@@ -50,9 +50,9 @@ public class MessageBroadcaster {
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         String form_json = mapper.writeValueAsString(form);
-        System.err.println("host ::   "+host);
+        log.info("host ::   "+host);
 		pusher.trigger(host.trim(), "discovered-form", form_json);
-		System.err.println("broadcasted a discovered form");
+		log.info("broadcasted a discovered form");
 	}
 	
 	/**

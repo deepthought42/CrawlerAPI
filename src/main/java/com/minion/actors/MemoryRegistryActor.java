@@ -79,15 +79,15 @@ public class MemoryRegistryActor extends AbstractActor{
 						}
 					}
 					else if(msg.getData() instanceof Test){
-						System.err.println("Test message received by memory registry actor");
+						log.info("Test message received by memory registry actor");
 						Test test = (Test)msg.getData();
 						
 						String host_url = msg.getOptions().get("host").toString();
 						Test record = test_repo.findByKey(test.getKey());
 						
 						if(record == null){
-							System.err.println("Test REPO :: "+test_repo);
-							System.err.println("Test ::  "+test);
+							log.info("Test REPO :: "+test_repo);
+							log.info("Test ::  "+test);
 							test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
 							Domain domain = domain_repo.findByHost(host_url);
 							domain.addTest(test);

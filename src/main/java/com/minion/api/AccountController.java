@@ -89,12 +89,12 @@ public class AccountController {
         }
           
         //STAGING
-     	Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
-    	Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
+     	//Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
+    	//Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
     	
     	//PRODUCTION
-    	//Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
-    	//Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
+    	Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
+    	Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
@@ -203,9 +203,9 @@ public class AccountController {
     					
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
-    	//System.err.println("AUTH0 Response body      :::::::::::      "+response.getBody());
-    	//System.err.println("AUTH0 Response status      :::::::::::      "+response.getStatus());
-    	//System.err.println("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
+    	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
+    	//log.info("AUTH0 Response status      :::::::::::      "+response.getStatus());
+    	//log.info("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
     	
     	//remove stripe subscription
         this.stripeClient.cancelSubscription(account.getSubscriptionToken());

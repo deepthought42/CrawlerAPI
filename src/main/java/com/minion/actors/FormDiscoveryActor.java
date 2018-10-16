@@ -137,7 +137,6 @@ public class FormDiscoveryActor extends AbstractActor{
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

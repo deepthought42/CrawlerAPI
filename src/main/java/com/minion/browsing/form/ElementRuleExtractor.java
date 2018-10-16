@@ -119,11 +119,11 @@ public class ElementRuleExtractor {
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().get(0).equalsIgnoreCase("email")){
 				rule = new EmailPatternRule();					
 			
-				System.err.println("email rule :: "+rule);
+				log.info("email rule :: "+rule);
 				EmailPatternRule email_rule = new EmailPatternRule();
-				System.err.println("email pattern rule :: "+email_rule);
+				log.info("email pattern rule :: "+email_rule);
 				
-				System.err.println("EMAIL RULE REPO :: "+email_pattern_rule_repo);
+				log.info("EMAIL RULE REPO :: "+email_pattern_rule_repo);
 
 				rule_record = email_pattern_rule_repo.findByKey(rule.getKey());
 			}
@@ -135,11 +135,11 @@ public class ElementRuleExtractor {
 			else{
 				continue;
 			}
-			System.err.println("RULE :: "+rule);
-			System.err.println("rule repo key :: "+rule.getKey());
-			System.err.println("RULE RECORD :: "+rule_record);
-			System.err.println("INPUT RULES ::  "+ input_rules.keySet().size());
-			System.err.println("RULE TYPE   ::  "+rule.getType().toString());
+			log.info("RULE :: "+rule);
+			log.info("rule repo key :: "+rule.getKey());
+			log.info("RULE RECORD :: "+rule_record);
+			log.info("INPUT RULES ::  "+ input_rules.keySet().size());
+			log.info("RULE TYPE   ::  "+rule.getType().toString());
 			if(input_rules.containsKey(rule.getType().toString()) && input_rules.get(rule.getType().toString()) != true){
 				if(rule_record == null){
 					rules.add(rule);

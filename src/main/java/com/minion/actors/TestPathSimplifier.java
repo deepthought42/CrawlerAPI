@@ -63,7 +63,7 @@ public class TestPathSimplifier extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
-					System.err.println("Test path simplfier received message of type "+message.getData().getClass().getName());
+					log.info("Test path simplfier received message of type "+message.getData().getClass().getName());
 					if(message.getData() instanceof Test){
 						
 						Test test = (Test)message.getData();
@@ -86,7 +86,7 @@ public class TestPathSimplifier extends AbstractActor{
 								PageState page_state = (PageState)path_obj;
 								//clear known path if page is landable
 															
-								System.err.println("is page state landable  ?? :: "+page_state.isLandable());
+								log.info("is page state landable  ?? :: "+page_state.isLandable());
 								//return landable;
 								
 								if(page_state.isLandable()){
@@ -131,7 +131,7 @@ public class TestPathSimplifier extends AbstractActor{
 						//Test new_test = new Test(path_keys, new_path, test.getResult(), test.getName());
 						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 						
-						System.err.println("!!!!!!!!!!!!!!!!!!     TEST PATH SIMPLIFIER ACTOR SENDING TEST TO PATH EXPANSION");
+						log.info("!!!!!!!!!!!!!!!!!!     TEST PATH SIMPLIFIER ACTOR SENDING TEST TO PATH EXPANSION");
 						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						path_expansion_actor.tell(test_msg, getSelf());

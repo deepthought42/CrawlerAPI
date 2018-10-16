@@ -26,9 +26,6 @@ public class BrowserServiceTest {
 		
 		
 		Set<PathObject> path_objects = DomainController.merge(page_state, actions);
-		
-		for(PathObject obj : path_objects){
-			System.err.println("Path obj :: "+obj.getType());
-		}
+
 	}
 }

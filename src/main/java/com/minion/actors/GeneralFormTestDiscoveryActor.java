@@ -123,7 +123,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					  		
 							final long pathCrawlStartTime = System.currentTimeMillis();
 							
-					  		System.err.println("Crawling potential form test path");
+					  		log.info("Crawling potential form test path");
 					  		browser = new Browser(message.getOptions().get("browser").toString());
 					  		PageState result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
 					  		
@@ -173,7 +173,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	 */
 	public List<List<PathObject>> generateAllFormTestPaths(Test test, Form form){
 		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
-		System.err.println("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
+		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		//for each field in the complex field generate a set of tests for all known rules
 		for(PageElement input_elem : form.getFormFields()){
 			
@@ -191,7 +191,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 			}
 			
 			if(field_exists){
-				System.err.println("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
+				log.info("FORM FIELD ALREADY EXISTS IN PATH  :: "+field_exists);
 				continue;
 			}
 			List<Rule> rules = extractor.extractInputRules(input_elem);
@@ -200,7 +200,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				List<List<PathObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
 				form_tests.addAll(path_list);
 			}
-			System.err.println("FORM TESTS    :::   "+form_tests.size());
+			log.info("FORM TESTS    :::   "+form_tests.size());
 		}
 		return form_tests;
 	}
@@ -419,7 +419,6 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		if(rule.getType().equals(RuleType.REQUIRED)){
 			//generate required path for element type
-			System.err.println("Generating requirements check tests");
 			tests.addAll(generateRequirementChecks(input_elem, true, submitField));
 		}
 		else if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){

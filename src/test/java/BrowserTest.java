@@ -23,7 +23,7 @@ public class BrowserTest {
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
 		
 		String clean_src = Browser.cleanSrc(src_example);
-		//System.err.println("clean src: " +clean_src);
+		//log.info("clean src: " +clean_src);
 		Assert.assertTrue(clean_src.equals("<html><head></head></html>"));
 	}
 	
@@ -33,7 +33,7 @@ public class BrowserTest {
 		String src_example = "This is a embedded \"path\"";
 		BrowserService service = new BrowserService();
 		String clean_src = service.generateConcatForXPath(src_example);// cleanSrc(src_example);
-		//System.err.println("clean src: " +clean_src);
+		//log.info("clean src: " +clean_src);
 		Assert.assertTrue(clean_src.equals("concat('This is a embedded ', '\"', 'path', '\"', '')"));
 	}
 	

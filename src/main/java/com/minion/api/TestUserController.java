@@ -6,6 +6,8 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import org.omg.CORBA.UnknownUserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +29,7 @@ import com.qanairy.models.repository.TestUserRepository;
 @Controller
 @RequestMapping("/test_users")
 public class TestUserController {
+	private static Logger log = LoggerFactory.getLogger(TestUserController.class);
 
 	@Autowired
 	private TestUserRepository test_user_repo;
@@ -48,17 +51,21 @@ public class TestUserController {
     @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
     public @ResponseBody void updateUser(HttpServletRequest request,
     									@PathVariable(value="user_id", required=true) long user_id,
-    									@RequestParam(value="test_user", required=true) TestUser test_user) 
+    									@RequestParam(value="isEnabled", required=true) boolean isEnabled,
+    									@RequestParam(value="password", required=true) String password,
+    									@RequestParam(value="username", required=true) String username,
+    									@RequestParam(value="role", required=true) String role) 
     											throws UnknownUserException {
     	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
+    	System.err.println("is user present :: " + optional_user.isPresent());
     	if(optional_user.isPresent()){
     		TestUser test_user_record = optional_user.get();
     		    		
-    		System.err.println("Test user does not exist for domain yet");
-    		test_user_record.setIsEnabled(test_user.isEnabled());
-    		test_user_record.setPassword(test_user.getPassword());
-    		test_user_record.setRole(test_user.getRole());
-    		test_user_record.setUsername(test_user.getUsername());
+    		log.info("Test user does not exist for domain yet");
+    		test_user_record.setIsEnabled(isEnabled);
+    		test_user_record.setPassword(password);
+    		test_user_record.setRole(role);
+    		test_user_record.setUsername(username);
     		test_user_repo.save(test_user_record);
     	}
     	else{

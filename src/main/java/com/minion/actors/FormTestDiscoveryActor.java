@@ -47,15 +47,14 @@ public class FormTestDiscoveryActor extends AbstractActor {
 					if(message.getData() instanceof Form){
 						Form form = ((Form)message.getData());
 
-						System.err.println("FORM TEST DISCOVERY ACTOR received :: "+form.getType());
 						if(form.getType().equals(FormType.LOGIN)){
-							System.err.println("LOGIN type recieved");
+							log.info("LOGIN type recieved");
 							final ActorRef loginFormTestDiscoveryActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("loginFormTestDiscoveryActor"), "login_form_test_discovery_actor"+UUID.randomUUID());
 							loginFormTestDiscoveryActor.tell(message, getSelf() );
 						}
 						else{
-							System.err.println("Another different type recieved");
+							log.info("Another different type recieved");
 							final ActorRef generalFormTestDiscoveryActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("generalFormTestDiscoveryActor"), "general_form_test_discovery_actor"+UUID.randomUUID());
 							generalFormTestDiscoveryActor.tell(message, getSelf() );
@@ -72,7 +71,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
+					log.info("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

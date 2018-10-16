@@ -83,7 +83,7 @@ public class PathExpansionActor extends AbstractActor {
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
-						System.err.println("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
+						log.info("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
 						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
@@ -94,20 +94,20 @@ public class PathExpansionActor extends AbstractActor {
 					}
 					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){					
 						pathExpansions = expandPath(test);
-						System.err.println(pathExpansions.size()+"   path expansions found.");
+						log.info(pathExpansions.size()+"   path expansions found.");
 						
 						DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 						if(discovery_record2 != null){
 							discovery_record = discovery_record2;
 						}
 						int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-						System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
-						System.err.println("expected total path count :: "+new_total_path_count);
+						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+						log.info("expected total path count :: "+new_total_path_count);
 						discovery_record.setTotalPathCount(new_total_path_count);
 						discovery_record.getExpandedPageState().add(test.getResult().getKey());
 						discovery_record = discovery_repo.save(discovery_record);
 
-						System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
+						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 						
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 	
@@ -155,7 +155,7 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		//iterate over all elements
-		System.err.println("Page elements for expansion :: "+page.getElements().size());
+		log.info("Page elements for expansion :: "+page.getElements().size());
 		for(PageElement page_element : page.getElements()){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
@@ -200,7 +200,7 @@ public class PathExpansionActor extends AbstractActor {
 							
 							
 							/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-								System.err.println("EXISTING ELEMENT ACTION SEQUENCE FOUND");
+								log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
 								continue;
 							}*/
 							pathList.add(action_path);

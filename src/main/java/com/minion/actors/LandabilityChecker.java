@@ -88,12 +88,12 @@ public class LandabilityChecker extends AbstractActor{
 						try{
 							page_state_record = page_state_repo.findByKey(page_state.getKey());
 							if(page_state_record != null){
-								System.err.println("Landability checker found page state with key :: "+page_state.getKey());
+								log.info("Landability checker found page state with key :: "+page_state.getKey());
 								page_state = page_state_record;
 							}
 							Browser landable_browser = new Browser(bps.browser_name);
 							landable_browser.navigateTo(page_state.getUrl());
-							System.err.println("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
+							log.info("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
 							if(page_state.equals(browser_service.buildPage(landable_browser))){
 								page_state.setLandable(true);
 							}
@@ -116,7 +116,7 @@ public class LandabilityChecker extends AbstractActor{
 						cnt++;
 					}while(!page_visited_successfully && cnt < 3);
 					
-					System.err.println("is page state landable  ?? :: "+page_state.isLandable());
+					log.info("is page state landable  ?? :: "+page_state.isLandable());
 					postStop();
 				})
 				.match(MemberUp.class, mUp -> {

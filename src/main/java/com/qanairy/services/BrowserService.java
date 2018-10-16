@@ -40,6 +40,7 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -128,7 +129,7 @@ public class BrowserService {
 			cnt++;
 		}while(!page_visited_successfully && cnt < 3);
 		
-		System.err.println("is page state landable  ?? :: "+landable);
+		log.info("is page state landable  ?? :: "+landable);
 		return landable;
 	}
 	
@@ -144,7 +145,8 @@ public class BrowserService {
 	 */
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
-				
+	
+		Timing.pauseThread(5000L);
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
 		String page_key = "";
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
@@ -153,7 +155,7 @@ public class BrowserService {
 		try{
 			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 			page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
-			System.err.println("Getting visible elements...");
+			log.info("Getting visible elements...");
 			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(viewport_screenshot), page_url.getHost());
 		}catch(IOException e){
 			log.error(e.getMessage());
@@ -506,19 +508,19 @@ public class BrowserService {
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			
-			System.err.println("EXTACTED FORM ELEMENT WITH TEXT   : "+form_elem.getText());
+			log.info("EXTACTED FORM ELEMENT WITH TEXT   : "+form_elem.getText());
 
 			String page_screenshot = "";
 			for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
-				System.err.println("screenshot browser  ::   "+screenshot.getBrowser());
-				System.err.println("browser browsername ::   "+browser.getBrowserName());
+				log.info("screenshot browser  ::   "+screenshot.getBrowser());
+				log.info("browser browsername ::   "+browser.getBrowserName());
 				if(screenshot.getBrowser().equals(browser.getBrowserName())){
 					page_screenshot = screenshot.getViewportScreenshot();
 				}
 			}
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
-			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
+			log.info("FORM SCREENSHOT URL :: "+screenshot_url);
 			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
 			if(tag != null){
 				form_tag = tag;
@@ -581,7 +583,7 @@ public class BrowserService {
 				}
 				
 				if(alreadySeen){
-					//System.err.println("page element already seen before extracting form elements");
+					//log.info("page element already seen before extracting form elements");
 					continue;
 				}						
 				
@@ -594,15 +596,15 @@ public class BrowserService {
 						input_field.setFieldLabel(label);
 					}
 					catch(NullPointerException e){
-						System.err.println("Error occurred while finding label for form input field");
+						log.info("Error occurred while finding label for form input field");
 					}
 				}
 				*/
-				System.err.println("GROUP INPUTS    :::   "+group_inputs.size());
+				log.info("GROUP INPUTS    :::   "+group_inputs.size());
 				for(PageElement page_elem : group_inputs){
 					for(Rule rule : extractor.extractInputRules(page_elem)){
-						System.err.println(" RULE     :::   "+ rule);
-						System.err.println("INPUT ELEMENT "+page_elem);
+						log.info(" RULE     :::   "+ rule);
+						log.info("INPUT ELEMENT "+page_elem);
 						page_elem.addRule(rule);
 					}
 				}
@@ -612,20 +614,20 @@ public class BrowserService {
 			
 						
 			for(double d: form.getPrediction()){
-				System.err.println("PREDICTION ::: "+d);
+				log.info("PREDICTION ::: "+d);
 			}
 			
 			for(FormType type : form.getTypeOptions()){
-				System.err.println(" FORM TYPE          :::::     "+type);
+				log.info(" FORM TYPE          :::::     "+type);
 			}
-			System.err.println("weights :: "+ form.getPrediction());
+			log.info("weights :: "+ form.getPrediction());
 			form.setType(FormType.UNKNOWN);
 			
 			form.setDateDiscovered(new Date());
-			System.err.println("form record discovered date :: "+form.getDateDiscovered());
+			log.info("form record discovered date :: "+form.getDateDiscovered());
 			
 			form.setName("Form #1");
-			System.err.println("name :: "+form.getName());
+			log.info("name :: "+form.getName());
 			
 			for(PageElement elem : form.getFormFields()){
 				for(Rule rule : elem.getRules()){
@@ -809,10 +811,10 @@ public class BrowserService {
 		File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
-		System.err.println("page state screenshots :: "+page_state.getBrowserScreenshots().size());
+		log.info("page state screenshots :: "+page_state.getBrowserScreenshots().size());
 		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
 			if(screenshot.getBrowser().equals(browser.getBrowserName())){
-				System.err.println("Browser name matches screenshot browser!");
+				log.info("Browser name matches screenshot browser!");
 				page_screenshot = screenshot;
 			}
 		}
@@ -825,7 +827,7 @@ public class BrowserService {
 			if(pages_match){
 				return true;
 			}
-			System.err.println("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
+			log.info("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

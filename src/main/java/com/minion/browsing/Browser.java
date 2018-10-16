@@ -89,7 +89,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 60){
+		while(driver == null && cnt < 100){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -106,7 +106,7 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
-				
+
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -120,7 +120,7 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(15000L);
+			Timing.pauseThread(30000L);
 		}
 	}
 	
@@ -287,7 +287,7 @@ public class Browser {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
 		
-		System.err.println("Requesting chrome remote driver from hub");
+		log.info("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);

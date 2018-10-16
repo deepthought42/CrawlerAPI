@@ -83,14 +83,14 @@ public class ExploratoryPath {
 		//extract all pages
 		//iterate through pages to see if any match
 		int matches = 0;
-		System.err.println("Checking if exploratory path has a cycle");
+		log.info("Checking if exploratory path has a cycle");
 		for(String key : path_key_list){
 			if(key.equals(page.getKey())){
 				return true;
 			}
 		}
 
-		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		return false;
 	}
 

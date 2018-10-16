@@ -63,19 +63,19 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					//check that message data is of type Form and that the form type is set to login
-					System.err.println("login form test discovery actor is up!");
+					log.info("login form test discovery actor is up!");
 					if(message.getData() instanceof Form){
 						Form form = (Form)message.getData();
 						Domain domain = domain_service.findByHost(message.getOptions().get("host").toString());
 						//check if form type is set to login
 						if(form.getType().equals(FormType.LOGIN)){
-							System.err.println("FORM TYPE IS    LOGIN");
+							log.info("FORM TYPE IS    LOGIN");
 							//get current domain from options list within message
 							//  generate path leading to current form
 							
 							//get users for current domain
 							Set<TestUser> test_users = domain_service.getTestUsers(domain);
-							System.err.println("generating tests for "+test_users.size()+"   users");
+							log.info("generating tests for "+test_users.size()+"   users");
 							for(TestUser user : test_users){
 								ExploratoryPath exploratory_path = initializeFormTest(form);
 
@@ -88,7 +88,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								if(username_elem == null){
 									username_elem = findInputElementByAttribute(elements, "email");
 									if(username_elem == null){
-										System.err.println("could not find username !!!!!!!!");
+										log.info("could not find username !!!!!!!!");
 										//throw error that cannot find username field
 									}
 								}
@@ -110,7 +110,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								PageElement password_elem = findInputElementByAttribute(elements, "password");
 
 								if(password_elem == null){
-									System.err.println("could not find password !!!!!!!!");
+									log.info("could not find password !!!!!!!!");
 									//throw error that cannot find password field
 								}
 								
@@ -140,11 +140,11 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								action_list.add(submit_login);
 
-								System.err.println("*********************************************************");
-								System.err.println("ACTION LIST :: "+submit_login.getKey());
-								System.err.println("ACTION LIST :: "+submit_login.getName());
-								System.err.println("ACTION LIST :: "+action_list.size());
-								System.err.println("*********************************************************");
+								log.info("*********************************************************");
+								log.info("ACTION LIST :: "+submit_login.getKey());
+								log.info("ACTION LIST :: "+submit_login.getName());
+								log.info("ACTION LIST :: "+action_list.size());
+								log.info("*********************************************************");
 								
 								//exploratory_path.setPossibleActions(action_list);
 								exploratory_path.addPathObject(submit_login);
@@ -156,7 +156,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								do{
 									try{
-										System.err.println("Crawling path");
+										log.info("Crawling path");
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){

@@ -13,11 +13,16 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.minion.browsing.Browser;
 import com.qanairy.models.Form;
 
 public class DeepthoughtApi {
+	private static Logger log = LoggerFactory.getLogger(DeepthoughtApi.class);
+
 	public static void predict(Form form) throws UnsupportedOperationException, IOException{
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -25,7 +30,7 @@ public class DeepthoughtApi {
         //Object to JSON in String
         String form_json = mapper.writeValueAsString(form);
         
-        System.err.println("Requesting prediction for form from RL system");
+        log.info("Requesting prediction for form from RL system");
 	  	
 	  	CloseableHttpClient client = HttpClients.createDefault();
 	    HttpPost httpPost = new HttpPost("http://198.211.117.122:9080/rl/predict");
@@ -41,8 +46,8 @@ public class DeepthoughtApi {
 
 	    CloseableHttpResponse response = client.execute(httpPost);
 
-	  	System.err.println("Recieved status code from RL :: "+response.getStatusLine().getStatusCode());
-	  	System.err.println("REPSONE ENTITY CONTENT ::   " +response.getEntity().getContent().toString());
+	  	log.info("Recieved status code from RL :: "+response.getStatusLine().getStatusCode());
+	  	log.info("REPSONE ENTITY CONTENT ::   " +response.getEntity().getContent().toString());
 	  	int status = response.getStatusLine().getStatusCode();
 	  	
   		String rl_response = "";
@@ -58,7 +63,7 @@ public class DeepthoughtApi {
                 }
                 br.close();
                 rl_response = sb.toString();
-                System.err.println("Response received from RL system :: "+rl_response);	
+                log.info("Response received from RL system :: "+rl_response);	
                 break;
             case 500:
             	return;
@@ -67,10 +72,10 @@ public class DeepthoughtApi {
 
         String src = "";
         
-        System.err.println("form tag :: "+form.getFormTag());
-        System.err.println("form tax xpath :: "+form.getFormTag().getXpath());
+        log.info("form tag :: "+form.getFormTag());
+        log.info("form tax xpath :: "+form.getFormTag().getXpath());
         JSONObject obj = new JSONObject(rl_response);
-        System.err.println("RL RESPONSE OBJ :: " + obj);
+        log.info("RL RESPONSE OBJ :: " + obj);
         JSONArray prediction = obj.optJSONArray("prediction");
         long memory_id = obj.getLong("id");
         
@@ -89,10 +94,10 @@ public class DeepthoughtApi {
 	}
 	
 	public static void learn(Form form) throws UnsupportedOperationException, IOException{
-		System.err.println("FORM ::    "+form);
-		System.err.println("FORM MEMORY ID   :::   "+form.getMemoryId());
-		System.err.println("feature value :: "+form.getType());
-	  	System.err.println("Requesting prediction for form from RL system");
+		log.info("FORM ::    "+form);
+		log.info("FORM MEMORY ID   :::   "+form.getMemoryId());
+		log.info("feature value :: "+form.getType());
+	  	log.info("Requesting prediction for form from RL system");
 	  	
 	  	CloseableHttpClient client = HttpClients.createDefault();
 	    HttpPost httpPost = new HttpPost("http://198.211.117.122:9080/rl/learn");
@@ -109,8 +114,8 @@ public class DeepthoughtApi {
 
 	    CloseableHttpResponse response = client.execute(httpPost);
 
-	  	System.err.println("Recieved status code from RL :: "+response.getStatusLine().getStatusCode());
-	  	System.err.println("REPSONE ENTITY CONTENT ::   " +response.getEntity().getContent().toString());
+	  	log.info("Recieved status code from RL :: "+response.getStatusLine().getStatusCode());
+	  	log.info("REPSONE ENTITY CONTENT ::   " +response.getEntity().getContent().toString());
 	  	int status = response.getStatusLine().getStatusCode();
 	  	
   		String rl_response = "";
@@ -126,12 +131,12 @@ public class DeepthoughtApi {
                 }
                 br.close();
                 rl_response = sb.toString();
-                System.err.println("Response received from RL system :: "+rl_response);	
+                log.info("Response received from RL system :: "+rl_response);	
                 break;
             case 400:
-            	System.err.println("***********************************************************");
-            	System.err.println("RL returned a 400");
-            	System.err.println("***********************************************************");
+            	log.info("***********************************************************");
+            	log.info("RL returned a 400");
+            	log.info("***********************************************************");
             case 500:
             	return;
         }

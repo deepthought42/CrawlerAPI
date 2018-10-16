@@ -182,7 +182,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-							  		System.err.println("looking for parent path ... ");
 							  		do{
 							  			try{
 							  				ExploratoryPath parent_path = buildParentPath(path, browser);
@@ -195,7 +194,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			
 								  			if(results_match){
 								  				last_path = path;
-								  				System.err.println("RESULT MATCH");
 								  				path = parent_path;
 								  			}
 							  			}catch(NoSuchAlgorithmException e){
@@ -211,7 +209,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		if(last_path == null){
 							  			last_path = path;
 							  		}
-							  		System.err.println("Creating a new test from exploratory path !!!!!!!!!!!!!!");
 									
 							  		PageState result_page_record = page_state_repo.findByKey(result_page.getKey());
 							  		if(result_page_record != null){
@@ -284,7 +281,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO path expansion actor");
 		final ActorRef test_simplifier = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
 		test_simplifier.tell(test_msg, getSelf());

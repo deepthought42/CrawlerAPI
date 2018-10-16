@@ -224,7 +224,7 @@ public class DomainController {
     	}
     	
     	Set<Domain> domains = account_repo.getDomains(username);
-    	System.err.println("Domain size :: "+domains.size());
+    	log.info("Domain size :: "+domains.size());
 	    return domains;
     }
     
@@ -280,7 +280,7 @@ public class DomainController {
     	//}
 
 		Set<PageState> page_states = domain_repo.getPageStates(host);
-		System.err.println("###### PAGE STATE COUNT :: "+page_states.size());
+		log.info("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
     	
     			
@@ -293,9 +293,9 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_repo.getPageStates(host);
-		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		System.err.println("retreived   "+page_state.size()+"      page states");
-		System.err.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		log.info("retreived   "+page_state.size()+"      page states");
+		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		Set<PageState> test_results = domain_repo.getResults(host);		
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
@@ -345,7 +345,7 @@ public class DomainController {
     	}
 
 		Set<PageElement> page_elements = domain_repo.getPageElements(host);
-		System.err.println("###### PAGE ELEMENT COUNT :: "+page_elements.size());
+		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
     	//	    return domain_repo.getPageElements();
 
@@ -415,34 +415,34 @@ public class DomainController {
 														MalformedURLException {
     	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
     	
-		System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-    	System.err.println("starting to add user");
+		log.info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+    	log.info("starting to add user");
     	if(optional_domain.isPresent()){
     		Domain domain = optional_domain.get();
-    		System.err.println("domain : "+domain);
+    		log.info("domain : "+domain);
     		Set<TestUser> test_users = domain_repo.getTestUsers(domain.getKey());
     		
-    		System.err.println("Test users : "+test_users.size());
+    		log.info("Test users : "+test_users.size());
     		for(TestUser user : test_users){
     			if(user.getUsername().equals(username)){
-    				System.err.println("User exists, returning user : "+user);
+    				log.info("User exists, returning user : "+user);
     				return user;
     			}
     		}
     		
-    		System.err.println("Test user does not exist for domain yet");
+    		log.info("Test user does not exist for domain yet");
     		
     		TestUser user = new TestUser(username, password, role, enabled);
-    		System.err.println("SAVING TEST USER "+user);
+    		log.info("SAVING TEST USER "+user);
     		user = test_user_repo.save(user);
     		Set<TestUser> users = new HashSet<TestUser>();
     		users.add(user);
-    		System.err.println("created test user :: "+user);
+    		log.info("created test user :: "+user);
     		domain.setTestUsers(users);
-			System.err.println("domain.testusers :: "+domain.getTestUsers());
-    		System.err.println("added test user to domain");
+			log.info("domain.testusers :: "+domain.getTestUsers());
+    		log.info("added test user to domain");
     		domain = domain_repo.save(domain);
-    		System.err.println("saved domain :: "+domain.getKey());
+    		log.info("saved domain :: "+domain.getKey());
     		return user;
     	}
 		throw new DomainNotFoundException();
@@ -517,18 +517,18 @@ public class DomainController {
 	    	form_record = form_repo.save(form_record);
 	
 			Optional<Domain> optional_domain = domain_repo.findById(domain_id);
-			System.err.println("Does the domain exist :: "+optional_domain.isPresent());
+			log.info("Does the domain exist :: "+optional_domain.isPresent());
 	    	if(optional_domain.isPresent()){
 	    		Domain domain = optional_domain.get();
 	        		
-	    		System.err.println("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
+	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
 	    		//start form test creation actor
 	    		Map<String, Object> options = new HashMap<String, Object>();
 				options.put("browser", domain.getDiscoveryBrowserName());
 		        options.put("host", domain.getUrl());
 		        Message<Form> form_msg = new Message<Form>(acct.getUsername(), form_record, options);
 	
-		        System.err.println("Sending form message  :: "+form_msg.toString());
+		        log.info("Sending form message  :: "+form_msg.toString());
 	    		final ActorRef form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 	  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
 	    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());

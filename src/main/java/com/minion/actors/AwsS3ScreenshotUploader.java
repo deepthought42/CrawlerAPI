@@ -54,7 +54,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 				.match(ElementScreenshotUpload.class, screenshot_upload -> {
 					String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot_upload.screenshot, screenshot_upload.page_url.getHost(), screenshot_upload.page_elem_key, "element_screenshot");
 
-					System.err.println("Screenshot uploaded to :: "+viewport_screenshot_url);
+					log.info("Screenshot uploaded to :: "+viewport_screenshot_url);
 					/*ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, screenshot_upload.browser_name);
 					
 					ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
@@ -82,7 +82,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
+					log.info("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

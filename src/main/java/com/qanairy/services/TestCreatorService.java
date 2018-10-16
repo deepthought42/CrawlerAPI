@@ -66,7 +66,6 @@ public class TestCreatorService {
 
 		browser.navigateTo(url);
 		
-		System.err.println("building page");
 	  	PageState page_obj = browser_service.buildPage(browser);
 
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
@@ -78,7 +77,6 @@ public class TestCreatorService {
 	  	else{
 	  		page_obj = page_record;
 	  	}
-	  	System.err.println("Page built");
 	  	
 	  	try{
 	  		browser.close();

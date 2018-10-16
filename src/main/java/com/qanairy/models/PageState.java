@@ -224,31 +224,31 @@ public class PageState implements Persistable, PathObject {
         
         boolean pages_match = this.getKey().equals(that.getKey());
 		/*try {
-			System.err.println("This browser screenshot :: "+this.getBrowserScreenshots().size());
-			System.err.println("NEXT BROSEWR SCREENSHOT :: "+this.getBrowserScreenshots().iterator().next());
-			System.err.println("Viewport screenshot :: "+this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+			log.info("This browser screenshot :: "+this.getBrowserScreenshots().size());
+			log.info("NEXT BROSEWR SCREENSHOT :: "+this.getBrowserScreenshots().iterator().next());
+			log.info("Viewport screenshot :: "+this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
 			String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
 	        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();	        
 	        
-	        System.err.println("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
+	        log.info("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
 			BufferedImage img1;
 			BufferedImage img2;
 			
 			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
 			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
 			pages_match = compareImages(img1, img2);
-			System.err.println("DO THE SCREENSHOTS MATCH FOR PAGE EQUALITY????        ::::     "+pages_match);
+			log.info("DO THE SCREENSHOTS MATCH FOR PAGE EQUALITY????        ::::     "+pages_match);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 		*/
-        //System.err.println("Screenshots match? :: "+screenshots_match);
+        //log.info("Screenshots match? :: "+screenshots_match);
         
-        /*System.err.println("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
-        System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        System.err.println("Page 1 length :: "+this.getElements().size());
-        System.err.println("Page 2 length :: "+that.getElements().size());
-        System.err.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        /*log.info("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
+        log.info("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        log.info("Page 1 length :: "+this.getElements().size());
+        log.info("Page 2 length :: "+that.getElements().size());
+        log.info("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         */
         /*
         if(!pages_match ){

@@ -3,7 +3,6 @@ package com.minion.api;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -38,7 +36,7 @@ import com.qanairy.services.BrowserService;
  */
 @RestController
 @RequestMapping("/testIDE")
-public class IdeTestExportController {
+public class IDETestExportController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Autowired
@@ -125,5 +123,4 @@ public class IdeTestExportController {
     	test = test_repo.save(test);
     	return new ResponseEntity<>(test, HttpStatus.ACCEPTED );
 	}
-
 }

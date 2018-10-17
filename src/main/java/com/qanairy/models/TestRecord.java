@@ -115,6 +115,6 @@ public class TestRecord implements Persistable {
 	 */
 	@Override
 	public String generateKey() {
-		return getRanAt().toString()+"::"+getPassing();
+		return "testrecord::"+getRanAt().toString()+"::"+getPassing();
 	}
 }

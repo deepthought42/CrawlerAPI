@@ -1,9 +1,17 @@
 package com.qanairy.models.rules;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.qanairy.models.PageElement;
 
+@NodeEntity
 public class RequirementRule extends Rule{
-		
+	@GeneratedValue
+    @Id
+	private Long id;
+	
 	private String key;
 	private RuleType type;
 	private String value;

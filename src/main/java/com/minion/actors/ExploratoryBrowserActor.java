@@ -22,11 +22,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.minion.actors.AwsS3ScreenshotUploader.ElementScreenshotUpload;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -42,6 +42,7 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
@@ -50,7 +51,6 @@ import com.qanairy.services.TestService;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.AbstractActor.Receive;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -74,6 +74,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	
 	@Autowired
 	private PageStateRepository page_state_repo;
+	
+	@Autowired
+	private PageElementRepository page_element_repo;
 	
 	@Autowired
 	private TestRepository test_repo;
@@ -128,8 +131,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							}
 							
 							if(start_idx > 0){
+								exploratory_path.setPathKeys(exploratory_path.getPathKeys().subList(start_idx, exploratory_path.getPathKeys().size()));
 								exploratory_path.setPathObjects(exploratory_path.getPathObjects().subList(start_idx, exploratory_path.getPathObjects().size()));
 							}
+
 							for(Action action : exploratory_path.getPossibleActions()){
 								ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
 								Action action_record = action_repo.findByKey(action.getKey());
@@ -143,38 +148,33 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								int tries = 0;
 								do{
 									try{
-										System.err.println("Crawling path");
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
-										break;
 									}catch(NullPointerException e){
+										Timing.pauseThread(10000L);
 										browser = new Browser(browser.getBrowserName());
 										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
-										e.printStackTrace();
 									} catch (GridException e) {
+										Timing.pauseThread(10000L);
 										browser = new Browser(browser.getBrowserName());
-										// TODO Auto-generated catch block
-										e.printStackTrace();
+										log.error("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (WebDriverException e) {
+										Timing.pauseThread(10000L);
 										browser = new Browser(browser.getBrowserName());
-										// TODO Auto-generated catch block
-										e.printStackTrace();
+										log.error("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (NoSuchAlgorithmException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
+										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									}
+									catch(Exception e){
+										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
+									}
+
 									tries++;
-								}while(result_page == null && tries < 5);
+								}while(result_page == null && tries < 10);
 							
 								//have page checked for landability
-								System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page);
-		
-								System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page.getBrowserScreenshots());
-								System.err.println("EXPLORATORY BROWSER ACTOR PAGE STATE SCREENSHOTS :: "+result_page.getBrowserScreenshots().size());
-		
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 								
 								final long pathCrawlEndTime = System.currentTimeMillis();
-		
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
@@ -182,7 +182,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-							  		System.err.println("Starting building parent path");
 							  		do{
 							  			try{
 							  				ExploratoryPath parent_path = buildParentPath(path, browser);
@@ -190,23 +189,32 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								  			if(parent_path == null){
 								  				break;
 								  			}
+								  			
 							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, domain.getUrl());
 							  			
 								  			if(results_match){
-								  				last_path=path;
+								  				last_path = path;
 								  				path = parent_path;
 								  			}
-							  			}catch(Exception e){
+							  			}catch(NoSuchAlgorithmException e){
+							  				e.printStackTrace();
 							  				browser = new Browser(browser.getBrowserName());
 							  				results_match = false;
 							  			}
+							  			catch(NoSuchElementException e){
+							  				e.printStackTrace();
+							  			}
 							  		}while(results_match);
-		
+							  		
 							  		if(last_path == null){
 							  			last_path = path;
 							  		}
-							  		
-									createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg);
+									
+							  		PageState result_page_record = page_state_repo.findByKey(result_page.getKey());
+							  		if(result_page_record != null){
+							  			result_page = result_page_record;
+							  		}
+							  		createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg);
 									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 									discovery_record.setTestCount(discovery_record.getTestCount()+1);
 							  		discovery_repo.save(discovery_record);
@@ -215,6 +223,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							}
 							
 							DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+							
 							discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 					  		discovery_record.setLastPathRanAt(new Date());
 					  		discovery_record = discovery_repo.save(discovery_record);
@@ -243,7 +252,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();
@@ -256,8 +264,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @throws JsonProcessingException 
 	 */
 	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg ) throws JsonProcessingException {
+		
 		Test test = new Test(path_keys, path_objects, result_page, null);							
-
+		Test test_db = test_repo.findByKey(test.getKey());
+		if(test_db != null){
+			test = test_db;
+		}
+		
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
@@ -268,17 +281,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-		System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO Test Simplifier");
 		final ActorRef test_simplifier = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("testPathSimplifier"), "test_simplifier"+UUID.randomUUID());
+				  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
 		test_simplifier.tell(test_msg, getSelf());
-	
-
-		/*System.err.println("!!!!!!!!!!!!!!!!!!     EXPLORATORY ACTOR SENDING TEST TO PATH EXPANSION");
-		final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-		path_expansion_actor.tell(test_msg, getSelf());
-		 */
 	}
 	
 	/**
@@ -293,7 +298,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_repo.save(test);
+					test_service.save(test, test.firstPage().getUrl()); 
 					break;
 				}
 			}
@@ -317,7 +322,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 */
 	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
 		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
-		return parent_result.equals(result_page);
+		return parent_result.getKey().equals(result_page.getKey());
 	}
 	
 	/**
@@ -327,44 +332,55 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 *  
 	 * @param test
 	 * @param driver
+	 * 
 	 * @return
+	 * @throws Exception 
+	 * 
+	 * @pre path != null
+	 * @pre browser != null
 	 */
-	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser){
+	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser) throws Exception{
+		assert path != null;
+		assert browser != null;
+		
 		PageElement elem = null;
-		int element_idx = 0;
-
-		for(PathObject obj : path.getPathObjects()){
-			if(obj.getType().equals("PageElement")){
-				elem = (PageElement)obj;
+		int idx = 0;
+		for(int element_idx=0; element_idx < path.getPathKeys().size(); element_idx++){
+			if(path.getPathObjects().get(element_idx).getType().equals("PageElement")){
+				elem = (PageElement)path.getPathObjects().get(element_idx);
+				idx = element_idx;
 			}
-			element_idx++;
 		}
 		
 		if(elem != null){
+			List<String> path_keys = path.getPathKeys().subList(0, idx+1);
+			List<PathObject> path_objects = path.getPathObjects().subList(0, idx+1);
+			PageState page = crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
+			
+			//perform action on the element
+			//ensure page is equal to expected page
 			//get parent of element
 			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
 			WebElement parent = browser_service.getParentElement(web_elem);
 
-			//clone test and swap page element with parent
-			ExploratoryPath parent_path = ExploratoryPath.clone(path);
-			Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
-			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
-			String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), parent);
-			PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent), screenshot_url );
-			
-			//Ensure Order path objects
-			int idx = 0;
-			for(PathObject obj : parent_path.getPathObjects()){
-				if(obj.getKey().equals(parent_tag)){
-					break;
+			if(!parent.getTagName().equals("body")){
+				//clone test and swap page element with parent
+				ExploratoryPath parent_path = ExploratoryPath.clone(path);
+				Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
+				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
+				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), parent);
+				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent), screenshot_url );
+				
+				PageElement parent_tag_record = page_element_repo.findByKey(parent_tag.getKey());
+				if(parent_tag_record != null){
+					parent_tag = parent_tag_record;
 				}
-				idx++;
+				
+				parent_path.getPathObjects().set(idx, parent_tag);
+				
+				parent_path.getPathKeys().set(idx, parent_tag.getKey());
+				return parent_path;
 			}
-			
-			parent_path.getPathObjects().set(idx, parent_tag);
-			
-			parent_path.getPathKeys().set(element_idx, parent_tag.getKey());
-			return parent_path;
 		}
 		return null;
 	}

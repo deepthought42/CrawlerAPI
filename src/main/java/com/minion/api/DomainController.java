@@ -1,37 +1,57 @@
 package com.minion.api;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
+
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
+import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.FormStatus;
+import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.FormRepository;
+import com.qanairy.models.repository.TestUserRepository;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 /**
  *	API endpoints for interacting with {@link Domain} data
@@ -49,6 +69,15 @@ public class DomainController {
 	@Autowired
 	private DomainRepository domain_repo;
 	
+	@Autowired
+	private FormRepository form_repo;
+	
+	@Autowired
+    private ActorSystem actor_system;
+	    
+	@Autowired
+	private TestUserRepository test_user_repo;
+	   
     /**
      * Create a new {@link Domain domain}
      * 
@@ -195,7 +224,7 @@ public class DomainController {
     	}
     	
     	Set<Domain> domains = account_repo.getDomains(username);
-    	System.err.println("Domain size :: "+domains.size());
+    	log.info("Domain size :: "+domains.size());
 	    return domains;
     }
     
@@ -208,9 +237,9 @@ public class DomainController {
 	 * @throws UnknownAccountException 
 	 */
 	@PreAuthorize("hasAuthority('delete:domains')")
-	@RequestMapping(method = RequestMethod.DELETE)
-	public @ResponseBody Domain remove(HttpServletRequest request,
-									   @RequestParam(value="key", required=true) String key) 
+	@RequestMapping(method = RequestMethod.DELETE, path="/{domain_id}")
+	public @ResponseBody void remove(HttpServletRequest request,
+										@PathVariable(value="domain_id", required=true) long domain_id)
 								   throws UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -226,11 +255,10 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}		
 		
-		Domain domain = domain_repo.findByKey(key);
-		acct.getDomains().remove(domain);
-		account_repo.save(acct);
-		
-	    return domain;
+		Optional<Domain> domain = domain_repo.findById(domain_id);
+		if(domain.isPresent()){
+			account_repo.removeDomain(acct.getUsername(), domain.get().getKey());
+		}
 	}
     
 	@PreAuthorize("hasAuthority('read:domains')")
@@ -251,9 +279,8 @@ public class DomainController {
     	//	throw new MissingSubscriptionException();
     	//}
 
-		System.err.println("$$$$$$ GETTING PAGE STATES FOR HOST :: "+host);
 		Set<PageState> page_states = domain_repo.getPageStates(host);
-		System.err.println("###### PAGE STATE COUNT :: "+page_states.size());
+		log.info("###### PAGE STATE COUNT :: "+page_states.size());
 		return page_states;
     	
     			
@@ -266,17 +293,16 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_repo.getPageStates(host);
-		System.err.println("PAGE STATE SIZE 1 :: "+page_state.size());
-
+		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		log.info("retreived   "+page_state.size()+"      page states");
+		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		Set<PageState> test_results = domain_repo.getResults(host);		
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
 		Set<PathObject> path_objects = new HashSet<PathObject>();//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(page_state);
-		System.err.println("PAGE STATE SIZE :: "+page_state.size());
 		path_objects.addAll(test_results);
-		System.err.println("Page results size :: "+test_results.size());
 		path_objects.addAll(page_elem);
 		path_objects.addAll(actions);
 		//path_objects.addAll(action_repo.getActions);
@@ -291,6 +317,7 @@ public class DomainController {
 	        newSet.addAll(collection);
 	    return newSet;
 	}
+	
 	/**
 	 * 
 	 * @param request
@@ -317,14 +344,200 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-    	System.err.println("$$$$$$ GETTING PAGE ELEMENTS FOR HOST :: "+host);
 		Set<PageElement> page_elements = domain_repo.getPageElements(host);
-		System.err.println("###### PAGE ELEMENT COUNT :: "+page_elements.size());
+		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
     	//	    return domain_repo.getPageElements();
 
 	    //return unique_page_elements;
     }
+	
+	/**
+	 * 
+	 * @param request
+	 * @param host
+	 * 
+	 * @return a unique set of {@link PageElement}s belonging to all page states for the {@link Domain} with the given host
+	 * @throws UnknownAccountException
+	 */
+	@PreAuthorize("hasAuthority('read:domains')")
+    @RequestMapping(method = RequestMethod.GET, path="{domain_id}/forms")
+    public @ResponseBody Set<Form> getAllForms(HttpServletRequest request, 
+												@PathVariable(value="domain_id", required=true) long domain_id)
+														throws UnknownAccountException {        
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = account_repo.findByUsername(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	Optional<Domain> domain = domain_repo.findById(domain_id);
+    	if(domain.isPresent()){
+    		return domain_repo.getForms(domain.get().getUrl());
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
+    }
+	
+	
+	//USERS ENDPOINTS
+	
+	/**
+	 * Create a new test user and add it to the domain
+	 * @param request
+	 * @param domain_id
+	 * @param username
+	 * @param password
+	 * @param role
+	 * 
+	 * 
+	 * @throws UnknownUserException
+	 * @throws UnknownAccountException
+	 * @throws MalformedURLException
+	 */
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="/{domain_id}/users", method = RequestMethod.POST)
+    public @ResponseBody TestUser addUser(HttpServletRequest request,
+    									@PathVariable(value="domain_id", required=true) long domain_id,
+    									@RequestParam(value="username", required=true) String username,
+    									@RequestParam(value="password", required=true) String password,
+    									@RequestParam(value="role", required=false) String role,
+    									@RequestParam(value="enabled", required=true) boolean enabled) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
+    	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+    	
+		log.info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+    	log.info("starting to add user");
+    	if(optional_domain.isPresent()){
+    		Domain domain = optional_domain.get();
+    		log.info("domain : "+domain);
+    		Set<TestUser> test_users = domain_repo.getTestUsers(domain.getKey());
+    		
+    		log.info("Test users : "+test_users.size());
+    		for(TestUser user : test_users){
+    			if(user.getUsername().equals(username)){
+    				log.info("User exists, returning user : "+user);
+    				return user;
+    			}
+    		}
+    		
+    		log.info("Test user does not exist for domain yet");
+    		
+    		TestUser user = new TestUser(username, password, role, enabled);
+    		log.info("SAVING TEST USER "+user);
+    		user = test_user_repo.save(user);
+    		Set<TestUser> users = new HashSet<TestUser>();
+    		users.add(user);
+    		log.info("created test user :: "+user);
+    		domain.setTestUsers(users);
+			log.info("domain.testusers :: "+domain.getTestUsers());
+    		log.info("added test user to domain");
+    		domain = domain_repo.save(domain);
+    		log.info("saved domain :: "+domain.getKey());
+    		return user;
+    	}
+		throw new DomainNotFoundException();
+    }
+    
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
+    public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
+    									@PathVariable(value="domain_id", required=true) long domain_id) 
+    											throws UnknownUserException, 
+														UnknownAccountException, 
+														MalformedURLException {
+    	Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+    	if(optional_domain.isPresent()){
+    		Domain domain = optional_domain.get();
+    		Set<TestUser> users = domain_repo.getTestUsers(domain.getKey());
+
+    		return users;
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
+    }
+    
+    /**
+     * Retrieves {@link FormRecord account} with a given key
+     * 
+     * @param key account key
+     * @return {@link FormRecord account}
+     * @throws IOException 
+     * @throws UnknownAccountException 
+     */
+
+	@PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(path="{domain_id}/forms", method = RequestMethod.PUT)
+    public @ResponseBody void updateForm(HttpServletRequest request,
+    							 @PathVariable(value="domain_id", required=true) long domain_id,
+    							 @RequestParam(value="key", required=true) String key,
+    							 @RequestParam(value="name", required=false) String name,
+    							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
+		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+    	
+    	Account acct = account_repo.findByUsername(username);
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+		
+		Form form_record = form_repo.findByKey(key);
+
+		if(form_record == null){
+			throw new FormNotFoundException();
+		}
+		else{
+			if(name!=null && !name.isEmpty()){
+				form_record.setName(name);
+			}
+			form_record.setType(FormType.create(form_type.toLowerCase()));
+			
+			if(!form_record.getType().equals(FormType.UNKNOWN)){
+				form_record.setStatus(FormStatus.CLASSIFIED);
+			}
+			
+	        //learn from form classification    
+	    	DeepthoughtApi.learn(form_record);
+	    
+	    	form_record = form_repo.save(form_record);
+	
+			Optional<Domain> optional_domain = domain_repo.findById(domain_id);
+			log.info("Does the domain exist :: "+optional_domain.isPresent());
+	    	if(optional_domain.isPresent()){
+	    		Domain domain = optional_domain.get();
+	        		
+	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
+	    		//start form test creation actor
+	    		Map<String, Object> options = new HashMap<String, Object>();
+				options.put("browser", domain.getDiscoveryBrowserName());
+		        options.put("host", domain.getUrl());
+		        Message<Form> form_msg = new Message<Form>(acct.getUsername(), form_record, options);
+	
+		        log.info("Sending form message  :: "+form_msg.toString());
+	    		final ActorRef form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+	  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
+	    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
+	    	}
+	    	else{
+	    		throw new DomainNotFoundException();
+	    	}
+		}
+	}
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
@@ -334,6 +547,26 @@ class RequiredFieldMissingException extends RuntimeException {
 
 	public RequiredFieldMissingException() {
 		super("Please fill in or select all required fields.");
+	}
+}
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class DomainNotFoundException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public DomainNotFoundException() {
+		super("Domain could not be found.");
+	}
+}
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class FormNotFoundException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public FormNotFoundException() {
+		super("Form could not be found.");
 	}
 }
 

@@ -1,15 +1,11 @@
 package com.minion.actors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.actor.AbstractActor;
-import akka.actor.AbstractActor.Receive;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -41,7 +37,7 @@ public class MemoryRegistryActor extends AbstractActor{
 	Cluster cluster = Cluster.get(getContext().getSystem());
 
 	public static Props props() {
-	  return Props.create(LandabilityChecker.class);
+	  return Props.create(MemoryRegistryActor.class);
 	}
 	
 	@Autowired
@@ -83,15 +79,15 @@ public class MemoryRegistryActor extends AbstractActor{
 						}
 					}
 					else if(msg.getData() instanceof Test){
-						System.err.println("Test message received by memory registry actor");
+						log.info("Test message received by memory registry actor");
 						Test test = (Test)msg.getData();
 						
 						String host_url = msg.getOptions().get("host").toString();
 						Test record = test_repo.findByKey(test.getKey());
 						
 						if(record == null){
-							System.err.println("Test REPO :: "+test_repo);
-							System.err.println("Test ::  "+test);
+							log.info("Test REPO :: "+test_repo);
+							log.info("Test ::  "+test);
 							test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
 							Domain domain = domain_repo.findByHost(host_url);
 							domain.addTest(test);

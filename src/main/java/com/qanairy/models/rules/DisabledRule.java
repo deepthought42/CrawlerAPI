@@ -5,11 +5,19 @@ import org.slf4j.LoggerFactory;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
 import org.slf4j.Logger;
 
+@NodeEntity
 public class DisabledRule extends Rule{
 	private static Logger log = LoggerFactory.getLogger(DisabledRule.class);
-
+	
+	@GeneratedValue
+    @Id
+	private Long id;
+	
 	private String key;
 	private String value;
 	private RuleType type;
@@ -35,7 +43,7 @@ public class DisabledRule extends Rule{
 	
 		for(Attribute attribute: elem.getAttributes()){
 			if(attribute.getName().equals("disabled")){
-				System.err.println("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
+				log.info("!DISABLED RULE TYPE....TODO : THIS FEATURE NEEDS A PROPER IMPLEMENTATION!!!");
 				return attribute.getVals().size() == 0;
 			}
 		}

@@ -1,8 +1,5 @@
 package com.qanairy.models;
 
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,37 +47,6 @@ public class PageElement implements Persistable, PathObject {
 	private Set<Rule> rules = new HashSet<>();
 			
 	public PageElement(){}
-	
-	/**
-	 * 
-	 * @param text
-	 * @param xpath
-	 * @param name
-	 * @param attributes
-	 * @param css_map
-	 * 
-	 * @pre attributes != null
-	 * @pre css_map != null
-	 * @pre xpath != null
-	 * @pre name != null
-	 * @pre screenshot_url != null
-	 * @pre !screenshot_url.isEmpty()
-	 */
-	public PageElement(String key, String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map){
-		assert attributes != null;
-		assert css_map != null;
-		assert xpath != null;
-		assert name != null;
-		
-		setKey(key);
-		setType("PageElement");
-		setName(name);
-		setXpath(xpath);
-		setAttributes(attributes);
-		setScreenshot("");
-		setText(text);
-		setCssValues(css_map);
-	}
 	
 	/**
 	 * 
@@ -271,18 +237,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		try {
-			return PageState.getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getScreenshot());
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return "";
-		//return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getXpath()+":"+getText()+":"+getType());   
+		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getXpath()+":"+getText());   
 	}
 	
 

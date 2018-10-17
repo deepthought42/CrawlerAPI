@@ -1,6 +1,9 @@
 package com.qanairy.models.rules;
 
 import org.apache.commons.lang3.StringUtils;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
@@ -9,7 +12,11 @@ import com.qanairy.models.PageElement;
 /**
  * Defines a min/max value or length {@link Rule} on a {@link PageElement}
  */
+@NodeEntity
 public class NumericRule extends Rule{
+	@GeneratedValue
+    @Id
+	private Long id;
 	
 	private String key;
 	private RuleType type;

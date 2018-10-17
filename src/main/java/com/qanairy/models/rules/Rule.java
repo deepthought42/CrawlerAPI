@@ -1,5 +1,9 @@
 package com.qanairy.models.rules;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.minion.browsing.form.FormField;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.Persistable;
@@ -12,7 +16,7 @@ import com.qanairy.models.rules.RuleType;
  * @param <T> a generic value that is used to define the type of value returned
  */
 public abstract class Rule implements Persistable {
-
+	
 	public abstract void setKey(String key);
 
 	public abstract String getKey();

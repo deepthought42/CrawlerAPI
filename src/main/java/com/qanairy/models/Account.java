@@ -19,6 +19,7 @@ public class Account {
 	@GeneratedValue
     @Id
 	private Long id;
+	
 	private String username;
 	private String customer_token;
 	private String subscription_token;
@@ -99,6 +100,10 @@ public class Account {
 		setOnboardedSteps(onboarded_steps);
 	}
 		
+	public long getId(){
+		return this.id;
+	}
+	
 	public String getUsername() {
 		return username;
 	}

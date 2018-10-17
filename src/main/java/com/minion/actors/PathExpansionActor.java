@@ -41,6 +41,7 @@ import com.qanairy.models.rules.Rule;
 @Component
 @Scope("prototype")
 public class PathExpansionActor extends AbstractActor {
+	
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
@@ -49,6 +50,9 @@ public class PathExpansionActor extends AbstractActor {
 	
 	@Autowired
 	DiscoveryRecordRepository discovery_repo;
+	
+	@Autowired
+	private ElementRuleExtractor extractor;
 	
 	/**
      * {@inheritDoc}
@@ -79,7 +83,7 @@ public class PathExpansionActor extends AbstractActor {
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
-
+						log.info("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
 						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
@@ -89,10 +93,22 @@ public class PathExpansionActor extends AbstractActor {
 						return;
 					}
 					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){					
-						pathExpansions = PathExpansionActor.expandPath(test);
-						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+pathExpansions.size());
+						pathExpansions = expandPath(test);
+						log.info(pathExpansions.size()+"   path expansions found.");
+						
+						DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
+						if(discovery_record2 != null){
+							discovery_record = discovery_record2;
+						}
+						int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
+						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+						log.info("expected total path count :: "+new_total_path_count);
+						discovery_record.setTotalPathCount(new_total_path_count);
 						discovery_record.getExpandedPageState().add(test.getResult().getKey());
 						discovery_record = discovery_repo.save(discovery_record);
+
+						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+						
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 	
 						for(ExploratoryPath expanded : pathExpansions){
@@ -117,7 +133,6 @@ public class PathExpansionActor extends AbstractActor {
 			log.info("Member is Removed: {}", mRemoved.member());
 		})	
 		.matchAny(o -> {
-			System.err.println("o class :: "+o.getClass().getName());
 			log.info("received unknown message");
 		})
 		.build();
@@ -130,7 +145,7 @@ public class PathExpansionActor extends AbstractActor {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static ArrayList<ExploratoryPath> expandPath(Test test)  {
+	public ArrayList<ExploratoryPath> expandPath(Test test)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
@@ -140,7 +155,7 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		//iterate over all elements
-		System.err.println("Page elements for expansion :: "+page.getElements().size());
+		log.info("Page elements for expansion :: "+page.getElements().size());
 		for(PageElement page_element : page.getElements()){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
@@ -161,12 +176,12 @@ public class PathExpansionActor extends AbstractActor {
 			}
 			//check if page element is an input
 			else if(page_element.getName().equals("input")){
-				List<Rule> rules = ElementRuleExtractor.extractInputRules(page_element);
+				List<Rule> rules = extractor.extractInputRules(page_element);
 				for(Rule rule : rules){
 					page_element.addRule(rule);
 				}
 				for(Rule rule : page_element.getRules()){
-					List<List<PathObject>> tests = FormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+					List<List<PathObject>> tests = GeneralFormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
 					for(List<PathObject> path_obj_list: tests){
 						//iterate over all actions
@@ -185,7 +200,7 @@ public class PathExpansionActor extends AbstractActor {
 							
 							
 							/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-								System.err.println("EXISTING ELEMENT ACTION SEQUENCE FOUND");
+								log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
 								continue;
 							}*/
 							pathList.add(action_path);

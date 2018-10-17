@@ -55,13 +55,14 @@ public class TestService {
 		 PageState page = null;
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
-		 System.err.println("Test :: "+test);
-		 System.err.println("TEST KEY S:: " + test.getPathKeys().size());
-		 System.err.println("browser :: " + browser);
+		 log.info("Test :: "+test);
+		 log.info("TEST KEY S:: " + test.getPathKeys().size());
+		 log.info("browser :: " + browser);
+		 
 		 try {
 			page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
 			
-			System.err.println("IS TEST CURRENTLY PASSING ??    "+test.getStatus()); 
+			log.info("IS TEST CURRENTLY PASSING ??    "+test.getStatus()); 
 			passing = Test.isTestPassing(test.getResult(), page, test.getStatus());
 			
 		    test.setBrowserStatus(browser.getBrowserName(), passing.toString());
@@ -77,33 +78,46 @@ public class TestService {
 		 return test_record;		
 	 }
 	 
-	 public Test save(Test test, String host_url) throws JsonProcessingException{
+	 public Test save(Test test, String host_url){
 		Test record = test_repo.findByKey(test.getKey());
 			
 		if(record == null){
-			System.err.println("Test REPO :: "+test_repo);
-			System.err.println("Test ::  "+test);
+			log.info("Test REPO :: "+test_repo);
+			log.info("Test ::  "+test);
 			test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
 	  		
-	  		record = test_repo.save(test);
+	  		test = test_repo.save(test);
 			Domain domain = domain_repo.findByHost(host_url);
-			domain.addTest(record);
+			domain.addTest(test);
 			domain = domain_repo.save(domain);
 			if(test.getBrowserStatuses() == null || test.getBrowserStatuses().isEmpty()){
-				System.err.println("Broadcasting discovered test");
-				MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
+				log.info("Broadcasting discovered test");
+				
+				try {
+					MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
+				} catch (JsonProcessingException e) {
+					log.error(e.getLocalizedMessage());
+				}
 			}
 			else {
-				System.err.println("Broadcasting Test...");
-				MessageBroadcaster.broadcastTest(test, host_url);
+				log.info("Broadcasting Test...");
+				try {
+					MessageBroadcaster.broadcastTest(test, host_url);
+				} catch (JsonProcessingException e) {
+					log.error(e.getLocalizedMessage());
+				}
 			}
 			
 			for(PathObject path_obj : test.getPathObjects()){
-				MessageBroadcaster.broadcastPathObject(path_obj, host_url);
+				try {
+					MessageBroadcaster.broadcastPathObject(path_obj, host_url);
+				} catch (JsonProcessingException e) {
+					log.error(e.getLocalizedMessage());
+				}
 			}
 		}
 		else{
-			System.err.println("Test already exists  !!!!!!!");
+			log.info("Test already exists  !!!!!!!");
 		}
 		
 		return test;

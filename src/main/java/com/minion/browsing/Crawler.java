@@ -8,21 +8,17 @@ import java.util.List;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.minion.api.MessageBroadcaster;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;
@@ -63,10 +59,10 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		assert browser != null;
 		assert path_keys != null;
-
+		
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//Ensure Order path objects
 		for(String path_obj_key : path_keys){
@@ -80,20 +76,18 @@ public class Crawler {
 		PageElement last_element = null;
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
+		
+		//check if page is the same as expected. 
 		PageState current_page_state = null;
 		//skip first node since we should have already loaded it during initialization
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
 				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
-				System.err.println("CHECKING IF PAGE STATE HAS RECORD IN DB.....");
 				if(page_record != null){
-					System.err.println("Page record is not null");
 					expected_page = page_record;
 					
 				}
-				System.err.println("Page screenshots :: "+expected_page.getBrowserScreenshots().size());
-				System.err.println("Page screenshot url :: "+expected_page.getBrowserScreenshots().iterator().next().getKey());
 				boolean screenshot_matches = false;
 				int cnt = 0;
 				
@@ -101,13 +95,10 @@ public class Crawler {
 					current_page_state = browser_service.buildPage(browser);
 					screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
 					cnt++;
-					try {
-						Thread.sleep(400);
-					} catch (InterruptedException e) {}
 				}while(!screenshot_matches && cnt < 5);
 				
 				if(!screenshot_matches){
-					throw new NullPointerException();
+					throw new PagesAreNotMatchingException();
 				}
 			}
 			else if(current_obj instanceof PageElement){
@@ -150,9 +141,7 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-			try {
-				Thread.sleep(25000L);
-			} catch (InterruptedException e) {}
+			Timing.pauseThread(5000L);
 		}
 		catch(StaleElementReferenceException e){
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
@@ -168,5 +157,13 @@ public class Crawler {
 		}
 		
 		return wasPerformedSuccessfully;
+	}
+}
+
+class PagesAreNotMatchingException extends RuntimeException {
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public PagesAreNotMatchingException() {
+		super("Expected page and actual page did not match.");
 	}
 }

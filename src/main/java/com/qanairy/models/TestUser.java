@@ -8,23 +8,27 @@ import org.neo4j.ogm.annotation.NodeEntity;
  * Defines user information that can be used during testing
  */
 @NodeEntity
-public class TestUser implements Persistable {
+public class TestUser{
 	
 	@GeneratedValue
     @Id
 	private Long id;
 	
-	private String key;
 	private String username;
 	private String password;
 	private String role;
+	private boolean enabled;
 	
 	public TestUser(){}
 	
-	public TestUser(String username, String password, String role){
+	public TestUser(String username, String password, String role, boolean isEnabled){
 		setUsername(username);
 		setPassword(password);
-		setKey(generateKey());
+		setIsEnabled(isEnabled);
+	}
+	
+	public long getId(){
+		return this.id;
 	}
 	
 	public String getUsername(){
@@ -33,14 +37,6 @@ public class TestUser implements Persistable {
 	
 	public String getPassword(){
 		return this.password;
-	}
-
-	public String getKey(){
-		return this.key;
-	}
-	
-	public void setKey(String key) {
-		this.key = key;
 	}
 
 	public String getRole() {
@@ -59,12 +55,11 @@ public class TestUser implements Persistable {
 		this.password = password;
 	}
 	
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String generateKey() {
-		return getUsername()+"::"+getPassword();
+	public void setIsEnabled(boolean isEnabled){
+		this.enabled = isEnabled;
+	}
+	
+	public boolean isEnabled(){
+		return this.enabled;
 	}
 }

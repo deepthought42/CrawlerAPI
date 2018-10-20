@@ -37,8 +37,6 @@ public class TestingActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 	
-	@Autowired
-	private BrowserService browser_service;
 	
     /**
      * Inputs
@@ -66,6 +64,7 @@ public class TestingActor extends AbstractActor {
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 									break;
 								}catch(NullPointerException e){
+									browser = new Browser(browser.getBrowserName());
 									log.error(e.getMessage());
 								}
 								cnt++;
@@ -114,7 +113,6 @@ public class TestingActor extends AbstractActor {
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

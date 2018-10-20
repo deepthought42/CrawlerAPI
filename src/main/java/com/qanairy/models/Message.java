@@ -21,7 +21,5 @@ public class Message<T> {
 	
 	public T getData(){
 		return this.datum;
-	}
-	
-	
+	}	
 }

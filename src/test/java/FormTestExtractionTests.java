@@ -8,7 +8,7 @@ import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.testng.annotations.Test;
 import com.minion.browsing.Browser;
-import com.minion.browsing.form.Form;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.NumericRestrictionRule;
@@ -29,28 +29,26 @@ public class FormTestExtractionTests {
 
 	/**
 	 * Tests if {@link RequirementRule} can be extracted on a required field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testRequirementRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testRequirementRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
 		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
 			browser = new Browser("chrome");
 			PageState page = browser_service.buildPage(browser);
-			System.err.println("Extracting forms");
+			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
 			
-			//System.err.println("Extracting rules");
+			//log.info("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			log.info(form.get(0).getFormFields().get(0).getRules().size() + " Rules extracted :: ");
 			boolean rule_is_required = false;
-			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+			for(Rule rule : form.get(0).getFormFields().get(0).getRules()){
+				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(RequirementRule.class)){
 					rule_is_required = true;
 				}
@@ -68,12 +66,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testNumericRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testNumericRestrictionRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
 		Browser browser;
 		try {
@@ -81,19 +77,19 @@ public class FormTestExtractionTests {
 
 			browser = new Browser("chrome");
 			PageState page = browser_service.buildPage(browser);
-			System.err.println("Extracting forms");
+			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
 			
-			//System.err.println("Extracting rules");
+			//log.info("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			log.info(form.get(0).getFormFields().get(0).getRules().size() + " Rules extracted :: ");
 			boolean alphabetic_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
 			
-			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+			for(Rule rule : form.get(0).getFormFields().get(0).getRules()){
+				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(AlphabeticRestrictionRule.class)){
 					alphabetic_restrict_rule = true;
 				}
@@ -114,30 +110,28 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link NumericRestrionRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testAlphabeticRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testAlphabeticRestrictionRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
 		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
 			browser = new Browser("chrome");
 			PageState page = browser_service.buildPage(browser);
-			System.err.println("Extracting forms");
+			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
 			
-			//System.err.println("Extracting rules");
+			//log.info("Extracting rules");
 			//List<Rule<?>> form_rules = ElementRuleExtractor.extractRules(form.get(0).getFormTag());
 			
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			log.info(form.get(0).getFormFields().get(0).getRules().size() + " Rules extracted :: ");
 			boolean numeric_restrict_rule = false;
 			boolean special_char_restrict_rule = false;
 
-			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+			for(Rule rule : form.get(0).getFormFields().get(0).getRules()){
+				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRestrictionRule.class)){
 					numeric_restrict_rule = true;
 				}
@@ -158,12 +152,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testReadonlyRestrictionRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testReadonlyRestrictionRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
 		Browser browser;
 		try {
@@ -174,8 +166,8 @@ public class FormTestExtractionTests {
 
 			boolean readonly_restrict_rule = false;
 
-			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+			for(Rule rule : form.get(0).getFormFields().get(0).getRules()){
+				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(ReadOnlyRule.class)){
 					readonly_restrict_rule = true;
 				}
@@ -193,12 +185,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testMinValueRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testMinValueRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
 		Browser browser;
 		try {
@@ -207,11 +197,11 @@ public class FormTestExtractionTests {
 			PageState page = browser_service.buildPage(browser);
 			List<Form> form = browser_service.extractAllForms(page, browser);
 
-			System.err.println(form.get(0).getFormFields().get(0).getElements().get(0).getRules().size() + " Rules extracted :: ");
+			log.info(form.get(0).getFormFields().get(0).getRules().size() + " Rules extracted :: ");
 			boolean min_value_rule = false;
 
-			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
-				System.err.println("rule class :: " + rule.getClass());
+			for(Rule rule : form.get(0).getFormFields().get(0).getRules()){
+				log.info("rule class :: " + rule.getClass());
 				if(rule.getClass().equals(NumericRule.class)){
 					min_value_rule = true;
 				}
@@ -229,12 +219,10 @@ public class FormTestExtractionTests {
 	
 	/**
 	 * Tests if a {@link ReadonlyRule} is can be extracted from a number type field
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
+	 * @throws Exception 
 	 */
 	@Test
-	public void testMaxValueRuleExtractions() throws GridException, WebDriverException, NoSuchAlgorithmException{
+	public void testMaxValueRuleExtractions() throws Exception{
 		String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
 		Browser browser;
 		try {
@@ -245,7 +233,7 @@ public class FormTestExtractionTests {
 
 			boolean max_value_rule = false;
 
-			for(Rule rule : form.get(0).getFormFields().get(0).getElements().get(0).getRules()){
+			for(Rule rule : form.get(0).getFormFields().get(0).getRules()){
 				if(rule.getClass().equals(NumericRule.class)){
 					max_value_rule = true;
 				}

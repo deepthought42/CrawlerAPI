@@ -38,9 +38,6 @@ public class TechstarsTests {
 				//driver.navigate().to("https://www.techstars.com");
 				String src = driver.getPageSource();
 				String domain = driver.getCurrentUrl();
-				
-				System.err.println("SOURCE :: "+src);
-				System.err.println("Domain :: " + domain);
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

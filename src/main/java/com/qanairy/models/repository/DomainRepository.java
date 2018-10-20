@@ -8,10 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestUser;
 
 /**
  * 
@@ -38,15 +40,19 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p) MATCH b=(t)-[]->() MATCH c=(p)-[]->() RETURN a,b,c as d")
 	public Set<Test> getTests(@Param("domain_host") String host);
 
-	//CURRENT QUERY DOESN"T WORK THE COMMENTED ONE DOES
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[:HAS_TEST_RECORD]->() MATCH c=(p)-[:HAS_SCREENSHOT]->() WHERE t.status='UNVERIFIED' RETURN a,b,c as d")
-	//@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[:HAS_TEST_RECORD]->(:TestRecord) MATCH c=(t)-[:HAS_GROUP]->(:Group) WHERE t.status='UNVERIFIED' RETURN a,b,c as c")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[]->(p:PageState) MATCH (p)-[]->(f:Form) MATCH a=(f)-[:FORM__TAG]->() MATCH b=()-[:SUBMIT__FIELD]->() MATCH c=(f)-[:FORM__FIELDS]->()  return a,b,c as d")
+	public Set<Form> getForms(@Param("domain_host") String host);
+	
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH c=(p)-[:HAS_SCREENSHOT]->() RETURN a,c as d")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host);
 
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->() MATCH c=(p)-[]->() WHERE t.status='PASSING' OR t.status='FAILING' RETURN a,b,c as d")
-	//@Query("MATCH (:Domain{host:'staging-marketing.qanairy.com'})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT|:HAS_TEST_RECORD|:HAS_GROUP]->(d) WHERE (t.status='PASSING' OR t.status='FAILING') AND (d:PageState or d:Group or d:TestRecord) RETURN t,d as c")
 	public Set<Test> getVerifiedTests(@Param("domain_host") String host);
 
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
 	public int getTestCount(@Param("domain_host") String host);
+
+	@Query("MATCH (:Domain{key:{domain_key}})-[:HAS_TEST_USER]->(t:TestUser) RETURN t")
+	public Set<TestUser> getTestUsers(@Param("domain_key") String domain_key);
+
 }

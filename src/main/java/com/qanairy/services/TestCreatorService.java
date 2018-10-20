@@ -3,6 +3,7 @@ package com.qanairy.services;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +26,6 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
-import com.qanairy.models.repository.TestRepository;
 
 @Component
 public class TestCreatorService {
@@ -40,7 +40,7 @@ public class TestCreatorService {
 	PageStateRepository page_state_repo;
 	
 	@Autowired
-	private TestRepository test_repo;
+	private TestService test_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -66,18 +66,17 @@ public class TestCreatorService {
 
 		browser.navigateTo(url);
 		
-		System.err.println("building page");
 	  	PageState page_obj = browser_service.buildPage(browser);
 
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 		  	page_obj.setLandable(true);
+		  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
 	  		page_obj = page_state_repo.save(page_obj);
 	  	}
 	  	else{
 	  		page_obj = page_record;
 	  	}
-	  	System.err.println("Page built");
 	  	
 	  	try{
 	  		browser.close();
@@ -98,9 +97,6 @@ public class TestCreatorService {
 		Domain domain = domain_repo.findByHost( host);
 		
 		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-		System.err.println("Broadcasting discovery status");
-		System.err.println("result page elements count :: "+page_obj.getElements().size());
 		return createTest(path_keys, path_objects, page_obj, 1L, domain ,discovery_record, browser_name);
 	}
 	
@@ -136,7 +132,7 @@ public class TestCreatorService {
 				PageElement elem = (PageElement)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_repo.save(test);
+					test_service.save(test, test.firstPage().getUrl());
 					break;
 				}
 			}

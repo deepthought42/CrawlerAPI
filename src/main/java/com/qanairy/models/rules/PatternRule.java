@@ -3,14 +3,22 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
 
 /**
  * Defines a regular expression based rule that applies to the entire text content(beginning to end) of a field.
  */
+@NodeEntity
 public class PatternRule extends Rule {
-
+	@GeneratedValue
+    @Id
+	private Long id;
+	
 	private String key;
 	private String value;
 	private RuleType type;

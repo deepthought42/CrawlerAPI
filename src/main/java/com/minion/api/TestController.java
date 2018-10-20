@@ -33,6 +33,7 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.TestService;
+
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -92,7 +93,7 @@ public class TestController {
 	@RequestMapping(method = RequestMethod.GET)
 	public @ResponseBody Set<Test> getTestByDomain(HttpServletRequest request, 
 													@RequestParam(value="url", required=true) String url) 
-															throws UnknownAccountException, DomainNotOwnedByAccountException {    	
+			throws UnknownAccountException, DomainNotOwnedByAccountException {    	
 		return domain_repo.getVerifiedTests(url);
     }
 
@@ -158,7 +159,6 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	System.err.println("DOmain repo :: "+domain_repo);
     	return domain_repo.getUnverifiedTests(url);
     	
    		/*Domain domain = domain_repo.findByHost(url);
@@ -217,8 +217,6 @@ public class TestController {
     		);
     	
 		Test test = test_repo.findByKey(key);
-		System.err.println("Test status :: "+status);
-		System.err.println("Test :: "+test.getKey());
 		test.setStatus(status);
 		test.getBrowserStatuses().put(browser_name, status.toString());
 		//update last TestRecord passes value
@@ -389,7 +387,6 @@ public class TestController {
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	
     	for(String key : test_keys){
-    		System.err.println("Looking up test by key :: "+key);
     		Test test = test_repo.findByKey(key);
     		TestRecord record = null;
     		
@@ -506,7 +503,7 @@ public class TestController {
 		Test test = test_repo.findByKey(key);
 		test.getGroups().add(group);
 		
-		test = test_repo.save(test);
+		test = test_service.save(test, test.firstPage().getUrl());
 		return group;
 	}
 

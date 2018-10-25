@@ -1,6 +1,5 @@
 package com.minion.api;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,18 +54,18 @@ public class IDETestExportController {
      * @param browser_name
      * 
      * @return
-	 * @throws IOException 
-     * @throws Exception 
+	 * @throws Exception 
      */
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Test> create( @RequestParam(value="name", required=true) String name,
-    									@RequestBody(required=true) JSONObject[] path) throws IOException {
+    public ResponseEntity<Test> create( @RequestBody(required=true) JSONObject test_json) throws Exception {
     	
     	List<String> path_keys = new ArrayList<String>();
     	List<PathObject> path_objects = new ArrayList<PathObject>();
     	Browser browser = new Browser("chrome");
     	boolean first_page = true;
     	int current_idx = 0;
+    	String name = (String) test_json.get("name");
+    	JSONObject[] path = (JSONObject[]) test_json.get("path");
     	for(JSONObject obj : path){
     		if(obj.has("url")){
     			String url = obj.getString("url");

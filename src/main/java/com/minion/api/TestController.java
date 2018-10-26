@@ -32,6 +32,7 @@ import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
@@ -41,6 +42,8 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Plan;
+import com.stripe.model.Subscription;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
@@ -76,6 +79,9 @@ public class TestController {
     
     @Autowired
     private TestService test_service;
+    
+    @Autowired
+    private SubscriptionService subscription_service;
     
     @Autowired
     TestController(StripeClient stripeClient) {
@@ -335,6 +341,7 @@ public class TestController {
      * @throws NoSuchAlgorithmException 
      * @throws WebDriverException 
      * @throws GridException 
+     * @throws PaymentDueException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
@@ -342,7 +349,7 @@ public class TestController {
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser", required=true) String browser,
 														  @RequestParam(value="host_url", required=true) String host) 
-																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException{
+																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -352,15 +359,10 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
     	
-    	Date date = new Date();
-    	Set<TestRecord> test_records = domain_repo.getTestsByMonth(host, date.getMonth());
-    	if(test_records.size() > 250){
+    	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct)){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
-    	}
+        }
     	
     	/*Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
     	String subscription_item = null;

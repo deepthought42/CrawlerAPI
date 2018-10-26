@@ -5,7 +5,9 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +23,25 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
+import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.StripeClient;
 import com.qanairy.models.Test;
+import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.services.SubscriptionService;
+import com.stripe.model.Plan;
+import com.stripe.model.Subscription;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -48,7 +57,16 @@ public class PathExpansionActor extends AbstractActor {
 	private ActorSystem actor_system;
 	
 	@Autowired
-	DiscoveryRecordRepository discovery_repo;
+	private DiscoveryRecordRepository discovery_repo;
+	
+	@Autowired
+	private AccountRepository account_repo;
+	
+	@Autowired
+	private StripeClient stripe_client;
+	
+	@Autowired
+	private SubscriptionService subscription_service;
 	
 	/**
      * {@inheritDoc}
@@ -64,6 +82,11 @@ public class PathExpansionActor extends AbstractActor {
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 
+		    	Account acct = account_repo.findByUsername(message.getAccountKey());
+		    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct)){
+		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
+		    	}
+		    	
 				if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost())) && 
 						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	

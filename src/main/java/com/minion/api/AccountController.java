@@ -43,6 +43,7 @@ import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
+import com.stripe.model.Product;
 import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
 
@@ -93,17 +94,15 @@ public class AccountController {
         }
           
         //STAGING
-     	Plan discovery_plan = Plan.retrieve("plan_CzgiWkZsvIZsmS");
-    	Plan test_plan = Plan.retrieve("plan_CziqgQT71QsOD3");
+        Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
     	
     	//PRODUCTION
-    	//Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
-    	//Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
+    	//Plan tier = Plan.retrieve("plan_D06ComCwTJ0Cgz  ?????");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
-    	Subscription subscription = this.stripeClient.subscribe(discovery_plan, test_plan, customer);
+    	Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
     	
     	acct = new Account(username, customer.getId(), subscription.getId());
 
@@ -210,6 +209,7 @@ public class AccountController {
     	//System.err.println("AUTH0 Response body      :::::::::::      "+response.getBody());
     	//System.err.println("AUTH0 Response status      :::::::::::      "+response.getStatus());
     	//System.err.println("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
+    	
     	
     	//remove stripe subscription
         this.stripeClient.cancelSubscription(account.getSubscriptionToken());

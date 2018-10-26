@@ -38,6 +38,7 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.services.SubscriptionService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.APIConnectionException;
@@ -45,6 +46,7 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.UsageRecord;
@@ -69,13 +71,16 @@ public class DiscoveryController {
     private StripeClient stripeClient;
 
     @Autowired
-    AccountRepository account_repo;
+    private AccountRepository account_repo;
     
     @Autowired
-    DomainRepository domain_repo;
+    private DomainRepository domain_repo;
     
     @Autowired
     private ActorSystem actor_system;
+    
+    @Autowired
+    private SubscriptionService subscription_service;
     
     @Autowired
     DiscoveryController(StripeClient stripeClient) {
@@ -123,6 +128,7 @@ public class DiscoveryController {
      * @throws APIConnectionException 
      * @throws InvalidRequestException 
      * @throws AuthenticationException 
+     * @throws PaymentDueException 
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
@@ -133,8 +139,7 @@ public class DiscoveryController {
 										   	  						DiscoveryLimitReachedException, 
 										   	  						AuthenticationException, 
 										   	  						InvalidRequestException, 
-										   	  						APIConnectionException, 
-										   	  						CardException, APIException {
+										   	  						CardException, PaymentDueException, APIConnectionException, APIException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -146,27 +151,12 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	String subscription_item = null;
-    	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
-    		if(item.getPlan().getNickname().equals("Discovery")){
-    			subscription_item = item.getId();
-    		}
-    	}
     	
-    	if(subscription_item==null){
-    		throw new MissingDiscoveryPlanException();
-    	}
     	
-    	//check if user has exceeded freemium plan
-    	Date date = new Date();
-    	Set<DiscoveryRecord> discovery_records = account_repo.getDiscoveryRecordsByMonth(username, date.getMonth());
-    	if(discovery_records.size() > 50){
+    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct)){
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
+    	
     	
 		DiscoveryRecord last_discovery_record = null;
 		Date started_date = new Date(0L);
@@ -188,12 +178,11 @@ public class DiscoveryController {
     	String protocol = domain.getProtocol();
         
 		if(diffInMinutes > 1440){
-			Date date = new Date();
-			long date_millis = date.getTime();
+			long date_millis = now.getTime();
 			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
 	    	usageRecordParams.put("quantity", 1);
 	    	usageRecordParams.put("timestamp", date_millis/1000);
-	    	usageRecordParams.put("subscription_item", subscription_item);
+	    	usageRecordParams.put("account", acct.getUsername());
 	    	usageRecordParams.put("action", "increment");
 
 	    	UsageRecord.create(usageRecordParams, null);

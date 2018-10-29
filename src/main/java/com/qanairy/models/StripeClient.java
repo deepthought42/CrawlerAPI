@@ -44,7 +44,7 @@ public class StripeClient {
     	params.put("items", items);
     	
 		Calendar c = Calendar.getInstance();
-		c.add(Calendar.MONTH, 3);
+		c.add(Calendar.MONTH, 1);
 		Date date = c.getTime();
 		date.getTime();
 		params.put("trial_end", date.getTime()/1000);
@@ -84,6 +84,10 @@ public class StripeClient {
         	customerParams.put("source", token);
         }
     	return Customer.create(customerParams);
+    }
+
+    public Customer getCustomer(String customer_id) throws Exception {
+        return Customer.retrieve(customer_id);
     }
 
 	public Subscription getSubscription(String subscriptionToken) 

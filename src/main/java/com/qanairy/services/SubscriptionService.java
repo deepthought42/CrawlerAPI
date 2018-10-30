@@ -23,7 +23,8 @@ import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
 
 /**
- * 
+ * Provides methods to check if an {@link Account} user has permission to access a restricted resource and verifying that
+ * the {@link Account} user has not exceeded their usage.
  * 
  */
 @Service
@@ -98,7 +99,7 @@ public class SubscriptionService {
 	}
 	
 	
-	private SubscriptionPlan getSubscriptionPlanName(Account acct) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public SubscriptionPlan getSubscriptionPlanName(Account acct) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
 		Subscription subscription = null;
     	
 		SubscriptionPlan account_subscription = null;

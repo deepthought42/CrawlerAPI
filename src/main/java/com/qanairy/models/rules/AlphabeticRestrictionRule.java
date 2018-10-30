@@ -3,13 +3,21 @@ package com.qanairy.models.rules;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import com.qanairy.models.PageElement;
 
 /**
  * Defines a {@link Rule} where all letters a-z are not allowed regardless of case
  */
+@NodeEntity
 public class AlphabeticRestrictionRule extends Rule{
-
+	@GeneratedValue
+    @Id
+	private Long id;
+	
 	private String key;
 	private String value;
 	private RuleType type;
@@ -28,7 +36,7 @@ public class AlphabeticRestrictionRule extends Rule{
 	public AlphabeticRestrictionRule() {
 		this.value = "[a-zA-Z]*";
 		setType(RuleType.ALPHABETIC_RESTRICTION);
-		setKey(generateKey());
+		setKey(super.generateKey());
 	}
 	
 

@@ -1,20 +1,21 @@
 package com.minion.actors;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.element.ComplexField;
 import com.minion.browsing.form.ElementRuleExtractor;
-import com.minion.browsing.form.Form;
-import com.minion.browsing.form.FormField;
 import com.minion.structs.Message;
+import com.qanairy.integrations.DeepthoughtApi;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.models.repository.PageElementRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 
@@ -38,6 +39,12 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	ElementRuleExtractor rule_extractor;
+	
+	@Autowired
+	PageStateRepository page_state_repo;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -79,28 +86,44 @@ public class FormDiscoveryActor extends AbstractActor{
 							}
 							cnt++;
 						}	
+					  
 					  	
-					  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-					  	for(Form form : forms){
-	
-						  	for(ComplexField complex_field: form.getFormFields()){
-								//for each field in the complex field generate a set of tests for all known rules
-								System.err.println("COMPLEX FIELD ELEMENTS   :::   "+complex_field.getElements().size());
-								for(FormField field : complex_field.getElements()){
-									List<Rule> rules = ElementRuleExtractor.extractInputRules(field.getInputElement());
+					  	page_state = page_state_repo.findByKey(page_state.getKey());
+					  
+					  	try{
+						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+						  	for(Form form : forms){
+							  	for(PageElement field: form.getFormFields()){
+									//for each field in the complex field generate a set of tests for all known rules
+							  		List<Rule> rules = rule_extractor.extractInputRules(field);
 									
 									log.info("Total RULES   :::   "+rules.size());
 									for(Rule rule : rules){
-										field.getInputElement().addRule(rule);
+										field.addRule(rule);
+									
 									}
 								}
-							}
-						  	
-						  	try{
-						  		browser.close();
+							  							  	
+							    DeepthoughtApi.predict(form);
+						       
+							  	try{
+							  		browser.close();
+							  	}
+							  	catch(Exception e){}
+							  	
+							  	page_state.addForm(form);
+							  	page_state_repo.save(page_state);
+						        
+							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 						  	}
-						  	catch(Exception e){}
-
+					  	}
+					  	catch(NoSuchAlgorithmException e){
+					  		e.printStackTrace();
+					  	}
+					  	catch(Exception e){
+					  		log.error("exception occurred while performing form discovery");
+					  		browser = new Browser(message.getOptions().get("browser").toString());
+					  		browser.navigateTo(page_state.getUrl());
 					  	}
 					}
 				})
@@ -114,7 +137,6 @@ public class FormDiscoveryActor extends AbstractActor{
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

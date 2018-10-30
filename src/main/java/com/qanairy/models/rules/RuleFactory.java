@@ -25,7 +25,7 @@ public class RuleFactory {
 			return new DisabledRule();
 		}
 		else if(type.equals(RuleType.EMAIL_PATTERN.toString())){
-			//System.err.println("Creating email pattern rule");
+			//log.info("Creating email pattern rule");
 			return new EmailPatternRule();
 		}
 		else if(type.equals(RuleType.MAX_LENGTH.toString())){
@@ -55,7 +55,7 @@ public class RuleFactory {
 		else if(type.equals(RuleType.SPECIAL_CHARACTER_RESTRICTION.toString())){
 			return new SpecialCharacterRestriction();
 		}
-		//System.err.println("returning null rule");
+		//log.info("returning null rule");
 		return null;
 	}
 }

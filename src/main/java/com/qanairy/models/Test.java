@@ -89,6 +89,7 @@ public class Test implements Persistable {
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
 		setIsRunning(false);
+		setArchived(false);
 		setKey(generateKey());
 		setRunTime(0L);
 	}
@@ -109,6 +110,7 @@ public class Test implements Persistable {
 		setName(name);
 		setBrowserStatuses(new HashMap<String, String>());
 		setIsRunning(false);
+		setArchived(false);
 		setKey(generateKey());
 		setRunTime(0L);
 	}
@@ -351,7 +353,7 @@ public class Test implements Persistable {
 		String path_key =  String.join("::", getPathKeys());
 		path_key += getResult().getKey();
 		
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(path_key);
+		return "test::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(path_key);
 	}
 	
 	/**

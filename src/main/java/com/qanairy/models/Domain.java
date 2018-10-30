@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -187,8 +186,8 @@ public class Domain implements Persistable{
 		this.test_users.remove(test_user);
 	}
 	
-	public void addTestUser(TestUser test_user) {
-		this.test_users.add(test_user);
+	public boolean addTestUser(TestUser test_user) {
+		return this.test_users.add(test_user);
 	}
 
 	public void setTestUsers(Set<TestUser> test_users) {
@@ -221,7 +220,7 @@ public class Domain implements Persistable{
 	 */
 	@Override
 	public String generateKey() {
-		return getUrl().toString();
+		return "domain::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getUrl().toString());
 	}
 	
 	public Set<Account> getAccount() {
@@ -230,5 +229,9 @@ public class Domain implements Persistable{
 
 	public void setAccount(Set<Account> account) {
 		this.account = account;
+	}
+	
+	public long getId(){
+		return this.id;
 	}
 }

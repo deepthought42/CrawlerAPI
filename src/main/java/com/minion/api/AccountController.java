@@ -82,10 +82,6 @@ public class AccountController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Account> create( @RequestParam(value="user_email", required=true) String username) 
     												throws Exception{        
-
-    	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	//Auth0Client auth = new Auth0Client();
-    	//String username = auth.getUsername(auth_access_token);
     	Account acct = account_repo.findByUsername(username);
     	
     	//create account
@@ -206,9 +202,9 @@ public class AccountController {
     					
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
-    	//System.err.println("AUTH0 Response body      :::::::::::      "+response.getBody());
-    	//System.err.println("AUTH0 Response status      :::::::::::      "+response.getStatus());
-    	//System.err.println("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
+    	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
+    	//log.info("AUTH0 Response status      :::::::::::      "+response.getStatus());
+    	//log.info("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
     	
     	
     	//remove stripe subscription

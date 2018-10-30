@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum FormType {
 	LOGIN("login"), REGISTRATION("registration"), CONTACT_COMPANY("contact_company"), SUBSCRIBE("subscribe"), 
-	LEAD("lead"), SEARCH("search"), PASSWORD_RESET("password_reset"), PAYMENT("payment");
+	LEAD("lead"), SEARCH("search"), PASSWORD_RESET("password_reset"), PAYMENT("payment"), UNKNOWN("unknown");
 	
 	private String shortName;
 

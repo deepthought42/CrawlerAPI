@@ -22,6 +22,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
 import com.qanairy.models.Test;
+import com.qanairy.models.PageState;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 
@@ -51,8 +52,6 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
-			
-					System.err.println("Recieved data of type :: "+message.getData().getClass().getSimpleName());
 					if(message.getData() instanceof URL){
 						boolean test_generated_successfully = false;
 						do{
@@ -64,23 +63,27 @@ public class UrlBrowserActor extends AbstractActor {
 								
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
 								test_service.save(test, host);
-								
-								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 		
-								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-								path_expansion_actor.tell(test_msg, getSelf() );
+								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+								log.info("test result :: "+test.getResult());
+								log.info("message account key :: "+message.getAccountKey());
+								log.info("message options "+ message.getOptions());
+								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 								
-								final ActorRef form_test_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formTestDiscoveryActor"), "form_test_discovery"+UUID.randomUUID());
-								form_test_discoverer.tell(test_msg, getSelf() );
-		
-								/*Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
+								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 
 								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								form_test_discoverer.tell(page_state_msg, getSelf() );
-		*/
+								form_discoverer.tell(page_state_msg, getSelf() );
+		
+								
+								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
+		
+								/**  path expansion temporarily disabled
+								 */
+								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+								path_expansion_actor.tell(test_msg, getSelf() );
 								
 								break;
 							}
@@ -103,7 +106,6 @@ public class UrlBrowserActor extends AbstractActor {
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					System.err.println("o class :: "+o.getClass().getName());
 					log.info("received unknown message");
 				})
 				.build();

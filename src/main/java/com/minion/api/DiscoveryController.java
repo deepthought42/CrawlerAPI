@@ -255,7 +255,7 @@ public class DiscoveryController {
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping("/stop")
-	public @ResponseBody WorkAllocationActor stopWorkForAccount(HttpServletRequest request) 
+	public @ResponseBody void stopWorkForAccount(HttpServletRequest request) 
 			throws MalformedURLException, UnknownAccountException {
 		
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -271,8 +271,6 @@ public class DiscoveryController {
     	}
 
 		WorkAllowanceStatus.haltWork(acct.getUsername()); 
-		
-		return null;
 	}
 
 }

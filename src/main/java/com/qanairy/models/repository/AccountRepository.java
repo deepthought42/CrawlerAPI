@@ -15,11 +15,14 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 
 	@Query("MATCH (account:Account {username:{0}})-[:HAS_DOMAIN]->(domain:Domain) RETURN domain")
 	public Set<Domain> getDomains(String username);
+	
 	//public List<DiscoveryRecord> getAllDiscoveryRecords();
 	
 	@Query("MATCH (account:Account {username:{username}})-[]->(d:DiscoveryRecord) return d")
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(@Param("username") String username, @Param("month") int month);
 	//public List<TestRecord> getAllTestRecords();
 	//public List<TestRecord> getTestRecordsByMonth(int month);
-	//public void removeDomain(Account account, Domain domain);
+	
+	@Query("MATCH (account:Account {username:{acct_key}})-[hd:HAS_DOMAIN]->(Domain{key:{domain_key}}) DELETE hd")
+	public void removeDomain(@Param("acct_key") String acct_key, @Param("domain_key") String domain_key);
 }

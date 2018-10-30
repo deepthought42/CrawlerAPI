@@ -51,6 +51,6 @@ public class ScreenshotSet implements Persistable {
 	}
 	
 	public String generateKey() {
-		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getViewportScreenshot());
+		return "screenshot::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getViewportScreenshot());
 	}
 }

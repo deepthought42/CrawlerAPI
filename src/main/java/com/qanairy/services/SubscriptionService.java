@@ -35,9 +35,9 @@ public class SubscriptionService {
 	@Autowired
 	private AccountRepository account_repo;
 	
-	@Autowired
-	private DomainRepository domain_repo;
-	
+	public SubscriptionService(AccountRepository account_repo){
+		this.account_repo = account_repo;
+	}
 	/**
 	 * checks if user has exceeded test run limit for their subscription
 	 * @param acct
@@ -48,22 +48,15 @@ public class SubscriptionService {
 	 * @throws InvalidRequestException 
 	 * @throws AuthenticationException 
 	 */
-	public boolean hasExceededSubscriptionTestRunsLimit(Account acct) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
-		SubscriptionPlan plan = getSubscriptionPlanName(acct);
-    	
+	public boolean hasExceededSubscriptionTestRunsLimit(Account acct, SubscriptionPlan plan) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
     	//check if user has exceeded freemium plan
     	Date date = new Date();
+    	int test_run_cnt = account_repo.getTestCountByMonth(acct.getUsername(), date.getMonth());
     	
-    	int test_run_cnt = 0;
-    	for(Domain domain : account_repo.getDomains(acct.getUsername())){
-        	Set<TestRecord> test_records = domain_repo.getTestsByMonth(domain.getUrl(), date.getMonth());
-        	test_run_cnt += test_records.size();
-    	}
-    	
-    	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 50){
+    	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 100){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 500){
+    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 5000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){
@@ -73,21 +66,20 @@ public class SubscriptionService {
     	return false;
 	}
 	
-	public boolean hasExceededSubscriptionDiscoveredLimit(Account acct) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
-		SubscriptionPlan plan = getSubscriptionPlanName(acct);
-    	
+	public boolean hasExceededSubscriptionDiscoveredLimit(Account acct, SubscriptionPlan plan) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{    	
     	//check if user has exceeded freemium plan
     	Date date = new Date();
     	Set<DiscoveryRecord> discovery_records = account_repo.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
     	int discovered_test_cnt = 0;
+
     	for(DiscoveryRecord record : discovery_records){
     		discovered_test_cnt += record.getTestCount();
     	}
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 20){
+    	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 50){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 100){
+    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 250){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){
@@ -101,7 +93,6 @@ public class SubscriptionService {
 	
 	public SubscriptionPlan getSubscriptionPlanName(Account acct) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
 		Subscription subscription = null;
-    	
 		SubscriptionPlan account_subscription = null;
     	if(acct.getSubscriptionToken() == null){
     		//free plan
@@ -109,9 +100,7 @@ public class SubscriptionService {
     	}
     	//pro/enterprise plan
     	else {
-    		subscription = stripe_client.getSubscription(acct.getSubscriptionToken());
-        	String subscription_item = null;
-        	
+    		subscription = stripe_client.getSubscription(acct.getSubscriptionToken());        	
         	//check for product
         	Plan plan = subscription.getPlan();
         	if(plan.getId().equals("plan_Dr1tjSakC3uGXq")){

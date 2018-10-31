@@ -440,6 +440,8 @@ public class TestController {
 
 			acct.addTestRecord(record);
 			account_repo.save(acct);
+			acct.addTestRecord(record);
+			account_repo.save(acct);
    		}
 		
 		return test_results;

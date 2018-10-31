@@ -36,6 +36,9 @@ public class Domain implements Persistable{
 	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
 	private Set<Account> account = new HashSet<>();
 
+	@Relationship(type = "HAS_DISCOVERY_RECORD")
+	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
+	
 	/**
 	 * 
 	 * 
@@ -149,7 +152,18 @@ public class Domain implements Persistable{
 		this.tests.add(test);
 	}
 	
+	public Set<DiscoveryRecord> getDiscoveryRecords() {
+		return discovery_records;
+	}
 
+	public void setDiscoveryRecords(Set<DiscoveryRecord> discovery_records) {
+		this.discovery_records = discovery_records;
+	}
+	
+	public void addDiscoveryRecord(DiscoveryRecord record){
+		this.discovery_records.add(record);
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */

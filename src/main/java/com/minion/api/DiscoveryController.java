@@ -157,17 +157,17 @@ public class DiscoveryController {
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
     	
-    	
+    	Domain domain = domain_repo.findByHost(url); 
+
 		DiscoveryRecord last_discovery_record = null;
 		Date started_date = new Date(0L);
-		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+		for(DiscoveryRecord record : domain_repo.getDiscoveryRecords(url)){
 			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
 				started_date = record.getStartTime();
 				last_discovery_record = record;
 			}
 		}
     	
-    	Domain domain = domain_repo.findByHost(url); 
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
@@ -191,6 +191,9 @@ public class DiscoveryController {
         	
 			acct.addDiscoveryRecord(discovery_record);
 			acct = account_repo.save(acct);
+			
+			domain.addDiscoveryRecord(discovery_record);
+			domain_repo.save(domain);
                 	
 			WorkAllowanceStatus.register(acct.getUsername());
 			//ActorSystem actor_system = ActorSystem.create("MinionActorSystem");

@@ -14,7 +14,6 @@ import com.qanairy.models.ScreenshotSet;
 
 public class BrowserServiceTest {
 
-	@Test
 	public void verifySetMergeWorks() throws IOException{
 		Set<PageState> page_state = new HashSet<PageState>();
 		Set<ScreenshotSet> screen = new HashSet<ScreenshotSet>();

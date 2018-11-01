@@ -8,12 +8,10 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.StripeClient;
-import com.qanairy.models.TestRecord;
+
 import com.qanairy.models.enums.SubscriptionPlan;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DomainRepository;
 import com.stripe.exception.APIConnectionException;
 import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;

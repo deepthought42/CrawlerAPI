@@ -87,7 +87,7 @@ public class PathExpansionActor extends AbstractActor {
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 
 		    	Account acct = account_repo.findByUsername(message.getAccountKey());
-		    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct)){
+		    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	

@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+
 import com.minion.browsing.Browser;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
@@ -18,7 +18,7 @@ import com.qanairy.services.BrowserService;
  */
 public class BrowserTest {
 
-	@Test(groups="Regression")
+	//@Test
 	public void verifyCleanSrc(){
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
 		
@@ -28,7 +28,7 @@ public class BrowserTest {
 	}
 	
 	
-	@Test(groups="Regression")
+	//@Test
 	public void verifyGenerateConcatForXpath(){
 		String src_example = "This is a embedded \"path\"";
 		BrowserService service = new BrowserService();
@@ -38,7 +38,7 @@ public class BrowserTest {
 	}
 	
 	
-	@Test(groups="Regression")
+	//@Test
 	public void verifyTestConstructor(){
 		try {
 			Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();

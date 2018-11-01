@@ -358,7 +358,7 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	
-    	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct)){
+    	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
     	

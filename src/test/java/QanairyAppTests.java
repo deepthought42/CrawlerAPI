@@ -1,8 +1,9 @@
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import org.junit.Test;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.testng.annotations.Test;
 
 /**
  * 
@@ -10,7 +11,7 @@ import org.testng.annotations.Test;
  */
 public class QanairyAppTests {
 
-		@Test
+		//@Test
 		public void testHttpsSettingsInPhantomjs(){
 			DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setJavascriptEnabled(true);

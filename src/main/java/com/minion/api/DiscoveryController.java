@@ -10,11 +10,9 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import com.minion.WorkManagement.WorkAllowanceStatus;
-import com.minion.actors.WorkAllocationActor;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
@@ -33,8 +30,6 @@ import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
-import com.qanairy.models.StripeClient;
-import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
@@ -46,9 +41,6 @@ import com.stripe.exception.APIException;
 import com.stripe.exception.AuthenticationException;
 import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Plan;
-import com.stripe.model.Subscription;
-import com.stripe.model.SubscriptionItem;
 import com.stripe.model.UsageRecord;
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -68,8 +60,6 @@ import akka.actor.ActorSystem;
 public class DiscoveryController {
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
     
-    private StripeClient stripeClient;
-
     @Autowired
     private AccountRepository account_repo;
     
@@ -81,11 +71,6 @@ public class DiscoveryController {
     
     @Autowired
     private SubscriptionService subscription_service;
-    
-    @Autowired
-    DiscoveryController(StripeClient stripeClient) {
-        this.stripeClient = stripeClient;
-    }
     
 	@RequestMapping(path="/status", method = RequestMethod.GET)
     public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request, 
@@ -153,7 +138,7 @@ public class DiscoveryController {
     	}
     	
     	
-    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct)){
+    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
     	

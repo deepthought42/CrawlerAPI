@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
  */
 public class TechstarsTests {
 
-		@Test
+		//@Test
 		public void testHttpsSettingsInPhantomjs(){
 			DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setJavascriptEnabled(true);

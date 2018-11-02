@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.StripeClient;
+import com.qanairy.models.enums.SubscriptionPlan;
 import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.services.SubscriptionService;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
@@ -29,10 +31,20 @@ public class SubscriptionController {
     AccountRepository account_repo;
     
     @Autowired
+    SubscriptionService subscription_service;
+    
+    @Autowired
     SubscriptionController(StripeClient stripeClient) {
         this.stripeClient = stripeClient;
     }
     
+    /**
+     * 
+     * @param request
+     * @param plan
+     * 
+     * @throws Exception
+     */
     @PutMapping
     public void subscribe(HttpServletRequest request,
 					 		@RequestParam(value="plan", required=true) String plan) throws Exception {
@@ -41,43 +53,7 @@ public class SubscriptionController {
     	String username = auth.getUsername(auth_access_token);
     	Account acct = account_repo.findByUsername(username);
     	
-    	if(plan == "pro"){
-    		Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
-    		
-    		Customer customer = null;
-    		if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()){
-    			customer = this.stripeClient.createCustomer(null, username);
-            	acct.setCustomerToken(customer.getId());
-    		}
-    		else{
-    			customer = this.stripeClient.getCustomer(acct.getCustomerToken());
-    		}
-    		
-        	Subscription subscription = null;
-        	
-        	if(acct.getSubscriptionToken() == null || acct.getSubscriptionToken().isEmpty()){
-        		subscription = this.stripeClient.subscribe(pro_tier, customer);
-        	}
-        	else{
-            	Map<String, Object> item = new HashMap<>();
-            	subscription = Subscription.retrieve(acct.getSubscriptionToken());
-            	item.put("id", subscription.getId());
-            	item.put("plan", pro_tier.getId());
-
-            	Map<String, Object> items = new HashMap<>();
-            	items.put("0", item);
-
-            	Map<String, Object> params = new HashMap<>();
-            	params.put("items", items);
-            	
-            	subscription.update(params);
-        	}
-        	
-        	acct.setSubscriptionToken(subscription.getId());
-    	}
-    	else {
-    		throw new UnknownSubscriptionPlanException();
-    	}
+    	subscription_service.changeSubscription(acct, SubscriptionPlan.valueOf(plan));
     }
 }
 

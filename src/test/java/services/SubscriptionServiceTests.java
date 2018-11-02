@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.qanairy.models.Account;
@@ -33,6 +34,9 @@ public class SubscriptionServiceTests {
 	
 	@Mock
 	private Account account;
+	
+	@Spy
+	private Account account_spy;
 	
 	@Mock
 	private AccountRepository account_repo;
@@ -110,7 +114,6 @@ public class SubscriptionServiceTests {
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.FREE);
 		assertTrue(has_exceeded);
 	}
-	
 
 	@Test
 	public void belowLimitTestRunsOnProPlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
@@ -177,5 +180,9 @@ public class SubscriptionServiceTests {
 		
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionDiscoveredLimit(account, SubscriptionPlan.PRO);
 		assertTrue(has_exceeded);
+	}
+	
+	public void freePlanWithExistingSubscription(){
+		subscription_service.changeSubscription(account_spy, SubscriptionPlan.FREE, String payment_token);
 	}
 }

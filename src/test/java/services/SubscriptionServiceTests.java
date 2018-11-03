@@ -63,7 +63,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void ExceedingLimitTestRunsOnFreePlan() throws StripeException {
+	public void exceedingLimitTestRunsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(101);
 		
@@ -130,7 +130,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void ExceedingLimitTestRunsOnProPlan() throws StripeException {
+	public void exceedingLimitTestRunsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(5001);
 			

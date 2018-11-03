@@ -5,9 +5,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +32,11 @@ import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.StripeClient;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.SubscriptionService;
-import com.stripe.model.Plan;
-import com.stripe.model.Subscription;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -62,9 +57,6 @@ public class PathExpansionActor extends AbstractActor {
 	
 	@Autowired
 	private AccountRepository account_repo;
-	
-	@Autowired
-	private StripeClient stripe_client;
 	
 	@Autowired
 	private SubscriptionService subscription_service;

@@ -57,8 +57,6 @@ import com.qanairy.models.TestRecord;
 public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
 
-    private StripeClient stripeClient;
-
     @Autowired
     private DomainRepository domain_repo;
     
@@ -76,11 +74,6 @@ public class TestController {
     
     @Autowired
     private SubscriptionService subscription_service;
-    
-    @Autowired
-    TestController(StripeClient stripeClient) {
-        this.stripeClient = stripeClient;
-    }
     
 	/**
 	 * Retrieves list of all tests from the database 
@@ -350,24 +343,7 @@ public class TestController {
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
-    	
-    	/*Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	String subscription_item = null;
-    	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
-    		if(item.getPlan().getNickname().equals("test_runs")){
-    			subscription_item = item.getId();
-    		}
-    	}
-
-    	if(subscription_item==null){
-    		throw new MissingDiscoveryPlanException();
-    	}
-    	
-    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
-    		throw new FreeTrialExpiredException();
-    	}
-	   */	    	
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        

@@ -2,8 +2,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.testng.annotations.Test;
-
 import com.minion.api.DomainController;
 import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
@@ -14,6 +12,7 @@ import com.qanairy.models.ScreenshotSet;
 
 public class BrowserServiceTest {
 
+	
 	public void verifySetMergeWorks() throws IOException{
 		Set<PageState> page_state = new HashSet<PageState>();
 		Set<ScreenshotSet> screen = new HashSet<ScreenshotSet>();

@@ -36,14 +36,9 @@ import com.qanairy.models.repository.AccountRepository;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
-import com.stripe.model.Product;
 import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
 
@@ -176,12 +171,23 @@ public class AccountController {
      * 
      * @param key account key
      * @return {@link Account account}
+     * @throws UnknownAccountException 
      */
     @PreAuthorize("hasAuthority('read:accounts')")
-    @RequestMapping(value ="/{id}", method = RequestMethod.GET)
-    public Account get(final @PathVariable String username) {
-        logger.info("get invoked");
-        return account_repo.findByUsername(username);
+    @RequestMapping(path="/find", method = RequestMethod.GET)
+    public Account get(HttpServletRequest request) throws UnknownAccountException {
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+        Account acct = account_repo.findByUsername(username);
+        if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+        
+        return acct;
     }
 
 	@PreAuthorize("hasAuthority('update:accounts')")
@@ -192,9 +198,16 @@ public class AccountController {
         return account_repo.save(account);
     }
     
+	/**
+	 * Deletes account
+	 * 
+	 * @param request
+	 * @throws UnirestException
+	 * @throws StripeException
+	 */
 	@PreAuthorize("hasAuthority('delete:accounts')")
     @RequestMapping(method = RequestMethod.DELETE)
-    public void delete(HttpServletRequest request) throws UnirestException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+    public void delete(HttpServletRequest request) throws UnirestException, StripeException{
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
@@ -218,7 +231,7 @@ public class AccountController {
 	
     @PreAuthorize("hasAuthority('read:accounts')")
 	@RequestMapping(path ="/usage", method = RequestMethod.GET)
-    public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+    public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException{
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);

@@ -20,11 +20,7 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.enums.SubscriptionPlan;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.services.SubscriptionService;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
 
 @SpringBootTest
 public class SubscriptionServiceTests {
@@ -49,7 +45,7 @@ public class SubscriptionServiceTests {
     }
 	
 	@Test
-	public void belowLimitTestRunsOnFreePlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void belowLimitTestRunsOnFreePlan() throws StripeException{
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(99);
 		
@@ -58,7 +54,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void reachingLimitTestRunsOnFreePlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void reachingLimitTestRunsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(100);
 		
@@ -67,7 +63,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void ExceedingLimitTestRunsOnFreePlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void ExceedingLimitTestRunsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(101);
 		
@@ -77,7 +73,7 @@ public class SubscriptionServiceTests {
 	
 
 	@Test
-	public void lessThanLimitDiscoveredTestsOnFreePlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void lessThanLimitDiscoveredTestsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
 		DiscoveryRecord record = new DiscoveryRecord();
@@ -90,7 +86,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void reachingLimitDiscoveredTestsOnFreePlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void reachingLimitDiscoveredTestsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
 		DiscoveryRecord record = new DiscoveryRecord();
@@ -103,7 +99,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void exceedingDiscoveredTestsOnFreePlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void exceedingDiscoveredTestsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
 		DiscoveryRecord record = new DiscoveryRecord();
@@ -116,7 +112,7 @@ public class SubscriptionServiceTests {
 	}
 
 	@Test
-	public void belowLimitTestRunsOnProPlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void belowLimitTestRunsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(4999);
 			
@@ -125,7 +121,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void reachingLimitTestRunsOnProPlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void reachingLimitTestRunsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(5000);
 			
@@ -134,7 +130,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void ExceedingLimitTestRunsOnProPlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void ExceedingLimitTestRunsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(5001);
 			
@@ -144,7 +140,7 @@ public class SubscriptionServiceTests {
 	
 	
 	@Test
-	public void lessThanLimitDiscoveredTestsOnProPlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void lessThanLimitDiscoveredTestsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
 		DiscoveryRecord record = new DiscoveryRecord();
@@ -157,7 +153,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void reachingLimitDiscoveredTestsOnPROPlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void reachingLimitDiscoveredTestsOnPROPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
 		DiscoveryRecord record = new DiscoveryRecord();
@@ -170,7 +166,7 @@ public class SubscriptionServiceTests {
 	}
 	
 	@Test
-	public void exceedingDiscoveredTestsOnProPlan() throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public void exceedingDiscoveredTestsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
 		DiscoveryRecord record = new DiscoveryRecord();
@@ -182,7 +178,7 @@ public class SubscriptionServiceTests {
 		assertTrue(has_exceeded);
 	}
 	
-	public void freePlanWithExistingSubscription(){
-		subscription_service.changeSubscription(account_spy, SubscriptionPlan.FREE, String payment_token);
+	public void freePlanWithExistingSubscription() throws Exception{
+		subscription_service.changeSubscription(account_spy, SubscriptionPlan.FREE, "paymentToken");
 	}
 }

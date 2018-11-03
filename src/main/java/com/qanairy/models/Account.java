@@ -23,6 +23,7 @@ public class Account {
 	private String username;
 	private String customer_token;
 	private String subscription_token;
+	private String subscription_type;
 	private String last_domain_url;
 	private List<String> onboarded_steps;
 	
@@ -205,5 +206,13 @@ public class Account {
 
 	public void addTestRecord(TestRecord record) {
 		this.test_records.add(record);
+	}
+
+	public String getSubscriptionType() {
+		return subscription_type;
+	}
+
+	public void setSubscriptionType(String subscription_type) {
+		this.subscription_type = subscription_type;
 	}
 }

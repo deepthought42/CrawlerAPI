@@ -1,7 +1,5 @@
 package com.qanairy.services;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,11 +16,7 @@ import com.qanairy.models.StripeClient;
 
 import com.qanairy.models.enums.SubscriptionPlan;
 import com.qanairy.models.repository.AccountRepository;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
@@ -58,26 +52,28 @@ public class SubscriptionService {
 	 * 
 	 * @throws Exception
 	 */
-	public void changeSubscription(Account acct, SubscriptionPlan plan, String payment_token) throws Exception{
+	public void changeSubscription(Account acct, SubscriptionPlan plan, String source_token) throws Exception{
 		Plan plan_tier = null;
-		if(plan.toString().equals("free")){
+		System.err.println("Change subscription to plan :: " + plan.toString());
+		if("FREE".equals(plan.toString())){
 			//check if account has a subscription, if so then unsubscribe and remove subscription token
 			if(acct.getSubscriptionToken() != null && 
 					!acct.getSubscriptionToken().isEmpty()){
 	    		stripe_client.cancelSubscription(acct.getSubscriptionToken());
-	    		acct.setSubscriptionToken(null);
+	    		acct.setSubscriptionToken("");
+	    		acct.setSubscriptionType("FREE");
 	    		account_repo.save(acct);
 			}
 			else{
 				log.warn("User already has free plan");
 			}
 		}
-		else if(plan.toString().equals("pro")){
+		else if("PRO".equals(plan.toString())){
     		plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
 		
 			Customer customer = null;
 			if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()){
-				customer = stripe_client.createCustomer(null, acct.getUsername());
+				customer = stripe_client.createCustomer(source_token, acct.getUsername());
 	        	acct.setCustomerToken(customer.getId());
 			}
 			else{
@@ -88,6 +84,7 @@ public class SubscriptionService {
 	    	
 	    	if(acct.getSubscriptionToken() == null || acct.getSubscriptionToken().isEmpty()){
 	    		subscription = stripe_client.subscribe(plan_tier, customer);
+	    	}else{
 	        	Map<String, Object> item = new HashMap<>();
 	        	subscription = Subscription.retrieve(acct.getSubscriptionToken());
 	        	item.put("id", subscription.getId());
@@ -103,6 +100,7 @@ public class SubscriptionService {
 	    	}
 	    	
 	    	acct.setSubscriptionToken(subscription.getId());
+    		acct.setSubscriptionType("PRO");
 	    	account_repo.save(acct);
 		}
 	}
@@ -114,13 +112,9 @@ public class SubscriptionService {
 	 * 
 	 * @return true if user has exceeded limits for their {@link SubscriptionPlan}, otherwise false
 	 * 
-	 * @throws APIException 
-	 * @throws CardException 
-	 * @throws APIConnectionException 
-	 * @throws InvalidRequestException 
-	 * @throws AuthenticationException 
+	 * @throws StripeException
 	 */
-	public boolean hasExceededSubscriptionTestRunsLimit(Account acct, SubscriptionPlan plan) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public boolean hasExceededSubscriptionTestRunsLimit(Account acct, SubscriptionPlan plan) throws StripeException{
     	//check if user has exceeded freemium plan
     	Date date = new Date();
     	int test_run_cnt = account_repo.getTestCountByMonth(acct.getUsername(), date.getMonth());
@@ -146,13 +140,9 @@ public class SubscriptionService {
 	 * 
 	 * @return true if user has exceeded the limits for their {@SubscriptionPlan}
 	 * 
-	 * @throws AuthenticationException
-	 * @throws InvalidRequestException
-	 * @throws APIConnectionException
-	 * @throws CardException
-	 * @throws APIException
+	 * @throws StripeException
 	 */
-	public boolean hasExceededSubscriptionDiscoveredLimit(Account acct, SubscriptionPlan plan) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{    	
+	public boolean hasExceededSubscriptionDiscoveredLimit(Account acct, SubscriptionPlan plan) throws StripeException{    	
     	//check if user has exceeded freemium plan
     	Date date = new Date();
     	Set<DiscoveryRecord> discovery_records = account_repo.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
@@ -181,13 +171,9 @@ public class SubscriptionService {
 	 * 
 	 * @param acct
 	 * @return
-	 * @throws AuthenticationException
-	 * @throws InvalidRequestException
-	 * @throws APIConnectionException
-	 * @throws CardException
-	 * @throws APIException
+	 * @throws StripeException
 	 */
-	public SubscriptionPlan getSubscriptionPlanName(Account acct) throws AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException{
+	public SubscriptionPlan getSubscriptionPlanName(Account acct) throws StripeException {
 		Subscription subscription = null;
 		SubscriptionPlan account_subscription = null;
     	if(acct.getSubscriptionToken() == null){

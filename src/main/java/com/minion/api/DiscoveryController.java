@@ -36,11 +36,7 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.services.SubscriptionService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
 import com.stripe.model.UsageRecord;
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
@@ -108,12 +104,8 @@ public class DiscoveryController {
 	 * @return
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
-     * @throws APIException 
-     * @throws CardException 
-     * @throws APIConnectionException 
-     * @throws InvalidRequestException 
-     * @throws AuthenticationException 
      * @throws PaymentDueException 
+     * @throws StripeException 
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
@@ -122,9 +114,7 @@ public class DiscoveryController {
 										   	  				throws MalformedURLException, 
 										   	  						UnknownAccountException, 
 										   	  						DiscoveryLimitReachedException, 
-										   	  						AuthenticationException, 
-										   	  						InvalidRequestException, 
-										   	  						CardException, PaymentDueException, APIConnectionException, APIException {
+										   	  						PaymentDueException, StripeException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();

@@ -38,18 +38,11 @@ import com.qanairy.services.TestService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Plan;
-import com.stripe.model.Subscription;
+import com.stripe.exception.StripeException;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.StripeClient;
@@ -330,16 +323,12 @@ public class TestController {
 	 * @param key
 	 * @return
 	 * @throws MalformedURLException 
-     * @throws UnknownAccountException 
-     * @throws APIException 
-     * @throws CardException 
-     * @throws APIConnectionException 
-     * @throws InvalidRequestException 
-     * @throws AuthenticationException 
+     * @throws UnknownAccountException
      * @throws NoSuchAlgorithmException 
      * @throws WebDriverException 
      * @throws GridException 
      * @throws PaymentDueException 
+     * @throws StripeException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
@@ -347,7 +336,7 @@ public class TestController {
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser", required=true) String browser,
 														  @RequestParam(value="host_url", required=true) String host) 
-																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException{
+																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();

@@ -1,13 +1,12 @@
 package com.minion.api;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,9 +16,6 @@ import com.qanairy.models.StripeClient;
 import com.qanairy.models.enums.SubscriptionPlan;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.services.SubscriptionService;
-import com.stripe.model.Customer;
-import com.stripe.model.Plan;
-import com.stripe.model.Subscription;
 
 @RestController
 @RequestMapping("/subscribe")
@@ -45,15 +41,18 @@ public class SubscriptionController {
      * 
      * @throws Exception
      */
-    @PutMapping
+    @PreAuthorize("hasAuthority('create:domains')")
+    @RequestMapping(method = RequestMethod.PUT)
     public void subscribe(HttpServletRequest request,
-					 		@RequestParam(value="plan", required=true) String plan) throws Exception {
+					 		@RequestParam(value="plan", required=true) String plan,
+					 		@RequestParam(value="source_token", required=true) String source_token) throws Exception {
+    	System.err.println("SOURCE TOKEN :: " + source_token + "   :::    PLAN     "+plan);
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account acct = account_repo.findByUsername(username);
     	
-    	subscription_service.changeSubscription(acct, SubscriptionPlan.valueOf(plan));
+    	subscription_service.changeSubscription(acct, SubscriptionPlan.valueOf(plan.toUpperCase()), source_token);
     }
 }
 

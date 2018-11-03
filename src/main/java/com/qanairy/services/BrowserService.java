@@ -38,7 +38,6 @@ import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
-import com.minion.browsing.form.FormField;
 import com.minion.util.ArrayUtility;
 import com.minion.util.Timing;
 import com.qanairy.models.Action;
@@ -738,9 +737,7 @@ public class BrowserService {
 					else{
 						input_tag = page_element_repo.save(input_tag);
 					}
-					
-					FormField input_field = new FormField(input_tag);
-					
+										
 					child_inputs.add(input_tag);
 				}
 			}

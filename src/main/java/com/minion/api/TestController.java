@@ -45,7 +45,6 @@ import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
-import com.qanairy.models.StripeClient;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 

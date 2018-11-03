@@ -59,8 +59,6 @@ import akka.actor.ActorSystem;
 @Controller
 @RequestMapping("/domains")
 public class DomainController {
-	
-	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
@@ -311,6 +309,7 @@ public class DomainController {
 	    //return new HashSet<PageState>();
     }
 	
+	@SafeVarargs
 	public static <T> Set<T> merge(Collection<? extends T>... collections) {
 	    Set<T> newSet = new HashSet<T>();
 	    for (Collection<? extends T> collection : collections)

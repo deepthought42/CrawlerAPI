@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
-import com.qanairy.models.StripeClient;
 import com.qanairy.models.enums.SubscriptionPlan;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.services.SubscriptionService;
@@ -20,20 +19,13 @@ import com.qanairy.services.SubscriptionService;
 @RestController
 @RequestMapping("/subscribe")
 public class SubscriptionController {
-
-    private StripeClient stripeClient;
     
     @Autowired
     AccountRepository account_repo;
     
     @Autowired
     SubscriptionService subscription_service;
-    
-    @Autowired
-    SubscriptionController(StripeClient stripeClient) {
-        this.stripeClient = stripeClient;
-    }
-    
+
     /**
      * 
      * @param request

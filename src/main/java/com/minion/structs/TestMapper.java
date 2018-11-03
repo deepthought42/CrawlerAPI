@@ -3,8 +3,6 @@ package com.minion.structs;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.qanairy.models.Action;
-import com.qanairy.models.PageElement;
 import com.qanairy.models.Test;
 
 
@@ -37,23 +35,6 @@ public class TestMapper {
 	}
 	
 	/**
-	 * Generates a key with the format xpath:::content_hash:::action_name where
-	 * the content_hash is a hash of the text within the element.
-	 * 
-	 * @param elem
-	 * @param action
-	 * @return
-	 */
-	private String generateHash(PageElement elem, Action action){
-		int content_hash = elem.hashCode();
-		String xpath = elem.getXpath();
-		String action_str = action.getName();
-		
-		return xpath+":::"+content_hash+":::"+action_str;
-	
-	}
-	
-	/**
 	 * Checks if element action sequence exists.
 	 * 
 	 * @param elem
@@ -61,7 +42,7 @@ public class TestMapper {
 	 * @return
 	 */
 	public boolean containsTest(Test test){
-		String hash_key = Integer.toString(test.hashCode());//generateHash(elem, action);
+		String hash_key = Integer.toString(test.hashCode());
 		return  this.testHash.containsKey(hash_key);
 	}
 	

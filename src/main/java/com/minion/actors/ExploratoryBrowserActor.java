@@ -355,7 +355,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		if(elem != null){
 			List<String> path_keys = path.getPathKeys().subList(0, idx+1);
 			List<PathObject> path_objects = path.getPathObjects().subList(0, idx+1);
-			PageState page = crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
+			crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
 			
 			//perform action on the element
 			//ensure page is equal to expected page

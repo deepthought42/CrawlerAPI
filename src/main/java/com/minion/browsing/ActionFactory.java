@@ -12,6 +12,7 @@ import org.openqa.selenium.interactions.Actions;
  *
  */
 public class ActionFactory {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ActionFactory.class);
 
 	private static String[] actions = {"click",
@@ -45,7 +46,7 @@ public class ActionFactory {
 		else if("doubleClick".equals(action)){
 			builder.doubleClick(elem);
 		}
-		else if("dragAndDrop".equals(action)){
+		/*else if("dragAndDrop".equals(action)){
 			//builder.dragAndDrop(source, target);
 		}
 		else if("keyDown".equals(action)){
@@ -54,6 +55,7 @@ public class ActionFactory {
 		else if("keyUp".equals(action)){
 			//builder.keyUp(theKey);
 		}
+		*/
 		else if("release".equals(action)){
 			builder.release(elem);
 		}

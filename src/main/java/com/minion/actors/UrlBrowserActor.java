@@ -54,6 +54,7 @@ public class UrlBrowserActor extends AbstractActor {
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
 						boolean test_generated_successfully = false;
+						int attempts = 0;
 						do{
 							try{
 								String browser = message.getOptions().get("browser").toString();
@@ -91,7 +92,7 @@ public class UrlBrowserActor extends AbstractActor {
 								e.printStackTrace();
 								log.error(e.getMessage());
 							}
-						}while(!test_generated_successfully);
+						}while(!test_generated_successfully && attempts < 5);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		

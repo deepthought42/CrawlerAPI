@@ -32,16 +32,14 @@ import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
+import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
@@ -59,8 +57,6 @@ import com.qanairy.models.TestRecord;
 public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
 
-    private StripeClient stripeClient;
-
     @Autowired
     private DomainRepository domain_repo;
     
@@ -77,9 +73,7 @@ public class TestController {
     private TestService test_service;
     
     @Autowired
-    TestController(StripeClient stripeClient) {
-        this.stripeClient = stripeClient;
-    }
+    private SubscriptionService subscription_service;
     
 	/**
 	 * Retrieves list of all tests from the database 
@@ -322,22 +316,20 @@ public class TestController {
 	 * @param key
 	 * @return
 	 * @throws MalformedURLException 
-     * @throws UnknownAccountException 
-     * @throws APIException 
-     * @throws CardException 
-     * @throws APIConnectionException 
-     * @throws InvalidRequestException 
-     * @throws AuthenticationException 
+     * @throws UnknownAccountException
      * @throws NoSuchAlgorithmException 
      * @throws WebDriverException 
      * @throws GridException 
+     * @throws PaymentDueException 
+     * @throws StripeException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_name", required=true) String browser_name) 
-																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException{
+														  @RequestParam(value="browser", required=true) String browser,
+														  @RequestParam(value="host_url", required=true) String host) 
+																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
@@ -347,27 +339,11 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
     	
-    	/*Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	String subscription_item = null;
-    	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
-    		if(item.getPlan().getNickname().equals("test_runs")){
-    			subscription_item = item.getId();
-    		}
-    	}
-
-    	if(subscription_item==null){
-    		throw new MissingDiscoveryPlanException();
-    	}
-    	
-    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
-    		throw new FreeTrialExpiredException();
-    	}
-	   */	    	
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
+    		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
+        }
+    	    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        
@@ -401,9 +377,9 @@ public class TestController {
 
 	    	UsageRecord.create(usageRecordParams, null);
 */
-			Browser browser = new Browser(browser_name.trim());
-			record = test_service.runTest(test, browser);
-			browser.close();
+			Browser browser_dto = new Browser(browser.trim());
+			record = test_service.runTest(test, browser_dto);
+			browser_dto.close();
 			
 			test.addRecord(record);
 	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
@@ -418,7 +394,7 @@ public class TestController {
 				}
 			}
 			Map<String, String> browser_statuses = test.getBrowserStatuses();
-			browser_statuses.put(browser_name, is_passing.toString());
+			browser_statuses.put(browser, is_passing.toString());
 			
 			test.addRecord(record);
 			test.setStatus(is_passing);
@@ -427,6 +403,8 @@ public class TestController {
 			test.setBrowserStatuses(browser_statuses);
 			test_repo.save(test);
 
+			acct.addTestRecord(record);
+			account_repo.save(acct);
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}

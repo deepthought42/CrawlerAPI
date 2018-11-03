@@ -12,6 +12,7 @@ import org.openqa.selenium.interactions.Actions;
  *
  */
 public class ActionFactory {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ActionFactory.class);
 
 	private static String[] actions = {"click",
@@ -32,36 +33,37 @@ public class ActionFactory {
 	 * @param action
 	 */
 	public void execAction(WebElement elem, String input, String action) throws WebDriverException{
-		if(action.equals("click")){
+		if("click".equals(action)){
 			builder.click(elem);
 		}
-		else if(action.equals("clickAndHold")){
+		else if("clickAndHold".equals(action)){
 			builder.clickAndHold(elem);
 		}
 		//Context click clicks select/options box
-		else if(action.equals("contextClick")){
+		else if("contextClick".equals(action)){
 			builder.contextClick(elem);
 		}
-		else if(action.equals("doubleClick")){
+		else if("doubleClick".equals(action)){
 			builder.doubleClick(elem);
 		}
-		else if(action.equals("dragAndDrop")){
+		/*else if("dragAndDrop".equals(action)){
 			//builder.dragAndDrop(source, target);
 		}
-		else if(action.equals("keyDown")){
+		else if("keyDown".equals(action)){
 			//builder.keyDown();
 		}
-		else if(action.equals("keyUp")){
+		else if("keyUp".equals(action)){
 			//builder.keyUp(theKey);
 		}
-		else if(action.equals("release")){
+		*/
+		else if("release".equals(action)){
 			builder.release(elem);
 		}
-		else if(action.equals("sendKeys")){
+		else if("sendKeys".equals(action)){
 			//builder.sendKeys(elem, Keys.chord(Keys.CONTROL, Keys.ALT, Keys.DELETE));
 			builder.sendKeys(elem, input);
 		}
-		else if(action.equals("mouseover")){
+		else if("mouseover".equals(action)){
 			builder.moveToElement(elem);
 		}
 

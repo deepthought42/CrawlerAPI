@@ -7,12 +7,14 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 
 /**
@@ -51,6 +53,13 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
 	public int getTestCount(@Param("domain_host") String host);
+
+	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
+	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("domain_host") String host);
+	
+	//needs work done still to make it return all test records by month
+	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
+	public Set<TestRecord> getTestsByMonth(@Param("host") String host, @Param("month") int month);
 
 	@Query("MATCH (:Domain{key:{domain_key}})-[:HAS_TEST_USER]->(t:TestUser) RETURN t")
 	public Set<TestUser> getTestUsers(@Param("domain_key") String domain_key);

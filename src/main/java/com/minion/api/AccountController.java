@@ -36,11 +36,7 @@ import com.qanairy.models.repository.AccountRepository;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
 import com.stripe.model.Subscription;
@@ -89,17 +85,15 @@ public class AccountController {
         }
           
         //STAGING
-     	//Plan discovery_plan = Plan.retrieve("plan_Dr1tjSakC3uGXq");
-    	//Plan test_plan = Plan.retrieve("plan_Dr1tjSakC3uGXq");
+        Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
     	
     	//PRODUCTION
-    	Plan discovery_plan = Plan.retrieve("plan_CzQNdJWHcF8KGo");
-    	Plan test_plan = Plan.retrieve("plan_D06ComCwTJ0Cgz");
+    	//Plan tier = Plan.retrieve("plan_D06ComCwTJ0Cgz  ?????");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
-    	Subscription subscription = this.stripeClient.subscribe(discovery_plan, test_plan, customer);
+    	Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
     	
     	acct = new Account(username, customer.getId(), subscription.getId());
 
@@ -177,12 +171,23 @@ public class AccountController {
      * 
      * @param key account key
      * @return {@link Account account}
+     * @throws UnknownAccountException 
      */
     @PreAuthorize("hasAuthority('read:accounts')")
-    @RequestMapping(value ="/{id}", method = RequestMethod.GET)
-    public Account get(final @PathVariable String username) {
-        logger.info("get invoked");
-        return account_repo.findByUsername(username);
+    @RequestMapping(path="/find", method = RequestMethod.GET)
+    public Account get(HttpServletRequest request) throws UnknownAccountException {
+    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Auth0Client auth = new Auth0Client();
+    	String username = auth.getUsername(auth_access_token);
+        Account acct = account_repo.findByUsername(username);
+        if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+        
+        return acct;
     }
 
 	@PreAuthorize("hasAuthority('update:accounts')")
@@ -193,9 +198,16 @@ public class AccountController {
         return account_repo.save(account);
     }
     
+	/**
+	 * Deletes account
+	 * 
+	 * @param request
+	 * @throws UnirestException
+	 * @throws StripeException
+	 */
 	@PreAuthorize("hasAuthority('delete:accounts')")
     @RequestMapping(method = RequestMethod.DELETE)
-    public void delete(HttpServletRequest request) throws UnirestException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+    public void delete(HttpServletRequest request) throws UnirestException, StripeException{
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
@@ -206,6 +218,7 @@ public class AccountController {
     	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
     	//log.info("AUTH0 Response status      :::::::::::      "+response.getStatus());
     	//log.info("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
+    	
     	
     	//remove stripe subscription
         this.stripeClient.cancelSubscription(account.getSubscriptionToken());
@@ -218,7 +231,7 @@ public class AccountController {
 	
     @PreAuthorize("hasAuthority('read:accounts')")
 	@RequestMapping(path ="/usage", method = RequestMethod.GET)
-    public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException {
+    public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException{
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);

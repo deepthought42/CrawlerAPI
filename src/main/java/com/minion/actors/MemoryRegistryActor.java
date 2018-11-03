@@ -37,9 +37,6 @@ public class MemoryRegistryActor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private BrowserService browser_service;
-	
-	@Autowired
 	private DomainRepository domain_repo;
 	
 	@Autowired

@@ -86,15 +86,15 @@ public class TestService {
 			log.info("Test ::  "+test);
 			test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
 	  		
-	  		test = test_repo.save(test);
+	  		Test new_test = test_repo.save(test);
 			Domain domain = domain_repo.findByHost(host_url);
-			domain.addTest(test);
+			domain.addTest(new_test);
 			domain = domain_repo.save(domain);
-			if(test.getBrowserStatuses() == null || test.getBrowserStatuses().isEmpty()){
+			if(new_test.getBrowserStatuses() == null || new_test.getBrowserStatuses().isEmpty()){
 				log.info("Broadcasting discovered test");
 				
 				try {
-					MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
+					MessageBroadcaster.broadcastDiscoveredTest(new_test, host_url);
 				} catch (JsonProcessingException e) {
 					log.error(e.getLocalizedMessage());
 				}
@@ -102,19 +102,20 @@ public class TestService {
 			else {
 				log.info("Broadcasting Test...");
 				try {
-					MessageBroadcaster.broadcastTest(test, host_url);
+					MessageBroadcaster.broadcastTest(new_test, host_url);
 				} catch (JsonProcessingException e) {
 					log.error(e.getLocalizedMessage());
 				}
 			}
 			
-			for(PathObject path_obj : test.getPathObjects()){
+			for(PathObject path_obj : new_test.getPathObjects()){
 				try {
 					MessageBroadcaster.broadcastPathObject(path_obj, host_url);
 				} catch (JsonProcessingException e) {
 					log.error(e.getLocalizedMessage());
 				}
 			}
+			return new_test;
 		}
 		else{
 			log.info("Test already exists  !!!!!!!");

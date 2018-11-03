@@ -34,26 +34,26 @@ import com.qanairy.services.BrowserService;
 @Scope("prototype")
 public class MemoryRegistryActor extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-	Cluster cluster = Cluster.get(getContext().getSystem());
-
+	private Cluster cluster = Cluster.get(getContext().getSystem());
+	
+	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
+	private DomainRepository domain_repo;
+	
+	@Autowired
+	private TestRepository test_repo;
+	
+	@Autowired
+	private PageStateRepository page_repo;
+	
+	@Autowired
+	private PageElementRepository element_repo;
+	
 	public static Props props() {
 	  return Props.create(MemoryRegistryActor.class);
 	}
-	
-	@Autowired
-	BrowserService browser_service;
-	
-	@Autowired
-	DomainRepository domain_repo;
-	
-	@Autowired
-	TestRepository test_repo;
-	
-	@Autowired
-	PageStateRepository page_repo;
-	
-	@Autowired
-	PageElementRepository element_repo;
 	
 	//subscribe to cluster changes
 	@Override

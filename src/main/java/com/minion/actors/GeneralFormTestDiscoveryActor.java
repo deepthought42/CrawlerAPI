@@ -633,11 +633,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		for(Attribute attribute: input.getAttributes()){
-			if(attribute.getName().equals("type")){
+			if("type".equals(attribute.getName())){
 				String input_type = attribute.getVals().get(0);
-				if(input_type.equals("text") ||
-						input_type.equals("textarea") ||
-						input_type.equals("email")){
+				if("text".equals( input_type ) ||
+						"textarea".equals(input_type) ||
+						"email".equals(input_type)){
 					//generate empty string test
 					List<PathObject> path_obj_list = new ArrayList<PathObject>();
 					path_obj_list.add(input);
@@ -658,7 +658,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					path_obj_list_2.add(new Action("click", ""));
 					tests.add(path_obj_list_2);
 				}
-				else if( input_type.equals("number")){
+				else if( "number".equals(input_type)){
 					//generate empty string test
 					List<PathObject> path_obj_list = new ArrayList<PathObject>();
 					path_obj_list.add(input);

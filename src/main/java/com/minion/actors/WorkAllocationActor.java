@@ -35,24 +35,24 @@ import com.minion.structs.Message;
 @Scope("prototype")
 public class WorkAllocationActor extends AbstractActor  {
 	private static Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
-	Cluster cluster = Cluster.get(getContext().getSystem());
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
-	ActorSystem actor_system;
-	
-	  //subscribe to cluster changes
-	  @Override
-	  public void preStart() {
-	    cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
-	        MemberEvent.class, UnreachableMember.class);
-	  }
-	
-	  //re-subscribe when restart
-	  @Override
-	  public void postStop() {
-	    cluster.unsubscribe(getSelf());
-	  }
-	
+	private ActorSystem actor_system;
+
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()

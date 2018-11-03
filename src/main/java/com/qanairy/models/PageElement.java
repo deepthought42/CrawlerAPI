@@ -121,10 +121,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public boolean isChildElement(PageElement elem){
-		if(elem.getXpath().equals(this.getXpath()) && elem.getXpath().contains(this.getXpath())){
-			return true;
-		}
-		return false;
+		return elem.getXpath().equals(this.getXpath()) && elem.getXpath().contains(this.getXpath());
 	}
 		
 	public String getName() {

@@ -48,7 +48,7 @@ public class TestUserController {
 	 * @throws MalformedURLException
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
-    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
+    @RequestMapping(path="{user_id}", method = RequestMethod.DELETE)
     public @ResponseBody void updateUser(HttpServletRequest request,
     									@PathVariable(value="user_id", required=true) long user_id,
     									@RequestParam(value="isEnabled", required=true) boolean isEnabled,
@@ -67,6 +67,29 @@ public class TestUserController {
     		test_user_record.setRole(role);
     		test_user_record.setUsername(username);
     		test_user_repo.save(test_user_record);
+    	}
+    	else{
+    		throw new TestUserNotFoundException();
+    	}
+    }
+    
+
+	/**
+	 * 
+	 * @param request
+	 * @param user_id
+	 * @throws UnknownUserException
+	 */
+    @PreAuthorize("hasAuthority('create:test_user')")
+    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
+    public @ResponseBody void delete(HttpServletRequest request,
+    									@PathVariable(value="user_id", required=true) long user_id) 
+    											throws UnknownUserException {
+    	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
+    	System.err.println("is user present :: " + optional_user.isPresent());
+    	if(optional_user.isPresent()){
+    		TestUser test_user_record = optional_user.get();
+    		test_user_repo.delete(test_user_record);
     	}
     	else{
     		throw new TestUserNotFoundException();

@@ -41,7 +41,7 @@ public class SubscriptionService {
 	public SubscriptionService(AccountRepository account_repo){
 		this.account_repo = account_repo;
 	}
-	
+
 	/**
 	 * Updates the {@link Subscription} for a given {@link Account}
 	 * 
@@ -69,8 +69,11 @@ public class SubscriptionService {
 			}
 		}
 		else if("PRO".equals(plan.toString())){
+			//STAGING
     		plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
-		
+    		//PRODUCTION
+    		//Plan tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
+
 			Customer customer = null;
 			if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()){
 				customer = stripe_client.createCustomer(source_token, acct.getUsername());
@@ -176,7 +179,7 @@ public class SubscriptionService {
 	public SubscriptionPlan getSubscriptionPlanName(Account acct) throws StripeException {
 		Subscription subscription = null;
 		SubscriptionPlan account_subscription = null;
-    	if(acct.getSubscriptionToken() == null){
+    	if(acct.getSubscriptionToken() == null || acct.getSubscriptionToken().isEmpty()){
     		//free plan
     		account_subscription = SubscriptionPlan.FREE;
     	}

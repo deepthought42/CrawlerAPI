@@ -37,7 +37,6 @@ import com.qanairy.services.SubscriptionService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
-import com.stripe.model.UsageRecord;
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;
@@ -153,15 +152,7 @@ public class DiscoveryController {
     	String protocol = domain.getProtocol();
         
 		if(diffInMinutes > 1440){
-			long date_millis = now.getTime();
-			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
-	    	usageRecordParams.put("quantity", 1);
-	    	usageRecordParams.put("timestamp", date_millis/1000);
-	    	usageRecordParams.put("account", acct.getUsername());
-	    	usageRecordParams.put("action", "increment");
-
-	    	UsageRecord.create(usageRecordParams, null);
-        	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
+			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
 			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	
 			acct.addDiscoveryRecord(discovery_record);

@@ -85,7 +85,7 @@ public class AccountController {
         }
           
         //STAGING
-        Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
+        //Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
     	
     	//PRODUCTION
     	//Plan tier = Plan.retrieve("plan_D06ComCwTJ0Cgz  ?????");
@@ -93,10 +93,9 @@ public class AccountController {
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
-    	Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
-    	
-    	acct = new Account(username, customer.getId(), subscription.getId());
-
+    	//Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
+    	acct = new Account(username, customer.getId(), "");
+    	acct.setSubscriptionType("FREE");
 
         // Connect to Auth0 API and update user metadata
         /*HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
@@ -120,7 +119,7 @@ public class AccountController {
     		);
     	
     	Map<String, String> account_signup_properties = new HashMap<String, String>();
-    	account_signup_properties.put("plan", subscription.getId());
+    	account_signup_properties.put("plan", "FREE");
     	analytics.enqueue(TrackMessage.builder("Signed Up")
     		    .userId(acct.getUsername())
     		    .properties(account_signup_properties)

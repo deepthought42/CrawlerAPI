@@ -142,7 +142,7 @@ public class Browser {
 		catch(Exception e){
 			log.error(e.getMessage());
 		}	
-		Timing.pauseThread(5000L);
+		Timing.pauseThread(15000L);
 	}
 
 	/**

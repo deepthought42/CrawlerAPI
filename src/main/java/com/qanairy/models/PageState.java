@@ -59,58 +59,23 @@ public class PageState implements Persistable, PathObject {
 	private Set<Form> forms = new HashSet<>();
 	
 	public PageState(){}
-
-	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre html != null && html.length() > 0
-	 * @pre elements != null
-	 * @pre browser_screenshots != null;
-	 */
-	public PageState(String html, String url , Set<PageElement> elements) throws IOException {
-		assert elements != null;
-		assert html != null;
-		assert html.length() > 0;
-		assert browser_screenshots  != null;
-
-		setType(PageState.class.getSimpleName());
-		setSrc("");
-		setUrl(url.replace("/#",""));
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
-		setKey(generateKey());
-	}
-
 	
 	/**
  	 * Creates a page instance that is meant to contain information about a state of a webpage
  	 * 
-	 * @param html
 	 * @param url
 	 * @param screenshot
 	 * @param elements
 	 * @throws IOException
 	 * 
-	 * @pre html != null && html.length() > 0
 	 * @pre elements != null
 	 * @pre browser_screenshots != null;
 	 */
-	public PageState(String html, String url, Set<ScreenshotSet> browser_screenshots , Set<PageElement> elements) throws IOException {
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots , Set<PageElement> elements) throws IOException {
 		assert elements != null;
-		assert html != null;
-		assert html.length() > 0;
 		assert browser_screenshots  != null;
 
 		setType(PageState.class.getSimpleName());
-		setSrc("");
 		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browser_screenshots );
 		setElements(elements);
@@ -279,23 +244,6 @@ public class PageState implements Persistable, PathObject {
 	public String toString(){
 		return this.getUrl().toString();
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-    public int hashCode() {
-        int hash = 1;
-        hash = hash * 5 + url.hashCode();
-        hash = hash * 17 + src.hashCode();
-        
-        if(elements != null){
-	        for(PageElement element : elements){
-	        	hash = hash * 13 + element.hashCode();
-	        }
-        }
-        return hash;
-    }
 	
 	/**
 	 * {@inheritDoc}
@@ -420,7 +368,7 @@ public class PageState implements Persistable, PathObject {
 		this.elements.add(element);
 	}
 
-	public static String getFileChecksum(MessageDigest digest, String url) throws IOException
+	public String getFileChecksum(MessageDigest digest, String url) throws IOException
 	{
 		//InputStream is = new URL(url).openStream(); 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -596,7 +544,9 @@ public class PageState implements Persistable, PathObject {
 	 */
 	public String generateKey() {
 		try{
-			String key ="pagestate::"+getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+			Set<ScreenshotSet> screenshots = this.getBrowserScreenshots();
+			String screenshot = screenshots.iterator().next().getViewportScreenshot();
+			String key ="pagestate::"+getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot);
 			return key;
 		}
 		catch(Exception e){

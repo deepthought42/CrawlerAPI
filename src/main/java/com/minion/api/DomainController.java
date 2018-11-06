@@ -450,6 +450,22 @@ public class DomainController {
 		throw new DomainNotFoundException();
     }
     
+    
+
+	/**
+	 * 
+	 * @param request
+	 * @param user_id
+	 * @throws UnknownUserException
+	 */
+    @PreAuthorize("hasAuthority('create:test_user')")
+    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
+    public @ResponseBody void delete(HttpServletRequest request,
+    									@PathVariable(value="domain_key", required=true) String domain_key,
+    									@PathVariable(value="test_user_key", required=true) String test_user_key) {
+		domain_repo.deleteTestUser(domain_key, test_user_key);
+    }
+    
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,

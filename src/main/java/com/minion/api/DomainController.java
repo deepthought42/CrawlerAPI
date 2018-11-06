@@ -112,6 +112,9 @@ public class DomainController {
     	if(dot_idx == last_dot_idx){
     		formatted_url = "www."+url;
     	}
+    	formatted_url = formatted_url.replace("http://", "");
+    	formatted_url = formatted_url.replace("https://", "");
+    	protocol = "http";
     	URL url_obj = new URL(protocol+"://"+formatted_url);
 		
     	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);

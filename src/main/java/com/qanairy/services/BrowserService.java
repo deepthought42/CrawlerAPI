@@ -766,6 +766,13 @@ public class BrowserService {
 		return elem;
 	}
 	
+	/**
+	 * 
+	 * @param driver
+	 * @param elem
+	 * @return
+	 * @throws Exception
+	 */
 	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem) throws Exception{
 		BufferedImage img = null;
 		String checksum = "";
@@ -786,6 +793,14 @@ public class BrowserService {
 		return screenshot_url;
 	}
 	
+	/**
+	 * 
+	 * @param driver
+	 * @param elem
+	 * @param page_img
+	 * @return
+	 * @throws Exception
+	 */
 	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem, BufferedImage page_img) throws Exception{
 		BufferedImage img = null;
 		String checksum = "";
@@ -806,6 +821,14 @@ public class BrowserService {
 		return screenshot_url;
 	}
 	
+	/**
+	 * 
+	 * @param browser
+	 * @param page_state
+	 * @return
+	 * @throws GridException
+	 * @throws IOException
+	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
 		File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		

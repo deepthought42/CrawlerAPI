@@ -21,9 +21,6 @@ public class ExploratoryPathTests {
 	
 	@Mock
 	private PageState page;
-	
-    @Mock 
-    private MessageDigest messageDigestMock;
 
 	@Before
 	public void start(){

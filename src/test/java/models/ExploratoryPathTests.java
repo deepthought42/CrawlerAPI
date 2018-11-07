@@ -3,7 +3,6 @@ package models;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 

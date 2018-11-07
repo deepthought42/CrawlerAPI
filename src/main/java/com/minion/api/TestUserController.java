@@ -72,29 +72,6 @@ public class TestUserController {
     		throw new TestUserNotFoundException();
     	}
     }
-    
-
-	/**
-	 * 
-	 * @param request
-	 * @param user_id
-	 * @throws UnknownUserException
-	 */
-    @PreAuthorize("hasAuthority('create:test_user')")
-    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
-    public @ResponseBody void delete(HttpServletRequest request,
-    									@PathVariable(value="user_id", required=true) long user_id) 
-    											throws UnknownUserException {
-    	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
-    	System.err.println("is user present :: " + optional_user.isPresent());
-    	if(optional_user.isPresent()){
-    		TestUser test_user_record = optional_user.get();
-    		test_user_repo.delete(test_user_record);
-    	}
-    	else{
-    		throw new TestUserNotFoundException();
-    	}
-    }
 }
 
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -18,7 +18,7 @@ public class BrowserServiceTest {
 		Set<ScreenshotSet> screen = new HashSet<ScreenshotSet>();
 		screen.add(new ScreenshotSet("http://qanairy.com", "chrome"));
 		Set<PageElement> elems = new HashSet<PageElement>();
-		page_state.add(new PageState("html", "url.com", screen, elems));
+		page_state.add(new PageState("url.com", screen, elems));
 		Set<Action> actions = new HashSet<Action>();
 		actions.add(new Action("Test"));
 		

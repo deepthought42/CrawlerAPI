@@ -80,11 +80,12 @@ public class UrlBrowserActor extends AbstractActor {
 		
 								/**  path expansion temporarily disabled
 								 */
-								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							/*	final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 								path_expansion_actor.tell(test_msg, getSelf() );
 								
 								break;
+								*/
 							}
 							catch(Exception e){
 								e.printStackTrace();

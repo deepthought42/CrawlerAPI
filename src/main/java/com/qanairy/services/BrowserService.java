@@ -193,8 +193,7 @@ public class BrowserService {
 			HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
 			screenshots.add(screenshot_set);
 			
-			page_state = new PageState("",
-					page_url.toString(),
+			page_state = new PageState(	page_url.toString(),
 					screenshots,
 					visible_elements);
 		}
@@ -507,7 +506,7 @@ public class BrowserService {
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			
-			log.info("EXTACTED FORM ELEMENT WITH TEXT   : "+form_elem.getText());
+			System.err.println("EXTACTED FORM ELEMENT WITH TEXT   : "+form_elem.getText());
 
 			String page_screenshot = "";
 			for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
@@ -517,18 +516,21 @@ public class BrowserService {
 					page_screenshot = screenshot.getViewportScreenshot();
 				}
 			}
+			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
-			log.info("FORM SCREENSHOT URL :: "+screenshot_url);
+			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
 			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
+			System.err.println("SAVING SCREENSHOT URL ");
 			if(tag != null){
 				form_tag = tag;
 			}
 			form_tag.setScreenshot(screenshot_url);
-
+			
 			double[] weights = new double[1];
 			weights[0] = 0.3;
 			
+			System.err.println("CREATING A NEW FORM !!! ");
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
 									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
@@ -764,6 +766,13 @@ public class BrowserService {
 		return elem;
 	}
 	
+	/**
+	 * 
+	 * @param driver
+	 * @param elem
+	 * @return
+	 * @throws Exception
+	 */
 	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem) throws Exception{
 		BufferedImage img = null;
 		String checksum = "";
@@ -784,6 +793,14 @@ public class BrowserService {
 		return screenshot_url;
 	}
 	
+	/**
+	 * 
+	 * @param driver
+	 * @param elem
+	 * @param page_img
+	 * @return
+	 * @throws Exception
+	 */
 	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem, BufferedImage page_img) throws Exception{
 		BufferedImage img = null;
 		String checksum = "";
@@ -804,6 +821,14 @@ public class BrowserService {
 		return screenshot_url;
 	}
 	
+	/**
+	 * 
+	 * @param browser
+	 * @param page_state
+	 * @return
+	 * @throws GridException
+	 * @throws IOException
+	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
 		File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		

@@ -64,4 +64,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{key:{domain_key}})-[:HAS_TEST_USER]->(t:TestUser) RETURN t")
 	public Set<TestUser> getTestUsers(@Param("domain_key") String domain_key);
 
+	@Query("MATCH (:Domain{key:{domain_key}})-[r:HAS_TEST_USER]->(t:TestUser{key:{test_user_key}) DELETE r,t")
+	public Set<TestUser> deleteTestUser(@Param("domain_key") String domain_key, @Param("test_user_key") String test_user_key);
+
 }

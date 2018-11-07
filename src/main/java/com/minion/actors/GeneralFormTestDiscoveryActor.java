@@ -81,7 +81,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							}
 							cnt++;
 						}	
-	
+
 					  	List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
 					  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					  	for(Form form : forms){

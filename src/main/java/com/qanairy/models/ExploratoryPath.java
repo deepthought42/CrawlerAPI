@@ -73,10 +73,8 @@ public class ExploratoryPath {
 	 */
 	public static boolean hasCycle(List<String> path_key_list, PageState page){
 		assert page != null;
-		assert path_key_list != null;
-		assert !path_key_list.isEmpty();
-		
-		if(path_key_list.size() == 1){
+	
+		if(path_key_list.size() <= 1){
 			return false;
 		}
 		
@@ -89,7 +87,6 @@ public class ExploratoryPath {
 			}
 		}
 
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		return false;
 	}
 

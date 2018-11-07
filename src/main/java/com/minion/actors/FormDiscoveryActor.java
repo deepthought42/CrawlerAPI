@@ -91,7 +91,10 @@ public class FormDiscoveryActor extends AbstractActor{
 					  	page_state = page_state_repo.findByKey(page_state.getKey());
 					  
 					  	try{
+					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
+
 						  	for(Form form : forms){
 							  	for(PageElement field: form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
@@ -106,14 +109,16 @@ public class FormDiscoveryActor extends AbstractActor{
 							  							  	
 							    DeepthoughtApi.predict(form);
 						       
-							  	try{
+							    System.err.println("PREDICTION DONE !!! ");
+							    System.err.println("********************************************************");
+							    try{
 							  		browser.close();
 							  	}
 							  	catch(Exception e){}
 							  	
 							  	page_state.addForm(form);
 							  	page_state_repo.save(page_state);
-						        
+						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 						  	}
 					  	}
@@ -121,6 +126,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		e.printStackTrace();
 					  	}
 					  	catch(Exception e){
+					  		e.printStackTrace();
 					  		log.error("exception occurred while performing form discovery");
 					  		browser = new Browser(message.getOptions().get("browser").toString());
 					  		browser.navigateTo(page_state.getUrl());

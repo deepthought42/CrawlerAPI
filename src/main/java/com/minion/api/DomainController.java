@@ -112,6 +112,9 @@ public class DomainController {
     	if(dot_idx == last_dot_idx){
     		formatted_url = "www."+url;
     	}
+    	formatted_url = formatted_url.replace("http://", "");
+    	formatted_url = formatted_url.replace("https://", "");
+    	protocol = "http";
     	URL url_obj = new URL(protocol+"://"+formatted_url);
 		
     	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
@@ -445,6 +448,22 @@ public class DomainController {
     		return user;
     	}
 		throw new DomainNotFoundException();
+    }
+    
+    
+
+	/**
+	 * 
+	 * @param request
+	 * @param user_id
+	 * @throws UnknownUserException
+	 */
+    @PreAuthorize("hasAuthority('create:test_user')")
+    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
+    public @ResponseBody void delete(HttpServletRequest request,
+    									@PathVariable(value="domain_key", required=true) String domain_key,
+    									@PathVariable(value="test_user_key", required=true) String test_user_key) {
+		domain_repo.deleteTestUser(domain_key, test_user_key);
     }
     
     @PreAuthorize("hasAuthority('create:domains')")

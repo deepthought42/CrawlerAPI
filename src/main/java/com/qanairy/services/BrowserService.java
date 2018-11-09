@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -755,7 +756,13 @@ public class BrowserService {
 	 * @throws Exception 
 	 */
 	private PageElement findFormSubmitButton(WebElement form_elem, Browser browser) throws Exception {
-		WebElement submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
+		WebElement submit_element = null;
+		try{
+			submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
+		}
+		catch(NoSuchElementException e){
+			submit_element = form_elem.findElement(By.xpath("//input[@type='submit']"));
+		}
 		Set<Attribute> attributes = extractAttributes(submit_element, browser.getDriver());
 		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem);
 		PageElement elem = new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url );

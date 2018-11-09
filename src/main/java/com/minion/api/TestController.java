@@ -91,6 +91,33 @@ public class TestController {
     }
 
     /**
+	 * Updates a test
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(method=RequestMethod.PUT)
+	public @ResponseBody void update(HttpServletRequest request,
+									@RequestParam(value="key", required=true) String key, 
+									@RequestParam(value="name", required=true) String name, 
+									@RequestParam(value="firefox", required=false) String firefox_status,
+									@RequestParam(value="chrome", required=false) String chrome_status){
+		Test test = test_repo.findByKey(key);
+		
+		Map<String, String> browser_statuses = new HashMap<String, String>();
+		if(firefox_status!=null && !firefox_status.isEmpty()){
+			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
+		}
+		if(chrome_status!=null && !chrome_status.isEmpty()){
+			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
+		}
+		test.setName(name);
+		test.setBrowserStatuses(browser_statuses);
+		test_repo.save(test);
+    }
+    
+    /**
 	 * Retrieves list of all tests from the database 
 	 * @param url
 	 * 
@@ -264,32 +291,7 @@ public class TestController {
 		test_repo.save(test);
     }
     
-	/**
-	 * Updates a test
-	 * 
-	 * @param test
-	 * @return
-	 */
-    @PreAuthorize("hasAuthority('update:tests')")
-	@RequestMapping(method=RequestMethod.PUT)
-	public @ResponseBody void update(HttpServletRequest request,
-									@RequestParam(value="key", required=true) String key, 
-									@RequestParam(value="name", required=true) String name, 
-									@RequestParam(value="firefox", required=false) String firefox_status,
-									@RequestParam(value="chrome", required=false) String chrome_status){
-		Test test = test_repo.findByKey(key);
-		
-		Map<String, String> browser_statuses = new HashMap<String, String>();
-		if(firefox_status!=null && !firefox_status.isEmpty()){
-			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
-		}
-		if(chrome_status!=null && !chrome_status.isEmpty()){
-			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
-		}
-		test.setName(name);
-		test.setBrowserStatuses(browser_statuses);
-		test_repo.save(test);
-    }
+	
 
     
 	/**

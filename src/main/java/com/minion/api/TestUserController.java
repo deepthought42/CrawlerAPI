@@ -48,7 +48,7 @@ public class TestUserController {
 	 * @throws MalformedURLException
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
-    @RequestMapping(path="{user_id}", method = RequestMethod.DELETE)
+    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
     public @ResponseBody void updateUser(HttpServletRequest request,
     									@PathVariable(value="user_id", required=true) long user_id,
     									@RequestParam(value="isEnabled", required=true) boolean isEnabled,

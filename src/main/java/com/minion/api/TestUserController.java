@@ -48,13 +48,13 @@ public class TestUserController {
 	 * @throws MalformedURLException
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
-    @RequestMapping(path="{user_id}", method = RequestMethod.DELETE)
+    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
     public @ResponseBody void updateUser(HttpServletRequest request,
     									@PathVariable(value="user_id", required=true) long user_id,
     									@RequestParam(value="isEnabled", required=true) boolean isEnabled,
     									@RequestParam(value="password", required=true) String password,
     									@RequestParam(value="username", required=true) String username,
-    									@RequestParam(value="role", required=true) String role) 
+    									@RequestParam(value="role", required=false) String role) 
     											throws UnknownUserException {
     	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
     	System.err.println("is user present :: " + optional_user.isPresent());

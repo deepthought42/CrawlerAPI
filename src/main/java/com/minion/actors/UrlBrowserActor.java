@@ -83,16 +83,19 @@ public class UrlBrowserActor extends AbstractActor {
 									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 									form_discoverer.tell(page_state_msg, getSelf() );
+									
+									
+									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
+			
+									/**  path expansion temporarily disabled
+									 */
+									final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+									path_expansion_actor.tell(test_msg, getSelf() );
 								}
 								
-								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-		
-								/**  path expansion temporarily disabled
-								 */
-								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-								path_expansion_actor.tell(test_msg, getSelf() );
-								
+								discovery_record.addExpandedPageState(test.getResult().getKey());
+								discovery_record_repo.save(discovery_record);
 								test_generated_successfully = true;
 								attempts = 6;
 								break;

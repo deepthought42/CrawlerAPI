@@ -107,7 +107,7 @@ public class PathExpansionActor extends AbstractActor {
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						return;
 					}
-					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){					
+					else if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){					
 						pathExpansions = expandPath(test);
 						log.info(pathExpansions.size()+"   path expansions found.");
 						
@@ -119,7 +119,7 @@ public class PathExpansionActor extends AbstractActor {
 						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 						log.info("expected total path count :: "+new_total_path_count);
 						discovery_record.setTotalPathCount(new_total_path_count);
-						discovery_record.getExpandedPageState().add(test.getResult().getKey());
+						discovery_record.getExpandedPageStates().add(test.getResult().getKey());
 						discovery_record = discovery_repo.save(discovery_record);
 
 						log.info("existing total path count :: "+discovery_record.getTotalPathCount());

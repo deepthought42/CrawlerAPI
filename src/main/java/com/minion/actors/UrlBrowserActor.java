@@ -20,6 +20,8 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
 import com.qanairy.models.Test;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
@@ -42,6 +44,9 @@ public class UrlBrowserActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 
+	@Autowired
+	private DiscoveryRecordRepository discovery_record_repo;
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -51,6 +56,8 @@ public class UrlBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
+					  	System.err.println("URL DISCOVERY HAS STARTED");
+
 						boolean test_generated_successfully = false;
 						int attempts = 0;
 						do{
@@ -71,27 +78,34 @@ public class UrlBrowserActor extends AbstractActor {
 								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 
-								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								form_discoverer.tell(page_state_msg, getSelf() );
-		
+								DiscoveryRecord discovery_record = discovery_record_repo.findByKey(discovery_key);
+								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){					
+									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+									form_discoverer.tell(page_state_msg, getSelf() );
+								}
 								
 								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 		
 								/**  path expansion temporarily disabled
 								 */
-							/*	final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 								path_expansion_actor.tell(test_msg, getSelf() );
 								
+								test_generated_successfully = true;
+								attempts = 6;
 								break;
-								*/
+								
 							}
 							catch(Exception e){
 								e.printStackTrace();
 								log.error(e.getMessage());
 							}
 						}while(!test_generated_successfully && attempts < 5);
+						
+					  	System.err.println("URL DISCOVERY HAS ENDED");
+
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		

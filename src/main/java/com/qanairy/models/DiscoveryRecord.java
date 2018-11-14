@@ -130,11 +130,15 @@ public class DiscoveryRecord implements Persistable {
 		return getDomainUrl()+":"+getStartTime();
 	}
 
-	public List<String> getExpandedPageState() {
+	public List<String> getExpandedPageStates() {
 		return expanded_page_state;
 	}
 
-	public void setExpandedPageState(List<String> expanded_page_state) {
+	public void setExpandedPageStates(List<String> expanded_page_state) {
 		this.expanded_page_state = expanded_page_state;
+	}
+	
+	public void addExpandedPageState(String expanded_page_state_key) {
+		this.expanded_page_state.add(expanded_page_state_key);
 	}
 }

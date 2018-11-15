@@ -23,7 +23,6 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.minion.browsing.Browser;
 
 /**
  * A reference to a web page 
@@ -41,9 +40,7 @@ public class PageState implements Persistable, PathObject {
     private String key;
     private boolean landable;
     private LocalDateTime last_landability_check;
-    
-    @JsonIgnore
-	private String src;
+
 	private String url;
 	private int total_weight;
 	private int image_weight;
@@ -99,12 +96,11 @@ public class PageState implements Persistable, PathObject {
 	 * 
 	 * @throws IOException
 	 */
-	public PageState(String html, String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable) throws IOException {
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable) throws IOException {
 		assert elements != null;
 		assert browser_screenshots != null;
 	
 		setType(PageState.class.getSimpleName());
-		setSrc("");
 		setUrl(url.replace("/#",""));
 		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
@@ -255,11 +251,7 @@ public class PageState implements Persistable, PathObject {
 		
 		PageState page;
 		try {
-			page = new PageState(getSrc(), getUrl().toString(), screenshots, elements, isLandable());
-			page.setElements(this.getElements());
-			page.setLandable(this.isLandable());
-			page.setSrc(this.getSrc());
-			page.setUrl(this.getUrl());
+			page = new PageState(getUrl().toString(), screenshots, elements, isLandable());
 			return page;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -275,25 +267,6 @@ public class PageState implements Persistable, PathObject {
 	 public void setKey(String key) {
 		 this.key = key;
 	 }
-	 
-	/**
-	 * @return the page of the source
-	 */
-	@JsonIgnore
-	public String getSrc() {
-		return this.src;
-	}
-	
-	@JsonIgnore
-	public void setSrc(String src) {
-		if(src != null && src.length() > 0){
-			String cleaned_src = Browser.cleanSrc(src);
-			this.src = cleaned_src;
-		}
-		else{
-			this.src = src;
-		}
-	}
 	
 	@JsonIgnore
 	public Set<PageElement> getElements(){

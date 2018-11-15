@@ -46,8 +46,7 @@ public class BrowserTest {
 
 			Set<PageElement> elements = new HashSet<PageElement>();
 			
-			PageState page = new PageState("<html>localhost</html>",
-					"http://localhost", 
+			PageState page = new PageState(	"http://localhost", 
 					screenshots,
 					elements,
 					false);

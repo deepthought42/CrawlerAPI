@@ -38,8 +38,6 @@ import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
-import com.stripe.model.Plan;
-import com.stripe.model.Subscription;
 import com.mashape.unirest.http.HttpResponse;
 
 /**
@@ -220,11 +218,14 @@ public class AccountController {
     	
     	
     	//remove stripe subscription
-        this.stripeClient.cancelSubscription(account.getSubscriptionToken());
-        this.stripeClient.deleteCustomer(account.getCustomerToken());
-        
+    	if(!account.getSubscriptionToken().isEmpty()){
+    		this.stripeClient.cancelSubscription(account.getSubscriptionToken());
+    	}
+    	if(!account.getCustomerToken().isEmpty()){
+    		this.stripeClient.deleteCustomer(account.getCustomerToken());
+    	}
 		//remove account
-        account_repo.delete(account);
+        account_repo.deleteAccountAndEdges(account.getUsername());
         logger.info("update invoked");
     }
 	

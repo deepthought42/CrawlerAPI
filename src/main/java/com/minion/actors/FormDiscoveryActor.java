@@ -68,7 +68,8 @@ public class FormDiscoveryActor extends AbstractActor{
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof PageState){
-	
+					  	System.err.println("FORM DISCOVERY HAS STARTED");
+
 						PageState page_state = ((PageState)message.getData());
 						
 						//get first page in path
@@ -121,6 +122,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 						  	}
+						  	System.err.println("FORM DISCOVERY HAS ENDED");
 					  	}
 					  	catch(NoSuchAlgorithmException e){
 					  		e.printStackTrace();
@@ -128,8 +130,6 @@ public class FormDiscoveryActor extends AbstractActor{
 					  	catch(Exception e){
 					  		e.printStackTrace();
 					  		log.error("exception occurred while performing form discovery");
-					  		browser = new Browser(message.getOptions().get("browser").toString());
-					  		browser.navigateTo(page_state.getUrl());
 					  	}
 					}
 				})

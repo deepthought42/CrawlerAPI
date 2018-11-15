@@ -107,33 +107,31 @@ public class PathExpansionActor extends AbstractActor {
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						return;
 					}
-					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){					
-						pathExpansions = expandPath(test);
-						log.info(pathExpansions.size()+"   path expansions found.");
-						
-						DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
-						if(discovery_record2 != null){
-							discovery_record = discovery_record2;
-						}
-						int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-						log.info("expected total path count :: "+new_total_path_count);
-						discovery_record.setTotalPathCount(new_total_path_count);
-						discovery_record.getExpandedPageState().add(test.getResult().getKey());
-						discovery_record = discovery_repo.save(discovery_record);
+					pathExpansions = expandPath(test);
+					log.info(pathExpansions.size()+"   path expansions found.");
+					
+					DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
+					if(discovery_record2 != null){
+						discovery_record = discovery_record2;
+					}
+					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
+					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+					log.info("expected total path count :: "+new_total_path_count);
+					discovery_record.setTotalPathCount(new_total_path_count);
+					//discovery_record.getExpandedPageStates().add(test.getResult().getKey());
+					discovery_record = discovery_repo.save(discovery_record);
 
-						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+					
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
+					for(ExploratoryPath expanded : pathExpansions){
+						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+
+						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 						
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-	
-						for(ExploratoryPath expanded : pathExpansions){
-							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-	
-							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-							
-							work_allocator.tell(expanded_path_msg, getSelf() );
-						}
+						work_allocator.tell(expanded_path_msg, getSelf() );
 					}
 				}	
 			}

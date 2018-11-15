@@ -209,7 +209,7 @@ public class AccountController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account account = account_repo.findByUsername(username);
-    					
+    	System.err.println("Account :: " + account);
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
     	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
@@ -218,10 +218,10 @@ public class AccountController {
     	
     	
     	//remove stripe subscription
-    	if(!account.getSubscriptionToken().isEmpty()){
+    	if(account.getSubscriptionToken() != null && !account.getSubscriptionToken().isEmpty()){
     		this.stripeClient.cancelSubscription(account.getSubscriptionToken());
     	}
-    	if(!account.getCustomerToken().isEmpty()){
+    	if(account.getCustomerToken() != null && !account.getCustomerToken().isEmpty()){
     		this.stripeClient.deleteCustomer(account.getCustomerToken());
     	}
 		//remove account

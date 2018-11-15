@@ -30,6 +30,6 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	public int getTestCountByMonth(@Param("acct_key") String acct_key, @Param("month") int month);
 
 	@Query("MATCH (account:Account {username:{username}})-[edge]->() DELETE edge,account")
-	public int deleteAccountAndEdges(@Param("username") String username);
+	public void deleteAccountAndEdges(@Param("username") String username);
 
 }

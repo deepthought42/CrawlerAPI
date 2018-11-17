@@ -246,21 +246,6 @@ public class PageElement implements Persistable, PathObject {
 	}
 
 	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-    public int hashCode() {
-        int hash = 1;
-        hash = hash * 5 + name.hashCode();
-        hash = hash * 17 + text.hashCode();
-        hash = hash * 31 + xpath.hashCode();
-        
-        for(Attribute attr : attributes){
-        	hash = hash * 13 + attr.hashCode();
-        }
-        return hash;
-    }
-	/**
 	 * Checks if {@link PageElement elements} are equal
 	 * 
 	 * @param elem

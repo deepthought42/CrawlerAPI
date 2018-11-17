@@ -209,7 +209,6 @@ public class AccountController {
     	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account account = account_repo.findByUsername(username);
-    	System.err.println("Account :: " + account);
 		//remove Auth0 account
     	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
     	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
@@ -225,7 +224,11 @@ public class AccountController {
     		this.stripeClient.deleteCustomer(account.getCustomerToken());
     	}
 		//remove account
-        account_repo.deleteAccountAndEdges(account.getUsername());
+        account_repo.deleteAccountEdges(username);
+        account_repo.deleteAccount(username);
+
+        account = account_repo.findByUsername(username);
+    	System.err.println("Account :: " + account);
         logger.info("update invoked");
     }
 	

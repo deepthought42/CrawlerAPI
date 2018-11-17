@@ -110,6 +110,6 @@ public class Action implements Persistable, PathObject{
 	 */
 	@Override
 	public String generateKey() {
-		return getName() + ":"+ getValue().hashCode();
+		return "action:"+getName() + ":"+ getValue();
 	}
 }

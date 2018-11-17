@@ -459,11 +459,11 @@ public class DomainController {
 	 * @throws UnknownUserException
 	 */
     @PreAuthorize("hasAuthority('create:test_user')")
-    @RequestMapping(path="{user_id}", method = RequestMethod.PUT)
+    @RequestMapping(path="test_users/{user_id}", method = RequestMethod.DELETE)
     public @ResponseBody void delete(HttpServletRequest request,
-    									@PathVariable(value="domain_key", required=true) String domain_key,
-    									@PathVariable(value="test_user_key", required=true) String test_user_key) {
-		domain_repo.deleteTestUser(domain_key, test_user_key);
+    									@RequestParam(value="domain_key", required=true) String domain_key,
+    									@RequestParam(value="username", required=true) String username) {
+		domain_repo.deleteTestUser(domain_key, username);
     }
     
     @PreAuthorize("hasAuthority('create:domains')")

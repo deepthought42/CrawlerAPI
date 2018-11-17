@@ -5,7 +5,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
- * Defines user information that can be used during testing
+ * Defines user information that can be used during testing and discovery
  */
 @NodeEntity
 public class TestUser{

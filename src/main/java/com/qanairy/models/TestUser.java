@@ -24,6 +24,7 @@ public class TestUser{
 	public TestUser(String username, String password, String role, boolean isEnabled){
 		setUsername(username);
 		setPassword(password);
+		setRole(role);
 		setIsEnabled(isEnabled);
 	}
 	

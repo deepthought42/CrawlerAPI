@@ -89,20 +89,6 @@ public class Attribute implements Persistable {
 		return attrString;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-    public int hashCode() {
-        int hash = 1;
-        hash = hash * 5 + name.hashCode();
-        
-        for(String value : vals){
-        	hash = hash * 13 + value.hashCode();
-        }
-        return hash;
-    }
-
 	public void setKey(String key) {
 		this.key = key;
 	}

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -511,12 +512,12 @@ public class TestController {
 	 * 
 	 * @return
 	 */
-    /*@PreAuthorize("hasAuthority('read:groups')")
-	@RequestMapping(path="/groups", method = RequestMethod.GET)
+    @PreAuthorize("hasAuthority('read:groups')")
+	@RequestMapping(path="groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {
 		List<Group> groups = new ArrayList<Group>();
-		Set<Test> test_list = test_repo.findByUrl(url);
+		Set<Test> test_list = domain_repo.getTests(url);
 		
 		for(Test test : test_list){
 			if(test.getGroups() != null){
@@ -526,7 +527,7 @@ public class TestController {
 
 		return groups;
 	}
-	*/
+	
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

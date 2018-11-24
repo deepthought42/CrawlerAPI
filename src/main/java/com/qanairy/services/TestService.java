@@ -22,6 +22,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 
 @Component
@@ -33,6 +34,9 @@ public class TestService {
 	
 	@Autowired
 	private TestRepository test_repo;
+	
+	@Autowired
+	private PageStateRepository page_repo;
 	
 	@Autowired
 	private Crawler crawler;
@@ -71,9 +75,12 @@ public class TestService {
 		 }	
 		
 		 final long pathCrawlEndTime = System.currentTimeMillis();
-
+		 PageState page_record = page_repo.findByKey(page.getKey());
+		 if(page_record == null){
+			 page_record = page_repo.save(page);
+		 }
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
+		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page_record, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

@@ -32,6 +32,7 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
+import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
@@ -65,6 +66,9 @@ public class TestController {
     
     @Autowired
     private TestRepository test_repo;
+   
+    @Autowired
+    private TestRecordRepository test_record_repo;
     
     @Autowired
     private GroupRepository group_repo;
@@ -366,25 +370,11 @@ public class TestController {
     	
     	for(String key : test_keys){
     		Test test = test_repo.findByKey(key);
-    		TestRecord record = null;
-    		
-    		/*
-    		Date date = new Date();
-			long date_millis = date.getTime();
-			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
-	    	usageRecordParams.put("quantity", 1);
-	    	usageRecordParams.put("timestamp", date_millis/1000);
-	    	usageRecordParams.put("subscription_item", subscription_item);
-	    	usageRecordParams.put("action", "increment");
 
-	    	UsageRecord.create(usageRecordParams, null);
-*/
 			Browser browser_dto = new Browser(browser.trim());
-			record = test_service.runTest(test, browser_dto);
+			TestRecord record = test_service.runTest(test, browser_dto);
 			browser_dto.close();
 			
-			test.addRecord(record);
-	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
 			    		
 			test_results.put(test.getKey(), record);
 			TestStatus is_passing = TestStatus.PASSING;
@@ -395,18 +385,19 @@ public class TestController {
 					break;
 				}
 			}
-			Map<String, String> browser_statuses = test.getBrowserStatuses();
-			browser_statuses.put(browser, is_passing.toString());
-			
-			test.addRecord(record);
+    		
+    		record = test_record_repo.save(record);
+    		
+	    	test = test_repo.findByKey(key);
+	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
+    		
+	    	test.addRecord(record);
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());
-			test.setBrowserStatuses(browser_statuses);
 			test_repo.save(test);
+			
 
-			acct.addTestRecord(record);
-			account_repo.save(acct);
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}

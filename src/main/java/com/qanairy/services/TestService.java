@@ -59,14 +59,9 @@ public class TestService {
 		 PageState page = null;
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
-		 log.info("Test :: "+test);
-		 log.info("TEST KEY S:: " + test.getPathKeys().size());
-		 log.info("browser :: " + browser);
 		 
 		 try {
 			page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
-			
-			log.info("IS TEST CURRENTLY PASSING ??    "+test.getStatus()); 
 			passing = Test.isTestPassing(test.getResult(), page, test.getStatus());
 			
 		    test.setBrowserStatus(browser.getBrowserName(), passing.toString());

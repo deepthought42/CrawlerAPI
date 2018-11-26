@@ -358,7 +358,7 @@ public class TestController {
     		    .traits(traits)
     		);
     	
-    	//Fire discovery started event	
+    	//Fire test run started event	
 	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
 	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
 	   	analytics.enqueue(TrackMessage.builder("Running tests")
@@ -370,11 +370,16 @@ public class TestController {
     	
     	for(String key : test_keys){
     		Test test = test_repo.findByKey(key);
+    		test.setBrowserStatus(browser, null);
+    		test_repo.save(test);
+    	}
+    	
+    	for(String key : test_keys){
+    		Test test = test_repo.findByKey(key);
 
 			Browser browser_dto = new Browser(browser.trim());
 			TestRecord record = test_service.runTest(test, browser_dto);
 			browser_dto.close();
-			
 			    		
 			test_results.put(test.getKey(), record);
 			TestStatus is_passing = TestStatus.PASSING;
@@ -388,7 +393,6 @@ public class TestController {
     		
     		record = test_record_repo.save(record);
     		
-	    	test = test_repo.findByKey(key);
 	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
     		
 	    	test.addRecord(record);
@@ -397,7 +401,6 @@ public class TestController {
 			test.setRunTime(record.getRunTime());
 			test_repo.save(test);
 			
-
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}

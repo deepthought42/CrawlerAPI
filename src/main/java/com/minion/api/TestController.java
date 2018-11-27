@@ -370,7 +370,7 @@ public class TestController {
     	
     	for(String key : test_keys){
     		Test test = test_repo.findByKey(key);
-    		test.setBrowserStatus(browser, null);
+    		test.setBrowserStatus(browser, TestStatus.RUNNING.toString());
     		test_repo.save(test);
     	}
     	

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
+import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -52,7 +53,7 @@ public class TestService {
 	 * @throws WebDriverException 
 	 * @throws GridException 
 	 */		
-	 public TestRecord runTest(Test test, Browser browser) throws GridException, WebDriverException, NoSuchAlgorithmException{				
+	 public TestRecord runTest(Test test, Browser browser, TestStatus last_test_status) throws GridException, WebDriverException, NoSuchAlgorithmException{				
 		 assert test != null;		
 	 			
 		 TestStatus passing = null;		
@@ -62,12 +63,14 @@ public class TestService {
 		 
 		 try {
 			page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
-			passing = Test.isTestPassing(test.getResult(), page, test.getStatus());
+			passing = Test.isTestPassing(test.getResult(), page, last_test_status);
 			
-		    test.setBrowserStatus(browser.getBrowserName(), passing.toString());
 		 } catch (IOException e) {		
-			 log.error(e.getMessage());		
-		 }	
+			 System.err.println(e.getMessage());		
+		 } catch(PagesAreNotMatchingException e){
+			 passing = TestStatus.FAILING;
+			 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
+		 }
 		
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 PageState page_record = page_repo.findByKey(page.getKey());

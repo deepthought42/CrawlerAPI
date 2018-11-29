@@ -150,15 +150,11 @@ public class BrowserService {
 		String page_key = "";
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		BufferedImage viewport_screenshot = null;
 		try{
-			viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
-			page_key = "pagestate::"+PageState.getFileChecksum(viewport_screenshot);
 			
 			//viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 			//page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
-			log.info("Getting visible elements...");
-			visible_elements = getVisibleElements(browser.getDriver(), "", viewport_screenshot, page_url.getHost());
+			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(Browser.getViewportScreenshot(browser.getDriver())), page_url.getHost());
 		}catch(IOException e){
 			log.error(e.getMessage());
 		} catch (Exception e) {
@@ -171,7 +167,12 @@ public class BrowserService {
 
 		PageState page_state = null;
 		PageState page_record = null;
+		BufferedImage viewport_screenshot = null;
+
 		try{
+			viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
+			page_key = "pagestate::"+PageState.getFileChecksum(viewport_screenshot);
+			
 			page_record = page_state_repo.findByKey("pagestate::"+page_key);
 		}
 		catch(Exception e){
@@ -513,8 +514,6 @@ public class BrowserService {
 
 			String page_screenshot = "";
 			for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
-				log.info("screenshot browser  ::   "+screenshot.getBrowser());
-				log.info("browser browsername ::   "+browser.getBrowserName());
 				if(screenshot.getBrowser().equals(browser.getBrowserName())){
 					page_screenshot = screenshot.getViewportScreenshot();
 				}
@@ -523,17 +522,14 @@ public class BrowserService {
 			//perform a click function to ensure the form element is brought into view
 			form_elem.click();
 			
-			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
+			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem);
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
-			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
 			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
-			System.err.println("SAVING SCREENSHOT URL ");
+
 			if(tag != null){
 				form_tag = tag;
 			}
-			form_tag.setScreenshot(screenshot_url);
-			
-			
+			form_tag.setScreenshot(screenshot_url);			
 			
 			//NOTE:::: THIS NEEDS TO BE REPLACED WITH A REAL REQUEST TO RL API!!!!!
 			double[] weights = new double[1];
@@ -551,11 +547,6 @@ public class BrowserService {
 			for(WebElement input_elem : input_elements){
 				Set<Attribute> attributes = extractAttributes(input_elem, browser.getDriver());
 				
-				for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
-					if(screenshot.getBrowser().equals(browser.getBrowserName())){
-						page_screenshot = screenshot.getViewportScreenshot();
-					}
-				}
 				
 				screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), screenshot_url );
@@ -565,9 +556,8 @@ public class BrowserService {
 				if(elem_record == null || elem_record.getScreenshot()== null || elem_record.getScreenshot().isEmpty()){
 
 					Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
-					BufferedImage viewport = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
-					
-					//File viewport = Browser.getViewportScreenshot(browser.getDriver());
+
+					BufferedImage viewport = ImageIO.read(Browser.getViewportScreenshot(browser.getDriver()));
 										
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
@@ -627,15 +617,7 @@ public class BrowserService {
 				//combo_input.getElements().addAll(labels);
 				form.addFormFields(group_inputs);
 			}
-			
-						
-			for(double d: form.getPrediction()){
-				log.info("PREDICTION ::: "+d);
-			}
-			
-			for(FormType type : form.getTypeOptions()){
-				log.info(" FORM TYPE          :::::     "+type);
-			}
+
 			log.info("weights :: "+ form.getPrediction());
 			form.setType(FormType.UNKNOWN);
 			
@@ -799,8 +781,8 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			//img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
-			img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
+			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			//img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
 			
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
@@ -829,8 +811,8 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			//img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
-			img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
+			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			//img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
 			
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
@@ -855,7 +837,6 @@ public class BrowserService {
 	 * @throws IOException
 	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
-		//File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		BufferedImage viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;

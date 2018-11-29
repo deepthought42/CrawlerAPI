@@ -343,7 +343,6 @@ public class Browser {
 	 */
 	public static BufferedImage getScaledViewportScreenshot1920x1080(WebDriver driver) throws IOException, GridException{
 		BufferedImage image = ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
-		//get closest aspect ratio
 		return Crawler.resize(image, 1080, 1920);
 	}
 	

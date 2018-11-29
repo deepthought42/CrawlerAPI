@@ -4,7 +4,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
@@ -151,12 +150,15 @@ public class BrowserService {
 		String page_key = "";
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		File viewport_screenshot = null;
+		BufferedImage viewport_screenshot = null;
 		try{
-			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-			page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
+			viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
+			page_key = "pagestate::"+PageState.getFileChecksum(viewport_screenshot);
+			
+			//viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+			//page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
 			log.info("Getting visible elements...");
-			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(viewport_screenshot), page_url.getHost());
+			visible_elements = getVisibleElements(browser.getDriver(), "", viewport_screenshot, page_url.getHost());
 		}catch(IOException e){
 			log.error(e.getMessage());
 		} catch (Exception e) {
@@ -170,7 +172,7 @@ public class BrowserService {
 		PageState page_state = null;
 		PageState page_record = null;
 		try{
-			page_record = page_state_repo.findByKey("pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot)));
+			page_record = page_state_repo.findByKey("pagestate::"+page_key);
 		}
 		catch(Exception e){
 			
@@ -179,7 +181,7 @@ public class BrowserService {
 			page_state = page_record;
 		}
 		else{
-			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(ImageIO.read(viewport_screenshot), page_url.getHost(), page_key, "viewport");
+			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
 			
 			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
 			
@@ -518,6 +520,9 @@ public class BrowserService {
 				}
 			}
 			
+			//perform a click function to ensure the form element is brought into view
+			form_elem.click();
+			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
 			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
@@ -528,8 +533,15 @@ public class BrowserService {
 			}
 			form_tag.setScreenshot(screenshot_url);
 			
+			
+			
+			//NOTE:::: THIS NEEDS TO BE REPLACED WITH A REAL REQUEST TO RL API!!!!!
 			double[] weights = new double[1];
 			weights[0] = 0.3;
+		    
+			//NOTE:: THIS IS ACTUALLY WHERE THE PREDICTION BELONGS. THIS NEEDS TO BE FIGURED OUT
+			//DeepthoughtApi.predict(form);
+
 			
 			System.err.println("CREATING A NEW FORM !!! ");
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
@@ -553,12 +565,14 @@ public class BrowserService {
 				if(elem_record == null || elem_record.getScreenshot()== null || elem_record.getScreenshot().isEmpty()){
 
 					Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
-					File viewport = Browser.getViewportScreenshot(browser.getDriver());
+					BufferedImage viewport = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
+					
+					//File viewport = Browser.getViewportScreenshot(browser.getDriver());
 										
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
 					}
-					BufferedImage img = Browser.getElementScreenshot(ImageIO.read(viewport), input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
+					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
 					String screenshot= null;
 					try {
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), PageState.getFileChecksum(img), input_tag.getKey());
@@ -785,7 +799,9 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			//img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
+			
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
 
@@ -813,7 +829,9 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			//img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
+			
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
 
@@ -837,23 +855,43 @@ public class BrowserService {
 	 * @throws IOException
 	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
-		File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+		//File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+		BufferedImage viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
-		log.info("page state screenshots :: "+page_state.getBrowserScreenshots().size());
+		System.err.println("page state screenshots :: "+page_state.getBrowserScreenshots().size());
 		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
 			if(screenshot.getBrowser().equals(browser.getBrowserName())){
-				log.info("Browser name matches screenshot browser!");
+				System.err.println("Browser name matches screenshot browser!");
 				page_screenshot = screenshot;
 			}
 		}
-		
+
+
 		boolean pages_match = false;
 		try {
-			BufferedImage img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));
-			BufferedImage img2 = ImageIO.read(viewport_screenshot);
-			pages_match = PageState.compareImages(img1, img2);
+			System.err.println("do keys match :: " + viewport_screenshot.getHeight() + " :: w: "+viewport_screenshot.getWidth());
+			System.err.println("Page screenshot :: " + page_screenshot);
+			
+			BufferedImage img1 = null;
+			
+			if(page_screenshot == null){
+				img1 = viewport_screenshot;
+			}
+			else{
+				img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));
+			}
+			
+			BufferedImage orig_screenshot = Crawler.resize(img1, 1080, 1920);
+			BufferedImage new_screenshot = Crawler.resize(viewport_screenshot, 1080, 1920);
+
+			System.err.println("expected_page screenshot 1 :  h:  " + orig_screenshot.getHeight() + "  ::  w:  "+orig_screenshot.getWidth());	
+			System.err.println("current_page screenshot 1 :  h:  " + new_screenshot.getHeight() + "  ::  w:  "+new_screenshot.getWidth());	
+			
+
+			pages_match = PageState.compareImages(orig_screenshot, new_screenshot);
 			if(pages_match){
+				System.err.println("SCEENSHOTS MATCH! RETURNING TRUE!");
 				return true;
 			}
 			log.info("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);

@@ -19,6 +19,7 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
@@ -68,7 +69,7 @@ public class UrlBrowserActor extends AbstractActor {
 								String url = ((URL)message.getData()).toString();
 								
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
-								test_service.save(test, host);
+								test = test_service.save(test, host);
 		
 								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 								log.info("test result :: "+test.getResult());
@@ -84,20 +85,19 @@ public class UrlBrowserActor extends AbstractActor {
 											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 									form_discoverer.tell(page_state_msg, getSelf() );
 									
-									
 									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-			
-									/**  path expansion temporarily disabled
-									 */
+									
 									final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 									path_expansion_actor.tell(test_msg, getSelf() );
+									discovery_record.addExpandedPageState(test.getResult().getKey());
+									discovery_record_repo.save(discovery_record);
+									
 								}
 								
-								discovery_record.addExpandedPageState(test.getResult().getKey());
-								discovery_record_repo.save(discovery_record);
+								
 								test_generated_successfully = true;
-								attempts = 6;
+								attempts = 20;
 								break;
 								
 							}
@@ -105,7 +105,8 @@ public class UrlBrowserActor extends AbstractActor {
 								e.printStackTrace();
 								log.error(e.getMessage());
 							}
-						}while(!test_generated_successfully && attempts < 5);
+							Timing.pauseThread(30000L);
+						}while(!test_generated_successfully && attempts < 20);
 						
 					  	System.err.println("URL DISCOVERY HAS ENDED");
 

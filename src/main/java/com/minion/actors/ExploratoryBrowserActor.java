@@ -150,15 +150,15 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									try{
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 									}catch(NullPointerException e){
-										Timing.pauseThread(10000L);
+										Timing.pauseThread(30000L);
 										browser = new Browser(browser.getBrowserName());
 										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
 									} catch (GridException e) {
-										Timing.pauseThread(10000L);
+										Timing.pauseThread(30000L);
 										browser = new Browser(browser.getBrowserName());
 										log.error("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (WebDriverException e) {
-										Timing.pauseThread(10000L);
+										Timing.pauseThread(30000L);
 										browser = new Browser(browser.getBrowserName());
 										log.error("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (NoSuchAlgorithmException e) {
@@ -169,7 +169,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									}
 
 									tries++;
-								}while(result_page == null && tries < 10);
+								}while(result_page == null && tries < 30);
 							
 								//have page checked for landability
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());

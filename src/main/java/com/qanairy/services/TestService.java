@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
+import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -22,6 +23,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 
 @Component
@@ -33,6 +35,9 @@ public class TestService {
 	
 	@Autowired
 	private TestRepository test_repo;
+	
+	@Autowired
+	private PageStateRepository page_repo;
 	
 	@Autowired
 	private Crawler crawler;
@@ -48,32 +53,32 @@ public class TestService {
 	 * @throws WebDriverException 
 	 * @throws GridException 
 	 */		
-	 public TestRecord runTest(Test test, Browser browser) throws GridException, WebDriverException, NoSuchAlgorithmException{				
+	 public TestRecord runTest(Test test, Browser browser, TestStatus last_test_status) throws GridException, WebDriverException, NoSuchAlgorithmException{				
 		 assert test != null;		
 	 			
 		 TestStatus passing = null;		
 		 PageState page = null;
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
-		 log.info("Test :: "+test);
-		 log.info("TEST KEY S:: " + test.getPathKeys().size());
-		 log.info("browser :: " + browser);
 		 
 		 try {
 			page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
+			passing = Test.isTestPassing(test.getResult(), page, last_test_status);
 			
-			log.info("IS TEST CURRENTLY PASSING ??    "+test.getStatus()); 
-			passing = Test.isTestPassing(test.getResult(), page, test.getStatus());
-			
-		    test.setBrowserStatus(browser.getBrowserName(), passing.toString());
 		 } catch (IOException e) {		
-			 log.error(e.getMessage());		
-		 }	
+			 System.err.println(e.getMessage());		
+		 } catch(PagesAreNotMatchingException e){
+			 passing = TestStatus.FAILING;
+			 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
+		 }
 		
 		 final long pathCrawlEndTime = System.currentTimeMillis();
-
+		 PageState page_record = page_repo.findByKey(page.getKey());
+		 if(page_record == null){
+			 page_record = page_repo.save(page);
+		 }
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
+		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page_record, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

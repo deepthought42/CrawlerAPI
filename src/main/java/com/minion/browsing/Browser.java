@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,9 +44,6 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import ru.yandex.qatools.ashot.AShot;
-import ru.yandex.qatools.ashot.Screenshot;
-import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -89,7 +89,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 100){
+		while(driver == null && cnt < 500){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -120,7 +120,7 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(30000L);
+			Timing.pauseThread(60000L);
 		}
 	}
 	
@@ -195,13 +195,15 @@ public class Browser {
 	 */
 	public static WebDriver openWithFirefox() throws MalformedURLException, UnreachableBrowserException, GridException{
 		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+		
 	    DesiredCapabilities cap = DesiredCapabilities.firefox();
-	    cap.setBrowserName("firefox");
+	    //cap.setBrowserName("firefox");
 		cap.setJavascriptEnabled(true);
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    //driver.manage().window().setSize(new Dimension(1920, 975));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
+	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
 		return driver;
 	}
@@ -269,7 +271,9 @@ public class Browser {
 		ChromeOptions options = new ChromeOptions();
 		//options.setHeadless(true);
 		DesiredCapabilities cap = DesiredCapabilities.chrome();
-		cap.setCapability(ChromeOptions.CAPABILITY, options);
+
+	    options.addArguments("window-size=1920,1080");
+	    cap.setCapability(ChromeOptions.CAPABILITY, options);
 		
 		cap.setJavascriptEnabled(true);
 		
@@ -331,15 +335,16 @@ public class Browser {
 		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 	}
 	
-	
 	/**
 	 * Gets image as a base 64 string
 	 * 
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static Screenshot getFullScreenshot(WebDriver driver) throws IOException, GridException{
-		return new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
+	public static BufferedImage getScaledViewportScreenshot1920x1080(WebDriver driver) throws IOException, GridException{
+		BufferedImage image = ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
+		//get closest aspect ratio
+		return Crawler.resize(image, 1080, 1920);
 	}
 	
 	/**

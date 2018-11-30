@@ -39,7 +39,6 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
-import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -119,14 +118,13 @@ public class BrowserService {
 				landable_browser.close();
 
 			}catch(GridException e){
-				log.error(e.getMessage());
+				log.error("Grid exception in check for landability :: " + e.getMessage());
 			}
 			catch(Exception e){
 				log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
-				log.error(e.getMessage());
 			}
 			cnt++;
-		}while(!page_visited_successfully && cnt < 3);
+		}while(!page_visited_successfully && cnt < 5);
 		
 		log.info("is page state landable  ?? :: "+landable);
 		return landable;
@@ -145,21 +143,18 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 	
-		Timing.pauseThread(5000L);
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
 		String page_key = "";
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
 		try{
-			
-			//viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-			//page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
 			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(Browser.getViewportScreenshot(browser.getDriver())), page_url.getHost());
 		}catch(IOException e){
-			log.error(e.getMessage());
-		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.error("IOException while building page :: " + e.getMessage());
+		} catch (WebDriverException e) {
+			log.error("Web driver Exception while getting visible elements during PAGE BUILD (MAIN METHOD) :: " + e.getMessage());
 		}
+		browser = new Browser(browser.getBrowserName());
 	
 		if(visible_elements == null){
 			visible_elements = new HashSet<PageElement>();
@@ -176,8 +171,9 @@ public class BrowserService {
 			page_record = page_state_repo.findByKey("pagestate::"+page_key);
 		}
 		catch(Exception e){
-			
+			log.error("error getting scaled viewport screenshot :: " + e.getMessage());
 		}
+		
 		if(page_record != null){
 			page_state = page_record;
 		}
@@ -225,22 +221,29 @@ public class BrowserService {
 															 throws WebDriverException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-
 		Set<PageElement> elementList = new HashSet<PageElement>();
 		
 		if(pageElements.size() == 0){
 			return elementList;
 		}
 		
-		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
 			try{
+				//log.error("Element tag name?? "+elem.getTagName());
+				//log.error("Element tag id?? "+elem.getAttribute("id"));
+				//log.error("Element tag class attribute?? "+elem.getAttribute("class"));
+
 				boolean is_child = getChildElements(elem).isEmpty();
 				
+				//log.error("Child checked :: " + is_child);
+
+				String tag_name = elem.getTagName();
+				
 				if(is_child && elem.getSize().getHeight() > 0 && elem.isDisplayed()
-						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
-						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
+						&& !elem.getAttribute("class").contains("slideshow")
+						&& !tag_name.equals("body") && !tag_name.equals("html") 
+						&& !tag_name.equals("script") && !tag_name.equals("link")){
 					
 					BufferedImage img = null;
 					String checksum = "";
@@ -249,11 +252,14 @@ public class BrowserService {
 						checksum = PageState.getFileChecksum(img);		
 					}
 					catch(RasterFormatException e){
-						log.warn("Raster Format Exception : "+e.getMessage());
-						continue;
+						//log.error("Raster Format Exception while getting visible elements on page : "+e.getMessage());
+						((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", elem);
+						img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
+
+						//continue;
 					}
 					catch(Exception e){
-						
+						log.error("Error retrieving element screenshot :: "+e.getMessage());
 					}
 					
 					Set<Attribute> attributes = extractAttributes(elem, driver);
@@ -273,16 +279,25 @@ public class BrowserService {
 					}
 				}
 			}catch(StaleElementReferenceException e){
-				log.error(e.getMessage());
+				/*
+				System.err.println("elem name :: "+elem.getTagName());
+				System.err.println("elem text :: "+elem.getText());
+				System.err.println("elem x:y  :: "+elem.getLocation().getX()+ "  :   "+elem.getLocation().getY());
+				System.err.println("elem :: "+elem.getAttribute("class"));
+				*/
+				log.error("Stale element excpeption occurred while getting visible element :: " + e.getMessage());
 			}
 			catch(RasterFormatException e){
-				log.error(e.getMessage());
+				log.warn("Raster format exception while getting visible element :: " + e.getMessage());
 			}
 			catch(GridException e){
-				log.error(e.getMessage());
+				log.error("Grid exception while getting visible element :: " +e.getMessage());
 			} 
 			catch (IOException e) {
-				log.error(e.getMessage());
+				log.error("IOExcpetion while getting visible element :: " +e.getMessage());
+			}
+			catch(Exception e){
+				log.error("Exception while getting visible elements during PAGE BUILD :: " + e.getMessage());
 			}
 		}
 		
@@ -487,7 +502,7 @@ public class BrowserService {
 			}
 			
 		}catch(InvalidSelectorException e){
-			log.error(e.getMessage());
+			log.error("Invalid selector exception while uniquifying xpath :: " + e.getMessage());
 		}
 
 		return xpath;
@@ -548,7 +563,7 @@ public class BrowserService {
 				Set<Attribute> attributes = extractAttributes(input_elem, browser.getDriver());
 				
 				
-				screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
+				screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem);
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), screenshot_url );
 				
   				PageElement elem_record = page_element_repo.findByKey(input_tag.getKey());				
@@ -562,13 +577,13 @@ public class BrowserService {
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
 					}
-					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
+					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation());
 					String screenshot= null;
 					try {
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), PageState.getFileChecksum(img), input_tag.getKey());
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						log.error("Error saving screenshot to S3 :: " +e.getMessage());
+						//e.printStackTrace();
 					}
 
 					if(elem_record == null){
@@ -693,8 +708,11 @@ public class BrowserService {
 				}
 			}catch(InvalidSelectorException e){
 				parent = null;
-				e.printStackTrace();
+				log.error("Invalid selector EXCEPTION OCCURRED :: "+e.getMessage());
 				break;
+			}
+			catch(Exception e){
+				log.error("An error occurred while custructing a grouping  ::  "+e.getMessage());
 			}
 			
 			if(allChildrenMatch){
@@ -791,39 +809,9 @@ public class BrowserService {
 		catch(RasterFormatException e){
 			log.warn("Raster Format Exception : "+e.getMessage());
 		} catch (GridException e) {
-			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
+			log.error("Grid Exception occurred while retrieving and uploading "+e.getMessage());
 		} catch (IOException e) {
-			log.warn("IOException occurred while retrieving and uploading "+e.getMessage());
-		}
-		return screenshot_url;
-	}
-	
-	/**
-	 * 
-	 * @param driver
-	 * @param elem
-	 * @param page_img
-	 * @return
-	 * @throws Exception
-	 */
-	public String retrieveAndUploadBrowserScreenshot(WebDriver driver, WebElement elem, BufferedImage page_img) throws Exception{
-		BufferedImage img = null;
-		String checksum = "";
-		String screenshot_url = "";
-		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
-			//img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
-			
-			checksum = PageState.getFileChecksum(img);		
-			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
-
-		}
-		catch(RasterFormatException e){
-			log.warn("Raster Format Exception : "+e.getMessage());
-		} catch (GridException e) {
-			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
-		} catch (IOException e) {
-			log.warn("IOException occurred while retrieving and uploading "+e.getMessage());
+			log.error("IOException occurred while retrieving and uploading "+e.getMessage());
 		}
 		return screenshot_url;
 	}
@@ -851,9 +839,6 @@ public class BrowserService {
 
 		boolean pages_match = false;
 		try {
-			System.err.println("do keys match :: " + viewport_screenshot.getHeight() + " :: w: "+viewport_screenshot.getWidth());
-			System.err.println("Page screenshot :: " + page_screenshot);
-			
 			BufferedImage img1 = null;
 			
 			if(page_screenshot == null){
@@ -866,20 +851,11 @@ public class BrowserService {
 			BufferedImage orig_screenshot = Crawler.resize(img1, 1080, 1920);
 			BufferedImage new_screenshot = Crawler.resize(viewport_screenshot, 1080, 1920);
 
-			System.err.println("expected_page screenshot 1 :  h:  " + orig_screenshot.getHeight() + "  ::  w:  "+orig_screenshot.getWidth());	
-			System.err.println("current_page screenshot 1 :  h:  " + new_screenshot.getHeight() + "  ::  w:  "+new_screenshot.getWidth());	
-			
-
 			pages_match = PageState.compareImages(orig_screenshot, new_screenshot);
-			if(pages_match){
-				System.err.println("SCEENSHOTS MATCH! RETURNING TRUE!");
-				return true;
-			}
-			log.info("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			log.error("Exception occurred while checking is screenshots match :: " + e1.getMessage());
 		}
 		
-		return false;
+		return pages_match;
 	}
 }

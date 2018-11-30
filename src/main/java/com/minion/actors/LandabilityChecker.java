@@ -94,7 +94,7 @@ public class LandabilityChecker extends AbstractActor{
 							Browser landable_browser = new Browser(bps.browser_name);
 							landable_browser.navigateTo(page_state.getUrl());
 							
-							log.info("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
+							System.err.println("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
 							if(page_state.equals(browser_service.buildPage(landable_browser))){
 								page_state.setLandable(true);
 							}
@@ -104,18 +104,18 @@ public class LandabilityChecker extends AbstractActor{
 							landable_browser.close();
 
 						}catch(GridException e){
-							log.error(e.getMessage());
+							log.error("Grid exception while checking landability :: " + e.getMessage());
 						}
 						catch(NoSuchAlgorithmException e){
 							log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
-							log.error(e.getMessage());
+							log.error("ERROR VISITING PAGE ::: " + e.getMessage());
 						}
 						catch(ClientException e){
-							log.error(e.getMessage());
+							log.error("Client exception occurred while checking landability \n " + e.getMessage());
 						}
 
 						cnt++;
-					}while(!page_visited_successfully && cnt < 3);
+					}while(!page_visited_successfully && cnt < 5);
 					
 					log.info("is page state landable  ?? :: "+page_state.isLandable());
 					postStop();

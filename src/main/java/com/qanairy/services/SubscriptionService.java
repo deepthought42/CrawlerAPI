@@ -70,9 +70,10 @@ public class SubscriptionService {
 		}
 		else if("PRO".equals(plan.toString())){
 			//STAGING
-    		plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
-    		//PRODUCTION
-    		//Plan tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
+    		//plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
+    		
+			//PRODUCTION
+    		plan_tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
 
 			Customer customer = null;
 			if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()){

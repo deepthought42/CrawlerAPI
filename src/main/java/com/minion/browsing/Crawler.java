@@ -80,7 +80,6 @@ public class Crawler {
 		PageElement last_element = null;
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
-		
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
 		//skip first node since we should have already loaded it during initialization
@@ -93,16 +92,10 @@ public class Crawler {
 					
 				}
 				boolean screenshot_matches = false;
-				int cnt = 0;
 				
-				do{
-					current_page_state = browser_service.buildPage(browser);
-					screenshot_matches = current_page_state.equals(expected_page);
-					
-					screenshot_matches = browser_service.doScreenshotsMatch(browser, expected_page);
-					System.err.println("do screenshots match :: "+screenshot_matches);
-					cnt++;
-				}while(!screenshot_matches && cnt < 5);
+				current_page_state = browser_service.buildPage(browser);
+				screenshot_matches = current_page_state.equals(expected_page);
+				System.err.println("does expected page key match current_page_state??    " + screenshot_matches);
 				
 				if(!screenshot_matches){
 					throw new PagesAreNotMatchingException();
@@ -157,9 +150,7 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-			Timing.pauseThread(20000L);
-			driver.getTitle();
-			Timing.pauseThread(20000L);
+			Timing.pauseThread(10000L);
 		}
 		catch(StaleElementReferenceException e){
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "

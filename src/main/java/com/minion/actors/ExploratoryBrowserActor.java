@@ -27,6 +27,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
+import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -152,20 +153,23 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									}catch(NullPointerException e){
 										Timing.pauseThread(30000L);
 										browser = new Browser(browser.getBrowserName());
-										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
-									} catch (GridException e) {
+										log.error("Error happened while exploratory actor attempted to crawl test \t"+e.getLocalizedMessage());
+									} catch(GridException e) {
 										Timing.pauseThread(30000L);
 										browser = new Browser(browser.getBrowserName());
-										log.error("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-									} catch (WebDriverException e) {
+										log.error("Grid exception encountered while trying to crawl exporatory path \t"+e.getLocalizedMessage());
+									} catch(WebDriverException e) {
 										Timing.pauseThread(30000L);
 										browser = new Browser(browser.getBrowserName());
-										log.error("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-									} catch (NoSuchAlgorithmException e) {
-										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+										log.error("WebDriver exception encountered while trying to crawl exporatory path \t"+e.getLocalizedMessage());
+									} catch(NoSuchAlgorithmException e) {
+										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path \t"+e.getLocalizedMessage());
+									}
+									catch(PagesAreNotMatchingException e){
+										log.error("Pages don't match exception thrown while crawling path : " +e.getMessage());
 									}
 									catch(Exception e){
-										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
+										log.error("Exception occurred in explortatory actor. \t"+e.getClass().getSimpleName()+"    "+e.getMessage());
 									}
 
 									tries++;

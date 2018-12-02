@@ -6,7 +6,10 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -22,9 +25,10 @@ import javax.imageio.ImageIO;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -54,6 +58,7 @@ import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.RuleRepository;
 import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.utils.ImageUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -147,63 +152,73 @@ public class BrowserService {
 		String page_key = "";
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		try{
-			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(Browser.getViewportScreenshot(browser.getDriver())), page_url.getHost());
-		}catch(IOException e){
-			log.error("IOException while building page :: " + e.getMessage());
-		} catch (WebDriverException e) {
-			log.error("Web driver Exception while getting visible elements during PAGE BUILD (MAIN METHOD) :: " + e.getMessage());
-		}
-		browser = new Browser(browser.getBrowserName());
-	
-		if(visible_elements == null){
-			visible_elements = new HashSet<PageElement>();
-		}
 
 		PageState page_state = null;
 		PageState page_record = null;
-		BufferedImage viewport_screenshot = null;
+		BufferedImage scaled_viewport_screenshot = null;
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 
 		try{
-			viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
-			page_key = "pagestate::"+PageState.getFileChecksum(viewport_screenshot);
+			scaled_viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
+			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(scaled_viewport_screenshot, page_url.getHost(), page_key, "viewport");
 			
-			page_record = page_state_repo.findByKey("pagestate::"+page_key);
-		}
-		catch(Exception e){
-			log.error("error getting scaled viewport screenshot :: " + e.getMessage());
-		}
-		
-		if(page_record != null){
-			page_state = page_record;
-		}
-		else{
-			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
+			page_key ="pagestate::"+ImageUtils.getFileChecksum(new URL(viewport_screenshot_url));
+			page_record = page_state_repo.findByKey(page_key);
 			
-			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
-			
-			ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
-			if(screenshot_record != null){
-				screenshot_set = screenshot_record;
+			System.err.println("Looking for page with key :: " +page_key);
+			if(page_record != null){
+				System.err.println("Found page with key :: " + page_key);
+				page_state = page_record;
 			}
 			else{
-				screenshot_set = screenshot_set_repo.save(screenshot_set);
-			}
-			
-			HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
-			screenshots.add(screenshot_set);
-			
-			page_state = new PageState(	page_url.toString(),
-					screenshots,
-					visible_elements);
-		}
-		//page_state.setLandable(checkIfLandable(browser, page_state));
-		//have page checked for landability
-		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
+				viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(scaled_viewport_screenshot, page_url.getHost(), page_key, "viewport");
+				
+				ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
+				
+				ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
+				if(screenshot_record != null){
+					screenshot_set = screenshot_record;
+				}
+				else{
+					screenshot_set = screenshot_set_repo.save(screenshot_set);
+				}
+				
+				HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
+				screenshots.add(screenshot_set);
+				
+				System.err.println("Retrieving all visible elements..............");
+				visible_elements = getVisibleElements(browser.getDriver(), "", viewport_screenshot, page_url.getHost());
+				
+				if(visible_elements.isEmpty()){
+					visible_elements = new HashSet<PageElement>();
+				}
+				
+				page_state = new PageState(	page_url.toString(),
+						screenshots,
+						visible_elements);
+				System.err.println("Created Page Object with key ::     " + page_key);
 
-		final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-		landibility_checker.tell(bps, ActorRef.noSender() );
+			}
+			scaled_viewport_screenshot.flush();
+		}
+		catch(Exception e){
+			log.error("error getting scaled viewport screenshot :: " + e.getClass().getName() + "  :::   " +e.getMessage());
+		}
+		
+		if(page_state.getLastLandabilityCheck() != null){
+			Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
+			Duration minimum_diff = Duration.ofHours(24);
+			if(time_diff.compareTo(minimum_diff) <= 0){
+				//page_state.setLandable(checkIfLandable(browser, page_state));
+				//have page checked for landability
+				BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
+
+				final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
+				landibility_checker.tell(bps, ActorRef.noSender() );
+			}
+		}
+		
 		
 		return page_state;
 	}
@@ -217,9 +232,7 @@ public class BrowserService {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	private Set<PageElement> getVisibleElements(WebDriver driver, String xpath, BufferedImage page_screenshot, String host) 
-															 throws WebDriverException{
-		
+	public Set<PageElement> getVisibleElements(WebDriver driver, String xpath, BufferedImage page_screenshot, String host) {
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
 		Set<PageElement> elementList = new HashSet<PageElement>();
 		
@@ -230,42 +243,43 @@ public class BrowserService {
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
 			try{
-				//log.error("Element tag name?? "+elem.getTagName());
-				//log.error("Element tag id?? "+elem.getAttribute("id"));
-				//log.error("Element tag class attribute?? "+elem.getAttribute("class"));
-
 				boolean is_child = getChildElements(elem).isEmpty();
 				
-				//log.error("Child checked :: " + is_child);
-
 				String tag_name = elem.getTagName();
+				Dimension elem_dimension = elem.getSize();
+				Point elem_location = elem.getLocation();
 				
-				if(is_child && elem.getSize().getHeight() > 0 && elem.isDisplayed()
-						&& !elem.getAttribute("class").contains("slideshow")
+				boolean isDisplayed = elem.isDisplayed();
+				boolean isSlideshow = elem.getAttribute("class").contains("slideshow");
+				
+				if(is_child && elem_dimension.getHeight() > 0  && elem_dimension.getWidth() > 0
+						&& isDisplayed
+						&& !isSlideshow
 						&& !tag_name.equals("body") && !tag_name.equals("html") 
 						&& !tag_name.equals("script") && !tag_name.equals("link")){
 					
 					BufferedImage img = null;
 					String checksum = "";
+					String screenshot = "";
 					try{
-						img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
-						checksum = PageState.getFileChecksum(img);		
+						((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", elem);
+						BufferedImage viewport_screenshot = Browser.getViewportScreenshot(driver);
+						img = Browser.getElementScreenshot(viewport_screenshot, elem_dimension, elem_location);
+						checksum = ImageUtils.getFileChecksum(img);	
+						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+						viewport_screenshot.flush();
+						img.flush();
 					}
 					catch(RasterFormatException e){
-						//log.error("Raster Format Exception while getting visible elements on page : "+e.getMessage());
-						((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", elem);
-						img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
-
-						//continue;
+						log.warn("Raster Format Exception while getting visible elements on page : "+e.getMessage());
 					}
 					catch(Exception e){
 						log.error("Error retrieving element screenshot :: "+e.getMessage());
 					}
-					
+						
 					Set<Attribute> attributes = extractAttributes(elem, driver);
 					Map<String, String> css_props = Browser.loadCssProperties(elem);
 					String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
-					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
 					PageElement tag_record = page_element_repo.findByKey(tag.getKey());
@@ -278,26 +292,10 @@ public class BrowserService {
 						elementList.add(tag_record);
 					}
 				}
-			}catch(StaleElementReferenceException e){
-				/*
-				System.err.println("elem name :: "+elem.getTagName());
-				System.err.println("elem text :: "+elem.getText());
-				System.err.println("elem x:y  :: "+elem.getLocation().getX()+ "  :   "+elem.getLocation().getY());
-				System.err.println("elem :: "+elem.getAttribute("class"));
-				*/
-				log.error("Stale element excpeption occurred while getting visible element :: " + e.getMessage());
-			}
-			catch(RasterFormatException e){
-				log.warn("Raster format exception while getting visible element :: " + e.getMessage());
-			}
-			catch(GridException e){
-				log.error("Grid exception while getting visible element :: " +e.getMessage());
-			} 
-			catch (IOException e) {
-				log.error("IOExcpetion while getting visible element :: " +e.getMessage());
+				
 			}
 			catch(Exception e){
-				log.error("Exception while getting visible elements during PAGE BUILD :: " + e.getMessage());
+				log.warn("Exception while getting visible elements during PAGE BUILD :: " + e.getMessage());
 			}
 		}
 		
@@ -572,15 +570,16 @@ public class BrowserService {
 
 					Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
 
-					BufferedImage viewport = ImageIO.read(Browser.getViewportScreenshot(browser.getDriver()));
+					BufferedImage viewport = Browser.getViewportScreenshot(browser.getDriver());
 										
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
 					}
 					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation());
+					viewport.flush();
 					String screenshot= null;
 					try {
-						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), PageState.getFileChecksum(img), input_tag.getKey());
+						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), ImageUtils.getFileChecksum(img), input_tag.getKey());
 					} catch (Exception e) {
 						log.error("Error saving screenshot to S3 :: " +e.getMessage());
 						//e.printStackTrace();
@@ -594,6 +593,8 @@ public class BrowserService {
 						elem_record.setScreenshot(screenshot);
 						elem_record = page_element_repo.save(elem_record); 
 					}
+					
+					img.flush();
 				}
 
 				boolean alreadySeen = false;
@@ -799,12 +800,12 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			img = Browser.getElementScreenshot(Browser.getViewportScreenshot(driver), elem.getSize(), elem.getLocation());
 			//img = Browser.getElementScreenshot(Browser.getScaledViewportScreenshot1920x1080(driver), elem.getSize(), elem.getLocation());
 			
-			checksum = PageState.getFileChecksum(img);		
-			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
-
+			checksum = ImageUtils.getFileChecksum(img);		
+			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);
+			img.flush();
 		}
 		catch(RasterFormatException e){
 			log.warn("Raster Format Exception : "+e.getMessage());
@@ -828,30 +829,33 @@ public class BrowserService {
 		BufferedImage viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
-		System.err.println("page state screenshots :: "+page_state.getBrowserScreenshots().size());
 		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
 			if(screenshot.getBrowser().equals(browser.getBrowserName())){
-				System.err.println("Browser name matches screenshot browser!");
 				page_screenshot = screenshot;
 			}
 		}
-
 
 		boolean pages_match = false;
 		try {
 			BufferedImage img1 = null;
 			
 			if(page_screenshot == null){
+				//since original screenshot is null then set to current 
+				// screenshot using assumption that current page screenshot, 
+				// must be the pre-existing state.
 				img1 = viewport_screenshot;
 			}
 			else{
 				img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));
 			}
 			
-			BufferedImage orig_screenshot = Crawler.resize(img1, 1080, 1920);
-			BufferedImage new_screenshot = Crawler.resize(viewport_screenshot, 1080, 1920);
+			BufferedImage orig_screenshot = Crawler.resize(img1, 768, 1024);
+			BufferedImage new_screenshot = Crawler.resize(viewport_screenshot, 768, 1024);
 
 			pages_match = PageState.compareImages(orig_screenshot, new_screenshot);
+			new_screenshot.flush();
+			img1.flush();
+			viewport_screenshot.flush();
 		} catch (IOException e1) {
 			log.error("Exception occurred while checking is screenshots match :: " + e1.getMessage());
 		}

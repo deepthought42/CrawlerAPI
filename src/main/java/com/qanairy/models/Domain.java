@@ -21,7 +21,6 @@ public class Domain implements Persistable{
 	private Long id;
 	
 	private String host;
-	private int test_cnt;
 	private String key;
 	private String protocol;
 	private String logo_url;

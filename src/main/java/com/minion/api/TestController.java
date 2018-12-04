@@ -349,7 +349,8 @@ public class TestController {
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
-    	    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	    	
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
         traits.put("email", username);        
@@ -358,7 +359,7 @@ public class TestController {
     		    .traits(traits)
     		);
     	
-    	//Fire discovery started event	
+    	//Fire test run started event	
 	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
 	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
 	   	analytics.enqueue(TrackMessage.builder("Running tests")
@@ -371,33 +372,26 @@ public class TestController {
     	for(String key : test_keys){
     		Test test = test_repo.findByKey(key);
 
+    		TestStatus last_test_status = test.getStatus();
+    		
+    		test.setBrowserStatus(browser, TestStatus.RUNNING.toString());
+    		test.setStatus(TestStatus.RUNNING);
+    		test = test_repo.save(test);
 			Browser browser_dto = new Browser(browser.trim());
-			TestRecord record = test_service.runTest(test, browser_dto);
+			TestRecord record = test_service.runTest(test, browser_dto, last_test_status);
 			browser_dto.close();
-			
 			    		
 			test_results.put(test.getKey(), record);
-			TestStatus is_passing = TestStatus.PASSING;
-			//update overall passing status based on all browser passing statuses
-			for(String status : test.getBrowserStatuses().values()){
-				if(status.equals(TestStatus.UNVERIFIED) || status.equals(TestStatus.FAILING)){
-					is_passing = TestStatus.FAILING;
-					break;
-				}
-			}
     		
     		record = test_record_repo.save(record);
     		
-	    	test = test_repo.findByKey(key);
 	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
     		
 	    	test.addRecord(record);
-			test.setStatus(is_passing);
+			test.setStatus(record.getPassing());
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());
 			test_repo.save(test);
-			
-
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}

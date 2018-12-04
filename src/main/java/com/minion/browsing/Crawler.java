@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import com.minion.util.Timing;
+import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;
@@ -174,13 +175,5 @@ public class Crawler {
 		}
 		
 		return wasPerformedSuccessfully;
-	}
-}
-
-class PagesAreNotMatchingException extends RuntimeException {
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public PagesAreNotMatchingException() {
-		super("Expected page and actual page did not match.");
 	}
 }

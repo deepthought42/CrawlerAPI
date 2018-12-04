@@ -271,17 +271,9 @@ public class BrowserService {
 						elementList.add(tag_record);
 					}
 				}
-			}catch(StaleElementReferenceException e){
-				log.error(e.getMessage());
 			}
-			catch(RasterFormatException e){
-				log.error(e.getMessage());
-			}
-			catch(GridException e){
-				log.error(e.getMessage());
-			} 
-			catch (IOException e) {
-				log.error(e.getMessage());
+			catch (Exception e) {
+				log.error("Error getting visible elements : " + e.getLocalizedMessage());
 			}
 		}
 		

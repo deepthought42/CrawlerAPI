@@ -21,10 +21,10 @@ import com.qanairy.services.SubscriptionService;
 public class SubscriptionController {
     
     @Autowired
-    AccountRepository account_repo;
+    private AccountRepository account_repo;
     
     @Autowired
-    SubscriptionService subscription_service;
+    private SubscriptionService subscription_service;
 
     /**
      * 

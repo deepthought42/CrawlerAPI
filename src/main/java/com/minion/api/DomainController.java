@@ -308,8 +308,6 @@ public class DomainController {
 		path_objects.addAll(actions);
 		//path_objects.addAll(action_repo.getActions);
 		return path_objects;
-	
-	    //return new HashSet<PageState>();
     }
 	
 	@SafeVarargs
@@ -349,9 +347,6 @@ public class DomainController {
 		Set<PageElement> page_elements = domain_repo.getPageElements(host);
 		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
-    	//	    return domain_repo.getPageElements();
-
-	    //return unique_page_elements;
     }
 	
 	/**

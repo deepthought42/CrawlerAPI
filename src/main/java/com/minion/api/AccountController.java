@@ -4,8 +4,10 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+import javax.security.auth.login.AccountNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,6 +183,21 @@ public class AccountController {
     					  final @Validated @RequestBody Account account) {
         logger.info("update invoked");
         return account_repo.save(account);
+    }
+	
+	@PreAuthorize("hasAuthority('update:accounts')")
+    @RequestMapping(value ="/{id}", method = RequestMethod.PUT)
+    public Account updateApiToken(final @PathVariable long id) throws AccountNotFoundException {
+        logger.info("update invoked");
+        Optional<Account> optional_acct = account_repo.findById(id);
+        if(optional_acct.isPresent()){
+        	Account account = optional_acct.get();
+        	account.setApiToken(UUID.randomUUID().toString());
+        	return account_repo.save(account);
+        }
+        else{
+        	throw new AccountNotFoundException();
+        }
     }
     
 	/**

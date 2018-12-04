@@ -4,6 +4,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,12 +83,6 @@ public class AccountController {
         if(acct != null){
         	throw new AccountExistsException();
         }
-          
-        //STAGING
-        //Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
-    	
-    	//PRODUCTION
-    	//Plan tier = Plan.retrieve("plan_D06ComCwTJ0Cgz  ?????");
 
     	Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
@@ -94,15 +90,7 @@ public class AccountController {
     	//Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
     	acct = new Account(username, customer.getId(), "");
     	acct.setSubscriptionType("FREE");
-
-        // Connect to Auth0 API and update user metadata
-        /*HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
-        if(api_resp.getStatus() != 200){
-        	throw new Auth0ManagementApiException();
-        }
-        */
-        //printGrantedAuthorities((Auth0JWTToken) principal);
-
+    	acct.setApiToken(UUID.randomUUID().toString());
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
         acct = account_repo.save(acct);

@@ -26,6 +26,7 @@ public class Account {
 	private String subscription_type;
 	private String last_domain_url;
 	private List<String> onboarded_steps;
+	private String api_token;
 	
 	@Relationship(type = "HAS_DOMAIN")
 	private Set<Domain> domains = new HashSet<>();
@@ -214,5 +215,13 @@ public class Account {
 
 	public void setSubscriptionType(String subscription_type) {
 		this.subscription_type = subscription_type;
+	}
+
+	public String getApiToken() {
+		return api_token;
+	}
+
+	public void setApiToken(String api_token) {
+		this.api_token = api_token;
 	}
 }

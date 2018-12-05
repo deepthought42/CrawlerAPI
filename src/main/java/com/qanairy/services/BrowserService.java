@@ -867,7 +867,6 @@ public class BrowserService {
 			}
 		}
 
-
 		boolean pages_match = false;
 		try {
 			System.err.println("do keys match :: " + viewport_screenshot.getHeight() + " :: w: "+viewport_screenshot.getWidth());

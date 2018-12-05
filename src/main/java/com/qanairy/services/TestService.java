@@ -1,8 +1,14 @@
 package com.qanairy.services;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -15,20 +21,29 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
+import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
+import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.IdentifyMessage;
+import com.segment.analytics.messages.TrackMessage;
 
 @Component
 public class TestService {
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
+	@Autowired
+	private AccountRepository account_repo;
+	
 	@Autowired
 	private DomainRepository domain_repo;
 	
@@ -37,6 +52,12 @@ public class TestService {
 	
 	@Autowired
 	private PageStateRepository page_repo;
+	
+	@Autowired
+	private TestService test_service;
+	
+	@Autowired
+	private TestRecordRepository test_record_repo;
 	
 	@Autowired
 	private Crawler crawler;
@@ -130,4 +151,59 @@ public class TestService {
 		
 		return test;
 	}
+	 
+	 public List<TestRecord> runAllTests(Account acct, Domain domain) throws MalformedURLException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
+		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Map<String, String> traits = new HashMap<String, String>();
+        traits.put("account", acct.getUsername());
+        traits.put("api_key", acct.getApiToken());        
+    	analytics.enqueue(IdentifyMessage.builder()
+		    .userId(acct.getUsername())
+		    .traits(traits)
+		);
+    	
+		//Fire discovery started event	
+    	Set<Test> tests = domain_repo.getVerifiedTests(domain.getUrl());
+	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
+	   	run_test_batch_props.put("total tests", Integer.toString(tests.size()));
+	   	analytics.enqueue(TrackMessage.builder("Running tests")
+   		    .userId(acct.getUsername())
+   		    .properties(run_test_batch_props)
+   		);
+	   	
+    	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
+    	List<TestRecord> test_records = new ArrayList<TestRecord>();
+    	
+    	for(Test test : tests){
+			Browser browser_dto = new Browser(domain.getDiscoveryBrowserName());
+			TestRecord record = test_service.runTest(test, browser_dto);
+			browser_dto.close();
+			    		
+			test_results.put(test.getKey(), record);
+			TestStatus is_passing = TestStatus.PASSING;
+			//update overall passing status based on all browser passing statuses
+			for(String status : test.getBrowserStatuses().values()){
+				if(status.equals(TestStatus.UNVERIFIED) || status.equals(TestStatus.FAILING)){
+					is_passing = TestStatus.FAILING;
+					break;
+				}
+			}
+    		
+    		record = test_record_repo.save(record);
+    		test_records.add(record);
+    		
+	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
+    		
+	    	test.addRecord(record);
+			test.setStatus(is_passing);
+			test.setLastRunTimestamp(new Date());
+			test.setRunTime(record.getRunTime());
+			test_repo.save(test);
+
+			acct.addTestRecord(record);
+			account_repo.save(acct);
+   		}
+    	
+    	return test_records;
+	 }
 }

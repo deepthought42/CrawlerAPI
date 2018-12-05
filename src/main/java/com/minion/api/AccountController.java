@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+
+import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -226,10 +228,7 @@ public class AccountController {
 		//remove account
         account_repo.deleteAccountEdges(username);
         account_repo.deleteAccount(username);
-
-        account = account_repo.findByUsername(username);
-    	System.err.println("Account :: " + account);
-        logger.info("update invoked");
+        logger.info("DELETED ACCOUNT");
     }
 	
     @PreAuthorize("hasAuthority('read:accounts')")

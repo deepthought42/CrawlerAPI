@@ -57,7 +57,7 @@ public class UrlBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
-					  	System.err.println("URL DISCOVERY HAS STARTED");
+					  	log.info("URL DISCOVERY HAS STARTED");
 
 						boolean test_generated_successfully = false;
 						int attempts = 0;
@@ -108,7 +108,7 @@ public class UrlBrowserActor extends AbstractActor {
 							Timing.pauseThread(30000L);
 						}while(!test_generated_successfully && attempts < 20);
 						
-					  	System.err.println("URL DISCOVERY HAS ENDED");
+					  	log.info("URL DISCOVERY HAS ENDED");
 
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);

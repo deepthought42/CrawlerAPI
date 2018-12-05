@@ -151,6 +151,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 									}catch(NullPointerException e){
 										Timing.pauseThread(30000L);
+										browser.close();
 										browser = new Browser(browser.getBrowserName());
 										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
 									} catch (GridException e) {
@@ -165,7 +166,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									}
 									catch(Exception e){
-										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
+										browser.close();
+										browser = new Browser(browser.getBrowserName());
+										log.error("Exception occurred in explortatory actor. \n"+e.getLocalizedMessage());
 									}
 
 									tries++;

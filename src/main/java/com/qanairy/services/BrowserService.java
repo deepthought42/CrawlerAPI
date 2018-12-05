@@ -170,13 +170,8 @@ public class BrowserService {
 		}
 
 		PageState page_state = null;
-		PageState page_record = null;
-		try{
-			page_record = page_state_repo.findByKey("pagestate::"+page_key);
-		}
-		catch(Exception e){
-			
-		}
+		PageState page_record = page_state_repo.findByKey("pagestate::"+page_key);
+		
 		if(page_record != null){
 			page_state = page_record;
 		}
@@ -224,13 +219,11 @@ public class BrowserService {
 															 throws WebDriverException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-
 		Set<PageElement> elementList = new HashSet<PageElement>();
 		
 		if(pageElements.size() == 0){
 			return elementList;
 		}
-		
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
@@ -519,7 +512,6 @@ public class BrowserService {
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
 			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
 			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
-			System.err.println("SAVING SCREENSHOT URL ");
 			if(tag != null){
 				form_tag = tag;
 			}
@@ -535,7 +527,7 @@ public class BrowserService {
 			//DeepthoughtApi.predict(form);
 
 			
-			System.err.println("CREATING A NEW FORM !!! ");
+			log.info("CREATING A NEW FORM !!! ");
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
 									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
@@ -851,7 +843,6 @@ public class BrowserService {
 		BufferedImage viewport_screenshot = Browser.getScaledViewportScreenshot1920x1080(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
-		System.err.println("page state screenshots :: "+page_state.getBrowserScreenshots().size());
 		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
 			if(screenshot.getBrowser().equals(browser.getBrowserName())){
 				System.err.println("Browser name matches screenshot browser!");
@@ -861,10 +852,7 @@ public class BrowserService {
 
 
 		boolean pages_match = false;
-		try {
-			System.err.println("do keys match :: " + viewport_screenshot.getHeight() + " :: w: "+viewport_screenshot.getWidth());
-			System.err.println("Page screenshot :: " + page_screenshot);
-			
+		try {			
 			BufferedImage img1 = null;
 			
 			if(page_screenshot == null){
@@ -874,19 +862,10 @@ public class BrowserService {
 				img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));
 			}
 			
-			BufferedImage orig_screenshot = Crawler.resize(img1, 1080, 1920);
-			BufferedImage new_screenshot = Crawler.resize(viewport_screenshot, 1080, 1920);
-
-			System.err.println("expected_page screenshot 1 :  h:  " + orig_screenshot.getHeight() + "  ::  w:  "+orig_screenshot.getWidth());	
-			System.err.println("current_page screenshot 1 :  h:  " + new_screenshot.getHeight() + "  ::  w:  "+new_screenshot.getWidth());	
-			
-
-			pages_match = PageState.compareImages(orig_screenshot, new_screenshot);
+			pages_match = PageState.compareImages(img1, viewport_screenshot);
 			if(pages_match){
-				System.err.println("SCEENSHOTS MATCH! RETURNING TRUE!");
 				return true;
 			}
-			log.info("DO THE SCREENSHOTS MATCH????        ::::     "+pages_match);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

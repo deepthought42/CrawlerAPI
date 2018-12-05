@@ -57,7 +57,6 @@ public class TestUserController {
     									@RequestParam(value="role", required=false) String role) 
     											throws UnknownUserException {
     	Optional<TestUser> optional_user = test_user_repo.findById(user_id);
-    	System.err.println("is user present :: " + optional_user.isPresent());
     	if(optional_user.isPresent()){
     		TestUser test_user_record = optional_user.get();
     		    		

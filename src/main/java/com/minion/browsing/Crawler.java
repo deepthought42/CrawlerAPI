@@ -92,17 +92,11 @@ public class Crawler {
 					expected_page = page_record;
 					
 				}
-				boolean screenshot_matches = false;
-				int cnt = 0;
+				boolean screenshot_matches = false;				
+				current_page_state = browser_service.buildPage(browser);
+				screenshot_matches = current_page_state.equals(expected_page);
 				
-				do{
-					current_page_state = browser_service.buildPage(browser);
-					screenshot_matches = current_page_state.equals(expected_page);
-					
-					screenshot_matches = browser_service.doScreenshotsMatch(browser, expected_page);
-					System.err.println("do screenshots match :: "+screenshot_matches);
-					cnt++;
-				}while(!screenshot_matches && cnt < 5);
+				screenshot_matches = browser_service.doScreenshotsMatch(browser, expected_page);
 				
 				if(!screenshot_matches){
 					throw new PagesAreNotMatchingException();
@@ -126,7 +120,6 @@ public class Crawler {
 				performAction(action, last_element, browser.getDriver());
 			}
 			else if(current_obj instanceof PageAlert){
-				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
 			}
@@ -157,8 +150,6 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-			Timing.pauseThread(20000L);
-			driver.getTitle();
 			Timing.pauseThread(20000L);
 		}
 		catch(StaleElementReferenceException e){

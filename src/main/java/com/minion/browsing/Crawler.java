@@ -1,8 +1,5 @@
 package com.minion.browsing;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -97,10 +94,7 @@ public class Crawler {
 				
 				do{
 					current_page_state = browser_service.buildPage(browser);
-					screenshot_matches = current_page_state.equals(expected_page);
-					
-					screenshot_matches = browser_service.doScreenshotsMatch(browser, expected_page);
-					System.err.println("do screenshots match :: "+screenshot_matches);
+					screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
 					cnt++;
 				}while(!screenshot_matches && cnt < 5);
 				
@@ -135,15 +129,6 @@ public class Crawler {
 		return browser_service.buildPage(browser);
 	}
 	
-	 public static BufferedImage resize(BufferedImage img, int height, int width) {
-        Image tmp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = resized.createGraphics();
-        g2d.drawImage(tmp, 0, 0, null);
-        g2d.dispose();
-        return resized;
-    }
-	 
 	/**
 	 * Executes the given {@link ElementAction element action} pair such that
 	 * the action is executed against the element 

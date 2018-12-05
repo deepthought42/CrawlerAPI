@@ -93,7 +93,6 @@ public class LandabilityChecker extends AbstractActor{
 							}
 							Browser landable_browser = new Browser(bps.browser_name);
 							landable_browser.navigateTo(page_state.getUrl());
-							
 							log.info("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
 							if(page_state.equals(browser_service.buildPage(landable_browser))){
 								page_state.setLandable(true);

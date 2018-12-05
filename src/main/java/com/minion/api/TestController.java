@@ -32,7 +32,6 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
-import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
@@ -66,9 +65,6 @@ public class TestController {
     
     @Autowired
     private TestRepository test_repo;
-   
-    @Autowired
-    private TestRecordRepository test_record_repo;
     
     @Autowired
     private GroupRepository group_repo;
@@ -371,7 +367,18 @@ public class TestController {
     	
     	for(String key : test_keys){
     		Test test = test_repo.findByKey(key);
+    		TestRecord record = null;
+    		
+    		/*
+    		Date date = new Date();
+			long date_millis = date.getTime();
+			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
+	    	usageRecordParams.put("quantity", 1);
+	    	usageRecordParams.put("timestamp", date_millis/1000);
+	    	usageRecordParams.put("subscription_item", subscription_item);
+	    	usageRecordParams.put("action", "increment");
 
+<<<<<<< HEAD
     		TestStatus last_test_status = test.getStatus();
     		
     		test.setBrowserStatus(browser, TestStatus.RUNNING.toString());
@@ -389,9 +396,39 @@ public class TestController {
     		
 	    	test.addRecord(record);
 			test.setStatus(record.getPassing());
+=======
+	    	UsageRecord.create(usageRecordParams, null);
+*/
+    		TestStatus last_test_status = test.getStatus();
+
+			Browser browser_dto = new Browser(browser.trim());
+			record = test_service.runTest(test, browser_dto, last_test_status);
+			browser_dto.close();
+			
+			test.addRecord(record);
+	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
+			    		
+			test_results.put(test.getKey(), record);
+			TestStatus is_passing = TestStatus.PASSING;
+			//update overall passing status based on all browser passing statuses
+			for(String status : test.getBrowserStatuses().values()){
+				if(status.equals(TestStatus.UNVERIFIED) || status.equals(TestStatus.FAILING)){
+					is_passing = TestStatus.FAILING;
+					break;
+				}
+			}
+			Map<String, String> browser_statuses = test.getBrowserStatuses();
+			browser_statuses.put(browser, is_passing.toString());
+			
+			test.addRecord(record);
+			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());
+			test.setBrowserStatuses(browser_statuses);
 			test_repo.save(test);
+			
+			acct.addTestRecord(record);
+			account_repo.save(acct);
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}

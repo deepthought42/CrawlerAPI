@@ -70,9 +70,24 @@ public class FormDiscoveryActor extends AbstractActor{
 					if(message.getData() instanceof PageState){
 					  	System.err.println("FORM DISCOVERY HAS STARTED");
 
-						PageState page_state = ((PageState)message.getData());			
-						Browser browser = new Browser(message.getOptions().get("browser").toString());
-				  		browser.navigateTo(page_state.getUrl());
+						PageState page_state = ((PageState)message.getData());
+						
+						//get first page in path
+			
+						int cnt = 0;
+					  	Browser browser = null;
+					  	
+					  	while(browser == null && cnt < 5){
+					  		try{
+						  		browser = new Browser(message.getOptions().get("browser").toString());
+						  		browser.navigateTo(page_state.getUrl());
+								break;
+							}catch(NullPointerException e){
+								log.error(e.getMessage());
+							}
+							cnt++;
+						}	
+					  
 					  	
 					  	page_state = page_state_repo.findByKey(page_state.getKey());
 					  
@@ -81,11 +96,6 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
 					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
 
-					  		try{
-						  		browser.close();
-						  	}
-						  	catch(Exception e){}
-					  		
 						  	for(Form form : forms){
 							  	for(PageElement field: form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
@@ -94,6 +104,7 @@ public class FormDiscoveryActor extends AbstractActor{
 									log.info("Total RULES   :::   "+rules.size());
 									for(Rule rule : rules){
 										field.addRule(rule);
+									
 									}
 								}
 							  							  	
@@ -101,7 +112,10 @@ public class FormDiscoveryActor extends AbstractActor{
 						       
 							    System.err.println("PREDICTION DONE !!! ");
 							    System.err.println("********************************************************");
-							    
+							    try{
+							  		browser.close();
+							  	}
+							  	catch(Exception e){}
 							  	
 							  	page_state.addForm(form);
 							  	page_state_repo.save(page_state);

@@ -154,17 +154,10 @@ public class BrowserService {
 		File viewport_screenshot = null;
 		try{
 			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-			page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
-			log.info("Getting visible elements...");
-			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(viewport_screenshot), page_url.getHost());
 		}catch(IOException e){
 			log.error(e.getMessage());
 		} catch (Exception e) {
 			log.error(e.getMessage());
-		}
-	
-		if(visible_elements == null){
-			visible_elements = new HashSet<PageElement>();
 		}
 
 		PageState page_state = null;
@@ -179,6 +172,10 @@ public class BrowserService {
 			page_state = page_record;
 		}
 		else{
+			page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
+			log.info("Getting visible elements...");
+			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(viewport_screenshot), page_url.getHost());
+
 			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(ImageIO.read(viewport_screenshot), page_url.getHost(), page_key, "viewport");
 			
 			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
@@ -234,7 +231,7 @@ public class BrowserService {
 		for(WebElement elem : pageElements){
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
-				
+
 				if(is_child && elem.getSize().getHeight() > 0 && elem.isDisplayed()
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
 						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
@@ -269,17 +266,8 @@ public class BrowserService {
 						elementList.add(tag_record);
 					}
 				}
-			}catch(StaleElementReferenceException e){
-				log.error(e.getMessage());
-			}
-			catch(RasterFormatException e){
-				log.error(e.getMessage());
-			}
-			catch(GridException e){
-				log.error(e.getMessage());
-			} 
-			catch (IOException e) {
-				log.error(e.getMessage());
+			}catch(Exception e) {
+				log.warn("Error getting visible element "+ e.getMessage());
 			}
 		}
 		

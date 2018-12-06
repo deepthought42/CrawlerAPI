@@ -328,17 +328,6 @@ public class Browser {
 		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
 	}
 	
-	
-	/**
-	 * Gets image as a base 64 string
-	 * 
-	 * @return File png file of image
-	 * @throws IOException
-	 */
-	public static Screenshot getFullScreenshot(WebDriver driver) throws IOException, GridException{
-		return new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
-	}
-	
 	/**
 	 * 
 	 * @param screenshot

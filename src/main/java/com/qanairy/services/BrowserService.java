@@ -25,7 +25,6 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -146,7 +145,6 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 	
-		Timing.pauseThread(5000L);
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
 		String page_key = "";
 		Set<PageElement> visible_elements = new HashSet<PageElement>();

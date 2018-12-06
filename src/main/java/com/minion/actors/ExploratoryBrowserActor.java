@@ -165,6 +165,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									}
 									catch(Exception e){
+										Timing.pauseThread(30000L);
 										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
 									}
 

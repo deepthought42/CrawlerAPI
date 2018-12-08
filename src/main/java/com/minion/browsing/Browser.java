@@ -86,7 +86,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 100){
+		while(driver == null && cnt < 500){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -326,17 +326,6 @@ public class Browser {
 	 */
 	public static File getViewportScreenshot(WebDriver driver) throws IOException, GridException{
 		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
-	}
-	
-	
-	/**
-	 * Gets image as a base 64 string
-	 * 
-	 * @return File png file of image
-	 * @throws IOException
-	 */
-	public static Screenshot getFullScreenshot(WebDriver driver) throws IOException, GridException{
-		return new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
 	}
 	
 	/**

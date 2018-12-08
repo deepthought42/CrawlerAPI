@@ -142,9 +142,7 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-			Timing.pauseThread(20000L);
-			driver.getTitle();
-			Timing.pauseThread(20000L);
+			Timing.pauseThread(15000L);
 		}
 		catch(StaleElementReferenceException e){
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "

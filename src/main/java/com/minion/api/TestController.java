@@ -369,36 +369,6 @@ public class TestController {
     		Test test = test_repo.findByKey(key);
     		TestRecord record = null;
     		
-    		/*
-    		Date date = new Date();
-			long date_millis = date.getTime();
-			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
-	    	usageRecordParams.put("quantity", 1);
-	    	usageRecordParams.put("timestamp", date_millis/1000);
-	    	usageRecordParams.put("subscription_item", subscription_item);
-	    	usageRecordParams.put("action", "increment");
-
-<<<<<<< HEAD
-    		TestStatus last_test_status = test.getStatus();
-    		
-    		test.setBrowserStatus(browser, TestStatus.RUNNING.toString());
-    		test.setStatus(TestStatus.RUNNING);
-    		test = test_repo.save(test);
-			Browser browser_dto = new Browser(browser.trim());
-			TestRecord record = test_service.runTest(test, browser_dto, last_test_status);
-			browser_dto.close();
-			    		
-			test_results.put(test.getKey(), record);
-    		
-    		record = test_record_repo.save(record);
-    		
-	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
-    		
-	    	test.addRecord(record);
-			test.setStatus(record.getPassing());
-=======
-	    	UsageRecord.create(usageRecordParams, null);
-*/
     		TestStatus last_test_status = test.getStatus();
 
 			Browser browser_dto = new Browser(browser.trim());
@@ -427,8 +397,6 @@ public class TestController {
 			test.setBrowserStatuses(browser_statuses);
 			test_repo.save(test);
 			
-			acct.addTestRecord(record);
-			account_repo.save(acct);
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}

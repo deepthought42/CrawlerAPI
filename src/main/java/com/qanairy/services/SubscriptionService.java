@@ -70,9 +70,9 @@ public class SubscriptionService {
 		}
 		else if("PRO".equals(plan.toString())){
 			//STAGING
-    		plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
+    		//plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
     		//PRODUCTION
-    		//Plan tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
+			plan_tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
 
 			Customer customer = null;
 			if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()){
@@ -150,9 +150,11 @@ public class SubscriptionService {
     	Date date = new Date();
     	Set<DiscoveryRecord> discovery_records = account_repo.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
     	int discovered_test_cnt = 0;
-
+    	
     	for(DiscoveryRecord record : discovery_records){
-    		discovered_test_cnt += record.getTestCount();
+    		if(record.getStartTime().getMonth() == date.getMonth()){
+    			discovered_test_cnt += record.getTestCount();
+    		}
     	}
     	
     	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 50){

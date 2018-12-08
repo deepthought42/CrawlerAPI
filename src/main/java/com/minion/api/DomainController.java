@@ -294,19 +294,15 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_repo.getPageStates(host);
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		log.info("retreived   "+page_state.size()+"      page states");
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		Set<PageState> test_results = domain_repo.getResults(host);		
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
-		Set<PathObject> path_objects = new HashSet<PathObject>();//merge(page_state, page_elem, actions);
+		Set<PathObject> path_objects = new HashSet<PathObject>();
+		
+		//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(page_state);
-		path_objects.addAll(test_results);
 		path_objects.addAll(page_elem);
 		path_objects.addAll(actions);
-		//path_objects.addAll(action_repo.getActions);
 		return path_objects;
     }
 	

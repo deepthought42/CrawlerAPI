@@ -65,6 +65,9 @@ public class DiscoveryController {
     private ActorSystem actor_system;
     
     @Autowired
+    private Auth0Client auth;
+    
+    @Autowired
     private SubscriptionService subscription_service;
     
 	@RequestMapping(path="/status", method = RequestMethod.GET)
@@ -72,7 +75,6 @@ public class DiscoveryController {
     												@RequestParam(value="url", required=true) String url) 
     														throws UnknownAccountException{
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -116,7 +118,6 @@ public class DiscoveryController {
 										   	  						PaymentDueException, StripeException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
 
@@ -228,7 +229,7 @@ public class DiscoveryController {
 			throws MalformedURLException, UnknownAccountException {
 		
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
+
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);

@@ -164,7 +164,7 @@ public class BrowserService {
 			page_record = page_state_repo.findByKey("pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot)));
 		}
 		catch(Exception e){
-			
+			log.warn("Page record not found :  "+e.getLocalizedMessage());
 		}
 		if(page_record != null){
 			page_state = page_record;

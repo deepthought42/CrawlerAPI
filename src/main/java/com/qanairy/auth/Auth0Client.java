@@ -2,25 +2,51 @@ package com.qanairy.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Service;
 
 import com.auth0.client.auth.AuthAPI;
 import com.auth0.exception.APIException;
 import com.auth0.exception.Auth0Exception;
 import com.auth0.json.auth.UserInfo;
 import com.auth0.net.Request;
+import com.qanairy.config.Auth0Configuration;
 
-@Component
+@Service
 public class Auth0Client {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+	@Value("${auth0.domain}")
+	private String domain;
+	
+	@Value("${auth0.clientId}")
+	private String clientId;
+	
+	@Value("${auth0.clientSecret}")
+	private String clientSecret;
+	
+	@Value("${auth0.apiAudience}")
+	private String apiAudience;
+	
+	@Value("${auth0.issuer}")
+	private String issuer;
+	
     private AuthAPI auth0;
     //private final AuthenticationAPIClient client;
-
+    
+    @Autowired
+    private Auth0Configuration auth0Config;
+    
     public Auth0Client() {
+    	log.info("AUTH0 CONFIGURATION PROPERTIES  :   "+domain);
+    	
         //this.auth0 = new AuthAPI("dev-qanairy.auth0.com", "IGBRMudqLag0UKqwcEmYPAdTxQsoAMUv", "5R6Uy4EhKWuavOC9DDdoENMxSlJgJ6TIOBPYvES3ajhlWqaTEKfm5lZ4z9YgIT-F");//Auth0(clientid, domain);
-        //this.auth0 = new AuthAPI("staging-qanairy.auth0.com", "jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw", "XUtP8AOw4cRKTpJJT_BWjUgfFnrEq4TRjA8oSkVeRBTbIPbeNIrXVoydc5EefRqm");//Auth0(clientid, domain);
-    	this.auth0 = new AuthAPI("qanairy.auth0.com", "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH", "EFXS4rxXk6a036e7DOLKXkh4gYs9nSdL93wzWcRvUUGAuL4Bxh9OmMDL-ZQ-VbnR");
+        this.auth0 = new AuthAPI("staging-qanairy.auth0.com", "jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw", "XUtP8AOw4cRKTpJJT_BWjUgfFnrEq4TRjA8oSkVeRBTbIPbeNIrXVoydc5EefRqm");//Auth0(clientid, domain);
+        //this.auth0 = new AuthAPI(auth0Config.getDomain(), auth0Config.getClientId(), auth0Config.getClientSecret());//Auth0(clientid, domain);
+
+        //this.auth0 = new AuthAPI("qanairy.auth0.com", "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH", "EFXS4rxXk6a036e7DOLKXkh4gYs9nSdL93wzWcRvUUGAuL4Bxh9OmMDL-ZQ-VbnR");
     	//this.client = this.auth0.newAuthenticationAPIClient();
     }
 

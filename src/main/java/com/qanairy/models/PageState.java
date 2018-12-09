@@ -1,12 +1,11 @@
 package com.qanairy.models;
 
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -179,57 +178,7 @@ public class PageState implements Persistable, PathObject {
         PageState that = (PageState)o;
         
         boolean pages_match = this.getKey().equals(that.getKey());
-		/*try {
-			log.info("This browser screenshot :: "+this.getBrowserScreenshots().size());
-			log.info("NEXT BROSEWR SCREENSHOT :: "+this.getBrowserScreenshots().iterator().next());
-			log.info("Viewport screenshot :: "+this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
-			String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
-	        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();	        
-	        
-	        log.info("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
-			BufferedImage img1;
-			BufferedImage img2;
-			
-			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
-			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
-			pages_match = compareImages(img1, img2);
-			log.info("DO THE SCREENSHOTS MATCH FOR PAGE EQUALITY????        ::::     "+pages_match);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		*/
-        //log.info("Screenshots match? :: "+screenshots_match);
         
-        /*log.info("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
-        log.info("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        log.info("Page 1 length :: "+this.getElements().size());
-        log.info("Page 2 length :: "+that.getElements().size());
-        log.info("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        */
-        /*
-        if(!pages_match ){
-	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
-	        for(PageElement elem : that.getElements()){
-	        	page_elements.put(elem.getXpath(), elem);
-	        }
-	        
-	        for(PageElement elem : this.getElements()){
-        		page_elements.remove(elem.getXpath());
-	        }
-
-	        if(page_elements.isEmpty()){
-	        	pages_match = true;
-	        }
-	        else{
-	        	if( (page_elements.size()/((this.getElements().size()+that.getElements().size())/2)) > 0.7){
-		        	pages_match = false;	
-	        	}
-	        	else{
-	        		pages_match = true;
-	        	}
-	        }
-        }
-        */
     	return pages_match;
   	}
 	
@@ -343,171 +292,41 @@ public class PageState implements Persistable, PathObject {
 
 	public String getFileChecksum(MessageDigest digest, String url) throws IOException
 	{
-		//InputStream is = new URL(url).openStream(); 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BufferedImage img = ImageIO.read(new URL(url));
-		
-		//turn image to grayscale
-		//get image width and height
-		int width = img.getWidth();
-		int height = img.getHeight();
-		
-		/*
-		for(int y = 0; y < height; y++){
-		  for(int x = 0; x < width; x++){
-			  int p = img.getRGB(x,y);
-			  int a = (p>>24)&0xff;
-			  int r = (p>>16)&0xff;
-			  int g = (p>>8)&0xff;
-			  int b = p&0xff;
-			  
-			  int avg = (r+g+b)/3;
-			  p = (a<<24) | (avg<<16) | (avg<<8) | avg;
-			  img.setRGB(x, y, p);
-		  }
-		}
-	*/
-		// creates output image
-		BufferedImage outputImage = null;
-        // creates output image
-        if(height/10 > 100 && width/10 > 100){
-        	outputImage = new BufferedImage(width/10, height/10, img.getType());
- 
-	        // scales the input image to the output image
-	        Graphics2D g2d = outputImage.createGraphics();
-	        g2d.drawImage(img, 0, 0, width/10, height/10, null);
-	        g2d.dispose();
-	 
-        }
-        else{
-        	outputImage = img;
-        }
-		boolean foundWriter = ImageIO.write(outputImage, "png", baos);
+		BufferedImage buff_img = ImageIO.read(new URL(url));
+
+		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
 		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-    
-		String image_hex = Hex.encodeHexString(baos.toByteArray());
-		StringBuilder sb = new StringBuilder();
-		for(int idx = 0; idx<image_hex.length(); idx+=97){
-			if(sb.toString().length() > 512){
-				break;
-			}
-			sb.append(image_hex.charAt(idx));			
-		}
-		
-	    return sb.toString();
-		
-		
-		/*
-		 try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-256");
-			byte[] thedigest = sha.digest(baos.toByteArray());
-	        return DatatypeConverter.printHexBinary(thedigest);
+	    //Get file input stream for reading the file content
+	    byte[] data = baos.toByteArray();
+	    try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-512");
+			sha.update(data);
+			byte[] thedigest = sha.digest(data);
+			return Hex.encodeHexString(thedigest);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 	    return "";
-	    */
-	    /*
-	    //Create byte array to read data in chunks
-	    byte[] byteArray = new byte[1024];
-	    int bytesCount = 0;
-	      
-	    //Read file data and update in message digest
-	    while ((bytesCount = is.read(byteArray)) != -1) {
-	        digest.update(byteArray, 0, bytesCount);
-	    };
-	     
-	    //close the stream; We don't need it now.
-	    is.close();
-	     
-	    //Get the hash's bytes
-	    byte[] bytes = digest.digest();
-	     
-	    //This bytes[] has bytes in decimal format;
-	    //Convert it to hexadecimal format
-	    StringBuilder sb = new StringBuilder();
-	    for(int i=0; i< bytes.length ;i++)
-	    {
-	        sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
-	    }
-	     
-	   //return complete hash
-	   return sb.toString();
-	   */
 	}
 	
 	public static String getFileChecksum(BufferedImage buff_img) throws IOException
 	{			
-		BufferedImage img = new BufferedImage(buff_img.getWidth(), buff_img.getHeight(), buff_img.getType());
-	    Graphics graphics = img.getGraphics();
-	    graphics.drawImage(buff_img, 0, 0, null);
-	    graphics.dispose();
-	    //InputStream is = new URL(url).openStream(); 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		
-		//turn image to grayscale
-		//get image width and height
-		int width = img.getWidth();
-		int height = img.getHeight();
-		
-/*
-        for(int y = 0; y < height; y++){
-		  for(int x = 0; x < width; x++){
-			  int p = img.getRGB(x,y);
-			  int a = (p>>24)&0xff;
-			  int r = (p>>16)&0xff;
-			  int g = (p>>8)&0xff;
-			  int b = p&0xff;
-			  
-			  int avg = (r+g+b)/3;
-			  p = (a<<24) | (avg<<16) | (avg<<8) | avg;
-			  img.setRGB(x, y, p);
-		  }
-		}
-  */      
-        BufferedImage outputImage = null;
-        // creates output image
-        if(height/10 > 100 && width/10 > 100){
-	        outputImage = new BufferedImage(width/10, height/10, img.getType());
-	 
-	        // scales the input image to the output image
-	        Graphics2D g2d = outputImage.createGraphics();
-	        g2d.drawImage(outputImage, 0, 0, width/10, height/10, null);
-	        g2d.dispose();
-        }
-        else{
-        	outputImage = img;
-        }		
-		boolean foundWriter = ImageIO.write(outputImage, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-
-		String image_hex = Hex.encodeHexString(baos.toByteArray());
-
-		StringBuilder sb = new StringBuilder();
-
-		for(int idx = 0; idx<image_hex.length(); idx+=97){
-			if(sb.toString().length() > 512){
-				break;
-			}
-			sb.append(image_hex.charAt(idx));
-			
-		}
-        return sb.toString();
-		/*
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		boolean foundWriter = ImageIO.write(bufferedImage, "png", baos);
+		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
 		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
 	    //Get file input stream for reading the file content
-	    
+	    byte[] data = baos.toByteArray();
 	    try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-256");
-			byte[] thedigest = sha.digest(baos.toByteArray());
-	        return DatatypeConverter.printHexBinary(thedigest);
+			MessageDigest sha = MessageDigest.getInstance("SHA-512");
+			sha.update(data);
+			byte[] thedigest = sha.digest(data);
+			return Hex.encodeHexString(thedigest);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 	    return "";
-	    */
+	    
 	}
 		
 	/**
@@ -525,15 +344,7 @@ public class PageState implements Persistable, PathObject {
 		catch(Exception e){
 			e.printStackTrace();
 		}
-		return "";
-		//return "";
-		/*String key = "";
-		for(PageElement element : getElements()){
-			key += element.getKey();
-		}
-		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(key);
-		*/
-		
+		return "";		
 	}
 
 	public void addForm(Form form) {

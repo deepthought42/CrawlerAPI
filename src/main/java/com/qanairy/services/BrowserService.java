@@ -164,7 +164,7 @@ public class BrowserService {
 			page_record = page_state_repo.findByKey("pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot)));
 		}
 		catch(Exception e){
-			
+			log.warn("Page record not found :  "+e.getLocalizedMessage());
 		}
 		if(page_record != null){
 			page_state = page_record;
@@ -193,7 +193,6 @@ public class BrowserService {
 					screenshots,
 					visible_elements);
 		}
-		//page_state.setLandable(checkIfLandable(browser, page_state));
 		//have page checked for landability
 		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
 

@@ -76,6 +76,8 @@ public class DomainController {
 	@Autowired
 	private TestUserRepository test_user_repo;
 	   
+	@Autowired
+	private Auth0Client auth;
     /**
      * Create a new {@link Domain domain}
      * 
@@ -93,7 +95,6 @@ public class DomainController {
 							    		 @RequestParam(value="test_users", required=false) List<TestUser> users) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-       	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -156,7 +157,6 @@ public class DomainController {
         }*/
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -193,7 +193,6 @@ public class DomainController {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -214,7 +213,6 @@ public class DomainController {
     public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
@@ -244,7 +242,6 @@ public class DomainController {
 								   throws UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
 		Account acct = account_repo.findByUsername(username);
@@ -269,7 +266,6 @@ public class DomainController {
     															throws UnknownAccountException {        
     	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	//Auth0Client auth = new Auth0Client();
     	//String username = auth.getUsername(auth_access_token);
     	
     	//Account acct = account_repo.findByUsername(username);
@@ -294,19 +290,15 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_repo.getPageStates(host);
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		log.info("retreived   "+page_state.size()+"      page states");
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		Set<PageState> test_results = domain_repo.getResults(host);		
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
-		Set<PathObject> path_objects = new HashSet<PathObject>();//merge(page_state, page_elem, actions);
+		Set<PathObject> path_objects = new HashSet<PathObject>();
+		
+		//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(page_state);
-		path_objects.addAll(test_results);
 		path_objects.addAll(page_elem);
 		path_objects.addAll(actions);
-		//path_objects.addAll(action_repo.getActions);
 		return path_objects;
     }
 	
@@ -333,7 +325,6 @@ public class DomainController {
     															throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	
     	Account acct = account_repo.findByUsername(username);
@@ -364,7 +355,6 @@ public class DomainController {
 														throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	
     	Account acct = account_repo.findByUsername(username);
@@ -497,9 +487,7 @@ public class DomainController {
     							 @RequestParam(value="name", required=false) String name,
     							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
+       	String username = auth.getUsername(auth_access_token);
     	
     	Account acct = account_repo.findByUsername(username);
     	if(acct == null){

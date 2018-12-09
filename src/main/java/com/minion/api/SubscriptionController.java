@@ -26,6 +26,9 @@ public class SubscriptionController {
     @Autowired
     private SubscriptionService subscription_service;
 
+    @Autowired
+    private Auth0Client auth;
+    
     /**
      * 
      * @param request
@@ -39,7 +42,6 @@ public class SubscriptionController {
 					 		@RequestParam(value="plan", required=true) String plan,
 					 		@RequestParam(value="source_token", required=true) String source_token) throws Exception {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account acct = account_repo.findByUsername(username);
     	

@@ -54,6 +54,9 @@ public class AccountController {
     @Autowired
     private AccountRepository account_repo;
     
+    @Autowired
+    private Auth0Client auth;
+    
     private StripeClient stripeClient;
 
     @Autowired
@@ -129,7 +132,6 @@ public class AccountController {
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
     public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
         Account acct = account_repo.findByUsername(username);
         if(acct == null){
@@ -150,7 +152,6 @@ public class AccountController {
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
         Account acct = account_repo.findByUsername(username);
         if(acct == null){
@@ -174,7 +175,6 @@ public class AccountController {
     @RequestMapping(path="/find", method = RequestMethod.GET)
     public Account get(HttpServletRequest request) throws UnknownAccountException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
         Account acct = account_repo.findByUsername(username);
         if(acct == null){
@@ -206,7 +206,6 @@ public class AccountController {
     @RequestMapping(method = RequestMethod.DELETE)
     public void delete(HttpServletRequest request) throws UnirestException, StripeException{
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account account = account_repo.findByUsername(username);
 		//remove Auth0 account
@@ -236,7 +235,6 @@ public class AccountController {
 	@RequestMapping(path ="/usage", method = RequestMethod.GET)
     public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException{
         String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
         Account acct = account_repo.findByUsername(username);
         if(acct == null){

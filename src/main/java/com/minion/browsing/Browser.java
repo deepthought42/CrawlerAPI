@@ -104,6 +104,7 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
+				Timing.pauseThread(5000L);
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -198,7 +199,7 @@ public class Browser {
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
+	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
 		return driver;
 	}

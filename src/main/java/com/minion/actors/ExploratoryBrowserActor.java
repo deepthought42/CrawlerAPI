@@ -178,11 +178,14 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
+								System.err.println("RESULT PAGE :: " + result_page);
+								System.err.println("PATH :: "+path.getPathKeys());
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
+							  		int cnt=0;
 							  		do{
 							  			try{
 							  				ExploratoryPath parent_path = buildParentPath(path, browser);
@@ -197,15 +200,14 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								  				last_path = path;
 								  				path = parent_path;
 								  			}
-							  			}catch(NoSuchAlgorithmException e){
-							  				e.printStackTrace();
+								  			break;
+							  			}catch(Exception e){
+							  				log.warn("Exception thrown while building parent path : " + e.getLocalizedMessage());
 							  				browser = new Browser(browser.getBrowserName());
 							  				results_match = false;
 							  			}
-							  			catch(NoSuchElementException e){
-							  				e.printStackTrace();
-							  			}
-							  		}while(results_match);
+							  			cnt++;
+							  		}while(results_match && cnt < 20);
 							  		
 							  		if(last_path == null){
 							  			last_path = path;

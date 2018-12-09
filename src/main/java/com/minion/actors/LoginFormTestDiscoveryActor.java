@@ -140,12 +140,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								action_list.add(submit_login);
 
-								log.info("*********************************************************");
-								log.info("ACTION LIST :: "+submit_login.getKey());
-								log.info("ACTION LIST :: "+submit_login.getName());
-								log.info("ACTION LIST :: "+action_list.size());
-								log.info("*********************************************************");
-								
 								//exploratory_path.setPossibleActions(action_list);
 								exploratory_path.addPathObject(submit_login);
 								exploratory_path.addToPathKeys(submit_login.getKey());
@@ -156,12 +150,12 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								do{
 									try{
-										log.info("Crawling path");
+										log.info("Crawling path for login form test discovery");
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
 										browser = new Browser(browser.getBrowserName());
-										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
+										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
 										e.printStackTrace();
 									} catch (GridException e) {
 										browser = new Browser(browser.getBrowserName());

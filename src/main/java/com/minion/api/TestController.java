@@ -73,6 +73,9 @@ public class TestController {
     private TestService test_service;
     
     @Autowired
+    private Auth0Client auth;
+    
+    @Autowired
     private SubscriptionService subscription_service;
     
 	/**
@@ -181,23 +184,6 @@ public class TestController {
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
     	return domain_repo.getUnverifiedTests(url);
-    	
-   		/*Domain domain = domain_repo.findByHost(url);
-		
-		Set<Test> tests = domain.getTests();
-		Set<Test> unverified_tests = new HashSet<Test>();
-
-		for(Test test : tests){
-			if(test.getCorrect() == null){
-				unverified_tests.add(test);
-			}
-		}
-    	
-    	Date end = new Date();
-    	long diff = end.getTime() - start.getTime();
-    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
-    	*/
-		//return unverified_tests;
 	}
 
 	/**
@@ -217,7 +203,6 @@ public class TestController {
     	
     	//make sure domain belongs to user account first
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -334,7 +319,6 @@ public class TestController {
 																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);

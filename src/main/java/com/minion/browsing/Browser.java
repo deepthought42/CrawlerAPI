@@ -23,6 +23,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
@@ -166,10 +167,10 @@ public class Browser {
 			driver.quit();
 		}
 		catch(NullPointerException e){
-			//log.error("Error closing driver. Driver is NULL");
+			log.warn("Error closing driver. Driver is NULL");
 		}
 		catch(UnreachableBrowserException e){
-			log.error(e.getMessage());
+			log.warn("Error closing driver. "+e.getMessage());
 		}
 		catch(NoSuchSessionException e){
 			log.error(e.getMessage());			
@@ -198,7 +199,7 @@ public class Browser {
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
-	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
+	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
 		return driver;
 	}
@@ -264,10 +265,12 @@ public class Browser {
 	public static WebDriver openWithChrome() 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
+		options.addArguments("--start-maximized");
+		
 		//options.setHeadless(true);
 		DesiredCapabilities cap = DesiredCapabilities.chrome();
 		cap.setCapability(ChromeOptions.CAPABILITY, options);
-		
+
 		cap.setJavascriptEnabled(true);
 		
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.

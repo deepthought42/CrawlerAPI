@@ -193,7 +193,6 @@ public class BrowserService {
 					screenshots,
 					visible_elements);
 		}
-		//page_state.setLandable(checkIfLandable(browser, page_state));
 		//have page checked for landability
 		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
 

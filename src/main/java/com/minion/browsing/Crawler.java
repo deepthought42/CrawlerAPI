@@ -90,13 +90,9 @@ public class Crawler {
 					
 				}
 				boolean screenshot_matches = false;
-				int cnt = 0;
 				
-				do{
-					current_page_state = browser_service.buildPage(browser);
-					screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
-					cnt++;
-				}while(!screenshot_matches && cnt < 5);
+				current_page_state = browser_service.buildPage(browser);
+				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
 				
 				if(!screenshot_matches){
 					throw new PagesAreNotMatchingException();
@@ -125,7 +121,7 @@ public class Crawler {
 				alert.performChoice(browser.getDriver());
 			}
 		}
-
+		
 		return browser_service.buildPage(browser);
 	}
 	

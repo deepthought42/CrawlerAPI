@@ -140,12 +140,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								action_list.add(submit_login);
 
-								log.info("*********************************************************");
-								log.info("ACTION LIST :: "+submit_login.getKey());
-								log.info("ACTION LIST :: "+submit_login.getName());
-								log.info("ACTION LIST :: "+action_list.size());
-								log.info("*********************************************************");
-								
 								//exploratory_path.setPossibleActions(action_list);
 								exploratory_path.addPathObject(submit_login);
 								exploratory_path.addToPathKeys(submit_login.getKey());

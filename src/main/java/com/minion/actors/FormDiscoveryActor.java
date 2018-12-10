@@ -15,6 +15,7 @@ import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
+import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -41,10 +42,13 @@ public class FormDiscoveryActor extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
-	ElementRuleExtractor rule_extractor;
+	private ElementRuleExtractor rule_extractor;
 	
 	@Autowired
-	PageStateRepository page_state_repo;
+	private PageStateRepository page_state_repo;
+	
+	@Autowired
+	private FormRepository form_repo;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -104,14 +108,9 @@ public class FormDiscoveryActor extends AbstractActor{
 									log.info("Total RULES   :::   "+rules.size());
 									for(Rule rule : rules){
 										field.addRule(rule);
-									
 									}
-								}
-							  							  	
-							    DeepthoughtApi.predict(form);
-						       
-							    System.err.println("PREDICTION DONE !!! ");
-							    System.err.println("********************************************************");
+								}					
+							    
 							    try{
 							  		browser.close();
 							  	}

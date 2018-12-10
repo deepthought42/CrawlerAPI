@@ -40,6 +40,7 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.minion.util.Timing;
+import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -514,7 +515,6 @@ public class BrowserService {
 			form_tag.setScreenshot(screenshot_url);
 			
 			double[] weights = new double[1];
-			weights[0] = 0.3;
 			
 			System.err.println("CREATING A NEW FORM !!! ");
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
@@ -635,10 +635,18 @@ public class BrowserService {
 			
 			Form form_db_record = form_repo.findByKey(form.getKey());
 			
-			if(form_db_record == null){
-				form_repo.save(form);
+			if(form_db_record != null){
+				
+				form = form_db_record;
 			}
-						
+			
+			DeepthoughtApi.predict(form_db_record);
+			form_repo.save(form_db_record);
+		    
+		    System.err.println("PREDICTION DONE !!! ");
+		    System.err.println("********************************************************");
+		    form = form_repo.save(form);
+		
 			form_list.add(form);
 		}
 		return form_list;

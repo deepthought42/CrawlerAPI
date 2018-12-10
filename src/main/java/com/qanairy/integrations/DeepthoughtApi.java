@@ -46,7 +46,7 @@ public class DeepthoughtApi {
 	    CloseableHttpResponse response = client.execute(httpPost);
 
 	  	log.info("Recieved status code from RL :: "+response.getStatusLine().getStatusCode());
-	  	log.info("REPSONE ENTITY CONTENT ::   " +response.getEntity().getContent().toString());
+	  	log.info("RESPONE ENTITY CONTENT ::   " +response.getEntity().getContent().toString());
 	  	int status = response.getStatusLine().getStatusCode();
 	  	
   		String rl_response = "";

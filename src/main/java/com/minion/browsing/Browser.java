@@ -87,7 +87,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 15000){
+		while(driver == null && cnt < 50000){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -119,7 +119,7 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(15000L);
+			Timing.pauseThread(5000L);
 		}
 	}
 	

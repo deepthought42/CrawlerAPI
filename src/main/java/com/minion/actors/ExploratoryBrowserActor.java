@@ -176,8 +176,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								System.err.println("RESULT PAGE :: " + result_page);
-								System.err.println("PATH :: "+path.getPathKeys());
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
@@ -219,7 +217,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 									discovery_record.setTestCount(discovery_record.getTestCount()+1);
 							  		discovery_repo.save(discovery_record);
-									break;
+									//break;
 								}
 							}
 							

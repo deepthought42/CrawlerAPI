@@ -514,4 +514,25 @@ public class Browser {
 	public void setBrowserName(String browser_name) {
 		this.browser_name = browser_name;
 	}
+	
+	/**
+	 * Swaps current tab or window for new tab or window by getting any window
+	 * handle from the set of window handles avaialable that isn't the current window's handle
+	 * 
+	 * @param driver {@link WebDriver}
+	 */
+	public void swapView() {
+		//change window to new window
+		String current_handle = driver.getWindowHandle();
+		Set<String> handle_set = driver.getWindowHandles();
+		
+		String new_handle = "";
+		for(String handle : handle_set){
+			if(!handle.equals(current_handle)){
+				new_handle = handle;
+				break;
+			}
+		}
+		driver.switchTo().window(new_handle);
+	}
 }

@@ -135,6 +135,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								exploratory_path.setPathKeys(exploratory_path.getPathKeys().subList(start_idx, exploratory_path.getPathKeys().size()));
 								exploratory_path.setPathObjects(exploratory_path.getPathObjects().subList(start_idx, exploratory_path.getPathObjects().size()));
 							}
+							Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 
 							for(Action action : exploratory_path.getPossibleActions()){
 								ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
@@ -149,7 +150,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								int tries = 0;
 								do{
 									try{
-										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, domain.getUrl());
 										
 										if(browser.getDriver().getWindowHandles().size() > 1){
 											//then add a view swap object to path, swap the view and build new page
@@ -158,7 +159,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 											path.addPathObject(swap);
 											browser.swapView();
 											result_page = browser_service.buildPage(browser);
+											path.addToPathKeys(result_page.getKey());
+											path.addPathObject(result_page);
 											
+											final long pathCrawlEndTime = System.currentTimeMillis();
+											long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
+									  		createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg);
 											DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 											
 											discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
@@ -196,7 +202,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								}while(result_page == null && tries < 30);
 							
 								//have page checked for landability
-								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 								
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;

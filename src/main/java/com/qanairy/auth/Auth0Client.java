@@ -19,8 +19,8 @@ public class Auth0Client {
 
     public Auth0Client() {
         //this.auth0 = new AuthAPI("dev-qanairy.auth0.com", "IGBRMudqLag0UKqwcEmYPAdTxQsoAMUv", "5R6Uy4EhKWuavOC9DDdoENMxSlJgJ6TIOBPYvES3ajhlWqaTEKfm5lZ4z9YgIT-F");//Auth0(clientid, domain);
-        //this.auth0 = new AuthAPI("staging-qanairy.auth0.com", "jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw", "XUtP8AOw4cRKTpJJT_BWjUgfFnrEq4TRjA8oSkVeRBTbIPbeNIrXVoydc5EefRqm");//Auth0(clientid, domain);
-    	this.auth0 = new AuthAPI("qanairy.auth0.com", "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH", "EFXS4rxXk6a036e7DOLKXkh4gYs9nSdL93wzWcRvUUGAuL4Bxh9OmMDL-ZQ-VbnR");
+        this.auth0 = new AuthAPI("staging-qanairy.auth0.com", "jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw", "XUtP8AOw4cRKTpJJT_BWjUgfFnrEq4TRjA8oSkVeRBTbIPbeNIrXVoydc5EefRqm");//Auth0(clientid, domain);
+    	//this.auth0 = new AuthAPI("qanairy.auth0.com", "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH", "EFXS4rxXk6a036e7DOLKXkh4gYs9nSdL93wzWcRvUUGAuL4Bxh9OmMDL-ZQ-VbnR");
     	//this.client = this.auth0.newAuthenticationAPIClient();
     }
 

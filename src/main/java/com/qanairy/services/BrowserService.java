@@ -549,8 +549,7 @@ public class BrowserService {
 					try {
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), PageState.getFileChecksum(img), input_tag.getKey());
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						log.warn("Error retrieving screenshot -- "+e.getLocalizedMessage());
 					}
 
 					if(elem_record == null){

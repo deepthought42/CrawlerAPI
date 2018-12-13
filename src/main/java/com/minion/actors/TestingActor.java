@@ -59,12 +59,12 @@ public class TestingActor extends AbstractActor {
 						PageState resulting_page = null;
 						if(test.getPathKeys() != null){
 							int cnt = 0;
-							while(browser == null && cnt < 5){
+							while(browser == null && cnt < 10){
 								try{
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 									break;
 								}catch(NullPointerException e){
-									browser = new Browser(browser.getBrowserName());
+									browser = new Browser((String)message.getOptions().get("browser"));
 									log.error(e.getMessage());
 								}
 								cnt++;

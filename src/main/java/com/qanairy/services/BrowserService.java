@@ -235,13 +235,15 @@ public class BrowserService {
 					
 					BufferedImage img = null;
 					String checksum = "";
+					String screenshot = null;
 					try{
 						img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
 						checksum = PageState.getFileChecksum(img);		
+						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+
 					}
 					catch(RasterFormatException e){
 						log.warn("Raster Format Exception : "+e.getMessage());
-						continue;
 					}
 					catch(Exception e){
 						
@@ -250,7 +252,6 @@ public class BrowserService {
 					Set<Attribute> attributes = extractAttributes(elem, driver);
 					Map<String, String> css_props = Browser.loadCssProperties(elem);
 					String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
-					String screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
 					PageElement tag_record = page_element_repo.findByKey(tag.getKey());

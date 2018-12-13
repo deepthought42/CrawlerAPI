@@ -38,6 +38,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.ViewSwap;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
@@ -149,6 +150,28 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								do{
 									try{
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+										
+										if(browser.getDriver().getWindowHandles().size() > 1){
+											//then add a view swap object to path, swap the view and build new page
+											ViewSwap swap = new ViewSwap();
+											path.addToPathKeys(swap.getKey());
+											path.addPathObject(swap);
+											browser.swapView();
+											result_page = browser_service.buildPage(browser);
+											
+											DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+											
+											discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+									  		discovery_record.setLastPathRanAt(new Date());
+									  		discovery_record = discovery_repo.save(discovery_record);
+											try{
+												MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+										  	}catch(Exception e){
+											
+											}
+										  	browser.close();
+										  	return;
+										}
 									}catch(NullPointerException e){
 										Timing.pauseThread(30000L);
 										browser = new Browser(browser.getBrowserName());
@@ -178,8 +201,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								System.err.println("RESULT PAGE :: " + result_page);
-								System.err.println("PATH :: "+path.getPathKeys());
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;

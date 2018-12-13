@@ -25,6 +25,7 @@ import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.ViewSwap;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
@@ -119,6 +120,10 @@ public class Crawler {
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
+			}
+			else if(current_obj instanceof ViewSwap){
+				log.info("swapping window/tab view");
+				browser.swapView();
 			}
 		}
 		

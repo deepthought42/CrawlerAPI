@@ -224,7 +224,7 @@ public class PathExpansionActor extends AbstractActor {
 			else{
 				boolean last_action_mouseover = false;
 				//if last action was a mouseover, then don't expand path
-				for(int idx = test.getPathObjects().size(); idx >=0; idx++){
+				for(int idx = test.getPathObjects().size()-1; idx >=0; idx--){
 					if(test.getPathObjects().get(idx) instanceof Action){
 						if(test.getPathObjects().get(idx).getType().equals("mouseover")){
 							last_action_mouseover = true;

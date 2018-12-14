@@ -191,7 +191,8 @@ public class BrowserService {
 			
 			page_state = new PageState(	page_url.toString(),
 					screenshots,
-					visible_elements);
+					visible_elements,
+					browser.getDriver().getPageSource());
 		}
 		//have page checked for landability
 		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());

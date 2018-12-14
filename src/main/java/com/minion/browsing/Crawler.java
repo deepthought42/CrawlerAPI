@@ -94,7 +94,8 @@ public class Crawler {
 				current_page_state = browser_service.buildPage(browser);
 				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
 				
-				if(!screenshot_matches){
+				boolean sources_match = current_page_state.getSrc().equals(expected_page.getSrc());
+				if(!screenshot_matches && !sources_match){
 					throw new PagesAreNotMatchingException();
 				}
 			}

@@ -222,14 +222,32 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
+				boolean last_action_mouseover = false;
+				//if last action was a mouseover, then don't expand path
+				for(int idx = test.getPathObjects().size(); idx >=0; idx++){
+					if(test.getPathObjects().get(idx) instanceof Action){
+						if(test.getPathObjects().get(idx).getType().equals("mouseover")){
+							last_action_mouseover = true;
+							break;
+						}
+					}
+				}
+				
+				if(last_action_mouseover){
+					continue;
+				}
+				
 				Test new_test = Test.clone(test);
+
 				if(test.getPathKeys().size() > 1){
 					new_test.getPathKeys().add(test.getResult().getKey());
 					new_test.getPathObjects().add(test.getResult());
 				}
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
-
+				
+				
+				
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				

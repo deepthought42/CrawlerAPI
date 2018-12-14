@@ -69,9 +69,9 @@ public class TestService {
 				 passing = TestStatus.FAILING;
 				 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
 			 }
-			 Timing.pauseThread(30000L);
+			 Timing.pauseThread(5000L);
 			 cnt++;
-		 }while(cnt < 5000 && page != null);
+		 }while(cnt < 50000 && page != null);
 		
 		 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
 

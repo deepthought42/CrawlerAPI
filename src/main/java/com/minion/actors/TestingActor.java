@@ -69,7 +69,7 @@ public class TestingActor extends AbstractActor {
 									log.error(e.getMessage());
 								}
 								
-								Timing.pauseThread(60000L);
+								Timing.pauseThread(10000L);
 								cnt++;
 							}
 						}

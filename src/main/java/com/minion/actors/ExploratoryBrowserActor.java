@@ -163,7 +163,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
 									}
 
-									Timing.pauseThread(15000L);
+									Timing.pauseThread(5000L);
 									browser = new Browser(browser.getBrowserName());
 
 									tries++;
@@ -202,8 +202,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  				results_match = false;
 							  			}
 							  			cnt++;
-							  			Timing.pauseThread(60000L);
-							  		}while(results_match && cnt < 1000);
+							  			Timing.pauseThread(10000L);
+							  		}while(results_match && cnt < 10000);
 							  		
 							  		if(last_path == null){
 							  			last_path = path;

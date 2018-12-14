@@ -167,9 +167,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									} catch (NoSuchAlgorithmException e) {
 										e.printStackTrace();
 									}
-									Timing.pauseThread(60000L);
+									Timing.pauseThread(10000L);
 									tries++;
-								}while(result_page == null && tries < 1000);
+								}while(result_page == null && tries < 10000);
 							
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
 								Test test_record = test_repo.findByKey(test.getKey());

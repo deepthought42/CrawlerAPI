@@ -115,9 +115,7 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				if(action.getType().equals("click")){
-					Timing.pauseThread(5000L);
-				}
+				Timing.pauseThread(2000L);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");

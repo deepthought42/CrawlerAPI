@@ -122,10 +122,10 @@ public class SubscriptionService {
     	Date date = new Date();
     	int test_run_cnt = account_repo.getTestCountByMonth(acct.getUsername(), date.getMonth());
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 100){
+    	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 400){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 500){
+    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 2000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){
@@ -157,10 +157,10 @@ public class SubscriptionService {
     		}
     	}
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 50){
+    	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 250){
+    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 1000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){

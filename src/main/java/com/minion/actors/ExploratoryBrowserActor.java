@@ -151,13 +151,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
-										browser = new Browser(browser.getBrowserName());
 										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
 									} catch (GridException e) {
-										browser = new Browser(browser.getBrowserName());
 										log.error("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (WebDriverException e) {
-										browser = new Browser(browser.getBrowserName());
 										log.error("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (NoSuchAlgorithmException e) {
 										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
@@ -166,9 +163,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
 									}
 
-									Timing.pauseThread(60000L);
+									Timing.pauseThread(15000L);
+									browser = new Browser(browser.getBrowserName());
+
 									tries++;
-								}while(result_page == null && tries < 30);
+								}while(result_page == null && tries < 5000);
 							
 								//have page checked for landability
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
@@ -203,7 +202,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  				results_match = false;
 							  			}
 							  			cnt++;
-							  		}while(results_match && cnt < 20);
+							  			Timing.pauseThread(60000L);
+							  		}while(results_match && cnt < 1000);
 							  		
 							  		if(last_path == null){
 							  			last_path = path;

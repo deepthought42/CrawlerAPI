@@ -15,6 +15,7 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
@@ -166,8 +167,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									} catch (NoSuchAlgorithmException e) {
 										e.printStackTrace();
 									}
+									Timing.pauseThread(60000L);
 									tries++;
-								}while(result_page == null && tries < 10);
+								}while(result_page == null && tries < 1000);
 							
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
 								Test test_record = test_repo.findByKey(test.getKey());

@@ -50,7 +50,7 @@ public class SubscriptionServiceTests {
 	@Test
 	public void belowLimitTestRunsOnFreePlan() throws StripeException{
 		when(account.getUsername()).thenReturn("test@test.com");
-		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(99);
+		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(399);
 		
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.FREE);
 		assertFalse(has_exceeded);
@@ -59,7 +59,7 @@ public class SubscriptionServiceTests {
 	@Test
 	public void reachingLimitTestRunsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
-		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(100);
+		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(400);
 		
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.FREE);
 		assertFalse(has_exceeded);
@@ -68,7 +68,7 @@ public class SubscriptionServiceTests {
 	@Test
 	public void exceedingLimitTestRunsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
-		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(101);
+		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(401);
 		
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.FREE);
 		assertTrue(has_exceeded);
@@ -81,7 +81,7 @@ public class SubscriptionServiceTests {
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
 		records.add(record);
 		
-		when(record.getTestCount()).thenReturn(49);
+		when(record.getTestCount()).thenReturn(199);
 		when(record.getStartTime()).thenReturn(new Date());
 		when(account_repo.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
 		
@@ -93,7 +93,7 @@ public class SubscriptionServiceTests {
 	public void reachingLimitDiscoveredTestsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
-		when(record.getTestCount()).thenReturn(50);
+		when(record.getTestCount()).thenReturn(200);
 		when(record.getStartTime()).thenReturn(new Date());
 		records.add(record);
 		when(account_repo.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
@@ -106,7 +106,7 @@ public class SubscriptionServiceTests {
 	public void exceedingDiscoveredTestsOnFreePlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
-		when(record.getTestCount()).thenReturn(51);
+		when(record.getTestCount()).thenReturn(201);
 		when(record.getStartTime()).thenReturn(new Date());
 		records.add(record);
 		when(account_repo.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
@@ -118,7 +118,7 @@ public class SubscriptionServiceTests {
 	@Test
 	public void belowLimitTestRunsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
-		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(499);
+		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(1999);
 			
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.PRO);
 		assertFalse(has_exceeded);
@@ -127,7 +127,7 @@ public class SubscriptionServiceTests {
 	@Test
 	public void reachingLimitTestRunsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
-		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(500);
+		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(2000);
 			
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.PRO);
 		assertFalse(has_exceeded);
@@ -136,7 +136,7 @@ public class SubscriptionServiceTests {
 	@Test
 	public void exceedingLimitTestRunsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
-		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(501);
+		when(account_repo.getTestCountByMonth(anyString(), anyInt())).thenReturn(2001);
 			
 		boolean has_exceeded = subscription_service.hasExceededSubscriptionTestRunsLimit(account, SubscriptionPlan.PRO);
 		assertTrue(has_exceeded);
@@ -147,7 +147,7 @@ public class SubscriptionServiceTests {
 	public void lessThanLimitDiscoveredTestsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
-		when(record.getTestCount()).thenReturn(249);
+		when(record.getTestCount()).thenReturn(999);
 		when(record.getStartTime()).thenReturn(new Date());
 		records.add(record);
 		when(account_repo.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
@@ -160,7 +160,7 @@ public class SubscriptionServiceTests {
 	public void reachingLimitDiscoveredTestsOnPROPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
-		when(record.getTestCount()).thenReturn(250);
+		when(record.getTestCount()).thenReturn(1000);
 		when(record.getStartTime()).thenReturn(new Date());
 		records.add(record);
 		when(account_repo.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);
@@ -173,7 +173,7 @@ public class SubscriptionServiceTests {
 	public void exceedingDiscoveredTestsOnProPlan() throws StripeException {
 		when(account.getUsername()).thenReturn("test@test.com");
 		Set<DiscoveryRecord> records = new HashSet<DiscoveryRecord>();
-		when(record.getTestCount()).thenReturn(251);
+		when(record.getTestCount()).thenReturn(1001);
 		when(record.getStartTime()).thenReturn(new Date());
 		records.add(record);
 		when(account_repo.getDiscoveryRecordsByMonth(anyString(), anyInt())).thenReturn(records);

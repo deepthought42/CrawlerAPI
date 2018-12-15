@@ -24,41 +24,44 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
- * A reference to a web page 
+ * A reference to a web page
  *
  */
 @NodeEntity
 public class PageState implements Persistable, PathObject {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
-	
+
 	@GeneratedValue
-    @Id
+	@Id
 	private Long id;
-	
-    private String key;
-    private boolean landable;
-    private LocalDateTime last_landability_check;
+
+	private String src;
+	private String key;
+	private boolean landable;
+	private LocalDateTime last_landability_check;
 
 	private String url;
 	private int total_weight;
 	private int image_weight;
 	private String type;
-	
+
 	@Relationship(type = "HAS_SCREENSHOT")
 	private Set<ScreenshotSet> browser_screenshots = new HashSet<>();
-	
+
 	@Relationship(type = "HAS_ELEMENT")
 	private Set<PageElement> elements = new HashSet<>();
-	
+
 	@Relationship(type = "HAS_FORM")
 	private Set<Form> forms = new HashSet<>();
-	
-	public PageState(){}
-	
+
+	public PageState() {
+	}
+
 	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
 	 * @param url
 	 * @param screenshot
 	 * @param elements
@@ -67,23 +70,25 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre browser_screenshots != null;
 	 */
-	public PageState(String url, Set<ScreenshotSet> browser_screenshots , Set<PageElement> elements) throws IOException {
+	@Deprecated
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements) throws IOException {
 		assert elements != null;
-		assert browser_screenshots  != null;
+		assert browser_screenshots != null;
 
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#",""));
-		setBrowserScreenshots(browser_screenshots );
+		setUrl(url.replace("/#", ""));
+		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
 		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
-	
+
 	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
 	 * @param html
 	 * @param url
 	 * @param browsers_screenshots
@@ -95,12 +100,14 @@ public class PageState implements Persistable, PathObject {
 	 * 
 	 * @throws IOException
 	 */
-	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable) throws IOException {
+	@Deprecated
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable)
+			throws IOException {
 		assert elements != null;
 		assert browser_screenshots != null;
-	
+
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#",""));
+		setUrl(url.replace("/#", ""));
 		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
 		setLandable(isLandable);
@@ -108,62 +115,125 @@ public class PageState implements Persistable, PathObject {
 		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
-	
-	
+
+	/**
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null
+	 * @pre browser_screenshots != null;
+	 */
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, String src)
+			throws IOException {
+		assert elements != null;
+		assert browser_screenshots != null;
+
+		setType(PageState.class.getSimpleName());
+		setUrl(url.replace("/#", ""));
+		setBrowserScreenshots(browser_screenshots);
+		setElements(elements);
+		setLandable(false);
+		setImageWeight(0);
+		setType(PageState.class.getSimpleName());
+		setSrc(src);
+		setKey(generateKey());
+	}
+
+	/**
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
+	 * @param html
+	 * @param url
+	 * @param browsers_screenshots
+	 * @param elements
+	 * @param isLandable
+	 * 
+	 * @pre elements != null;
+	 * @pre browser_screenshots != null;
+	 * 
+	 * @throws IOException
+	 */
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable,
+			String src) throws IOException {
+		assert elements != null;
+		assert browser_screenshots != null;
+
+		setType(PageState.class.getSimpleName());
+		setUrl(url.replace("/#", ""));
+		setBrowserScreenshots(browser_screenshots);
+		setElements(elements);
+		setLandable(isLandable);
+		setImageWeight(0);
+		setType(PageState.class.getSimpleName());
+		setSrc(src);
+		setKey(generateKey());
+	}
+
 	/**
 	 * Gets counts for all tags based on {@link PageElement}s passed
 	 * 
-	 * @param page_elements list of {@link PageElement}s
+	 * @param page_elements
+	 *            list of {@link PageElement}s
 	 * 
-	 * @return Hash of counts for all tag names in list of {@PageElement}s passed
+	 * @return Hash of counts for all tag names in list of {@PageElement}s
+	 *         passed
 	 */
-	public Map<String, Integer> countTags(Set<PageElement> tags){
+	public Map<String, Integer> countTags(Set<PageElement> tags) {
 		Map<String, Integer> elem_cnts = new HashMap<String, Integer>();
-		for(PageElement tag : tags){
-			if(elem_cnts.containsKey(tag.getName())){
+		for (PageElement tag : tags) {
+			if (elem_cnts.containsKey(tag.getName())) {
 				int cnt = elem_cnts.get(tag.getName());
 				cnt += 1;
 				elem_cnts.put(tag.getName(), cnt);
-			}
-			else{
+			} else {
 				elem_cnts.put(tag.getName(), 1);
 			}
 		}
 		return elem_cnts;
 	}
-	
+
 	/**
 	 * Compares two images pixel by pixel.
 	 *
-	 * @param imgA the first image.
-	 * @param imgB the second image.
+	 * @param imgA
+	 *            the first image.
+	 * @param imgB
+	 *            the second image.
 	 * @return whether the images are both the same or not.
 	 */
 	public static boolean compareImages(BufferedImage imgA, BufferedImage imgB) {
-	  // The images must be the same size.
-	  if (imgA.getWidth() == imgB.getWidth() && imgA.getHeight() == imgB.getHeight()) {
-	    int width = imgA.getWidth();
-	    int height = imgA.getHeight();
+		// The images must be the same size.
+		if (imgA.getWidth() == imgB.getWidth() && imgA.getHeight() == imgB.getHeight()) {
+			int width = imgA.getWidth();
+			int height = imgA.getHeight();
 
-	    // Loop over every pixel.
-	    for (int y = 0; y < height; y++) {
-	      for (int x = 0; x < width; x++) {
-	        // Compare the pixels for equality.
-	        if (imgA.getRGB(x, y) != imgB.getRGB(x, y)) {
-	          return false;
-	        }
-	      }
-	    }
-	  } else {
-	    return false;
-	  }
+			// Loop over every pixel.
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					// Compare the pixels for equality.
+					if (imgA.getRGB(x, y) != imgB.getRGB(x, y)) {
+						return false;
+					}
+				}
+			}
+		} else {
+			return false;
+		}
 
-	  return true;
+		return true;
 	}
-	
+
 	/**
 	 * Checks if Pages are equal
-	 * @param page the {@link Page} object to compare current page to
+	 * 
+	 * @param page
+	 *            the {@link Page} object to compare current page to
 	 * 
 	 * @pre page != null
 	 * @return boolean value
@@ -171,25 +241,27 @@ public class PageState implements Persistable, PathObject {
 	 * @NOTE :: TODO :: add in ability to differentiate screenshots
 	 */
 	@Override
-	public boolean equals(Object o){
-		if (this == o) return true;
-        if (!(o instanceof PageState)) return false;
-        
-        PageState that = (PageState)o;
-        
-        boolean pages_match = this.getKey().equals(that.getKey());
-        
-    	return pages_match;
-  	}
-	
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof PageState))
+			return false;
+
+		PageState that = (PageState) o;
+
+		boolean pages_match = this.getKey().equals(that.getKey());
+
+		return pages_match;
+	}
+
 	/**
-	 * {@inheritDoc} 	
+	 * {@inheritDoc}
 	 */
 	@Override
-	public String toString(){
+	public String toString() {
 		return this.getUrl().toString();
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -197,7 +269,7 @@ public class PageState implements Persistable, PathObject {
 	public PathObject clone() {
 		Set<PageElement> elements = new HashSet<PageElement>(getElements());
 		Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>(getBrowserScreenshots());
-		
+
 		PageState page;
 		try {
 			page = new PageState(getUrl().toString(), screenshots, elements, isLandable());
@@ -205,46 +277,45 @@ public class PageState implements Persistable, PathObject {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
-	
-	 public String getKey() {
-		 return this.key;
-	 }
 
-	 public void setKey(String key) {
-		 this.key = key;
-	 }
-	
+	public String getKey() {
+		return this.key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
 	@JsonIgnore
-	public Set<PageElement> getElements(){
+	public Set<PageElement> getElements() {
 		return this.elements;
 	}
-	
+
 	@JsonIgnore
-	public void setElements(Set<PageElement> elements){
+	public void setElements(Set<PageElement> elements) {
 		this.elements = elements;
 	}
-	
-	public void setLandable(boolean isLandable){
+
+	public void setLandable(boolean isLandable) {
 		this.landable = isLandable;
 	}
-		
-	public boolean isLandable(){
+
+	public boolean isLandable() {
 		return this.landable;
 	}
 
-	public String getUrl(){
+	public String getUrl() {
 		return this.url;
 	}
-	
-	public void setUrl(String url){
-		/*int param_idx = url.indexOf('?');
-		if(param_idx >= 0){
-			url = url.substring(0, param_idx);
-		}
-		*/
+
+	public void setUrl(String url) {
+		/*
+		 * int param_idx = url.indexOf('?'); if(param_idx >= 0){ url =
+		 * url.substring(0, param_idx); }
+		 */
 		this.url = url;
 	}
 
@@ -290,16 +361,16 @@ public class PageState implements Persistable, PathObject {
 		this.elements.add(element);
 	}
 
-	public String getFileChecksum(MessageDigest digest, String url) throws IOException
-	{
+	public String getFileChecksum(MessageDigest digest, String url) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		BufferedImage buff_img = ImageIO.read(new URL(url));
 
 		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-	    //Get file input stream for reading the file content
-	    byte[] data = baos.toByteArray();
-	    try {
+		assert foundWriter; // Not sure about this... with jpg it may work but
+							// other formats ?
+		// Get file input stream for reading the file content
+		byte[] data = baos.toByteArray();
+		try {
 			MessageDigest sha = MessageDigest.getInstance("SHA-512");
 			sha.update(data);
 			byte[] thedigest = sha.digest(data);
@@ -307,17 +378,17 @@ public class PageState implements Persistable, PathObject {
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
-	    return "";
+		return "";
 	}
-	
-	public static String getFileChecksum(BufferedImage buff_img) throws IOException
-	{			
+
+	public static String getFileChecksum(BufferedImage buff_img) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-	    //Get file input stream for reading the file content
-	    byte[] data = baos.toByteArray();
-	    try {
+		assert foundWriter; // Not sure about this... with jpg it may work but
+							// other formats ?
+		// Get file input stream for reading the file content
+		byte[] data = baos.toByteArray();
+		try {
 			MessageDigest sha = MessageDigest.getInstance("SHA-512");
 			sha.update(data);
 			byte[] thedigest = sha.digest(data);
@@ -325,38 +396,37 @@ public class PageState implements Persistable, PathObject {
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
-	    return "";
-	    
+		return "";
+
 	}
-		
+
 	/**
 	 * {@inheritDoc}
 	 * 
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		try{
+		try {
 			Set<ScreenshotSet> screenshots = this.getBrowserScreenshots();
 			String screenshot = screenshots.iterator().next().getViewportScreenshot();
-			String key ="pagestate::"+getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot);
+			String key = "pagestate::" + getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot);
 			return key;
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return "";		
+		return "";
 	}
 
 	public void addForm(Form form) {
-		for(Form temp_form: this.forms){
-			if(temp_form.getKey().equals(form.getKey())){
+		for (Form temp_form : this.forms) {
+			if (temp_form.getKey().equals(form.getKey())) {
 				return;
 			}
 		}
 		this.forms.add(form);
 	}
-	
-	public Set<Form> getForms(){
+
+	public Set<Form> getForms() {
 		return this.forms;
 	}
 
@@ -366,5 +436,13 @@ public class PageState implements Persistable, PathObject {
 
 	public void setLastLandabilityCheck(LocalDateTime last_landability_check_timestamp) {
 		this.last_landability_check = last_landability_check_timestamp;
+	}
+
+	public String getSrc() {
+		return src;
+	}
+
+	public void setSrc(String src) {
+		this.src = src;
 	}
 }

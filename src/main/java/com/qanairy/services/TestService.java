@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
+import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
@@ -57,17 +58,23 @@ public class TestService {
 		 TestRecord test_record = null;
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 		 
-		 try {
-			page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
-			passing = Test.isTestPassing(test.getResult(), page, last_test_status);
-			
-		 } catch (IOException e) {		
-			 System.err.println(e.getMessage());		
-		 } catch(PagesAreNotMatchingException e){
-			 passing = TestStatus.FAILING;
-			 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
-		 }
+		 int cnt = 0;
+		 do{
+			 try {
+				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
+				break;
+			 } catch (IOException e) {		
+				 System.err.println(e.getMessage());		
+			 } catch(PagesAreNotMatchingException e){
+				 passing = TestStatus.FAILING;
+				 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
+			 }
+			 Timing.pauseThread(5000L);
+			 cnt++;
+		 }while(cnt < 50000 && page != null);
 		
+		 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
+
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;

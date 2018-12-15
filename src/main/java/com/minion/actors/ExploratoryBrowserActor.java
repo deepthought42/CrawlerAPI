@@ -178,28 +178,25 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										  	browser.close();
 										  	return;
 										}
+
 									}catch(NullPointerException e){
-										Timing.pauseThread(30000L);
-										browser = new Browser(browser.getBrowserName());
 										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
 									} catch (GridException e) {
-										Timing.pauseThread(30000L);
-										browser = new Browser(browser.getBrowserName());
 										log.error("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (WebDriverException e) {
-										Timing.pauseThread(30000L);
-										browser = new Browser(browser.getBrowserName());
 										log.error("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (NoSuchAlgorithmException e) {
 										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									}
 									catch(Exception e){
-										Timing.pauseThread(30000L);
 										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
 									}
 
+									Timing.pauseThread(5000L);
+									browser = new Browser(browser.getBrowserName());
+
 									tries++;
-								}while(result_page == null && tries < 30);
+								}while(result_page == null && tries < 5000);
 							
 								//have page checked for landability
 								
@@ -233,7 +230,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  				results_match = false;
 							  			}
 							  			cnt++;
-							  		}while(results_match && cnt < 20);
+							  			Timing.pauseThread(10000L);
+							  		}while(results_match && cnt < 10000);
 							  		
 							  		if(last_path == null){
 							  			last_path = path;
@@ -247,7 +245,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 									discovery_record.setTestCount(discovery_record.getTestCount()+1);
 							  		discovery_repo.save(discovery_record);
-									break;
+									//break;
 								}
 							}
 							

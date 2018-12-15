@@ -87,7 +87,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 50000){
+		while(driver == null && cnt < 10000){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -105,7 +105,7 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				Timing.pauseThread(10000L);
+				Timing.pauseThread(5000L);
 				return;
 			}
 			catch(UnreachableBrowserException e){

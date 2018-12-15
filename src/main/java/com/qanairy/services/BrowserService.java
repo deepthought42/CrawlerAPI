@@ -39,7 +39,6 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
-import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -191,7 +190,8 @@ public class BrowserService {
 			
 			page_state = new PageState(	page_url.toString(),
 					screenshots,
-					visible_elements);
+					visible_elements,
+					browser.getDriver().getPageSource());
 		}
 		//have page checked for landability
 		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
@@ -549,8 +549,7 @@ public class BrowserService {
 					try {
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), PageState.getFileChecksum(img), input_tag.getKey());
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						log.warn("Error retrieving screenshot -- "+e.getLocalizedMessage());
 					}
 
 					if(elem_record == null){

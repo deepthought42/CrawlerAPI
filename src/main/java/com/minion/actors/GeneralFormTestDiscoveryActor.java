@@ -125,7 +125,17 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							
 					  		log.info("Crawling potential form test path");
 					  		browser = new Browser(message.getOptions().get("browser").toString());
-					  		PageState result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
+					  		
+					  		cnt = 0;
+					  		PageState result_page = null;
+					  		do{
+					  			try{
+					  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
+					  				break;
+					  			}catch(Exception e){
+					  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
+					  			}
+				  			}while(cnt < 1000 && result_page == null);
 					  		
 					  		final long pathCrawlEndTime = System.currentTimeMillis();
 							long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;

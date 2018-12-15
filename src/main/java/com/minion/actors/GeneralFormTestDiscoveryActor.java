@@ -134,7 +134,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					  				break;
 					  			}catch(Exception e){
 					  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
-					  			};
+					  			}
 				  			}while(cnt < 1000 && result_page == null);
 					  		
 					  		final long pathCrawlEndTime = System.currentTimeMillis();

@@ -345,15 +345,10 @@ public class Browser {
 	 */
 	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem) throws IOException{
 		
-		((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(false);", elem);
-		Timing.pauseThread(500L);
+		//((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(false);", elem);
+		//Timing.pauseThread(500L);
 		BufferedImage page_screenshot = new AShot().takeScreenshot(driver, elem).getImage();
-		
-		//log.error("LOOKING UP ELEMENT  BY XPATH ::  "+xpath);
-		//elem = driver.findElement(By.xpath(xpath));
-		
-		//		return new AShot().takeScreenshot(driver, elem).getImage();
-		//return page_screenshot.getImage();
+
 		Dimension dimension = elem.getSize();
 		Point point = elem.getLocation();
 		

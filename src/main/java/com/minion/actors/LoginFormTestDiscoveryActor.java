@@ -155,19 +155,16 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
-										browser = new Browser(browser.getBrowserName());
 										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
 										e.printStackTrace();
 									} catch (GridException e) {
-										browser = new Browser(browser.getBrowserName());
 										e.printStackTrace();
 									} catch (WebDriverException e) {
-										browser = new Browser(browser.getBrowserName());
 										e.printStackTrace();
 									} catch (NoSuchAlgorithmException e) {
 										e.printStackTrace();
 									}
-									Timing.pauseThread(10000L);
+									browser = new Browser(browser.getBrowserName());
 									tries++;
 								}while(result_page == null && tries < 10000);
 							

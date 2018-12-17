@@ -65,11 +65,10 @@ public class TestingActor extends AbstractActor {
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 									break;
 								}catch(NullPointerException e){
-									browser = new Browser((String)message.getOptions().get("browser"));
 									log.error(e.getMessage());
 								}
 								
-								Timing.pauseThread(10000L);
+								browser = new Browser((String)message.getOptions().get("browser"));
 								cnt++;
 							}
 						}

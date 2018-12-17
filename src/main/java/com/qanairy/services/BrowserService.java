@@ -57,6 +57,9 @@ import com.qanairy.models.rules.Rule;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 
 /**
  * 
@@ -143,9 +146,9 @@ public class BrowserService {
 	 */
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
-	
+		
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
-		String page_key = "";
+		//new Actions(browser.getDriver()).moveByOffset(1000,1000);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
 		File viewport_screenshot = null;
@@ -157,10 +160,12 @@ public class BrowserService {
 			log.error(e.getMessage());
 		}
 
+		BufferedImage screenshot = ImageIO.read(viewport_screenshot);
+		String page_key = "pagestate::"+PageState.getFileChecksum(screenshot);
 		PageState page_state = null;
 		PageState page_record = null;
 		try{
-			page_record = page_state_repo.findByKey("pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot)));
+			page_record = page_state_repo.findByKey(page_key);
 		}
 		catch(Exception e){
 			log.warn("Page record not found :  "+e.getLocalizedMessage());
@@ -169,11 +174,10 @@ public class BrowserService {
 			page_state = page_record;
 		}
 		else{
-			page_key = "pagestate::"+PageState.getFileChecksum(ImageIO.read(viewport_screenshot));
 			log.info("Getting visible elements...");
-			visible_elements = getVisibleElements(browser.getDriver(), "", ImageIO.read(viewport_screenshot), page_url.getHost());
+			visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
 
-			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(ImageIO.read(viewport_screenshot), page_url.getHost(), page_key, "viewport");
+			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot, page_url.getHost(), page_key, "viewport");
 			
 			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
 			
@@ -212,7 +216,7 @@ public class BrowserService {
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
 	 */
-	private Set<PageElement> getVisibleElements(WebDriver driver, String xpath, BufferedImage page_screenshot, String host) 
+	private Set<PageElement> getVisibleElements(WebDriver driver, String xpath, String host) 
 															 throws WebDriverException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
@@ -223,21 +227,26 @@ public class BrowserService {
 			return elementList;
 		}
 		
-		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
+			
+			
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 
-				if(is_child && elem.getSize().getHeight() > 0 && elem.isDisplayed()
+				if(is_child && elem.getSize().getHeight() > 1 && elem.getSize().width >1 && elem.isDisplayed()
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
 						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
 					
+					Set<Attribute> attributes = extractAttributes(elem, driver);
+					String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
+
 					BufferedImage img = null;
 					String checksum = "";
 					String screenshot = null;
 					try{
-						img = Browser.getElementScreenshot(page_screenshot, elem.getSize(), elem.getLocation());
+						
+						img = Browser.getElementScreenshot(driver, elem);
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 
@@ -249,9 +258,7 @@ public class BrowserService {
 						
 					}
 					
-					Set<Attribute> attributes = extractAttributes(elem, driver);
 					Map<String, String> css_props = Browser.loadCssProperties(elem);
-					String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
 					PageElement tag_record = page_element_repo.findByKey(tag.getKey());
@@ -770,7 +777,7 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation(), driver);
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
 
@@ -798,7 +805,7 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation());
+			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation(), driver);
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
 

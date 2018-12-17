@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,6 +44,9 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
+
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -87,7 +93,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 10000){
+		while(driver == null && cnt < 50000){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -119,7 +125,7 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(5000L);
+			Timing.pauseThread(15000L);
 		}
 	}
 	
@@ -141,7 +147,7 @@ public class Browser {
 		catch(Exception e){
 			log.error(e.getMessage());
 		}	
-		Timing.pauseThread(15000L);
+		Timing.pauseThread(5000L);
 	}
 
 	/**
@@ -337,12 +343,29 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point) throws IOException{
+	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem) throws IOException{
+		
+		((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(false);", elem);
+		Timing.pauseThread(500L);
+		BufferedImage page_screenshot = new AShot().takeScreenshot(driver, elem).getImage();
+		
+		//log.error("LOOKING UP ELEMENT  BY XPATH ::  "+xpath);
+		//elem = driver.findElement(By.xpath(xpath));
+		
+		//		return new AShot().takeScreenshot(driver, elem).getImage();
+		//return page_screenshot.getImage();
+		Dimension dimension = elem.getSize();
+		Point point = elem.getLocation();
+		
 		// Get width and height of the element
 		int elem_width = dimension.getWidth();
 		int elem_height = dimension.getHeight();
 		int point_x = point.getX();
+		
 		int point_y = point.getY();
+		if(point_y > page_screenshot.getHeight()){
+			point_y =  page_screenshot.getHeight() - dimension.getHeight();
+		}
 		
 		if( (elem_width + point_x) < page_screenshot.getWidth()){
 			elem_width = elem_width+5;
@@ -376,6 +399,7 @@ public class Browser {
 			point_y = 0;
 		}
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
+		
 	}
 	
 	/**

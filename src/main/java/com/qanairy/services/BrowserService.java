@@ -246,7 +246,7 @@ public class BrowserService {
 					String screenshot = null;
 					try{
 						
-						img = Browser.getElementScreenshot(driver, elem);
+						img = Browser.getElementScreenshot(driver, elem, ImageIO.read(Browser.getViewportScreenshot(driver)));
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 

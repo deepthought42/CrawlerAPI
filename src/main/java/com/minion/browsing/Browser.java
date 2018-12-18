@@ -93,7 +93,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 50000){
+		while(driver == null && cnt < 100000){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -115,17 +115,17 @@ public class Browser {
 				return;
 			}
 			catch(UnreachableBrowserException e){
-				log.error(e.getMessage());
+				log.warn(e.getMessage());
 			}
 			catch(WebDriverException e){
-				log.error(e.getMessage());
+				log.warn(e.getMessage());
 			}
 			catch(GridException e){
-				log.error(e.getMessage());
+				log.warn(e.getMessage());
 			}
 
 			cnt++;
-			Timing.pauseThread(15000L);
+			Timing.pauseThread(5000L);
 		}
 	}
 	
@@ -173,20 +173,8 @@ public class Browser {
 		try{
 			driver.quit();
 		}
-		catch(NullPointerException e){
-			//log.error("Error closing driver. Driver is NULL");
-		}
-		catch(UnreachableBrowserException e){
-			log.error(e.getMessage());
-		}
-		catch(NoSuchSessionException e){
-			log.error(e.getMessage());			
-		}
-		catch(GridException e){
-			log.error("Grid exception occurred when closing browser", e.getMessage());
-		}
 		catch(Exception e){
-			log.error("Unknown exception occurred when closing browser", e.getMessage());
+			log.warn("Unknown exception occurred when closing browser", e.getLocalizedMessage());
 		}
 		
 	}
@@ -343,11 +331,11 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem) throws IOException{
+	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		
 		//((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(false);", elem);
 		//Timing.pauseThread(500L);
-		BufferedImage page_screenshot = new AShot().takeScreenshot(driver, elem).getImage();
+		//BufferedImage page_screenshot = new AShot().takeScreenshot(driver, elem).getImage();
 
 		Dimension dimension = elem.getSize();
 		Point point = elem.getLocation();

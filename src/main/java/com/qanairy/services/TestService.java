@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
@@ -15,7 +16,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
@@ -69,7 +69,11 @@ public class TestService {
 				 passing = TestStatus.FAILING;
 				 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
 			 }
-			 Timing.pauseThread(5000L);
+			 try {
+				browser = new Browser(browser.getBrowserName());
+			} catch (MalformedURLException | NullPointerException e) {
+				log.error(e.getLocalizedMessage());
+			}
 			 cnt++;
 		 }while(cnt < 50000 && page != null);
 		
@@ -91,39 +95,32 @@ public class TestService {
 			log.info("Test ::  "+test);
 			test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
 	  		
-	  		Test new_test = test_repo.save(test);
+	  		test = test_repo.save(test);
 			Domain domain = domain_repo.findByHost(host_url);
-			domain.addTest(new_test);
+			domain.addTest(test);
 			domain = domain_repo.save(domain);
-			if(new_test.getBrowserStatuses() == null || new_test.getBrowserStatuses().isEmpty()){
-				log.info("Broadcasting discovered test");
-				
-				try {
-					MessageBroadcaster.broadcastDiscoveredTest(new_test, host_url);
-				} catch (JsonProcessingException e) {
-					log.error(e.getLocalizedMessage());
-				}
-			}
-			else {
-				log.info("Broadcasting Test...");
-				try {
-					MessageBroadcaster.broadcastTest(new_test, host_url);
-				} catch (JsonProcessingException e) {
-					log.error(e.getLocalizedMessage());
-				}
+		
+			try {
+				MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
+			} catch (JsonProcessingException e) {
+				log.error(e.getLocalizedMessage());
 			}
 			
-			for(PathObject path_obj : new_test.getPathObjects()){
+			for(PathObject path_obj : test.getPathObjects()){
 				try {
 					MessageBroadcaster.broadcastPathObject(path_obj, host_url);
 				} catch (JsonProcessingException e) {
 					log.error(e.getLocalizedMessage());
 				}
 			}
-			return new_test;
 		}
 		else{
 			log.info("Test already exists  !!!!!!!");
+			try {
+				MessageBroadcaster.broadcastTest(test, host_url);
+			} catch (JsonProcessingException e) {
+				log.error(e.getLocalizedMessage());
+			}			
 		}
 		
 		return test;

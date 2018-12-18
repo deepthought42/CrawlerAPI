@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
-import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.TakesScreenshot;
@@ -87,7 +87,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 10000){
+		while(driver == null && cnt < 100000){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -109,13 +109,13 @@ public class Browser {
 				return;
 			}
 			catch(UnreachableBrowserException e){
-				log.error(e.getMessage());
+				log.warn(e.getMessage());
 			}
 			catch(WebDriverException e){
-				log.error(e.getMessage());
+				log.warn(e.getMessage());
 			}
 			catch(GridException e){
-				log.error(e.getMessage());
+				log.warn(e.getMessage());
 			}
 
 			cnt++;
@@ -141,7 +141,7 @@ public class Browser {
 		catch(Exception e){
 			log.error(e.getMessage());
 		}	
-		Timing.pauseThread(15000L);
+		Timing.pauseThread(5000L);
 	}
 
 	/**
@@ -167,20 +167,8 @@ public class Browser {
 		try{
 			driver.quit();
 		}
-		catch(NullPointerException e){
-			//log.error("Error closing driver. Driver is NULL");
-		}
-		catch(UnreachableBrowserException e){
-			log.error(e.getMessage());
-		}
-		catch(NoSuchSessionException e){
-			log.error(e.getMessage());			
-		}
-		catch(GridException e){
-			log.error("Grid exception occurred when closing browser", e.getMessage());
-		}
 		catch(Exception e){
-			log.error("Unknown exception occurred when closing browser", e.getMessage());
+			log.warn("Unknown exception occurred when closing browser", e.getLocalizedMessage());
 		}
 		
 	}
@@ -337,12 +325,24 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point) throws IOException{
+	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot) throws IOException{
+		
+		//((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(false);", elem);
+		//Timing.pauseThread(500L);
+		//BufferedImage page_screenshot = new AShot().takeScreenshot(driver, elem).getImage();
+
+		Dimension dimension = elem.getSize();
+		Point point = elem.getLocation();
+		
 		// Get width and height of the element
 		int elem_width = dimension.getWidth();
 		int elem_height = dimension.getHeight();
 		int point_x = point.getX();
+		
 		int point_y = point.getY();
+		if(point_y > page_screenshot.getHeight()){
+			point_y =  page_screenshot.getHeight() - dimension.getHeight();
+		}
 		
 		if( (elem_width + point_x) < page_screenshot.getWidth()){
 			elem_width = elem_width+5;
@@ -376,6 +376,7 @@ public class Browser {
 			point_y = 0;
 		}
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
+		
 	}
 	
 	/**

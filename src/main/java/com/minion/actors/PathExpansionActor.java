@@ -223,8 +223,6 @@ public class PathExpansionActor extends AbstractActor {
 			}
 			else{
 				//page element is not an input or a form
-				
-				
 				Test new_test = Test.clone(test);
 
 				if(test.getPathKeys().size() > 1){
@@ -235,12 +233,11 @@ public class PathExpansionActor extends AbstractActor {
 				new_test.getPathKeys().add(page_element.getKey());
 						
 				//check if element exists in previous pageStates
-				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
+				if(doesElementExistInMultiplePageStatesWithinTest(new_test, page_element)){
 					continue;
 				}
 				
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
-
 				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
@@ -260,7 +257,22 @@ public class PathExpansionActor extends AbstractActor {
 		return pathList;
 	}
 
+	/**
+	 * Checks if a given {@link PageElement} exists in a {@link PageState} within the {@link Test} path
+	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
+	 * 
+	 * @param test {@link Test}
+	 * @param elem {@link PageElement}
+	 * 
+	 * @return
+	 * 
+	 * @pre test != null
+	 * @pre elem != null
+	 */
 	public static boolean doesElementExistInMultiplePageStatesWithinTest(Test test, PageElement elem) {
+		assert test != null;
+		assert elem != null;
+		
 		int cnt = 0;
 		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);

@@ -222,6 +222,8 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
+				//page element is not an input or a form
+				
 				
 				Test new_test = Test.clone(test);
 
@@ -232,6 +234,10 @@ public class PathExpansionActor extends AbstractActor {
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 						
+				//check if element exists in previous pageStates
+				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
+					continue;
+				}
 				
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
@@ -252,5 +258,26 @@ public class PathExpansionActor extends AbstractActor {
 		}
 				
 		return pathList;
+	}
+
+	public static boolean doesElementExistInMultiplePageStatesWithinTest(Test test, PageElement elem) {
+		int cnt = 0;
+		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
+			PathObject obj = test.getPathObjects().get(path_idx);
+			if(obj instanceof PageState){
+				for(PageElement page_elem : ((PageState) obj).getElements()){
+					if(elem.equals(page_elem)){
+						cnt++;
+						break;
+					}
+				}
+			}
+			
+			//a count greater than 1 signifies more than one page state in the test contains this element
+			if(cnt > 1){
+				return true;
+			}
+		}
+		return false;
 	}
 }

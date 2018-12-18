@@ -257,37 +257,7 @@ public class PageElement implements Persistable, PathObject {
         if (!(o instanceof PageElement)) return false;
         
         PageElement that = (PageElement)o;
-		Set<Attribute> newPageElementAttributes = that.getAttributes();
-		boolean areElementsEqual =  true;
-		
-		if(!this.getName().equals(that.getName()) || !this.getText().equals(that.getText())
-				|| !this.getKey().equals(that.getKey())){
-			return false;
-		}
-		
-		if(this.getAttributes().size() == newPageElementAttributes.size())
-		{
-			Map<String, Attribute> attribute_map = new HashMap<String, Attribute>();
-			for(Attribute attr : this.getAttributes()){
-				attribute_map.put(attr.getName(), attr);		
-			}
-			
-			for(Attribute attr : newPageElementAttributes){
-				if(attr.equals(attribute_map.get(attr.getName()))){
-					attribute_map.remove(attr.getName());
-				}
-			}
-
-			if(!attribute_map.isEmpty()){
-				return false;
-			}
-		}
-		else{
-			return false;
-		}
-		
-		areElementsEqual = this.cssMatches(that);
-		return areElementsEqual;
+		return this.getKey().equals(that.getKey());
 	}
 
 

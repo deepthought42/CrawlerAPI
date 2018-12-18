@@ -57,9 +57,6 @@ import com.qanairy.models.rules.Rule;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import ru.yandex.qatools.ashot.AShot;
-import ru.yandex.qatools.ashot.Screenshot;
-import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 
 /**
  * 

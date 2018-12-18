@@ -9,16 +9,13 @@ import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
-import akka.actor.AbstractActor.Receive;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;

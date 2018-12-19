@@ -105,7 +105,6 @@ public class Browser {
 					this.driver = openWithOpera();
 				}
 
-				Timing.pauseThread(5000L);
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -119,7 +118,7 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(5000L);
+			Timing.pauseThread(2000L);
 		}
 	}
 	
@@ -141,7 +140,7 @@ public class Browser {
 		catch(Exception e){
 			log.error(e.getMessage());
 		}	
-		Timing.pauseThread(5000L);
+		Timing.pauseThread(10000L);
 	}
 
 	/**

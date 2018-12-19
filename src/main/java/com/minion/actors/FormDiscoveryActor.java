@@ -132,6 +132,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		log.error("exception occurred while performing form discovery");
 					  	}
 					}
+					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

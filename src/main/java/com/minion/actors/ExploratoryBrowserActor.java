@@ -235,6 +235,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						//PLACE CALL TO LEARNING SYSTEM HERE
 						//Brain.learn(test, test.getIsUseful());
 					}
+					postStop();
+
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		
 				})

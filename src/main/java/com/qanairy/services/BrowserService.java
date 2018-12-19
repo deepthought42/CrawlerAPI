@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -194,13 +196,22 @@ public class BrowserService {
 					visible_elements,
 					browser.getDriver().getPageSource());
 		}
-		//have page checked for landability
-		BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
 
-		final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-		landibility_checker.tell(bps, ActorRef.noSender() );
-		
+		if(page_state.getLastLandabilityCheck() != null){
+
+			Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
+			Duration minimum_diff = Duration.ofHours(24);
+			if(time_diff.compareTo(minimum_diff) <= 0){
+				log.info("Last landability check occurred less than 24 hours ago");
+				//have page checked for landability
+				BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
+
+				final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
+				landibility_checker.tell(bps, ActorRef.noSender() );
+			}
+		}
+				
 		return page_state;
 	}
 

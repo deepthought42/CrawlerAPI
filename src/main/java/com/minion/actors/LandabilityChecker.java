@@ -69,16 +69,6 @@ public class LandabilityChecker extends AbstractActor{
 					if(page_state_record != null){
 						page_state = page_state_record;
 					}
-					if(page_state.getLastLandabilityCheck() != null){
-
-						Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
-						Duration minimum_diff = Duration.ofHours(24);
-						if(time_diff.compareTo(minimum_diff) <= 0){
-							log.info("Last landability check occurred less than 24 hours ago");
-							postStop();
-							return;
-						}
-					}
 
 					boolean page_visited_successfully = false;
 					int cnt  = 0;
@@ -114,7 +104,7 @@ public class LandabilityChecker extends AbstractActor{
 						}
 
 						cnt++;
-					}while(!page_visited_successfully && cnt < 3);
+					}while(!page_visited_successfully && cnt < 50);
 					
 					log.info("is page state landable  ?? :: "+page_state.isLandable());
 					postStop();

@@ -135,6 +135,7 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}	
 			}
+			postStop();
 		})
 		.match(MemberUp.class, mUp -> {
 			log.info("Member is Up: {}", mUp.member());

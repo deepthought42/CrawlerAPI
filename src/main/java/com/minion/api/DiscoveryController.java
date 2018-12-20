@@ -31,6 +31,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.services.SubscriptionService;
@@ -154,7 +155,7 @@ public class DiscoveryController {
         
 		if(diffInMinutes > 1440){
 			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0, DiscoveryStatus.RUNNING);
         	
 			acct.addDiscoveryRecord(discovery_record);
 			acct = account_repo.save(acct);
@@ -225,7 +226,7 @@ public class DiscoveryController {
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping("/stop")
-	public @ResponseBody void stopWorkForAccount(HttpServletRequest request) 
+	public @ResponseBody void stopDiscovery(HttpServletRequest request, @RequestParam(value="url", required=true) String url) 
 			throws MalformedURLException, UnknownAccountException {
 		
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
@@ -240,7 +241,17 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
-		WorkAllowanceStatus.haltWork(acct.getUsername()); 
+    	DiscoveryRecord last_discovery_record = null;
+		Date started_date = new Date(0L);
+		for(DiscoveryRecord record : domain_repo.getDiscoveryRecords(url)){
+			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
+				started_date = record.getStartTime();
+				last_discovery_record = record;
+			}
+		}
+		
+		last_discovery_record.setStatus(DiscoveryStatus.STOPPED);
+		//WorkAllowanceStatus.haltWork(acct.getUsername()); 
 	}
 
 }

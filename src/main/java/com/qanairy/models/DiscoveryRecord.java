@@ -8,6 +8,8 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
+import com.qanairy.models.enums.DiscoveryStatus;
+
 /**
  * Record detailing a "Discovery" ran by an account.
  */
@@ -23,6 +25,7 @@ public class DiscoveryRecord implements Persistable {
 	private String browser_name;
 	private String domain_url;
 	private Date last_path_ran_at;
+	private DiscoveryStatus status; 
 	private int total_path_count;
 	private int examined_path_count;
 	private int test_cnt;
@@ -30,22 +33,9 @@ public class DiscoveryRecord implements Persistable {
 
 	public DiscoveryRecord(){}
 	
-	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url){
-		assert started_timestamp != null;
-		assert browser_name != null;
-		assert domain_url != null;
-		
-		setStartTime(started_timestamp);
-		setBrowserName(browser_name);
-		setDomainUrl(domain_url);
-		setLastPathRanAt(new Date());
-		setTotalPathCount(0);
-		setExaminedPathCount(0);
-		setTestCount(0);
-		setKey(generateKey());
-	}
-	
-	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
+	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url, 
+							Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt,
+							DiscoveryStatus status){
 		assert started_timestamp != null;
 		assert browser_name != null;
 		assert domain_url != null;
@@ -59,6 +49,7 @@ public class DiscoveryRecord implements Persistable {
 		setTotalPathCount(total_cnt);
 		setExaminedPathCount(examined_cnt);
 		setTestCount(test_cnt);
+		setStatus(status);
 		setKey(generateKey());
 	}
 
@@ -140,5 +131,13 @@ public class DiscoveryRecord implements Persistable {
 	
 	public void addExpandedPageState(String expanded_page_state_key) {
 		this.expanded_page_state.add(expanded_page_state_key);
+	}
+
+	public DiscoveryStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(DiscoveryStatus status) {
+		this.status = status;
 	}
 }

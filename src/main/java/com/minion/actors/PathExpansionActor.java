@@ -33,6 +33,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
@@ -78,6 +79,11 @@ public class PathExpansionActor extends AbstractActor {
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 
+				if(discovery_record.getStatus().equals(DiscoveryStatus.STOPPED)){
+					log.info("Discovery is flagged as 'STOPPED' so expansion is being ignored");
+					return;
+				}
+				
 		    	Account acct = account_repo.findByUsername(message.getAccountKey());
 		    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");

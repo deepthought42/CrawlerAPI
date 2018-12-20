@@ -105,7 +105,7 @@ public class UrlBrowserActor extends AbstractActor {
 								e.printStackTrace();
 								log.error(e.getMessage());
 							}
-						}while(!test_generated_successfully && attempts < 5);
+						}while(!test_generated_successfully && attempts < 50000);
 						
 					  	System.err.println("URL DISCOVERY HAS ENDED");
 

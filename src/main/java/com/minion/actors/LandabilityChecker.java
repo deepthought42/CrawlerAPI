@@ -65,18 +65,13 @@ public class LandabilityChecker extends AbstractActor{
 				.match(BrowserPageState.class, bps -> {
 					PageState page_state = bps.page;
 
-					PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
-					if(page_state_record != null){
-						page_state = page_state_record;
-					}
-
 					boolean page_visited_successfully = false;
 					int cnt  = 0;
 					do{
 						page_visited_successfully = false;
 						
 						try{
-							page_state_record = page_state_repo.findByKey(page_state.getKey());
+							PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
 							if(page_state_record != null){
 								log.info("Landability checker found page state with key :: "+page_state.getKey());
 								page_state = page_state_record;
@@ -88,23 +83,24 @@ public class LandabilityChecker extends AbstractActor{
 								page_state.setLandable(true);
 							}
 							page_state.setLastLandabilityCheck(LocalDateTime.now());
+							page_state.setLandable(true);
 							page_visited_successfully = true;
 							page_state_repo.save(page_state);
 							landable_browser.close();
-
+							break;
 						}catch(GridException e){
-							log.error(e.getMessage());
+							log.warning(e.getLocalizedMessage());
 						}
 						catch(NoSuchAlgorithmException e){
-							log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
-							log.error(e.getMessage());
+							log.warning("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
+							log.warning(e.getLocalizedMessage());
 						}
 						catch(ClientException e){
-							log.error(e.getMessage());
+							log.warning(e.getLocalizedMessage());
 						}
 
 						cnt++;
-					}while(!page_visited_successfully && cnt < 50);
+					}while(!page_visited_successfully && cnt < 500000);
 					
 					log.info("is page state landable  ?? :: "+page_state.isLandable());
 					postStop();

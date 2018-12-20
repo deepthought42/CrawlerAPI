@@ -127,7 +127,7 @@ public class BrowserService {
 				log.error(e.getMessage());
 			}
 			cnt++;
-		}while(!page_visited_successfully && cnt < 3);
+		}while(!page_visited_successfully && cnt < 10000);
 		
 		log.info("is page state landable  ?? :: "+landable);
 		return landable;

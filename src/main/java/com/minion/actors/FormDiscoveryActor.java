@@ -77,60 +77,57 @@ public class FormDiscoveryActor extends AbstractActor{
 						int cnt = 0;
 					  	Browser browser = null;
 					  	
-					  	while(browser == null && cnt < 5){
+					  	while(browser == null && cnt < 100000){
 					  		try{
 						  		browser = new Browser(message.getOptions().get("browser").toString());
 						  		browser.navigateTo(page_state.getUrl());
+						  		
+						  		page_state = page_state_repo.findByKey(page_state.getKey());
+								  
+						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
+							  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
+
+							  	for(Form form : forms){
+								  	for(PageElement field: form.getFormFields()){
+										//for each field in the complex field generate a set of tests for all known rules
+								  		List<Rule> rules = rule_extractor.extractInputRules(field);
+										
+										log.info("Total RULES   :::   "+rules.size());
+										for(Rule rule : rules){
+											field.addRule(rule);
+										
+										}
+									}
+								  							  	
+								    DeepthoughtApi.predict(form);
+							       
+								    System.err.println("PREDICTION DONE !!! ");
+								    System.err.println("********************************************************");
+								    try{
+								  		browser.close();
+								  	}
+								  	catch(Exception e){}
+								  	
+								  	page_state.addForm(form);
+								  	page_state_repo.save(page_state);
+							        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
+								  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
+							  	}
+							  	System.err.println("FORM DISCOVERY HAS ENDED");
+						  	
 								break;
 							}catch(NullPointerException e){
-								log.error(e.getMessage());
+								log.warning(e.getMessage());
 							}
+					  		catch(NoSuchAlgorithmException e){
+					  			log.warning(e.getMessage());
+						  	}
+						  	catch(Exception e){
+						  		log.warning(e.getMessage());
+						  	}
 							cnt++;
 						}	
-					  
-					  	
-					  	page_state = page_state_repo.findByKey(page_state.getKey());
-					  
-					  	try{
-					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
-						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
-
-						  	for(Form form : forms){
-							  	for(PageElement field: form.getFormFields()){
-									//for each field in the complex field generate a set of tests for all known rules
-							  		List<Rule> rules = rule_extractor.extractInputRules(field);
-									
-									log.info("Total RULES   :::   "+rules.size());
-									for(Rule rule : rules){
-										field.addRule(rule);
-									
-									}
-								}
-							  							  	
-							    DeepthoughtApi.predict(form);
-						       
-							    System.err.println("PREDICTION DONE !!! ");
-							    System.err.println("********************************************************");
-							    try{
-							  		browser.close();
-							  	}
-							  	catch(Exception e){}
-							  	
-							  	page_state.addForm(form);
-							  	page_state_repo.save(page_state);
-						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
-							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
-						  	}
-						  	System.err.println("FORM DISCOVERY HAS ENDED");
-					  	}
-					  	catch(NoSuchAlgorithmException e){
-					  		e.printStackTrace();
-					  	}
-					  	catch(Exception e){
-					  		e.printStackTrace();
-					  		log.error("exception occurred while performing form discovery");
-					  	}
 					}
 					postStop();
 				})

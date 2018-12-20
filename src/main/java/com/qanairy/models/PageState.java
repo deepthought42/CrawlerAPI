@@ -250,6 +250,7 @@ public class PageState implements Persistable, PathObject {
 		PageState that = (PageState) o;
 
 		boolean pages_match = this.getKey().equals(that.getKey());
+		boolean sources_match = this.getSrc().equals(that.getSrc());
 
 		return pages_match;
 	}

@@ -165,8 +165,8 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									}
 									browser = new Browser(browser.getBrowserName());
 									tries++;
-								}while(result_page == null && tries < 10000);
-							
+								}while(result_page == null && tries < 100000);
+						
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
 								Test test_record = test_repo.findByKey(test.getKey());
 								if(test_record == null){

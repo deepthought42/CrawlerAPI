@@ -102,7 +102,7 @@ public class BrowserService {
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
-	public boolean checkIfLandable(Browser browser, PageState page_state) throws GridException, IOException {
+	public boolean checkIfLandable(String browser, PageState page_state) throws GridException, IOException {
 		boolean landable = false;
 
 		boolean page_visited_successfully = false;
@@ -111,23 +111,24 @@ public class BrowserService {
 			page_visited_successfully = false;
 
 			try{
-				Browser landable_browser = new Browser(browser.getBrowserName());
+				Browser landable_browser = new Browser(browser);
 				landable_browser.navigateTo(page_state.getUrl());
-				page_visited_successfully = true;
 				if(page_state.equals(buildPage(landable_browser))){
 					landable= true;
 				}
-				landable_browser.close();
+				page_visited_successfully = true;
 
+				landable_browser.close();
+				break;
 			}catch(GridException e){
-				log.error(e.getMessage());
+				log.warn(e.getMessage());
 			}
 			catch(Exception e){
-				log.error("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
-				log.error(e.getMessage());
+				log.warn("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
+				log.warn(e.getMessage());
 			}
 			cnt++;
-		}while(!page_visited_successfully && cnt < 10000);
+		}while(!page_visited_successfully && cnt < 100000);
 		
 		log.info("is page state landable  ?? :: "+landable);
 		return landable;
@@ -154,9 +155,9 @@ public class BrowserService {
 		try{
 			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		}catch(IOException e){
-			log.error(e.getMessage());
+			log.warn(e.getMessage());
 		} catch (Exception e) {
-			log.error(e.getMessage());
+			log.warn(e.getMessage());
 		}
 
 		BufferedImage screenshot = ImageIO.read(viewport_screenshot);
@@ -201,19 +202,19 @@ public class BrowserService {
 
 			Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
 			Duration minimum_diff = Duration.ofHours(24);
-			if(time_diff.compareTo(minimum_diff) <= 0){
-				log.info("Last landability check occurred less than 24 hours ago");
-				//have page checked for landability
-				BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
-
-				final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-				landibility_checker.tell(bps, ActorRef.noSender() );
+			if(time_diff.compareTo(minimum_diff) >= 0){
+				boolean landable = checkIfLandable(browser.getBrowserName(), page_state);
+				page_state.setLandable(landable);
 			}
+		}
+		else{
+			boolean landable = checkIfLandable(browser.getBrowserName(), page_state);
+			page_state.setLandable(landable);
 		}
 				
 		return page_state;
 	}
+	
 
 	/**
 	 * Retreives all elements on a given page that are visible. In this instance we take 
@@ -364,7 +365,7 @@ public class BrowserService {
 	    		}
 	    	}catch(InvalidSelectorException e){
 	    		parent = null;
-	    		log.error("Invalid selector exception occurred while generating xpath through parent nodes");
+	    		log.warn("Invalid selector exception occurred while generating xpath through parent nodes");
 	    		break;
 	    	}
 	    	count++;
@@ -485,7 +486,7 @@ public class BrowserService {
 			}
 			
 		}catch(InvalidSelectorException e){
-			log.error(e.getMessage());
+			log.warn(e.getMessage());
 		}
 
 		return xpath;

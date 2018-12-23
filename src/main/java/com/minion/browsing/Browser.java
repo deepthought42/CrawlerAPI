@@ -118,7 +118,6 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(2000L);
 		}
 	}
 	
@@ -131,16 +130,17 @@ public class Browser {
 
 	public void navigateTo(String url){
 		getDriver().get(url);
+
 		try{
 			new WebDriverWait(getDriver(), 360).until(
 					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			Timing.pauseThread(5000L);
 		}catch(GridException e){
-			log.error(e.getMessage());
+			log.warn("Grid exception occurrred while navigating to page  --  "+e.getMessage());
 		}
 		catch(Exception e){
-			log.error(e.getMessage());
-		}	
-		Timing.pauseThread(10000L);
+			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
+		}
 	}
 
 	/**
@@ -169,7 +169,6 @@ public class Browser {
 		catch(Exception e){
 			log.warn("Unknown exception occurred when closing browser", e.getLocalizedMessage());
 		}
-		
 	}
 	
 	/**

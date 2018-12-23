@@ -81,7 +81,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
 
@@ -112,7 +111,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
 
@@ -139,7 +137,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setSrc(src);
 		setKey(generateKey());
 	}
@@ -170,7 +167,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setSrc(src);
 		setKey(generateKey());
 	}

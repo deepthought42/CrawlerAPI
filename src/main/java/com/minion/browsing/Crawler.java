@@ -80,7 +80,7 @@ public class Crawler {
 		
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
-		//skip first node since we should have already loaded it during initialization
+
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
@@ -93,6 +93,9 @@ public class Crawler {
 				
 				current_page_state = browser_service.buildPage(browser);
 				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
+				if(!screenshot_matches){
+					throw new PagesAreNotMatchingException();
+				}
 			}
 			else if(current_obj instanceof PageElement){
 				last_element = (PageElement) current_obj;

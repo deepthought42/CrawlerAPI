@@ -56,8 +56,8 @@ public class UrlBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
-					  	System.err.println("URL DISCOVERY HAS STARTED");
-
+						
+						
 						boolean test_generated_successfully = false;
 						int attempts = 0;
 						do{
@@ -70,12 +70,6 @@ public class UrlBrowserActor extends AbstractActor {
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
 								test_service.save(test, host);
 		
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								log.info("test result :: "+test.getResult());
-								log.info("message account key :: "+message.getAccountKey());
-								log.info("message options "+ message.getOptions());
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 
 								DiscoveryRecord discovery_record = discovery_record_repo.findByKey(discovery_key);
@@ -102,13 +96,9 @@ public class UrlBrowserActor extends AbstractActor {
 								
 							}
 							catch(Exception e){
-								e.printStackTrace();
-								log.error(e.getMessage());
+								log.warn("Exception occurred while exploring url --  " + e.getMessage());
 							}
-						}while(!test_generated_successfully && attempts < 50000);
-						
-					  	System.err.println("URL DISCOVERY HAS ENDED");
-
+						}while(!test_generated_successfully && attempts < 100000);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		

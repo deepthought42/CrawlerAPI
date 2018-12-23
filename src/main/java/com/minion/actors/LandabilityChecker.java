@@ -82,10 +82,14 @@ public class LandabilityChecker extends AbstractActor{
 							if(page_state.equals(browser_service.buildPage(landable_browser))){
 								page_state.setLandable(true);
 							}
+							else{
+								page_state.setLandable(false);
+							}
 							page_state.setLastLandabilityCheck(LocalDateTime.now());
-							page_state.setLandable(true);
 							page_visited_successfully = true;
 							page_state_repo.save(page_state);
+							cnt = 500000;
+
 							landable_browser.close();
 							break;
 						}catch(GridException e){

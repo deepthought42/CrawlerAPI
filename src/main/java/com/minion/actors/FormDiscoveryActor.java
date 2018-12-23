@@ -78,10 +78,16 @@ public class FormDiscoveryActor extends AbstractActor{
 					  	Browser browser = null;
 					  	
 					  	while(browser == null && cnt < 100000){
+					  		
 					  		try{
+					  			System.err.println("Getting browser for form extraction");
 						  		browser = new Browser(message.getOptions().get("browser").toString());
+
+					  			System.err.println("navigating to url :: "+page_state.getUrl());
 						  		browser.navigateTo(page_state.getUrl());
 						  		
+
+					  			System.err.println("Looking up page state by key");
 						  		page_state = page_state_repo.findByKey(page_state.getKey());
 								  
 						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );

@@ -76,8 +76,8 @@ public class FormDiscoveryActor extends AbstractActor{
 			
 						int cnt = 0;
 					  	Browser browser = null;
-					  	
-					  	while(browser == null && cnt < 100000){
+					  	boolean forms_created = false;
+					  	do{
 					  		
 					  		try{
 					  			System.err.println("Getting browser for form extraction");
@@ -110,10 +110,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							       
 								    System.err.println("PREDICTION DONE !!! ");
 								    System.err.println("********************************************************");
-								    try{
-								  		browser.close();
-								  	}
-								  	catch(Exception e){}
+							  		browser.close();
 								  	
 								  	page_state.addForm(form);
 								  	page_state_repo.save(page_state);
@@ -121,19 +118,14 @@ public class FormDiscoveryActor extends AbstractActor{
 								  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 							  	}
 							  	System.err.println("FORM DISCOVERY HAS ENDED");
-						  	
+							  	forms_created = true;
 								break;
-							}catch(NullPointerException e){
-								log.warning(e.getMessage());
-							}
-					  		catch(NoSuchAlgorithmException e){
-					  			log.warning(e.getMessage());
-						  	}
-						  	catch(Exception e){
+							} catch(Exception e){
 						  		log.warning(e.getMessage());
 						  	}
+					  		browser = new Browser(page_state.getUrl());
 							cnt++;
-						}	
+						}	while(!forms_created && cnt < 100000);
 					}
 					postStop();
 				})

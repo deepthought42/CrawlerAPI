@@ -113,13 +113,12 @@ public class BrowserService {
 			try{
 				Browser landable_browser = new Browser(browser);
 				landable_browser.navigateTo(page_state.getUrl());
+				page_visited_successfully = true;
 				if(page_state.equals(buildPage(landable_browser))){
 					landable= true;
 				}
-				page_visited_successfully = true;
-
 				landable_browser.close();
-				break;
+
 			}catch(GridException e){
 				log.warn(e.getMessage());
 			}
@@ -203,13 +202,20 @@ public class BrowserService {
 			Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
 			Duration minimum_diff = Duration.ofHours(24);
 			if(time_diff.compareTo(minimum_diff) >= 0){
-				boolean landable = checkIfLandable(browser.getBrowserName(), page_state);
-				page_state.setLandable(landable);
+				//have page checked for landability
+				BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
+
+				final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
+				landibility_checker.tell(bps, ActorRef.noSender() );
 			}
 		}
 		else{
-			boolean landable = checkIfLandable(browser.getBrowserName(), page_state);
-			page_state.setLandable(landable);
+			BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
+
+			final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
+			landibility_checker.tell(bps, ActorRef.noSender() );
 		}
 				
 		return page_state;

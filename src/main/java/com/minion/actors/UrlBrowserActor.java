@@ -66,14 +66,15 @@ public class UrlBrowserActor extends AbstractActor {
 								String discovery_key = message.getOptions().get("discovery_key").toString();
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
-								
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
-								test_service.save(test, host);
+								test = test_service.save(test, host);
 		
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 
 								DiscoveryRecord discovery_record = discovery_record_repo.findByKey(discovery_key);
-								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){					
+								
+								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){	
+									
 									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 									form_discoverer.tell(page_state_msg, getSelf() );
@@ -91,9 +92,7 @@ public class UrlBrowserActor extends AbstractActor {
 								discovery_record.addExpandedPageState(test.getResult().getKey());
 								discovery_record_repo.save(discovery_record);
 								test_generated_successfully = true;
-								attempts = 6;
-								break;
-								
+								break;								
 							}
 							catch(Exception e){
 								log.warn("Exception occurred while exploring url --  " + e.getMessage());

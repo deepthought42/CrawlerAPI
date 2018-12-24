@@ -67,15 +67,19 @@ public class LandabilityChecker extends AbstractActor{
 
 					boolean page_visited_successfully = false;
 					int cnt  = 0;
+					
+					PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
+					if(page_state_record != null){
+						page_state = page_state_record;
+					}
+					page_state.setLastLandabilityCheck(LocalDateTime.now());
+					page_state = page_state_repo.save(page_state);
+
 					do{
 						page_visited_successfully = false;
 						
 						try{
-							PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
-							if(page_state_record != null){
-								log.info("Landability checker found page state with key :: "+page_state.getKey());
-								page_state = page_state_record;
-							}
+							
 							Browser landable_browser = new Browser(bps.browser_name);
 							landable_browser.navigateTo(page_state.getUrl());
 							log.info("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
@@ -85,21 +89,13 @@ public class LandabilityChecker extends AbstractActor{
 							else{
 								page_state.setLandable(false);
 							}
-							page_state.setLastLandabilityCheck(LocalDateTime.now());
 							page_visited_successfully = true;
-							page_state_repo.save(page_state);
-							cnt = 500000;
+							page_state = page_state_repo.save(page_state);
 
 							landable_browser.close();
 							break;
-						}catch(GridException e){
-							log.warning(e.getLocalizedMessage());
 						}
-						catch(NoSuchAlgorithmException e){
-							log.warning("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
-							log.warning(e.getLocalizedMessage());
-						}
-						catch(ClientException e){
+						catch(Exception e){
 							log.warning(e.getLocalizedMessage());
 						}
 

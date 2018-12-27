@@ -11,6 +11,7 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
@@ -123,9 +124,10 @@ public class FormDiscoveryActor extends AbstractActor{
 							} catch(Exception e){
 						  		log.warning(e.getMessage());
 						  	}
-					  		browser = new Browser(page_state.getUrl());
 							cnt++;
-						}	while(!forms_created && cnt < 100000);
+							Timing.pauseThread(1000);
+
+						}	while(!forms_created && cnt < Integer.MAX_VALUE);
 					}
 					postStop();
 				})

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
+import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
@@ -50,7 +51,7 @@ public class TestService {
 	 * @throws WebDriverException 
 	 * @throws GridException 
 	 */		
-	 public TestRecord runTest(Test test, Browser browser, TestStatus last_test_status) throws GridException, WebDriverException, NoSuchAlgorithmException{				
+	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status) throws GridException, WebDriverException, NoSuchAlgorithmException{				
 		 assert test != null;		
 	 			
 		 TestStatus passing = null;		
@@ -59,30 +60,43 @@ public class TestService {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 		 
 		 int cnt = 0;
+		 System.err.println("running test using browser :: " + browser_name + " ::");
 		 do{
 			 try {
+				System.err.println("Getting browser connection...");
+				Browser browser = new Browser(browser_name.trim());
+				System.err.println("Preparing to crawl path with keys :: "+test.getPathKeys().size());
+				System.err.println("Preparing to crawl path with objects :: "+test.getPathObjects().size());
+				System.err.println("Crawling path for test run...");
+
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
+				System.err.println("Closing browser for test run...");
+				browser.close();
 				break;
-			 } catch (IOException e) {		
-				 System.err.println(e.getMessage());		
 			 } catch(PagesAreNotMatchingException e){
+				 log.warn(e.getLocalizedMessage());
 				 passing = TestStatus.FAILING;
-				 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
+				 test.setBrowserStatus(browser_name.trim(), TestStatus.FAILING.toString());
+				 break;
 			 }
-			 try {
-				browser = new Browser(browser.getBrowserName());
-			} catch (MalformedURLException | NullPointerException e) {
-				log.error(e.getLocalizedMessage());
-			}
+			 catch (Exception e) {
+				 e.printStackTrace();
+				 System.err.println(e.getLocalizedMessage());
+			 } 
+			 
+			 Timing.pauseThread(2000);
 			 cnt++;
-		 }while(cnt < 50000 && page != null);
+		 }while(cnt < Integer.MAX_VALUE && page == null);
 		
+		 System.err.println("test result ::  " + test.getResult());
+		 System.err.println("page :: " + page);
+		 System.err.println("last_test_status  ::   " +last_test_status);
 		 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
 
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
+		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime);
 
 		 return test_record;		
 	 }

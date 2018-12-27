@@ -26,6 +26,7 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -147,6 +148,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								int tries = 0;
 								do{
 									try{
+										browser = new Browser(browser.getBrowserName());
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
@@ -161,10 +163,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
 									}
 
-									browser = new Browser(browser.getBrowserName());
-
 									tries++;
-								}while(result_page == null && tries < 50000);
+									Timing.pauseThread(1000);
+								}while(result_page == null && tries < Integer.MAX_VALUE);
 							
 								//have page checked for landability
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
@@ -203,7 +204,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  				results_match = false;
 							  			}
 							  			cnt++;
-							  		}while(results_match && cnt < 10000);
+										Timing.pauseThread(1000);
+							  		}while(results_match && cnt < Integer.MAX_VALUE);
 							  		
 							  		if(last_path == null){
 							  			last_path = path;

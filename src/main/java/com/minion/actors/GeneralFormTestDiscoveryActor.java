@@ -26,6 +26,7 @@ import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 
 import akka.actor.AbstractActor;
 import akka.cluster.ClusterEvent.MemberRemoved;
@@ -71,7 +72,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						int cnt = 0;
 					  	Browser browser = null;
 					  	
-					  	while(browser == null && cnt < 50000){
+					  	while(browser == null && cnt < Integer.MAX_VALUE){
 					  		try{
 						  		browser = new Browser(message.getOptions().get("browser").toString());
 						  		browser.navigateTo(page.getUrl());
@@ -129,7 +130,8 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  			}catch(Exception e){
 							  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
 							  			}
-						  			}while(cnt < 1000 && result_page == null);
+										Timing.pauseThread(1000);
+						  			}while(cnt < Integer.MAX_VALUE && result_page == null);
 							  		
 							  		final long pathCrawlEndTime = System.currentTimeMillis();
 									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;

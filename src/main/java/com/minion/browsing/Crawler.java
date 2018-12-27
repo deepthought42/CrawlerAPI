@@ -77,7 +77,6 @@ public class Crawler {
 		PageElement last_element = null;
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
-		
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
 
@@ -87,10 +86,9 @@ public class Crawler {
 				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
 				if(page_record != null){
 					expected_page = page_record;
-					
 				}
 				boolean screenshot_matches = false;
-				
+				System.err.println("building page for host channel :: " + host_channel);
 				current_page_state = browser_service.buildPage(browser);
 				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
 				if(!screenshot_matches){

@@ -122,6 +122,10 @@ public class Test implements Persistable {
 	 * @return
 	 */
 	public static TestStatus isTestPassing(PageState expected_page, PageState new_result_page, TestStatus last_test_passing_status){
+		assert expected_page != null;
+		assert new_result_page != null;
+		assert last_test_passing_status != null;
+		
 		if(last_test_passing_status.equals(TestStatus.FAILING) && expected_page.getKey().equals(new_result_page.getKey())){
 			last_test_passing_status = TestStatus.FAILING; 
 		}

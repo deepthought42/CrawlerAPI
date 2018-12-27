@@ -19,6 +19,7 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
@@ -97,7 +98,8 @@ public class UrlBrowserActor extends AbstractActor {
 							catch(Exception e){
 								log.warn("Exception occurred while exploring url --  " + e.getMessage());
 							}
-						}while(!test_generated_successfully && attempts < 100000);
+							 Timing.pauseThread(1000);
+						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		

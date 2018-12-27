@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -57,16 +58,17 @@ public class TestingActor extends AbstractActor {
 						PageState resulting_page = null;
 						if(test.getPathKeys() != null){
 							int cnt = 0;
-							while(browser == null && cnt < 10000){
+							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
+									browser = new Browser((String)message.getOptions().get("browser"));
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 									break;
 								}catch(NullPointerException e){
 									log.error(e.getMessage());
 								}
 								
-								browser = new Browser((String)message.getOptions().get("browser"));
 								cnt++;
+								Timing.pauseThread(1000);
 							}
 						}
 						final long pathCrawlEndTime = System.currentTimeMillis();
@@ -74,9 +76,7 @@ public class TestingActor extends AbstractActor {
 						test.setRunTime(pathCrawlRunTime);
 						//get current page of browser
 						PageState expected_page = test.getResult();
-						
-						int tries=0;
-		
+								
 						if(!resulting_page.equals(expected_page)){
 							TestRecord record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 							record.setRunTime(pathCrawlRunTime);

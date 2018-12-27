@@ -361,10 +361,11 @@ public class PageState implements Persistable, PathObject {
 	public String getFileChecksum(MessageDigest digest, String url) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		BufferedImage buff_img = ImageIO.read(new URL(url));
-
+		
 		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
 		assert foundWriter; // Not sure about this... with jpg it may work but
 							// other formats ?
+		
 		// Get file input stream for reading the file content
 		byte[] data = baos.toByteArray();
 		try {

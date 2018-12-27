@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
+import com.minion.util.Timing;
 import com.qanairy.models.PageState;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
@@ -100,7 +101,8 @@ public class LandabilityChecker extends AbstractActor{
 						}
 
 						cnt++;
-					}while(!page_visited_successfully && cnt < 500000);
+						Timing.pauseThread(1000);
+					}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
 					
 					log.info("is page state landable  ?? :: "+page_state.isLandable());
 					postStop();

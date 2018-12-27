@@ -41,6 +41,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -56,6 +57,7 @@ import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.RuleRepository;
 import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.utils.ImageUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -127,7 +129,9 @@ public class BrowserService {
 				log.warn(e.getMessage());
 			}
 			cnt++;
-		}while(!page_visited_successfully && cnt < 100000);
+			Timing.pauseThread(1000);
+
+		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
 		
 		log.info("is page state landable  ?? :: "+landable);
 		return landable;
@@ -146,11 +150,12 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
+		System.err.println("getting current url :: "+browser.getDriver().getCurrentUrl());
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
 		//new Actions(browser.getDriver()).moveByOffset(1000,1000);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		File viewport_screenshot = null;
+		BufferedImage viewport_screenshot = null;
 		try{
 			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		}catch(IOException e){
@@ -159,7 +164,9 @@ public class BrowserService {
 			log.warn(e.getMessage());
 		}
 
-		BufferedImage screenshot = ImageIO.read(viewport_screenshot);
+		BufferedImage screenshot = viewport_screenshot;
+		screenshot = ImageUtils.resize(screenshot, 768, 1024);
+        
 		String page_key = "pagestate::"+PageState.getFileChecksum(screenshot);
 		PageState page_state = null;
 		PageState page_record = null;
@@ -261,7 +268,7 @@ public class BrowserService {
 					String screenshot = null;
 					try{
 						
-						img = Browser.getElementScreenshot(driver, elem, ImageIO.read(Browser.getViewportScreenshot(driver)));
+						img = Browser.getElementScreenshot(driver, elem, Browser.getViewportScreenshot(driver));
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 
@@ -523,6 +530,7 @@ public class BrowserService {
 				log.info("browser browsername ::   "+browser.getBrowserName());
 				if(screenshot.getBrowser().equals(browser.getBrowserName())){
 					page_screenshot = screenshot.getViewportScreenshot();
+					break;
 				}
 			}
 			
@@ -550,6 +558,7 @@ public class BrowserService {
 				for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
 					if(screenshot.getBrowser().equals(browser.getBrowserName())){
 						page_screenshot = screenshot.getViewportScreenshot();
+						break;
 					}
 				}
 				
@@ -561,12 +570,14 @@ public class BrowserService {
 				if(elem_record == null || elem_record.getScreenshot()== null || elem_record.getScreenshot().isEmpty()){
 
 					Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
-					File viewport = Browser.getViewportScreenshot(browser.getDriver());
+					BufferedImage viewport = Browser.getViewportScreenshot(browser.getDriver());
 										
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
 					}
-					BufferedImage img = Browser.getElementScreenshot(ImageIO.read(viewport), input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
+					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
+					img = ImageUtils.resize(img, 768, 1024);
+
 					String screenshot= null;
 					try {
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), PageState.getFileChecksum(img), input_tag.getKey());
@@ -792,10 +803,9 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation(), driver);
+			img = Browser.getElementScreenshot(Browser.getViewportScreenshot(driver), elem.getSize(), elem.getLocation(), driver);
 			checksum = PageState.getFileChecksum(img);		
-			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
-
+			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);
 		}
 		catch(RasterFormatException e){
 			log.warn("Raster Format Exception : "+e.getMessage());
@@ -820,7 +830,7 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(ImageIO.read(Browser.getViewportScreenshot(driver)), elem.getSize(), elem.getLocation(), driver);
+			img = Browser.getElementScreenshot(Browser.getViewportScreenshot(driver), elem.getSize(), elem.getLocation(), driver);
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum);	
 
@@ -844,7 +854,7 @@ public class BrowserService {
 	 * @throws IOException
 	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
-		File viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
 		log.info("page state screenshots :: "+page_state.getBrowserScreenshots().size());
@@ -858,7 +868,7 @@ public class BrowserService {
 		boolean pages_match = false;
 		try {
 			BufferedImage img1 = ImageIO.read(new URL(page_screenshot.getViewportScreenshot()));
-			BufferedImage img2 = ImageIO.read(viewport_screenshot);
+			BufferedImage img2 = viewport_screenshot;
 			pages_match = PageState.compareImages(img1, img2);
 			if(pages_match){
 				return true;

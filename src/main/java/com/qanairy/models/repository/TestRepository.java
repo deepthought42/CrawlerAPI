@@ -1,7 +1,5 @@
 package com.qanairy.models.repository;
 
-import java.util.Set;
-
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;

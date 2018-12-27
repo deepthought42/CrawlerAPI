@@ -355,9 +355,7 @@ public class TestController {
     		
     		TestStatus last_test_status = test.getStatus();
 
-			Browser browser_dto = new Browser(browser.trim());
-			record = test_service.runTest(test, browser_dto, last_test_status);
-			browser_dto.close();
+			record = test_service.runTest(test, browser, last_test_status);
 			
 			test.addRecord(record);
 	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			

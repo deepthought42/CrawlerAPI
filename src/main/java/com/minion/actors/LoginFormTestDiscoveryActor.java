@@ -15,6 +15,7 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
@@ -151,6 +152,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								do{
 									try{
 										log.info("Crawling path for login form test discovery");
+										browser = new Browser(browser.getBrowserName());
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
@@ -163,9 +165,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									} catch (NoSuchAlgorithmException e) {
 										e.printStackTrace();
 									}
-									browser = new Browser(browser.getBrowserName());
 									tries++;
-								}while(result_page == null && tries < 100000);
+									Timing.pauseThread(1000);
+								}while(result_page == null && tries < Integer.MAX_VALUE);
 						
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
 								Test test_record = test_repo.findByKey(test.getKey());

@@ -4,7 +4,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
@@ -150,14 +149,13 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		System.err.println("getting current url :: "+browser.getDriver().getCurrentUrl());
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
 		//new Actions(browser.getDriver()).moveByOffset(1000,1000);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
 		BufferedImage viewport_screenshot = null;
 		try{
-			viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+			viewport_screenshot = Browser.getViewportScreenshot1024x768(browser.getDriver());
 		}catch(IOException e){
 			log.warn(e.getMessage());
 		} catch (Exception e) {
@@ -165,7 +163,7 @@ public class BrowserService {
 		}
 
 		BufferedImage screenshot = viewport_screenshot;
-		screenshot = ImageUtils.resize(screenshot, 768, 1024);
+		//screenshot = ImageUtils.resize(screenshot, 768, 1024);
         
 		String page_key = "pagestate::"+PageState.getFileChecksum(screenshot);
 		PageState page_state = null;
@@ -854,7 +852,7 @@ public class BrowserService {
 	 * @throws IOException
 	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
-		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot1024x768(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
 		log.info("page state screenshots :: "+page_state.getBrowserScreenshots().size());

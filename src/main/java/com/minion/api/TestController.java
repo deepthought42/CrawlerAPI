@@ -373,6 +373,7 @@ public class TestController {
 			browser_statuses.put(browser, is_passing.toString());
 			
 			test.addRecord(record);
+			test.setResult(record.getResult());
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());

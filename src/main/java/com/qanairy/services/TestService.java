@@ -84,7 +84,6 @@ public class TestService {
 				 System.err.println(e.getLocalizedMessage());
 			 } 
 			 
-			 Timing.pauseThread(2000);
 			 cnt++;
 		 }while(cnt < Integer.MAX_VALUE && page == null);
 		
@@ -97,7 +96,7 @@ public class TestService {
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime);
-
+		 
 		 return test_record;		
 	 }
 	 

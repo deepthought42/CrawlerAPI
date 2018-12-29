@@ -355,9 +355,7 @@ public class TestController {
     		
     		TestStatus last_test_status = test.getStatus();
 
-			Browser browser_dto = new Browser(browser.trim());
-			record = test_service.runTest(test, browser_dto, last_test_status);
-			browser_dto.close();
+			record = test_service.runTest(test, browser, last_test_status);
 			
 			test.addRecord(record);
 	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
@@ -375,6 +373,7 @@ public class TestController {
 			browser_statuses.put(browser, is_passing.toString());
 			
 			test.addRecord(record);
+			test.setResult(record.getResult());
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());

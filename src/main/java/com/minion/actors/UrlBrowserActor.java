@@ -19,6 +19,7 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
@@ -56,8 +57,8 @@ public class UrlBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
-					  	System.err.println("URL DISCOVERY HAS STARTED");
-
+						
+						
 						boolean test_generated_successfully = false;
 						int attempts = 0;
 						do{
@@ -66,20 +67,15 @@ public class UrlBrowserActor extends AbstractActor {
 								String discovery_key = message.getOptions().get("discovery_key").toString();
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
-								
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
-								test_service.save(test, host);
+								test = test_service.save(test, host);
 		
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								log.info("test result :: "+test.getResult());
-								log.info("message account key :: "+message.getAccountKey());
-								log.info("message options "+ message.getOptions());
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 
 								DiscoveryRecord discovery_record = discovery_record_repo.findByKey(discovery_key);
-								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){					
+								
+								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){	
+									
 									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 									form_discoverer.tell(page_state_msg, getSelf() );
@@ -97,18 +93,13 @@ public class UrlBrowserActor extends AbstractActor {
 								discovery_record.addExpandedPageState(test.getResult().getKey());
 								discovery_record_repo.save(discovery_record);
 								test_generated_successfully = true;
-								attempts = 6;
-								break;
-								
+								break;								
 							}
 							catch(Exception e){
-								e.printStackTrace();
-								log.error(e.getMessage());
+								log.warn("Exception occurred while exploring url --  " + e.getMessage());
 							}
-						}while(!test_generated_successfully && attempts < 5);
-						
-					  	System.err.println("URL DISCOVERY HAS ENDED");
-
+							 Timing.pauseThread(1000);
+						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		

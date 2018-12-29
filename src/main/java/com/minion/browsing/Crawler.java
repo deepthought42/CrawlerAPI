@@ -77,26 +77,22 @@ public class Crawler {
 		PageElement last_element = null;
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
-		
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
-		//skip first node since we should have already loaded it during initialization
+
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
 				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
 				if(page_record != null){
 					expected_page = page_record;
-					
 				}
 				boolean screenshot_matches = false;
-				
+				System.err.println("building page for host channel :: " + host_channel);
 				current_page_state = browser_service.buildPage(browser);
 				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
-				
-				boolean sources_match = current_page_state.getSrc().equals(expected_page.getSrc());
-				if(!screenshot_matches && !sources_match){
-					throw new PagesAreNotMatchingException();
+				if(!screenshot_matches){
+					return current_page_state;
 				}
 			}
 			else if(current_obj instanceof PageElement){

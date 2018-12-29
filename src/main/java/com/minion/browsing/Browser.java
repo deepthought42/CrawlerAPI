@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -30,6 +32,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -41,6 +44,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
+import com.qanairy.utils.ImageUtils;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -87,7 +91,7 @@ public class Browser {
 		
 		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 100000){
+		while(driver == null && cnt < Integer.MAX_VALUE){
 			try{
 				if(browser.equals("chrome")){
 					this.driver = openWithChrome();
@@ -104,8 +108,7 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
-
-				Timing.pauseThread(5000L);
+				Timing.pauseThread(5000);
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -119,7 +122,6 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(5000L);
 		}
 	}
 	
@@ -131,17 +133,20 @@ public class Browser {
 	}
 
 	public void navigateTo(String url){
+		System.err.println("Navigating to url.... " +url);
 		getDriver().get(url);
+
 		try{
-			new WebDriverWait(getDriver(), 360).until(
+			new WebDriverWait(getDriver(), 600).until(
 					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+			
 		}catch(GridException e){
-			log.error(e.getMessage());
+			log.warn("Grid exception occurrred while navigating to page  --  "+e.getMessage());
 		}
 		catch(Exception e){
-			log.error(e.getMessage());
-		}	
-		Timing.pauseThread(5000L);
+			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
+		}
+		Timing.pauseThread(15000);
 	}
 
 	/**
@@ -170,7 +175,6 @@ public class Browser {
 		catch(Exception e){
 			log.warn("Unknown exception occurred when closing browser", e.getLocalizedMessage());
 		}
-		
 	}
 	
 	/**
@@ -182,11 +186,15 @@ public class Browser {
 	 */
 	public static WebDriver openWithFirefox() throws MalformedURLException, UnreachableBrowserException, GridException{
 		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
-	    DesiredCapabilities cap = DesiredCapabilities.firefox();
-	    cap.setBrowserName("firefox");
+		FirefoxOptions options = new FirefoxOptions();
+		//options.setHeadless(true);
+		DesiredCapabilities cap = DesiredCapabilities.firefox();
+		cap.setCapability(FirefoxOptions.FIREFOX_OPTIONS, options);
 		cap.setJavascriptEnabled(true);
 
+
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -277,6 +285,7 @@ public class Browser {
 		log.info("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
+		driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -314,8 +323,20 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static File getViewportScreenshot(WebDriver driver) throws IOException, GridException{
-		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+	public static BufferedImage getViewportScreenshot(WebDriver driver) throws IOException, GridException{
+		return ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
+		//return ImageUtils.resize(screenshot, 768, 1024);
+	}
+	
+	/**
+	 * Gets image as a base 64 string
+	 * 
+	 * @return File png file of image
+	 * @throws IOException
+	 */
+	public static BufferedImage getViewportScreenshot1024x768(WebDriver driver) throws IOException, GridException{
+		BufferedImage screenshot = ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
+		return ImageUtils.resize(screenshot, 768, 1024);
 	}
 	
 	/**
@@ -409,7 +430,6 @@ public class Browser {
 	private static boolean isElementVisibleInPane(BufferedImage screenshot, WebElement elem) throws IOException {
 		Dimension weD = elem.getSize();
 	    Point weP = elem.getLocation();
-	    //BufferedImage  fullImg = ImageIO.read(screenshot);
 
 	    int x = screenshot.getWidth();;
 	    int y = screenshot.getHeight();

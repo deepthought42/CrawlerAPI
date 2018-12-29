@@ -1,21 +1,11 @@
 package actors;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.minion.actors.PathExpansionActor;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 
 public class PathExpansionActorTest {

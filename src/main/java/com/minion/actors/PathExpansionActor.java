@@ -113,15 +113,12 @@ public class PathExpansionActor extends AbstractActor {
 						return;
 					}
 					pathExpansions = expandPath(test);
-					System.err.println(pathExpansions.size()+"   path expansions found.");
 					
 					DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 					if(discovery_record2 != null){
 						discovery_record = discovery_record2;
 					}
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
-					System.err.println("expected total path count :: "+new_total_path_count);
 					discovery_record.setTotalPathCount(new_total_path_count);
 					//discovery_record.getExpandedPageStates().add(test.getResult().getKey());
 					discovery_record = discovery_repo.save(discovery_record);
@@ -238,18 +235,15 @@ public class PathExpansionActor extends AbstractActor {
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 						
-				System.err.println("Checking if element exists previously as a path object or within a page state");
 				//check if element exists in previous pageStates
 				
 				if(doesElementExistInMultiplePageStatesWithinTest(new_test, page_element)){
 					continue;
 				}
 				
-				System.err.println("adding actions lists to exploratory paths");
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-					System.err.println("exploratory path being created...");
 					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 
@@ -259,12 +253,10 @@ public class PathExpansionActor extends AbstractActor {
 					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 						continue;
 					}*/
-					System.err.println("added action path to path list");
 					pathList.add(action_path);
 				}
 			}
 		}
-		System.err.println("path list size :: " + pathList.size());
 		return pathList;
 	}
 
@@ -285,21 +277,15 @@ public class PathExpansionActor extends AbstractActor {
 		assert elem != null;
 		
 		int cnt = 0;
-		System.err.println("test path objects size :: " + test.getPathObjects().size());
 		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
 			
 			PathObject obj = test.getPathObjects().get(path_idx);
-			System.err.println("path object type about to be checked");
 			if(obj.getType().equals("PageState")){
-				System.err.println("Page state casting for object");
 				PageState page_state = ((PageState) obj);
 				Set<PageElement> page_elements = page_state_repo.getPageElements(page_state.getKey());
-				System.err.println("page state has # of elements  ::  "+page_elements.size());
 				for(PageElement page_elem : page_elements){
-					System.err.println("Checking if latest element matches page element ");
 					if(elem.equals(page_elem)){
 						cnt++;
-						System.err.println("PAGE ELEMENT COUNT WITHIN PATH :: " + cnt);
 						break;
 					}
 				}
@@ -307,8 +293,6 @@ public class PathExpansionActor extends AbstractActor {
 		}
 		//a count greater than 1 signifies more than one page state in the test contains this element
 		if(cnt > 1){
-			System.err.println("element exists already in path with # occurrence :: "+cnt);
-
 			return true;
 		}
 		return false;

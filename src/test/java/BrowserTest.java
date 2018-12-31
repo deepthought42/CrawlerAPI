@@ -49,7 +49,8 @@ public class BrowserTest {
 			PageState page = new PageState(	"http://localhost", 
 					screenshots,
 					elements,
-					false);
+					false,
+					"");
 			
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());

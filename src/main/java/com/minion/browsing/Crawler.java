@@ -88,7 +88,6 @@ public class Crawler {
 					expected_page = page_record;
 				}
 				boolean screenshot_matches = false;
-				System.err.println("building page for host channel :: " + host_channel);
 				current_page_state = browser_service.buildPage(browser);
 				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
 				if(!screenshot_matches){
@@ -111,7 +110,7 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				Timing.pauseThread(5000L);
+				Timing.pauseThread(10000L);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -119,7 +118,6 @@ public class Crawler {
 				alert.performChoice(browser.getDriver());
 			}
 		}
-		
 		return browser_service.buildPage(browser);
 	}
 	

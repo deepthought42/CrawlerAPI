@@ -126,16 +126,16 @@ public class Test implements Persistable {
 		assert new_result_page != null;
 		assert last_test_passing_status != null;
 		
-		if(last_test_passing_status.equals(TestStatus.FAILING) && expected_page.getKey().equals(new_result_page.getKey())){
+		if(last_test_passing_status.equals(TestStatus.FAILING) && expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.FAILING; 
 		}
-		else if(last_test_passing_status.equals(TestStatus.FAILING) && !expected_page.getKey().equals(new_result_page.getKey())){
+		else if(last_test_passing_status.equals(TestStatus.FAILING) && !expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.UNVERIFIED;
 		}
-		else if(last_test_passing_status.equals(TestStatus.PASSING) && expected_page.getKey().equals(new_result_page.getKey())){
+		else if(last_test_passing_status.equals(TestStatus.PASSING) && expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.PASSING;
 		}
-		else if(last_test_passing_status.equals(TestStatus.PASSING) && !expected_page.getKey().equals(new_result_page.getKey())){
+		else if(last_test_passing_status.equals(TestStatus.PASSING) && !expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.FAILING;
 		}
 		

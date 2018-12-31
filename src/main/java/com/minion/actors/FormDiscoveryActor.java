@@ -1,6 +1,5 @@
 package com.minion.actors;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,8 +68,6 @@ public class FormDiscoveryActor extends AbstractActor{
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof PageState){
-					  	System.err.println("FORM DISCOVERY HAS STARTED");
-
 						PageState page_state = ((PageState)message.getData());
 						
 						//get first page in path
@@ -81,20 +78,11 @@ public class FormDiscoveryActor extends AbstractActor{
 					  	do{
 					  		
 					  		try{
-					  			System.err.println("Getting browser for form extraction");
 						  		browser = new Browser(message.getOptions().get("browser").toString());
-
-					  			System.err.println("navigating to url :: "+page_state.getUrl());
 						  		browser.navigateTo(page_state.getUrl());
-						  		
-
-					  			System.err.println("Looking up page state by key");
 						  		page_state = page_state_repo.findByKey(page_state.getKey());
-								  
-						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
-							  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
-
+								List<Form> forms = browser_service.extractAllForms(page_state, browser);
+						  		
 							  	for(Form form : forms){
 								  	for(PageElement field: form.getFormFields()){
 										//for each field in the complex field generate a set of tests for all known rules
@@ -108,17 +96,12 @@ public class FormDiscoveryActor extends AbstractActor{
 									}
 								  							  	
 								    DeepthoughtApi.predict(form);
-							       
-								    System.err.println("PREDICTION DONE !!! ");
-								    System.err.println("********************************************************");
-							  		browser.close();
+							    	browser.close();
 								  	
 								  	page_state.addForm(form);
 								  	page_state_repo.save(page_state);
-							        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 								  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 							  	}
-							  	System.err.println("FORM DISCOVERY HAS ENDED");
 							  	forms_created = true;
 								break;
 							} catch(Exception e){

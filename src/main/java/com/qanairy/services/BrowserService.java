@@ -153,17 +153,7 @@ public class BrowserService {
 		//new Actions(browser.getDriver()).moveByOffset(1000,1000);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		BufferedImage viewport_screenshot = null;
-		try{
-			viewport_screenshot = Browser.getViewportScreenshot1024x768(browser.getDriver());
-		}catch(IOException e){
-			log.warn(e.getMessage());
-		} catch (Exception e) {
-			log.warn(e.getMessage());
-		}
-
-		BufferedImage screenshot = viewport_screenshot;
-		//screenshot = ImageUtils.resize(screenshot, 768, 1024);
+		BufferedImage screenshot = Browser.getViewportScreenshot(browser.getDriver());
         
 		String page_key = "pagestate::"+PageState.getFileChecksum(screenshot);
 		PageState page_state = null;
@@ -179,9 +169,9 @@ public class BrowserService {
 		}
 		else{
 			log.info("Getting visible elements...");
-			visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
-
 			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot, page_url.getHost(), page_key, "viewport");
+
+			visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
 			
 			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
 			
@@ -196,10 +186,13 @@ public class BrowserService {
 			HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
 			screenshots.add(screenshot_set);
 			
+			String src = browser.getDriver().getPageSource();
+			src = src.replaceAll("\\s","");
+			
 			page_state = new PageState(	page_url.toString(),
 					screenshots,
 					visible_elements,
-					browser.getDriver().getPageSource());
+					src);
 		}
 
 		if(page_state.getLastLandabilityCheck() != null){
@@ -240,7 +233,6 @@ public class BrowserService {
 															 throws WebDriverException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
-
 		Set<PageElement> elementList = new HashSet<PageElement>();
 		
 		if(pageElements.size() == 0){
@@ -249,15 +241,11 @@ public class BrowserService {
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
-			
-			
-			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 
 				if(is_child && elem.getSize().getHeight() > 1 && elem.getSize().width >1 && elem.isDisplayed()
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
 						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
-					
 					Set<Attribute> attributes = extractAttributes(elem, driver);
 					String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
 
@@ -265,11 +253,9 @@ public class BrowserService {
 					String checksum = "";
 					String screenshot = null;
 					try{
-						
 						img = Browser.getElementScreenshot(driver, elem, Browser.getViewportScreenshot(driver));
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-
 					}
 					catch(RasterFormatException e){
 						log.warn("Raster Format Exception : "+e.getMessage());
@@ -291,9 +277,6 @@ public class BrowserService {
 						elementList.add(tag_record);
 					}
 				}
-			}catch(Exception e) {
-				log.warn("Error getting visible element "+ e.getMessage());
-			}
 		}
 		
 		return elementList;
@@ -338,9 +321,19 @@ public class BrowserService {
 	 */
 	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver, Set<Attribute> attributes){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
-
+		List<Attribute> ordered_attributes = new ArrayList<>();
+		//order attributes based on valid attributes
+		for(String valid_attr : valid_xpath_attributes){
+			for(Attribute attr : attributes){
+				if(valid_attr.equals(attr.getName())){
+					ordered_attributes.add(attr);
+					break;
+				}
+			}
+		}
+		
 		xpath += "//"+element.getTagName();
-		for(Attribute attr : attributes){
+		for(Attribute attr : ordered_attributes){
 			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
 				
 				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
@@ -395,6 +388,7 @@ public class BrowserService {
 	@SuppressWarnings("unchecked")
 	public Set<Attribute> extractAttributes(WebElement element, WebDriver driver) {
 		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
+		
 		return loadAttributes(attribute_strings);
 	}
 	
@@ -520,8 +514,6 @@ public class BrowserService {
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			
-			System.err.println("EXTACTED FORM ELEMENT WITH TEXT   : "+form_elem.getText());
-
 			String page_screenshot = "";
 			for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
 				log.info("screenshot browser  ::   "+screenshot.getBrowser());
@@ -534,9 +526,7 @@ public class BrowserService {
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
-			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
 			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
-			System.err.println("SAVING SCREENSHOT URL ");
 			if(tag != null){
 				form_tag = tag;
 			}
@@ -545,7 +535,6 @@ public class BrowserService {
 			double[] weights = new double[1];
 			weights[0] = 0.3;
 			
-			System.err.println("CREATING A NEW FORM !!! ");
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
 									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
@@ -852,7 +841,7 @@ public class BrowserService {
 	 * @throws IOException
 	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
-		BufferedImage viewport_screenshot = Browser.getViewportScreenshot1024x768(browser.getDriver());
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
 		log.info("page state screenshots :: "+page_state.getBrowserScreenshots().size());

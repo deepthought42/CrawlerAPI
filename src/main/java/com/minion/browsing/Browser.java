@@ -1,7 +1,6 @@
 package com.minion.browsing;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -108,7 +107,6 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
-				Timing.pauseThread(5000);
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -122,6 +120,7 @@ public class Browser {
 			}
 
 			cnt++;
+			Timing.pauseThread(1000);
 		}
 	}
 	
@@ -133,7 +132,6 @@ public class Browser {
 	}
 
 	public void navigateTo(String url){
-		System.err.println("Navigating to url.... " +url);
 		getDriver().get(url);
 
 		try{
@@ -146,7 +144,7 @@ public class Browser {
 		catch(Exception e){
 			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
 		}
-		Timing.pauseThread(15000);
+		Timing.pauseThread(15000L);
 	}
 
 	/**
@@ -194,7 +192,7 @@ public class Browser {
 
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
-	    driver.manage().window().setSize(new Dimension(1024, 768));
+	    driver.manage().window().setSize(new Dimension(1920, 1080));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -285,7 +283,7 @@ public class Browser {
 		log.info("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
-		driver.manage().window().setSize(new Dimension(1024, 768));
+	    driver.manage().window().setSize(new Dimension(1920, 1080));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -325,7 +323,6 @@ public class Browser {
 	 */
 	public static BufferedImage getViewportScreenshot(WebDriver driver) throws IOException, GridException{
 		return ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
-		//return ImageUtils.resize(screenshot, 768, 1024);
 	}
 	
 	/**

@@ -14,6 +14,7 @@ import com.qanairy.models.ScreenshotSet;
  * 
  */
 public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
+	@Query("MATCH a=(p:PageState{key:{key}})-[h:HAS_ELEMENT]->(e:PageElement) RETURN a")
 	public PageState findByKey(@Param("key") String key);
 	
 	@Query("MATCH (p:PageState{key:{page_key}})-[h:HAS_SCREENSHOT]->(s:ScreenshotSet) RETURN s")

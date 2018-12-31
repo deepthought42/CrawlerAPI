@@ -41,7 +41,7 @@ public class ExploratoryPathTests {
 		when(page.getKey()).thenReturn("this is a test key");
 		List<String> path_key_list = new ArrayList<>();
 		path_key_list.add(page.getKey());
-		System.err.println("page  : " + page);
+		
 		boolean isCycle = ExploratoryPath.hasCycle(path_key_list, page);
 		assertFalse(isCycle);
 	}
@@ -54,7 +54,6 @@ public class ExploratoryPathTests {
 		path_key_list.add(page.getKey());
 		path_key_list.add(page.getKey());
 
-		System.err.println("page  : " + page);
 		boolean isCycle = ExploratoryPath.hasCycle(path_key_list, page);
 		assertTrue(isCycle);
 	}
@@ -67,7 +66,6 @@ public class ExploratoryPathTests {
 		path_key_list.add(null);
 		path_key_list.add(page.getKey());
 
-		System.err.println("page  : " + page);
 		boolean isCycle = ExploratoryPath.hasCycle(path_key_list, page);
 		assertTrue(isCycle);
 	}

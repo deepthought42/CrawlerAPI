@@ -22,11 +22,14 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.qanairy.serializers.PageStateSerializer;
 
 /**
  * A reference to a web page
  *
  */
+@JsonSerialize(using = PageStateSerializer.class)
 @NodeEntity
 public class PageState implements Persistable, PathObject {
 	@SuppressWarnings("unused")
@@ -56,62 +59,6 @@ public class PageState implements Persistable, PathObject {
 	private Set<Form> forms = new HashSet<>();
 
 	public PageState() {
-	}
-
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 * 
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null
-	 * @pre browser_screenshots != null;
-	 */
-	@Deprecated
-	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements) throws IOException {
-		assert elements != null;
-		assert browser_screenshots != null;
-
-		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
-		setBrowserScreenshots(browser_screenshots);
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setKey(generateKey());
-	}
-
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 * 
-	 * @param html
-	 * @param url
-	 * @param browsers_screenshots
-	 * @param elements
-	 * @param isLandable
-	 * 
-	 * @pre elements != null;
-	 * @pre browser_screenshots != null;
-	 * 
-	 * @throws IOException
-	 */
-	@Deprecated
-	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable)
-			throws IOException {
-		assert elements != null;
-		assert browser_screenshots != null;
-
-		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
-		setBrowserScreenshots(browser_screenshots);
-		setElements(elements);
-		setLandable(isLandable);
-		setImageWeight(0);
-		setKey(generateKey());
 	}
 
 	/**
@@ -246,9 +193,10 @@ public class PageState implements Persistable, PathObject {
 		PageState that = (PageState) o;
 
 		boolean pages_match = this.getKey().equals(that.getKey());
-		//boolean sources_match = this.getSrc().equals(that.getSrc());
 
-		return pages_match;
+		boolean sources_match = this.getSrc().equals(that.getSrc());
+
+		return pages_match || sources_match;
 	}
 
 	/**
@@ -269,7 +217,7 @@ public class PageState implements Persistable, PathObject {
 
 		PageState page;
 		try {
-			page = new PageState(getUrl().toString(), screenshots, elements, isLandable());
+			page = new PageState(getUrl().toString(), screenshots, elements, isLandable(), getSrc());
 			return page;
 		} catch (IOException e) {
 			e.printStackTrace();

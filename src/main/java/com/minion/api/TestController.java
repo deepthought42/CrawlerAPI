@@ -41,7 +41,6 @@ import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import com.minion.api.exception.PaymentDueException;
-import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -330,22 +329,25 @@ public class TestController {
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
     	    	
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-    	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", auth.getNickname(auth_access_token));
-        traits.put("email", username);        
-    	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getUsername())
-    		    .traits(traits)
+    	try{
+	    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+	    	Map<String, String> traits = new HashMap<String, String>();
+	        traits.put("name", auth.getNickname(auth_access_token));
+	        traits.put("email", username);        
+	    	analytics.enqueue(IdentifyMessage.builder()
+	    		    .userId(acct.getUsername())
+	    		    .traits(traits)
     		);
-    	
-    	//Fire test run started event	
-	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
-	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
-	   	analytics.enqueue(TrackMessage.builder("Running tests")
-	   		    .userId(acct.getUsername())
-	   		    .properties(run_test_batch_props)
+	    	
+	    	//Fire test run started event	
+	    	
+		   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
+		   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
+		   	analytics.enqueue(TrackMessage.builder("Running tests")
+		   		    .userId(acct.getUsername())
+		   		    .properties(run_test_batch_props)
 	   		);
+    	}catch(Exception e){}
 	   	
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	
@@ -354,7 +356,6 @@ public class TestController {
     		TestRecord record = null;
     		
     		TestStatus last_test_status = test.getStatus();
-
 			record = test_service.runTest(test, browser, last_test_status);
 			
 			test.addRecord(record);
@@ -369,11 +370,11 @@ public class TestController {
 					break;
 				}
 			}
+			
 			Map<String, String> browser_statuses = test.getBrowserStatuses();
 			browser_statuses.put(browser, is_passing.toString());
 			
 			test.addRecord(record);
-			test.setResult(record.getResult());
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());

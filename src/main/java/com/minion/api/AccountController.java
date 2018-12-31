@@ -227,7 +227,6 @@ public class AccountController {
         account_repo.deleteAccount(username);
 
         account = account_repo.findByUsername(username);
-    	System.err.println("Account :: " + account);
         logger.info("update invoked");
     }
 	

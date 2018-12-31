@@ -234,7 +234,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getXpath()+":"+getText());   
+		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getXpath()+getText().toLowerCase());   
 	}
 	
 
@@ -257,6 +257,7 @@ public class PageElement implements Persistable, PathObject {
         if (!(o instanceof PageElement)) return false;
         
         PageElement that = (PageElement)o;
+       
 		return this.getKey().equals(that.getKey());
 	}
 

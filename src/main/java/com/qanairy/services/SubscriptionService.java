@@ -54,7 +54,6 @@ public class SubscriptionService {
 	 */
 	public void changeSubscription(Account acct, SubscriptionPlan plan, String source_token) throws Exception{
 		Plan plan_tier = null;
-		System.err.println("Change subscription to plan :: " + plan.toString());
 		if("FREE".equals(plan.toString())){
 			//check if account has a subscription, if so then unsubscribe and remove subscription token
 			if(acct.getSubscriptionToken() != null && 

@@ -22,6 +22,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 
 @Component
@@ -33,6 +34,9 @@ public class TestService {
 	
 	@Autowired
 	private TestRepository test_repo;
+	
+	@Autowired
+	private PageStateRepository page_state_repo;
 	
 	@Autowired
 	private Crawler crawler;
@@ -57,17 +61,10 @@ public class TestService {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 		 
 		 int cnt = 0;
-		 System.err.println("running test using browser :: " + browser_name + " ::");
 		 do{
 			 try {
-				System.err.println("Getting browser connection...");
 				Browser browser = new Browser(browser_name.trim());
-				System.err.println("Preparing to crawl path with keys :: "+test.getPathKeys().size());
-				System.err.println("Preparing to crawl path with objects :: "+test.getPathObjects().size());
-				System.err.println("Crawling path for test run...");
-
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
-				System.err.println("Closing browser for test run...");
 				browser.close();
 				break;
 			 } catch(PagesAreNotMatchingException e){
@@ -77,17 +74,14 @@ public class TestService {
 				 break;
 			 }
 			 catch (Exception e) {
-				 e.printStackTrace();
-				 System.err.println(e.getLocalizedMessage());
+				 log.warn(e.getLocalizedMessage());
 			 } 
 			 
 			 cnt++;
 		 }while(cnt < Integer.MAX_VALUE && page == null);
 		
-		 System.err.println("test result ::  " + test.getResult());
-		 System.err.println("page :: " + page);
-		 System.err.println("last_test_status  ::   " +last_test_status);
-		 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
+		 PageState result = page_state_repo.findByKey(test.getResult().getKey());
+		 passing = Test.isTestPassing(result, page, last_test_status);
 
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 

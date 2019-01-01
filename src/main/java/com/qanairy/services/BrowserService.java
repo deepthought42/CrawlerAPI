@@ -244,6 +244,12 @@ public class BrowserService {
 			return elementList;
 		}
 		
+		int last_y_pos = 0;
+		//check if element is within viewport
+		//if not then scroll to bottom of element and take a screenshot
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		int contentHeight = ((Number) js.executeScript("return window.innerHeight")).intValue();
+		int contentWidth = ((Number) js.executeScript("return window.innerWidth")).intValue();
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
 			
@@ -263,6 +269,17 @@ public class BrowserService {
 					String screenshot = null;
 					try{
 						
+						
+						if(elem.getRect().getY() > (last_y_pos + contentHeight) || elem.getRect().getX() > contentWidth){
+							int scroll_y = (elem.getRect().getY()) - last_y_pos;
+						
+							((JavascriptExecutor)driver).executeScript("window.scrollBy("+ scroll_y +",0)");
+						}
+						else if(elem.getRect().getY() < last_y_pos){
+							int scroll_y = last_y_pos - elem.getRect().getY();
+						
+							((JavascriptExecutor)driver).executeScript("window.scrollBy(-"+ scroll_y +",0)");
+						}
 						img = Browser.getElementScreenshot(driver, elem, Browser.getViewportScreenshot(driver));
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	

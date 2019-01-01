@@ -161,11 +161,8 @@ public class BrowserService {
 		} catch (Exception e) {
 			log.warn(e.getMessage());
 		}
-
-		BufferedImage screenshot = viewport_screenshot;
-		//screenshot = ImageUtils.resize(screenshot, 768, 1024);
         
-		String page_key = "pagestate::"+PageState.getFileChecksum(screenshot);
+		String page_key = "pagestate::"+PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state = null;
 		PageState page_record = null;
 		try{
@@ -181,7 +178,7 @@ public class BrowserService {
 			log.info("Getting visible elements...");
 			visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
 
-			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot, page_url.getHost(), page_key, "viewport");
+			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
 			
 			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
 			

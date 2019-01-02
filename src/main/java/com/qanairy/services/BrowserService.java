@@ -24,6 +24,7 @@ import javax.imageio.ImageIO;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -250,6 +251,8 @@ public class BrowserService {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		int contentHeight = ((Number) js.executeScript("return window.innerHeight")).intValue();
 		int contentWidth = ((Number) js.executeScript("return window.innerWidth")).intValue();
+		Dimension viewport_dimension = new Dimension(contentWidth, contentHeight);
+		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
 			
@@ -268,19 +271,7 @@ public class BrowserService {
 					String checksum = "";
 					String screenshot = null;
 					try{
-						
-						
-						if(elem.getRect().getY() > (last_y_pos + contentHeight) || elem.getRect().getX() > contentWidth){
-							int scroll_y = (elem.getRect().getY()) - last_y_pos;
-						
-							((JavascriptExecutor)driver).executeScript("window.scrollBy("+ scroll_y +",0)");
-						}
-						else if(elem.getRect().getY() < last_y_pos){
-							int scroll_y = last_y_pos - elem.getRect().getY();
-						
-							((JavascriptExecutor)driver).executeScript("window.scrollBy(-"+ scroll_y +",0)");
-						}
-						img = Browser.getElementScreenshot(driver, elem, Browser.getViewportScreenshot(driver));
+						img = Browser.getElementScreenshot(driver, elem, Browser.getViewportScreenshot(driver), last_y_pos, viewport_dimension);
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 

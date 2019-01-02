@@ -348,10 +348,6 @@ public class Browser {
 	 */
 	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		
-		//((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(false);", elem);
-		//Timing.pauseThread(500L);
-		//BufferedImage page_screenshot = new AShot().takeScreenshot(driver, elem).getImage();
-
 		Dimension dimension = elem.getSize();
 		Point point = elem.getLocation();
 		
@@ -361,6 +357,78 @@ public class Browser {
 		int point_x = point.getX();
 		
 		int point_y = point.getY();
+		if(point_y > page_screenshot.getHeight()){
+			point_y =  page_screenshot.getHeight() - dimension.getHeight();
+		}
+		
+		if( (elem_width + point_x) < page_screenshot.getWidth()){
+			elem_width = elem_width+5;
+		}
+		else{
+			elem_width = page_screenshot.getWidth() - point_x;
+		}
+		
+		if((elem_height + point_y) < page_screenshot.getHeight()){
+			elem_height = elem_height+5;
+		}
+		else{
+			elem_height = page_screenshot.getHeight() - point_y;
+		}
+		
+		if( (point_x - 5) >= 0){
+			elem_width += 5;
+			point_x -= 5;
+		}
+		else{
+			elem_width += point_x;
+			point_x = 0;
+		}
+		
+		if( (point_y - 5) >= 0){
+			//elem_height += 5;
+			point_y -= 5;
+		}
+		else{
+			//elem_height += point_y;
+			point_y = 0;
+		}
+		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
+		
+	}
+	
+	/**
+	 * 
+	 * @param screenshot
+	 * @param elem
+	 * @return
+	 * @throws IOException
+	 */
+	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot, int last_y_pos, Dimension viewport_dimension) throws IOException{
+		
+		Dimension dimension = elem.getSize();
+		Point point = elem.getLocation();
+		
+		// Get width and height of the element
+		int elem_width = dimension.getWidth();
+		int elem_height = dimension.getHeight();
+		int point_x = point.getX();
+		int point_y = point.getY();
+		
+		if(point_y > (last_y_pos + viewport_dimension.getHeight()) || point_x > viewport_dimension.getWidth()){
+			int scroll_y = point_y - last_y_pos;
+		
+			((JavascriptExecutor)driver).executeScript("window.scrollBy("+ scroll_y +",0)");
+			last_y_pos += scroll_y;
+			point_y -= scroll_y;
+		}
+		else if(point_y < last_y_pos){
+			int scroll_y = last_y_pos - point_y;
+		
+			((JavascriptExecutor)driver).executeScript("window.scrollBy(-"+ scroll_y +",0)");
+			point_y += scroll_y;
+			last_y_pos -= scroll_y;
+		}
+		
 		if(point_y > page_screenshot.getHeight()){
 			point_y =  page_screenshot.getHeight() - dimension.getHeight();
 		}

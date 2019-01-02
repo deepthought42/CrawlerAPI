@@ -404,7 +404,8 @@ public class Browser {
 	 * @throws IOException
 	 */
 	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot, int last_y_pos, Dimension viewport_dimension) throws IOException{
-		
+
+
 		Dimension dimension = elem.getSize();
 		Point point = elem.getLocation();
 		
@@ -484,27 +485,6 @@ public class Browser {
 		Long viewport_offset = (Long) executor.executeScript("return window.pageYOffset;");
 		int y_coord = point.getY()-viewport_offset.intValue();
 		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
-	}
-	
-	
-	/**
-	 * Checks if element is visible in a given screenshot
-	 * 
-	 * @param screenshot
-	 * @param elem
-	 * @return
-	 * @throws IOException
-	 */
-	private static boolean isElementVisibleInPane(BufferedImage screenshot, WebElement elem) throws IOException {
-		Dimension weD = elem.getSize();
-	    Point weP = elem.getLocation();
-
-	    int x = screenshot.getWidth();;
-	    int y = screenshot.getHeight();
-	    int x2 = weD.getWidth() + weP.getX();
-	    int y2 = weD.getHeight() + weP.getY();
-
-	    return x2 <= x && y2 <= y && weD.getWidth()>0 && weD.getHeight()>0;
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){

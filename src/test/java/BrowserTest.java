@@ -1,10 +1,25 @@
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.PageElement;
@@ -17,7 +32,24 @@ import com.qanairy.services.BrowserService;
  * 
  */
 public class BrowserTest {
-
+	
+	@Mock
+	private WebDriver driver;
+	
+	@Mock
+	private WebElement web_element;
+	
+	@Mock
+	private BufferedImage buffered_img;
+	
+	@Mock
+	private Dimension dimension;
+	
+	@Before
+	public void start(){
+        MockitoAnnotations.initMocks(this);
+	}
+	
 	//@Test
 	public void verifyCleanSrc(){
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
@@ -38,7 +70,7 @@ public class BrowserTest {
 	}
 	
 	
-	//@Test
+	@Test
 	public void verifyTestConstructor(){
 		try {
 			Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
@@ -49,7 +81,8 @@ public class BrowserTest {
 			PageState page = new PageState(	"http://localhost", 
 					screenshots,
 					elements,
-					false);
+					false,
+					"");
 			
 			List<String> path_keys = new ArrayList<String>();
 			path_keys.add(page.getKey());
@@ -63,10 +96,24 @@ public class BrowserTest {
 			Assert.assertEquals(test.getPathObjects().size(), path_objects.size());
 			Assert.assertEquals(test.getRunTime(), 0L);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	@Test
+	public void getElementScreenshotForElementWithinView() throws IOException{
+		int last_y_pos = 0;
 		
+		when(web_element.getSize()).thenReturn(new Dimension(10, 10));
+		when(web_element.getLocation()).thenReturn(new Point(0, 0));
+		when(buffered_img.getHeight()).thenReturn(800);
+		when(buffered_img.getWidth()).thenReturn(1280);
 		
+		BufferedImage buffered_img = ImageIO.read(new File("C:\\Users\\brand\\workspace\\WebTestVisualizer\\src\\test\\resources\\screenshot.png"));
+		
+		BufferedImage img = Browser.getElementScreenshot(driver, web_element, buffered_img, last_y_pos, dimension);
+		
+		assertNotNull(img);
 	}
 }
+

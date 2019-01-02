@@ -325,18 +325,6 @@ public class Browser {
 	 */
 	public static BufferedImage getViewportScreenshot(WebDriver driver) throws IOException, GridException{
 		return ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
-		//return ImageUtils.resize(screenshot, 768, 1024);
-	}
-	
-	/**
-	 * Gets image as a base 64 string
-	 * 
-	 * @return File png file of image
-	 * @throws IOException
-	 */
-	public static BufferedImage getViewportScreenshot1024x768(WebDriver driver) throws IOException, GridException{
-		BufferedImage screenshot = ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
-		return ImageUtils.resize(screenshot, 768, 1024);
 	}
 	
 	/**
@@ -348,10 +336,6 @@ public class Browser {
 	 */
 	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		
-		//((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(false);", elem);
-		//Timing.pauseThread(500L);
-		//BufferedImage page_screenshot = new AShot().takeScreenshot(driver, elem).getImage();
-
 		Dimension dimension = elem.getSize();
 		Point point = elem.getLocation();
 		
@@ -359,7 +343,6 @@ public class Browser {
 		int elem_width = dimension.getWidth();
 		int elem_height = dimension.getHeight();
 		int point_x = point.getX();
-		
 		int point_y = point.getY();
 		if(point_y > page_screenshot.getHeight()){
 			point_y =  page_screenshot.getHeight() - dimension.getHeight();
@@ -389,11 +372,9 @@ public class Browser {
 		}
 		
 		if( (point_y - 5) >= 0){
-			//elem_height += 5;
 			point_y -= 5;
 		}
 		else{
-			//elem_height += point_y;
 			point_y = 0;
 		}
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);

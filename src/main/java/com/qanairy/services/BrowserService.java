@@ -153,14 +153,8 @@ public class BrowserService {
 		//new Actions(browser.getDriver()).moveByOffset(1000,1000);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		BufferedImage viewport_screenshot = null;
-		try{
-			viewport_screenshot = Browser.getViewportScreenshot1024x768(browser.getDriver());
-		}catch(IOException e){
-			log.warn(e.getMessage());
-		} catch (Exception e) {
-			log.warn(e.getMessage());
-		}
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+		
 
 		BufferedImage screenshot = viewport_screenshot;
 		//screenshot = ImageUtils.resize(screenshot, 768, 1024);
@@ -852,7 +846,7 @@ public class BrowserService {
 	 * @throws IOException
 	 */
 	public boolean doScreenshotsMatch(Browser browser, PageState page_state) throws GridException, IOException{
-		BufferedImage viewport_screenshot = Browser.getViewportScreenshot1024x768(browser.getDriver());
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 		
 		ScreenshotSet page_screenshot = null;
 		log.info("page state screenshots :: "+page_state.getBrowserScreenshots().size());

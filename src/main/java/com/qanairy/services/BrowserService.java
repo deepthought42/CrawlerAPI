@@ -104,8 +104,10 @@ public class BrowserService {
 	 * @throws GridException 
 	 */
 	public boolean checkIfLandable(String browser, PageState page_state) throws GridException, IOException {
-		boolean landable = false;
 
+		page_state.setLastLandabilityCheck(LocalDateTime.now());
+
+		boolean landable = false;
 		boolean page_visited_successfully = false;
 		int cnt  = 0;
 		do{
@@ -114,12 +116,16 @@ public class BrowserService {
 			try{
 				Browser landable_browser = new Browser(browser);
 				landable_browser.navigateTo(page_state.getUrl());
-				page_visited_successfully = true;
+				
 				if(page_state.equals(buildPage(landable_browser))){
-					landable= true;
+					page_state.setLandable(true);
 				}
+				else{
+					page_state.setLandable(false);
+				}
+				
+				page_visited_successfully = true;
 				landable_browser.close();
-
 			}catch(GridException e){
 				log.warn(e.getMessage());
 			}
@@ -128,8 +134,6 @@ public class BrowserService {
 				log.warn(e.getMessage());
 			}
 			cnt++;
-			Timing.pauseThread(1000);
-
 		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
 		
 		log.info("is page state landable  ?? :: "+landable);
@@ -150,14 +154,11 @@ public class BrowserService {
 		assert browser != null;
 		
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
-		//new Actions(browser.getDriver()).moveByOffset(1000,1000);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
-		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-		
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
 
 		BufferedImage screenshot = viewport_screenshot;
-		//screenshot = ImageUtils.resize(screenshot, 768, 1024);
         
 		String page_key = "pagestate::"+PageState.getFileChecksum(screenshot);
 		PageState page_state = null;
@@ -202,19 +203,12 @@ public class BrowserService {
 			Duration minimum_diff = Duration.ofHours(24);
 			if(time_diff.compareTo(minimum_diff) >= 0){
 				//have page checked for landability
-				BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
-
-				final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-				landibility_checker.tell(bps, ActorRef.noSender() );
+				checkIfLandable(browser.getBrowserName(), page_state);
 			}
 		}
 		else{
 			BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
-
-			final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-			landibility_checker.tell(bps, ActorRef.noSender() );
+			checkIfLandable(browser.getBrowserName(), page_state);
 		}
 				
 		return page_state;

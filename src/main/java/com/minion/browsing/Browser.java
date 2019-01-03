@@ -108,7 +108,6 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
-				Timing.pauseThread(5000);
 				return;
 			}
 			catch(UnreachableBrowserException e){

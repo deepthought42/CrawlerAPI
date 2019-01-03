@@ -106,7 +106,8 @@ public class BrowserService {
 	public boolean checkIfLandable(String browser, PageState page_state) throws GridException, IOException {
 
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
-
+		page_state = page_state_repo.save(page_state);
+		
 		boolean landable = false;
 		boolean page_visited_successfully = false;
 		int cnt  = 0;

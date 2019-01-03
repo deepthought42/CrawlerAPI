@@ -115,5 +115,20 @@ public class BrowserTest {
 		
 		assertNotNull(img);
 	}
+	
+	public void getElementScreenshotForElementOutsideOfViewBelow() throws IOException{
+		int last_y_pos = 0;
+		
+		when(web_element.getSize()).thenReturn(new Dimension(10, 10));
+		when(web_element.getLocation()).thenReturn(new Point(0, 2000));
+		when(buffered_img.getHeight()).thenReturn(800);
+		when(buffered_img.getWidth()).thenReturn(1280);
+		
+		BufferedImage buffered_img = ImageIO.read(new File("C:\\Users\\brand\\workspace\\WebTestVisualizer\\src\\test\\resources\\screenshot.png"));
+		
+		BufferedImage img = Browser.getElementScreenshot(driver, web_element, buffered_img, last_y_pos, dimension);
+		
+		assertNotNull(img);
+	}
 }
 

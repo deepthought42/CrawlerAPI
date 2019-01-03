@@ -108,7 +108,6 @@ public class BrowserService {
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
 		page_state = page_state_repo.save(page_state);
 		
-		boolean landable = false;
 		boolean page_visited_successfully = false;
 		int cnt  = 0;
 		do{
@@ -127,6 +126,7 @@ public class BrowserService {
 				
 				page_visited_successfully = true;
 				landable_browser.close();
+				break;
 			}catch(GridException e){
 				log.warn(e.getMessage());
 			}
@@ -136,9 +136,10 @@ public class BrowserService {
 			}
 			cnt++;
 		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
-		
-		log.info("is page state landable  ?? :: "+landable);
-		return landable;
+		page_state = page_state_repo.save(page_state);
+
+		log.info("is page state landable  ?? :: "+page_state.isLandable());
+		return page_state.isLandable();
 	}
 	
 	/**
@@ -196,19 +197,13 @@ public class BrowserService {
 					screenshots,
 					visible_elements,
 					browser.getDriver().getPageSource());
+			boolean isLandable = checkIfLandable(browser.getBrowserName(), page_state);
 		}
 
-		if(page_state.getLastLandabilityCheck() != null){
-
-			Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
-			Duration minimum_diff = Duration.ofHours(24);
-			if(time_diff.compareTo(minimum_diff) >= 0){
-				//have page checked for landability
-				checkIfLandable(browser.getBrowserName(), page_state);
-			}
-		}
-		else{
-			BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
+		Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
+		Duration minimum_diff = Duration.ofHours(24);
+		if(time_diff.compareTo(minimum_diff) > 0){
+			//have page checked for landability
 			checkIfLandable(browser.getBrowserName(), page_state);
 		}
 				

@@ -136,7 +136,7 @@ public class Browser {
 		getDriver().get(url);
 
 		try{
-			new WebDriverWait(getDriver(), 600).until(
+			new WebDriverWait(getDriver(), 360).until(
 					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 			
 		}catch(GridException e){

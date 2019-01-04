@@ -3,6 +3,7 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
+import java.util.Date;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
+import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
 import com.qanairy.models.Test;
@@ -35,6 +37,9 @@ import com.qanairy.services.TestService;
 @Scope("prototype")
 public class UrlBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
+	
+	@Autowired
+	DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -70,11 +75,18 @@ public class UrlBrowserActor extends AbstractActor {
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
 								test = test_service.save(test, host);
 		
+								DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
+								discovery_record.setLastPathRanAt(new Date());
+								discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+								discovery_record.setTestCount(discovery_record.getTestCount()+1);
+								discovery_record = discovery_repo.save(discovery_record);
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
-
-								DiscoveryRecord discovery_record = discovery_record_repo.findByKey(discovery_key);
 								
 								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){	
+									discovery_record.addExpandedPageState(test.getResult().getKey());
+									discovery_record_repo.save(discovery_record);
 									
 									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
@@ -90,8 +102,6 @@ public class UrlBrowserActor extends AbstractActor {
 									path_expansion_actor.tell(test_msg, getSelf() );
 								}
 								
-								discovery_record.addExpandedPageState(test.getResult().getKey());
-								discovery_record_repo.save(discovery_record);
 								test_generated_successfully = true;
 								break;								
 							}

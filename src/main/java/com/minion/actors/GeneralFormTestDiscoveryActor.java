@@ -154,7 +154,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
 							  	}
 								break;
-							}catch(NullPointerException e){
+							}catch(Exception e){
 								log.warning(e.getLocalizedMessage());
 							}
 							cnt++;

@@ -103,13 +103,20 @@ public class PathExpansionActor extends AbstractActor {
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
+						
+						try{
+							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					  	}catch(Exception e){
+						
+						}
+						
 						log.info("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
 						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
 						Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(test.getResult().getUrl()), message.getOptions());
 						work_allocator.tell(url_msg, getSelf() );
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
 						return;
 					}
 					pathExpansions = expandPath(test);

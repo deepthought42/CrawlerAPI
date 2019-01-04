@@ -164,7 +164,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									}
 
 									tries++;
-									Timing.pauseThread(1000);
 								}while(result_page == null && tries < Integer.MAX_VALUE);
 							
 								//have page checked for landability
@@ -204,7 +203,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  				results_match = false;
 							  			}
 							  			cnt++;
-										Timing.pauseThread(1000);
 							  		}while(results_match && cnt < Integer.MAX_VALUE);
 							  		
 							  		if(last_path == null){

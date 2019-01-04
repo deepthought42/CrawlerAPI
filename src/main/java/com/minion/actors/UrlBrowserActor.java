@@ -98,7 +98,6 @@ public class UrlBrowserActor extends AbstractActor {
 							catch(Exception e){
 								log.warn("Exception occurred while exploring url --  " + e.getMessage());
 							}
-							 Timing.pauseThread(1000);
 						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);

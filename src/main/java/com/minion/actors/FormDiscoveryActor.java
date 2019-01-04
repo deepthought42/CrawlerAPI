@@ -125,9 +125,8 @@ public class FormDiscoveryActor extends AbstractActor{
 						  		log.warning(e.getMessage());
 						  	}
 							cnt++;
-							Timing.pauseThread(1000);
 
-						}	while(!forms_created && cnt < Integer.MAX_VALUE);
+						}while(!forms_created && cnt < Integer.MAX_VALUE);
 					}
 					postStop();
 				})

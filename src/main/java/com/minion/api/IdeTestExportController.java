@@ -16,10 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.minion.browsing.Browser;
+import com.minion.browsing.Crawler;
 import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
@@ -35,7 +35,7 @@ import com.qanairy.services.BrowserService;
  */
 @RestController
 @RequestMapping("/testIDE")
-public class IDETestExportController {
+public class IdeTestExportController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Autowired
@@ -64,6 +64,7 @@ public class IDETestExportController {
     	Browser browser = new Browser("chrome");
     	boolean first_page = true;
     	int current_idx = 0;
+    	PageElement last_element = null;
     	String name = (String) test_json.get("name");
     	JSONObject[] path = (JSONObject[]) test_json.get("path");
     	for(JSONObject obj : path){
@@ -87,7 +88,7 @@ public class IDETestExportController {
 
     			String xpath = browser_service.generateXpath(element, obj.getString("xpath"), new HashMap<String, Integer>(), browser.getDriver(), attributes);
     			PageElement elem = new PageElement(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);
-    			
+    			last_element = elem;
     			//add to path
     			path_keys.add(elem.getKey());
     			path_objects.add(elem);
@@ -101,7 +102,8 @@ public class IDETestExportController {
     			
     			path_keys.add(action.getKey());
     			path_objects.add(action);
-    			Timing.pauseThread(5000L);    			
+    			Crawler.performAction(action, last_element, browser.getDriver());
+    			Timing.pauseThread(10000L);    			
     			
     			//******************************************************
     			// THIS IS LIKELY TO BE PROBLEMATIC IF THE CLIENT ACTUALLY EXPERIENCED A TRANSITION STATE

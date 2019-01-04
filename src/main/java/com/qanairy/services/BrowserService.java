@@ -104,10 +104,7 @@ public class BrowserService {
 	 * @throws GridException 
 	 */
 	public boolean checkIfLandable(String browser, PageState page_state) throws GridException, IOException {
-
-		page_state.setLastLandabilityCheck(LocalDateTime.now());
-		page_state = page_state_repo.save(page_state);
-		
+		boolean isLandable = false;
 		boolean page_visited_successfully = false;
 		int cnt  = 0;
 		do{
@@ -118,10 +115,10 @@ public class BrowserService {
 				landable_browser.navigateTo(page_state.getUrl());
 				
 				if(page_state.equals(buildPage(landable_browser))){
-					page_state.setLandable(true);
+					isLandable = true;
 				}
 				else{
-					page_state.setLandable(false);
+					isLandable = false;
 				}
 				
 				page_visited_successfully = true;
@@ -136,10 +133,9 @@ public class BrowserService {
 			}
 			cnt++;
 		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
-		page_state = page_state_repo.save(page_state);
-
+		
 		log.info("is page state landable  ?? :: "+page_state.isLandable());
-		return page_state.isLandable();
+		return isLandable;
 	}
 	
 	/**
@@ -197,14 +193,24 @@ public class BrowserService {
 					screenshots,
 					visible_elements,
 					browser.getDriver().getPageSource());
+			page_state.setLastLandabilityCheck(LocalDateTime.now());
+			page_state = page_state_repo.save(page_state);
+			
 			boolean isLandable = checkIfLandable(browser.getBrowserName(), page_state);
+			page_state.setLandable(isLandable);
+			page_state = page_state_repo.save(page_state);
 		}
 
 		Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
 		Duration minimum_diff = Duration.ofHours(24);
 		if(time_diff.compareTo(minimum_diff) > 0){
 			//have page checked for landability
-			checkIfLandable(browser.getBrowserName(), page_state);
+			page_state.setLastLandabilityCheck(LocalDateTime.now());
+			page_state = page_state_repo.save(page_state);
+
+			boolean isLandable = checkIfLandable(browser.getBrowserName(), page_state);
+			page_state.setLandable(isLandable);
+			page_state = page_state_repo.save(page_state);
 		}
 				
 		return page_state;

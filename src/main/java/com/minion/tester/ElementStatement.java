@@ -12,6 +12,7 @@ import org.slf4j.Logger;
  *
  */
 public class ElementStatement implements IStatementFactory {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStatement.class);
 
 	/**

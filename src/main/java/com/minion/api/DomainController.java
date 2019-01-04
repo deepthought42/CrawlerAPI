@@ -59,8 +59,6 @@ import akka.actor.ActorSystem;
 @Controller
 @RequestMapping("/domains")
 public class DomainController {
-	
-	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
@@ -78,6 +76,8 @@ public class DomainController {
 	@Autowired
 	private TestUserRepository test_user_repo;
 	   
+	@Autowired
+	private Auth0Client auth;
     /**
      * Create a new {@link Domain domain}
      * 
@@ -95,7 +95,6 @@ public class DomainController {
 							    		 @RequestParam(value="test_users", required=false) List<TestUser> users) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-       	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -114,6 +113,9 @@ public class DomainController {
     	if(dot_idx == last_dot_idx){
     		formatted_url = "www."+url;
     	}
+    	formatted_url = formatted_url.replace("http://", "");
+    	formatted_url = formatted_url.replace("https://", "");
+    	protocol = "http";
     	URL url_obj = new URL(protocol+"://"+formatted_url);
 		
     	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
@@ -155,7 +157,6 @@ public class DomainController {
         }*/
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -192,7 +193,6 @@ public class DomainController {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -213,7 +213,6 @@ public class DomainController {
     public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
@@ -243,7 +242,6 @@ public class DomainController {
 								   throws UnknownAccountException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
 		Account acct = account_repo.findByUsername(username);
@@ -268,7 +266,6 @@ public class DomainController {
     															throws UnknownAccountException {        
     	//String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	//Auth0Client auth = new Auth0Client();
     	//String username = auth.getUsername(auth_access_token);
     	
     	//Account acct = account_repo.findByUsername(username);
@@ -293,24 +290,22 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_repo.getPageStates(host);
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		log.info("retreived   "+page_state.size()+"      page states");
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-		Set<PageState> test_results = domain_repo.getResults(host);		
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
-		Set<PathObject> path_objects = new HashSet<PathObject>();//merge(page_state, page_elem, actions);
+		Set<PathObject> path_objects = new HashSet<PathObject>();
+		
+		for(PageState state : page_state){
+			state.setSrc(null);
+		}
+		//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(page_state);
-		path_objects.addAll(test_results);
 		path_objects.addAll(page_elem);
 		path_objects.addAll(actions);
-		//path_objects.addAll(action_repo.getActions);
 		return path_objects;
-	
-	    //return new HashSet<PageState>();
     }
 	
+	@SafeVarargs
 	public static <T> Set<T> merge(Collection<? extends T>... collections) {
 	    Set<T> newSet = new HashSet<T>();
 	    for (Collection<? extends T> collection : collections)
@@ -333,7 +328,6 @@ public class DomainController {
     															throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	
     	Account acct = account_repo.findByUsername(username);
@@ -347,9 +341,6 @@ public class DomainController {
 		Set<PageElement> page_elements = domain_repo.getPageElements(host);
 		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
-    	//	    return domain_repo.getPageElements();
-
-	    //return unique_page_elements;
     }
 	
 	/**
@@ -367,7 +358,6 @@ public class DomainController {
 														throws UnknownAccountException {        
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
     	
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
     	
     	Account acct = account_repo.findByUsername(username);
@@ -448,6 +438,22 @@ public class DomainController {
 		throw new DomainNotFoundException();
     }
     
+    
+
+	/**
+	 * 
+	 * @param request
+	 * @param user_id
+	 * @throws UnknownUserException
+	 */
+    @PreAuthorize("hasAuthority('create:test_user')")
+    @RequestMapping(path="test_users/{user_id}", method = RequestMethod.DELETE)
+    public @ResponseBody void delete(HttpServletRequest request,
+    									@RequestParam(value="domain_key", required=true) String domain_key,
+    									@RequestParam(value="username", required=true) String username) {
+		domain_repo.deleteTestUser(domain_key, username);
+    }
+    
     @PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/users", method = RequestMethod.GET)
     public @ResponseBody Set<TestUser> getUsers(HttpServletRequest request,
@@ -484,9 +490,7 @@ public class DomainController {
     							 @RequestParam(value="name", required=false) String name,
     							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
 		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
+       	String username = auth.getUsername(auth_access_token);
     	
     	Account acct = account_repo.findByUsername(username);
     	if(acct == null){

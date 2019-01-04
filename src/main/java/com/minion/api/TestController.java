@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,22 +33,19 @@ import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
+import com.stripe.exception.StripeException;
+import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
-import com.qanairy.models.StripeClient;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 
@@ -58,8 +56,6 @@ import com.qanairy.models.TestRecord;
 @RequestMapping("/tests")
 public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
-
-    private StripeClient stripeClient;
 
     @Autowired
     private DomainRepository domain_repo;
@@ -77,9 +73,10 @@ public class TestController {
     private TestService test_service;
     
     @Autowired
-    TestController(StripeClient stripeClient) {
-        this.stripeClient = stripeClient;
-    }
+    private Auth0Client auth;
+    
+    @Autowired
+    private SubscriptionService subscription_service;
     
 	/**
 	 * Retrieves list of all tests from the database 
@@ -97,6 +94,33 @@ public class TestController {
 		return domain_repo.getVerifiedTests(url);
     }
 
+    /**
+	 * Updates a test
+	 * 
+	 * @param test
+	 * @return
+	 */
+    @PreAuthorize("hasAuthority('update:tests')")
+	@RequestMapping(method=RequestMethod.PUT)
+	public @ResponseBody void update(HttpServletRequest request,
+									@RequestParam(value="key", required=true) String key, 
+									@RequestParam(value="name", required=true) String name, 
+									@RequestParam(value="firefox", required=false) String firefox_status,
+									@RequestParam(value="chrome", required=false) String chrome_status){
+		Test test = test_repo.findByKey(key);
+		
+		Map<String, String> browser_statuses = new HashMap<String, String>();
+		if(firefox_status!=null && !firefox_status.isEmpty()){
+			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
+		}
+		if(chrome_status!=null && !chrome_status.isEmpty()){
+			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
+		}
+		test.setName(name);
+		test.setBrowserStatuses(browser_statuses);
+		test_repo.save(test);
+    }
+    
     /**
 	 * Retrieves list of all tests from the database 
 	 * @param url
@@ -160,23 +184,6 @@ public class TestController {
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
     	return domain_repo.getUnverifiedTests(url);
-    	
-   		/*Domain domain = domain_repo.findByHost(url);
-		
-		Set<Test> tests = domain.getTests();
-		Set<Test> unverified_tests = new HashSet<Test>();
-
-		for(Test test : tests){
-			if(test.getCorrect() == null){
-				unverified_tests.add(test);
-			}
-		}
-    	
-    	Date end = new Date();
-    	long diff = end.getTime() - start.getTime();
-    	log.info("UNVERIFIED TESTS LOADED IN " + diff + " milliseconds");
-    	*/
-		//return unverified_tests;
 	}
 
 	/**
@@ -196,7 +203,6 @@ public class TestController {
     	
     	//make sure domain belongs to user account first
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -271,32 +277,7 @@ public class TestController {
 		test_repo.save(test);
     }
     
-	/**
-	 * Updates a test
-	 * 
-	 * @param test
-	 * @return
-	 */
-    @PreAuthorize("hasAuthority('update:tests')")
-	@RequestMapping(method=RequestMethod.PUT)
-	public @ResponseBody void update(HttpServletRequest request,
-									@RequestParam(value="key", required=true) String key, 
-									@RequestParam(value="name", required=true) String name, 
-									@RequestParam(value="firefox", required=false) String firefox_status,
-									@RequestParam(value="chrome", required=false) String chrome_status){
-		Test test = test_repo.findByKey(key);
-		
-		Map<String, String> browser_statuses = new HashMap<String, String>();
-		if(firefox_status!=null && !firefox_status.isEmpty()){
-			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
-		}
-		if(chrome_status!=null && !chrome_status.isEmpty()){
-			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
-		}
-		test.setName(name);
-		test.setBrowserStatuses(browser_statuses);
-		test_repo.save(test);
-    }
+	
 
     
 	/**
@@ -322,51 +303,33 @@ public class TestController {
 	 * @param key
 	 * @return
 	 * @throws MalformedURLException 
-     * @throws UnknownAccountException 
-     * @throws APIException 
-     * @throws CardException 
-     * @throws APIConnectionException 
-     * @throws InvalidRequestException 
-     * @throws AuthenticationException 
+     * @throws UnknownAccountException
      * @throws NoSuchAlgorithmException 
      * @throws WebDriverException 
      * @throws GridException 
+     * @throws PaymentDueException 
+     * @throws StripeException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
 	public @ResponseBody Map<String, TestRecord> runTests(HttpServletRequest request,
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
-														  @RequestParam(value="browser_name", required=true) String browser_name) 
-																  throws MalformedURLException, UnknownAccountException, AuthenticationException, InvalidRequestException, APIConnectionException, CardException, APIException, GridException, WebDriverException, NoSuchAlgorithmException{
+														  @RequestParam(value="browser", required=true) String browser,
+														  @RequestParam(value="host_url", required=true) String host) 
+																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException{
     	
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
     	
-    	/*Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	String subscription_item = null;
-    	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
-    		if(item.getPlan().getNickname().equals("test_runs")){
-    			subscription_item = item.getId();
-    		}
-    	}
-
-    	if(subscription_item==null){
-    		throw new MissingDiscoveryPlanException();
-    	}
-    	
-    	if(subscription.getTrialEnd() < (new Date()).getTime()/1000){
-    		throw new FreeTrialExpiredException();
-    	}
-	   */	    	
+    	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
+    		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
+        }
+    	    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("name", auth.getNickname(auth_access_token));
@@ -376,7 +339,7 @@ public class TestController {
     		    .traits(traits)
     		);
     	
-    	//Fire discovery started event	
+    	//Fire test run started event	
 	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
 	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
 	   	analytics.enqueue(TrackMessage.builder("Running tests")
@@ -390,20 +353,9 @@ public class TestController {
     		Test test = test_repo.findByKey(key);
     		TestRecord record = null;
     		
-    		/*
-    		Date date = new Date();
-			long date_millis = date.getTime();
-			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
-	    	usageRecordParams.put("quantity", 1);
-	    	usageRecordParams.put("timestamp", date_millis/1000);
-	    	usageRecordParams.put("subscription_item", subscription_item);
-	    	usageRecordParams.put("action", "increment");
+    		TestStatus last_test_status = test.getStatus();
 
-	    	UsageRecord.create(usageRecordParams, null);
-*/
-			Browser browser = new Browser(browser_name.trim());
-			record = test_service.runTest(test, browser);
-			browser.close();
+			record = test_service.runTest(test, browser, last_test_status);
 			
 			test.addRecord(record);
 	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
@@ -418,15 +370,16 @@ public class TestController {
 				}
 			}
 			Map<String, String> browser_statuses = test.getBrowserStatuses();
-			browser_statuses.put(browser_name, is_passing.toString());
+			browser_statuses.put(browser, is_passing.toString());
 			
 			test.addRecord(record);
+			test.setResult(record.getResult());
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());
 			test.setBrowserStatuses(browser_statuses);
 			test_repo.save(test);
-
+			
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}
@@ -532,12 +485,12 @@ public class TestController {
 	 * 
 	 * @return
 	 */
-    /*@PreAuthorize("hasAuthority('read:groups')")
-	@RequestMapping(path="/groups", method = RequestMethod.GET)
+    @PreAuthorize("hasAuthority('read:groups')")
+	@RequestMapping(path="groups", method = RequestMethod.GET)
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {
 		List<Group> groups = new ArrayList<Group>();
-		Set<Test> test_list = test_repo.findByUrl(url);
+		Set<Test> test_list = domain_repo.getTests(url);
 		
 		for(Test test : test_list){
 			if(test.getGroups() != null){
@@ -547,7 +500,7 @@ public class TestController {
 
 		return groups;
 	}
-	*/
+	
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

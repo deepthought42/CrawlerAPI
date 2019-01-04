@@ -148,28 +148,24 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								int tries = 0;
 								do{
 									try{
+										browser = new Browser(browser.getBrowserName());
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
+										break;
 									}catch(NullPointerException e){
-										Timing.pauseThread(10000L);
-										browser = new Browser(browser.getBrowserName());
-										log.error("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
+										log.warn("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
 									} catch (GridException e) {
-										Timing.pauseThread(10000L);
-										browser = new Browser(browser.getBrowserName());
-										log.error("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+										log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (WebDriverException e) {
-										Timing.pauseThread(10000L);
-										browser = new Browser(browser.getBrowserName());
-										log.error("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+										log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (NoSuchAlgorithmException e) {
-										log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-									}
-									catch(Exception e){
-										log.error("Exception occurred in explortatory actor. \n"+e.getMessage());
+										log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+									} catch(Exception e){
+										log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
 									}
 
 									tries++;
-								}while(result_page == null && tries < 10);
+									Timing.pauseThread(1000);
+								}while(result_page == null && tries < Integer.MAX_VALUE);
 							
 								//have page checked for landability
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
@@ -177,12 +173,17 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
+								System.err.println("Checking for cycle...");
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
+									System.err.println("No cycle detected");
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
+							  		int cnt=0;
 							  		do{
+						  				System.err.println("building parent path...attempt # ::  "+cnt);
+
 							  			try{
 							  				ExploratoryPath parent_path = buildParentPath(path, browser);
 							  			
@@ -191,20 +192,20 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								  			}
 								  			
 							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, domain.getUrl());
-							  			
+							  				System.err.println("Does path produce expected result???  "+results_match);
 								  			if(results_match){
 								  				last_path = path;
 								  				path = parent_path;
 								  			}
-							  			}catch(NoSuchAlgorithmException e){
-							  				e.printStackTrace();
+								  			break;
+							  			}catch(Exception e){
+							  				log.warn("Exception thrown while building parent path : " + e.getLocalizedMessage());
 							  				browser = new Browser(browser.getBrowserName());
 							  				results_match = false;
 							  			}
-							  			catch(NoSuchElementException e){
-							  				e.printStackTrace();
-							  			}
-							  		}while(results_match);
+							  			cnt++;
+										Timing.pauseThread(1000);
+							  		}while(results_match && cnt < Integer.MAX_VALUE);
 							  		
 							  		if(last_path == null){
 							  			last_path = path;
@@ -214,11 +215,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		if(result_page_record != null){
 							  			result_page = result_page_record;
 							  		}
+							  		System.err.println("Creating test for parent path");
 							  		createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg);
 									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 									discovery_record.setTestCount(discovery_record.getTestCount()+1);
 							  		discovery_repo.save(discovery_record);
-									break;
+									//break;
 								}
 							}
 							
@@ -239,6 +241,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						//PLACE CALL TO LEARNING SYSTEM HERE
 						//Brain.learn(test, test.getIsUseful());
 					}
+					postStop();
+
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		
 				})
@@ -355,7 +359,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		if(elem != null){
 			List<String> path_keys = path.getPathKeys().subList(0, idx+1);
 			List<PathObject> path_objects = path.getPathObjects().subList(0, idx+1);
-			PageState page = crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
+			crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
 			
 			//perform action on the element
 			//ensure page is equal to expected page

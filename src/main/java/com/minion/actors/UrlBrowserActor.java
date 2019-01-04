@@ -13,15 +13,16 @@ import org.springframework.stereotype.Component;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.UntypedActor;
 import akka.actor.AbstractActor;
-import akka.actor.AbstractActor.Receive;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Test;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
@@ -44,6 +45,9 @@ public class UrlBrowserActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 
+	@Autowired
+	private DiscoveryRecordRepository discovery_record_repo;
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -53,45 +57,49 @@ public class UrlBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
+						
+						
 						boolean test_generated_successfully = false;
+						int attempts = 0;
 						do{
 							try{
 								String browser = message.getOptions().get("browser").toString();
 								String discovery_key = message.getOptions().get("discovery_key").toString();
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
-								
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
-								test_service.save(test, host);
+								test = test_service.save(test, host);
 		
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								log.info("test result :: "+test.getResult());
-								log.info("message account key :: "+message.getAccountKey());
-								log.info("message options "+ message.getOptions());
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 
-								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								form_discoverer.tell(page_state_msg, getSelf() );
-		
+								DiscoveryRecord discovery_record = discovery_record_repo.findByKey(discovery_key);
 								
-								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-		
-								/**  path expansion temporarily disabled
-								 */
-								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-								path_expansion_actor.tell(test_msg, getSelf() );
+								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){	
+									
+									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+									form_discoverer.tell(page_state_msg, getSelf() );
+									
+									
+									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
+			
+									/**  path expansion temporarily disabled
+									 */
+									final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+									path_expansion_actor.tell(test_msg, getSelf() );
+								}
 								
-								break;
+								discovery_record.addExpandedPageState(test.getResult().getKey());
+								discovery_record_repo.save(discovery_record);
+								test_generated_successfully = true;
+								break;								
 							}
 							catch(Exception e){
-								e.printStackTrace();
-								log.error(e.getMessage());
+								log.warn("Exception occurred while exploring url --  " + e.getMessage());
 							}
-						}while(!test_generated_successfully);
+							 Timing.pauseThread(1000);
+						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		

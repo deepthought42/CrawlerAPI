@@ -36,6 +36,9 @@ public class Domain implements Persistable{
 	@Relationship(type = "HAS_DOMAIN", direction = Relationship.INCOMING)
 	private Set<Account> account = new HashSet<>();
 
+	@Relationship(type = "HAS_DISCOVERY_RECORD")
+	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
+	
 	/**
 	 * 
 	 * 
@@ -56,65 +59,8 @@ public class Domain implements Persistable{
 		setLogoUrl(logo_url);
 		setProtocol(protocol);
 		setDiscoveryBrowserName(browser);
-		setTestCount(0);
 		setKey(generateKey());
 	}
-	
-	/**
-	 * 
-	 * @param key
-	 * @param domain_url
-	 * @param logo_url
-	 * @param tests
-	 * @param protocol
-	 * @param test_count
-	 */
-	public Domain(String domain_url,
-					String logo_url,
-					Set<Test> tests,
-					String protocol,
-					int test_count){
-		setUrl(domain_url);
-		setTests(tests);
-		setProtocol(protocol);
-		setLogoUrl(logo_url);
-		setDiscoveryBrowserName("");
-		setTestCount(test_count);
-		setKey(generateKey());
-	}
-
-	
-	/**
-	 * 
-	 * @param key
-	 * @param domain_url
-	 * @param logo_url
-	 * @param tests
-	 * @param protocol
-	 * @param last_path_ran_at
-	 * @param last_discovery_started_at
-	 * @param test_users
-	 * @param discovered_test_count
-	 * @param browser_name
-	 */
-	public Domain(String domain_url,
-					String logo_url,
-					Set<Test> tests,
-					String protocol,
-					Set<TestUser> test_users,
-					String browser_name,
-					int test_count){
-		setUrl(domain_url);
-		setTests(tests);
-		setProtocol(protocol);
-		setLogoUrl(logo_url);
-		setTestUsers(test_users);
-		setDiscoveryBrowserName(browser_name);
-		setTestCount(test_count);
-		setKey(generateKey());
-	}
-	
-
 
 	/**
 	 * {@inheritDoc}
@@ -202,19 +148,22 @@ public class Domain implements Persistable{
 		this.discovery_browser = discovery_browser;
 	}
 
-	public int getTestCount() {
-		return test_cnt;
-	}
-
-	public void setTestCount(int test_cnt) {
-		this.test_cnt = test_cnt;
-	}
-
 	public void addTest(Test test) {
 		this.tests.add(test);
 	}
 	
+	public Set<DiscoveryRecord> getDiscoveryRecords() {
+		return discovery_records;
+	}
 
+	public void setDiscoveryRecords(Set<DiscoveryRecord> discovery_records) {
+		this.discovery_records = discovery_records;
+	}
+	
+	public void addDiscoveryRecord(DiscoveryRecord record){
+		this.discovery_records.add(record);
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 */

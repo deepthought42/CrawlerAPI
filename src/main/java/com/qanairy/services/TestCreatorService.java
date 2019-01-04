@@ -63,11 +63,8 @@ public class TestCreatorService {
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		Browser browser = new Browser(browser_name);
-
 		browser.navigateTo(url);
-		
 	  	PageState page_obj = browser_service.buildPage(browser);
-
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 		  	page_obj.setLandable(true);
@@ -78,9 +75,7 @@ public class TestCreatorService {
 	  		page_obj = page_record;
 	  	}
 	  	
-	  	try{
-	  		browser.close();
-	  	}catch(Exception e){}
+  		browser.close();
 	  	
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());

@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.minion.browsing.Browser;
 import com.qanairy.models.Form;
 
 public class DeepthoughtApi {
@@ -69,8 +68,6 @@ public class DeepthoughtApi {
             	return;
         }
 	    client.close();
-
-        String src = "";
         
         log.info("form tag :: "+form.getFormTag());
         log.info("form tax xpath :: "+form.getFormTag().getXpath());

@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +22,11 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
+import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
@@ -31,8 +34,11 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.services.SubscriptionService;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -49,7 +55,16 @@ public class PathExpansionActor extends AbstractActor {
 	private ActorSystem actor_system;
 	
 	@Autowired
-	DiscoveryRecordRepository discovery_repo;
+	private DiscoveryRecordRepository discovery_repo;
+	
+	@Autowired
+	private PageStateRepository page_state_repo;
+	
+	@Autowired
+	private AccountRepository account_repo;
+	
+	@Autowired
+	private SubscriptionService subscription_service;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -68,6 +83,11 @@ public class PathExpansionActor extends AbstractActor {
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 
+		    	Account acct = account_repo.findByUsername(message.getAccountKey());
+		    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
+		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
+		    	}
+		    	
 				if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost())) && 
 						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
@@ -92,36 +112,35 @@ public class PathExpansionActor extends AbstractActor {
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						return;
 					}
-					else if(!discovery_record.getExpandedPageState().contains(test.getResult().getKey())){					
-						pathExpansions = expandPath(test);
-						log.info(pathExpansions.size()+"   path expansions found.");
-						
-						DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
-						if(discovery_record2 != null){
-							discovery_record = discovery_record2;
-						}
-						int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-						log.info("expected total path count :: "+new_total_path_count);
-						discovery_record.setTotalPathCount(new_total_path_count);
-						discovery_record.getExpandedPageState().add(test.getResult().getKey());
-						discovery_record = discovery_repo.save(discovery_record);
+					pathExpansions = expandPath(test);
+					System.err.println(pathExpansions.size()+"   path expansions found.");
+					
+					DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
+					if(discovery_record2 != null){
+						discovery_record = discovery_record2;
+					}
+					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
+					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
+					System.err.println("expected total path count :: "+new_total_path_count);
+					discovery_record.setTotalPathCount(new_total_path_count);
+					//discovery_record.getExpandedPageStates().add(test.getResult().getKey());
+					discovery_record = discovery_repo.save(discovery_record);
 
-						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+					
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
+					for(ExploratoryPath expanded : pathExpansions){
+						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+
+						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 						
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-	
-						for(ExploratoryPath expanded : pathExpansions){
-							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-	
-							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-							
-							work_allocator.tell(expanded_path_msg, getSelf() );
-						}
+						work_allocator.tell(expanded_path_msg, getSelf() );
 					}
 				}	
 			}
+			postStop();
 		})
 		.match(MemberUp.class, mUp -> {
 			log.info("Member is Up: {}", mUp.member());
@@ -209,18 +228,28 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
+				//page element is not an input or a form
 				Test new_test = Test.clone(test);
+
 				if(test.getPathKeys().size() > 1){
 					new_test.getPathKeys().add(test.getResult().getKey());
 					new_test.getPathObjects().add(test.getResult());
 				}
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
-
+						
+				System.err.println("Checking if element exists previously as a path object or within a page state");
+				//check if element exists in previous pageStates
+				
+				if(doesElementExistInMultiplePageStatesWithinTest(new_test, page_element)){
+					continue;
+				}
+				
+				System.err.println("adding actions lists to exploratory paths");
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
-
 				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+					System.err.println("exploratory path being created...");
 					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 
@@ -230,11 +259,58 @@ public class PathExpansionActor extends AbstractActor {
 					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 						continue;
 					}*/
+					System.err.println("added action path to path list");
 					pathList.add(action_path);
 				}
 			}
 		}
-				
+		System.err.println("path list size :: " + pathList.size());
 		return pathList;
+	}
+
+	/**
+	 * Checks if a given {@link PageElement} exists in a {@link PageState} within the {@link Test} path
+	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
+	 * 
+	 * @param test {@link Test}
+	 * @param elem {@link PageElement}
+	 * 
+	 * @return
+	 * 
+	 * @pre test != null
+	 * @pre elem != null
+	 */
+	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, PageElement elem) {
+		assert test != null;
+		assert elem != null;
+		
+		int cnt = 0;
+		System.err.println("test path objects size :: " + test.getPathObjects().size());
+		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
+			
+			PathObject obj = test.getPathObjects().get(path_idx);
+			System.err.println("path object type about to be checked");
+			if(obj.getType().equals("PageState")){
+				System.err.println("Page state casting for object");
+				PageState page_state = ((PageState) obj);
+				Set<PageElement> page_elements = page_state_repo.getPageElements(page_state.getKey());
+				System.err.println("page state has # of elements  ::  "+page_elements.size());
+				for(PageElement page_elem : page_elements){
+					System.err.println("Checking if latest element matches page element ");
+					if(elem.equals(page_elem)){
+						cnt++;
+						System.err.println("PAGE ELEMENT COUNT WITHIN PATH :: " + cnt);
+						break;
+					}
+				}
+			}	
+		}
+		//a count greater than 1 signifies more than one page state in the test contains this element
+		if(cnt > 1){
+			System.err.println("element exists already in path with # occurrence :: "+cnt);
+
+			return true;
+		}
+		return false;
 	}
 }

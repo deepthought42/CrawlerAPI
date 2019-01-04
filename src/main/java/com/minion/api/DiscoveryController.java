@@ -23,27 +23,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import com.minion.WorkManagement.WorkAllowanceStatus;
-import com.minion.actors.WorkAllocationActor;
+import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
-import com.qanairy.models.StripeClient;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.services.SubscriptionService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
-import com.stripe.exception.APIConnectionException;
-import com.stripe.exception.APIException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
-import com.stripe.model.Subscription;
-import com.stripe.model.SubscriptionItem;
-import com.stripe.model.UsageRecord;
+import com.stripe.exception.StripeException;
 import akka.pattern.Patterns;
 import scala.concurrent.Future;
 import scala.concurrent.Await;
@@ -62,28 +55,26 @@ import akka.actor.ActorSystem;
 public class DiscoveryController {
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
     
-    private StripeClient stripeClient;
-
     @Autowired
-    AccountRepository account_repo;
+    private AccountRepository account_repo;
     
     @Autowired
-    DomainRepository domain_repo;
+    private DomainRepository domain_repo;
     
     @Autowired
     private ActorSystem actor_system;
     
     @Autowired
-    DiscoveryController(StripeClient stripeClient) {
-        this.stripeClient = stripeClient;
-    }
+    private Auth0Client auth;
+    
+    @Autowired
+    private SubscriptionService subscription_service;
     
 	@RequestMapping(path="/status", method = RequestMethod.GET)
     public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request, 
     												@RequestParam(value="url", required=true) String url) 
     														throws UnknownAccountException{
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -114,11 +105,8 @@ public class DiscoveryController {
 	 * @return
 	 * @throws MalformedURLException
 	 * @throws UnknownAccountException 
-     * @throws APIException 
-     * @throws CardException 
-     * @throws APIConnectionException 
-     * @throws InvalidRequestException 
-     * @throws AuthenticationException 
+     * @throws PaymentDueException 
+     * @throws StripeException 
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
@@ -127,13 +115,9 @@ public class DiscoveryController {
 										   	  				throws MalformedURLException, 
 										   	  						UnknownAccountException, 
 										   	  						DiscoveryLimitReachedException, 
-										   	  						AuthenticationException, 
-										   	  						InvalidRequestException, 
-										   	  						APIConnectionException, 
-										   	  						CardException, APIException {
+										   	  						PaymentDueException, StripeException {
 
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
     	String username = auth.getUsername(auth_access_token);
 		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
 
@@ -142,31 +126,23 @@ public class DiscoveryController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	else if(acct.getSubscriptionToken() == null){
-    		throw new MissingSubscriptionException();
-    	}
-    	Subscription subscription = stripeClient.getSubscription(acct.getSubscriptionToken());
-    	String subscription_item = null;
-    	for(SubscriptionItem item : subscription.getSubscriptionItems().getData()){
-    		if(item.getPlan().getNickname().equals("Discovery")){
-    			subscription_item = item.getId();
-    		}
+    	
+    	
+    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
+    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
     	
-    	if(subscription_item==null){
-    		throw new MissingDiscoveryPlanException();
-    	}
-    	
+    	Domain domain = domain_repo.findByHost(url); 
+
 		DiscoveryRecord last_discovery_record = null;
 		Date started_date = new Date(0L);
-		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+		for(DiscoveryRecord record : domain_repo.getDiscoveryRecords(url)){
 			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
 				started_date = record.getStartTime();
 				last_discovery_record = record;
 			}
 		}
     	
-    	Domain domain = domain_repo.findByHost(url); 
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
@@ -177,20 +153,14 @@ public class DiscoveryController {
     	String protocol = domain.getProtocol();
         
 		if(diffInMinutes > 1440){
-			Date date = new Date();
-			long date_millis = date.getTime();
-			Map<String, Object> usageRecordParams = new HashMap<String, Object>();
-	    	usageRecordParams.put("quantity", 1);
-	    	usageRecordParams.put("timestamp", date_millis/1000);
-	    	usageRecordParams.put("subscription_item", subscription_item);
-	    	usageRecordParams.put("action", "increment");
-
-	    	UsageRecord.create(usageRecordParams, null);
-        	//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
+			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
 			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	
 			acct.addDiscoveryRecord(discovery_record);
 			acct = account_repo.save(acct);
+			
+			domain.addDiscoveryRecord(discovery_record);
+			domain_repo.save(domain);
                 	
 			WorkAllowanceStatus.register(acct.getUsername());
 			//ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
@@ -259,7 +229,7 @@ public class DiscoveryController {
 			throws MalformedURLException, UnknownAccountException {
 		
     	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
+
     	String username = auth.getUsername(auth_access_token);
 
     	Account acct = account_repo.findByUsername(username);
@@ -308,17 +278,5 @@ class DiscoveryLimitReachedException extends RuntimeException {
 
 	public DiscoveryLimitReachedException() {
 		super("You’ve reached your discovery limit. Upgrade your account now!");
-	}
-}
-
-@ResponseStatus(HttpStatus.CONFLICT)
-class PaymentDueException extends RuntimeException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7200878662560716216L;
-
-	public PaymentDueException() {
-		super("There was an issue processing your payment. Please update your payment details");
 	}
 }

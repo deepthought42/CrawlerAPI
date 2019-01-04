@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import com.minion.util.Timing;
+import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;
@@ -76,29 +77,22 @@ public class Crawler {
 		PageElement last_element = null;
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
-		
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
-		//skip first node since we should have already loaded it during initialization
+
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
 				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
 				if(page_record != null){
 					expected_page = page_record;
-					
 				}
 				boolean screenshot_matches = false;
-				int cnt = 0;
-				
-				do{
-					current_page_state = browser_service.buildPage(browser);
-					screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
-					cnt++;
-				}while(!screenshot_matches && cnt < 5);
-				
+				System.err.println("building page for host channel :: " + host_channel);
+				current_page_state = browser_service.buildPage(browser);
+				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
 				if(!screenshot_matches){
-					throw new PagesAreNotMatchingException();
+					return current_page_state;
 				}
 			}
 			else if(current_obj instanceof PageElement){
@@ -117,6 +111,7 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
+				Timing.pauseThread(5000L);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -124,7 +119,7 @@ public class Crawler {
 				alert.performChoice(browser.getDriver());
 			}
 		}
-
+		
 		return browser_service.buildPage(browser);
 	}
 	
@@ -141,7 +136,6 @@ public class Crawler {
 		try{
 			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 			actionFactory.execAction(element, action.getValue(), action.getName());
-			Timing.pauseThread(5000L);
 		}
 		catch(StaleElementReferenceException e){
 			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
@@ -157,13 +151,5 @@ public class Crawler {
 		}
 		
 		return wasPerformedSuccessfully;
-	}
-}
-
-class PagesAreNotMatchingException extends RuntimeException {
-	private static final long serialVersionUID = 7200878662560716215L;
-
-	public PagesAreNotMatchingException() {
-		super("Expected page and actual page did not match.");
 	}
 }

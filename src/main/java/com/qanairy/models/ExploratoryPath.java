@@ -73,16 +73,13 @@ public class ExploratoryPath {
 	 */
 	public static boolean hasCycle(List<String> path_key_list, PageState page){
 		assert page != null;
-		assert path_key_list != null;
-		assert !path_key_list.isEmpty();
-		
-		if(path_key_list.size() == 1){
+	
+		if(path_key_list.size() <= 1){
 			return false;
 		}
 		
 		//extract all pages
 		//iterate through pages to see if any match
-		int matches = 0;
 		log.info("Checking if exploratory path has a cycle");
 		for(String key : path_key_list){
 			if(key.equals(page.getKey())){
@@ -90,7 +87,6 @@ public class ExploratoryPath {
 			}
 		}
 
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 		return false;
 	}
 

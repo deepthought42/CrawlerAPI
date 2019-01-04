@@ -5,7 +5,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
- * Defines user information that can be used during testing
+ * Defines user information that can be used during testing and discovery
  */
 @NodeEntity
 public class TestUser{
@@ -24,6 +24,7 @@ public class TestUser{
 	public TestUser(String username, String password, String role, boolean isEnabled){
 		setUsername(username);
 		setPassword(password);
+		setRole(role);
 		setIsEnabled(isEnabled);
 	}
 	

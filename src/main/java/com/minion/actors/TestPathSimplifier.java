@@ -153,8 +153,8 @@ public class TestPathSimplifier extends AbstractActor{
 	}
 	
 	public static final class TestBrowserRecord {
-		Test test;
-		String browser_name;
+		protected Test test;
+		protected String browser_name;
 		
 		public TestBrowserRecord(Test test, String browser_name){
 			this.test = test;

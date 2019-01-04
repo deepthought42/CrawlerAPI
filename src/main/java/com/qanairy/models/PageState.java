@@ -1,10 +1,6 @@
 package com.qanairy.models;
 
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -15,10 +11,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.Deflater;
 
 import javax.imageio.ImageIO;
-import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.codec.binary.Hex;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -28,106 +22,72 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.minion.browsing.Browser;
 
 /**
- * A reference to a web page 
+ * A reference to a web page
  *
  */
 @NodeEntity
 public class PageState implements Persistable, PathObject {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
-	
+
 	@GeneratedValue
-    @Id
+	@Id
 	private Long id;
-	
-    private String key;
-    private boolean landable;
-    private LocalDateTime last_landability_check;
-    
-    @JsonIgnore
+
 	private String src;
+	private String key;
+	private boolean landable;
+	private LocalDateTime last_landability_check;
+
 	private String url;
 	private int total_weight;
 	private int image_weight;
 	private String type;
-	
+
 	@Relationship(type = "HAS_SCREENSHOT")
 	private Set<ScreenshotSet> browser_screenshots = new HashSet<>();
-	
+
 	@Relationship(type = "HAS_ELEMENT")
 	private Set<PageElement> elements = new HashSet<>();
-	
+
 	@Relationship(type = "HAS_FORM")
 	private Set<Form> forms = new HashSet<>();
-	
-	public PageState(){}
+
+	public PageState() {
+	}
 
 	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
 	 * @param url
 	 * @param screenshot
 	 * @param elements
 	 * @throws IOException
 	 * 
-	 * @pre html != null && html.length() > 0
 	 * @pre elements != null
 	 * @pre browser_screenshots != null;
 	 */
-	public PageState(String html, String url , Set<PageElement> elements) throws IOException {
+	@Deprecated
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements) throws IOException {
 		assert elements != null;
-		assert html != null;
-		assert html.length() > 0;
-		assert browser_screenshots  != null;
+		assert browser_screenshots != null;
 
 		setType(PageState.class.getSimpleName());
-		setSrc("");
-		setUrl(url.replace("/#",""));
+		setUrl(url.replace("/#", ""));
+		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
 
-	
 	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
-	 * @param html
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
 	 * 
-	 * @pre html != null && html.length() > 0
-	 * @pre elements != null
-	 * @pre browser_screenshots != null;
-	 */
-	public PageState(String html, String url, Set<ScreenshotSet> browser_screenshots , Set<PageElement> elements) throws IOException {
-		assert elements != null;
-		assert html != null;
-		assert html.length() > 0;
-		assert browser_screenshots  != null;
-
-		setType(PageState.class.getSimpleName());
-		setSrc("");
-		setUrl(url.replace("/#",""));
-		setBrowserScreenshots(browser_screenshots );
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
-		setKey(generateKey());
-	}
-	
-	/**
- 	 * Creates a page instance that is meant to contain information about a state of a webpage
- 	 * 
 	 * @param html
 	 * @param url
 	 * @param browsers_screenshots
@@ -139,76 +99,137 @@ public class PageState implements Persistable, PathObject {
 	 * 
 	 * @throws IOException
 	 */
-	public PageState(String html, String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable) throws IOException {
+	@Deprecated
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable)
+			throws IOException {
 		assert elements != null;
 		assert browser_screenshots != null;
-	
+
 		setType(PageState.class.getSimpleName());
-		setSrc("");
-		setUrl(url.replace("/#",""));
+		setUrl(url.replace("/#", ""));
 		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
-	
-	
+
+	/**
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null
+	 * @pre browser_screenshots != null;
+	 */
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, String src)
+			throws IOException {
+		assert elements != null;
+		assert browser_screenshots != null;
+
+		setType(PageState.class.getSimpleName());
+		setUrl(url.replace("/#", ""));
+		setBrowserScreenshots(browser_screenshots);
+		setElements(elements);
+		setLandable(false);
+		setImageWeight(0);
+		setSrc(src);
+		setKey(generateKey());
+	}
+
+	/**
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
+	 * @param html
+	 * @param url
+	 * @param browsers_screenshots
+	 * @param elements
+	 * @param isLandable
+	 * 
+	 * @pre elements != null;
+	 * @pre browser_screenshots != null;
+	 * 
+	 * @throws IOException
+	 */
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable,
+			String src) throws IOException {
+		assert elements != null;
+		assert browser_screenshots != null;
+
+		setType(PageState.class.getSimpleName());
+		setUrl(url.replace("/#", ""));
+		setBrowserScreenshots(browser_screenshots);
+		setElements(elements);
+		setLandable(isLandable);
+		setImageWeight(0);
+		setSrc(src);
+		setKey(generateKey());
+	}
+
 	/**
 	 * Gets counts for all tags based on {@link PageElement}s passed
 	 * 
-	 * @param page_elements list of {@link PageElement}s
+	 * @param page_elements
+	 *            list of {@link PageElement}s
 	 * 
-	 * @return Hash of counts for all tag names in list of {@PageElement}s passed
+	 * @return Hash of counts for all tag names in list of {@PageElement}s
+	 *         passed
 	 */
-	public Map<String, Integer> countTags(Set<PageElement> tags){
+	public Map<String, Integer> countTags(Set<PageElement> tags) {
 		Map<String, Integer> elem_cnts = new HashMap<String, Integer>();
-		for(PageElement tag : tags){
-			if(elem_cnts.containsKey(tag.getName())){
+		for (PageElement tag : tags) {
+			if (elem_cnts.containsKey(tag.getName())) {
 				int cnt = elem_cnts.get(tag.getName());
 				cnt += 1;
 				elem_cnts.put(tag.getName(), cnt);
-			}
-			else{
+			} else {
 				elem_cnts.put(tag.getName(), 1);
 			}
 		}
 		return elem_cnts;
 	}
-	
+
 	/**
 	 * Compares two images pixel by pixel.
 	 *
-	 * @param imgA the first image.
-	 * @param imgB the second image.
+	 * @param imgA
+	 *            the first image.
+	 * @param imgB
+	 *            the second image.
 	 * @return whether the images are both the same or not.
 	 */
 	public static boolean compareImages(BufferedImage imgA, BufferedImage imgB) {
-	  // The images must be the same size.
-	  if (imgA.getWidth() == imgB.getWidth() && imgA.getHeight() == imgB.getHeight()) {
-	    int width = imgA.getWidth();
-	    int height = imgA.getHeight();
+		// The images must be the same size.
+		if (imgA.getWidth() == imgB.getWidth() && imgA.getHeight() == imgB.getHeight()) {
+			int width = imgA.getWidth();
+			int height = imgA.getHeight();
 
-	    // Loop over every pixel.
-	    for (int y = 0; y < height; y++) {
-	      for (int x = 0; x < width; x++) {
-	        // Compare the pixels for equality.
-	        if (imgA.getRGB(x, y) != imgB.getRGB(x, y)) {
-	          return false;
-	        }
-	      }
-	    }
-	  } else {
-	    return false;
-	  }
+			// Loop over every pixel.
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					// Compare the pixels for equality.
+					if (imgA.getRGB(x, y) != imgB.getRGB(x, y)) {
+						return false;
+					}
+				}
+			}
+		} else {
+			return false;
+		}
 
-	  return true;
+		return true;
 	}
-	
+
 	/**
 	 * Checks if Pages are equal
-	 * @param page the {@link Page} object to compare current page to
+	 * 
+	 * @param page
+	 *            the {@link Page} object to compare current page to
 	 * 
 	 * @pre page != null
 	 * @return boolean value
@@ -216,72 +237,25 @@ public class PageState implements Persistable, PathObject {
 	 * @NOTE :: TODO :: add in ability to differentiate screenshots
 	 */
 	@Override
-	public boolean equals(Object o){
-		if (this == o) return true;
-        if (!(o instanceof PageState)) return false;
-        
-        PageState that = (PageState)o;
-        
-        boolean pages_match = this.getKey().equals(that.getKey());
-		/*try {
-			log.info("This browser screenshot :: "+this.getBrowserScreenshots().size());
-			log.info("NEXT BROSEWR SCREENSHOT :: "+this.getBrowserScreenshots().iterator().next());
-			log.info("Viewport screenshot :: "+this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
-			String thisBrowserScreenshot = this.getBrowserScreenshots().iterator().next().getViewportScreenshot();
-	        String thatBrowserScreenshot = that.getBrowserScreenshots().iterator().next().getViewportScreenshot();	        
-	        
-	        log.info("Checking image location for equality :: "+thisBrowserScreenshot.equals(thatBrowserScreenshot));
-			BufferedImage img1;
-			BufferedImage img2;
-			
-			img1 = ImageIO.read(new URL(thisBrowserScreenshot));
-			img2 = ImageIO.read(new URL(thatBrowserScreenshot));
-			pages_match = compareImages(img1, img2);
-			log.info("DO THE SCREENSHOTS MATCH FOR PAGE EQUALITY????        ::::     "+pages_match);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		*/
-        //log.info("Screenshots match? :: "+screenshots_match);
-        
-        /*log.info("PAGE SOURCES MATCH??    ::   "+this.getSrc().equals(that.getSrc()));
-        log.info("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        log.info("Page 1 length :: "+this.getElements().size());
-        log.info("Page 2 length :: "+that.getElements().size());
-        log.info("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        */
-        /*
-        if(!pages_match ){
-	        Map<String, PageElement> page_elements = new HashMap<String, PageElement>();
-	        for(PageElement elem : that.getElements()){
-	        	page_elements.put(elem.getXpath(), elem);
-	        }
-	        
-	        for(PageElement elem : this.getElements()){
-        		page_elements.remove(elem.getXpath());
-	        }
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof PageState))
+			return false;
 
-	        if(page_elements.isEmpty()){
-	        	pages_match = true;
-	        }
-	        else{
-	        	if( (page_elements.size()/((this.getElements().size()+that.getElements().size())/2)) > 0.7){
-		        	pages_match = false;	
-	        	}
-	        	else{
-	        		pages_match = true;
-	        	}
-	        }
-        }
-        */
-    	return pages_match;
-  	}
-	
+		PageState that = (PageState) o;
+
+		boolean pages_match = this.getKey().equals(that.getKey());
+		//boolean sources_match = this.getSrc().equals(that.getSrc());
+
+		return pages_match;
+	}
+
 	/**
-	 * {@inheritDoc} 	
+	 * {@inheritDoc}
 	 */
 	@Override
-	public String toString(){
+	public String toString() {
 		return this.getUrl().toString();
 	}
 
@@ -289,97 +263,56 @@ public class PageState implements Persistable, PathObject {
 	 * {@inheritDoc}
 	 */
 	@Override
-    public int hashCode() {
-        int hash = 1;
-        hash = hash * 5 + url.hashCode();
-        hash = hash * 17 + src.hashCode();
-        
-        if(elements != null){
-	        for(PageElement element : elements){
-	        	hash = hash * 13 + element.hashCode();
-	        }
-        }
-        return hash;
-    }
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public PathObject clone() {
 		Set<PageElement> elements = new HashSet<PageElement>(getElements());
 		Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>(getBrowserScreenshots());
-		
+
 		PageState page;
 		try {
-			page = new PageState(getSrc(), getUrl().toString(), screenshots, elements, isLandable());
-			page.setElements(this.getElements());
-			page.setLandable(this.isLandable());
-			page.setSrc(this.getSrc());
-			page.setUrl(this.getUrl());
+			page = new PageState(getUrl().toString(), screenshots, elements, isLandable());
 			return page;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
-	
-	 public String getKey() {
-		 return this.key;
-	 }
 
-	 public void setKey(String key) {
-		 this.key = key;
-	 }
-	 
-	/**
-	 * @return the page of the source
-	 */
-	@JsonIgnore
-	public String getSrc() {
-		return this.src;
+	public String getKey() {
+		return this.key;
 	}
-	
-	@JsonIgnore
-	public void setSrc(String src) {
-		if(src != null && src.length() > 0){
-			String cleaned_src = Browser.cleanSrc(src);
-			this.src = cleaned_src;
-		}
-		else{
-			this.src = src;
-		}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
-	
+
 	@JsonIgnore
-	public Set<PageElement> getElements(){
+	public Set<PageElement> getElements() {
 		return this.elements;
 	}
-	
+
 	@JsonIgnore
-	public void setElements(Set<PageElement> elements){
+	public void setElements(Set<PageElement> elements) {
 		this.elements = elements;
 	}
-	
-	public void setLandable(boolean isLandable){
+
+	public void setLandable(boolean isLandable) {
 		this.landable = isLandable;
 	}
-		
-	public boolean isLandable(){
+
+	public boolean isLandable() {
 		return this.landable;
 	}
 
-	public String getUrl(){
+	public String getUrl() {
 		return this.url;
 	}
-	
-	public void setUrl(String url){
-		/*int param_idx = url.indexOf('?');
-		if(param_idx >= 0){
-			url = url.substring(0, param_idx);
-		}
-		*/
+
+	public void setUrl(String url) {
+		/*
+		 * int param_idx = url.indexOf('?'); if(param_idx >= 0){ url =
+		 * url.substring(0, param_idx); }
+		 */
 		this.url = url;
 	}
 
@@ -425,209 +358,73 @@ public class PageState implements Persistable, PathObject {
 		this.elements.add(element);
 	}
 
-	public static String getFileChecksum(MessageDigest digest, String url) throws IOException
-	{
-		//InputStream is = new URL(url).openStream(); 
+	public String getFileChecksum(MessageDigest digest, String url) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BufferedImage img = ImageIO.read(new URL(url));
+		BufferedImage buff_img = ImageIO.read(new URL(url));
 		
-		//turn image to grayscale
-		//get image width and height
-		int width = img.getWidth();
-		int height = img.getHeight();
+		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but
+							// other formats ?
 		
-		/*
-		for(int y = 0; y < height; y++){
-		  for(int x = 0; x < width; x++){
-			  int p = img.getRGB(x,y);
-			  int a = (p>>24)&0xff;
-			  int r = (p>>16)&0xff;
-			  int g = (p>>8)&0xff;
-			  int b = p&0xff;
-			  
-			  int avg = (r+g+b)/3;
-			  p = (a<<24) | (avg<<16) | (avg<<8) | avg;
-			  img.setRGB(x, y, p);
-		  }
-		}
-	*/
-		// creates output image
-		BufferedImage outputImage = null;
-        // creates output image
-        if(height/10 > 100 && width/10 > 100){
-        	outputImage = new BufferedImage(width/10, height/10, img.getType());
- 
-	        // scales the input image to the output image
-	        Graphics2D g2d = outputImage.createGraphics();
-	        g2d.drawImage(img, 0, 0, width/10, height/10, null);
-	        g2d.dispose();
-	 
-        }
-        else{
-        	outputImage = img;
-        }
-		boolean foundWriter = ImageIO.write(outputImage, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-    
-		String image_hex = Hex.encodeHexString(baos.toByteArray());
-		StringBuilder sb = new StringBuilder();
-		for(int idx = 0; idx<image_hex.length(); idx+=97){
-			if(sb.toString().length() > 512){
-				break;
-			}
-			sb.append(image_hex.charAt(idx));			
-		}
-		
-	    return sb.toString();
-		
-		
-		/*
-		 try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-256");
-			byte[] thedigest = sha.digest(baos.toByteArray());
-	        return DatatypeConverter.printHexBinary(thedigest);
+		// Get file input stream for reading the file content
+		byte[] data = baos.toByteArray();
+		try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-512");
+			sha.update(data);
+			byte[] thedigest = sha.digest(data);
+			return Hex.encodeHexString(thedigest);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
-	    return "";
-	    */
-	    /*
-	    //Create byte array to read data in chunks
-	    byte[] byteArray = new byte[1024];
-	    int bytesCount = 0;
-	      
-	    //Read file data and update in message digest
-	    while ((bytesCount = is.read(byteArray)) != -1) {
-	        digest.update(byteArray, 0, bytesCount);
-	    };
-	     
-	    //close the stream; We don't need it now.
-	    is.close();
-	     
-	    //Get the hash's bytes
-	    byte[] bytes = digest.digest();
-	     
-	    //This bytes[] has bytes in decimal format;
-	    //Convert it to hexadecimal format
-	    StringBuilder sb = new StringBuilder();
-	    for(int i=0; i< bytes.length ;i++)
-	    {
-	        sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
-	    }
-	     
-	   //return complete hash
-	   return sb.toString();
-	   */
+		return "";
 	}
-	
-	public static String getFileChecksum(BufferedImage buff_img) throws IOException
-	{			
-		BufferedImage img = new BufferedImage(buff_img.getWidth(), buff_img.getHeight(), buff_img.getType());
-	    Graphics graphics = img.getGraphics();
-	    graphics.drawImage(buff_img, 0, 0, null);
-	    graphics.dispose();
-	    //InputStream is = new URL(url).openStream(); 
+
+	public static String getFileChecksum(BufferedImage buff_img) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		
-		//turn image to grayscale
-		//get image width and height
-		int width = img.getWidth();
-		int height = img.getHeight();
-		
-/*
-        for(int y = 0; y < height; y++){
-		  for(int x = 0; x < width; x++){
-			  int p = img.getRGB(x,y);
-			  int a = (p>>24)&0xff;
-			  int r = (p>>16)&0xff;
-			  int g = (p>>8)&0xff;
-			  int b = p&0xff;
-			  
-			  int avg = (r+g+b)/3;
-			  p = (a<<24) | (avg<<16) | (avg<<8) | avg;
-			  img.setRGB(x, y, p);
-		  }
-		}
-  */      
-        BufferedImage outputImage = null;
-        // creates output image
-        if(height/10 > 100 && width/10 > 100){
-	        outputImage = new BufferedImage(width/10, height/10, img.getType());
-	 
-	        // scales the input image to the output image
-	        Graphics2D g2d = outputImage.createGraphics();
-	        g2d.drawImage(outputImage, 0, 0, width/10, height/10, null);
-	        g2d.dispose();
-        }
-        else{
-        	outputImage = img;
-        }		
-		boolean foundWriter = ImageIO.write(outputImage, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-
-		String image_hex = Hex.encodeHexString(baos.toByteArray());
-
-		StringBuilder sb = new StringBuilder();
-
-		for(int idx = 0; idx<image_hex.length(); idx+=97){
-			if(sb.toString().length() > 512){
-				break;
-			}
-			sb.append(image_hex.charAt(idx));
-			
-		}
-        return sb.toString();
-		/*
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		boolean foundWriter = ImageIO.write(bufferedImage, "png", baos);
-		assert foundWriter; // Not sure about this... with jpg it may work but other formats ?
-	    //Get file input stream for reading the file content
-	    
-	    try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-256");
-			byte[] thedigest = sha.digest(baos.toByteArray());
-	        return DatatypeConverter.printHexBinary(thedigest);
+		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
+		assert foundWriter; // Not sure about this... with jpg it may work but
+							// other formats ?
+		// Get file input stream for reading the file content
+		byte[] data = baos.toByteArray();
+		try {
+			MessageDigest sha = MessageDigest.getInstance("SHA-512");
+			sha.update(data);
+			byte[] thedigest = sha.digest(data);
+			return Hex.encodeHexString(thedigest);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
-	    return "";
-	    */
+		return "";
+
 	}
-		
+
 	/**
 	 * {@inheritDoc}
 	 * 
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		try{
-			String key ="pagestate::"+getFileChecksum(MessageDigest.getInstance("SHA-256"), this.getBrowserScreenshots().iterator().next().getViewportScreenshot());
+		try {
+			Set<ScreenshotSet> screenshots = this.getBrowserScreenshots();
+			String screenshot = screenshots.iterator().next().getViewportScreenshot();
+			String key = "pagestate::" + getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot);
 			return key;
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return "";
-		//return "";
-		/*String key = "";
-		for(PageElement element : getElements()){
-			key += element.getKey();
-		}
-		return org.apache.commons.codec.digest.DigestUtils.sha512Hex(key);
-		*/
-		
 	}
 
 	public void addForm(Form form) {
-		for(Form temp_form: this.forms){
-			if(temp_form.getKey().equals(form.getKey())){
+		for (Form temp_form : this.forms) {
+			if (temp_form.getKey().equals(form.getKey())) {
 				return;
 			}
 		}
 		this.forms.add(form);
 	}
-	
-	public Set<Form> getForms(){
+
+	public Set<Form> getForms() {
 		return this.forms;
 	}
 
@@ -637,5 +434,13 @@ public class PageState implements Persistable, PathObject {
 
 	public void setLastLandabilityCheck(LocalDateTime last_landability_check_timestamp) {
 		this.last_landability_check = last_landability_check_timestamp;
+	}
+
+	public String getSrc() {
+		return src;
+	}
+
+	public void setSrc(String src) {
+		this.src = src;
 	}
 }

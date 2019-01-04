@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
+import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -28,6 +29,12 @@ public class MessageBroadcaster {
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
+		for(PathObject obj : test.getPathObjects()){
+			if(obj instanceof PageState){
+				((PageState)obj).setSrc("");
+			}
+		}
+		test.getResult().setSrc("");
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         String test_json = mapper.writeValueAsString(test);
@@ -87,6 +94,9 @@ public class MessageBroadcaster {
         
         ObjectMapper mapper = new ObjectMapper();
 
+        if(path_object instanceof PageState){
+        	((PageState) path_object).setSrc("");
+        }
         //Object to JSON in String
         String path_object_json = mapper.writeValueAsString(path_object);
         

@@ -285,7 +285,7 @@ public class PathExpansionActor extends AbstractActor {
 		
 		int cnt = 0;
 		System.err.println("test path objects size :: " + test.getPathObjects().size());
-		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
+		for(int path_idx = test.getPathObjects().size()-4; path_idx >= 0; path_idx-- ){
 			
 			PathObject obj = test.getPathObjects().get(path_idx);
 			System.err.println("path object type about to be checked");
@@ -299,13 +299,12 @@ public class PathExpansionActor extends AbstractActor {
 					if(elem.equals(page_elem)){
 						cnt++;
 						System.err.println("PAGE ELEMENT COUNT WITHIN PATH :: " + cnt);
-						break;
 					}
 				}
 			}	
 		}
 		//a count greater than 1 signifies more than one page state in the test contains this element
-		if(cnt > 1){
+		if(cnt > 0){
 			System.err.println("element exists already in path with # occurrence :: "+cnt);
 
 			return true;

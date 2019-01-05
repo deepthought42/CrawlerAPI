@@ -92,7 +92,6 @@ public class UrlBrowserActor extends AbstractActor {
 											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 									form_discoverer.tell(page_state_msg, getSelf() );
 									
-									
 									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 			
 									/**  path expansion temporarily disabled

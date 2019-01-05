@@ -1,7 +1,4 @@
 package com.qanairy.services;
-
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
@@ -18,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
@@ -34,13 +30,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.minion.actors.LandabilityChecker.BrowserPageState;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
-import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -58,7 +52,6 @@ import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.utils.ImageUtils;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
 /**
@@ -128,7 +121,7 @@ public class BrowserService {
 				log.warn(e.getMessage());
 			}
 			catch(Exception e){
-				log.warn("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
+				log.warn("ERROR CHECKING LANDABILITY OF PAGE AT ::: "+page_state.getUrl().toString());
 				log.warn(e.getMessage());
 			}
 			cnt++;
@@ -158,7 +151,13 @@ public class BrowserService {
 
 		BufferedImage screenshot = viewport_screenshot;
         
-		String page_key = "pagestate::"+PageState.getFileChecksum(screenshot);
+		int param_index = browser.getDriver().getCurrentUrl().indexOf("?");
+		String url_without_params = browser.getDriver().getCurrentUrl();
+		if(param_index >= 0){
+			url_without_params = url_without_params.substring(0, param_index);
+		}
+		
+		String page_key = "pagestate::"+url_without_params+PageState.getFileChecksum(screenshot);
 		PageState page_state = null;
 		PageState page_record = null;
 		try{

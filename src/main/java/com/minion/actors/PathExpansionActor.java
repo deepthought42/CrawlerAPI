@@ -118,20 +118,6 @@ public class PathExpansionActor extends AbstractActor {
 						pathExpansions = expandPath(test);
 						System.err.println(pathExpansions.size()+"   path expansions found.");
 
-						int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-						System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
-						System.err.println("expected total path count :: "+new_total_path_count);
-						discovery_record.setTotalPathCount(new_total_path_count);
-						discovery_record = discovery_repo.save(discovery_record);
-	
-						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-						
-						try{
-							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-					  	}catch(Exception e){
-						
-						}
-						
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
@@ -141,6 +127,22 @@ public class PathExpansionActor extends AbstractActor {
 							work_allocator.tell(expanded_path_msg, getSelf() );
 						}
 					}
+					
+
+					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
+					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
+					System.err.println("expected total path count :: "+new_total_path_count);
+					discovery_record.setTotalPathCount(new_total_path_count);
+					discovery_record = discovery_repo.save(discovery_record);
+
+					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+					
+					try{
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+				  	}catch(Exception e){
+					
+					}
+					
 				}	
 			}
 			postStop();
@@ -287,32 +289,21 @@ public class PathExpansionActor extends AbstractActor {
 		assert test != null;
 		assert elem != null;
 		
-		int cnt = 0;
-		System.err.println("test path objects size :: " + test.getPathObjects().size());
 		for(int path_idx = test.getPathObjects().size()-4; path_idx >= 0; path_idx-- ){
-			
 			PathObject obj = test.getPathObjects().get(path_idx);
-			System.err.println("path object type about to be checked");
 			if(obj.getType().equals("PageState")){
-				System.err.println("Page state casting for object");
 				PageState page_state = ((PageState) obj);
 				Set<PageElement> page_elements = page_state_repo.getPageElements(page_state.getKey());
 				System.err.println("page state has # of elements  ::  "+page_elements.size());
 				for(PageElement page_elem : page_elements){
 					System.err.println("Checking if latest element matches page element ");
 					if(elem.equals(page_elem)){
-						cnt++;
-						System.err.println("PAGE ELEMENT COUNT WITHIN PATH :: " + cnt);
+						return true;
 					}
 				}
 			}	
 		}
-		//a count greater than 1 signifies more than one page state in the test contains this element
-		if(cnt > 0){
-			System.err.println("element exists already in path with # occurrence :: "+cnt);
 
-			return true;
-		}
 		return false;
 	}
 }

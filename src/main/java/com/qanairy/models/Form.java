@@ -57,7 +57,11 @@ public class Form {
 	}
 	
 	private String generateKey() {
-		return "form::"+getFormFields().hashCode()+""+getFormTag().hashCode()+""+getSubmitField().hashCode();
+		String elements_key = "";
+		for(PageElement elem : getFormFields()){
+			elements_key += elem.getKey();
+		}
+		return "form::"+elements_key+""+getFormTag().getKey()+""+getSubmitField().getKey();
 	}
 
 	/**

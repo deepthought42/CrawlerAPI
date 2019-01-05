@@ -243,7 +243,7 @@ public class BrowserService {
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 
-				if(is_child && elem.getSize().getHeight() > 1 && elem.getSize().width >1 && elem.isDisplayed()
+				if(is_child && elem.getSize().getHeight() > 0 && elem.getSize().width >0 && elem.isDisplayed()
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
 						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
 					

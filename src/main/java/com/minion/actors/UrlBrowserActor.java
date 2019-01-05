@@ -63,35 +63,28 @@ public class UrlBrowserActor extends AbstractActor {
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
 						
-						
+						String discovery_key = message.getOptions().get("discovery_key").toString();
 						boolean test_generated_successfully = false;
 						int attempts = 0;
 						do{
 							try{
 								String browser = message.getOptions().get("browser").toString();
-								String discovery_key = message.getOptions().get("discovery_key").toString();
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
 								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
 								test = test_service.save(test, host);
 		
 								DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
-								discovery_record.setLastPathRanAt(new Date());
-								discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-								discovery_record.setTestCount(discovery_record.getTestCount()+1);
-								discovery_record = discovery_repo.save(discovery_record);
-								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 								
-								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){	
+								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
 									discovery_record.addExpandedPageState(test.getResult().getKey());
 									discovery_record_repo.save(discovery_record);
 									
 									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 									form_discoverer.tell(page_state_msg, getSelf() );
-									
 									
 									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 			
@@ -108,8 +101,14 @@ public class UrlBrowserActor extends AbstractActor {
 							catch(Exception e){
 								log.warn("Exception occurred while exploring url --  " + e.getMessage());
 							}
-							 Timing.pauseThread(1000);
 						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
+						
+						DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
+						discovery_record.setLastPathRanAt(new Date());
+						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+						discovery_record.setTestCount(discovery_record.getTestCount()+1);
+						discovery_record = discovery_repo.save(discovery_record);
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		

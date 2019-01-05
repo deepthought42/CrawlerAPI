@@ -108,7 +108,6 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
-				Timing.pauseThread(5000);
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -146,7 +145,8 @@ public class Browser {
 		catch(Exception e){
 			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
 		}
-		Timing.pauseThread(15000);
+		
+		Timing.pauseThread(5000);
 	}
 
 	/**
@@ -194,7 +194,7 @@ public class Browser {
 
 
 	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
-	    driver.manage().window().setSize(new Dimension(1024, 768));
+	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -285,7 +285,7 @@ public class Browser {
 		log.info("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
-		driver.manage().window().setSize(new Dimension(1024, 768));
+		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;

@@ -92,14 +92,9 @@ public class PathExpansionActor extends AbstractActor {
 						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					
-					//Send test to simplifier
-					//when simplifier returns simplified test
+					
 					// if path is a single page 
 					//		then send path to urlBrowserActor
-					
-					//	expand path
-					// 	send expanded path to work allocator
-					
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
@@ -119,32 +114,35 @@ public class PathExpansionActor extends AbstractActor {
 
 						return;
 					}
-					pathExpansions = expandPath(test);
-					System.err.println(pathExpansions.size()+"   path expansions found.");
-					
-					DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
-					if(discovery_record2 != null){
-						discovery_record = discovery_record2;
+					else{
+						pathExpansions = expandPath(test);
+						System.err.println(pathExpansions.size()+"   path expansions found.");
+
+						for(ExploratoryPath expanded : pathExpansions){
+							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+	
+							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
+							
+							work_allocator.tell(expanded_path_msg, getSelf() );
+						}
 					}
+					
+
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
 					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
 					System.err.println("expected total path count :: "+new_total_path_count);
 					discovery_record.setTotalPathCount(new_total_path_count);
-					//discovery_record.getExpandedPageStates().add(test.getResult().getKey());
 					discovery_record = discovery_repo.save(discovery_record);
 
 					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 					
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-					for(ExploratoryPath expanded : pathExpansions){
-						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-
-						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-						
-						work_allocator.tell(expanded_path_msg, getSelf() );
+					try{
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+				  	}catch(Exception e){
+					
 					}
+					
 				}	
 			}
 			postStop();
@@ -291,33 +289,21 @@ public class PathExpansionActor extends AbstractActor {
 		assert test != null;
 		assert elem != null;
 		
-		int cnt = 0;
-		System.err.println("test path objects size :: " + test.getPathObjects().size());
-		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
-			
+		for(int path_idx = test.getPathObjects().size()-4; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);
-			System.err.println("path object type about to be checked");
 			if(obj.getType().equals("PageState")){
-				System.err.println("Page state casting for object");
 				PageState page_state = ((PageState) obj);
 				Set<PageElement> page_elements = page_state_repo.getPageElements(page_state.getKey());
 				System.err.println("page state has # of elements  ::  "+page_elements.size());
 				for(PageElement page_elem : page_elements){
 					System.err.println("Checking if latest element matches page element ");
 					if(elem.equals(page_elem)){
-						cnt++;
-						System.err.println("PAGE ELEMENT COUNT WITHIN PATH :: " + cnt);
-						break;
+						return true;
 					}
 				}
 			}	
 		}
-		//a count greater than 1 signifies more than one page state in the test contains this element
-		if(cnt > 1){
-			System.err.println("element exists already in path with # occurrence :: "+cnt);
 
-			return true;
-		}
 		return false;
 	}
 }

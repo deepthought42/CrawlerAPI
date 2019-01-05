@@ -126,8 +126,12 @@ public class PathExpansionActor extends AbstractActor {
 	
 						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 						
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-	
+						try{
+							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					  	}catch(Exception e){
+						
+						}
+						
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());

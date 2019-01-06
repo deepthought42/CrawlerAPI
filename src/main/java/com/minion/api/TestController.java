@@ -126,7 +126,6 @@ public class TestController {
 			else{
 				status = TestStatus.PASSING;
 			}
-			System.err.println("updated record status3 :: " + status);
 		}
 		if(chrome_status!=null && !chrome_status.isEmpty()){
 			browser_statuses.put("chrome", chrome_status.toUpperCase());
@@ -147,9 +146,6 @@ public class TestController {
 		
 		//get last test record
 		TestRecord record = test_repo.getMostRecentRecord(test.getKey());
-		System.err.println("updated record status1 :: " + record.getKey());
-
-		System.err.println("updated record status2 :: " + record.getStatus());
 		record.setStatus(status);
 		test_record_repo.save(record);
 		

@@ -5,6 +5,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Principal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.catalina.authenticator.SpnegoAuthenticator.AuthenticateAction;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -211,10 +213,11 @@ public class DomainController {
     @PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Principal principal = request.getUserPrincipal();
+
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
     	
-    	String username = auth.getUsername(auth_access_token);
-    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -222,8 +225,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	Set<Domain> domains = account_repo.getDomains(username);
-    	log.info("Domain size :: "+domains.size());
+    	Set<Domain> domains = account_repo.getDomains(id);
 	    return domains;
     }
     

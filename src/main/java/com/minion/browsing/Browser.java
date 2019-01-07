@@ -108,7 +108,6 @@ public class Browser {
 				else if(browser.equals("opera")){
 					this.driver = openWithOpera();
 				}
-				Timing.pauseThread(5000);
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -146,7 +145,8 @@ public class Browser {
 		catch(Exception e){
 			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
 		}
-		Timing.pauseThread(15000);
+		
+		Timing.pauseThread(5000);
 	}
 
 	/**

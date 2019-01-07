@@ -68,7 +68,6 @@ public class TestingActor extends AbstractActor {
 								}
 								
 								cnt++;
-								Timing.pauseThread(1000);
 							}
 						}
 						final long pathCrawlEndTime = System.currentTimeMillis();

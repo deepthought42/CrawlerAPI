@@ -1,10 +1,13 @@
 package com.qanairy.models;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.imageio.ImageIO;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -234,7 +237,12 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getScreenshot()+getXpath()+":"+getText());   
+		String checksum = "";
+		try{
+			checksum = PageState.getFileChecksum(ImageIO.read(new File(getScreenshot())));
+		}
+		catch(Exception e){}
+		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(checksum+":"+getXpath()+":"+getText());   
 	}
 	
 

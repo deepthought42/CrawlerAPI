@@ -166,7 +166,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										e.printStackTrace();
 									}
 									tries++;
-									Timing.pauseThread(1000);
 								}while(result_page == null && tries < Integer.MAX_VALUE);
 						
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");

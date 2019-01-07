@@ -32,6 +32,7 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
+import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
@@ -40,6 +41,7 @@ import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
@@ -65,6 +67,9 @@ public class TestController {
     
     @Autowired
     private TestRepository test_repo;
+    
+    @Autowired
+    private TestRecordRepository test_record_repo;
     
     @Autowired
     private GroupRepository group_repo;
@@ -99,26 +104,54 @@ public class TestController {
 	 * 
 	 * @param test
 	 * @return
+     * @throws JsonProcessingException 
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(method=RequestMethod.PUT)
-	public @ResponseBody void update(HttpServletRequest request,
+	public @ResponseBody Test update(HttpServletRequest request,
 									@RequestParam(value="key", required=true) String key, 
 									@RequestParam(value="name", required=true) String name, 
 									@RequestParam(value="firefox", required=false) String firefox_status,
-									@RequestParam(value="chrome", required=false) String chrome_status){
-		Test test = test_repo.findByKey(key);
+									@RequestParam(value="chrome", required=false) String chrome_status) throws JsonProcessingException{
+		Map<String, String> browser_statuses = new HashMap<String, String>();	
 		
-		Map<String, String> browser_statuses = new HashMap<String, String>();
+		TestStatus status = TestStatus.FAILING;
+
 		if(firefox_status!=null && !firefox_status.isEmpty()){
 			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
+			
+			if(firefox_status.toLowerCase().equals("failing")){
+				status = TestStatus.FAILING;
+			}
+			else{
+				status = TestStatus.PASSING;
+			}
 		}
 		if(chrome_status!=null && !chrome_status.isEmpty()){
-			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
+			browser_statuses.put("chrome", chrome_status.toUpperCase());
+			if(chrome_status.toLowerCase().equals("failing")){
+				status = TestStatus.FAILING;
+			}
+			else{
+				status = TestStatus.PASSING;
+			}
 		}
+		Test test = test_repo.findByKey(key);
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);
+		test.setStatus(status);
+		//test.setRecords(records);
+		//update status of last test record
 		test_repo.save(test);
+		
+		//get last test record
+		TestRecord record = test_repo.getMostRecentRecord(test.getKey());
+		record.setStatus(status);
+		test_record_repo.save(record);
+		
+		record = test_record_repo.updateStatus(record.getKey(), status.toString());
+		test = test_repo.findByKey(test.getKey());
+		return test;
     }
     
     /**
@@ -257,7 +290,7 @@ public class TestController {
 		}
 		
 		if(last_record != null){
-			last_record.setPassing(test.getStatus());
+			last_record.setStatus(test.getStatus());
 		}
 	}
 
@@ -358,7 +391,7 @@ public class TestController {
 			record = test_service.runTest(test, browser, last_test_status);
 			
 			test.addRecord(record);
-	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());			
+	    	test.getBrowserStatuses().put(record.getBrowser(), record.getStatus().toString());			
 			    		
 			test_results.put(test.getKey(), record);
 			TestStatus is_passing = TestStatus.PASSING;
@@ -379,7 +412,7 @@ public class TestController {
 			test.setRunTime(record.getRunTime());
 			test.setBrowserStatuses(browser_statuses);
 			test_repo.save(test);
-			
+
 			acct.addTestRecord(record);
 			account_repo.save(acct);
    		}

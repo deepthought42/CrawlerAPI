@@ -1,7 +1,4 @@
 package com.qanairy.services;
-
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
@@ -18,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
@@ -35,13 +31,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.minion.actors.LandabilityChecker.BrowserPageState;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
-import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -59,7 +53,6 @@ import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.utils.ImageUtils;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
 /**
@@ -105,8 +98,7 @@ public class BrowserService {
 	 * @throws GridException 
 	 */
 	public boolean checkIfLandable(String browser, PageState page_state) throws GridException, IOException {
-		boolean landable = false;
-
+		boolean isLandable = false;
 		boolean page_visited_successfully = false;
 		int cnt  = 0;
 		do{
@@ -115,26 +107,29 @@ public class BrowserService {
 			try{
 				Browser landable_browser = new Browser(browser);
 				landable_browser.navigateTo(page_state.getUrl());
-				page_visited_successfully = true;
+				
 				if(page_state.equals(buildPage(landable_browser))){
-					landable= true;
+					isLandable = true;
 				}
+				else{
+					isLandable = false;
+				}
+				
+				page_visited_successfully = true;
 				landable_browser.close();
-
+				break;
 			}catch(GridException e){
 				log.warn(e.getMessage());
 			}
 			catch(Exception e){
-				log.warn("ERROR VISITING PAGE AT ::: "+page_state.getUrl().toString());
+				log.warn("ERROR CHECKING LANDABILITY OF PAGE AT ::: "+page_state.getUrl().toString());
 				log.warn(e.getMessage());
 			}
 			cnt++;
-			Timing.pauseThread(1000);
-
 		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
 		
-		log.info("is page state landable  ?? :: "+landable);
-		return landable;
+		log.info("is page state landable  ?? :: "+page_state.isLandable());
+		return isLandable;
 	}
 	
 	/**
@@ -151,13 +146,21 @@ public class BrowserService {
 		assert browser != null;
 		
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
-		//new Actions(browser.getDriver()).moveByOffset(1000,1000);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
 
-		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
+
+		BufferedImage screenshot = viewport_screenshot;
         
-		String page_key = "pagestate::"+PageState.getFileChecksum(viewport_screenshot);
+		int param_index = browser.getDriver().getCurrentUrl().indexOf("?");
+		String url_without_params = browser.getDriver().getCurrentUrl();
+		if(param_index >= 0){
+			url_without_params = url_without_params.substring(0, param_index);
+		}
+		
+		String page_key = "pagestate::"+url_without_params+PageState.getFileChecksum(screenshot);
+
 		PageState page_state = null;
 		PageState page_record = null;
 		try{
@@ -192,27 +195,24 @@ public class BrowserService {
 					screenshots,
 					visible_elements,
 					browser.getDriver().getPageSource());
+			page_state.setLastLandabilityCheck(LocalDateTime.now());
+			page_state = page_state_repo.save(page_state);
+			
+			boolean isLandable = checkIfLandable(browser.getBrowserName(), page_state);
+			page_state.setLandable(isLandable);
+			page_state = page_state_repo.save(page_state);
 		}
 
-		if(page_state.getLastLandabilityCheck() != null){
+		Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
+		Duration minimum_diff = Duration.ofHours(24);
+		if(time_diff.compareTo(minimum_diff) > 0){
+			//have page checked for landability
+			page_state.setLastLandabilityCheck(LocalDateTime.now());
+			page_state = page_state_repo.save(page_state);
 
-			Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
-			Duration minimum_diff = Duration.ofHours(24);
-			if(time_diff.compareTo(minimum_diff) >= 0){
-				//have page checked for landability
-				BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
-
-				final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-				landibility_checker.tell(bps, ActorRef.noSender() );
-			}
-		}
-		else{
-			BrowserPageState bps = new BrowserPageState(page_state, browser.getBrowserName());
-
-			final ActorRef landibility_checker = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("landabilityChecker"), "landability_checker"+UUID.randomUUID());
-			landibility_checker.tell(bps, ActorRef.noSender() );
+			boolean isLandable = checkIfLandable(browser.getBrowserName(), page_state);
+			page_state.setLandable(isLandable);
+			page_state = page_state_repo.save(page_state);
 		}
 				
 		return page_state;
@@ -254,7 +254,7 @@ public class BrowserService {
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 
-				if(is_child && elem.getSize().getHeight() > 1 && elem.getSize().width >1 && elem.isDisplayed()
+				if(is_child && elem.getSize().getHeight() > 0 && elem.getSize().width >0 && elem.isDisplayed()
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
 						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
 					

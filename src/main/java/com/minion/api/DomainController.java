@@ -17,7 +17,6 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.catalina.authenticator.SpnegoAuthenticator.AuthenticateAction;
 import org.omg.CORBA.UnknownUserException;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,10 +95,9 @@ public class DomainController {
 							    		 @RequestParam(value="logo_url", required=false) String logo_url,
 							    		 @RequestParam(value="test_users", required=false) List<TestUser> users) 
     											throws UnknownUserException, UnknownAccountException, MalformedURLException {
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -151,18 +149,10 @@ public class DomainController {
     											throws UnknownUserException, 
     													UnknownAccountException, 
     													MalformedURLException {
-        //printGrantedAuthorities((Auth0JWTToken) principal);
-        /*if ("ROLES".equals(appConfig.getAuthorityStrategy())) {
-            
-            // log username of user requesting domain creation
-            logger.info("creating new domain in domain");
-        }*/
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
     	
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = account_repo.findByUsername(username);
-
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -193,11 +183,9 @@ public class DomainController {
 														UnknownAccountException, 
 														MalformedURLException {
 
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -214,7 +202,6 @@ public class DomainController {
     @RequestMapping(method = RequestMethod.GET)
     public @ResponseBody Set<Domain> getAll(HttpServletRequest request) throws UnknownAccountException {        
     	Principal principal = request.getUserPrincipal();
-
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_repo.findByUserId(id);
     	
@@ -242,11 +229,9 @@ public class DomainController {
 	public @ResponseBody void remove(HttpServletRequest request,
 										@PathVariable(value="domain_id", required=true) long domain_id)
 								   throws UnknownAccountException {
-
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-
-		Account acct = account_repo.findByUsername(username);
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
 	
 		if(acct == null){
 			throw new UnknownAccountException();
@@ -328,11 +313,10 @@ public class DomainController {
     public @ResponseBody Set<PageElement> getAllPageElements(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
     	
-    	String username = auth.getUsername(auth_access_token);
-    	
-    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -358,11 +342,10 @@ public class DomainController {
     public @ResponseBody Set<Form> getAllForms(HttpServletRequest request, 
 												@PathVariable(value="domain_id", required=true) long domain_id)
 														throws UnknownAccountException {        
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
     	
-    	String username = auth.getUsername(auth_access_token);
-    	
-    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -425,14 +408,10 @@ public class DomainController {
     		log.info("Test user does not exist for domain yet");
     		
     		TestUser user = new TestUser(username, password, role, enabled);
-    		log.info("SAVING TEST USER "+user);
     		user = test_user_repo.save(user);
     		Set<TestUser> users = new HashSet<TestUser>();
     		users.add(user);
-    		log.info("created test user :: "+user);
     		domain.setTestUsers(users);
-			log.info("domain.testusers :: "+domain.getTestUsers());
-    		log.info("added test user to domain");
     		domain = domain_repo.save(domain);
     		log.info("saved domain :: "+domain.getKey());
     		return user;
@@ -491,10 +470,10 @@ public class DomainController {
     							 @RequestParam(value="key", required=true) String key,
     							 @RequestParam(value="name", required=false) String name,
     							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
-		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-       	String username = auth.getUsername(auth_access_token);
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
     	
-    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}

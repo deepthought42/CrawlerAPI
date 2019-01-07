@@ -1,5 +1,7 @@
 package com.minion.api;
 
+import java.security.Principal;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +43,9 @@ public class SubscriptionController {
     public void subscribe(HttpServletRequest request,
 					 		@RequestParam(value="plan", required=true) String plan,
 					 		@RequestParam(value="source_token", required=true) String source_token) throws Exception {
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-    	Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
     	
     	subscription_service.changeSubscription(acct, SubscriptionPlan.valueOf(plan.toUpperCase()), source_token);
     }

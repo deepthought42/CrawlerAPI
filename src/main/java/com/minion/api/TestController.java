@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,7 +44,6 @@ import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.exception.PaymentDueException;
-import com.minion.browsing.Browser;
 import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
@@ -235,10 +235,10 @@ public class TestController {
 															throws UnknownAccountException{
     	
     	//make sure domain belongs to user account first
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -247,13 +247,6 @@ public class TestController {
     	}
     	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-    	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", auth.getNickname(auth_access_token));
-        traits.put("email", username);        
-    	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getUsername())
-    		    .traits(traits)
-    		);
     	
 		Test test = test_repo.findByKey(key);
 		test.setStatus(status);
@@ -351,10 +344,10 @@ public class TestController {
 														  @RequestParam(value="host_url", required=true) String host) 
 																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException{
     	
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -364,13 +357,6 @@ public class TestController {
         }
     	    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-    	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("name", auth.getNickname(auth_access_token));
-        traits.put("email", username);        
-    	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getUsername())
-    		    .traits(traits)
-    		);
     	
     	//Fire test run started event	
 	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();

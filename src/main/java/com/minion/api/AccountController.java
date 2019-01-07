@@ -1,5 +1,6 @@
 package com.minion.api;
 
+import java.security.Principal;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -125,10 +126,11 @@ public class AccountController {
 
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
     public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
-        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
-        if(acct == null){
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
+    	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
@@ -145,9 +147,10 @@ public class AccountController {
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
-        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
         if(acct == null){
     		throw new UnknownAccountException();
     	}

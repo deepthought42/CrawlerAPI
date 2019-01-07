@@ -1,5 +1,6 @@
 package com.minion.api;
 
+import java.security.Principal;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -76,26 +77,22 @@ public class AccountController {
      */
     @CrossOrigin(origins = "138.91.154.99, 54.183.64.135, 54.67.77.38, 54.67.15.170, 54.183.204.205, 54.173.21.107, 54.85.173.28, 35.167.74.121, 35.160.3.103, 35.166.202.113, 52.14.40.253, 52.14.38.78, 52.14.17.114, 52.71.209.77, 34.195.142.251, 52.200.94.42", maxAge = 3600)
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Account> create( @RequestParam(value="user_email", required=true) String username) 
-    												throws Exception{        
+    public ResponseEntity<Account> create( @RequestParam(value="user_id", required=true) String user_id,
+    										@RequestParam(value="username", required=true) String username) 
+    												throws Exception{    
     	Account acct = account_repo.findByUsername(username);
     	
     	//create account
         if(acct != null){
         	throw new AccountExistsException();
         }
-          
-        //STAGING
-        //Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
-    	
-    	//PRODUCTION
-    	//Plan tier = Plan.retrieve("plan_D06ComCwTJ0Cgz  ?????");
 
-    	Map<String, Object> customerParams = new HashMap<String, Object>();
+        Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
     	//Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
-    	acct = new Account(username, customer.getId(), "");
+
+    	acct = new Account(user_id, username, customer.getId(), "");
     	acct.setSubscriptionType("FREE");
 
         // Connect to Auth0 API and update user metadata
@@ -106,10 +103,8 @@ public class AccountController {
         */
         //printGrantedAuthorities((Auth0JWTToken) principal);
 
-        //final String username = usernameService.getUsername();
         // log username of user requesting account creation
         acct = account_repo.save(acct);
-        
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
@@ -131,10 +126,11 @@ public class AccountController {
 
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
     public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
-        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
-        if(acct == null){
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
+    	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
@@ -151,9 +147,10 @@ public class AccountController {
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
-        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
         if(acct == null){
     		throw new UnknownAccountException();
     	}

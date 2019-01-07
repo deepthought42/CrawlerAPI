@@ -26,7 +26,6 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
@@ -164,7 +163,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									}
 
 									tries++;
-									Timing.pauseThread(1000);
 								}while(result_page == null && tries < Integer.MAX_VALUE);
 							
 								//have page checked for landability
@@ -204,7 +202,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  				results_match = false;
 							  			}
 							  			cnt++;
-										Timing.pauseThread(1000);
 							  		}while(results_match && cnt < Integer.MAX_VALUE);
 							  		
 							  		if(last_path == null){
@@ -220,7 +217,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 									discovery_record.setTestCount(discovery_record.getTestCount()+1);
 							  		discovery_repo.save(discovery_record);
-									//break;
 								}
 							}
 							

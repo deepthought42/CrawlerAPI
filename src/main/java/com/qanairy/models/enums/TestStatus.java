@@ -3,7 +3,7 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum TestStatus {
-	PASSING("passing"), FAILING("failing"), UNVERIFIED("unverified"), RUNNING("running");
+	PASSING("PASSING"), FAILING("FAILING"), UNVERIFIED("UNVERIFIED"), RUNNING("RUNNING");
 	
 	private String shortName;
 

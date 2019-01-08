@@ -36,6 +36,7 @@ import com.qanairy.services.BrowserService;
 @RestController
 @RequestMapping("/testIDE")
 public class IdeTestExportController {
+	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Autowired
@@ -47,18 +48,17 @@ public class IdeTestExportController {
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
      *  {@link PageElement}s and {@link Action}s
-     * 
-     * @param authorization_header
-     * @param url 
-     * @param screenshot_url
-     * @param browser_name
-     * 
-     * @return
-	 * @throws Exception 
-     */
+	 * 
+	 * @param json_str JSON String
+	 * 
+	 * @return A boolean value indicating that the system successfully created a {@link Test} using the provided JSON
+	 * 
+	 * @throws Exception
+	 */
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Test> create( @RequestBody(required=true) JSONObject test_json) throws Exception {
-    	
+    public ResponseEntity<Boolean> create( @RequestBody(required=true) String json_str) 
+    										throws Exception {
+    	JSONObject test_json = new JSONObject(json_str);
     	List<String> path_keys = new ArrayList<String>();
     	List<PathObject> path_objects = new ArrayList<PathObject>();
     	Browser browser = new Browser("chrome");
@@ -122,6 +122,6 @@ public class IdeTestExportController {
     	PageState result_page = browser_service.buildPage(browser);
     	Test test = new Test(path_keys, path_objects, result_page, name);
     	test = test_repo.save(test);
-    	return new ResponseEntity<>(test, HttpStatus.ACCEPTED );
+    	return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
 	}
 }

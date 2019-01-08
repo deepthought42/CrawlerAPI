@@ -39,7 +39,6 @@ import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 
 import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -76,9 +75,6 @@ public class TestController {
     
     @Autowired
     private TestService test_service;
-    
-    @Autowired
-    private Auth0Client auth;
     
     @Autowired
     private SubscriptionService subscription_service;
@@ -370,27 +366,27 @@ public class TestController {
     	
     	for(String key : test_keys){
     		Test test = test_repo.findByKey(key);
-    		TestRecord record = null;
-    		
     		TestStatus last_test_status = test.getStatus();
 
-			record = test_service.runTest(test, browser, last_test_status);
+			test.setStatus(TestStatus.RUNNING);
+			test.setBrowserStatus(browser.trim(), TestStatus.RUNNING.toString());
+			test = test_repo.save(test);
 			
-			test.addRecord(record);
-	    	test.getBrowserStatuses().put(record.getBrowser(), record.getStatus().toString());			
+    		TestRecord record = test_service.runTest(test, browser, last_test_status);
 			    		
 			test_results.put(test.getKey(), record);
 			TestStatus is_passing = TestStatus.PASSING;
 			//update overall passing status based on all browser passing statuses
 			for(String status : test.getBrowserStatuses().values()){
-				if(status.equals(TestStatus.UNVERIFIED) || status.equals(TestStatus.FAILING)){
+				if(status.equals(TestStatus.FAILING)){
 					is_passing = TestStatus.FAILING;
 					break;
 				}
 			}
 			Map<String, String> browser_statuses = test.getBrowserStatuses();
-			browser_statuses.put(browser, is_passing.toString());
+			browser_statuses.put(browser, record.getStatus().toString());
 			
+			test.addRecord(record);
 			test.addRecord(record);
 			test.setResult(record.getResult());
 			test.setStatus(is_passing);

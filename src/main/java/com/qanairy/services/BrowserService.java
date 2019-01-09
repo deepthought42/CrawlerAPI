@@ -117,7 +117,8 @@ public class BrowserService {
 				page_visited_successfully = true;
 				landable_browser.close();
 				break;
-			}catch(GridException e){
+			}
+			catch(GridException e){
 				log.warn(e.getMessage());
 			}
 			catch(Exception e){
@@ -157,7 +158,7 @@ public class BrowserService {
 			url_without_params = url_without_params.substring(0, param_index);
 		}
 		
-		String page_key = "pagestate::"+url_without_params+PageState.getFileChecksum(screenshot);
+		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(screenshot));
 		PageState page_state = null;
 		PageState page_record = null;
 		try{

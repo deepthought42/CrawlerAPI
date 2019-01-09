@@ -62,12 +62,8 @@ public class TestService {
 			 try {
 				System.err.println("Getting browser connection...");
 				Browser browser = new Browser(browser_name.trim());
-				System.err.println("Preparing to crawl path with keys :: "+test.getPathKeys().size());
-				System.err.println("Preparing to crawl path with objects :: "+test.getPathObjects().size());
-				System.err.println("Crawling path for test run...");
-
+				
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
-				System.err.println("Closing browser for test run...");
 				browser.close();
 				break;
 			 } catch(PagesAreNotMatchingException e){
@@ -88,7 +84,7 @@ public class TestService {
 		 System.err.println("page :: " + page);
 		 System.err.println("last_test_status  ::   " +last_test_status);
 		 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
-
+		 
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;

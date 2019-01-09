@@ -109,7 +109,7 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTestStatus(String host, TestRecord record) throws JsonProcessingException {
+	public static void broadcastTestStatus(String host, Test record) throws JsonProcessingException {
 		
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
@@ -121,7 +121,7 @@ public class MessageBroadcaster {
         
         String test_json = mapper.writeValueAsString(record);
         
-		pusher.trigger(host, "test-status", test_json);
+		pusher.trigger(host, "test-run", test_json);
 	}
 	
 	/**

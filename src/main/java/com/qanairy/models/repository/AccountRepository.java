@@ -15,7 +15,7 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	//Account findByKey(@Param("key") String key);
 	Account findByUsername(@Param("username") String username);
 
-	@Query("MATCH p=(account:Account {user_id:{user_id}})-[]->() RETURN p")
+	@Query("MATCH p=(account:Account{user_id:{user_id}})-->() RETURN p")
 	Account findByUserId(@Param("user_id") String user_id);
 
 	

@@ -89,7 +89,7 @@ public class DiscoveryController {
     	DiscoveryRecord last_discovery_record = null;
     	Date last_ran_date = new Date(0L);
 		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-			if(record.getStartTime().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url)){
+			if(record.getStartTime().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url.trim())){
 				last_ran_date = record.getStartTime();
 				last_discovery_record = record;
 			}

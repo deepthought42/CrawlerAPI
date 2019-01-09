@@ -43,7 +43,6 @@ import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.exception.PaymentDueException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
@@ -331,6 +330,7 @@ public class TestController {
      * @throws GridException 
      * @throws PaymentDueException 
      * @throws StripeException 
+     * @throws JsonProcessingException 
 	 */
     @PreAuthorize("hasAuthority('run:tests')")
 	@RequestMapping(path="/run", method = RequestMethod.POST)
@@ -338,7 +338,7 @@ public class TestController {
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys, 
 														  @RequestParam(value="browser", required=true) String browser,
 														  @RequestParam(value="host_url", required=true) String host) 
-																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException{
+																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException, JsonProcessingException{
     	
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -387,7 +387,6 @@ public class TestController {
 			browser_statuses.put(browser, record.getStatus().toString());
 			
 			test.addRecord(record);
-			test.addRecord(record);
 			test.setResult(record.getResult());
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
@@ -397,8 +396,10 @@ public class TestController {
 
 			acct.addTestRecord(record);
 			account_repo.save(acct);
-   		}
+			MessageBroadcaster.broadcastTestStatus(host, test);
+    	}
 		
+    	
 		return test_results;
 	}
 

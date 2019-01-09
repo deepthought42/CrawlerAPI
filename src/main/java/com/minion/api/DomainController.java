@@ -18,7 +18,8 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import org.omg.CORBA.UnknownUserException;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +34,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
@@ -77,8 +77,6 @@ public class DomainController {
 	@Autowired
 	private TestUserRepository test_user_repo;
 	   
-	@Autowired
-	private Auth0Client auth;
     /**
      * Create a new {@link Domain domain}
      * 

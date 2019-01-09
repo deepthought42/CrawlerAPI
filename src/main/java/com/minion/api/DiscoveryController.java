@@ -27,7 +27,6 @@ import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -64,9 +63,6 @@ public class DiscoveryController {
     
     @Autowired
     private ActorSystem actor_system;
-    
-    @Autowired
-    private Auth0Client auth;
     
     @Autowired
     private SubscriptionService subscription_service;

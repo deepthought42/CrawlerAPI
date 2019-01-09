@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
@@ -54,9 +53,6 @@ public class AccountController {
 
     @Autowired
     private AccountRepository account_repo;
-    
-    @Autowired
-    private Auth0Client auth;
     
     private StripeClient stripeClient;
 
@@ -94,14 +90,6 @@ public class AccountController {
 
     	acct = new Account(user_id, username, customer.getId(), "");
     	acct.setSubscriptionType("FREE");
-
-        // Connect to Auth0 API and update user metadata
-        /*HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
-        if(api_resp.getStatus() != 200){
-        	throw new Auth0ManagementApiException();
-        }
-        */
-        //printGrantedAuthorities((Auth0JWTToken) principal);
 
         // log username of user requesting account creation
         acct = account_repo.save(acct);

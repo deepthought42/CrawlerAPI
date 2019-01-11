@@ -3,6 +3,7 @@ package com.minion.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
+import com.qanairy.dto.TestRecordDto;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
@@ -109,7 +110,7 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTestStatus(String host, Test record) throws JsonProcessingException {
+	public static void broadcastTestStatus(String host, TestRecord record, Test test) throws JsonProcessingException {
 		
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
@@ -119,7 +120,7 @@ public class MessageBroadcaster {
 
         //Object to JSON in String
         
-        String test_json = mapper.writeValueAsString(record);
+        String test_json = mapper.writeValueAsString(new TestRecordDto(record, test.getKey()));
         
 		pusher.trigger(host, "test-run", test_json);
 	}

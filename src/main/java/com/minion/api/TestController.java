@@ -373,30 +373,34 @@ public class TestController {
 			test = test_repo.save(test);
 			
     		TestRecord record = test_service.runTest(test, browser, last_test_status);
-			    		
 			test_results.put(test.getKey(), record);
+			
+			//set browser status first since we use browser statuses to determine overall test status
+			test.setBrowserStatus(browser.trim(), record.getStatus().toString());
+			
 			TestStatus is_passing = TestStatus.PASSING;
 			//update overall passing status based on all browser passing statuses
 			for(String status : test.getBrowserStatuses().values()){
-				if(status.equals(TestStatus.FAILING)){
+				if(status.equals(TestStatus.FAILING.toString())){
+					is_passing = TestStatus.FAILING;
+					break;
+				}
+				else if(status.equals(TestStatus.UNVERIFIED.toString())){
 					is_passing = TestStatus.FAILING;
 					break;
 				}
 			}
-			Map<String, String> browser_statuses = test.getBrowserStatuses();
-			browser_statuses.put(browser, record.getStatus().toString());
 			
 			test.addRecord(record);
 			test.setResult(record.getResult());
 			test.setStatus(is_passing);
 			test.setLastRunTimestamp(new Date());
 			test.setRunTime(record.getRunTime());
-			test.setBrowserStatuses(browser_statuses);
 			test_repo.save(test);
 
 			acct.addTestRecord(record);
 			account_repo.save(acct);
-			MessageBroadcaster.broadcastTestStatus(host, test);
+			MessageBroadcaster.broadcastTestStatus(host, record, test);
     	}
 		
     	

@@ -192,7 +192,7 @@ public class BrowserService {
 			page_state = new PageState(	page_url.toString(),
 					screenshots,
 					visible_elements,
-					browser.getDriver().getPageSource());
+					"");
 			page_state.setLastLandabilityCheck(LocalDateTime.now());
 			page_state = page_state_repo.save(page_state);
 			

@@ -48,7 +48,7 @@ public class TestService {
 	 * @throws WebDriverException 
 	 * @throws GridException 
 	 */		
-	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status) throws GridException, WebDriverException, NoSuchAlgorithmException{				
+	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status) {				
 		 assert test != null;		
 	 			
 		 TestStatus passing = null;		
@@ -129,5 +129,9 @@ public class TestService {
 		}
 		
 		return test;
+	}
+	 
+	public void init(Crawler crawler){
+		this.crawler = crawler;
 	}
 }

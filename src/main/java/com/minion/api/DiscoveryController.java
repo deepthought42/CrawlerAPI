@@ -27,7 +27,6 @@ import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -66,9 +65,6 @@ public class DiscoveryController {
     private ActorSystem actor_system;
     
     @Autowired
-    private Auth0Client auth;
-    
-    @Autowired
     private SubscriptionService subscription_service;
     
 	@RequestMapping(path="/status", method = RequestMethod.GET)
@@ -85,17 +81,8 @@ public class DiscoveryController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-
-    	DiscoveryRecord last_discovery_record = null;
-    	Date last_ran_date = new Date(0L);
-		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-			if(record.getStartTime().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url)){
-				last_ran_date = record.getStartTime();
-				last_discovery_record = record;
-			}
-		}
-
-		return last_discovery_record;
+    	
+    	return domain_repo.getMostRecentDiscoveryRecord(url, acct.getUserId());
     }
 	
     /**

@@ -1,7 +1,6 @@
 package com.minion.browsing;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -121,6 +120,7 @@ public class Browser {
 			}
 
 			cnt++;
+			Timing.pauseThread(1000);
 		}
 	}
 	
@@ -188,12 +188,8 @@ public class Browser {
 		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
 		FirefoxOptions options = new FirefoxOptions();
 		//options.setHeadless(true);
-		DesiredCapabilities cap = DesiredCapabilities.firefox();
-		cap.setCapability(FirefoxOptions.FIREFOX_OPTIONS, options);
-		cap.setJavascriptEnabled(true);
 
-
-	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), options);
 	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
@@ -263,11 +259,7 @@ public class Browser {
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
 		//options.setHeadless(true);
-		DesiredCapabilities cap = DesiredCapabilities.chrome();
-		cap.setCapability(ChromeOptions.CAPABILITY, options);
-		
-		cap.setJavascriptEnabled(true);
-		
+
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
 
 		//cap.setCapability("screenshot", true);
@@ -284,7 +276,7 @@ public class Browser {
 		
 		log.info("Requesting chrome remote driver from hub");
         String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
+		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), options);
 		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);

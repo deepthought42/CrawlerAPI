@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.enums.SubscriptionPlan;
 import com.qanairy.models.repository.AccountRepository;
@@ -27,9 +26,6 @@ public class SubscriptionController {
     
     @Autowired
     private SubscriptionService subscription_service;
-
-    @Autowired
-    private Auth0Client auth;
     
     /**
      * 

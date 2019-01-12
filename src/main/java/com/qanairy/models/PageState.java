@@ -408,9 +408,9 @@ public class PageState implements Persistable, PathObject {
 		if(param_index >= 0){
 			url_without_params = url_without_params.substring(0, param_index);
 		}
+
 		try{
-			String key = "pagestate::" +url_without_params+""+ getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot);
-			return key;
+			return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot));
 		}
 		catch(NoSuchAlgorithmException e){
 			log.error("Couldnt find SHA-256 algorithm :: " + e.getLocalizedMessage());

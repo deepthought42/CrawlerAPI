@@ -54,6 +54,9 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
 	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("domain_host") String host);
 	
+	@Query("MATCH (n:Domain{host:{host}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d ORDER BY d.started_at DESC LIMIT 1")
+	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("host") String host, @Param("user_id") String user_id);
+	
 	//needs work done still to make it return all test records by month
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
 	public Set<TestRecord> getTestsByMonth(@Param("host") String host, @Param("month") int month);

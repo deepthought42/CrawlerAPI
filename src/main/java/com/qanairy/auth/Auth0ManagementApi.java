@@ -17,7 +17,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 public class Auth0ManagementApi {
-	private static Logger log = LoggerFactory.getLogger(Auth0Client.class);
+	private static Logger log = LoggerFactory.getLogger(Auth0ManagementApi.class);
 
 	private static String client_id = "d0YAPCQl5rk8YhsDI1U5GaEfqvMSC5Ea";
 	private static String client_secret = "kbHd7I5avP_d5jhofdhAcTGMJKYdNnnzgevoCddRSryv2EgLmrXvSz4aEqZBvfMp";

@@ -2,8 +2,6 @@ package com.qanairy.dto;
 
 import java.util.Date;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,10 +11,6 @@ import com.qanairy.models.enums.TestStatus;
 public class TestRecordDto {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestRecord.class);
-
-	@GeneratedValue
-    @Id
-	private Long id;
 	
 	private String key;
 	private Date ran_at;

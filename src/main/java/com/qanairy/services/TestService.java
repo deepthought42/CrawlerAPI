@@ -48,7 +48,7 @@ public class TestService {
 	 * @throws WebDriverException 
 	 * @throws GridException 
 	 */		
-	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status) throws GridException, WebDriverException, NoSuchAlgorithmException{				
+	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status) {				
 		 assert test != null;		
 	 			
 		 TestStatus passing = null;		
@@ -57,10 +57,9 @@ public class TestService {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 		 
 		 int cnt = 0;
-		 System.err.println("running test using browser :: " + browser_name + " ::");
+		 boolean pages_dont_match = false;
 		 do{
 			 try {
-				System.err.println("Getting browser connection...");
 				Browser browser = new Browser(browser_name.trim());
 				
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
@@ -68,8 +67,7 @@ public class TestService {
 				break;
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
-				 passing = TestStatus.FAILING;
-				 test.setBrowserStatus(browser_name.trim(), TestStatus.FAILING.toString());
+				 pages_dont_match = true;
 				 break;
 			 }
 			 catch (Exception e) {
@@ -80,17 +78,18 @@ public class TestService {
 			 cnt++;
 		 }while(cnt < Integer.MAX_VALUE && page == null);
 		
-		 System.err.println("test result ::  " + test.getResult());
-		 System.err.println("page :: " + page);
-		 System.err.println("last_test_status  ::   " +last_test_status);
-		 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
-		 
 		 final long pathCrawlEndTime = System.currentTimeMillis();
-
-		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime);
+		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 		 
-		 return test_record;		
+		 if(pages_dont_match){
+			return new TestRecord(new Date(), TestStatus.FAILING, browser_name.trim(), page, pathCrawlRunTime);
+		 }
+		 else{
+			 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
+	 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime);
+			 
+			 return test_record;
+		 }
 	 }
 	 
 	 public Test save(Test test, String host_url){
@@ -130,5 +129,9 @@ public class TestService {
 		}
 		
 		return test;
+	}
+	 
+	public void init(Crawler crawler){
+		this.crawler = crawler;
 	}
 }

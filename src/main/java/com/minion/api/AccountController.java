@@ -82,7 +82,7 @@ public class AccountController {
         if(acct != null){
         	throw new AccountExistsException();
         }
-
+        
         Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);

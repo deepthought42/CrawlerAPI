@@ -131,20 +131,17 @@ public class Browser {
 		return this.driver;
 	}
 
+	/**
+	 * Navigates to a given url and waits for it the readyState to be complete
+	 * 
+	 * @param url
+	 */
 	public void navigateTo(String url){
 		System.err.println("Navigating to url.... " +url);
 		getDriver().get(url);
 
-		try{
-			new WebDriverWait(getDriver(), 600).until(
-					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			
-		}catch(GridException e){
-			log.warn("Grid exception occurrred while navigating to page  --  "+e.getMessage());
-		}
-		catch(Exception e){
-			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
-		}
+		new WebDriverWait(getDriver(), 600).until(
+				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 		
 		Timing.pauseThread(5000);
 	}

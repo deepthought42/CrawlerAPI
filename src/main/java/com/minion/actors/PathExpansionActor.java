@@ -233,6 +233,13 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
+				System.err.println("Checking if element exists previously as a path object or within a page state");
+				//check if element exists in previous pageStates
+				
+				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
+					continue;
+				}
+				
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
 
@@ -242,13 +249,6 @@ public class PathExpansionActor extends AbstractActor {
 				}
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
-						
-				System.err.println("Checking if element exists previously as a path object or within a page state");
-				//check if element exists in previous pageStates
-				
-				if(doesElementExistInMultiplePageStatesWithinTest(new_test, page_element)){
-					continue;
-				}
 				
 				System.err.println("adding actions lists to exploratory paths");
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
@@ -289,7 +289,7 @@ public class PathExpansionActor extends AbstractActor {
 		assert test != null;
 		assert elem != null;
 		
-		for(int path_idx = test.getPathObjects().size()-4; path_idx >= 0; path_idx-- ){
+		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);
 			if(obj.getType().equals("PageState")){
 				PageState page_state = ((PageState) obj);

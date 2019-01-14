@@ -3,7 +3,7 @@ package services;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -41,10 +41,10 @@ public class TestServiceTest {
 	@Mock
 	private Crawler crawler;
 	
-	@Autowired
+	@Spy
 	private TestService test_service;
 	
-	@Autowired
+	@Mock
 	private BrowserService browser_service;
 	
 	@Before
@@ -54,7 +54,7 @@ public class TestServiceTest {
 	}
 	
 	@org.junit.Test
-	public void runTestInFirefoxIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException {
+	public void runTestIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException {
 		when(browser_service.getConnection(Matchers.anyString())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");
 		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state);
@@ -63,5 +63,20 @@ public class TestServiceTest {
 		TestRecord record = test_service.runTest(test, "firefox", TestStatus.PASSING);
 		
 		assertNotNull(record);
+		assertTrue(record.getStatus().equals(TestStatus.PASSING));
+	}
+	
+	@org.junit.Test
+	public void runTestIsPassingWhenNotExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException {
+		when(browser_service.getConnection(Matchers.anyString())).thenReturn(new Browser());
+		when(page_state.getKey()).thenReturn("valid_key");
+		when(page_state1.getKey()).thenReturn("invalid_key");
+		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state1);
+		
+		when(test.getResult()).thenReturn(page_state);
+		TestRecord record = test_service.runTest(test, "firefox", TestStatus.PASSING);
+		
+		assertNotNull(record);
+		assertTrue(record.getStatus().equals(TestStatus.FAILING));
 	}
 }

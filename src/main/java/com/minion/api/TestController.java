@@ -386,7 +386,7 @@ public class TestController {
 					break;
 				}
 				else if(status.equals(TestStatus.UNVERIFIED.toString())){
-					is_passing = TestStatus.FAILING;
+					is_passing = TestStatus.UNVERIFIED;
 					break;
 				}
 			}

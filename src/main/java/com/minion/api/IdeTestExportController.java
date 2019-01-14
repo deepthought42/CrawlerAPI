@@ -29,6 +29,9 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.repository.ActionRepository;
+import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
 
@@ -43,6 +46,12 @@ public class IdeTestExportController {
 	
 	@Autowired
 	private TestRepository test_repo;
+	
+	@Autowired
+	private ActionRepository action_repo;
+	
+	@Autowired
+	private PageElementRepository page_element_repo;
 	
 	@Autowired
 	BrowserService browser_service;
@@ -106,6 +115,12 @@ public class IdeTestExportController {
 		
 		    			String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
 		    			PageElement elem = new PageElement(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);
+		    			PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+		    			
+		    			if(elem_record != null){
+		    				elem = elem_record;
+		    			}
+		    			
 		    			last_element = elem;
 		    			//add to path
 		    			path_keys.add(elem.getKey());
@@ -118,6 +133,10 @@ public class IdeTestExportController {
 		    			String action_type = action_json.getString("name");
 		    			String action_value = action_json.getString("value");
 		    			Action action = new Action(action_type, action_value);
+		    			Action action_record = action_repo.findByKey(action.getKey());
+		    			if(action_record != null){
+		    				action = action_record;
+		    			}
 		    			
 		    			path_keys.add(action.getKey());
 		    			path_objects.add(action);
@@ -144,6 +163,8 @@ public class IdeTestExportController {
 		    	}
 		    	result_page = browser_service.buildPage(browser);
 		    	Test test = new Test(path_keys, path_objects, result_page, name);
+		    	test.setStatus(TestStatus.PASSING);
+		    	test.getBrowserStatuses().put("chrome", TestStatus.PASSING.toString());
 		    	Test test_record = test_repo.findByKey(test.getKey());
 		    	if(test_record == null){
 		    		test = test_repo.save(test);

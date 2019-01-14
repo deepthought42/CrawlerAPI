@@ -134,7 +134,8 @@ public class TestService {
 		return test;
 	}
 	 
-	public void init(Crawler crawler){
+	public void init(Crawler crawler, BrowserService browser_service){
 		this.crawler = crawler;
+		this.browser_service = browser_service;
 	}
 }

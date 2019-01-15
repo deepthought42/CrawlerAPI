@@ -2,6 +2,7 @@ package com.qanairy.services;
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -88,6 +89,23 @@ public class BrowserService {
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
 
+	/**
+	 * retrieves a new browser connection
+	 * 
+	 * @param browser_name name of the browser (ie. firefox, chrome)
+	 * 
+	 * @return new {@link Browser} instance
+	 * @throws MalformedURLException
+	 * 
+	 * @pre browser_name != null;
+	 * @pre !browser_name.isEmpty();
+	 */
+	public Browser getConnection(String browser_name) throws MalformedURLException {
+		assert browser_name != null;
+		assert !browser_name.isEmpty();
+		return new Browser(browser_name);
+	}
+	
 	/**
 	 * 
 	 * @param browser_name

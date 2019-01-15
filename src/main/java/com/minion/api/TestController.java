@@ -459,7 +459,7 @@ public class TestController {
     @PreAuthorize("hasAuthority('create:groups')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
-										@RequestParam(value="description", required=true) String description,
+										@RequestParam(value="description", required=false) String description,
 										@RequestParam(value="key", required=true) String key){
     	if(name == null || name.isEmpty()){
     		throw new EmptyGroupNameException();

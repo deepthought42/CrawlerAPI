@@ -35,6 +35,9 @@ public class TestService {
 	private TestRepository test_repo;
 	
 	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
 	private Crawler crawler;
 	
 	/**		
@@ -60,7 +63,7 @@ public class TestService {
 		 boolean pages_dont_match = false;
 		 do{
 			 try {
-				Browser browser = new Browser(browser_name.trim());
+				Browser browser = browser_service.getConnection(browser_name.trim());
 				
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
 				browser.close();
@@ -131,7 +134,8 @@ public class TestService {
 		return test;
 	}
 	 
-	public void init(Crawler crawler){
+	public void init(Crawler crawler, BrowserService browser_service){
 		this.crawler = crawler;
+		this.browser_service = browser_service;
 	}
 }

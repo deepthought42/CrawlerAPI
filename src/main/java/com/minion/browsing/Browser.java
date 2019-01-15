@@ -85,7 +85,7 @@ public class Browser {
 	 * @pre url != null
 	 * @pre browser != null
 	 */
-	public Browser(String browser) throws MalformedURLException, NullPointerException {
+	public Browser(String browser) throws MalformedURLException {
 		assert browser != null;
 		
 		int cnt = 0;

@@ -1,5 +1,6 @@
 package com.minion.api;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,12 +26,14 @@ import com.minion.browsing.Crawler;
 import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
+import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
+import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
@@ -49,6 +52,9 @@ public class IdeTestExportController {
 	
 	@Autowired
 	private ActionRepository action_repo;
+	
+	@Autowired
+	private DomainRepository domain_repo;
 	
 	@Autowired
 	private PageElementRepository page_element_repo;
@@ -81,6 +87,8 @@ public class IdeTestExportController {
     	String name = test_json.get("name").toString();
     	JSONArray path = (JSONArray) test_json.get("path");
     	
+    	Domain domain = null;
+    			
     	do{
 	    	Browser browser = new Browser("chrome");
 
@@ -96,6 +104,9 @@ public class IdeTestExportController {
 		    			if(first_page){
 		    				System.err.println("NAVIGATING TO URL :: " + url);
 		    				browser.navigateTo(url);
+		    				String host = new URL(url).getHost();
+
+		    				domain = domain_repo.findByHost(host);
 		    				first_page = false;
 		    			}
 		    			
@@ -169,6 +180,9 @@ public class IdeTestExportController {
 		    	if(test_record == null){
 		    		test = test_repo.save(test);
 		    	}
+		    	
+		    	domain.addTest(test);
+		    	domain_repo.save(domain);
     		}
     		catch(Exception e){
     			Log.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());

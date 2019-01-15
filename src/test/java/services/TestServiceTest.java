@@ -10,10 +10,10 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
 import org.junit.Before;
-import org.mockito.*;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.minion.browsing.Browser;
@@ -48,7 +48,7 @@ public class TestServiceTest {
 	private BrowserService browser_service;
 	
 	@Before
-	public void setup(){
+	public void setUp(){
 		MockitoAnnotations.initMocks(this);
 		test_service.init(crawler, browser_service);
 	}

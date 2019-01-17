@@ -289,7 +289,7 @@ public class PathExpansionActor extends AbstractActor {
 		assert test != null;
 		assert elem != null;
 		
-		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
+		for(int path_idx = test.getPathObjects().size()-2; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);
 			if(obj.getType().equals("PageState")){
 				PageState page_state = ((PageState) obj);

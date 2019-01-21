@@ -173,14 +173,14 @@ public class PathExpansionActor extends AbstractActor {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		PageState page = test.getResult();
-		if(page == null){
+		PageState result_page = test.getResult();
+		if(result_page == null){
 			return null;
 		}
 
 		//iterate over all elements
-		log.info("Page elements for expansion :: "+page.getElements().size());
-		for(PageElement page_element : page.getElements()){
+		log.info("Page elements for expansion :: "+result_page.getElements().size());
+		for(PageElement page_element : result_page.getElements()){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -289,6 +289,9 @@ public class PathExpansionActor extends AbstractActor {
 		assert test != null;
 		assert elem != null;
 		
+		if(test.getPathKeys().size() == 1){
+			return false;
+		}
 		for(int path_idx = test.getPathObjects().size()-2; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);
 			if(obj.getType().equals("PageState")){

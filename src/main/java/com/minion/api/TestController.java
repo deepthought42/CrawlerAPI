@@ -1,6 +1,7 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
+import com.qanairy.dto.TestDto;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
@@ -41,6 +43,9 @@ import com.qanairy.services.TestService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
+
+import io.swagger.annotations.ApiOperation;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.exception.PaymentDueException;
 import com.qanairy.models.Account;
@@ -520,7 +525,56 @@ public class TestController {
 
 		return groups;
 	}
-	
+
+	/**
+	 * Handles pushing a {@link Test} to the current user's Pusher channel in a format compliant with 
+	 *   the browser extension spec
+	 * 
+	 * @param url
+	 * 
+	 * @return
+	 * @throws UnknownAccountException 
+	 * @throws JsonProcessingException 
+	 */
+    @ApiOperation(value = "Send test to browser extension by publishing test to users real time message channel", response = Iterable.class)
+    @PreAuthorize("hasAuthority('read:groups')")
+	@RequestMapping(path="{test_key}/edit", method = RequestMethod.GET)
+	public @ResponseBody TestDto editTest(HttpServletRequest request, 
+			   								   @PathVariable(value="test_key") String test_key) throws UnknownAccountException, JsonProcessingException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	Test test = test_repo.findByKey(test_key);
+		
+		//convert test to ide test
+		/*
+		 * {
+		 *   key: {test_key}
+		 * 	 [
+		 *     { key: {page_key}, url: {page_url}},
+		 *     { element: 
+		 *     	  { 
+		 *     		key: {element_key}, 
+		 *     		xpath: {element_xpath}
+		 *     	  },
+		 *        {
+		 *        	key: {action_key},
+		 *        	type: {action_type},
+		 *          value: {action_value
+		 *        }
+	     *     }
+		 * 	 ]
+		 * }
+		 */
+    	TestDto test_dto = new TestDto(test);
+		//send test to ide
+		MessageBroadcaster.broadcastIdeTest(test_dto, acct.getUsername());
+		return test_dto;
+	}
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

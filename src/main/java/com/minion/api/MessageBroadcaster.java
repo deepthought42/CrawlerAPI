@@ -164,6 +164,6 @@ public class MessageBroadcaster {
         //Object to JSON in String
         String test_json = mapper.writeValueAsString(test_dto);
         
-		pusher.trigger(username, "test", test_json);
+		pusher.trigger(username, "edit-test", test_json);
 	}
 }

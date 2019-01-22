@@ -120,7 +120,7 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(1000);
+			Timing.pauseThread(5000);
 		}
 	}
 	

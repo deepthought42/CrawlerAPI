@@ -88,8 +88,7 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	
-				if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost())) && 
-						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
+				if(	(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					
 					

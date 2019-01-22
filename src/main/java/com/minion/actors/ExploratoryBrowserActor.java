@@ -287,7 +287,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		
-		if(!test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost()))){
+		if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost()))){
 			test.setSpansMultipleDomains(true);
 		}
 		return test_service.save(test, acct_msg.getOptions().get("host").toString());

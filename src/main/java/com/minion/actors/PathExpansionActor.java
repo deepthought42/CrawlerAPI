@@ -178,8 +178,9 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		//iterate over all elements
-		log.info("Page elements for expansion :: "+result_page.getElements().size());
-		for(PageElement page_element : result_page.getElements()){
+		Set<PageElement> elements = page_state_repo.getPageElements(result_page.getKey());
+		log.info("Page elements for expansion :: "+elements.size());
+		for(PageElement page_element : elements){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();

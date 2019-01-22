@@ -3,17 +3,24 @@ package com.qanairy.dto;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.repository.TestRepository;
 
 /**
  * Data transfer object for {@link Test} object that is designed to comply with 
  * the data format for browser extensions
  */
 public class TestDto {
+	
+	@Autowired
+	private TestRepository test_repo;
 	
 	private String key;
 	private List<Object> path;
@@ -24,13 +31,23 @@ public class TestDto {
 		this.path = new ArrayList<Object>();
 		
 		List<PathObject> path_objects = test.getPathObjects();
-		for(int idx = 0; idx<test.getPathObjects().size(); idx++){
-			if(path_objects.get(idx).getType().equals("PageState")){
-
-				this.path.add(new PageStateDto((PageState)path_objects.get(idx)));	
+		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
+		//order by key
+		for(String key : test.getPathKeys()){
+			for(PathObject obj : path_objects){
+				if(obj.getKey().equals(key)){
+					ordered_path_objects.add(obj);
+				}
 			}
-			else if(path_objects.get(idx).getType().equals("PageElement")){
-				this.path.add(new ElementActionDto((PageElement)test.getPathObjects().get(idx), (Action)path_objects.get(++idx)));
+		}
+		
+		for(int idx = 0; idx < test.getPathObjects().size()-1; idx++){
+			if(ordered_path_objects.get(idx).getType().equals("PageState")){
+				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));	
+			}
+			else if(ordered_path_objects.get(idx).getType().equals("PageElement")){
+				System.err.println("PATH OBJECT :: " + ordered_path_objects.get(idx));
+				this.path.add(new ElementActionDto((PageElement)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
 			}
 		}
 	}
@@ -43,11 +60,11 @@ public class TestDto {
 		this.key = key;
 	}
 
-	public List<PathObject> getPath() {
+	public List<Object> getPath() {
 		return path;
 	}
 
-	public void setPath(List<PathObject> path) {
+	public void setPath(List<Object> path) {
 		this.path = path;
 	}
 }

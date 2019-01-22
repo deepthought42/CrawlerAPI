@@ -538,7 +538,7 @@ public class TestController {
 	 */
     @ApiOperation(value = "Send test to browser extension by publishing test to users real time message channel", response = Iterable.class)
     @PreAuthorize("hasAuthority('read:groups')")
-	@RequestMapping(path="{test_key}/edit", method = RequestMethod.GET)
+	@RequestMapping(path="{test_key}/edit", method = RequestMethod.POST)
 	public @ResponseBody TestDto editTest(HttpServletRequest request, 
 			   								   @PathVariable(value="test_key") String test_key) throws UnknownAccountException, JsonProcessingException {
     	Principal principal = request.getUserPrincipal();
@@ -549,7 +549,7 @@ public class TestController {
     		throw new UnknownAccountException();
     	}
     	Test test = test_repo.findByKey(test_key);
-		
+    	test.setPathObjects(test_repo.getPathObjects(test.getKey()));
 		//convert test to ide test
 		/*
 		 * {
@@ -571,6 +571,7 @@ public class TestController {
 		 * }
 		 */
     	TestDto test_dto = new TestDto(test);
+    	
 		//send test to ide
 		MessageBroadcaster.broadcastIdeTest(test_dto, acct.getUsername());
 		return test_dto;

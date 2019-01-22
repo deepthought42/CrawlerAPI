@@ -10,27 +10,27 @@ import com.qanairy.models.PathObject;
  */
 public class ElementActionDto{
 
-	private PageElementDto element_dto;
-	private ActionDto action_dto;
+	private PageElementDto element;
+	private ActionDto action;
 	
 	public ElementActionDto(PageElement elem, Action action){
-		setElementDto(new PageElementDto(elem));
-		setActionDto(new ActionDto(action));
+		setElement(new PageElementDto(elem));
+		setAction(new ActionDto(action));
 	}
 
-	public PageElementDto getElemenDto() {
-		return element_dto;
+	public PageElementDto getElement() {
+		return element;
 	}
 
-	private void setElementDto(PageElementDto element_dto) {
-		this.element_dto = element_dto;
+	private void setElement(PageElementDto element_dto) {
+		this.element = element_dto;
 	}
 
-	public ActionDto getActionDto() {
-		return action_dto;
+	public ActionDto getAction() {
+		return action;
 	}
 
-	private void setActionDto(ActionDto action_dto) {
-		this.action_dto = action_dto;
+	private void setAction(ActionDto action_dto) {
+		this.action = action_dto;
 	}
 }

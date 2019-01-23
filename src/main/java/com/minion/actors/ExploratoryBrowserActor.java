@@ -173,9 +173,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								System.err.println("Checking for cycle...");
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
-									System.err.println("No cycle detected");
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
@@ -287,8 +285,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
-		
-		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()) || !test.getResult().getUrl().contains(new URL(test.firstPage().getUrl()).getHost()));
+
+		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()));
 		test.setSpansMultipleDomains(leaves_domain);
 		return test_service.save(test, acct_msg.getOptions().get("host").toString());
 	}

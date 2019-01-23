@@ -2,7 +2,6 @@ package com.qanairy.dto;
 
 import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.PathObject;
 
 /**
  * Data Transfer object that describes an object composed of both {@link PageElement} and {@link Action}

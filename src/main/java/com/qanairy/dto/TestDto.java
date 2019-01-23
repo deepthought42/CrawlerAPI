@@ -3,25 +3,17 @@ package com.qanairy.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.qanairy.models.Action;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.repository.TestRepository;
 
 /**
  * Data transfer object for {@link Test} object that is designed to comply with 
  * the data format for browser extensions
  */
 public class TestDto {
-	
-	@Autowired
-	private TestRepository test_repo;
-	
 	private String key;
 	private List<Object> path;
 	

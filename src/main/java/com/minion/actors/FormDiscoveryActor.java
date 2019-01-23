@@ -1,6 +1,5 @@
 package com.minion.actors;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +10,6 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
@@ -103,7 +101,6 @@ public class FormDiscoveryActor extends AbstractActor{
 										log.info("Total RULES   :::   "+rules.size());
 										for(Rule rule : rules){
 											field.addRule(rule);
-										
 										}
 									}
 								  							  	
@@ -111,7 +108,6 @@ public class FormDiscoveryActor extends AbstractActor{
 							       
 								    System.err.println("PREDICTION DONE !!! ");
 								    System.err.println("********************************************************");
-							  		browser.close();
 								  	
 								  	page_state.addForm(form);
 								  	page_state_repo.save(page_state);
@@ -120,6 +116,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	}
 							  	System.err.println("FORM DISCOVERY HAS ENDED");
 							  	forms_created = true;
+							  	browser.close();
 								break;
 							} catch(Exception e){
 						  		log.warning(e.getMessage());
@@ -127,6 +124,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							cnt++;
 
 						}while(!forms_created && cnt < Integer.MAX_VALUE);
+					  	
 					}
 					postStop();
 				})

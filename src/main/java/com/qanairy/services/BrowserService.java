@@ -527,9 +527,6 @@ public class BrowserService {
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-			
-			System.err.println("EXTACTED FORM ELEMENT WITH TEXT   : "+form_elem.getText());
-
 			String page_screenshot = "";
 			for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
 				log.info("screenshot browser  ::   "+screenshot.getBrowser());
@@ -542,9 +539,7 @@ public class BrowserService {
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
-			System.err.println("FORM SCREENSHOT URL :: "+screenshot_url);
 			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
-			System.err.println("SAVING SCREENSHOT URL ");
 			if(tag != null){
 				form_tag = tag;
 			}
@@ -553,14 +548,12 @@ public class BrowserService {
 			double[] weights = new double[1];
 			weights[0] = 0.3;
 			
-			System.err.println("CREATING A NEW FORM !!! ");
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
 									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
-
 			for(WebElement input_elem : input_elements){
 				Set<Attribute> attributes = extractAttributes(input_elem, browser.getDriver());
-				
+
 				for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
 					if(screenshot.getBrowser().equals(browser.getBrowserName())){
 						page_screenshot = screenshot.getViewportScreenshot();
@@ -582,7 +575,6 @@ public class BrowserService {
 						continue;
 					}
 					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
-					img = ImageUtils.resize(img, 768, 1024);
 
 					String screenshot= null;
 					try {

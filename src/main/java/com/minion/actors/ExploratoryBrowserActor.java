@@ -215,16 +215,17 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			result_page = result_page_record;
 							  		}
 							  		System.err.println("Creating test for parent path");
-							  		Test test = createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg);
-									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
-									discovery_record.setTestCount(discovery_record.getTestCount()+1);
-							  		discovery_repo.save(discovery_record);
+							  		Test test = createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
 							  		
 							  		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
 									final ActorRef path_expansion = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
 									path_expansion.tell(test_msg, getSelf());
+									
+									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+									discovery_record.setTestCount(discovery_record.getTestCount()+1);
+							  		discovery_repo.save(discovery_record);
 								}
 							}
 							
@@ -272,7 +273,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @throws JsonProcessingException 
 	 * @throws MalformedURLException 
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg ) throws JsonProcessingException, MalformedURLException {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Message<?> acct_msg ) throws JsonProcessingException, MalformedURLException {
 		
 		Test test = new Test(path_keys, path_objects, result_page, null);							
 		Test test_db = test_repo.findByKey(test.getKey());
@@ -287,9 +288,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 		
-		if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost()))){
-			test.setSpansMultipleDomains(true);
-		}
+		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()) || !test.getResult().getUrl().contains(new URL(test.firstPage().getUrl()).getHost()));
+		test.setSpansMultipleDomains(leaves_domain);
 		return test_service.save(test, acct_msg.getOptions().get("host").toString());
 	}
 	

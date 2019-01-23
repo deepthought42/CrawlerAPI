@@ -556,11 +556,16 @@ public class BrowserService {
 			System.err.println("CREATING A NEW FORM !!! ");
 			Form form = new Form(form_tag, new ArrayList<PageElement>(), findFormSubmitButton(form_elem, browser), 
 									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
+			
+			System.err.println("form created!!!");
+			System.err.println("loading form input elements");
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
+			System.err.println("FORM ELEMENT LOADED");
 			for(WebElement input_elem : input_elements){
 				Set<Attribute> attributes = extractAttributes(input_elem, browser.getDriver());
 				
+				System.err.println("Getting screenshot");
 				for(ScreenshotSet screenshot : page.getBrowserScreenshots()){
 					if(screenshot.getBrowser().equals(browser.getBrowserName())){
 						page_screenshot = screenshot.getViewportScreenshot();
@@ -582,7 +587,6 @@ public class BrowserService {
 						continue;
 					}
 					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation(), browser.getDriver());
-					img = ImageUtils.resize(img, 768, 1024);
 
 					String screenshot= null;
 					try {

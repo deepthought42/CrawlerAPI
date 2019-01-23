@@ -88,8 +88,7 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	
-				if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost())) && 
-						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
+				if(	(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					
 					
@@ -128,7 +127,6 @@ public class PathExpansionActor extends AbstractActor {
 						}
 					}
 					
-
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
 					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
 					System.err.println("expected total path count :: "+new_total_path_count);
@@ -179,8 +177,9 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		//iterate over all elements
-		log.info("Page elements for expansion :: "+result_page.getElements().size());
-		for(PageElement page_element : result_page.getElements()){
+		Set<PageElement> elements = page_state_repo.getPageElements(result_page.getKey());
+		log.info("Page elements for expansion :: "+elements.size());
+		for(PageElement page_element : elements){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();

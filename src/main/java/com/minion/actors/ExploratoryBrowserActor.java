@@ -3,6 +3,8 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
@@ -171,9 +173,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								System.err.println("Checking for cycle...");
 								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
-									System.err.println("No cycle detected");
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
@@ -213,7 +213,14 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			result_page = result_page_record;
 							  		}
 							  		System.err.println("Creating test for parent path");
-							  		createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, domain, acct_msg);
+							  		Test test = createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
+							  		
+							  		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
+
+									final ActorRef path_expansion = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
+									path_expansion.tell(test_msg, getSelf());
+									
 									DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
 									discovery_record.setTestCount(discovery_record.getTestCount()+1);
 							  		discovery_repo.save(discovery_record);
@@ -262,8 +269,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @param test
 	 * @param result_page
 	 * @throws JsonProcessingException 
+	 * @throws MalformedURLException 
 	 */
-	private void createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, Message<?> acct_msg ) throws JsonProcessingException {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Message<?> acct_msg ) throws JsonProcessingException, MalformedURLException {
 		
 		Test test = new Test(path_keys, path_objects, result_page, null);							
 		Test test_db = test_repo.findByKey(test.getKey());
@@ -277,13 +285,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
-		test = test_service.save(test, acct_msg.getOptions().get("host").toString());
 
-		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-
-		final ActorRef test_simplifier = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
-		test_simplifier.tell(test_msg, getSelf());
+		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()));
+		test.setSpansMultipleDomains(leaves_domain);
+		return test_service.save(test, acct_msg.getOptions().get("host").toString());
 	}
 	
 	/**

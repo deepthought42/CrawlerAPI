@@ -217,7 +217,13 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	return domain_repo.getUnverifiedTests(url);
+    	Set<Test> tests = domain_repo.getUnverifiedTests(url);
+    	
+    	for(Test test : tests){
+    		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey());
+    		test.setRecords(records);
+    	}
+    	return tests;
 	}
 
 	/**
@@ -272,7 +278,7 @@ public class TestController {
      * @param itest
      */
 	private void updateLastTestRecordPassingStatus(Test test) {
-		Set<TestRecord> test_records = test.getRecords();
+		List<TestRecord> test_records = test.getRecords();
 		Date last_ran_at = new Date(0L);
 		TestRecord last_record = null;
 		for(TestRecord test_record : test_records){

@@ -1,6 +1,7 @@
 package com.qanairy.models.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -29,4 +30,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 
 	@Query("MATCH (t:Test{key:{key}})-[r:HAS_PATH_OBJECT]->(p) RETURN p")
 	public List<PathObject> getPathObjects(@Param("key") String key);
+	
+	@Query("MATCH p=(t:Test{key:{key}})-[r:HAS_TEST_RECORD]->(tr:TestRecord) MATCH a=(tr)-[:HAS_PAGE_STATE]->(p) MATCH b=(p)-[:HAS_SCREENSHOT]->() RETURN a,b ORDER BY tr.ran_at DESC")
+	public List<TestRecord> findAllTestRecords(String key);
 }

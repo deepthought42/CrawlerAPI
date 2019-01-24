@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -460,12 +461,13 @@ public class TestController {
 	 * @param test_key key for test that will have group added to it
 	 * 	
 	 * @return the updated test
+	 * @throws MalformedURLException 
 	 */
     @PreAuthorize("hasAuthority('create:groups')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
 										@RequestParam(value="description", required=false) String description,
-										@RequestParam(value="key", required=true) String key){
+										@RequestParam(value="key", required=true) String key) throws MalformedURLException{
     	if(name == null || name.isEmpty()){
     		throw new EmptyGroupNameException();
     	}
@@ -481,7 +483,7 @@ public class TestController {
 		Test test = test_repo.findByKey(key);
 		test.getGroups().add(group);
 		
-		test = test_service.save(test, test.firstPage().getUrl());
+		test = test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
 		return group;
 	}
 

@@ -20,6 +20,7 @@ public class Account {
     @Id
 	private Long id;
 	
+	private String user_id;
 	private String username;
 	private String customer_token;
 	private String subscription_token;
@@ -37,7 +38,7 @@ public class Account {
 	private Set<TestRecord> test_records = new HashSet<>();
 	
 	public Account(){}
-	
+
 	/**
 	 * 
 	 * @param username
@@ -46,61 +47,14 @@ public class Account {
 	 * 
 	 * @pre users != null
 	 */
-	public Account(String username, String customer_token, String subscription_token){
+	public Account(String user_id, String username, String customer_token, String subscription_token){
+		setUserId(user_id);
 		setUsername(username);
 		setCustomerToken(customer_token);
 		setSubscriptionToken(subscription_token);
 		setOnboardedSteps(new ArrayList<String>());
 	}
 	
-	/**
-	 * 
-	 * @param username
-	 * @param payment_acct_num
-	 * @param users
-	 * 
-	 * @pre users != null
-	 */
-	public Account(String username, String customer_token, String subscription_token, 
-					Set<DiscoveryRecord> discovery_records, Set<TestRecord> test_records, List<String> onboarded_steps){
-		
-		setUsername(username);
-		setCustomerToken(customer_token);
-		setSubscriptionToken(subscription_token);
-		setDiscoveryRecords(discovery_records);
-		setTestRecords(test_records);
-		setOnboardedSteps(onboarded_steps);
-	}
-
-	/**
-	 * 
-	 * @param key
-	 * @param username
-	 * @param payment_acct_num
-	 * @param users
-	 * @param domains
-	 * @param last_domain_url
-	 * @param discovery_records
-	 */
-	public Account(String username, 
-					String customer_token, 
-					String subscription_token, 
-					Set<Domain> domains, 
-					String last_domain_url, 
-					Set<DiscoveryRecord> discovery_records,
-					Set<TestRecord> test_records, 
-					List<String> onboarded_steps){
-		
-		setUsername(username);
-		setCustomerToken(customer_token);
-		setSubscriptionToken(subscription_token);
-		setDomains(domains);
-		setLastDomain(last_domain_url);
-		setDiscoveryRecords(discovery_records);
-		setTestRecords(test_records);
-		setOnboardedSteps(onboarded_steps);
-	}
-		
 	public long getId(){
 		return this.id;
 	}
@@ -214,5 +168,13 @@ public class Account {
 
 	public void setSubscriptionType(String subscription_type) {
 		this.subscription_type = subscription_type;
+	}
+
+	public String getUserId() {
+		return user_id;
+	}
+
+	public void setUserId(String user_id) {
+		this.user_id = user_id;
 	}
 }

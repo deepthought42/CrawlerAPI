@@ -90,15 +90,11 @@ public class MemoryRegistryActor extends AbstractActor{
 							domain.addTest(test);
 							domain_repo.save(domain);
 							
-							if(test.getBrowserStatuses() == null || test.getBrowserStatuses().isEmpty()){
-								MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
-							}
-							else {
-								MessageBroadcaster.broadcastTest(test, host_url);
-							}
+							MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
 						}
 						else{
 							test = record;
+							MessageBroadcaster.broadcastTest(test, host_url);
 						}
 					}
 					else if(msg.getData() instanceof PageElement){

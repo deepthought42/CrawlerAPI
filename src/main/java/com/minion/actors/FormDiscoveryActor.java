@@ -1,6 +1,5 @@
 package com.minion.actors;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,62 +75,58 @@ public class FormDiscoveryActor extends AbstractActor{
 			
 						int cnt = 0;
 					  	Browser browser = null;
-					  	
-					  	while(browser == null && cnt < 5){
+					  	boolean forms_created = false;
+					  	do{
+					  		
 					  		try{
+					  			System.err.println("Getting browser for form extraction");
 						  		browser = new Browser(message.getOptions().get("browser").toString());
-						  		browser.navigateTo(page_state.getUrl());
-								break;
-							}catch(NullPointerException e){
-								log.error(e.getMessage());
-							}
-							cnt++;
-						}	
-					  
-					  	
-					  	page_state = page_state_repo.findByKey(page_state.getKey());
-					  
-					  	try{
-					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
-						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
 
-						  	for(Form form : forms){
-							  	for(PageElement field: form.getFormFields()){
-									//for each field in the complex field generate a set of tests for all known rules
-							  		List<Rule> rules = rule_extractor.extractInputRules(field);
-									
-									log.info("Total RULES   :::   "+rules.size());
-									for(Rule rule : rules){
-										field.addRule(rule);
-									
+					  			System.err.println("navigating to url :: "+page_state.getUrl());
+						  		browser.navigateTo(page_state.getUrl());
+						  		
+
+					  			System.err.println("Looking up page state by key");
+						  		page_state = page_state_repo.findByKey(page_state.getKey());
+								  
+						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
+							  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
+
+							  	for(Form form : forms){
+								  	for(PageElement field: form.getFormFields()){
+										//for each field in the complex field generate a set of tests for all known rules
+								  		List<Rule> rules = rule_extractor.extractInputRules(field);
+										
+										log.info("Total RULES   :::   "+rules.size());
+										for(Rule rule : rules){
+											field.addRule(rule);
+										}
 									}
-								}
-							  							  	
-							    DeepthoughtApi.predict(form);
-						       
-							    System.err.println("PREDICTION DONE !!! ");
-							    System.err.println("********************************************************");
-							    try{
-							  		browser.close();
+								  							  	
+								    DeepthoughtApi.predict(form);
+							       
+								    System.err.println("PREDICTION DONE !!! ");
+								    System.err.println("********************************************************");
+								  	
+								  	page_state.addForm(form);
+								  	page_state_repo.save(page_state);
+							        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
+								  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 							  	}
-							  	catch(Exception e){}
-							  	
-							  	page_state.addForm(form);
-							  	page_state_repo.save(page_state);
-						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
-							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
+							  	System.err.println("FORM DISCOVERY HAS ENDED");
+							  	forms_created = true;
+							  	browser.close();
+								break;
+							} catch(Exception e){
+						  		log.warning(e.getMessage());
 						  	}
-						  	System.err.println("FORM DISCOVERY HAS ENDED");
-					  	}
-					  	catch(NoSuchAlgorithmException e){
-					  		e.printStackTrace();
-					  	}
-					  	catch(Exception e){
-					  		e.printStackTrace();
-					  		log.error("exception occurred while performing form discovery");
-					  	}
+							cnt++;
+
+						}while(!forms_created && cnt < Integer.MAX_VALUE);
+					  	
 					}
+					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

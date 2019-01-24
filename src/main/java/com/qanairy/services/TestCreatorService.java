@@ -12,7 +12,6 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -23,15 +22,11 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
 
 @Component
 public class TestCreatorService {
-	
-	@Autowired
-	DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
 	DomainRepository domain_repo;
@@ -63,11 +58,8 @@ public class TestCreatorService {
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		Browser browser = new Browser(browser_name);
-
 		browser.navigateTo(url);
-		
 	  	PageState page_obj = browser_service.buildPage(browser);
-
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 		  	page_obj.setLandable(true);
@@ -78,26 +70,17 @@ public class TestCreatorService {
 	  		page_obj = page_record;
 	  	}
 	  	
-	  	try{
-	  		browser.close();
-	  	}catch(Exception e){}
+  		browser.close();
 	  	
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
 	  	
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_objects.add(page_obj);
-	  	
-	  	DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
-		discovery_record.setLastPathRanAt(new Date());
-		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-		discovery_record.setTestCount(discovery_record.getTestCount()+1);
-		discovery_record = discovery_repo.save(discovery_record);
 
 		Domain domain = domain_repo.findByHost( host);
 		
-		MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-		return createTest(path_keys, path_objects, page_obj, 1L, domain ,discovery_record, browser_name);
+		return createTest(path_keys, path_objects, page_obj, 1L, domain ,null, browser_name);
 	}
 	
 	/**

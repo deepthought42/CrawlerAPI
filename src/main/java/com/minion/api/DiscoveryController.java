@@ -10,6 +10,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,6 @@ import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -65,37 +65,24 @@ public class DiscoveryController {
     private ActorSystem actor_system;
     
     @Autowired
-    private Auth0Client auth;
-    
-    @Autowired
     private SubscriptionService subscription_service;
     
 	@RequestMapping(path="/status", method = RequestMethod.GET)
     public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request, 
     												@RequestParam(value="url", required=true) String url) 
     														throws UnknownAccountException{
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = account_repo.findByUsername(username);
-
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-
-    	DiscoveryRecord last_discovery_record = null;
-    	Date last_ran_date = new Date(0L);
-		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-			if(record.getStartTime().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url)){
-				last_ran_date = record.getStartTime();
-				last_discovery_record = record;
-			}
-		}
-
-		return last_discovery_record;
+    	
+    	return domain_repo.getMostRecentDiscoveryRecord(url, acct.getUserId());
     }
 	
     /**
@@ -116,12 +103,11 @@ public class DiscoveryController {
 										   	  						UnknownAccountException, 
 										   	  						DiscoveryLimitReachedException, 
 										   	  						PaymentDueException, StripeException {
-
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
-    	Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -175,7 +161,7 @@ public class DiscoveryController {
 			
 		    //Fire discovery started event	
 			Map<String, String> traits = new HashMap<String, String>();
-	        traits.put("email", username);    
+	        traits.put("user_id", id);    
 	        traits.put("url", url);
 	    	traits.put("browser", domain.getDiscoveryBrowserName());
 	        traits.put("discovery_started", "true");
@@ -227,12 +213,10 @@ public class DiscoveryController {
 	@RequestMapping("/stop")
 	public @ResponseBody void stopWorkForAccount(HttpServletRequest request) 
 			throws MalformedURLException, UnknownAccountException {
-		
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-
-    	String username = auth.getUsername(auth_access_token);
-
-    	Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
     	if(acct == null){
     		throw new UnknownAccountException();
     	}

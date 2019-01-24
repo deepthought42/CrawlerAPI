@@ -81,7 +81,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
 
@@ -112,7 +111,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setKey(generateKey());
 	}
 
@@ -139,7 +137,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setSrc(src);
 		setKey(generateKey());
 	}
@@ -158,9 +155,10 @@ public class PageState implements Persistable, PathObject {
 	 * @pre browser_screenshots != null;
 	 * 
 	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
 	 */
 	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable,
-			String src) throws IOException {
+			String src) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
 		assert browser_screenshots != null;
 
@@ -170,7 +168,6 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
-		setType(PageState.class.getSimpleName());
 		setSrc(src);
 		setKey(generateKey());
 	}
@@ -250,6 +247,7 @@ public class PageState implements Persistable, PathObject {
 		PageState that = (PageState) o;
 
 		boolean pages_match = this.getKey().equals(that.getKey());
+		//boolean sources_match = this.getSrc().equals(that.getSrc());
 
 		return pages_match;
 	}
@@ -364,21 +362,16 @@ public class PageState implements Persistable, PathObject {
 	public String getFileChecksum(MessageDigest digest, String url) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		BufferedImage buff_img = ImageIO.read(new URL(url));
-
+		
 		boolean foundWriter = ImageIO.write(buff_img, "png", baos);
 		assert foundWriter; // Not sure about this... with jpg it may work but
 							// other formats ?
+		
 		// Get file input stream for reading the file content
 		byte[] data = baos.toByteArray();
-		try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-512");
-			sha.update(data);
-			byte[] thedigest = sha.digest(data);
-			return Hex.encodeHexString(thedigest);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		return "";
+		digest.update(data);
+		byte[] thedigest = digest.digest(data);
+		return Hex.encodeHexString(thedigest);
 	}
 
 	public static String getFileChecksum(BufferedImage buff_img) throws IOException {
@@ -389,7 +382,7 @@ public class PageState implements Persistable, PathObject {
 		// Get file input stream for reading the file content
 		byte[] data = baos.toByteArray();
 		try {
-			MessageDigest sha = MessageDigest.getInstance("SHA-512");
+			MessageDigest sha = MessageDigest.getInstance("SHA-256");
 			sha.update(data);
 			byte[] thedigest = sha.digest(data);
 			return Hex.encodeHexString(thedigest);
@@ -402,18 +395,30 @@ public class PageState implements Persistable, PathObject {
 
 	/**
 	 * {@inheritDoc}
+	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
 	 * 
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		try {
-			Set<ScreenshotSet> screenshots = this.getBrowserScreenshots();
-			String screenshot = screenshots.iterator().next().getViewportScreenshot();
-			String key = "pagestate::" + getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot);
-			return key;
-		} catch (Exception e) {
-			e.printStackTrace();
+		Set<ScreenshotSet> screenshots = this.getBrowserScreenshots();
+		String screenshot = screenshots.iterator().next().getViewportScreenshot();
+		int param_index = this.getUrl().indexOf("?");
+		String url_without_params = this.getUrl();
+		if(param_index >= 0){
+			url_without_params = url_without_params.substring(0, param_index);
 		}
+
+		try{
+			return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot));
+		}
+		catch(NoSuchAlgorithmException e){
+			log.error("Couldnt find SHA-256 algorithm :: " + e.getLocalizedMessage());
+		}
+		catch(IOException e){
+			log.error("Couldn't read file at "+screenshot+" ::  "+e.getLocalizedMessage());
+		}
+		
 		return "";
 	}
 

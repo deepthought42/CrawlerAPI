@@ -1,5 +1,6 @@
 package com.minion.api;
 
+import java.security.Principal;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
@@ -54,9 +54,6 @@ public class AccountController {
     @Autowired
     private AccountRepository account_repo;
     
-    @Autowired
-    private Auth0Client auth;
-    
     private StripeClient stripeClient;
 
     @Autowired
@@ -76,40 +73,26 @@ public class AccountController {
      */
     @CrossOrigin(origins = "138.91.154.99, 54.183.64.135, 54.67.77.38, 54.67.15.170, 54.183.204.205, 54.173.21.107, 54.85.173.28, 35.167.74.121, 35.160.3.103, 35.166.202.113, 52.14.40.253, 52.14.38.78, 52.14.17.114, 52.71.209.77, 34.195.142.251, 52.200.94.42", maxAge = 3600)
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Account> create( @RequestParam(value="user_email", required=true) String username) 
-    												throws Exception{        
+    public ResponseEntity<Account> create( @RequestParam(value="user_id", required=true) String user_id,
+    										@RequestParam(value="username", required=true) String username) 
+    												throws Exception{    
     	Account acct = account_repo.findByUsername(username);
     	
     	//create account
         if(acct != null){
         	throw new AccountExistsException();
         }
-          
-        //STAGING
-        //Plan pro_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
-    	
-    	//PRODUCTION
-    	//Plan tier = Plan.retrieve("plan_D06ComCwTJ0Cgz  ?????");
-
-    	Map<String, Object> customerParams = new HashMap<String, Object>();
+        
+        Map<String, Object> customerParams = new HashMap<String, Object>();
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
     	//Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
-    	acct = new Account(username, customer.getId(), "");
+
+    	acct = new Account(user_id, username, customer.getId(), "");
     	acct.setSubscriptionType("FREE");
 
-        // Connect to Auth0 API and update user metadata
-        /*HttpResponse<String> api_resp = Auth0ManagementApi.updateUserAppMetadata(auth0Client.getUserId((Auth0JWTToken) principal), "{\"status\": \"account_owner\"}");
-        if(api_resp.getStatus() != 200){
-        	throw new Auth0ManagementApiException();
-        }
-        */
-        //printGrantedAuthorities((Auth0JWTToken) principal);
-
-        //final String username = usernameService.getUsername();
         // log username of user requesting account creation
         acct = account_repo.save(acct);
-        
         
         Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
@@ -131,10 +114,11 @@ public class AccountController {
 
     @RequestMapping(path ="/onboarding_step", method = RequestMethod.POST)
     public List<String> setOnboardingStep(HttpServletRequest request, @RequestParam(value="step_name", required=true) String step_name) throws UnknownAccountException {
-        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
-        if(acct == null){
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
+    	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	else if(acct.getSubscriptionToken() == null){
@@ -151,9 +135,10 @@ public class AccountController {
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path ="/onboarding_steps_completed", method = RequestMethod.GET)
     public List<String> getOnboardingSteps(HttpServletRequest request) throws UnknownAccountException {
-        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
         if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -174,9 +159,10 @@ public class AccountController {
     @PreAuthorize("hasAuthority('read:accounts')")
     @RequestMapping(path="/find", method = RequestMethod.GET)
     public Account get(HttpServletRequest request) throws UnknownAccountException {
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
         if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -205,11 +191,11 @@ public class AccountController {
 	@PreAuthorize("hasAuthority('delete:accounts')")
     @RequestMapping(method = RequestMethod.DELETE)
     public void delete(HttpServletRequest request) throws UnirestException, StripeException{
-		String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-    	Account account = account_repo.findByUsername(username);
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account account = account_repo.findByUserId(id);
 		//remove Auth0 account
-    	HttpResponse<String> response = Auth0ManagementApi.deleteUser(auth.getUserId(auth_access_token));
+    	HttpResponse<String> response = Auth0ManagementApi.deleteUser(account.getUserId());
     	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
     	//log.info("AUTH0 Response status      :::::::::::      "+response.getStatus());
     	//log.info("AUTH0 Response status text      :::::::::::      "+response.getStatusText());
@@ -223,20 +209,16 @@ public class AccountController {
     		this.stripeClient.deleteCustomer(account.getCustomerToken());
     	}
 		//remove account
-        account_repo.deleteAccountEdges(username);
-        account_repo.deleteAccount(username);
-
-        account = account_repo.findByUsername(username);
-    	System.err.println("Account :: " + account);
-        logger.info("update invoked");
+        account_repo.deleteAccountEdges(account.getUserId());
+        account_repo.deleteAccount(account.getUserId());
     }
 	
     @PreAuthorize("hasAuthority('read:accounts')")
 	@RequestMapping(path ="/usage", method = RequestMethod.GET)
     public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException{
-        String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	String username = auth.getUsername(auth_access_token);
-        Account acct = account_repo.findByUsername(username);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
         if(acct == null){
     		throw new UnknownAccountException();
     	}

@@ -1,6 +1,5 @@
 package com.qanairy.services;
 
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
@@ -15,7 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
-import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
@@ -37,6 +35,9 @@ public class TestService {
 	private TestRepository test_repo;
 	
 	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
 	private Crawler crawler;
 	
 	/**		
@@ -50,7 +51,7 @@ public class TestService {
 	 * @throws WebDriverException 
 	 * @throws GridException 
 	 */		
-	 public TestRecord runTest(Test test, Browser browser, TestStatus last_test_status) throws GridException, WebDriverException, NoSuchAlgorithmException{				
+	 public TestRecord runTest(Test test, String browser_name, TestStatus last_test_status) {				
 		 assert test != null;		
 	 			
 		 TestStatus passing = null;		
@@ -59,28 +60,39 @@ public class TestService {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 		 
 		 int cnt = 0;
+		 boolean pages_dont_match = false;
 		 do{
 			 try {
+				Browser browser = browser_service.getConnection(browser_name.trim());
+				
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
+				browser.close();
 				break;
-			 } catch (IOException e) {		
-				 System.err.println(e.getMessage());		
 			 } catch(PagesAreNotMatchingException e){
-				 passing = TestStatus.FAILING;
-				 test.setBrowserStatus(browser.getBrowserName(), TestStatus.FAILING.toString());
+				 log.warn(e.getLocalizedMessage());
+				 pages_dont_match = true;
+				 break;
 			 }
-			 Timing.pauseThread(5000L);
+			 catch (Exception e) {
+				 e.printStackTrace();
+				 System.err.println(e.getLocalizedMessage());
+			 } 
+			 
 			 cnt++;
-		 }while(cnt < 50000 && page != null);
+		 }while(cnt < Integer.MAX_VALUE && page == null);
 		
-		 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
-
 		 final long pathCrawlEndTime = System.currentTimeMillis();
-
-		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime ;
-		 test_record = new TestRecord(new Date(), passing, browser.getBrowserName(), page, pathCrawlRunTime);
-
-		 return test_record;		
+		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
+		 
+		 if(pages_dont_match){
+			return new TestRecord(new Date(), TestStatus.FAILING, browser_name.trim(), page, pathCrawlRunTime);
+		 }
+		 else{
+			 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
+	 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime);
+			 
+			 return test_record;
+		 }
 	 }
 	 
 	 public Test save(Test test, String host_url){
@@ -91,41 +103,39 @@ public class TestService {
 			log.info("Test ::  "+test);
 			test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
 	  		
-	  		Test new_test = test_repo.save(test);
+	  		test = test_repo.save(test);
 			Domain domain = domain_repo.findByHost(host_url);
-			domain.addTest(new_test);
+			domain.addTest(test);
 			domain = domain_repo.save(domain);
-			if(new_test.getBrowserStatuses() == null || new_test.getBrowserStatuses().isEmpty()){
-				log.info("Broadcasting discovered test");
-				
-				try {
-					MessageBroadcaster.broadcastDiscoveredTest(new_test, host_url);
-				} catch (JsonProcessingException e) {
-					log.error(e.getLocalizedMessage());
-				}
-			}
-			else {
-				log.info("Broadcasting Test...");
-				try {
-					MessageBroadcaster.broadcastTest(new_test, host_url);
-				} catch (JsonProcessingException e) {
-					log.error(e.getLocalizedMessage());
-				}
+		
+			try {
+				MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
+			} catch (JsonProcessingException e) {
+				log.error(e.getLocalizedMessage());
 			}
 			
-			for(PathObject path_obj : new_test.getPathObjects()){
+			for(PathObject path_obj : test.getPathObjects()){
 				try {
 					MessageBroadcaster.broadcastPathObject(path_obj, host_url);
 				} catch (JsonProcessingException e) {
 					log.error(e.getLocalizedMessage());
 				}
 			}
-			return new_test;
 		}
 		else{
 			log.info("Test already exists  !!!!!!!");
+			try {
+				MessageBroadcaster.broadcastTest(test, host_url);
+			} catch (JsonProcessingException e) {
+				log.error(e.getLocalizedMessage());
+			}			
 		}
 		
 		return test;
+	}
+	 
+	public void init(Crawler crawler, BrowserService browser_service){
+		this.crawler = crawler;
+		this.browser_service = browser_service;
 	}
 }

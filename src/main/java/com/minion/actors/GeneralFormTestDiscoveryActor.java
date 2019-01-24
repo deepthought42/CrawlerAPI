@@ -26,6 +26,7 @@ import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 
 import akka.actor.AbstractActor;
 import akka.cluster.ClusterEvent.MemberRemoved;
@@ -71,93 +72,93 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						int cnt = 0;
 					  	Browser browser = null;
 					  	
-					  	while(browser == null && cnt < 5){
+					  	while(browser == null && cnt < Integer.MAX_VALUE){
 					  		try{
 						  		browser = new Browser(message.getOptions().get("browser").toString());
 						  		browser.navigateTo(page.getUrl());
+						  		
+						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
+							  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+							  	for(Form form : forms){
+							  		path_object_lists.addAll(generateAllFormTestPaths(test, form));
+							  	}
+							  	
+							  	try{
+							  		browser.close();
+							  	}
+							  	catch(Exception e){}
+							  	
+							  	//Evaluate all tests now
+							  	List<Test> tests = new ArrayList<Test>();
+							  	for(List<PathObject> path_obj_list : path_object_lists){
+							  		List<String> path_keys = new ArrayList<String>(test.getPathKeys());
+							  		
+							  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
+							  		for(PathObject obj : path_obj_list){
+							  			path_keys.add(obj.getKey());
+				
+							  			if(obj.getType().equals("PageElement")){
+							  				PageElement page_elem = (PageElement)obj;
+							  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
+							  				if(elem_record == null){
+							  					elem_record = page_element_repo.save(page_elem);
+							  				}
+							  				test_path_objects.add(page_elem);
+							  			}
+							  			else if(obj.getType().equals("Action")){
+							  				Action action = (Action)obj;
+							  				Action action_record = action_repo.findByKey(obj.getKey());
+							  				if(action_record == null){
+							  					action_record = action_repo.save(action);
+							  					MessageBroadcaster.broadcastPathObject(action_record, message.getOptions().get("host").toString());
+							  				}
+							  				test_path_objects.add(action_record);
+							  			}
+							  		}
+							  		
+									final long pathCrawlStartTime = System.currentTimeMillis();
+									
+							  		log.info("Crawling potential form test path");
+							  		browser = new Browser(message.getOptions().get("browser").toString());
+							  		
+							  		cnt = 0;
+							  		PageState result_page = null;
+							  		do{
+							  			try{
+							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
+							  				break;
+							  			}catch(Exception e){
+							  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
+							  			}
+						  			}while(cnt < Integer.MAX_VALUE && result_page == null);
+							  		
+							  		final long pathCrawlEndTime = System.currentTimeMillis();
+									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
+									
+									try{
+								  		browser.close();
+								  	}
+								  	catch(Exception e){}
+									
+							  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
+				
+							  		new_test.setRunTime(crawl_time_in_ms);
+							  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
+							  		
+							  		new_test = test_service.save(new_test, message.getOptions().get("host").toString());
+							  		tests.add(new_test);
+							  		
+							  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
+									discovery_record.setTestCount(discovery_record.getTestCount()+1);
+									discovery_record = discovery_repo.save(discovery_record);
+									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
+							  	}
 								break;
-							}catch(NullPointerException e){
-								log.error(e.getMessage());
+							}catch(Exception e){
+								log.warning(e.getLocalizedMessage());
 							}
 							cnt++;
-						}	
-
-					  	List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
-					  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
-					  	for(Form form : forms){
-					  		path_object_lists.addAll(generateAllFormTestPaths(test, form));
-					  	}
-					  	
-					  	try{
-					  		browser.close();
-					  	}
-					  	catch(Exception e){}
-					  	
-					  	//Evaluate all tests now
-					  	List<Test> tests = new ArrayList<Test>();
-					  	for(List<PathObject> path_obj_list : path_object_lists){
-					  		List<String> path_keys = new ArrayList<String>(test.getPathKeys());
-					  		
-					  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
-					  		for(PathObject obj : path_obj_list){
-					  			path_keys.add(obj.getKey());
-		
-					  			if(obj.getType().equals("PageElement")){
-					  				PageElement page_elem = (PageElement)obj;
-					  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
-					  				if(elem_record == null){
-					  					elem_record = page_element_repo.save(page_elem);
-					  				}
-					  				test_path_objects.add(page_elem);
-					  			}
-					  			else if(obj.getType().equals("Action")){
-					  				Action action = (Action)obj;
-					  				Action action_record = action_repo.findByKey(obj.getKey());
-					  				if(action_record == null){
-					  					action_record = action_repo.save(action);
-					  					MessageBroadcaster.broadcastPathObject(action_record, message.getOptions().get("host").toString());
-					  				}
-					  				test_path_objects.add(action_record);
-					  			}
-					  		}
-					  		
-							final long pathCrawlStartTime = System.currentTimeMillis();
-							
-					  		log.info("Crawling potential form test path");
-					  		browser = new Browser(message.getOptions().get("browser").toString());
-					  		
-					  		cnt = 0;
-					  		PageState result_page = null;
-					  		do{
-					  			try{
-					  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
-					  				break;
-					  			}catch(Exception e){
-					  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
-					  			}
-				  			}while(cnt < 1000 && result_page == null);
-					  		
-					  		final long pathCrawlEndTime = System.currentTimeMillis();
-							long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-							
-							try{
-						  		browser.close();
-						  	}
-						  	catch(Exception e){}
-							
-					  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
-		
-					  		new_test.setRunTime(crawl_time_in_ms);
-					  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
-					  		
-					  		new_test = test_service.save(new_test, message.getOptions().get("host").toString());
-					  		tests.add(new_test);
-					  		
-					  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
-							discovery_record.setTestCount(discovery_record.getTestCount()+1);
-							discovery_record = discovery_repo.save(discovery_record);
-							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
-					  	}
+						}					  	
 					}
 				})
 				.match(MemberUp.class, mUp -> {

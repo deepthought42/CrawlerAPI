@@ -152,25 +152,22 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								do{
 									try{
 										log.info("Crawling path for login form test discovery");
+										browser = new Browser(browser.getBrowserName());
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
-										browser = new Browser(browser.getBrowserName());
 										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
 										e.printStackTrace();
 									} catch (GridException e) {
-										browser = new Browser(browser.getBrowserName());
 										e.printStackTrace();
 									} catch (WebDriverException e) {
-										browser = new Browser(browser.getBrowserName());
 										e.printStackTrace();
 									} catch (NoSuchAlgorithmException e) {
 										e.printStackTrace();
 									}
-									Timing.pauseThread(10000L);
 									tries++;
-								}while(result_page == null && tries < 10000);
-							
+								}while(result_page == null && tries < Integer.MAX_VALUE);
+						
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
 								Test test_record = test_repo.findByKey(test.getKey());
 								if(test_record == null){

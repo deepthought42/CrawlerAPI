@@ -3,8 +3,11 @@ package com.minion.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
+import com.qanairy.dto.TestDto;
+import com.qanairy.dto.TestRecordDto;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
+import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -28,6 +31,12 @@ public class MessageBroadcaster {
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
+		for(PathObject obj : test.getPathObjects()){
+			if(obj instanceof PageState){
+				((PageState)obj).setSrc("");
+			}
+		}
+		test.getResult().setSrc("");
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         String test_json = mapper.writeValueAsString(test);
@@ -87,6 +96,9 @@ public class MessageBroadcaster {
         
         ObjectMapper mapper = new ObjectMapper();
 
+        if(path_object instanceof PageState){
+        	((PageState) path_object).setSrc("");
+        }
         //Object to JSON in String
         String path_object_json = mapper.writeValueAsString(path_object);
         
@@ -99,7 +111,7 @@ public class MessageBroadcaster {
      * @param test {@link Test} to be emitted to clients
      * @throws JsonProcessingException 
      */
-	public static void broadcastTestStatus(String host, TestRecord record) throws JsonProcessingException {
+	public static void broadcastTestStatus(String host, TestRecord record, Test test) throws JsonProcessingException {
 		
 		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
 		pusher.setCluster("us2");
@@ -109,9 +121,9 @@ public class MessageBroadcaster {
 
         //Object to JSON in String
         
-        String test_json = mapper.writeValueAsString(record);
+        String test_json = mapper.writeValueAsString(new TestRecordDto(record, test.getKey()));
         
-		pusher.trigger(host, "test-status", test_json);
+		pusher.trigger(host, "test-run", test_json);
 	}
 	
 	/**
@@ -133,5 +145,25 @@ public class MessageBroadcaster {
         String discovery_json = mapper.writeValueAsString(record);
         
 		pusher.trigger(record.getDomainUrl(), "discovery-status", discovery_json);
+	}
+
+	/**
+	 * Uses Pusher service to broadcast json representing {@link Test} to browser extension for the user with
+	 *   the given username
+	 * @param test_dto representation of {@link Test} that complies with format for browser extensions
+	 * @param username username of User
+	 * @throws JsonProcessingException
+	 */
+	public static void broadcastIdeTest(TestDto test_dto, String username) throws JsonProcessingException {
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+        
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String test_json = mapper.writeValueAsString(test_dto);
+        
+		pusher.trigger(username, "edit-test", test_json);
 	}
 }

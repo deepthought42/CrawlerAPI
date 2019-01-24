@@ -27,7 +27,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH a=(p:PageState)-[:HAS_SCREENSHOT]->() WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_PATH_OBJECT]->(p:PageElement) MATCH b=(p)-[]->() RETURN b")
+	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH a=(t)-[]->(p:PageElement) OPTIONAL MATCH b=(p)-->(attr) RETURN p,attr as f")
 	public Set<PageElement> getPageElements(@Param("domain_host") String host);
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) RETURN a")
@@ -53,6 +53,9 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
 	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("domain_host") String host);
+	
+	@Query("MATCH (n:Domain{host:{host}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d ORDER BY d.started_at DESC LIMIT 1")
+	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("host") String host, @Param("user_id") String user_id);
 	
 	//needs work done still to make it return all test records by month
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")

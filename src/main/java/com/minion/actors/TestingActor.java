@@ -14,11 +14,9 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
-import akka.actor.AbstractActor.Receive;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -60,16 +58,15 @@ public class TestingActor extends AbstractActor {
 						PageState resulting_page = null;
 						if(test.getPathKeys() != null){
 							int cnt = 0;
-							while(browser == null && cnt < 10000){
+							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
+									browser = new Browser((String)message.getOptions().get("browser"));
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 									break;
 								}catch(NullPointerException e){
-									browser = new Browser((String)message.getOptions().get("browser"));
 									log.error(e.getMessage());
 								}
 								
-								Timing.pauseThread(10000L);
 								cnt++;
 							}
 						}
@@ -78,9 +75,7 @@ public class TestingActor extends AbstractActor {
 						test.setRunTime(pathCrawlRunTime);
 						//get current page of browser
 						PageState expected_page = test.getResult();
-						
-						int tries=0;
-		
+								
 						if(!resulting_page.equals(expected_page)){
 							TestRecord record = new TestRecord(new Date(), TestStatus.FAILING, browser.getBrowserName(), resulting_page, pathCrawlRunTime);
 							record.setRunTime(pathCrawlRunTime);

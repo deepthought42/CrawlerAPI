@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.SubscriptionService;
 
@@ -54,6 +56,9 @@ public class PathExpansionActor extends AbstractActor {
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
+	
+	@Autowired
+	private PageStateRepository page_state_repo;
 	
 	@Autowired
 	private AccountRepository account_repo;
@@ -83,58 +88,62 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	
-				if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost())) && 
-						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
+				if(	(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					
-					//Send test to simplifier
-					//when simplifier returns simplified test
+					
 					// if path is a single page 
 					//		then send path to urlBrowserActor
-					
-					//	expand path
-					// 	send expanded path to work allocator
-					
 					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
+						
+						try{
+							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					  	}catch(Exception e){
+						
+						}
+						
 						log.info("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
 						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
 						Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(test.getResult().getUrl()), message.getOptions());
 						work_allocator.tell(url_msg, getSelf() );
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
 						return;
 					}
-					pathExpansions = expandPath(test);
-					log.info(pathExpansions.size()+"   path expansions found.");
-					
-					DiscoveryRecord discovery_record2 = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
-					if(discovery_record2 != null){
-						discovery_record = discovery_record2;
+					else{
+						pathExpansions = expandPath(test);
+						System.err.println(pathExpansions.size()+"   path expansions found.");
+
+						for(ExploratoryPath expanded : pathExpansions){
+							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+	
+							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
+							
+							work_allocator.tell(expanded_path_msg, getSelf() );
+						}
 					}
+					
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-					log.info("expected total path count :: "+new_total_path_count);
+					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
+					System.err.println("expected total path count :: "+new_total_path_count);
 					discovery_record.setTotalPathCount(new_total_path_count);
-					//discovery_record.getExpandedPageStates().add(test.getResult().getKey());
 					discovery_record = discovery_repo.save(discovery_record);
 
 					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 					
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-					for(ExploratoryPath expanded : pathExpansions){
-						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-
-						Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-						
-						work_allocator.tell(expanded_path_msg, getSelf() );
+					try{
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+				  	}catch(Exception e){
+					
 					}
+					
 				}	
 			}
+			postStop();
 		})
 		.match(MemberUp.class, mUp -> {
 			log.info("Member is Up: {}", mUp.member());
@@ -162,14 +171,15 @@ public class PathExpansionActor extends AbstractActor {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		PageState page = test.getResult();
-		if(page == null){
+		PageState result_page = test.getResult();
+		if(result_page == null){
 			return null;
 		}
 
 		//iterate over all elements
-		log.info("Page elements for expansion :: "+page.getElements().size());
-		for(PageElement page_element : page.getElements()){
+		Set<PageElement> elements = page_state_repo.getPageElements(result_page.getKey());
+		log.info("Page elements for expansion :: "+elements.size());
+		for(PageElement page_element : elements){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -222,7 +232,14 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
+				System.err.println("Checking if element exists previously as a path object or within a page state");
+				//check if element exists in previous pageStates
 				
+				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
+					continue;
+				}
+				
+				//page element is not an input or a form
 				Test new_test = Test.clone(test);
 
 				if(test.getPathKeys().size() > 1){
@@ -231,12 +248,12 @@ public class PathExpansionActor extends AbstractActor {
 				}
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
-						
 				
+				System.err.println("adding actions lists to exploratory paths");
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
-
 				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+					System.err.println("exploratory path being created...");
 					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 
@@ -246,11 +263,49 @@ public class PathExpansionActor extends AbstractActor {
 					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 						continue;
 					}*/
+					System.err.println("added action path to path list");
 					pathList.add(action_path);
 				}
 			}
 		}
-				
+		System.err.println("path list size :: " + pathList.size());
 		return pathList;
+	}
+
+	/**
+	 * Checks if a given {@link PageElement} exists in a {@link PageState} within the {@link Test} path
+	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
+	 * 
+	 * @param test {@link Test}
+	 * @param elem {@link PageElement}
+	 * 
+	 * @return
+	 * 
+	 * @pre test != null
+	 * @pre elem != null
+	 */
+	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, PageElement elem) {
+		assert test != null;
+		assert elem != null;
+		
+		if(test.getPathKeys().size() == 1){
+			return false;
+		}
+		for(int path_idx = test.getPathObjects().size()-2; path_idx >= 0; path_idx-- ){
+			PathObject obj = test.getPathObjects().get(path_idx);
+			if(obj.getType().equals("PageState")){
+				PageState page_state = ((PageState) obj);
+				Set<PageElement> page_elements = page_state_repo.getPageElements(page_state.getKey());
+				System.err.println("page state has # of elements  ::  "+page_elements.size());
+				for(PageElement page_elem : page_elements){
+					System.err.println("Checking if latest element matches page element ");
+					if(elem.equals(page_elem)){
+						return true;
+					}
+				}
+			}	
+		}
+
+		return false;
 	}
 }

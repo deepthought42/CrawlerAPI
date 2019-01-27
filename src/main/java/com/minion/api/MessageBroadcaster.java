@@ -3,6 +3,7 @@ package com.minion.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
+import com.qanairy.dto.TestDto;
 import com.qanairy.dto.TestRecordDto;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
@@ -144,5 +145,25 @@ public class MessageBroadcaster {
         String discovery_json = mapper.writeValueAsString(record);
         
 		pusher.trigger(record.getDomainUrl(), "discovery-status", discovery_json);
+	}
+
+	/**
+	 * Uses Pusher service to broadcast json representing {@link Test} to browser extension for the user with
+	 *   the given username
+	 * @param test_dto representation of {@link Test} that complies with format for browser extensions
+	 * @param username username of User
+	 * @throws JsonProcessingException
+	 */
+	public static void broadcastIdeTest(TestDto test_dto, String username) throws JsonProcessingException {
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+        
+        ObjectMapper mapper = new ObjectMapper();
+
+        //Object to JSON in String
+        String test_json = mapper.writeValueAsString(test_dto);
+        
+		pusher.trigger(username, "edit-test", test_json);
 	}
 }

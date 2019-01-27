@@ -88,8 +88,7 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	
-				if(test.firstPage().getUrl().contains((new URL(test.getResult().getUrl()).getHost())) && 
-						(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
+				if(	(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					
 					
@@ -128,7 +127,6 @@ public class PathExpansionActor extends AbstractActor {
 						}
 					}
 					
-
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
 					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
 					System.err.println("expected total path count :: "+new_total_path_count);
@@ -173,14 +171,15 @@ public class PathExpansionActor extends AbstractActor {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page
-		PageState page = test.getResult();
-		if(page == null){
+		PageState result_page = test.getResult();
+		if(result_page == null){
 			return null;
 		}
 
 		//iterate over all elements
-		log.info("Page elements for expansion :: "+page.getElements().size());
-		for(PageElement page_element : page.getElements()){
+		Set<PageElement> elements = page_state_repo.getPageElements(result_page.getKey());
+		log.info("Page elements for expansion :: "+elements.size());
+		for(PageElement page_element : elements){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -289,7 +288,10 @@ public class PathExpansionActor extends AbstractActor {
 		assert test != null;
 		assert elem != null;
 		
-		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
+		if(test.getPathKeys().size() == 1){
+			return false;
+		}
+		for(int path_idx = test.getPathObjects().size()-2; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);
 			if(obj.getType().equals("PageState")){
 				PageState page_state = ((PageState) obj);

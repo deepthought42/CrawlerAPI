@@ -1,12 +1,14 @@
 package com.minion.api;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
+import com.qanairy.dto.TestDto;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
@@ -41,6 +44,9 @@ import com.qanairy.services.TestService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
+
+import io.swagger.annotations.ApiOperation;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.exception.PaymentDueException;
 import com.qanairy.models.Account;
@@ -211,7 +217,13 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	return domain_repo.getUnverifiedTests(url);
+    	Set<Test> tests = domain_repo.getUnverifiedTests(url);
+    	
+    	for(Test test : tests){
+    		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey());
+    		test.setRecords(records);
+    	}
+    	return tests;
 	}
 
 	/**
@@ -266,7 +278,7 @@ public class TestController {
      * @param itest
      */
 	private void updateLastTestRecordPassingStatus(Test test) {
-		Set<TestRecord> test_records = test.getRecords();
+		List<TestRecord> test_records = test.getRecords();
 		Date last_ran_at = new Date(0L);
 		TestRecord last_record = null;
 		for(TestRecord test_record : test_records){
@@ -455,12 +467,13 @@ public class TestController {
 	 * @param test_key key for test that will have group added to it
 	 * 	
 	 * @return the updated test
+	 * @throws MalformedURLException 
 	 */
     @PreAuthorize("hasAuthority('create:groups')")
 	@RequestMapping(path="/addGroup", method = RequestMethod.POST)
 	public @ResponseBody Group addGroup(@RequestParam(value="name", required=true) String name,
-										@RequestParam(value="description", required=true) String description,
-										@RequestParam(value="key", required=true) String key){
+										@RequestParam(value="description", required=false) String description,
+										@RequestParam(value="key", required=true) String key) throws MalformedURLException{
     	if(name == null || name.isEmpty()){
     		throw new EmptyGroupNameException();
     	}
@@ -476,7 +489,7 @@ public class TestController {
 		Test test = test_repo.findByKey(key);
 		test.getGroups().add(group);
 		
-		test = test_service.save(test, test.firstPage().getUrl());
+		test = test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
 		return group;
 	}
 
@@ -520,7 +533,57 @@ public class TestController {
 
 		return groups;
 	}
-	
+
+	/**
+	 * Handles pushing a {@link Test} to the current user's Pusher channel in a format compliant with 
+	 *   the browser extension spec
+	 * 
+	 * @param url
+	 * 
+	 * @return
+	 * @throws UnknownAccountException 
+	 * @throws JsonProcessingException 
+	 */
+    @ApiOperation(value = "Send test to browser extension by publishing test to users real time message channel", response = Iterable.class)
+    @PreAuthorize("hasAuthority('read:groups')")
+	@RequestMapping(path="{test_key}/edit", method = RequestMethod.POST)
+	public @ResponseBody TestDto editTest(HttpServletRequest request, 
+			   								   @PathVariable(value="test_key") String test_key) throws UnknownAccountException, JsonProcessingException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	Test test = test_repo.findByKey(test_key);
+    	test.setPathObjects(test_repo.getPathObjects(test.getKey()));
+		//convert test to ide test
+		/*
+		 * {
+		 *   key: {test_key}
+		 * 	 [
+		 *     { key: {page_key}, url: {page_url}},
+		 *     { element: 
+		 *     	  { 
+		 *     		key: {element_key}, 
+		 *     		xpath: {element_xpath}
+		 *     	  },
+		 *        {
+		 *        	key: {action_key},
+		 *        	type: {action_type},
+		 *          value: {action_value
+		 *        }
+	     *     }
+		 * 	 ]
+		 * }
+		 */
+    	TestDto test_dto = new TestDto(test);
+    	
+		//send test to ide
+		MessageBroadcaster.broadcastIdeTest(test_dto, acct.getUsername());
+		return test_dto;
+	}
 }
 
 @ResponseStatus(HttpStatus.SEE_OTHER)

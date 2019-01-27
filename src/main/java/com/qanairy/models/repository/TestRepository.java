@@ -29,4 +29,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 
 	@Query("MATCH (t:Test{key:{key}})-[r:HAS_PATH_OBJECT]->(p) RETURN p")
 	public List<PathObject> getPathObjects(@Param("key") String key);
+	
+	@Query("MATCH (t:Test{key:{key}})-[r:HAS_TEST_RECORD]->(tr:TestRecord) MATCH a=(tr)-[:HAS_PAGE_STATE]->(p) MATCH b=(p)-[:HAS_SCREENSHOT]->() RETURN a,b ORDER BY tr.ran_at DESC")
+	public List<TestRecord> findAllTestRecords(@Param("key") String key);
 }

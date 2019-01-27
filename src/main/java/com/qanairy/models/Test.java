@@ -50,7 +50,7 @@ public class Test implements Persistable {
 	private Map<String, String> browser_passing_statuses = new HashMap<>();
 	
 	@Relationship(type = "HAS_TEST_RECORD")
-	private Set<TestRecord> records = new HashSet<>();
+	private List<TestRecord> records = new ArrayList<>();
 	
 	@Relationship(type = "HAS_GROUP")
 	private Set<Group> groups = new HashSet<>();
@@ -82,7 +82,7 @@ public class Test implements Persistable {
 		setPathKeys(path_keys);
 		setPathObjects(path_objects);
 		setResult(result);
-		setRecords(new HashSet<TestRecord>());
+		setRecords(new ArrayList<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(false);
 		setLastRunTimestamp(new Date());
@@ -103,7 +103,7 @@ public class Test implements Persistable {
 		setPathKeys(path_keys);
 		setPathObjects(path_objects);
 		setResult(result);
-		setRecords(new HashSet<TestRecord>());
+		setRecords(new ArrayList<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(spansMultipleDomains);
 		setLastRunTimestamp(new Date());
@@ -194,11 +194,11 @@ public class Test implements Persistable {
 		this.records.add(record);
 	}
 	
-	public Set<TestRecord> getRecords(){
+	public List<TestRecord> getRecords(){
 		return this.records;
 	}
 	
-	public void setRecords(Set<TestRecord> records){
+	public void setRecords(List<TestRecord> records){
 		this.records = records;
 	}
 	

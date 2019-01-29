@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.util.Timing;
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
@@ -79,25 +80,23 @@ public class IdeTestExportController {
     	PageState result_page = null;
     	
     	JSONObject test_json = new JSONObject(json_str);
-    	List<String> path_keys = new ArrayList<String>();
-    	List<PathObject> path_objects = new ArrayList<PathObject>();
-    	System.err.println("Test JSON :: "+test_json.toString());
+    	
     	boolean first_page = true;
-    	PageElement last_element = null;
     	String name = test_json.get("name").toString();
     	JSONArray path = (JSONArray) test_json.get("path");
     	
     	Domain domain = null;
     			
     	do{
+    		List<String> path_keys = new ArrayList<String>();
+        	List<PathObject> path_objects = new ArrayList<PathObject>();
 	    	Browser browser = new Browser("chrome");
 
     		try{
-		    	System.err.println("navigating over path :: "+path);
+		    	logger.info("navigating over path :: "+path);
 		    	for(int idx=0; idx < path.length(); idx++){
 		        	JSONObject path_obj_json = new JSONObject(path.get(idx).toString());
 		
-		        	System.err.println("PATH OBJECT :: " + path_obj_json);
 		    		if(path_obj_json.has("url")){
 		    			System.err.println("PATH OBJECT IS A URL :: " + path_obj_json);
 		    			String url = path_obj_json.getString("url");
@@ -132,7 +131,6 @@ public class IdeTestExportController {
 		    				elem = elem_record;
 		    			}
 		    			
-		    			last_element = elem;
 		    			//add to path
 		    			path_keys.add(elem.getKey());
 		    			path_objects.add(elem);
@@ -151,16 +149,14 @@ public class IdeTestExportController {
 		    			
 		    			path_keys.add(action.getKey());
 		    			path_objects.add(action);
-		    			System.err.println("Performing action!");
-		    			Crawler.performAction(action, last_element, browser.getDriver());
-		    			System.err.println("FINISHED PERFORMING ACTION");
+		    			Crawler.performAction(action, elem, browser.getDriver());
 		    			Timing.pauseThread(5000L);    			
 		    			
 		    			//******************************************************
 		    			// THIS IS LIKELY TO BE PROBLEMATIC IF THE CLIENT ACTUALLY EXPERIENCED A TRANSITION STATE
 		    			// BECAUSE IT SHOULD HAVE ADDED A URL TO THE PATH. CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING
 		    			//******************************************************
-			        	if(idx+1 < path.length()-1){
+			        	if(idx+1 < path.length()){
 			    			path_obj_json = new JSONObject(path.get(idx+1).toString());
 	
 			    			if(!path_obj_json.has("url")){
@@ -183,9 +179,11 @@ public class IdeTestExportController {
 		    	
 		    	domain.addTest(test);
 		    	domain_repo.save(domain);
+		    	
+		    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, domain.getAccount().iterator().next().getUsername());
     		}
     		catch(Exception e){
-    			Log.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
+    			logger.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
     			e.printStackTrace();
 				first_page = true;
     			browser.close();

@@ -166,4 +166,10 @@ public class MessageBroadcaster {
         
 		pusher.trigger(username, "edit-test", test_json);
 	}
+
+	public static void broadcastTestCreatedConfirmation(Test test, String username) {
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+	}
 }

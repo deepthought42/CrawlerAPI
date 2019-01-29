@@ -11,8 +11,8 @@ public class TestCreatedDto {
 	private String name;
 
 	public TestCreatedDto(Test test){
-		setKey(key);
-		setName(name);
+		setKey(test.getKey());
+		setName(test.getName());
 	}
 
 	public String getKey() {

@@ -1,14 +1,16 @@
 package com.minion.api;
 
 import java.net.URL;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.mortbay.log.Log;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -33,6 +36,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageElementRepository;
@@ -42,7 +46,7 @@ import com.qanairy.services.BrowserService;
 /**
  *	API for interacting with {@link User} data
  */
-@RestController
+@Controller
 @RequestMapping("/testIDE")
 public class IdeTestExportController {
 	@SuppressWarnings("unused")
@@ -53,6 +57,9 @@ public class IdeTestExportController {
 	
 	@Autowired
 	private ActionRepository action_repo;
+	
+	@Autowired
+	private AccountRepository account_repo;
 	
 	@Autowired
 	private DomainRepository domain_repo;
@@ -74,8 +81,13 @@ public class IdeTestExportController {
 	 * @throws Exception
 	 */
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Boolean> create( @RequestBody(required=true) String json_str) 
+    public ResponseEntity<Boolean> create(HttpServletRequest request,
+    									  @RequestBody(required=true) String json_str) 
     										throws Exception {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_repo.findByUserId(id);
+    	
     	int attempts = 0;
     	PageState result_page = null;
     	
@@ -172,15 +184,15 @@ public class IdeTestExportController {
 		    	Test test = new Test(path_keys, path_objects, result_page, name);
 		    	test.setStatus(TestStatus.PASSING);
 		    	test.getBrowserStatuses().put("chrome", TestStatus.PASSING.toString());
+		    	
 		    	Test test_record = test_repo.findByKey(test.getKey());
 		    	if(test_record == null){
 		    		test = test_repo.save(test);
+		    		domain.addTest(test);
+			    	domain_repo.save(domain);
 		    	}
 		    	
-		    	domain.addTest(test);
-		    	domain_repo.save(domain);
-		    	
-		    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, domain.getAccount().iterator().next().getUsername());
+		    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct.getUsername());
     		}
     		catch(Exception e){
     			logger.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());

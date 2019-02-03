@@ -17,6 +17,8 @@ public class TestDto {
 	private String key;
 	private List<Object> path;
 	
+	public TestDto(){}
+	
 	public TestDto(Test test){
 		setKey(test.getKey());
 		
@@ -33,8 +35,10 @@ public class TestDto {
 			}
 		}
 		
+		boolean first_page = true;
 		for(int idx = 0; idx < test.getPathObjects().size()-1; idx++){
-			if(ordered_path_objects.get(idx).getType().equals("PageState")){
+			if(ordered_path_objects.get(idx).getType().equals("PageState") && first_page){
+				first_page = false;
 				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));	
 			}
 			else if(ordered_path_objects.get(idx).getType().equals("PageElement")){

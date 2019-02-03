@@ -45,7 +45,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH c=(p)-[:HAS_SCREENSHOT]->() RETURN a,c as d")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->() MATCH c=(p)-[]->() MATCH d=(:TestRecord)-[:HAS_RESULT]->(z) MATCH e=(z)-[:HAS_SCREENSHOT]->() WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,b,c,d,e as g")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->() MATCH c=(p)-[]->() WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,b,c as g")
 	public Set<Test> getVerifiedTests(@Param("domain_host") String host);
 
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")

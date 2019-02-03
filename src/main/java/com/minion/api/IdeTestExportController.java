@@ -1,17 +1,16 @@
 package com.minion.api;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.net.URL;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,26 +21,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
-import com.minion.util.Timing;
+import com.minion.structs.Message;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 /**
  *	API for interacting with {@link User} data
@@ -53,11 +46,8 @@ public class IdeTestExportController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Autowired
-	private TestRepository test_repo;
-	
-	@Autowired
-	private ActionRepository action_repo;
-	
+    private ActorSystem actor_system;
+   
 	@Autowired
 	private AccountRepository account_repo;
 	
@@ -65,10 +55,25 @@ public class IdeTestExportController {
 	private DomainRepository domain_repo;
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
-	
-	@Autowired
-	BrowserService browser_service;
+	private BrowserService browser_service;
+    
+	/**
+     * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
+     *  {@link PageElement}s and {@link Action}s
+	 * 
+	 * @param json_str JSON String
+	 * 
+	 * @return A boolean value indicating that the system successfully created a {@link Test} using the provided JSON
+	 * 
+	 * @throws Exception
+	 */
+    @RequestMapping(method = RequestMethod.PUT)
+    public ResponseEntity<Boolean> update(HttpServletRequest request,
+    									  @RequestBody(required=true) String json_str) 
+    										throws Exception {
+    
+    	return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
+    }
     
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
@@ -87,121 +92,23 @@ public class IdeTestExportController {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_repo.findByUserId(id);
-    	
-    	int attempts = 0;
-    	PageState result_page = null;
-    	
+
     	JSONObject test_json = new JSONObject(json_str);
+
+    	String domain_url = test_json.getString("domain_url");
+    	Domain domain = domain_repo.findByHost(new URL(domain_url).getHost());
     	
-    	boolean first_page = true;
-    	String name = test_json.get("name").toString();
-    	JSONArray path = (JSONArray) test_json.get("path");
+    	Map<String, Object> options = new HashMap<String, Object>();
+		options.put("browser", domain.getDiscoveryBrowserName());
     	
-    	Domain domain = null;
-    			
-    	do{
-    		List<String> path_keys = new ArrayList<String>();
-        	List<PathObject> path_objects = new ArrayList<PathObject>();
-	    	Browser browser = new Browser("chrome");
 
-    		try{
-		    	logger.info("navigating over path :: "+path);
-		    	for(int idx=0; idx < path.length(); idx++){
-		        	JSONObject path_obj_json = new JSONObject(path.get(idx).toString());
+		Message<JSONObject> message = new Message<JSONObject>(acct.getUsername(), test_json, options);
+
+		ActorRef testCreationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("testCreationActor"), "test_creation_actor"+UUID.randomUUID());
 		
-		    		if(path_obj_json.has("url")){
-		    			System.err.println("PATH OBJECT IS A URL :: " + path_obj_json);
-		    			String url = path_obj_json.getString("url");
-		    			if(first_page){
-		    				System.err.println("NAVIGATING TO URL :: " + url);
-		    				browser.navigateTo(url);
-		    				String host = new URL(url).getHost();
-
-		    				domain = domain_repo.findByHost(host);
-		    				first_page = false;
-		    			}
-		    			
-		    			//construct a new page
-		    			PageState page_state = browser_service.buildPage(browser);
-		    			path_keys.add(page_state.getKey());
-		    			path_objects.add(page_state);
-		    		}
-		    		else {
-		    			System.err.println("ELEMENT IN JSON :: " + path_obj_json.getJSONObject("element").toString());
-		    			JSONObject element_json = path_obj_json.getJSONObject("element");
-		    			//use xpath to identify WebElement. 
-		    			WebElement element = browser.findWebElementByXpath(element_json.getString("xpath"));
-		    			//use WebElement to generate system usable xpath
-		    			Set<Attribute> attributes = browser_service.extractAttributes(element, browser.getDriver());
-		    			String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), element);
+		testCreationActor.tell(message, null);
 		
-		    			String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
-		    			PageElement elem = new PageElement(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);
-		    			PageElement elem_record = page_element_repo.findByKey(elem.getKey());
-		    			
-		    			if(elem_record != null){
-		    				elem = elem_record;
-		    			}
-		    			
-		    			//add to path
-		    			path_keys.add(elem.getKey());
-		    			path_objects.add(elem);
-
-		    			System.err.println("ACTION IN JSON ::  " + path_obj_json.getJSONObject("action"));
-		    			JSONObject action_json = path_obj_json.getJSONObject("action");
-		    			//create new action
-		    			//add action to Test
-		    			String action_type = action_json.getString("name");
-		    			String action_value = action_json.getString("value");
-		    			Action action = new Action(action_type, action_value);
-		    			Action action_record = action_repo.findByKey(action.getKey());
-		    			if(action_record != null){
-		    				action = action_record;
-		    			}
-		    			
-		    			path_keys.add(action.getKey());
-		    			path_objects.add(action);
-		    			Crawler.performAction(action, elem, browser.getDriver());
-		    			Timing.pauseThread(5000L);    			
-		    			
-		    			//******************************************************
-		    			// THIS IS LIKELY TO BE PROBLEMATIC IF THE CLIENT ACTUALLY EXPERIENCED A TRANSITION STATE
-		    			// BECAUSE IT SHOULD HAVE ADDED A URL TO THE PATH. CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING
-		    			//******************************************************
-			        	if(idx+1 < path.length()){
-			    			path_obj_json = new JSONObject(path.get(idx+1).toString());
-	
-			    			if(!path_obj_json.has("url")){
-				    			//capture new page state and add it to path
-				    			PageState page_state = browser_service.buildPage(browser);
-				    			path_keys.add(page_state.getKey());
-				    			path_objects.add(page_state);
-			    			}
-			        	}
-		    		}
-		    	}
-		    	result_page = browser_service.buildPage(browser);
-		    	Test test = new Test(path_keys, path_objects, result_page, name);
-		    	test.setStatus(TestStatus.PASSING);
-		    	test.getBrowserStatuses().put("chrome", TestStatus.PASSING.toString());
-		    	
-		    	Test test_record = test_repo.findByKey(test.getKey());
-		    	if(test_record == null){
-		    		test = test_repo.save(test);
-		    		domain.addTest(test);
-			    	domain_repo.save(domain);
-		    	}
-		    	
-		    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct.getUsername());
-    		}
-    		catch(Exception e){
-    			logger.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
-    			e.printStackTrace();
-				first_page = true;
-    			browser.close();
-    		}
-    		attempts++;
-    	}while(result_page == null && attempts < 10000);
     	return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
 	}
 }

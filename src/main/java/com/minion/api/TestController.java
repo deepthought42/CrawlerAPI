@@ -38,6 +38,7 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.EmailService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 
@@ -63,6 +64,9 @@ import com.qanairy.models.TestRecord;
 public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
 
+	@Autowired
+	private EmailService email_service;
+	
     @Autowired
     private DomainRepository domain_repo;
     
@@ -409,6 +413,7 @@ public class TestController {
 			MessageBroadcaster.broadcastTestStatus(host, record, test);
     	}
 		
+    	email_service.sendSimpleMessage("bkindred@qanairy.com", "Test run finished", "The test has finished running");
     	
 		return test_results;
 	}

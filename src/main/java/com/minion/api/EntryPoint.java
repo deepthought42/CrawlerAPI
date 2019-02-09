@@ -1,8 +1,10 @@
 package com.minion.api;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
@@ -20,6 +22,7 @@ import org.springframework.context.annotation.PropertySources;
 	@PropertySource("classpath:application.properties"),
 	@PropertySource("classpath:auth0.properties")
 })
+@EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
 public class EntryPoint {
 
 	public static void main(String[] args){

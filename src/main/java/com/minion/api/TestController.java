@@ -121,7 +121,7 @@ public class TestController {
 		if(firefox_status!=null && !firefox_status.isEmpty()){
 			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
 			
-			if(firefox_status.toLowerCase().equalsIgnoreCase("failing")){
+			if(firefox_status.equalsIgnoreCase("failing")){
 				status = TestStatus.FAILING;
 			}
 			else{
@@ -130,7 +130,7 @@ public class TestController {
 		}
 		if(chrome_status!=null && !chrome_status.isEmpty()){
 			browser_statuses.put("chrome", chrome_status.toUpperCase());
-			if(chrome_status.toLowerCase().equalsIgnoreCase("failing")){
+			if(chrome_status.equalsIgnoreCase("failing")){
 				status = TestStatus.FAILING;
 			}
 			else{

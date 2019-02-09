@@ -131,20 +131,17 @@ public class Browser {
 		return this.driver;
 	}
 
+	/**
+	 * Navigates to a given url and waits for it the readyState to be complete
+	 * 
+	 * @param url
+	 */
 	public void navigateTo(String url){
 		System.err.println("Navigating to url.... " +url);
 		getDriver().get(url);
 
-		try{
-			new WebDriverWait(getDriver(), 600).until(
-					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			
-		}catch(GridException e){
-			log.warn("Grid exception occurrred while navigating to page  --  "+e.getMessage());
-		}
-		catch(Exception e){
-			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
-		}
+		new WebDriverWait(getDriver(), 600).until(
+				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 		
 		Timing.pauseThread(5000);
 	}
@@ -474,6 +471,23 @@ public class Browser {
 	public static void outlineElement(PageElement page_element, WebDriver driver) {
 		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
+	}
+	
+	/**
+	 * Finds page element by xpath
+	 * 
+	 * @param xpath
+	 * 
+	 * @return {@link WebElement} located at the provided xpath
+	 * 
+	 * @pre xpath != null
+	 * @pre !xpath.isEmpty()
+	 */
+	public WebElement findWebElementByXpath(String xpath){
+		assert xpath != null;
+		assert !xpath.isEmpty();
+		
+		return driver.findElement(By.xpath(xpath));
 	}
 	
 	/**

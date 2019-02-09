@@ -7,8 +7,6 @@ import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -133,22 +131,8 @@ public class Crawler {
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 
-		try{
-			WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-			actionFactory.execAction(element, action.getValue(), action.getName());
-		}
-		catch(StaleElementReferenceException e){
-			log.warn("STALE ELEMENT REFERENCE EXCEPTION OCCURRED WHILE ACTOR WAS PERFORMING ACTION : "
-					+ action + ". ", e.getMessage());
-			wasPerformedSuccessfully = false;			
-		}
-		catch(ElementNotVisibleException e){
-			log.warn("ELEMENT IS NOT CURRENTLY VISIBLE.", e.getMessage());
-		}
-		catch(WebDriverException e){
-			log.warn("Element can not have action performed on it at point performed", e.getMessage());
-			wasPerformedSuccessfully = false;
-		}
+		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
+		actionFactory.execAction(element, action.getValue(), action.getName());
 		
 		return wasPerformedSuccessfully;
 	}

@@ -3,6 +3,7 @@ package com.minion.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pusher.rest.Pusher;
+import com.qanairy.dto.TestCreatedDto;
 import com.qanairy.dto.TestDto;
 import com.qanairy.dto.TestRecordDto;
 import com.qanairy.models.DiscoveryRecord;
@@ -165,5 +166,17 @@ public class MessageBroadcaster {
         String test_json = mapper.writeValueAsString(test_dto);
         
 		pusher.trigger(username, "edit-test", test_json);
+	}
+
+	public static void broadcastTestCreatedConfirmation(Test test, String username) throws JsonProcessingException {
+		TestCreatedDto test_created_dto = new TestCreatedDto(test);
+		
+		Pusher pusher = new Pusher("402026", "77fec1184d841b55919e", "5bbe37d13bed45b21e3a");
+		pusher.setCluster("us2");
+		pusher.setEncrypted(true);
+		
+        ObjectMapper mapper = new ObjectMapper();
+		String test_confirmation_json = mapper.writeValueAsString(test_created_dto);
+		pusher.trigger(username, "test-created", test_confirmation_json);
 	}
 }

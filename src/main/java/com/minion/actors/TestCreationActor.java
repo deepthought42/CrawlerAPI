@@ -86,8 +86,8 @@ public class TestCreationActor extends AbstractActor  {
 						JSONObject test_json = (JSONObject) acct_message.getData();
 				    	JSONArray path = (JSONArray) test_json.get("path");
 				    	String name = test_json.get("name").toString();
-				    	
-				    	if(test_json.get("key") != null){
+
+				    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
 				    		Test old_test = test_repo.findByKey(test_json.get("key").toString());
 				    		old_test.setArchived(true);
 				    		test_repo.save(old_test);

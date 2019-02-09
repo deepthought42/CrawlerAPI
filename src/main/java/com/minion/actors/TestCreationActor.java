@@ -35,7 +35,6 @@ import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;

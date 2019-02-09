@@ -54,9 +54,6 @@ public class IdeTestExportController {
 	@Autowired
 	private DomainRepository domain_repo;
 	
-	@Autowired
-	private BrowserService browser_service;
-    
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
      *  {@link PageElement}s and {@link Action}s

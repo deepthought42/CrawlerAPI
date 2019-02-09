@@ -1,7 +1,6 @@
 package com.minion.actors;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -110,7 +109,7 @@ public class TestCreationActor extends AbstractActor  {
 					    	Browser browser = new Browser("chrome");
 
 				    		try{
-				    			buildTestPathFromPathJson(path, path_keys, path_objects, domain, browser);
+				    			domain = buildTestPathFromPathJson(path, path_keys, path_objects, browser);
 						    	
 				    			PageState result_page = browser_service.buildPage(browser);
 						    	test = new Test(path_keys, path_objects, result_page, name);
@@ -157,8 +156,9 @@ public class TestCreationActor extends AbstractActor  {
 				.build();
 	}
 
-	private void buildTestPathFromPathJson(JSONArray path, List<String> path_keys, List<PathObject> path_objects, Domain domain, Browser browser) throws JSONException, Exception {
+	private Domain buildTestPathFromPathJson(JSONArray path, List<String> path_keys, List<PathObject> path_objects, Browser browser) throws JSONException, Exception {
 		boolean first_page = true;
+		Domain domain = null;
 		for(int idx=0; idx < path.length(); idx++){
         	JSONObject path_obj_json = new JSONObject(path.get(idx).toString());
 
@@ -166,15 +166,17 @@ public class TestCreationActor extends AbstractActor  {
     			System.err.println("PATH OBJECT IS A URL :: " + path_obj_json);
     			String url = path_obj_json.getString("url");
     			String host = new URL(url).getHost();
-    			domain = domain_repo.findByHost(host);
-
+    			
     			if(!first_page){
     				PageState page_state = browser_service.buildPage(browser);
     				path_keys.add(page_state.getKey());
 	    			path_objects.add(page_state);
     			}
+    			else{
+    				domain = domain_repo.findByHost(host);	
+    			}
     			
-    			PageState page_state = navigateToAndCreatePageState(url, first_page, browser);
+    			PageState page_state = navigateToAndCreatePageState(url, browser);
     			JSONObject action_json = path_obj_json.getJSONObject("action");
 
     			String action_type = action_json.getString("name");
@@ -229,6 +231,7 @@ public class TestCreationActor extends AbstractActor  {
 	        	}
     		}
     	}
+		return domain;
 	}
 
 	private Action createAction(String action_type, String action_value) {
@@ -269,7 +272,7 @@ public class TestCreationActor extends AbstractActor  {
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	private PageState navigateToAndCreatePageState(String url, boolean isFirstPage, Browser browser) 
+	private PageState navigateToAndCreatePageState(String url, Browser browser) 
 									throws GridException, NoSuchAlgorithmException, IOException {
 		browser.navigateTo(url);
 		

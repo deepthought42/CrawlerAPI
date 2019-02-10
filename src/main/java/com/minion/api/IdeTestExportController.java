@@ -97,9 +97,8 @@ public class IdeTestExportController {
 
     	URL domain_url = new URL(test_json.getString("domain_url"));
     	Domain domain = domain_repo.findByHost(domain_url.getHost());
-    	
     	if(domain == null){
-    		domain = new Domain(domain_url.getProtocol(), domain_url.getHost()+domain_url.getPath(),"chrome","");
+    		domain = new Domain(domain_url.getProtocol(), domain_url.getHost(),"chrome","");
     		domain = domain_repo.save(domain);
     	}
     	

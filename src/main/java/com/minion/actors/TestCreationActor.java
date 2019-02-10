@@ -177,16 +177,7 @@ public class TestCreationActor extends AbstractActor  {
     			}
     			
     			PageState page_state = navigateToAndCreatePageState(url, browser);
-    			JSONObject action_json = path_obj_json.getJSONObject("action");
 
-    			String action_type = action_json.getString("name");
-    			String action_value = action_json.getString("value");
-    			
-    			Action action = new Action(action_type, action_value);
-    			Action action_record = action_repo.findByKey(action.getKey());
-    			if(action_record != null){
-    				action = action_record;
-    			}
     			first_page = false;
     			path_keys.add(page_state.getKey());
     			path_objects.add(page_state);

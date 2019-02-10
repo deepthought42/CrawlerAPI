@@ -95,8 +95,13 @@ public class IdeTestExportController {
 
     	JSONObject test_json = new JSONObject(json_str);
 
-    	String domain_url = test_json.getString("domain_url");
-    	Domain domain = domain_repo.findByHost(new URL(domain_url).getHost());
+    	URL domain_url = new URL(test_json.getString("domain_url"));
+    	Domain domain = domain_repo.findByHost(domain_url.getHost());
+    	
+    	if(domain == null){
+    		domain = new Domain(domain_url.getProtocol(), domain_url.getHost()+domain_url.getPath(),"chrome","");
+    		domain = domain_repo.save(domain);
+    	}
     	
     	Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());

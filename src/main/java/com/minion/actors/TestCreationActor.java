@@ -173,7 +173,13 @@ public class TestCreationActor extends AbstractActor  {
 	    			path_objects.add(page_state);
     			}
     			else{
-    				domain = domain_repo.findByHost(host);	
+    				int dot_idx = host.indexOf('.');
+    		    	int last_dot_idx = host.lastIndexOf('.');
+    		    	String formatted_url = host;
+    		    	if(dot_idx == last_dot_idx){
+    		    		formatted_url = "www."+host;
+    		    	}
+    				domain = domain_repo.findByHost(formatted_url);	
     			}
     			
     			PageState page_state = navigateToAndCreatePageState(url, browser);

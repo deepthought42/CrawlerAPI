@@ -31,6 +31,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.AccountService;
 
 import akka.actor.ActorRef;
@@ -50,6 +51,9 @@ public class IdeTestExportController {
    
 	@Autowired
 	private AccountRepository account_repo;
+	
+	@Autowired
+	private TestRepository test_repo;
 	
 	@Autowired
 	private AccountService account_service;
@@ -95,10 +99,24 @@ public class IdeTestExportController {
 
     	JSONObject test_json = new JSONObject(json_str);
 
+    	String test_key = test_json.getString("key");
+    	Test test = test_repo.findByKey(test_key);
+    	if(test != null){
+    		test.setArchived(true);
+    		test_repo.save(test);
+    	}
+    	
     	URL domain_url = new URL(test_json.getString("domain_url"));
-    	Domain domain = domain_repo.findByHost(domain_url.getHost());
+    	String host = domain_url.getHost();
+    	int dot_idx = host.indexOf('.');
+    	int last_dot_idx = host.lastIndexOf('.');
+    	String formatted_url = host;
+    	if(dot_idx == last_dot_idx){
+    		formatted_url = "www."+host;
+    	}
+    	Domain domain = domain_repo.findByHost(formatted_url);
     	if(domain == null){
-    		domain = new Domain(domain_url.getProtocol(), domain_url.getHost(),"chrome","");
+    		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","");
     		domain = domain_repo.save(domain);
     	}
     	

@@ -61,6 +61,25 @@ public class ExploratoryPath {
 	}
 	
 	/**
+	 * Gets the last Vertex in a path that is of type {@link PageState}
+	 * 
+	 * @return
+	 */
+	public int findLastPageIndex(){
+		List<PathObject> path_obj_list = getPathObjects();
+		PageState page = null;
+
+		int last_idx = 0;
+		for(int idx=0; idx<path_obj_list.size(); idx++){
+			if(path_obj_list.get(idx) instanceof PageState){
+				last_idx = idx;
+			}
+		}
+
+		return last_idx;
+	}
+	
+	/**
 	 * Checks if the path has 2 pages that are the equal
 	 * 
 	 * @param path

@@ -36,6 +36,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.SubscriptionService;
@@ -64,6 +65,9 @@ public class PathExpansionActor extends AbstractActor {
 	private AccountRepository account_repo;
 	
 	@Autowired
+	private DomainRepository domain_repo;
+	
+	@Autowired
 	private SubscriptionService subscription_service;
 	
 	@Autowired
@@ -80,7 +84,7 @@ public class PathExpansionActor extends AbstractActor {
 			if(message.getData() instanceof Test){				
 				Test test = (Test)message.getData();
 
-				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
+				List<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 
 		    	Account acct = account_repo.findByUsername(message.getAccountKey());
@@ -117,6 +121,9 @@ public class PathExpansionActor extends AbstractActor {
 						pathExpansions = expandPath(test);
 						System.err.println(pathExpansions.size()+"   path expansions found.");
 
+						
+						//check expanded paths for interactions already explored in other tests
+						pathExpansions = filterPathsWithKnownInteractions(pathExpansions, discovery_record.getDomainUrl());
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
@@ -160,14 +167,53 @@ public class PathExpansionActor extends AbstractActor {
 		.build();
 	}
 	
-    /**
+	/**
+	 * Filters out any path expansions that have a {@link PageState} and {@link PageElement} sequence that 
+	 *    appear in another test for the {@link Domain} with the given url
+	 *    
+	 * @param pathExpansions
+	 * @param domainUrl host value for the {@link Domain}
+	 * @return
+	 */
+    private List<ExploratoryPath> filterPathsWithKnownInteractions(List<ExploratoryPath> pathExpansions,
+			String domainUrl) {
+    	Set<Test> tests = domain_repo.getTests(domainUrl);
+    	List<ExploratoryPath> filtered_paths = new ArrayList<ExploratoryPath>();
+    	for(ExploratoryPath path : pathExpansions){
+    		boolean should_filter_path = false;
+	    	//get pagestate and element at end of exploratory path
+    		int last_page_idx = path.findLastPageIndex();
+    		PageState last_page_state = (PageState)path.getPathObjects().get(last_page_idx);
+    		PageElement last_page_element = (PageElement)path.getPathObjects().get(last_page_idx+1);
+	    	for(Test test : tests){
+	    		for(int path_idx =0; path_idx<test.getPathObjects().size(); path_idx++){
+	    			if(test.getPathObjects().get(path_idx).getKey().equals(last_page_state.getKey())
+	    					&& test.getPathObjects().get(path_idx+1).getKey().equals(last_page_element.getKey())){
+	    				//filter expanded path
+	    				should_filter_path = true;
+	    				break;
+	    			}
+	    		}
+	    		if(should_filter_path){
+	    			break;
+	    		}
+	    	}
+	    	if(!should_filter_path){
+	    		filtered_paths.add(path);
+	    	}
+    	}    	
+    	
+    	return filtered_paths;
+	}
+
+	/**
 	 * Produces all possible element, action combinations that can be produced from the given path
 	 * 
 	 * @throws MalformedURLException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public ArrayList<ExploratoryPath> expandPath(Test test)  {
+	public List<ExploratoryPath> expandPath(Test test)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
 		//get last page

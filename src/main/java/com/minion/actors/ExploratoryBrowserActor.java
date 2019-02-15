@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
@@ -39,6 +40,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
@@ -111,7 +113,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					Browser browser = null;
 					if (acct_msg.getData() instanceof ExploratoryPath){
 						ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-						browser = new Browser((String)acct_msg.getOptions().get("browser"));
+						browser = BrowserFactory.buildBrowser((String)acct_msg.getOptions().get("browser"), BrowserEnvironment.DISCOVERY);
 		
 						if(exploratory_path.getPathObjects() != null){
 							PageState result_page = null;
@@ -149,7 +151,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								int tries = 0;
 								do{
 									try{
-										browser = new Browser(browser.getBrowserName());
+										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
@@ -198,7 +200,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								  			break;
 							  			}catch(Exception e){
 							  				log.warn("Exception thrown while building parent path : " + e.getLocalizedMessage());
-							  				browser = new Browser(browser.getBrowserName());
+							  				browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 							  				results_match = false;
 							  			}
 							  			cnt++;

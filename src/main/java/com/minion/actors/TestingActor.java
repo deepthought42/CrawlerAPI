@@ -7,12 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.services.TestService;
 
@@ -53,14 +55,14 @@ public class TestingActor extends AbstractActor {
 		
 						final long pathCrawlStartTime = System.currentTimeMillis();
 		
-					  	Browser browser = new Browser((String)message.getOptions().get("browser"));
+					  	Browser browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
 		
 						PageState resulting_page = null;
 						if(test.getPathKeys() != null){
 							int cnt = 0;
 							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
-									browser = new Browser((String)message.getOptions().get("browser"));
+									browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 									break;
 								}catch(NullPointerException e){

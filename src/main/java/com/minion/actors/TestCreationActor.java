@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
@@ -31,6 +32,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DomainRepository;
@@ -106,7 +108,7 @@ public class TestCreationActor extends AbstractActor  {
 				    	do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
-					    	Browser browser = new Browser("chrome");
+					    	Browser browser = BrowserFactory.buildBrowser(domain.getDiscoveryBrowserName(), BrowserEnvironment.TEST);
 
 				    		try{
 				    			domain = buildTestPathFromPathJson(path, path_keys, path_objects, browser);

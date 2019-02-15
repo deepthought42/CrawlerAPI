@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
@@ -42,6 +43,7 @@ import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.ScreenshotSet;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AttributeRepository;
@@ -100,10 +102,28 @@ public class BrowserService {
 	 * @pre browser_name != null;
 	 * @pre !browser_name.isEmpty();
 	 */
+	@Deprecated
 	public Browser getConnection(String browser_name) throws MalformedURLException {
 		assert browser_name != null;
 		assert !browser_name.isEmpty();
 		return new Browser(browser_name);
+	}
+	
+	/**
+	 * retrieves a new browser connection
+	 * 
+	 * @param browser_name name of the browser (ie. firefox, chrome)
+	 * 
+	 * @return new {@link Browser} instance
+	 * @throws MalformedURLException
+	 * 
+	 * @pre browser_name != null;
+	 * @pre !browser_name.isEmpty();
+	 */
+	public Browser getConnection(String browser_name, BrowserEnvironment browser_env) throws MalformedURLException {
+		assert browser_name != null;
+		assert !browser_name.isEmpty();
+		return BrowserFactory.buildBrowser(browser_name, browser_env);
 	}
 	
 	/**

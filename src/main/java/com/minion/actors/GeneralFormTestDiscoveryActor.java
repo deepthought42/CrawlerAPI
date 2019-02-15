@@ -17,6 +17,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.PageElementRepository;
@@ -74,7 +75,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					  	
 					  	while(browser == null && cnt < Integer.MAX_VALUE){
 					  		try{
-						  		browser = new Browser(message.getOptions().get("browser").toString());
+						  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 						  		browser.navigateTo(page.getUrl());
 						  		
 						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
@@ -119,7 +120,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 									final long pathCrawlStartTime = System.currentTimeMillis();
 									
 							  		log.info("Crawling potential form test path");
-							  		browser = new Browser(message.getOptions().get("browser").toString());
+							  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  		
 							  		cnt = 0;
 							  		PageState result_page = null;

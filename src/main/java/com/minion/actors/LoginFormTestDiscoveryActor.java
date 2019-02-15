@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
@@ -26,6 +27,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestUser;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.TestRepository;
@@ -146,13 +148,13 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								exploratory_path.addToPathKeys(submit_login.getKey());
 								
 								PageState result_page = null;
-								Browser browser = new Browser((String)message.getOptions().get("browser"));
+								Browser browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.DISCOVERY);
 								int tries = 0;
 								
 								do{
 									try{
 										log.info("Crawling path for login form test discovery");
-										browser = new Browser(browser.getBrowserName());
+										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){

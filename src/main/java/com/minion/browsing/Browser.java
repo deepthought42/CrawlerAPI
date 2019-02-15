@@ -53,18 +53,9 @@ public class Browser {
 
 	private WebDriver driver = null;
 	private String browser_name; 
-    
-	//GOOGLE CLOUD CLUSTER
-	private static final String HUB_IP_ADDRESS = "35.239.77.58:4444";
-	
-	// PRODUCTION HUB ADDRESS
-	//private static final String HUB_IP_ADDRESS= "142.93.192.184:4444";
-	
-	//STAGING HUB ADDRESS
-	//private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
-	
+
     public Browser(){}
-    
+
 	/**
 	 * 
 	 * @param url
@@ -79,7 +70,7 @@ public class Browser {
 	 * @pre url != null
 	 * @pre browser != null
 	 */
-	public Browser(String browser) throws MalformedURLException {
+	public Browser(String browser, URL hub_node_url) throws MalformedURLException {
 		assert browser != null;
 		
 		int cnt = 0;
@@ -87,19 +78,19 @@ public class Browser {
 		while(driver == null && cnt < Integer.MAX_VALUE){
 			try{
 				if(browser.equals("chrome")){
-					this.driver = openWithChrome();
+					this.driver = openWithChrome(hub_node_url);
 				}
 				else if(browser.equals("firefox")){
-					this.driver = openWithFirefox();
+					this.driver = openWithFirefox(hub_node_url);
 				}
 				else if(browser.equals("internet_explorer")){
-					this.driver = openWithInternetExplorer();
+					this.driver = openWithInternetExplorer(hub_node_url);
 				}
 				else if(browser.equals("safari")){
-					this.driver = openWithSafari();
+					this.driver = openWithSafari(hub_node_url);
 				}
 				else if(browser.equals("opera")){
-					this.driver = openWithOpera();
+					this.driver = openWithOpera(hub_node_url);
 				}
 				return;
 			}
@@ -175,12 +166,11 @@ public class Browser {
 	 * @return firefox web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithFirefox() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithFirefox(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 		FirefoxOptions options = new FirefoxOptions();
 		//options.setHeadless(true);
 
-	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), options);
+	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
@@ -195,13 +185,12 @@ public class Browser {
 	 * @return Opera web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithOpera() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithOpera(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 	    DesiredCapabilities cap = DesiredCapabilities.opera();
 	    cap.setBrowserName("opera");
 		cap.setJavascriptEnabled(true);
 
-	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -214,11 +203,10 @@ public class Browser {
 	 * @param url
 	 * @return safari web driver
 	 */
-	public static WebDriver openWithSafari() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithSafari(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, cap);
 	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 
 		return driver;
@@ -230,11 +218,10 @@ public class Browser {
 	 * @param url
 	 * @return internet explorer web driver
 	 */
-	public static WebDriver openWithInternetExplorer() throws MalformedURLException, UnreachableBrowserException, GridException {
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithInternetExplorer(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException {
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), capabilities);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, capabilities);
 		
 		return driver;
 	}
@@ -246,7 +233,7 @@ public class Browser {
 	 * @return Chrome web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithChrome() 
+	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
 		//options.setHeadless(true);
@@ -266,8 +253,7 @@ public class Browser {
 		}*/
 		
 		log.info("Requesting chrome remote driver from hub");
-        String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), options);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);

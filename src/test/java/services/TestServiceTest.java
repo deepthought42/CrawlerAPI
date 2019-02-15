@@ -55,7 +55,7 @@ public class TestServiceTest {
 	
 	@org.junit.Test
 	public void runTestIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException {
-		when(browser_service.getConnection(Matchers.anyString()), Matchers.anyObject()).thenReturn(new Browser());
+		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");
 		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state);
 		

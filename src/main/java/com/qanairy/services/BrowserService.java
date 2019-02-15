@@ -90,24 +90,6 @@ public class BrowserService {
 	private ElementRuleExtractor extractor;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
-
-	/**
-	 * retrieves a new browser connection
-	 * 
-	 * @param browser_name name of the browser (ie. firefox, chrome)
-	 * 
-	 * @return new {@link Browser} instance
-	 * @throws MalformedURLException
-	 * 
-	 * @pre browser_name != null;
-	 * @pre !browser_name.isEmpty();
-	 */
-	@Deprecated
-	public Browser getConnection(String browser_name) throws MalformedURLException {
-		assert browser_name != null;
-		assert !browser_name.isEmpty();
-		return new Browser(browser_name);
-	}
 	
 	/**
 	 * retrieves a new browser connection
@@ -142,7 +124,7 @@ public class BrowserService {
 			page_visited_successfully = false;
 
 			try{
-				Browser landable_browser = new Browser(browser);
+				Browser landable_browser = BrowserFactory.buildBrowser(browser, BrowserEnvironment.TEST);
 				landable_browser.navigateTo(page_state.getUrl());
 				
 				if(page_state.equals(buildPage(landable_browser))){

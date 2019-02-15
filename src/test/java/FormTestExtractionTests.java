@@ -4,8 +4,10 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.NumericRestrictionRule;
 import com.qanairy.models.rules.NumericRule;
@@ -33,7 +35,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = new Browser("chrome");
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
@@ -71,7 +73,7 @@ public class FormTestExtractionTests {
 		try {
 			BrowserService browser_service = new BrowserService();
 
-			browser = new Browser("chrome");
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
@@ -114,7 +116,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = new Browser("chrome");
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
@@ -156,7 +158,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = new Browser("chrome");
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			List<Form> form = browser_service.extractAllForms(page, browser);
 
@@ -189,7 +191,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = new Browser("chrome");
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			List<Form> form = browser_service.extractAllForms(page, browser);
 
@@ -223,7 +225,7 @@ public class FormTestExtractionTests {
 		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = new Browser("chrome");
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			List<Form> form = browser_service.extractAllForms(page, browser);
 

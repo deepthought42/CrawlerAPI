@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.models.Action;
@@ -27,7 +28,6 @@ import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 
 import akka.actor.AbstractActor;
 import akka.cluster.ClusterEvent.MemberRemoved;

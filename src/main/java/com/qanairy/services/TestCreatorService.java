@@ -21,6 +21,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
@@ -57,7 +58,7 @@ public class TestCreatorService {
 	public Test generate_landing_page_test(String browser_name, String discovery_key, String host, String url) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
-		Browser browser = new Browser(browser_name);
+		Browser browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo(url);
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());

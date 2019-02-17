@@ -92,12 +92,6 @@ public class TestCreationActor extends AbstractActor  {
 						JSONObject test_json = (JSONObject) acct_message.getData();
 				    	JSONArray path = (JSONArray) test_json.get("path");
 				    	String name = test_json.get("name").toString();
-
-				    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
-				    		Test old_test = test_repo.findByKey(test_json.get("key").toString());
-				    		old_test.setArchived(true);
-				    		test_repo.save(old_test);
-				    	}
 				    	
 				    	int attempts = 0;
 				    	Test test = null;				    	
@@ -121,9 +115,17 @@ public class TestCreationActor extends AbstractActor  {
 						    		test = test_repo.save(test);
 						    		domain.addTest(test);
 							    	domain_repo.save(domain);
+							    	
+							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
+								    	Test old_test = test_repo.findByKey(test_json.get("key").toString());
+							    		old_test.setArchived(true);
+							    		test_repo.save(old_test);
+								    }
 						    	}
 						    	else{
 						    		test = test_record;
+						    		test.setName(name);
+						    		test = test_repo.save(test);
 						    	}
 						    	
 						    	break;
@@ -177,16 +179,6 @@ public class TestCreationActor extends AbstractActor  {
     			}
     			
     			PageState page_state = navigateToAndCreatePageState(url, browser);
-    			JSONObject action_json = path_obj_json.getJSONObject("action");
-
-    			String action_type = action_json.getString("name");
-    			String action_value = action_json.getString("value");
-    			
-    			Action action = new Action(action_type, action_value);
-    			Action action_record = action_repo.findByKey(action.getKey());
-    			if(action_record != null){
-    				action = action_record;
-    			}
     			first_page = false;
     			path_keys.add(page_state.getKey());
     			path_objects.add(page_state);

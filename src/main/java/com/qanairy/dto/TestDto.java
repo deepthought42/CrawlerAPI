@@ -10,20 +10,22 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 
 /**
- * Data transfer object for {@link Test} object that is designed to comply with 
+ * Data transfer object for {@link Test} object that is designed to comply with
  * the data format for browser extensions
  */
 public class TestDto {
 	private String key;
+	private String name;
 	private List<Object> path;
-	
+
 	public TestDto(){}
-	
+
 	public TestDto(Test test){
 		setKey(test.getKey());
-		
+		setName(test.getName());
+
 		this.path = new ArrayList<Object>();
-		
+
 		List<PathObject> path_objects = test.getPathObjects();
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//order by key
@@ -34,12 +36,12 @@ public class TestDto {
 				}
 			}
 		}
-		
+
 		boolean first_page = true;
-		for(int idx = 0; idx < test.getPathObjects().size()-1; idx++){
+		for(int idx = 0; idx < ordered_path_objects.size(); idx++){
 			if(ordered_path_objects.get(idx).getType().equals("PageState") && first_page){
 				first_page = false;
-				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));	
+				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));
 			}
 			else if(ordered_path_objects.get(idx).getType().equals("PageElement")){
 				System.err.println("PATH OBJECT :: " + ordered_path_objects.get(idx));
@@ -62,5 +64,13 @@ public class TestDto {
 
 	public void setPath(List<Object> path) {
 		this.path = path;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

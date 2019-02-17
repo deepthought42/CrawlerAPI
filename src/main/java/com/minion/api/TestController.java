@@ -447,7 +447,7 @@ public class TestController {
 		for(Test group_test : group_list){
 			Browser browser;
 			try {
-				browser = new Browser(browser_name);
+				browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.TEST);
 				TestRecord record = TestingActor.runTest(group_test, browser);
 				group_records.add(record);
 			} catch (IOException e) {

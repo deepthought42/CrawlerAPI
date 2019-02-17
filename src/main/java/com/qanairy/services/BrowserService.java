@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
@@ -42,6 +43,7 @@ import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.ScreenshotSet;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AttributeRepository;
@@ -88,7 +90,7 @@ public class BrowserService {
 	private ElementRuleExtractor extractor;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
-
+	
 	/**
 	 * retrieves a new browser connection
 	 * 
@@ -100,10 +102,10 @@ public class BrowserService {
 	 * @pre browser_name != null;
 	 * @pre !browser_name.isEmpty();
 	 */
-	public Browser getConnection(String browser_name) throws MalformedURLException {
+	public Browser getConnection(String browser_name, BrowserEnvironment browser_env) throws MalformedURLException {
 		assert browser_name != null;
 		assert !browser_name.isEmpty();
-		return new Browser(browser_name);
+		return BrowserFactory.buildBrowser(browser_name, browser_env);
 	}
 	
 	/**
@@ -122,7 +124,7 @@ public class BrowserService {
 			page_visited_successfully = false;
 
 			try{
-				Browser landable_browser = new Browser(browser);
+				Browser landable_browser = BrowserFactory.buildBrowser(browser, BrowserEnvironment.TEST);
 				landable_browser.navigateTo(page_state.getUrl());
 				
 				if(page_state.equals(buildPage(landable_browser))){
@@ -187,7 +189,7 @@ public class BrowserService {
 		}
 		if(page_record != null){
 			page_state = page_record;
-			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(browser.getDriver().getPageSource()));
+			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
 		}
 		else{
 			log.info("Getting visible elements...");
@@ -211,7 +213,7 @@ public class BrowserService {
 			page_state = new PageState(	page_url.toString(),
 					screenshots,
 					visible_elements,
-					org.apache.commons.codec.digest.DigestUtils.sha256Hex(browser.getDriver().getPageSource()));
+					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
 			page_state.setLastLandabilityCheck(LocalDateTime.now());
 			page_state = page_state_repo.save(page_state);
 			

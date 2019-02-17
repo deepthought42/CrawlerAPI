@@ -32,7 +32,6 @@ public class MessageBroadcaster {
 		pusher.setCluster("us2");
 		pusher.setEncrypted(true);
 
-		test.getResult().setSrc("");
         //Object to JSON in String        
         ObjectMapper mapper = new ObjectMapper();
         String test_json = mapper.writeValueAsString(test);

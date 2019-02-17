@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.models.Action;
@@ -17,6 +18,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.PageElementRepository;
@@ -26,7 +28,6 @@ import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 
 import akka.actor.AbstractActor;
 import akka.cluster.ClusterEvent.MemberRemoved;
@@ -74,7 +75,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					  	
 					  	while(browser == null && cnt < Integer.MAX_VALUE){
 					  		try{
-						  		browser = new Browser(message.getOptions().get("browser").toString());
+						  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 						  		browser.navigateTo(page.getUrl());
 						  		
 						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
@@ -119,7 +120,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 									final long pathCrawlStartTime = System.currentTimeMillis();
 									
 							  		log.info("Crawling potential form test path");
-							  		browser = new Browser(message.getOptions().get("browser").toString());
+							  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  		
 							  		cnt = 0;
 							  		PageState result_page = null;

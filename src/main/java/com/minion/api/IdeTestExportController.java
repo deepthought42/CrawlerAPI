@@ -31,6 +31,8 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.AccountService;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -43,47 +45,53 @@ import akka.actor.ActorSystem;
 public class IdeTestExportController {
 	@SuppressWarnings("unused")
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
+
 	@Autowired
     private ActorSystem actor_system;
-   
+
 	@Autowired
 	private AccountRepository account_repo;
-	
+
+	@Autowired
+	private TestRepository test_repo;
+
+	@Autowired
+	private AccountService account_service;
+
 	@Autowired
 	private DomainRepository domain_repo;
-	
+
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
      *  {@link PageElement}s and {@link Action}s
-	 * 
+	 *
 	 * @param json_str JSON String
-	 * 
+	 *
 	 * @return A boolean value indicating that the system successfully created a {@link Test} using the provided JSON
-	 * 
+	 *
 	 * @throws Exception
 	 */
     @RequestMapping(method = RequestMethod.PUT)
     public ResponseEntity<Boolean> update(HttpServletRequest request,
-    									  @RequestBody(required=true) String json_str) 
+    									  @RequestBody(required=true) String json_str)
     										throws Exception {
-    
+
     	return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
     }
-    
+
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
      *  {@link PageElement}s and {@link Action}s
-	 * 
+	 *
 	 * @param json_str JSON String
-	 * 
+	 *
 	 * @return A boolean value indicating that the system successfully created a {@link Test} using the provided JSON
-	 * 
+	 *
 	 * @throws Exception
 	 */
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Boolean> create(HttpServletRequest request,
-    									  @RequestBody(required=true) String json_str) 
+    									  @RequestBody(required=true) String json_str)
     										throws Exception {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -91,20 +99,39 @@ public class IdeTestExportController {
 
     	JSONObject test_json = new JSONObject(json_str);
 
-    	String domain_url = test_json.getString("domain_url");
-    	Domain domain = domain_repo.findByHost(new URL(domain_url).getHost());
-    	
+    	String test_key = test_json.getString("key");
+    	Test test = test_repo.findByKey(test_key);
+    	if(test != null){
+    		test.setArchived(true);
+    		test_repo.save(test);
+    	}
+
+    	URL domain_url = new URL(test_json.getString("domain_url"));
+    	String host = domain_url.getHost();
+    	int dot_idx = host.indexOf('.');
+    	int last_dot_idx = host.lastIndexOf('.');
+    	String formatted_url = host;
+    	if(dot_idx == last_dot_idx){
+    		formatted_url = "www."+host;
+    	}
+    	Domain domain = domain_repo.findByHost(formatted_url);
+    	if(domain == null){
+    		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","");
+    		domain = domain_repo.save(domain);
+    	}
+
     	Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
-    	
+
+		account_service.addDomainToAccount(acct, domain);
 
 		Message<JSONObject> message = new Message<JSONObject>(acct.getUsername(), test_json, options);
 
 		ActorRef testCreationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("testCreationActor"), "test_creation_actor"+UUID.randomUUID());
-		
+
 		testCreationActor.tell(message, null);
-		
+
     	return new ResponseEntity<>(Boolean.TRUE, HttpStatus.ACCEPTED );
 	}
 }

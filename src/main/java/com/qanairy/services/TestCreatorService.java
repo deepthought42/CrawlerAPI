@@ -30,10 +30,10 @@ import com.qanairy.models.repository.PageStateRepository;
 public class TestCreatorService {
 	
 	@Autowired
-	DomainRepository domain_repo;
+	private DomainRepository domain_repo;
 	
 	@Autowired
-	PageStateRepository page_state_repo;
+	private PageStateRepository page_state_repo;
 	
 	@Autowired
 	private TestService test_service;
@@ -55,7 +55,7 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test generate_landing_page_test(String browser_name, String discovery_key, String host, String url) 
+	public Test generateLandingPageTest(String browser_name, String discovery_key, String host, String url) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		Browser browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
@@ -81,7 +81,7 @@ public class TestCreatorService {
 
 		Domain domain = domain_repo.findByHost( host);
 		
-		return createTest(path_keys, path_objects, page_obj, 1L, domain ,null, browser_name);
+		return createTest(path_keys, path_objects, page_obj, 1L, domain, browser_name);
 	}
 	
 	/**
@@ -89,7 +89,7 @@ public class TestCreatorService {
 	 * @param path
 	 * @param result_page
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, DiscoveryRecord discovery, String browser_name ) {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, String browser_name ) {
 		assert path_keys != null;
 		assert path_objects != null;
 		

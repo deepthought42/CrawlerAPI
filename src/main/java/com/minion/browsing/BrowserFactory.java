@@ -9,7 +9,7 @@ public class BrowserFactory {
 
 	//GOOGLE CLOUD CLUSTER
 	private static final String DISCOVERY_HUB_IP_ADDRESS = "35.239.77.58:4444";
-	private static final String TEST_HUB_IP_ADDRESS = "35.239.77.58:4444";
+	private static final String TEST_HUB_IP_ADDRESS = "34.73.96.186:4444";
 
 	// PRODUCTION HUB ADDRESS
 	//private static final String HUB_IP_ADDRESS= "142.93.192.184:4444";

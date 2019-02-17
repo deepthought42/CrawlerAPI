@@ -278,10 +278,6 @@ public class DomainController {
 		Set<PageElement> page_elem = domain_repo.getPageElements(host);
 		Set<Action> actions = domain_repo.getActions(host);
 		Set<PathObject> path_objects = new HashSet<PathObject>();
-		
-		for(PageState state : page_state){
-			state.setSrc(null);
-		}
 		//merge(page_state, page_elem, actions);
 
 		path_objects.addAll(page_state);

@@ -47,34 +47,34 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 /**
- * Creates new tests based on {@link JSONOBject} containing test steps as defined by the plugin 
+ * Creates new tests based on {@link JSONOBject} containing test steps as defined by the plugin
  */
 @Component
 @Scope("prototype")
 public class TestCreationActor extends AbstractActor  {
 	private static Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	
+
 	@Autowired
 	private BrowserService browser_service;
 
 	@Autowired
 	private DomainRepository domain_repo;
-	
+
 	@Autowired
 	private PageElementRepository page_element_repo;
-	
+
 	@Autowired
 	private TestRepository test_repo;
-	
+
 	@Autowired
 	private ActionRepository action_repo;
-	
-	
+
+
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 	      MemberEvent.class, UnreachableMember.class);
 	}
 
@@ -93,16 +93,10 @@ public class TestCreationActor extends AbstractActor  {
 				    	JSONArray path = (JSONArray) test_json.get("path");
 				    	String name = test_json.get("name").toString();
 
-				    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
-				    		Test old_test = test_repo.findByKey(test_json.get("key").toString());
-				    		old_test.setArchived(true);
-				    		test_repo.save(old_test);
-				    	}
-				    	
 				    	int attempts = 0;
-				    	Test test = null;				    	
+				    	Test test = null;
 				    	Domain domain = null;
-				    			
+
 				    	do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -110,22 +104,30 @@ public class TestCreationActor extends AbstractActor  {
 
 				    		try{
 				    			domain = buildTestPathFromPathJson(path, path_keys, path_objects, browser);
-						    	
+
 				    			PageState result_page = browser_service.buildPage(browser);
 						    	test = new Test(path_keys, path_objects, result_page, name);
 						    	test.setStatus(TestStatus.PASSING);
 						    	test.getBrowserStatuses().put("chrome", TestStatus.PASSING.toString());
-						    	
+
 						    	Test test_record = test_repo.findByKey(test.getKey());
 						    	if(test_record == null){
 						    		test = test_repo.save(test);
 						    		domain.addTest(test);
 							    	domain_repo.save(domain);
+
+							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
+								    	Test old_test = test_repo.findByKey(test_json.get("key").toString());
+							    		old_test.setArchived(true);
+							    		test_repo.save(old_test);
+								    }
 						    	}
 						    	else{
 						    		test = test_record;
+						    		test.setName(name);
+						    		test = test_repo.save(test);
 						    	}
-						    	
+
 						    	break;
 				    		}
 				    		catch(Exception e){
@@ -135,7 +137,7 @@ public class TestCreationActor extends AbstractActor  {
 				    		}
 				    		attempts++;
 				    	}while(test == null && attempts < 10000);
-				    	
+
 				    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct_message.getAccountKey());
 				    	MessageBroadcaster.broadcastTest(test, acct_message.getAccountKey());
 					}
@@ -149,7 +151,7 @@ public class TestCreationActor extends AbstractActor  {
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.info("Member is Removed: {}", mRemoved.member());
-				})	
+				})
 				.matchAny(o -> {
 					log.info("received unknown message");
 				})
@@ -166,7 +168,7 @@ public class TestCreationActor extends AbstractActor  {
     			System.err.println("PATH OBJECT IS A URL :: " + path_obj_json);
     			String url = path_obj_json.getString("url");
     			String host = new URL(url).getHost();
-    			
+
     			if(!first_page){
     				PageState page_state = browser_service.buildPage(browser);
     				path_keys.add(page_state.getKey());
@@ -179,9 +181,9 @@ public class TestCreationActor extends AbstractActor  {
     		    	if(dot_idx == last_dot_idx){
     		    		formatted_url = "www."+host;
     		    	}
-    				domain = domain_repo.findByHost(formatted_url);	
+    				domain = domain_repo.findByHost(formatted_url);
     			}
-    			
+
     			PageState page_state = navigateToAndCreatePageState(url, browser);
 
     			first_page = false;
@@ -191,7 +193,7 @@ public class TestCreationActor extends AbstractActor  {
     		else {
     			System.err.println("ELEMENT IN JSON :: " + path_obj_json.getJSONObject("element").toString());
     			JSONObject element_json = path_obj_json.getJSONObject("element");
-    			
+
     			PageElement element = createPageElement(element_json.getString("xpath"), browser);
     			//add to path
     			path_keys.add(element.getKey());
@@ -199,21 +201,21 @@ public class TestCreationActor extends AbstractActor  {
 
     			System.err.println("ACTION IN JSON ::  " + path_obj_json.getJSONObject("action"));
     			JSONObject action_json = path_obj_json.getJSONObject("action");
-    			
+
     			//create new action
     			//add action to Test
     			String action_type = action_json.getString("name");
     			String action_value = action_json.getString("value");
-    			
+
     			Action action = createAction(action_type, action_value);
     			path_keys.add(action.getKey());
     			path_objects.add(action);
-    			
+
     			Crawler.performAction(action, element, browser.getDriver());
-    			Timing.pauseThread(5000L);    			
-    			
+    			Timing.pauseThread(5000L);
+
     			//******************************************************
-    			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP. 
+    			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.
     			// IF NEXT OBJECT DOESN'T CONTAIN A URL, THEN CREATE NEW PAGE STATE
     			//******************************************************
 	        	if(idx+1 < path.length()){
@@ -237,12 +239,12 @@ public class TestCreationActor extends AbstractActor  {
 		if(action_record != null){
 			action = action_record;
 		}
-		
+
 		return action;
 	}
 
 	private PageElement createPageElement(String temp_xpath, Browser browser) throws Exception {
-		//use xpath to identify WebElement. 
+		//use xpath to identify WebElement.
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
 		Set<Attribute> attributes = browser_service.extractAttributes(element, browser.getDriver());
@@ -251,7 +253,7 @@ public class TestCreationActor extends AbstractActor  {
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
 		PageElement elem = new PageElement(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);
 		PageElement elem_record = page_element_repo.findByKey(elem.getKey());
-		
+
 		if(elem_record != null){
 			elem = elem_record;
 		}
@@ -260,19 +262,19 @@ public class TestCreationActor extends AbstractActor  {
 
 	/**
 	 * Navigates to url in the given browser
-	 * 
+	 *
 	 * @param url {@link String} value of {@link URL} object
-	 * @param isFirstPage 
+	 * @param isFirstPage
 	 * @param browser
 	 * @return
 	 * @throws GridException
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	private PageState navigateToAndCreatePageState(String url, Browser browser) 
+	private PageState navigateToAndCreatePageState(String url, Browser browser)
 									throws GridException, NoSuchAlgorithmException, IOException {
 		browser.navigateTo(url);
-		
+
 		//construct a new page
 		return browser_service.buildPage(browser);
 	}

@@ -13,7 +13,6 @@ import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageElement;
@@ -80,8 +79,11 @@ public class TestCreatorService {
 	  	path_objects.add(page_obj);
 
 		Domain domain = domain_repo.findByHost( host);
+		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser_name);
+		domain.addTest(test);
+		domain_repo.save(domain);
 		
-		return createTest(path_keys, path_objects, page_obj, 1L, domain, browser_name);
+		return test;
 	}
 	
 	/**
@@ -89,7 +91,7 @@ public class TestCreatorService {
 	 * @param path
 	 * @param result_page
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, String browser_name ) {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name ) {
 		assert path_keys != null;
 		assert path_objects != null;
 		

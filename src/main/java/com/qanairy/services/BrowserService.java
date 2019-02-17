@@ -189,7 +189,7 @@ public class BrowserService {
 		}
 		if(page_record != null){
 			page_state = page_record;
-			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(browser.getDriver().getPageSource()));
+			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
 		}
 		else{
 			log.info("Getting visible elements...");
@@ -213,7 +213,7 @@ public class BrowserService {
 			page_state = new PageState(	page_url.toString(),
 					screenshots,
 					visible_elements,
-					org.apache.commons.codec.digest.DigestUtils.sha256Hex(browser.getDriver().getPageSource()));
+					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
 			page_state.setLastLandabilityCheck(LocalDateTime.now());
 			page_state = page_state_repo.save(page_state);
 			

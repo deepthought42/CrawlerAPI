@@ -23,7 +23,6 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
-import com.qanairy.services.BrowserService;
 
 /**
  * Handles the saving of records into orientDB

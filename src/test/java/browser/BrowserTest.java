@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mortbay.log.Log;
 
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserFactory;
@@ -25,19 +24,6 @@ import com.qanairy.services.BrowserService;
  * 
  */
 public class BrowserTest {
-
-	@Test
-	public void retrieveChromeSource() throws MalformedURLException{
-		Browser browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.TEST);
-		browser.navigateTo("http://www.terran.us");
-		
-		String src = browser.getDriver().getPageSource();
-		browser.close();
-		System.err.println("PAGE SRCE ::   "+src);
-		//log.info("clean src: " +clean_src);
-		//Assert.assertTrue("<html><head></head></html>".equals(clean_src));
-	}
-	
 	
 	@Test
 	public void verifyCleanSrc(){

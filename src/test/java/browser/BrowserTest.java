@@ -1,7 +1,6 @@
 package browser;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,12 +11,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.ScreenshotSet;
-import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.services.BrowserService;
 
 /**

@@ -20,6 +20,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
@@ -63,7 +64,7 @@ public class TestService {
 		 boolean pages_dont_match = false;
 		 do{
 			 try {
-				Browser browser = browser_service.getConnection(browser_name.trim());
+				Browser browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);
 				
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
 				browser.close();

@@ -71,7 +71,7 @@ public class UrlBrowserActor extends AbstractActor {
 								String browser = message.getOptions().get("browser").toString();
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
-								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
+								Test test = test_creator_service.generateLandingPageTest(browser, discovery_key, host, url);
 								test = test_service.save(test, host);
 		
 								DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);

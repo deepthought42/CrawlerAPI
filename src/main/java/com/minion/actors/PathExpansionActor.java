@@ -140,7 +140,6 @@ public class PathExpansionActor extends AbstractActor {
 				  	}catch(Exception e){
 					
 					}
-					
 				}	
 			}
 			postStop();

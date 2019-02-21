@@ -8,12 +8,14 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -80,7 +82,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		
 					  		try{
 					  			System.err.println("Getting browser for form extraction");
-						  		browser = new Browser(message.getOptions().get("browser").toString());
+						  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 
 					  			System.err.println("navigating to url :: "+page_state.getUrl());
 						  		browser.navigateTo(page_state.getUrl());

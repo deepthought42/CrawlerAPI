@@ -94,7 +94,7 @@ public class TestCreationActor extends AbstractActor  {
 						JSONObject test_json = (JSONObject) acct_message.getData();
 				    	JSONArray path = (JSONArray) test_json.get("path");
 				    	String name = test_json.get("name").toString();
-
+				    	String browser_name = acct_message.getOptions().get("browser").toString();
 				    	int attempts = 0;
 				    	Test test = null;
 				    	Domain domain = null;
@@ -105,7 +105,7 @@ public class TestCreationActor extends AbstractActor  {
 					    	Browser browser = null;
 					    	
 				    		try{
-				    			browser = BrowserFactory.buildBrowser(domain.getDiscoveryBrowserName(), BrowserEnvironment.TEST);
+				    			browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.TEST);
 				    			domain = buildTestPathFromPathJson(path, path_keys, path_objects, browser);
 
 				    			PageState result_page = browser_service.buildPage(browser);
@@ -136,11 +136,12 @@ public class TestCreationActor extends AbstractActor  {
 				    		catch(Exception e){
 				    			log.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
 				    			e.printStackTrace();
-				    			browser.close();
+					    		if(browser != null){
+					    			browser.close();
+					    		}
 				    		}
-				    		browser.close();
 				    		attempts++;
-				    	}while(test == null && attempts < 10000);
+				    	}while(test == null && attempts < Integer.MAX_VALUE);
 
 				    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct_message.getAccountKey());
 				    	MessageBroadcaster.broadcastTest(test, acct_message.getAccountKey());
@@ -169,7 +170,6 @@ public class TestCreationActor extends AbstractActor  {
         	JSONObject path_obj_json = new JSONObject(path.get(idx).toString());
 
     		if(path_obj_json.has("url")){
-    			System.err.println("PATH OBJECT IS A URL :: " + path_obj_json);
     			String url = path_obj_json.getString("url");
     			String host = new URL(url).getHost();
 
@@ -195,7 +195,6 @@ public class TestCreationActor extends AbstractActor  {
     			path_objects.add(page_state);
     		}
     		else {
-    			System.err.println("ELEMENT IN JSON :: " + path_obj_json.getJSONObject("element").toString());
     			JSONObject element_json = path_obj_json.getJSONObject("element");
 
     			PageElement element = createPageElement(element_json.getString("xpath"), browser);
@@ -203,7 +202,6 @@ public class TestCreationActor extends AbstractActor  {
     			path_keys.add(element.getKey());
     			path_objects.add(element);
 
-    			System.err.println("ACTION IN JSON ::  " + path_obj_json.getJSONObject("action"));
     			JSONObject action_json = path_obj_json.getJSONObject("action");
 
     			//create new action

@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -131,8 +132,16 @@ public class Crawler {
 		boolean wasPerformedSuccessfully = true;
 
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
+		if(element.getLocation().getY() > driver.manage().window().getSize().getHeight()){
+			scrollDown(driver, element.getLocation().getY()-300);
+		}
 		actionFactory.execAction(element, action.getValue(), action.getName());
 		
 		return wasPerformedSuccessfully;
 	}
+	
+	public static void scrollDown(WebDriver driver, int distance) 
+    { 
+        ((JavascriptExecutor)driver).executeScript("scroll(0,"+ distance +");"); 
+    } 
 }

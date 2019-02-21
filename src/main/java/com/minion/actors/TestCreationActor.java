@@ -102,9 +102,10 @@ public class TestCreationActor extends AbstractActor  {
 				    	do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
-					    	Browser browser = BrowserFactory.buildBrowser(domain.getDiscoveryBrowserName(), BrowserEnvironment.TEST);
-
+					    	Browser browser = null;
+					    	
 				    		try{
+				    			browser = BrowserFactory.buildBrowser(domain.getDiscoveryBrowserName(), BrowserEnvironment.TEST);
 				    			domain = buildTestPathFromPathJson(path, path_keys, path_objects, browser);
 
 				    			PageState result_page = browser_service.buildPage(browser);
@@ -129,7 +130,7 @@ public class TestCreationActor extends AbstractActor  {
 						    		test.setName(name);
 						    		test = test_repo.save(test);
 						    	}
-
+						    	browser.close();
 						    	break;
 				    		}
 				    		catch(Exception e){
@@ -137,6 +138,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			e.printStackTrace();
 				    			browser.close();
 				    		}
+				    		browser.close();
 				    		attempts++;
 				    	}while(test == null && attempts < 10000);
 

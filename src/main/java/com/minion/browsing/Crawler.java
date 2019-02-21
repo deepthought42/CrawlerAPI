@@ -98,7 +98,6 @@ public class Crawler {
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
-				//boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
@@ -109,7 +108,7 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				Timing.pauseThread(10000L);
+				Timing.pauseThread(3000L);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");

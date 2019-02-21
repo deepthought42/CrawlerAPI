@@ -122,9 +122,9 @@ public class BrowserService {
 		int cnt  = 0;
 		do{
 			page_visited_successfully = false;
-
+			Browser landable_browser = null;
 			try{
-				Browser landable_browser = BrowserFactory.buildBrowser(browser, BrowserEnvironment.TEST);
+				landable_browser = BrowserFactory.buildBrowser(browser, BrowserEnvironment.TEST);
 				landable_browser.navigateTo(page_state.getUrl());
 				
 				if(page_state.equals(buildPage(landable_browser))){
@@ -145,6 +145,7 @@ public class BrowserService {
 				log.warn("ERROR CHECKING LANDABILITY OF PAGE AT ::: "+page_state.getUrl().toString());
 				log.warn(e.getMessage());
 			}
+			landable_browser.close();
 			cnt++;
 		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
 		

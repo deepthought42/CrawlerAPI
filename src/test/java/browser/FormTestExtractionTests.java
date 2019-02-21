@@ -114,7 +114,7 @@ public class FormTestExtractionTests {
 	//@Test
 	public void testAlphabeticRestrictionRuleExtractions() throws Exception{
 		//String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/alphabeticRestrictionForm.html";
-		Browser browser;
+		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
 			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
@@ -142,9 +142,11 @@ public class FormTestExtractionTests {
 			assert numeric_restrict_rule && special_char_restrict_rule;
 		} 
 		catch (MalformedURLException e) {
+			browser.close();
 			e.printStackTrace();
 		}
 		catch (IOException e){
+			browser.close();
 			e.printStackTrace();
 		}
 	}
@@ -223,7 +225,7 @@ public class FormTestExtractionTests {
 	//@Test
 	public void testMaxValueRuleExtractions() throws Exception{
 		//String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/maxValueFieldForm.html";
-		Browser browser;
+		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
 			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
@@ -241,9 +243,11 @@ public class FormTestExtractionTests {
 			assert max_value_rule;
 		} 
 		catch (MalformedURLException e) {
+			browser.close();
 			e.printStackTrace();
 		}
 		catch (IOException e){
+			browser.close();
 			e.printStackTrace();
 		}
 	}

@@ -1,6 +1,7 @@
 package browser;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,12 +9,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.Test;
+import org.mortbay.log.Log;
 
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.ScreenshotSet;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -21,7 +26,20 @@ import com.qanairy.services.BrowserService;
  */
 public class BrowserTest {
 
-	//@Test
+	@Test
+	public void retrieveChromeSource() throws MalformedURLException{
+		Browser browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.TEST);
+		browser.navigateTo("http://www.terran.us");
+		
+		String src = browser.getDriver().getPageSource();
+		browser.close();
+		System.err.println("PAGE SRCE ::   "+src);
+		//log.info("clean src: " +clean_src);
+		//Assert.assertTrue("<html><head></head></html>".equals(clean_src));
+	}
+	
+	
+	@Test
 	public void verifyCleanSrc(){
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
 		
@@ -29,7 +47,6 @@ public class BrowserTest {
 		//log.info("clean src: " +clean_src);
 		Assert.assertTrue("<html><head></head></html>".equals(clean_src));
 	}
-	
 	
 	//@Test
 	public void verifyGenerateConcatForXpath(){
@@ -70,7 +87,5 @@ public class BrowserTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
 	}
 }

@@ -103,6 +103,8 @@ public class MemoryRegistryActor extends AbstractActor{
 							element_repo.save(elem);
 						}
 					}
+					postStop();
+
 				})
 				.matchAny(o -> log.info("received unknown message"))
 				.build();	

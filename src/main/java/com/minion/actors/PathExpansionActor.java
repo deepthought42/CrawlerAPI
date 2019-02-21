@@ -154,7 +154,7 @@ public class PathExpansionActor extends AbstractActor {
 			log.info("Member is Removed: {}", mRemoved.member());
 		})	
 		.matchAny(o -> {
-			log.info("received unknown message");
+			log.info("received unknown message :: "+o.getClass().getName());
 		})
 		.build();
 	}

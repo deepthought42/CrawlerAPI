@@ -84,10 +84,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		path_object_lists.addAll(generateAllFormTestPaths(test, form));
 							  	}
 							  	
-							  	try{
-							  		browser.close();
-							  	}
-							  	catch(Exception e){}
+						  		browser.close();
 							  	
 							  	//Evaluate all tests now
 							  	List<Test> tests = new ArrayList<Test>();
@@ -136,10 +133,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		final long pathCrawlEndTime = System.currentTimeMillis();
 									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
 									
-									try{
-								  		browser.close();
-								  	}
-								  	catch(Exception e){}
+							  		browser.close();
 									
 							  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
 				
@@ -156,11 +150,14 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  	}
 								break;
 							}catch(Exception e){
+						  		browser.close();
 								log.warning(e.getLocalizedMessage());
 							}
 							cnt++;
 						}					  	
 					}
+					postStop();
+
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

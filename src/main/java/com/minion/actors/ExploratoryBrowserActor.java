@@ -110,10 +110,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message-> {
 					Message<?> acct_msg = (Message<?>)message;
-					Browser browser = null;
 					if (acct_msg.getData() instanceof ExploratoryPath){
+						Browser browser = null;
+
+						String browser_name = acct_msg.getOptions().get("browser").toString();
 						ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-						browser = BrowserFactory.buildBrowser((String)acct_msg.getOptions().get("browser"), BrowserEnvironment.DISCOVERY);
 		
 						if(exploratory_path.getPathObjects() != null){
 							PageState result_page = null;
@@ -151,11 +152,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								int tries = 0;
 								do{
 									try{
-										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
+										browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.DISCOVERY);
 										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
 										break;
 									}catch(NullPointerException e){
-										log.warn("Error happened while exploratory actor attempted to crawl test "+e.getLocalizedMessage());
+										log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
+										e.printStackTrace();
 									} catch (GridException e) {
 										log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 									} catch (WebDriverException e) {
@@ -199,6 +201,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								  			}
 								  			break;
 							  			}catch(Exception e){
+							  				browser.close();
 							  				log.warn("Exception thrown while building parent path : " + e.getLocalizedMessage());
 							  				browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 							  				results_match = false;

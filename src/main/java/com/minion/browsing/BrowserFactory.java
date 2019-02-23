@@ -19,19 +19,18 @@ public class BrowserFactory {
 	
 	
 	public static Browser buildBrowser(String browser, BrowserEnvironment environment) throws MalformedURLException{
-		
+		URL hub_url = null;
 		if(environment.equals(BrowserEnvironment.TEST)){
-			String hub_node_url = "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub";
-
-			return new Browser(browser, new URL(hub_node_url));
+			hub_url = new URL( "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub" );
 		}
 		else if(environment.equals(BrowserEnvironment.DISCOVERY)){
-			String hub_node_url = "http://"+DISCOVERY_HUB_IP_ADDRESS+"/wd/hub";
-
-			return new Browser(browser, new URL(hub_node_url));
+			System.err.println("Discovery enviroment...");
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS+"/wd/hub");
 		}
 		
-		return null;
+		System.err.println("done building browser :: " + environment);
+		
+		return new Browser(browser, hub_url);
 	}
 		
 }

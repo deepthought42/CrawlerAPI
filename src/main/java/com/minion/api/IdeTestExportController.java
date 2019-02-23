@@ -99,13 +99,15 @@ public class IdeTestExportController {
 
     	JSONObject test_json = new JSONObject(json_str);
 
-    	String test_key = test_json.getString("key");
-    	Test test = test_repo.findByKey(test_key);
-    	if(test != null){
-    		test.setArchived(true);
-    		test_repo.save(test);
+    	if(test_json.has("key")){
+    		String test_key = test_json.getString("key");
+    	
+	    	Test test = test_repo.findByKey(test_key);
+	    	if(test != null){
+	    		test.setArchived(true);
+	    		test_repo.save(test);
+	    	}
     	}
-
     	URL domain_url = new URL(test_json.getString("domain_url"));
     	String host = domain_url.getHost();
     	int dot_idx = host.indexOf('.');
@@ -122,7 +124,8 @@ public class IdeTestExportController {
 
     	Map<String, Object> options = new HashMap<String, Object>();
 		options.put("browser", domain.getDiscoveryBrowserName());
-
+		options.put("domain_key", domain.getKey());
+		
 		account_service.addDomainToAccount(acct, domain);
 
 		Message<JSONObject> message = new Message<JSONObject>(acct.getUsername(), test_json, options);

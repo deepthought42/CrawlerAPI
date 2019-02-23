@@ -55,8 +55,8 @@ public class TestingActor extends AbstractActor {
 		
 						final long pathCrawlStartTime = System.currentTimeMillis();
 		
-					  	Browser browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
-		
+					  	Browser browser = null;
+					  	
 						PageState resulting_page = null;
 						if(test.getPathKeys() != null){
 							int cnt = 0;
@@ -64,11 +64,13 @@ public class TestingActor extends AbstractActor {
 								try{
 									browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
+									browser.close();
 									break;
 								}catch(NullPointerException e){
 									log.error(e.getMessage());
 								}
-								
+								browser.close();
+
 								cnt++;
 							}
 						}
@@ -102,6 +104,8 @@ public class TestingActor extends AbstractActor {
 					else{
 						log.warn("ERROR : Message contains unknown format");
 					}
+					postStop();
+
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

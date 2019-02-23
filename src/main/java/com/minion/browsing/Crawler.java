@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -98,7 +99,6 @@ public class Crawler {
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
-				//boolean actionPerformedSuccessfully;
 				Action action = (Action)current_obj;
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
@@ -109,7 +109,7 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				Timing.pauseThread(10000L);
+				Timing.pauseThread(3000L);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -132,8 +132,16 @@ public class Crawler {
 		boolean wasPerformedSuccessfully = true;
 
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
+		if(element.getLocation().getY() > driver.manage().window().getSize().getHeight()){
+			scrollDown(driver, element.getLocation().getY()-300);
+		}
 		actionFactory.execAction(element, action.getValue(), action.getName());
 		
 		return wasPerformedSuccessfully;
 	}
+	
+	public static void scrollDown(WebDriver driver, int distance) 
+    { 
+        ((JavascriptExecutor)driver).executeScript("scroll(0,"+ distance +");"); 
+    } 
 }

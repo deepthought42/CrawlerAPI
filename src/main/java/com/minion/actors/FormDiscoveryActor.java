@@ -121,6 +121,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	browser.close();
 								break;
 							} catch(Exception e){
+								browser.close();
 						  		log.warning(e.getMessage());
 						  	}
 							cnt++;

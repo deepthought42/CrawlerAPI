@@ -75,6 +75,10 @@ public class TestCreatorService {
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
 	  	
+	  	PageState page_rec = page_state_repo.findByKey(page_obj.getKey());
+	  	if(page_rec != null){
+	  		page_obj = page_rec;
+	  	}
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_objects.add(page_obj);
 

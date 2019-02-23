@@ -148,7 +148,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								exploratory_path.addToPathKeys(submit_login.getKey());
 								
 								PageState result_page = null;
-								Browser browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.DISCOVERY);
+								Browser browser = null;
 								int tries = 0;
 								
 								do{
@@ -156,6 +156,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										log.info("Crawling path for login form test discovery");
 										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
+								  		browser.close();
 										break;
 									}catch(NullPointerException e){
 										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
@@ -167,7 +168,8 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									} catch (NoSuchAlgorithmException e) {
 										e.printStackTrace();
 									}
-									tries++;
+							  		browser.close();
+							  		tries++;
 								}while(result_page == null && tries < Integer.MAX_VALUE);
 						
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
@@ -184,6 +186,8 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							}
 						}
 					}
+					postStop();
+
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

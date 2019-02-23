@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.Test;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.PageElement;
@@ -20,8 +21,8 @@ import com.qanairy.services.BrowserService;
  * 
  */
 public class BrowserTest {
-
-	//@Test
+	
+	@Test
 	public void verifyCleanSrc(){
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
 		
@@ -29,7 +30,6 @@ public class BrowserTest {
 		//log.info("clean src: " +clean_src);
 		Assert.assertTrue("<html><head></head></html>".equals(clean_src));
 	}
-	
 	
 	//@Test
 	public void verifyGenerateConcatForXpath(){
@@ -70,7 +70,5 @@ public class BrowserTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
 	}
 }

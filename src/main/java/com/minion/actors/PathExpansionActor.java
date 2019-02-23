@@ -115,7 +115,6 @@ public class PathExpansionActor extends AbstractActor {
 					}
 					else{
 						pathExpansions = expandPath(test);
-						System.err.println(pathExpansions.size()+"   path expansions found.");
 
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)

@@ -49,6 +49,7 @@ import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.EmailService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -66,6 +67,9 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class ExploratoryBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 
+	@Autowired
+	private EmailService email_service;
+	
 	@Autowired
 	private ActorSystem actor_system;
 	
@@ -237,6 +241,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 					  		discovery_record.setLastPathRanAt(new Date());
 					  		discovery_record = discovery_repo.save(discovery_record);
+					  		
+					  		//send email if this is the last test
+					  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
+						    	email_service.sendSimpleMessage("bkindred@qanairy.com", "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
+							}
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						  	}catch(Exception e){

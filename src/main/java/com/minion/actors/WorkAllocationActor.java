@@ -82,6 +82,7 @@ public class WorkAllocationActor extends AbstractActor  {
 						testing_actor.tell(acct_message, getSelf() );
 					}
 					getSender().tell("Status: ok", getSelf());
+					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

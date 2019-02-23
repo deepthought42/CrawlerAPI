@@ -13,7 +13,6 @@ import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageElement;
@@ -21,6 +20,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
@@ -29,10 +29,10 @@ import com.qanairy.models.repository.PageStateRepository;
 public class TestCreatorService {
 	
 	@Autowired
-	DomainRepository domain_repo;
+	private DomainRepository domain_repo;
 	
 	@Autowired
-	PageStateRepository page_state_repo;
+	private PageStateRepository page_state_repo;
 	
 	@Autowired
 	private TestService test_service;
@@ -54,10 +54,10 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test generate_landing_page_test(String browser_name, String discovery_key, String host, String url) 
+	public Test generateLandingPageTest(String browser_name, String discovery_key, String host, String url) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
-		Browser browser = new Browser(browser_name);
+		Browser browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo(url);
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
@@ -75,12 +75,19 @@ public class TestCreatorService {
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
 	  	
+	  	PageState page_rec = page_state_repo.findByKey(page_obj.getKey());
+	  	if(page_rec != null){
+	  		page_obj = page_rec;
+	  	}
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_objects.add(page_obj);
 
 		Domain domain = domain_repo.findByHost( host);
+		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser_name);
+		domain.addTest(test);
+		domain_repo.save(domain);
 		
-		return createTest(path_keys, path_objects, page_obj, 1L, domain ,null, browser_name);
+		return test;
 	}
 	
 	/**
@@ -88,7 +95,7 @@ public class TestCreatorService {
 	 * @param path
 	 * @param result_page
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Domain domain, DiscoveryRecord discovery, String browser_name ) {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name ) {
 		assert path_keys != null;
 		assert path_objects != null;
 		

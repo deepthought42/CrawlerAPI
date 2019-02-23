@@ -125,7 +125,7 @@ public class TestController {
 		if(firefox_status!=null && !firefox_status.isEmpty()){
 			browser_statuses.put("firefox", TestStatus.valueOf(firefox_status.toUpperCase()).toString());
 			
-			if(firefox_status.toLowerCase().equals("failing")){
+			if(firefox_status.equalsIgnoreCase("failing")){
 				status = TestStatus.FAILING;
 			}
 			else{
@@ -134,7 +134,7 @@ public class TestController {
 		}
 		if(chrome_status!=null && !chrome_status.isEmpty()){
 			browser_statuses.put("chrome", chrome_status.toUpperCase());
-			if(chrome_status.toLowerCase().equals("failing")){
+			if(chrome_status.equalsIgnoreCase("failing")){
 				status = TestStatus.FAILING;
 			}
 			else{
@@ -221,7 +221,13 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	return domain_repo.getUnverifiedTests(url);
+    	Set<Test> tests = domain_repo.getUnverifiedTests(url);
+    	
+    	for(Test test : tests){
+    		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey());
+    		test.setRecords(records);
+    	}
+    	return tests;
 	}
 
 	/**
@@ -276,7 +282,7 @@ public class TestController {
      * @param itest
      */
 	private void updateLastTestRecordPassingStatus(Test test) {
-		Set<TestRecord> test_records = test.getRecords();
+		List<TestRecord> test_records = test.getRecords();
 		Date last_ran_at = new Date(0L);
 		TestRecord last_record = null;
 		for(TestRecord test_record : test_records){
@@ -396,7 +402,7 @@ public class TestController {
 					break;
 				}
 				else if(status.equals(TestStatus.UNVERIFIED.toString())){
-					is_passing = TestStatus.FAILING;
+					is_passing = TestStatus.UNVERIFIED;
 					break;
 				}
 			}
@@ -446,7 +452,7 @@ public class TestController {
 		for(Test group_test : group_list){
 			Browser browser;
 			try {
-				browser = new Browser(browser_name);
+				browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.TEST);
 				TestRecord record = TestingActor.runTest(group_test, browser);
 				group_records.add(record);
 			} catch (IOException e) {

@@ -23,7 +23,6 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
-import com.qanairy.services.BrowserService;
 
 /**
  * Handles the saving of records into orientDB
@@ -103,6 +102,8 @@ public class MemoryRegistryActor extends AbstractActor{
 							element_repo.save(elem);
 						}
 					}
+					postStop();
+
 				})
 				.matchAny(o -> log.info("received unknown message"))
 				.build();	

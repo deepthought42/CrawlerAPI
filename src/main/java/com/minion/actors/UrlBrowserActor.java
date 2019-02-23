@@ -61,6 +61,7 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
+					System.err.println("URL ACTOR RECIEVED MESSAGE :: "+message.getData().getClass().getName());
 					if(message.getData() instanceof URL){
 						
 						String discovery_key = message.getOptions().get("discovery_key").toString();
@@ -71,7 +72,7 @@ public class UrlBrowserActor extends AbstractActor {
 								String browser = message.getOptions().get("browser").toString();
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
-								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
+								Test test = test_creator_service.generateLandingPageTest(browser, discovery_key, host, url);
 								test = test_service.save(test, host);
 		
 								DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
@@ -111,7 +112,8 @@ public class UrlBrowserActor extends AbstractActor {
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
-		
+					postStop();
+
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

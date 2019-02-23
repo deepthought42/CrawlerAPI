@@ -60,6 +60,8 @@ public class FormTestDiscoveryActor extends AbstractActor {
 							generalFormTestDiscoveryActor.tell(message, getSelf() );
 						}
 					}
+					postStop();
+
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

@@ -43,7 +43,6 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.utils.ImageUtils;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -53,24 +52,10 @@ public class Browser {
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
 
 	private WebDriver driver = null;
-	//private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
-
-	//private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
 	private String browser_name; 
-    //private static final String DISCOVERY_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-    
-	//GOOGLE CLOUD CLUSTER
-	private static final String HUB_IP_ADDRESS = "35.239.77.58:4444";
-	
-	// PRODUCTION HUB ADDRESS
-	//private static final String HUB_IP_ADDRESS= "142.93.192.184:4444";
-	
-	//STAGING HUB ADDRESS
-	//private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
-	
+
     public Browser(){}
-    
+
 	/**
 	 * 
 	 * @param url
@@ -85,7 +70,7 @@ public class Browser {
 	 * @pre url != null
 	 * @pre browser != null
 	 */
-	public Browser(String browser) throws MalformedURLException {
+	public Browser(String browser, URL hub_node_url) throws MalformedURLException {
 		assert browser != null;
 		
 		int cnt = 0;
@@ -93,20 +78,22 @@ public class Browser {
 		while(driver == null && cnt < Integer.MAX_VALUE){
 			try{
 				if(browser.equals("chrome")){
-					this.driver = openWithChrome();
+					this.driver = openWithChrome(hub_node_url);
 				}
 				else if(browser.equals("firefox")){
-					this.driver = openWithFirefox();
+					System.err.println("creating firefox browser");
+					this.driver = openWithFirefox(hub_node_url);
 				}
 				else if(browser.equals("internet_explorer")){
-					this.driver = openWithInternetExplorer();
+					this.driver = openWithInternetExplorer(hub_node_url);
 				}
 				else if(browser.equals("safari")){
-					this.driver = openWithSafari();
+					this.driver = openWithSafari(hub_node_url);
 				}
 				else if(browser.equals("opera")){
-					this.driver = openWithOpera();
+					this.driver = openWithOpera(hub_node_url);
 				}
+				System.err.println("returning "+browser+" instance");
 				return;
 			}
 			catch(UnreachableBrowserException e){
@@ -120,7 +107,6 @@ public class Browser {
 			}
 
 			cnt++;
-			Timing.pauseThread(1000);
 		}
 	}
 	
@@ -131,22 +117,19 @@ public class Browser {
 		return this.driver;
 	}
 
+	/**
+	 * Navigates to a given url and waits for it the readyState to be complete
+	 * 
+	 * @param url
+	 */
 	public void navigateTo(String url){
 		System.err.println("Navigating to url.... " +url);
 		getDriver().get(url);
 
-		try{
-			new WebDriverWait(getDriver(), 600).until(
-					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-			
-		}catch(GridException e){
-			log.warn("Grid exception occurrred while navigating to page  --  "+e.getMessage());
-		}
-		catch(Exception e){
-			log.warn("An unknown exception occurred while navigating to page --  "+e.getMessage());
-		}
+		new WebDriverWait(getDriver(), 600).until(
+				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 		
-		Timing.pauseThread(5000);
+		Timing.pauseThread(1000);
 	}
 
 	/**
@@ -184,12 +167,12 @@ public class Browser {
 	 * @return firefox web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithFirefox() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithFirefox(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 		FirefoxOptions options = new FirefoxOptions();
 		//options.setHeadless(true);
-
-	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), options);
+		System.err.println("retrieving firefox url :  "+hub_node_url.toString());
+	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
+		System.err.println("retrieved firefox using url :  "+hub_node_url.toString());
 	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
@@ -204,13 +187,12 @@ public class Browser {
 	 * @return Opera web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithOpera() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithOpera(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 	    DesiredCapabilities cap = DesiredCapabilities.opera();
 	    cap.setBrowserName("opera");
 		cap.setJavascriptEnabled(true);
 
-	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -223,11 +205,10 @@ public class Browser {
 	 * @param url
 	 * @return safari web driver
 	 */
-	public static WebDriver openWithSafari() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithSafari(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, cap);
 	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 
 		return driver;
@@ -239,11 +220,10 @@ public class Browser {
 	 * @param url
 	 * @return internet explorer web driver
 	 */
-	public static WebDriver openWithInternetExplorer() throws MalformedURLException, UnreachableBrowserException, GridException {
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithInternetExplorer(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException {
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), capabilities);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, capabilities);
 		
 		return driver;
 	}
@@ -255,7 +235,7 @@ public class Browser {
 	 * @return Chrome web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithChrome() 
+	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
 		//options.setHeadless(true);
@@ -275,8 +255,7 @@ public class Browser {
 		}*/
 		
 		log.info("Requesting chrome remote driver from hub");
-        String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), options);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
@@ -474,6 +453,23 @@ public class Browser {
 	public static void outlineElement(PageElement page_element, WebDriver driver) {
 		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
+	}
+	
+	/**
+	 * Finds page element by xpath
+	 * 
+	 * @param xpath
+	 * 
+	 * @return {@link WebElement} located at the provided xpath
+	 * 
+	 * @pre xpath != null
+	 * @pre !xpath.isEmpty()
+	 */
+	public WebElement findWebElementByXpath(String xpath){
+		assert xpath != null;
+		assert !xpath.isEmpty();
+		
+		return driver.findElement(By.xpath(xpath));
 	}
 	
 	/**

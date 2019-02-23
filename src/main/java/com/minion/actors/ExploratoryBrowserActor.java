@@ -244,7 +244,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					  		
 					  		//send email if this is the last test
 					  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
-						    	email_service.sendSimpleMessage("bkindred@qanairy.com", "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
+						    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
 							}
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);

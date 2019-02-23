@@ -111,7 +111,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			PageState result_page = browser_service.buildPage(browser);
 						    	test = new Test(path_keys, path_objects, result_page, name);
 						    	test.setStatus(TestStatus.PASSING);
-						    	test.getBrowserStatuses().put("chrome", TestStatus.PASSING.toString());
+						    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
 
 						    	Test test_record = test_repo.findByKey(test.getKey());
 						    	if(test_record == null){
@@ -198,9 +198,17 @@ public class TestCreationActor extends AbstractActor  {
     			JSONObject element_json = path_obj_json.getJSONObject("element");
 
     			PageElement element = createPageElement(element_json.getString("xpath"), browser);
+
+    			PageElement page_elem_record = page_element_repo.findByKey(element.getKey());
+    			if(page_elem_record == null){
+					path_objects.add(element);
+				}
+				else{
+					element = page_elem_record;
+				}
+    			
     			//add to path
     			path_keys.add(element.getKey());
-    			path_objects.add(element);
 
     			JSONObject action_json = path_obj_json.getJSONObject("action");
 

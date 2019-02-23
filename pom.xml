@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  <version>0.1.16</version>
+  	<version>0.1.17</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 
@@ -222,12 +222,6 @@
 		  <version>1.7.0</version>
 		</dependency>
 
-		<!-- Rest Assured, Hamcrest, and Extent Reports -->
-    	<dependency>
-	  		<groupId>com.jayway.restassured</groupId>
-	  		<artifactId>json-schema-validator</artifactId>
-	  		<version>2.9.0</version>
-  		</dependency>
   		<dependency>
 	  		<groupId>com.jayway.restassured</groupId>
 	  		<artifactId>json-path</artifactId>

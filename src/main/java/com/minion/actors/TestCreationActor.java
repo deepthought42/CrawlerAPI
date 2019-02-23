@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
@@ -92,7 +94,7 @@ public class TestCreationActor extends AbstractActor  {
 				.match(Message.class, acct_message -> {
 					if(acct_message.getData() instanceof JSONObject){
 						JSONObject test_json = (JSONObject) acct_message.getData();
-				    	JSONArray path = (JSONArray) test_json.get("path");
+				    	JSONArray path_json = (JSONArray) test_json.get("path");
 				    	String name = test_json.get("name").toString();
 				    	String browser_name = acct_message.getOptions().get("browser").toString();
 				    	int attempts = 0;
@@ -106,15 +108,26 @@ public class TestCreationActor extends AbstractActor  {
 					    	
 				    		try{
 				    			browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.TEST);
-				    			domain = buildTestPathFromPathJson(path, path_keys, path_objects, browser);
-
+				    			long start_time = System.currentTimeMillis();
+				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
+				    			long end_time = System.currentTimeMillis();
+				    			
 				    			PageState result_page = browser_service.buildPage(browser);
 						    	test = new Test(path_keys, path_objects, result_page, name);
-						    	test.setStatus(TestStatus.PASSING);
-						    	test.getBrowserStatuses().put("chrome", TestStatus.PASSING.toString());
-
+						    	
 						    	Test test_record = test_repo.findByKey(test.getKey());
 						    	if(test_record == null){
+						    		TestRecord test_record_record = new TestRecord();
+						    		test_record_record.setBrowser(browser_name);
+						    		test_record_record.setRanAt(new Date());
+						    		test_record_record.setResult(result_page);
+						    		test_record_record.setRunTime(end_time-start_time);
+						    		test_record_record.setStatus(TestStatus.PASSING);
+						    		
+						    		test.addRecord(test_record_record);
+						    		test.setStatus(TestStatus.PASSING);
+							    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
+				
 						    		test = test_repo.save(test);
 						    		domain.addTest(test);
 							    	domain_repo.save(domain);

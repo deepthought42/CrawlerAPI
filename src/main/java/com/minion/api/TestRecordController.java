@@ -29,7 +29,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public class TestRecordController {
 
 	@Autowired
-	TestRecordRepository test_record_repo;
+	private TestRecordRepository test_record_repo;
 	
 	/**
  	 * Retrieves list of all test records for a test from the database

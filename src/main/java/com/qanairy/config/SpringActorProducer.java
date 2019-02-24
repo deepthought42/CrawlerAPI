@@ -8,8 +8,8 @@ import akka.actor.IndirectActorProducer;
  * An actor producer that lets Spring create the Actor instances.
  */
 public class SpringActorProducer implements IndirectActorProducer {
-  final ApplicationContext applicationContext;
-  final String actorBeanName;
+  private final ApplicationContext applicationContext;
+  private final String actorBeanName;
 
   public SpringActorProducer(ApplicationContext applicationContext,
                              String actorBeanName) {

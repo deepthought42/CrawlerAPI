@@ -77,19 +77,19 @@ public class Browser {
 		this.setBrowserName(browser);
 		while(driver == null && cnt < Integer.MAX_VALUE){
 			try{
-				if(browser.equals("chrome")){
+				if("chrome".equals(browser)){
 					this.driver = openWithChrome(hub_node_url);
 				}
-				else if(browser.equals("firefox")){
+				else if("firefox".equals(browser)){
 					this.driver = openWithFirefox(hub_node_url);
 				}
-				else if(browser.equals("internet_explorer")){
+				else if("internet_explorer".equals(browser)){
 					this.driver = openWithInternetExplorer(hub_node_url);
 				}
-				else if(browser.equals("safari")){
+				else if("safari".equals(browser)){
 					this.driver = openWithSafari(hub_node_url);
 				}
-				else if(browser.equals("opera")){
+				else if("opera".equals(browser)){
 					this.driver = openWithOpera(hub_node_url);
 				}
 				System.err.println("returning "+browser+" instance");
@@ -367,31 +367,9 @@ public class Browser {
 		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
 	}
 	
-	
-	/**
-	 * Checks if element is visible in a given screenshot
-	 * 
-	 * @param screenshot
-	 * @param elem
-	 * @return
-	 * @throws IOException
-	 */
-	private static boolean isElementVisibleInPane(BufferedImage screenshot, WebElement elem) throws IOException {
-		Dimension weD = elem.getSize();
-	    Point weP = elem.getLocation();
-
-	    int x = screenshot.getWidth();;
-	    int y = screenshot.getHeight();
-	    int x2 = weD.getWidth() + weP.getX();
-	    int y2 = weD.getHeight() + weP.getY();
-
-	    return x2 <= x && y2 <= y && weD.getWidth()>0 && weD.getHeight()>0;
-	}
-	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
 		return null;
 	}
-	
 	
 	public static PageElement findLabelFor(Set<PageElement> elements, String for_id){
 		for(PageElement elem : elements){

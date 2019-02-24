@@ -124,12 +124,14 @@ public class TestService {
 			}
 		}
 		else{
+			
 			log.info("Test already exists  !!!!!!!");
 			try {
 				MessageBroadcaster.broadcastTest(test, host_url);
 			} catch (JsonProcessingException e) {
 				log.error(e.getLocalizedMessage());
-			}			
+			}
+			test = record;
 		}
 		
 		return test;

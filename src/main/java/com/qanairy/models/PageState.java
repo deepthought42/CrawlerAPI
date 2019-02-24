@@ -180,7 +180,6 @@ public class PageState implements Persistable, PathObject {
 	 * @pre page != null
 	 * @return boolean value
 	 * 
-	 * @NOTE :: TODO :: add in ability to differentiate screenshots
 	 */
 	@Override
 	public boolean equals(Object o) {

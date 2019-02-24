@@ -81,7 +81,6 @@ public class Browser {
 					this.driver = openWithChrome(hub_node_url);
 				}
 				else if(browser.equals("firefox")){
-					System.err.println("creating firefox browser");
 					this.driver = openWithFirefox(hub_node_url);
 				}
 				else if(browser.equals("internet_explorer")){
@@ -170,9 +169,7 @@ public class Browser {
 	public static WebDriver openWithFirefox(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 		FirefoxOptions options = new FirefoxOptions();
 		//options.setHeadless(true);
-		System.err.println("retrieving firefox url :  "+hub_node_url.toString());
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
-		System.err.println("retrieved firefox using url :  "+hub_node_url.toString());
 	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);

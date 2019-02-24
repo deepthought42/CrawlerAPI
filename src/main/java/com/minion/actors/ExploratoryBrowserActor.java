@@ -181,7 +181,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
+								if(!ExploratoryPath.hasCycle(path.getPathObjects(), result_page)){
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
@@ -341,7 +341,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 */
 	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
 		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
-		return parent_result.getKey().equals(result_page.getKey());
+		return parent_result.equals(result_page);
 	}
 	
 	/**

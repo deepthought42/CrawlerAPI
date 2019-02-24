@@ -38,7 +38,6 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
-import com.qanairy.services.EmailService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 

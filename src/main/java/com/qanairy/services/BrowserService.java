@@ -53,9 +53,6 @@ import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.RuleRepository;
 import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
-import com.qanairy.utils.ImageUtils;
-
-import akka.actor.ActorSystem;
 
 /**
  * 
@@ -64,9 +61,6 @@ import akka.actor.ActorSystem;
 @Component
 public class BrowserService {
 	private static Logger log = LoggerFactory.getLogger(BrowserService.class);
-	
-	@Autowired
-	private ActorSystem actor_system;
 	
 	@Autowired
 	private PageStateRepository page_state_repo;

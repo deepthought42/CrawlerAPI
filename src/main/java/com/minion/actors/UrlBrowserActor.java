@@ -21,14 +21,11 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.repository.TestRepository;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
 import com.qanairy.services.TestCreatorService;
-import com.qanairy.services.TestService;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -47,12 +44,6 @@ public class UrlBrowserActor extends AbstractActor {
 	
 	@Autowired
 	private TestCreatorService test_creator_service;
-	
-	@Autowired
-	private TestRepository test_repo;
-	
-	@Autowired
-	private TestService test_service;
 
 	@Autowired
 	private DiscoveryRecordRepository discovery_record_repo;

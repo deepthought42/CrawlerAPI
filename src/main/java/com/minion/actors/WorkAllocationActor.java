@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
@@ -41,9 +40,6 @@ public class WorkAllocationActor extends AbstractActor  {
 
 	@Autowired
 	private ActorSystem actor_system;
-
-	@Autowired
-	private DiscoveryRecordRepository discovery_record_repo;
 	
 	//subscribe to cluster changes
 	@Override

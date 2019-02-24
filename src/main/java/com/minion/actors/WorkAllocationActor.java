@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Test;
-import com.qanairy.models.repository.DiscoveryRecordRepository;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;

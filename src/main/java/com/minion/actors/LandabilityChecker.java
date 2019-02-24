@@ -1,18 +1,13 @@
 package com.minion.actors;
 
-import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
-import org.openqa.grid.common.exception.GridException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserFactory;
-import com.minion.util.Timing;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.PageStateRepository;

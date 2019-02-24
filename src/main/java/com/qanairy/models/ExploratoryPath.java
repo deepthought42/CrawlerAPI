@@ -71,18 +71,18 @@ public class ExploratoryPath {
 	 * 
 	 * @return true if sequence appears more than once
 	 */
-	public static boolean hasCycle(List<String> path_key_list, PageState page){
+	public static boolean hasCycle(List<PathObject> path_objects, PageState page){
 		assert page != null;
 	
-		if(path_key_list.size() <= 1){
+		if(path_objects.size() <= 1){
 			return false;
 		}
 		
 		//extract all pages
 		//iterate through pages to see if any match
 		log.info("Checking if exploratory path has a cycle");
-		for(String key : path_key_list){
-			if(key.equals(page.getKey())){
+		for(PathObject path_obj : path_objects){
+			if(path_obj.equals(page)){
 				return true;
 			}
 		}

@@ -1,3 +1,5 @@
+package services;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,9 +11,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.ScreenshotSet;
 
-
 public class BrowserServiceTest {
-
 	
 	public void verifySetMergeWorks() throws IOException{
 		Set<PageState> page_state = new HashSet<PageState>();

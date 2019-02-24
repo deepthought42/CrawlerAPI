@@ -84,8 +84,7 @@ public class TestCreatorService {
 
 		Domain domain = domain_repo.findByHost( host);
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser_name);
-		domain.addTest(test);
-		domain_repo.save(domain);
+		test = test_service.save(test, domain.getUrl());
 		
 		return test;
 	}

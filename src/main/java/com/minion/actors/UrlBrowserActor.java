@@ -21,13 +21,11 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
 import com.qanairy.services.TestCreatorService;
-import com.qanairy.services.TestService;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -46,9 +44,6 @@ public class UrlBrowserActor extends AbstractActor {
 	
 	@Autowired
 	private TestCreatorService test_creator_service;
-	
-	@Autowired
-	private TestService test_service;
 
 	@Autowired
 	private DiscoveryRecordRepository discovery_record_repo;
@@ -73,8 +68,7 @@ public class UrlBrowserActor extends AbstractActor {
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
 								Test test = test_creator_service.generateLandingPageTest(browser, discovery_key, host, url);
-								test = test_service.save(test, host);
-		
+								
 								DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
 								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
@@ -100,6 +94,7 @@ public class UrlBrowserActor extends AbstractActor {
 								break;								
 							}
 							catch(Exception e){
+								e.printStackTrace();
 								log.warn("Exception occurred while exploring url --  " + e.getMessage());
 							}
 						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);

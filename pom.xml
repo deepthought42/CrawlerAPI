@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  <version>0.1.15</version>
+  	<version>0.1.17</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 
@@ -222,12 +222,6 @@
 		  <version>1.7.0</version>
 		</dependency>
 
-		<!-- Rest Assured, Hamcrest, and Extent Reports -->
-    	<dependency>
-	  		<groupId>com.jayway.restassured</groupId>
-	  		<artifactId>json-schema-validator</artifactId>
-	  		<version>2.9.0</version>
-  		</dependency>
   		<dependency>
 	  		<groupId>com.jayway.restassured</groupId>
 	  		<artifactId>json-path</artifactId>
@@ -268,6 +262,17 @@
 			<version>2.9.2</version>
 		</dependency>
 
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-mail</artifactId>
+		    <version>${springboot.version}</version>
+		    <exclusions>
+		      <exclusion>  <!-- declare the exclusion here -->
+		        <groupId>org.freemarker</groupId>
+		        <artifactId>freemarker</artifactId>
+		      </exclusion>
+		    </exclusions>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>

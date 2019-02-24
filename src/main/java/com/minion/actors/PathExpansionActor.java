@@ -79,7 +79,7 @@ public class PathExpansionActor extends AbstractActor {
 			
 			if(message.getData() instanceof Test){				
 				Test test = (Test)message.getData();
-
+				System.err.println("expanding path");
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
 
@@ -88,7 +88,7 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	
-				if(	(!ExploratoryPath.hasCycle(test.getPathKeys(), test.getResult()) 
+				if(	(!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					
 					
@@ -115,7 +115,6 @@ public class PathExpansionActor extends AbstractActor {
 					}
 					else{
 						pathExpansions = expandPath(test);
-						System.err.println(pathExpansions.size()+"   path expansions found.");
 
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)

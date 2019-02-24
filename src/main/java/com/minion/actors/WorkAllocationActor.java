@@ -39,7 +39,7 @@ public class WorkAllocationActor extends AbstractActor  {
 
 	@Autowired
 	private ActorSystem actor_system;
-
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {

@@ -49,6 +49,7 @@ import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.EmailService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -66,6 +67,9 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class ExploratoryBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 
+	@Autowired
+	private EmailService email_service;
+	
 	@Autowired
 	private ActorSystem actor_system;
 	
@@ -177,7 +181,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								if(!ExploratoryPath.hasCycle(path.getPathKeys(), result_page)){
+								if(!ExploratoryPath.hasCycle(path.getPathObjects(), result_page)){
 							  		boolean results_match = false;
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
@@ -237,6 +241,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 					  		discovery_record.setLastPathRanAt(new Date());
 					  		discovery_record = discovery_repo.save(discovery_record);
+					  		
+					  		//send email if this is the last test
+					  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
+						    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
+							}
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						  	}catch(Exception e){
@@ -332,7 +341,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 */
 	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
 		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
-		return parent_result.getKey().equals(result_page.getKey());
+		return parent_result.equals(result_page);
 	}
 	
 	/**

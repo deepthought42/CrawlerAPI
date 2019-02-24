@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 
 @SpringBootTest
 public class ExploratoryPathTests {
@@ -28,10 +29,11 @@ public class ExploratoryPathTests {
 	
 	@Test
 	public void verifyEmptyPathReturnsFalse(){
-		List<String> path_key_list = new ArrayList<>();
+		List<PathObject> path_objects = new ArrayList<>();
+		
 		when(page.getKey()).thenReturn("this is a test key");
-
-		boolean isCycle = ExploratoryPath.hasCycle(path_key_list, page);
+		
+		boolean isCycle = ExploratoryPath.hasCycle(path_objects, page);
 		assertFalse(isCycle);
 
 	}
@@ -39,10 +41,10 @@ public class ExploratoryPathTests {
 	@Test
 	public void verifySingleNodePathReturnsFalse(){
 		when(page.getKey()).thenReturn("this is a test key");
-		List<String> path_key_list = new ArrayList<>();
-		path_key_list.add(page.getKey());
+		List<PathObject> path_objs= new ArrayList<>();
+		path_objs.add(page);
 		System.err.println("page  : " + page);
-		boolean isCycle = ExploratoryPath.hasCycle(path_key_list, page);
+		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page);
 		assertFalse(isCycle);
 	}
 	
@@ -50,25 +52,25 @@ public class ExploratoryPathTests {
 	public void verifyTwoConsecutiveEqualsNodeInPathReturnsTrue(){
 		when(page.getKey()).thenReturn("this is a test key");
 		page.setKey("this is a test key");
-		List<String> path_key_list = new ArrayList<>();
-		path_key_list.add(page.getKey());
-		path_key_list.add(page.getKey());
+		List<PathObject> path_objs = new ArrayList<>();
+		path_objs.add(page);
+		path_objs.add(page);
 
 		System.err.println("page  : " + page);
-		boolean isCycle = ExploratoryPath.hasCycle(path_key_list, page);
+		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page);
 		assertTrue(isCycle);
 	}
 	
 	@Test
 	public void verifyTwoEqualsNodeSeparatedByNullInPathReturnsTrue(){
 		when(page.getKey()).thenReturn("this is a test key");
-		List<String> path_key_list = new ArrayList<>();
-		path_key_list.add(page.getKey());
-		path_key_list.add(null);
-		path_key_list.add(page.getKey());
+		List<PathObject> path_objs = new ArrayList<>();
+		path_objs.add(page);
+		path_objs.add(null);
+		path_objs.add(page);
 
 		System.err.println("page  : " + page);
-		boolean isCycle = ExploratoryPath.hasCycle(path_key_list, page);
+		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page);
 		assertTrue(isCycle);
 	}
 }

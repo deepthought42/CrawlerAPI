@@ -62,7 +62,7 @@ import com.qanairy.models.TestRecord;
 @RequestMapping("/tests")
 public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
-
+	
     @Autowired
     private DomainRepository domain_repo;
     
@@ -414,8 +414,7 @@ public class TestController {
 			account_repo.save(acct);
 			MessageBroadcaster.broadcastTestStatus(host, record, test);
     	}
-		
-    	
+		    	
 		return test_results;
 	}
 

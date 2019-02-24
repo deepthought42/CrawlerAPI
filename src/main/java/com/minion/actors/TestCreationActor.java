@@ -105,16 +105,16 @@ public class TestCreationActor extends AbstractActor  {
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
 					    	Browser browser = null;
-					    	
+
 				    		try{
 				    			browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.TEST);
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
-				    			
+
 				    			PageState result_page = browser_service.buildPage(browser);
 						    	test = new Test(path_keys, path_objects, result_page, name);
-						    	
+
 						    	Test test_record = test_repo.findByKey(test.getKey());
 						    	if(test_record == null){
 						    		TestRecord test_record_record = new TestRecord();
@@ -123,11 +123,11 @@ public class TestCreationActor extends AbstractActor  {
 						    		test_record_record.setResult(result_page);
 						    		test_record_record.setRunTime(end_time-start_time);
 						    		test_record_record.setStatus(TestStatus.PASSING);
-						    		
+
 						    		test.addRecord(test_record_record);
 						    		test.setStatus(TestStatus.PASSING);
 							    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
-				
+
 						    		test = test_repo.save(test);
 						    		domain.addTest(test);
 							    	domain_repo.save(domain);
@@ -211,9 +211,17 @@ public class TestCreationActor extends AbstractActor  {
     			JSONObject element_json = path_obj_json.getJSONObject("element");
 
     			PageElement element = createPageElement(element_json.getString("xpath"), browser);
+
+    			PageElement page_elem_record = page_element_repo.findByKey(element.getKey());
+    			if(page_elem_record == null){
+					path_objects.add(element);
+				}
+				else{
+					element = page_elem_record;
+				}
+
     			//add to path
     			path_keys.add(element.getKey());
-    			path_objects.add(element);
 
     			JSONObject action_json = path_obj_json.getJSONObject("action");
 
@@ -227,7 +235,7 @@ public class TestCreationActor extends AbstractActor  {
     			path_objects.add(action);
 
     			Crawler.performAction(action, element, browser.getDriver());
-    			Timing.pauseThread(5000L);
+    			Timing.pauseThread(3000L);
 
     			//******************************************************
     			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.

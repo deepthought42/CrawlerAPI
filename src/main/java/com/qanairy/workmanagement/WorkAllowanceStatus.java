@@ -1,4 +1,4 @@
-package com.qanairy.workManagement;
+package com.qanairy.workmanagement;
 
 import java.util.HashMap;
 import java.util.Map;

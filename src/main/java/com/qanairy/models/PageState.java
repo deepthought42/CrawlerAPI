@@ -192,9 +192,11 @@ public class PageState implements Persistable, PathObject {
 
 		boolean pages_match = this.getKey().equals(that.getKey());
 		
+		/*
 		if(!pages_match){
 			pages_match = this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));
 		}
+		*/
 		//boolean sources_match = this.getSrc().equals(that.getSrc());
 
 		return pages_match;

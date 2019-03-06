@@ -1,4 +1,4 @@
-package com.qanairy.browsing.table;
+package com.minion.browsing.table;
 
 import java.util.List;
 import com.minion.browsing.PageElementNode;

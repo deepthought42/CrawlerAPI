@@ -21,6 +21,7 @@ import javax.imageio.ImageIO;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -271,7 +272,9 @@ public class BrowserService {
 					String checksum = "";
 					String screenshot = null;
 					try{
-						
+						if(!isElementVisibleInPane(elem, driver.manage().window().getSize())){
+							Browser.scrollToElement(driver, elem);
+						}
 						img = Browser.getElementScreenshot(driver, elem, Browser.getViewportScreenshot(driver));
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
@@ -281,7 +284,7 @@ public class BrowserService {
 						log.warn("Raster Format Exception : "+e.getMessage());
 					}
 					catch(Exception e){
-						
+						e.printStackTrace();
 					}
 					
 					Map<String, String> css_props = Browser.loadCssProperties(elem);
@@ -305,13 +308,13 @@ public class BrowserService {
 		return elementList;
 	}
 	
-	public boolean isElementVisibleInPane(WebElement elem, int panel_width, int panel_height){
+	public boolean isElementVisibleInPane(WebElement elem, Dimension window_size){
 		int x = elem.getLocation().getX();
 		int y = elem.getLocation().getY();
 		int height = elem.getSize().getHeight();
 		int width = elem.getSize().getWidth();
 		
-		if(x >= 0 && y >= 0 && (x+width) <= panel_width && (y+height) <= panel_height){
+		if(x >= 0 && y >= 0 && (x+width) <= window_size.getWidth() && (y+height) <= window_size.getHeight()){
 			return true;
 		}
 		return false;

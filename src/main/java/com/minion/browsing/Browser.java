@@ -127,8 +127,6 @@ public class Browser {
 
 		new WebDriverWait(getDriver(), 600).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		
-		Timing.pauseThread(1000);
 	}
 
 	/**
@@ -143,7 +141,12 @@ public class Browser {
 		assert src != null;
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-
+		Pattern link_pattern = Pattern.compile("<link (.*)></link>",
+	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+		Pattern script_pattern = Pattern.compile("<script (.*)></script>",
+	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+		src = script_pattern.matcher(src).replaceAll("");
+		src = link_pattern.matcher(src).replaceAll("");
 		return p.matcher(src).replaceAll("");
 	}
 	
@@ -304,49 +307,18 @@ public class Browser {
 	 */
 	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		
+		//calculate element position within screen
+		Point point = getLocationInViewport(driver, elem);
 		Dimension dimension = elem.getSize();
-		Point point = elem.getLocation();
 		
 		// Get width and height of the element
-		int elem_width = dimension.getWidth();
-		int elem_height = dimension.getHeight();
+		int elem_width = dimension.getWidth()+5;
+		int elem_height = dimension.getHeight()+5;
+		
 		int point_x = point.getX();
 		int point_y = point.getY();
-		if(point_y > page_screenshot.getHeight()){
-			point_y =  page_screenshot.getHeight() - dimension.getHeight();
-		}
 		
-		if( (elem_width + point_x) < page_screenshot.getWidth()){
-			elem_width = elem_width+5;
-		}
-		else{
-			elem_width = page_screenshot.getWidth() - point_x;
-		}
-		
-		if((elem_height + point_y) < page_screenshot.getHeight()){
-			elem_height = elem_height+5;
-		}
-		else{
-			elem_height = page_screenshot.getHeight() - point_y;
-		}
-		
-		if( (point_x - 5) >= 0){
-			elem_width += 5;
-			point_x -= 5;
-		}
-		else{
-			elem_width += point_x;
-			point_x = 0;
-		}
-		
-		if( (point_y - 5) >= 0){
-			point_y -= 5;
-		}
-		else{
-			point_y = 0;
-		}
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
-		
 	}
 	
 	/**
@@ -478,5 +450,33 @@ public class Browser {
 
 	public void setBrowserName(String browser_name) {
 		this.browser_name = browser_name;
+	}
+	
+	public static void scrollToElement(WebDriver driver, WebElement elem) 
+    { 
+		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
+    }
+	
+	private static Point getLocationInViewport(WebDriver driver, WebElement element) {
+		Long y_offset = (Long)((JavascriptExecutor)driver).executeScript("return window.pageYOffset;"); 
+		Long x_offset = (Long)((JavascriptExecutor)driver).executeScript("return window.pageXOffset;"); 
+		
+		int y_coord = calculateYCoordinate(y_offset.intValue(), element.getLocation());
+		int x_coord = calculateXCoordinate(x_offset.intValue(), element.getLocation());
+       
+		return new Point(x_coord, y_coord);
+	}
+	
+	public static int calculateYCoordinate(int y_offset, Point location){
+		return location.getY() - y_offset;
+	}
+	
+	public static int calculateXCoordinate(int x_offset, Point location){
+		return location.getX() - x_offset;
+	}
+
+	public static void waitForPageToLoad(WebDriver driver) {
+		new WebDriverWait(driver, 600).until(
+				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 	}
 }

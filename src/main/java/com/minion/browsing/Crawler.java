@@ -74,14 +74,19 @@ public class Crawler {
 		}
 		
 		PageElement last_element = null;
-		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
 
+		int idx=0;
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
+
+				if(idx==0){
+					browser.navigateTo(expected_page.getUrl().toString());
+				}
+				Browser.scrollToElement(browser.getDriver(), browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(idx+1)).getXpath())));
 				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
 				if(page_record != null){
 					expected_page = page_record;
@@ -109,13 +114,13 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				Timing.pauseThread(1000L);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
 			}
+			idx++;
 		}
 		
 		return browser_service.buildPage(browser);

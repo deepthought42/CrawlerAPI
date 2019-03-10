@@ -155,7 +155,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									try{
 										log.info("Crawling path for login form test discovery");
 										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
-										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
+										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString(), null);
 								  		browser.close();
 										break;
 									}catch(NullPointerException e){

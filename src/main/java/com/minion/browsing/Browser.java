@@ -51,6 +51,8 @@ import com.qanairy.models.PageState;
 public class Browser {
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
 
+	private static final int DIMENSION_OFFSET_PIXELS = 5;
+	
 	private WebDriver driver = null;
 	private String browser_name; 
 
@@ -122,11 +124,10 @@ public class Browser {
 	 * @param url
 	 */
 	public void navigateTo(String url){
-		System.err.println("Navigating to url.... " +url);
+		log.info("Navigating to url.... " +url);
 		getDriver().get(url);
 
-		new WebDriverWait(getDriver(), 600).until(
-				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+		Browser.waitForPageToLoad(getDriver());
 	}
 
 	/**
@@ -312,8 +313,8 @@ public class Browser {
 		Dimension dimension = elem.getSize();
 		
 		// Get width and height of the element
-		int elem_width = dimension.getWidth()+5;
-		int elem_height = dimension.getHeight()+5;
+		int elem_width = dimension.getWidth()+DIMENSION_OFFSET_PIXELS;
+		int elem_height = dimension.getHeight()+DIMENSION_OFFSET_PIXELS;
 		
 		int point_x = point.getX();
 		int point_y = point.getY();
@@ -455,14 +456,15 @@ public class Browser {
 	public static void scrollToElement(WebDriver driver, WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
+		Timing.pauseThread(100);
     }
 	
 	private static Point getLocationInViewport(WebDriver driver, WebElement element) {
-		Long y_offset = (Long)((JavascriptExecutor)driver).executeScript("return window.pageYOffset;"); 
-		Long x_offset = (Long)((JavascriptExecutor)driver).executeScript("return window.pageXOffset;"); 
+		int y_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageYOffset;")).intValue(); 
+		int x_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageXOffset;")).intValue(); 
 		
-		int y_coord = calculateYCoordinate(y_offset.intValue(), element.getLocation());
-		int x_coord = calculateXCoordinate(x_offset.intValue(), element.getLocation());
+		int y_coord = calculateYCoordinate(y_offset, element.getLocation());
+		int x_coord = calculateXCoordinate(x_offset, element.getLocation());
        
 		return new Point(x_coord, y_coord);
 	}

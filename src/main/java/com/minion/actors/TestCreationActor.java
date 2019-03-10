@@ -235,7 +235,7 @@ public class TestCreationActor extends AbstractActor  {
     			path_objects.add(action);
 
     			Crawler.performAction(action, element, browser.getDriver());
-    			Timing.pauseThread(3000L);
+    			Timing.pauseThread(1500L);
 
     			//******************************************************
     			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.

@@ -1,8 +1,14 @@
 package services;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.imageio.ImageIO;
+
+import org.junit.Test;
 
 import com.minion.api.DomainController;
 import com.qanairy.models.Action;
@@ -25,5 +31,12 @@ public class BrowserServiceTest {
 		
 		Set<PathObject> path_objects = DomainController.merge(page_state, actions);
 
+	}
+	
+	@Test
+	public void screenshotFromUrl() throws MalformedURLException, IOException{
+		String checksum = PageState.getFileChecksum(ImageIO.read(new URL("https://s3-us-west-2.amazonaws.com/qanairy/www.terran.us/30550bada37e6c456380737c7dc19abfa22671c20effa861ed57665cf9960e5a/element_screenshot.png")));
+	
+		System.err.println("Checksum :: " + checksum);
 	}
 }

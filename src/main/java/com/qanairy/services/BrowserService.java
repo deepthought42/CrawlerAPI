@@ -63,6 +63,7 @@ import com.qanairy.models.rules.Rule;
 public class BrowserService {
 	private static Logger log = LoggerFactory.getLogger(BrowserService.class);
 	
+	private static final int DIMENSION_OFFSET_PIXELS = 5;
 	@Autowired
 	private PageStateRepository page_state_repo;
 	
@@ -122,7 +123,8 @@ public class BrowserService {
 				landable_browser = BrowserFactory.buildBrowser(browser, BrowserEnvironment.TEST);
 				landable_browser.navigateTo(page_state.getUrl());
 				
-				if(page_state.equals(buildPage(landable_browser))){
+				PageState landable_page_state = buildPage(landable_browser);
+				if(page_state.getSrc().equals(landable_page_state.getSrc())){
 					isLandable = true;
 				}
 				else{
@@ -161,6 +163,7 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
+		System.err.println("current url   :    " + browser.getDriver().getCurrentUrl());
 		URL page_url = new URL(browser.getDriver().getCurrentUrl());
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
@@ -176,16 +179,12 @@ public class BrowserService {
 		
 		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(screenshot));
 		PageState page_state = null;
-		PageState page_record = null;
-		try{
-			page_record = page_state_repo.findByKey(page_key);
-		}
-		catch(Exception e){
-			log.warn("Page record not found :  "+e.getLocalizedMessage());
-		}
+		PageState page_record = page_state_repo.findByKey(page_key);
+
 		if(page_record != null){
 			page_state = page_record;
-			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
+			//page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
+			//page_state = page_state_repo.save(page_state);
 		}
 		else{
 			log.info("Getting visible elements...");
@@ -272,19 +271,17 @@ public class BrowserService {
 					String checksum = "";
 					String screenshot = null;
 					try{
-						if(!isElementVisibleInPane(elem, driver.manage().window().getSize())){
+						if(!isElementVisibleInPane(driver, elem, driver.manage().window().getSize())){
 							Browser.scrollToElement(driver, elem);
 						}
-						img = Browser.getElementScreenshot(driver, elem, Browser.getViewportScreenshot(driver));
+						BufferedImage page_screenshot = Browser.getViewportScreenshot(driver);
+						img = Browser.getElementScreenshot(driver, elem, page_screenshot);
 						checksum = PageState.getFileChecksum(img);		
 						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-
+						page_screenshot.flush();
 					}
 					catch(RasterFormatException e){
 						log.warn("Raster Format Exception : "+e.getMessage());
-					}
-					catch(Exception e){
-						e.printStackTrace();
 					}
 					
 					Map<String, String> css_props = Browser.loadCssProperties(elem);
@@ -302,19 +299,24 @@ public class BrowserService {
 				}
 			}catch(Exception e) {
 				log.warn("Error getting visible element "+ e.getMessage());
+				e.printStackTrace();
 			}
 		}
 		
 		return elementList;
 	}
 	
-	public boolean isElementVisibleInPane(WebElement elem, Dimension window_size){
+	public boolean isElementVisibleInPane(WebDriver driver, WebElement elem, Dimension window_size){
+		int y_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageYOffset;")).intValue(); 
+		int x_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageXOffset;")).intValue(); 
+		
 		int x = elem.getLocation().getX();
 		int y = elem.getLocation().getY();
 		int height = elem.getSize().getHeight();
 		int width = elem.getSize().getWidth();
 		
-		if(x >= 0 && y >= 0 && (x+width) <= window_size.getWidth() && (y+height) <= window_size.getHeight()){
+		if(x >= x_offset && y >= y_offset && (x+width) <= (window_size.getWidth()+x_offset-DIMENSION_OFFSET_PIXELS) 
+				&& (y+height) <= (window_size.getHeight()+y_offset-DIMENSION_OFFSET_PIXELS)){
 			return true;
 		}
 		return false;

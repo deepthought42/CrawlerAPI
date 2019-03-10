@@ -1,6 +1,7 @@
 package com.qanairy.models;
 
 import java.io.File;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -237,13 +238,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		
-		String checksum = "";
-		try{
-			checksum = PageState.getFileChecksum(ImageIO.read(new File(getScreenshot())));
-		}
-		catch(Exception e){}
-		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(checksum+":"+getXpath()+":"+getText());   
+		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getScreenshot()+":"+getXpath()+":"+getText());   
 	}
 	
 

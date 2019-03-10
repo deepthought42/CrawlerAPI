@@ -2,6 +2,7 @@ package com.qanairy.services;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -66,7 +67,7 @@ public class TestService {
 			 try {
 				Browser browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);
 				
-				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
+				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, null);
 				browser.close();
 				break;
 			 } catch(PagesAreNotMatchingException e){
@@ -131,7 +132,10 @@ public class TestService {
 			} catch (JsonProcessingException e) {
 				log.error(e.getLocalizedMessage());
 			}
+			
 			test = record;
+			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
+			test.setPathObjects(path_objects);
 		}
 		
 		return test;

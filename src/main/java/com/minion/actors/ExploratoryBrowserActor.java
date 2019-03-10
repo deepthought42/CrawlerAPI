@@ -121,24 +121,26 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 		
 						if(exploratory_path.getPathObjects() != null){
+							System.err.println("EXPLORATORY PATH OBJECTS  ::   " + exploratory_path.getPathObjects().size());
 							PageState result_page = null;
 		
 							//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 							//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
 							int start_idx = 0;
+							int landable_page_cnt = 0;
 							int idx = 0;
 							for(PathObject path_obj : exploratory_path.getPathObjects()){
 								if(path_obj instanceof PageState){
 									PageState page = page_state_repo.findByKey(path_obj.getKey());
-									if(page.isLandable()){
+									if(page.isLandable() && exploratory_path.getPathObjects().size() > 1){
 										start_idx=idx;
-										break;
+										landable_page_cnt++;
 									}
 									idx++;
 								}
 							}
 							
-							if(start_idx > 0){
+							if(start_idx > 0 && landable_page_cnt > 1){
 								exploratory_path.setPathKeys(exploratory_path.getPathKeys().subList(start_idx, exploratory_path.getPathKeys().size()));
 								exploratory_path.setPathObjects(exploratory_path.getPathObjects().subList(start_idx, exploratory_path.getPathObjects().size()));
 							}
@@ -153,28 +155,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								path.addToPathKeys(action.getKey());
 								
 								final long pathCrawlStartTime = System.currentTimeMillis();
-								int tries = 0;
-								do{
-									try{
-										browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.DISCOVERY);
-										result_page = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, acct_msg.getOptions().get("host").toString());
-										break;
-									}catch(NullPointerException e){
-										log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
-										e.printStackTrace();
-									} catch (GridException e) {
-										log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-									} catch (WebDriverException e) {
-										log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-									} catch (NoSuchAlgorithmException e) {
-										log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-									} catch(Exception e){
-										log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
-									}
-
-									tries++;
-								}while(result_page == null && tries < Integer.MAX_VALUE);
-							
+								result_page = crawler.performPathCrawl(browser_name, path, acct_msg.getOptions().get("host").toString());
+								
 								//have page checked for landability
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 								
@@ -188,9 +170,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 							  		int cnt=0;
 							  		do{
-						  				System.err.println("building parent path...attempt # ::  "+cnt);
+						  				log.info("building parent path...attempt # ::  "+cnt);
 
 							  			try{
+							  				browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 							  				ExploratoryPath parent_path = buildParentPath(path, browser);
 							  			
 								  			if(parent_path == null){
@@ -198,11 +181,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								  			}
 								  			
 							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, domain.getUrl());
-							  				System.err.println("Does path produce expected result???  "+results_match);
+							  				log.info("Does path produce expected result???  "+results_match);
 								  			if(results_match){
 								  				last_path = path;
 								  				path = parent_path;
 								  			}
+							  				browser.close();
 								  			break;
 							  			}catch(Exception e){
 							  				browser.close();
@@ -236,12 +220,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								}
 							}
 							
-							DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
-							
-							discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-					  		discovery_record.setLastPathRanAt(new Date());
-					  		discovery_record = discovery_repo.save(discovery_record);
-					  		
+							DiscoveryRecord discovery_record = null;
+							do{
+								discovery_record = discovery_repo.findByKey(acct_msg.getOptions().get("discovery_key").toString());
+								discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+						  		discovery_record.setLastPathRanAt(new Date());
+						  		discovery_record = discovery_repo.save(discovery_record);
+							}while(discovery_record == null);
 					  		//send email if this is the last test
 					  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
 						    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
@@ -249,9 +234,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						  	}catch(Exception e){
-							
+						  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
 							}
-						  	browser.close();
 						}
 		
 						
@@ -300,6 +284,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
+		log.error("Test :: "+test);
+		log.error("Test first page :: "+test.firstPage());
+		log.error("Test first page url  :: "+test.firstPage().getUrl());
+		log.error("Test Result  :: "+test.getResult());
+		log.error("Test result url  :: "+test.getResult().getUrl());
 		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()));
 		test.setSpansMultipleDomains(leaves_domain);
 		return test_service.save(test, acct_msg.getOptions().get("host").toString());
@@ -340,7 +329,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @throws GridException 
 	 */
 	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
-		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel);
+		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel, path);
 		return parent_result.equals(result_page);
 	}
 	
@@ -374,7 +363,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		if(elem != null){
 			List<String> path_keys = path.getPathKeys().subList(0, idx+1);
 			List<PathObject> path_objects = path.getPathObjects().subList(0, idx+1);
-			crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
+			System.err.println("path objects length :: " + path.getPathObjects().size());
+			crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
 			
 			//perform action on the element
 			//ensure page is equal to expected page

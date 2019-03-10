@@ -73,6 +73,9 @@ public class UrlBrowserActor extends AbstractActor {
 								
 								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 								
+								log.info("Discovery record :: " + discovery_record);
+								log.info("test :: " + test);
+								log.info("test result " + test.getResult());
 								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
 									discovery_record.addExpandedPageState(test.getResult().getKey());
 									discovery_record_repo.save(discovery_record);

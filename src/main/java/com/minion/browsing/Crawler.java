@@ -20,10 +20,12 @@ import org.slf4j.Logger;
 import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
+import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
@@ -59,10 +61,12 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		assert browser != null;
 		assert path_keys != null;
 		
+		List<PathObject> updated_path_objects = new ArrayList<PathObject>();
+
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//Ensure Order path objects
 		for(String path_obj_key : path_keys){
@@ -73,30 +77,61 @@ public class Crawler {
 			}
 		}
 		
+		log.info("#########################################################################");
+		log.info("#########################################################################");
+		log.info("PATH  Keys size ::   " + path.getPathKeys().size());
+		log.info("PATH  Objects size ::   " + path.getPathObjects().size());
+
+		log.info("#########################################################################");
+		log.info("#########################################################################");
+		
+		updated_path_objects.addAll(ordered_path_objects);
+		
 		PageElement last_element = null;
 		
+		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
-
+				
+		log.info("building page for host channel :: " + host_channel);
+		do{
+			try{
+				browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
+				WebElement next_elem = browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(1)).getXpath()));
+				if(!browser_service.isElementVisibleInPane(browser.getDriver(), next_elem, browser.getDriver().manage().window().getSize())){
+					Browser.scrollToElement(browser.getDriver(), next_elem);
+				}
+				current_page_state = browser_service.buildPage(browser);
+			}catch(Exception e){
+				browser = browser_service.getConnection(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
+				e.printStackTrace();
+			}
+		}while(current_page_state == null);
+		
+		
 		int idx=0;
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
 
-				if(idx==0){
-					browser.navigateTo(expected_page.getUrl().toString());
-				}
-				Browser.scrollToElement(browser.getDriver(), browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(idx+1)).getXpath())));
+				/*
 				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
 				if(page_record != null){
 					expected_page = page_record;
 				}
-				boolean screenshot_matches = false;
-				System.err.println("building page for host channel :: " + host_channel);
-				current_page_state = browser_service.buildPage(browser);
-				screenshot_matches = current_page_state.equals(expected_page); //browser_service.doScreenshotsMatch(browser, current_page);
+				
+				screenshot_matches = current_page_state.equals(expected_page);
 				if(!screenshot_matches){
 					return current_page_state;
+				}
+				*/
+				
+				if(idx==0 && !current_page_state.equals(expected_page)){
+					updated_path_objects.set(idx, current_page_state);
+					path_keys.set(idx, current_page_state.getKey());
+					
+					path.setPathObjects(updated_path_objects);
+					path.setPathKeys(path_keys);
 				}
 			}
 			else if(current_obj instanceof PageElement){
@@ -114,6 +149,12 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
+				if(browser.getDriver().getCurrentUrl().equals(current_page_state.getUrl())){
+					Browser.waitForPageToLoad(browser.getDriver());
+				}
+				else{
+					Timing.pauseThread(750);
+				}
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -122,6 +163,7 @@ public class Crawler {
 			}
 			idx++;
 		}
+		
 		
 		return browser_service.buildPage(browser);
 	}
@@ -137,9 +179,6 @@ public class Crawler {
 		boolean wasPerformedSuccessfully = true;
 
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		if(element.getLocation().getY() > driver.manage().window().getSize().getHeight()){
-			scrollDown(driver, element.getLocation().getY()-300);
-		}
 		actionFactory.execAction(element, action.getValue(), action.getName());
 		
 		return wasPerformedSuccessfully;
@@ -148,5 +187,39 @@ public class Crawler {
 	public static void scrollDown(WebDriver driver, int distance) 
     { 
         ((JavascriptExecutor)driver).executeScript("scroll(0,"+ distance +");"); 
-    } 
+    }
+
+	/**
+	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
+	 * @param browser
+	 * @param path
+	 * @param host
+	 * @return
+	 */
+	public PageState performPathCrawl(String browser_name, ExploratoryPath path, String host) {
+		PageState result_page = null;
+		int tries = 0;
+		Browser browser = null;
+
+		do{
+			try{
+				browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.DISCOVERY);
+				result_page = crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host, path);
+			}catch(NullPointerException e){
+				log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
+				e.printStackTrace();
+			} catch (GridException e) {
+				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+			} catch (WebDriverException e) {
+				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+			} catch (NoSuchAlgorithmException e) {
+				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+			} catch(Exception e){
+				log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
+			}
+			browser.close();
+			tries++;
+		}while(result_page == null && tries < Integer.MAX_VALUE);
+		return result_page;
+	} 
 }

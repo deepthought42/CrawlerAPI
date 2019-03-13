@@ -20,11 +20,14 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
+import com.minion.browsing.Browser;
 import com.minion.structs.Message;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
+import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestCreatorService;
 
 /**
@@ -48,6 +51,9 @@ public class UrlBrowserActor extends AbstractActor {
 	@Autowired
 	private DiscoveryRecordRepository discovery_record_repo;
 	
+	@Autowired
+	private BrowserService browser_service;
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -62,12 +68,14 @@ public class UrlBrowserActor extends AbstractActor {
 						String discovery_key = message.getOptions().get("discovery_key").toString();
 						boolean test_generated_successfully = false;
 						int attempts = 0;
+						Browser browser = null;
 						do{
 							try{
-								String browser = message.getOptions().get("browser").toString();
+								String browser_name = message.getOptions().get("browser").toString();
 								String host = message.getOptions().get("host").toString();
 								String url = ((URL)message.getData()).toString();
-								Test test = test_creator_service.generateLandingPageTest(browser, discovery_key, host, url);
+								browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+								Test test = test_creator_service.generateLandingPageTest(discovery_key, host, url, browser);
 								
 								DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
 								
@@ -97,8 +105,10 @@ public class UrlBrowserActor extends AbstractActor {
 								break;								
 							}
 							catch(Exception e){
-								e.printStackTrace();
-								log.warn("Exception occurred while exploring url --  " + e.getMessage());
+								log.error("Exception occurred while exploring url --  " + e.getMessage());
+							}
+							finally{
+								browser.close();
 							}
 						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
 						

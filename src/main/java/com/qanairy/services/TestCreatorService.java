@@ -54,10 +54,9 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test generateLandingPageTest(String browser_name, String discovery_key, String host, String url) 
+	public Test generateLandingPageTest(String discovery_key, String host, String url, Browser browser) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
-		Browser browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo(url);
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
@@ -69,9 +68,7 @@ public class TestCreatorService {
 	  	else{
 	  		page_obj = page_record;
 	  	}
-	  	
-  		browser.close();
-	  	
+	  		  	
 	  	List<String> path_keys = new ArrayList<String>();
 	  	path_keys.add(page_obj.getKey());
 	  	
@@ -83,7 +80,7 @@ public class TestCreatorService {
 	  	path_objects.add(page_obj);
 
 		Domain domain = domain_repo.findByHost( host);
-		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser_name);
+		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser.getBrowserName());
 		test = test_service.save(test, domain.getUrl());
 		
 		return test;

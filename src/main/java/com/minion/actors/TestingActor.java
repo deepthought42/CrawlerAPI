@@ -64,13 +64,12 @@ public class TestingActor extends AbstractActor {
 								try{
 									browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString(), null);
-									browser.close();
-									break;
 								}catch(NullPointerException e){
 									log.error(e.getMessage());
 								}
-								browser.close();
-
+								finally{
+							  		browser.close();
+								}
 								cnt++;
 							}
 						}
@@ -99,7 +98,6 @@ public class TestingActor extends AbstractActor {
 						}
 		
 					  	test_service.save(test, message.getOptions().get("host").toString());
-						browser.close();
 					}
 					else{
 						log.warn("ERROR : Message contains unknown format");

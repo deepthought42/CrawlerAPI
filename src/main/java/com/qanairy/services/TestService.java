@@ -63,22 +63,22 @@ public class TestService {
 		 
 		 int cnt = 0;
 		 boolean pages_dont_match = false;
+		 Browser browser = null;
 		 do{
 			 try {
-				Browser browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);
-				
+				browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);	
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, null);
-				browser.close();
-				break;
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
 				 pages_dont_match = true;
-				 break;
 			 }
 			 catch (Exception e) {
 				 e.printStackTrace();
 				 System.err.println(e.getLocalizedMessage());
 			 } 
+			 finally{
+				browser.close();
+			 }
 			 
 			 cnt++;
 		 }while(cnt < Integer.MAX_VALUE && page == null);

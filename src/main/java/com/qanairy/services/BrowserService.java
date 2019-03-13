@@ -120,11 +120,11 @@ public class BrowserService {
 			page_visited_successfully = false;
 			Browser landable_browser = null;
 			try{
-				landable_browser = BrowserFactory.buildBrowser(browser, BrowserEnvironment.TEST);
+				landable_browser = BrowserFactory.buildBrowser(browser, BrowserEnvironment.DISCOVERY);
 				landable_browser.navigateTo(page_state.getUrl());
 				
 				PageState landable_page_state = buildPage(landable_browser);
-				if(page_state.getSrc().equals(landable_page_state.getSrc())){
+				if(page_state.getKey().equals(landable_page_state.getKey())){
 					isLandable = true;
 				}
 				else{
@@ -132,8 +132,6 @@ public class BrowserService {
 				}
 				
 				page_visited_successfully = true;
-				landable_browser.close();
-				break;
 			}
 			catch(GridException e){
 				log.warn(e.getMessage());
@@ -142,12 +140,55 @@ public class BrowserService {
 				log.warn("ERROR CHECKING LANDABILITY OF PAGE AT ::: "+page_state.getUrl().toString());
 				log.warn(e.getMessage());
 			}
-			landable_browser.close();
+			finally {
+				landable_browser.close();
+			}
 			cnt++;
 		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
 		
 		log.info("is page state landable  ?? :: "+page_state.isLandable());
 		return isLandable;
+	}
+	
+	
+	/**
+	 * Constructs a new page object
+	 * @param url
+	 * @param screenshot_url
+	 * @param visible_elements
+	 * @param is_landable
+	 * @param src
+	 * @param browser_name
+	 * @return
+	 */
+	public PageState buildPage(URL url, String screenshot_url, Set<PageElement> visible_elements, boolean is_landable, String src, String browser_name){
+		ScreenshotSet screenshot_record = new ScreenshotSet(screenshot_url, browser_name);
+		Set<ScreenshotSet> screenshot_set = new HashSet<>();
+		screenshot_set.add(screenshot_record);
+		
+		String clean_src = org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(src));
+		return new PageState(url.toString(), screenshot_set, visible_elements, clean_src);
+	}
+	
+	public PageState collectDataAndBuildPage(Browser browser) throws GridException, IOException{
+		assert browser != null;
+		
+		URL url = new URL(browser.getDriver().getCurrentUrl());
+		int param_index = url.toString().indexOf("?");
+		String url_without_params = url.toString();
+		if(param_index >= 0){
+			url_without_params = url_without_params.substring(0, param_index);
+		}
+		
+		String page_src = browser.getDriver().getPageSource();
+		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
+		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(viewport_screenshot));
+		
+		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, url.getHost(), page_key, "viewport");
+		log.info("Getting visible elements...");
+		Set<PageElement> visible_elements = getVisibleElements(browser.getDriver(), "", url.getHost());
+
+		return buildPage(url, viewport_screenshot_url, visible_elements, true, page_src, browser.getBrowserName());
 	}
 	
 	/**
@@ -160,37 +201,35 @@ public class BrowserService {
 	 * @pre browser != null
 	 * @post page_state != null
 	 */
+	@Deprecated
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
-		
-		System.err.println("current url   :    " + browser.getDriver().getCurrentUrl());
-		URL page_url = new URL(browser.getDriver().getCurrentUrl());
+		String browser_url = browser.getDriver().getCurrentUrl();
+		URL page_url = new URL(browser_url);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
 		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
-
-		BufferedImage screenshot = viewport_screenshot;
         
-		int param_index = browser.getDriver().getCurrentUrl().indexOf("?");
-		String url_without_params = browser.getDriver().getCurrentUrl();
+		int param_index = page_url.toString().indexOf("?");
+		String url_without_params = page_url.toString();
 		if(param_index >= 0){
 			url_without_params = url_without_params.substring(0, param_index);
 		}
 		
-		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(screenshot));
+		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(viewport_screenshot));
 		PageState page_state = null;
 		PageState page_record = page_state_repo.findByKey(page_key);
 
 		if(page_record != null){
 			page_state = page_record;
-			//page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
-			//page_state = page_state_repo.save(page_state);
+			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
+			page_state = page_state_repo.save(page_state);
 		}
 		else{
 			log.info("Getting visible elements...");
 			visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
 
-			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot, page_url.getHost(), page_key, "viewport");
+			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
 			
 			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
 			
@@ -271,7 +310,7 @@ public class BrowserService {
 					String checksum = "";
 					String screenshot = null;
 					try{
-						if(!isElementVisibleInPane(driver, elem, driver.manage().window().getSize())){
+						if(!isElementVisibleInPane(driver, elem)){
 							Browser.scrollToElement(driver, elem);
 						}
 						BufferedImage page_screenshot = Browser.getViewportScreenshot(driver);
@@ -306,17 +345,36 @@ public class BrowserService {
 		return elementList;
 	}
 	
-	public boolean isElementVisibleInPane(WebDriver driver, WebElement elem, Dimension window_size){
-		int y_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageYOffset;")).intValue(); 
-		int x_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageXOffset;")).intValue(); 
+	public boolean isElementVisibleInPane(WebDriver driver, WebElement elem){
+		Object objy = ((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
+		Object objx = ((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
+
+		int y_offset = 0;
+		int x_offset = 0;
+		
+		if(objy instanceof Double){
+			y_offset = ((Double)objy).intValue(); 
+		}
+		else if(objy instanceof Long){
+			y_offset = ((Long)objy).intValue(); 
+		}
+		
+		if(objx instanceof Double){
+			x_offset = ((Double)objx).intValue(); 
+		}
+		else if(objx instanceof Long){
+			x_offset = ((Long)objx).intValue(); 
+		}
 		
 		int x = elem.getLocation().getX();
 		int y = elem.getLocation().getY();
+		Dimension viewport_size = Browser.getViewportSize(driver);
+		
 		int height = elem.getSize().getHeight();
 		int width = elem.getSize().getWidth();
 		
-		if(x >= x_offset && y >= y_offset && (x+width) <= (window_size.getWidth()+x_offset-DIMENSION_OFFSET_PIXELS) 
-				&& (y+height) <= (window_size.getHeight()+y_offset-DIMENSION_OFFSET_PIXELS)){
+		if(x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset-DIMENSION_OFFSET_PIXELS) 
+				&& (y+height) <= (viewport_size.getHeight()+y_offset-DIMENSION_OFFSET_PIXELS)){
 			return true;
 		}
 		return false;

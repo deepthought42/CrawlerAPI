@@ -106,8 +106,8 @@ public class Browser {
 			catch(GridException e){
 				log.warn(e.getMessage());
 			}
-
 			cnt++;
+			Timing.pauseThread(3000);
 		}
 	}
 	
@@ -456,12 +456,29 @@ public class Browser {
 	public static void scrollToElement(WebDriver driver, WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		Timing.pauseThread(100);
+		Timing.pauseThread(500);
     }
 	
 	private static Point getLocationInViewport(WebDriver driver, WebElement element) {
-		int y_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageYOffset;")).intValue(); 
-		int x_offset = ((Long)((JavascriptExecutor)driver).executeScript("return window.pageXOffset;")).intValue(); 
+		Object objy = ((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
+		Object objx = ((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
+
+		int y_offset = 0;
+		int x_offset = 0;
+		
+		if(objy instanceof Double){
+			y_offset = ((Double)objy).intValue(); 
+		}
+		else if(objy instanceof Long){
+			y_offset = ((Long)objy).intValue(); 
+		}
+		
+		if(objx instanceof Double){
+			x_offset = ((Double)objx).intValue(); 
+		}
+		else if(objx instanceof Long){
+			x_offset = ((Long)objx).intValue(); 
+		}
 		
 		int y_coord = calculateYCoordinate(y_offset, element.getLocation());
 		int x_coord = calculateXCoordinate(x_offset, element.getLocation());
@@ -480,5 +497,28 @@ public class Browser {
 	public static void waitForPageToLoad(WebDriver driver) {
 		new WebDriverWait(driver, 600).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+		Timing.pauseThread(1000);
 	}
+	
+	public static Dimension getViewportSize(WebDriver driver) {
+		int width = extractViewportWidth(driver);
+		int height = extractViewportHeight(driver);
+		return new Dimension(width, height);
+	}
+
+	protected static int extractViewportWidth(WebDriver driver) {
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		int viewportWidth = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_WIDTH, new Object[0]).toString());
+		return viewportWidth;
+	}
+
+	protected static int extractViewportHeight(WebDriver driver) {
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		int result = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_HEIGHT, new Object[0]).toString());
+		return result;
+	}
+
+	private static final String JS_GET_VIEWPORT_WIDTH = "var width = undefined; if (window.innerWidth) {width = window.innerWidth;} else if (document.documentElement && document.documentElement.clientWidth) {width = document.documentElement.clientWidth;} else { var b = document.getElementsByTagName('body')[0]; if (b.clientWidth) {width = b.clientWidth;}};return width;";
+
+	private static final String JS_GET_VIEWPORT_HEIGHT = "var height = undefined;  if (window.innerHeight) {height = window.innerHeight;}  else if (document.documentElement && document.documentElement.clientHeight) {height = document.documentElement.clientHeight;}  else { var b = document.getElementsByTagName('body')[0]; if (b.clientHeight) {height = b.clientHeight;}};return height;";
 }

@@ -117,24 +117,25 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 									final long pathCrawlStartTime = System.currentTimeMillis();
 									
 							  		log.info("Crawling potential form test path");
-							  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  		
 							  		cnt = 0;
 							  		PageState result_page = null;
 							  		do{
+								  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  			try{
 							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString(), null);
 							  				break;
 							  			}catch(Exception e){
 							  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
 							  			}
+							  			finally{
+									  		browser.close();
+							  			}
 						  			}while(cnt < Integer.MAX_VALUE && result_page == null);
 							  		
 							  		final long pathCrawlEndTime = System.currentTimeMillis();
 									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-									
-							  		browser.close();
-									
+																		
 							  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
 				
 							  		new_test.setRunTime(crawl_time_in_ms);
@@ -150,9 +151,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  	}
 								break;
 							}catch(Exception e){
-						  		browser.close();
 								log.warning(e.getLocalizedMessage());
 							}
+					  		finally{
+					  			browser.close();
+					  		}
 							cnt++;
 						}					  	
 					}

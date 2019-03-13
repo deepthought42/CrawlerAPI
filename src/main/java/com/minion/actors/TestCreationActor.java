@@ -143,15 +143,13 @@ public class TestCreationActor extends AbstractActor  {
 						    		test.setName(name);
 						    		test = test_repo.save(test);
 						    	}
-						    	browser.close();
-						    	break;
 				    		}
 				    		catch(Exception e){
 				    			log.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
 				    			e.printStackTrace();
-					    		if(browser != null){
-					    			browser.close();
-					    		}
+				    		}
+				    		finally {
+						  		browser.close();
 				    		}
 				    		attempts++;
 				    	}while(test == null && attempts < Integer.MAX_VALUE);

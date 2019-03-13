@@ -2,13 +2,14 @@ package com.minion.browsing;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Random;
 
 import com.qanairy.models.enums.BrowserEnvironment;
 
 public class BrowserFactory {
 
 	//GOOGLE CLOUD CLUSTER
-	private static final String DISCOVERY_HUB_IP_ADDRESS = "35.239.77.58:4444";
+	private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444"};
 	private static final String TEST_HUB_IP_ADDRESS = "34.73.96.186:4444";
 
 	// PRODUCTION HUB ADDRESS
@@ -25,7 +26,9 @@ public class BrowserFactory {
 		}
 		else if(environment.equals(BrowserEnvironment.DISCOVERY)){
 			System.err.println("Discovery enviroment...");
-			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS+"/wd/hub");
+			Random randomGenerator = new Random();
+			int randomInt = randomGenerator.nextInt(2);
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
 		}
 		
 		System.err.println("done building browser :: " + environment);

@@ -71,8 +71,7 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre browser_screenshots != null;
 	 */
-	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, String src)
-			throws IOException {
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, String src){
 		assert elements != null;
 		assert browser_screenshots != null;
 

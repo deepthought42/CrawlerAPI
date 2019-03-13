@@ -156,8 +156,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										log.info("Crawling path for login form test discovery");
 										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString(), null);
-								  		browser.close();
-										break;
 									}catch(NullPointerException e){
 										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
 										e.printStackTrace();
@@ -168,7 +166,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									} catch (NoSuchAlgorithmException e) {
 										e.printStackTrace();
 									}
-							  		browser.close();
+									finally{
+								  		browser.close();
+									}
 							  		tries++;
 								}while(result_page == null && tries < Integer.MAX_VALUE);
 						

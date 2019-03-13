@@ -76,8 +76,7 @@ public class LandabilityChecker extends AbstractActor{
 					do{
 						page_visited_successfully = false;
 						Browser landable_browser = null;
-						try{
-							
+						try{							
 							landable_browser = BrowserFactory.buildBrowser(bps.browser_name, BrowserEnvironment.DISCOVERY);
 							landable_browser.navigateTo(page_state.getUrl());
 							log.info("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
@@ -89,13 +88,13 @@ public class LandabilityChecker extends AbstractActor{
 							}
 							page_visited_successfully = true;
 							page_state = page_state_repo.save(page_state);
-
-							landable_browser.close();
-							break;
 						}
 						catch(Exception e){
 							landable_browser.close();
 							log.warning(e.getLocalizedMessage());
+						}
+						finally{
+							landable_browser.close();
 						}
 
 						cnt++;

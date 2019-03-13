@@ -118,14 +118,14 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	}
 							  	System.err.println("FORM DISCOVERY HAS ENDED");
 							  	forms_created = true;
-							  	browser.close();
-								break;
 							} catch(Exception e){
 								browser.close();
 						  		log.warning(e.getMessage());
 						  	}
+					  		finally{
+					  			browser.close();
+					  		}
 							cnt++;
-
 						}while(!forms_created && cnt < Integer.MAX_VALUE);
 					  	
 					}

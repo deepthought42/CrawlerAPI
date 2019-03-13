@@ -98,11 +98,12 @@ public class Crawler {
 			try{
 				browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 				WebElement next_elem = browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(1)).getXpath()));
-				if(!browser_service.isElementVisibleInPane(browser.getDriver(), next_elem, browser.getDriver().manage().window().getSize())){
+				if(!browser_service.isElementVisibleInPane(browser.getDriver(), next_elem)){
 					Browser.scrollToElement(browser.getDriver(), next_elem);
 				}
 				current_page_state = browser_service.buildPage(browser);
 			}catch(Exception e){
+				browser.close();
 				browser = browser_service.getConnection(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 				e.printStackTrace();
 			}
@@ -149,11 +150,11 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				if(browser.getDriver().getCurrentUrl().equals(current_page_state.getUrl())){
+				if(!browser.getDriver().getCurrentUrl().equals(current_page_state.getUrl())){
 					Browser.waitForPageToLoad(browser.getDriver());
 				}
 				else{
-					Timing.pauseThread(750);
+					Timing.pauseThread(1000);
 				}
 			}
 			else if(current_obj instanceof PageAlert){
@@ -212,12 +213,15 @@ public class Crawler {
 				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 			} catch (WebDriverException e) {
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+				e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 			} catch(Exception e){
 				log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
 			}
-			browser.close();
+			finally{
+				browser.close();
+			}
 			tries++;
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;

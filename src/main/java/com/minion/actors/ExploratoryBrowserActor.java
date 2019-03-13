@@ -168,6 +168,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
+							  		/*
 							  		int cnt=0;
 							  		do{
 						  				log.info("building parent path...attempt # ::  "+cnt);
@@ -196,7 +197,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			}
 							  			cnt++;
 							  		}while(results_match && cnt < Integer.MAX_VALUE);
-							  		
+							  		*/
 							  		if(last_path == null){
 							  			last_path = path;
 							  		}
@@ -353,10 +354,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		
 		PageElement elem = null;
 		int idx = 0;
-		for(int element_idx=0; element_idx < path.getPathKeys().size(); element_idx++){
+		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
 			if(path.getPathObjects().get(element_idx).getType().equals("PageElement")){
 				elem = (PageElement)path.getPathObjects().get(element_idx);
 				idx = element_idx;
+				break;
 			}
 		}
 		

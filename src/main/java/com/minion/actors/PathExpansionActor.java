@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.SubscriptionService;
 
@@ -47,8 +45,6 @@ import com.qanairy.services.SubscriptionService;
 @Component
 @Scope("prototype")
 public class PathExpansionActor extends AbstractActor {
-	
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 
 	@Autowired
@@ -172,7 +168,7 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		//iterate over all elements
-		log.info("Page elements for expansion :: "+elements.size());
+		log.info("Page elements for expansion :: "+result_page.getElements().size());
 		for(PageElement page_element : result_page.getElements()){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP

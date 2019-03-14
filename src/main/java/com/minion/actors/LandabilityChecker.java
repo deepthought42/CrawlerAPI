@@ -10,7 +10,6 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserFactory;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
 

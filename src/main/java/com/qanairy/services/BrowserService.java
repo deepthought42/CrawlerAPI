@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +49,6 @@ import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.AttributeRepository;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.RuleRepository;
 import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
@@ -69,18 +67,6 @@ public class BrowserService {
 	
 	@Autowired
 	private PageElementRepository page_element_repo;
-	
-	@Autowired
-	private ScreenshotSetRepository screenshot_set_repo;
-	
-	@Autowired
-	private AttributeRepository attribute_repo;
-	
-	@Autowired
-	private FormRepository form_repo;
-	
-	@Autowired
-	private RuleRepository rule_repo;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;

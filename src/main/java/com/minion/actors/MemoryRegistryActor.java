@@ -21,7 +21,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.PageStateService;
 

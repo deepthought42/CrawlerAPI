@@ -48,7 +48,6 @@ import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.EmailService;

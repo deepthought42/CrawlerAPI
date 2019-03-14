@@ -25,7 +25,6 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.PageStateRepository;
 
 @Component
 public class TestCreatorService {
@@ -36,9 +35,6 @@ public class TestCreatorService {
 
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private PageStateRepository page_state_repo;
 	
 	@Autowired
 	private TestService test_service;
@@ -66,7 +62,7 @@ public class TestCreatorService {
 		browser.navigateTo(url);
 		log.info("building page for landability test");
 	  	PageState page_obj = browser_service.buildPage(browser);
-	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
+	  	PageState page_record = page_state_service.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 		  	page_obj.setLandable(true);
 		  	page_obj.setLastLandabilityCheck(LocalDateTime.now());

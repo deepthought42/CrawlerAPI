@@ -223,11 +223,6 @@ public class BrowserService {
 		log.info("calculated page state key :: "+ page_key);
 
 		PageState page_state = page_state_service.findByKey(page_key);
-		if(page_state != null){
-			page_state.setElements(page_state_service.getPageElements(page_key));
-			page_state.setBrowserScreenshots(page_state_service.getScreenshots(page_key));
-			return page_state;
-		}
 		
 		log.info("Getting visible elements...");
 		Set<PageElement> visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());

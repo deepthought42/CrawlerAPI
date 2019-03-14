@@ -83,7 +83,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	private DomainRepository domain_repo;
 	
 	@Autowired
-	private PageStateRepository page_state_repo;
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private PageElementRepository page_element_repo;
@@ -134,7 +134,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							int idx = 0;
 							for(PathObject path_obj : exploratory_path.getPathObjects()){
 								if(path_obj instanceof PageState){
-									PageState page_state = page_state_repo.findByKey(path_obj.getKey());
+									PageState page_state = page_state_service.findByKey(path_obj.getKey());
 									if(page_state == null){
 										page_state =(PageState)path_obj;
 									}
@@ -145,11 +145,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									if(time_diff.compareTo(minimum_diff) > 0){
 										//have page checked for landability
 										page_state.setLastLandabilityCheck(LocalDateTime.now());
-										page_state = page_state_repo.save(page_state);
+										page_state = page_state_service.save(page_state);
 
 										log.info("Checking for page landability");
-										boolean isLandable = browser_service.checkIfLandable(browser.getBrowserName(), page_state);										page_state.setLandable(isLandable);
-										page_state = page_state_repo.save(page_state);
+										boolean isLandable = browser_service.checkIfLandable(browser_name, page_state);										page_state.setLandable(isLandable);
+										page_state = page_state_service.save(page_state);
 									}
 									
 									
@@ -188,7 +188,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  	
 							  	
 								//have page checked for landability
-								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
+								//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 								
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;

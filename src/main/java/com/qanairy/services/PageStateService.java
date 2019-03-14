@@ -98,7 +98,12 @@ public class PageStateService {
 	}
 
 	public PageState findByKey(String page_key) {
-		return page_state_repo.findByKey(page_key);
+		PageState page_state = page_state_repo.findByKey(page_key);
+		if(page_state != null){
+			page_state.setElements(getPageElements(page_key));
+			page_state.setBrowserScreenshots(getScreenshots(page_key));
+		}
+		return page_state;
 	}
 	
 	public Set<PageElement> getPageElements(String page_key){

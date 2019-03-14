@@ -17,10 +17,10 @@ import com.qanairy.models.rules.Rule;
 public class PageElementService {
 	
 	@Autowired
-	private AttributeRepository attribute_repo;
+	private AttributeRepository attribute_service;
 	
 	@Autowired
-	private RuleRepository rule_repo;
+	private RuleRepository rule_service;
 	
 	@Autowired
 	private PageElementRepository page_element_repo;
@@ -29,22 +29,13 @@ public class PageElementService {
 		//iterate over attributes
 		Set<Attribute> new_attributes = new HashSet<Attribute>();
 		for(Attribute attribute : element.getAttributes()){
-			Attribute attribute_record = attribute_repo.findByKey(attribute.getKey());
-			if(attribute_record == null){
-				attribute_record = attribute_repo.save(attribute);
-			}
-			
-			new_attributes.add(attribute_record);
+			new_attributes.add(attribute_service.save(attribute));
 		}
 		element.setAttributes(new_attributes);
 		
 		Set<Rule> rule_records = new HashSet<>();
 		for(Rule rule : element.getRules()){
-			Rule rule_record = rule_repo.findByKey(rule.getKey());
-			if(rule_record == null){
-				rule_record = rule_repo.save(rule);
-			}
-			rule_records.add(rule_record);
+			rule_records.add(rule_service.save(rule));
 		}
 		element.setRules(rule_records);
 		

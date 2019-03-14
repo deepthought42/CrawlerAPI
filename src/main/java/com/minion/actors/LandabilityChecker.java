@@ -12,6 +12,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.PageStateService;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
@@ -35,7 +36,7 @@ public class LandabilityChecker extends AbstractActor{
 	Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
-	PageStateRepository page_state_repo;
+	private PageStateService page_state_service;
 	
 	@Autowired
 	BrowserService browser_service;
@@ -66,12 +67,12 @@ public class LandabilityChecker extends AbstractActor{
 					boolean page_visited_successfully = false;
 					int cnt  = 0;
 					
-					PageState page_state_record = page_state_repo.findByKey(page_state.getKey());
+					PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 					if(page_state_record != null){
 						page_state = page_state_record;
 					}
 					page_state.setLastLandabilityCheck(LocalDateTime.now());
-					page_state = page_state_repo.save(page_state);
+					page_state = page_state_service.save(page_state);
 
 					do{
 						page_visited_successfully = false;
@@ -87,7 +88,7 @@ public class LandabilityChecker extends AbstractActor{
 								page_state.setLandable(false);
 							}
 							page_visited_successfully = true;
-							page_state = page_state_repo.save(page_state);
+							page_state = page_state_service.save(page_state);
 						}
 						catch(Exception e){
 							landable_browser.close();

@@ -18,11 +18,10 @@ import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.PageStateService;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -48,10 +47,10 @@ public class FormDiscoveryActor extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
-	ElementRuleExtractor rule_extractor;
+	private ElementRuleExtractor rule_extractor;
 	
 	@Autowired
-	PageStateRepository page_state_repo;
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -98,7 +97,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						  		
 
 					  			System.err.println("Looking up page state by key");
-						  		page_state = page_state_repo.findByKey(page_state.getKey());
+						  		page_state = page_state_service.findByKey(page_state.getKey());
 								  
 						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
 							  	List<Form> forms = browser_service.extractAllForms(page_state, browser);

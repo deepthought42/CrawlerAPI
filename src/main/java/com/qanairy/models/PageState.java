@@ -22,7 +22,6 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.minion.browsing.Browser;
 
 /**
  * A reference to a web page
@@ -30,7 +29,6 @@ import com.minion.browsing.Browser;
  */
 @NodeEntity
 public class PageState implements Persistable, PathObject {
-	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
 	@GeneratedValue

@@ -58,9 +58,6 @@ public class PathExpansionActor extends AbstractActor {
 	private DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
-	private PageStateRepository page_state_repo;
-	
-	@Autowired
 	private AccountRepository account_repo;
 	
 	@Autowired
@@ -175,9 +172,8 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		//iterate over all elements
-		Set<PageElement> elements = page_state_repo.getPageElements(result_page.getKey());
 		log.info("Page elements for expansion :: "+elements.size());
-		for(PageElement page_element : elements){
+		for(PageElement page_element : result_page.getElements()){
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -293,10 +289,8 @@ public class PathExpansionActor extends AbstractActor {
 			PathObject obj = test.getPathObjects().get(path_idx);
 			if(obj.getType().equals("PageState")){
 				PageState page_state = ((PageState) obj);
-				Set<PageElement> page_elements = page_state_repo.getPageElements(page_state.getKey());
-				System.err.println("page state has # of elements  ::  "+page_elements.size());
-				for(PageElement page_elem : page_elements){
-					System.err.println("Checking if latest element matches page element ");
+				log.debug("page state has # of elements  ::  "+page_state.getElements().size());
+				for(PageElement page_elem : page_state.getElements()){
 					if(elem.equals(page_elem)){
 						return true;
 					}

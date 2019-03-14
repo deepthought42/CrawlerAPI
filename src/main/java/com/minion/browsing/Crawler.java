@@ -43,9 +43,6 @@ public class Crawler {
 	@Autowired
 	private ActionRepository action_repo;
 	
-	@Autowired
-	private PageStateRepository page_state_repo;
-	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 * 
@@ -116,7 +113,7 @@ public class Crawler {
 				PageState expected_page = (PageState)current_obj;
 
 				/*
-				PageState page_record = page_state_repo.findByKey(expected_page.getKey());
+				PageState page_record = page_state_service.findByKey(expected_page.getKey());
 				if(page_record != null){
 					expected_page = page_record;
 				}

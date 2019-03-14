@@ -386,6 +386,10 @@ public class PageState implements Persistable, PathObject {
 	public Set<Form> getForms() {
 		return this.forms;
 	}
+	
+	public void setForms(Set<Form> form_set){
+		this.forms = form_set;
+	}
 
 	public LocalDateTime getLastLandabilityCheck() {
 		return last_landability_check;

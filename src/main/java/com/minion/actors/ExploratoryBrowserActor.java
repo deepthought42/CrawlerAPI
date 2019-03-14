@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +52,7 @@ import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.EmailService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -131,8 +134,26 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							int idx = 0;
 							for(PathObject path_obj : exploratory_path.getPathObjects()){
 								if(path_obj instanceof PageState){
-									PageState page = page_state_repo.findByKey(path_obj.getKey());
-									if(page.isLandable() && exploratory_path.getPathObjects().size() > 1){
+									PageState page_state = page_state_repo.findByKey(path_obj.getKey());
+									if(page_state == null){
+										page_state =(PageState)path_obj;
+									}
+									
+
+									Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
+									Duration minimum_diff = Duration.ofHours(24);
+									if(time_diff.compareTo(minimum_diff) > 0){
+										//have page checked for landability
+										page_state.setLastLandabilityCheck(LocalDateTime.now());
+										page_state = page_state_repo.save(page_state);
+
+										log.info("Checking for page landability");
+										boolean isLandable = browser_service.checkIfLandable(browser.getBrowserName(), page_state);										page_state.setLandable(isLandable);
+										page_state = page_state_repo.save(page_state);
+									}
+									
+									
+									if(page_state.isLandable() && exploratory_path.getPathObjects().size() > 1){
 										start_idx=idx;
 										landable_page_cnt++;
 									}
@@ -157,6 +178,15 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlStartTime = System.currentTimeMillis();
 								result_page = crawler.performPathCrawl(browser_name, path, acct_msg.getOptions().get("host").toString());
 								
+								
+								//SEND RESULT PAGE TO MEMORY REGISTRY ACTOR
+								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), result_page, message.getOptions());
+
+							  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
+							  	memory_registry_actor.tell(page_state_msg, getSelf() );
+							  	
+							  	
 								//have page checked for landability
 								Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 								
@@ -202,10 +232,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			last_path = path;
 							  		}
 									
-							  		PageState result_page_record = page_state_repo.findByKey(result_page.getKey());
-							  		if(result_page_record != null){
-							  			result_page = result_page_record;
-							  		}
 							  		System.err.println("Creating test for parent path");
 							  		Test test = createTest(last_path.getPathKeys(), last_path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
 							  		

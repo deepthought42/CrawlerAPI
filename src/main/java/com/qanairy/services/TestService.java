@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -16,7 +17,9 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
+import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
+import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -35,6 +38,15 @@ public class TestService {
 	
 	@Autowired
 	private TestRepository test_repo;
+	
+	@Autowired
+	private ActionService action_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
+	private PageElementService page_element_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -99,8 +111,23 @@ public class TestService {
 	 
 	 public Test save(Test test, String host_url){
 		Test record = test_repo.findByKey(test.getKey());
-			
+				
 		if(record == null){
+			List<PathObject> path_objects = new ArrayList<PathObject>();
+			for(PathObject path_obj : test.getPathObjects()){
+				if(path_obj instanceof PageState){
+					path_objects.add(page_state_service.save((PageState)path_obj));
+				}
+				else if(path_obj instanceof PageElement){
+					path_objects.add(page_element_service.save((PageElement)path_obj));
+				}
+				else if(path_obj instanceof Action){
+					path_objects.add(action_service.save((Action)path_obj));
+				}
+			}
+			test.setPathObjects(path_objects);
+			test.setResult(page_state_service.save(test.getResult()));
+	
 			log.info("Test REPO :: "+test_repo);
 			log.info("Test ::  "+test);
 			test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));

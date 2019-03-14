@@ -107,7 +107,6 @@ public class Browser {
 				log.warn(e.getMessage());
 			}
 			cnt++;
-			Timing.pauseThread(3000);
 		}
 	}
 	
@@ -125,8 +124,9 @@ public class Browser {
 	 */
 	public void navigateTo(String url){
 		log.info("Navigating to url.... " +url);
+		System.err.println("Seriously navigating yo");
 		getDriver().get(url);
-
+		log.info("successfully navigated to "+url);
 		Browser.waitForPageToLoad(getDriver());
 	}
 
@@ -495,9 +495,11 @@ public class Browser {
 	}
 
 	public static void waitForPageToLoad(WebDriver driver) {
-		new WebDriverWait(driver, 600).until(
+		log.info("waiting for page to load");
+		System.err.println("waitinf or page to load");
+		new WebDriverWait(driver, 60).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		Timing.pauseThread(1000);
+		log.info("done waiting for page to load");
 	}
 	
 	public static Dimension getViewportSize(WebDriver driver) {

@@ -1,6 +1,9 @@
 package com.minion.actors;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -15,6 +18,7 @@ import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
+import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
@@ -22,6 +26,8 @@ import com.qanairy.services.BrowserService;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -46,6 +52,9 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	PageStateRepository page_state_repo;
+	
+	@Autowired
+	private ActorSystem actor_system;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -112,7 +121,13 @@ public class FormDiscoveryActor extends AbstractActor{
 								    System.err.println("********************************************************");
 								  	
 								  	page_state.addForm(form);
-								  	page_state_repo.save(page_state);
+								  	
+							  		Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), page_state, message.getOptions());
+
+								  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
+								  	memory_registry_actor.tell(page_state_msg, getSelf() );
+									
 							        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 								  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 							  	}

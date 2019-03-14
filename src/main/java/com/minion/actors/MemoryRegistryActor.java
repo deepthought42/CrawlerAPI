@@ -23,6 +23,7 @@ import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.PageStateService;
 
 /**
  * Handles the saving of records into orientDB
@@ -42,7 +43,7 @@ public class MemoryRegistryActor extends AbstractActor{
 	private TestRepository test_repo;
 	
 	@Autowired
-	private PageStateRepository page_repo;
+	private PageStateService page_service;
 	
 	@Autowired
 	private PageElementRepository element_repo;
@@ -70,9 +71,7 @@ public class MemoryRegistryActor extends AbstractActor{
 				.match(Message.class, msg -> {
 					if(msg.getData() instanceof PageState){
 						PageState page = (PageState)msg.getData();
-						if(page_repo.findByKey(page.getKey()) == null){
-							page_repo.save(page);
-						}
+						page_service.save(page);
 					}
 					else if(msg.getData() instanceof Test){
 						log.info("Test message received by memory registry actor");

@@ -65,7 +65,7 @@ public class BrowserService {
 	
 	private static final int DIMENSION_OFFSET_PIXELS = 5;
 	@Autowired
-	private PageStateRepository page_state_repo;
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private PageElementRepository page_element_repo;
@@ -130,7 +130,10 @@ public class BrowserService {
 				else{
 					isLandable = false;
 				}
+				page_state.setLastLandabilityCheck(LocalDateTime.now());
+				page_state.setLandable(isLandable);
 				
+				page_state_service.save(page_state);
 				page_visited_successfully = true;
 			}
 			catch(GridException e){
@@ -204,12 +207,14 @@ public class BrowserService {
 	@Deprecated
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
+		
+		log.info("building page");
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
 		Set<PageElement> visible_elements = new HashSet<PageElement>();
 		String viewport_screenshot_url = null;
 		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
-        
+        log.info("retrieved viewport screenshot");
 		int param_index = page_url.toString().indexOf("?");
 		String url_without_params = page_url.toString();
 		if(param_index >= 0){
@@ -217,57 +222,47 @@ public class BrowserService {
 		}
 		
 		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(viewport_screenshot));
-		PageState page_state = null;
-		PageState page_record = page_state_repo.findByKey(page_key);
+		log.info("calculated page state key :: "+ page_key);
 
+		PageState page_state = null;
+		//PageState page_record = page_state_repo.findByKey(page_key);
+
+		/*
 		if(page_record != null){
 			page_state = page_record;
 			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
 			page_state = page_state_repo.save(page_state);
 		}
 		else{
-			log.info("Getting visible elements...");
-			visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
+		*/
+		log.info("Getting visible elements...");
+		visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
 
-			viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
-			
-			ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
-			
-			ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
-			if(screenshot_record != null){
-				screenshot_set = screenshot_record;
-			}
-			else{
-				screenshot_set = screenshot_set_repo.save(screenshot_set);
-			}
-			
-			HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
-			screenshots.add(screenshot_set);
-			
-			page_state = new PageState(	page_url.toString(),
-					screenshots,
-					visible_elements,
-					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
-			page_state.setLastLandabilityCheck(LocalDateTime.now());
-			page_state = page_state_repo.save(page_state);
-			
-			boolean isLandable = checkIfLandable(browser.getBrowserName(), page_state);
-			page_state.setLandable(isLandable);
-			page_state = page_state_repo.save(page_state);
+		viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
+		
+		ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
+		/*
+		ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
+		if(screenshot_record != null){
+			screenshot_set = screenshot_record;
 		}
-
-		Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
-		Duration minimum_diff = Duration.ofHours(24);
-		if(time_diff.compareTo(minimum_diff) > 0){
-			//have page checked for landability
-			page_state.setLastLandabilityCheck(LocalDateTime.now());
-			page_state = page_state_repo.save(page_state);
-
-			boolean isLandable = checkIfLandable(browser.getBrowserName(), page_state);
-			page_state.setLandable(isLandable);
-			page_state = page_state_repo.save(page_state);
+		else{
+			screenshot_set = screenshot_set_repo.save(screenshot_set);
 		}
-				
+		*/
+		HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
+		screenshots.add(screenshot_set);
+		
+		log.info("building page state object");
+		page_state = new PageState(	page_url.toString(),
+				screenshots,
+				visible_elements,
+				org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
+		//page_state = page_state_repo.save(page_state);
+		
+		//page_state = page_state_repo.save(page_state);
+		//}
+		
 		return page_state;
 	}
 	
@@ -310,7 +305,9 @@ public class BrowserService {
 					String checksum = "";
 					String screenshot = null;
 					try{
+						log.info("Checking if element visible in viewport");
 						if(!isElementVisibleInPane(driver, elem)){
+							log.info("element not visible in viewport. SCROLLING TO ELEMENT");
 							Browser.scrollToElement(driver, elem);
 						}
 						BufferedImage page_screenshot = Browser.getViewportScreenshot(driver);
@@ -326,14 +323,9 @@ public class BrowserService {
 					Map<String, String> css_props = Browser.loadCssProperties(elem);
 
 					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
-					PageElement tag_record = page_element_repo.findByKey(tag.getKey());
-
-					if(tag_record == null){					
-						tag_record = page_element_repo.save(tag);
-					}
 					
-					if(!elementList.contains(tag_record)){
-						elementList.add(tag_record);
+					if(!elementList.contains(tag)){
+						elementList.add(tag);
 					}
 				}
 			}catch(Exception e) {
@@ -487,14 +479,6 @@ public class BrowserService {
 				if(!attributes_seen.containsKey(attribute_name)){
 					attributes_seen.put(attribute_name, true);
 					Attribute attribute = new Attribute(attribute_name, Arrays.asList(attributeVals));
-					
-					Attribute attribute_record = attribute_repo.findByKey(attribute.getKey());
-					if(attribute_record != null){
-						attribute = attribute_record;
-					}
-					else{
-						attribute = attribute_repo.save(attribute);
-					}
 					attr_set.add(attribute);	
 				}
 			}
@@ -600,10 +584,7 @@ public class BrowserService {
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
-			PageElement tag = page_element_repo.findByKey(form_tag.getKey());
-			if(tag != null){
-				form_tag = tag;
-			}
+			
 			form_tag.setScreenshot(screenshot_url);
 			
 			double[] weights = new double[1];
@@ -624,10 +605,8 @@ public class BrowserService {
 				
 				screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem, ImageIO.read(new URL(page_screenshot)));
 				PageElement input_tag = new PageElement(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), screenshot_url );
-				
-  				PageElement elem_record = page_element_repo.findByKey(input_tag.getKey());				
-								
-				if(elem_record == null || elem_record.getScreenshot()== null || elem_record.getScreenshot().isEmpty()){
+												
+				if(input_tag == null || input_tag.getScreenshot()== null || input_tag.getScreenshot().isEmpty()){
 
 					Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
 					BufferedImage viewport = Browser.getViewportScreenshot(browser.getDriver());
@@ -644,19 +623,12 @@ public class BrowserService {
 						log.warn("Error retrieving screenshot -- "+e.getLocalizedMessage());
 					}
 
-					if(elem_record == null){
-						input_tag.setScreenshot(screenshot);
-						elem_record = page_element_repo.save(input_tag);
-					}
-					else{
-						elem_record.setScreenshot(screenshot);
-						elem_record = page_element_repo.save(elem_record); 
-					}
+					input_tag.setScreenshot(screenshot);
 				}
 
 				boolean alreadySeen = false;
 				for(String xpath : form_xpath_list){
-					if(xpath.equals(elem_record.getXpath())){
+					if(xpath.equals(input_tag.getXpath())){
 						alreadySeen = true;
 					}
 				}
@@ -707,29 +679,6 @@ public class BrowserService {
 			
 			form.setName("Form #1");
 			log.info("name :: "+form.getName());
-			
-			for(PageElement elem : form.getFormFields()){
-				for(Rule rule : elem.getRules()){
-					Rule rule_record = rule_repo.findByKey(rule.getKey());
-					if(rule_record == null){
-						rule = rule_repo.save(rule);
-					}
-					else{
-						rule = rule_record;
-					}
-				}
-				
-				PageElement elem_record = page_element_repo.findByKey(elem.getKey());
-				if(elem_record == null){
-					page_element_repo.save(elem);
-				}
-			}
-			
-			Form form_db_record = form_repo.findByKey(form.getKey());
-			
-			if(form_db_record == null){
-				form_repo.save(form);
-			}
 						
 			form_list.add(form);
 		}

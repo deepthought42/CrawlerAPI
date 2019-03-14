@@ -10,8 +10,11 @@ import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import com.minion.browsing.Browser;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
@@ -20,16 +23,19 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageStateRepository;
 
 @Component
 public class TestCreatorService {
-	
+	private static Logger log = LoggerFactory.getLogger(TestCreatorService.class.getName());
+
 	@Autowired
 	private DomainRepository domain_repo;
+
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private PageStateRepository page_state_repo;
@@ -58,25 +64,21 @@ public class TestCreatorService {
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		browser.navigateTo(url);
+		log.info("building page for landability test");
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	PageState page_record = page_state_repo.findByKey(page_obj.getKey());
 	  	if(page_record == null){
 		  	page_obj.setLandable(true);
 		  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
-	  		page_obj = page_state_repo.save(page_obj);
+	  		page_obj = page_state_service.save(page_obj);
 	  	}
 	  	else{
 	  		page_obj = page_record;
 	  	}
 	  		  	
-	  	List<String> path_keys = new ArrayList<String>();
-	  	path_keys.add(page_obj.getKey());
-	  	
-	  	PageState page_rec = page_state_repo.findByKey(page_obj.getKey());
-	  	if(page_rec != null){
-	  		page_obj = page_rec;
-	  	}
+	  	List<String> path_keys = new ArrayList<String>();	  	
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
+	  	path_keys.add(page_obj.getKey());
 	  	path_objects.add(page_obj);
 
 		Domain domain = domain_repo.findByHost( host);

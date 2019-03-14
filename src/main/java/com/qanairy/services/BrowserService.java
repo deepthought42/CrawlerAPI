@@ -46,11 +46,7 @@ import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
-import com.qanairy.models.repository.AttributeRepository;
-import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.RuleRepository;
-import com.qanairy.models.repository.ScreenshotSetRepository;
 import com.qanairy.models.rules.Rule;
 
 /**

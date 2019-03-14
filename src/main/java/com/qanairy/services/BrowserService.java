@@ -211,8 +211,6 @@ public class BrowserService {
 		log.info("building page");
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
-		Set<PageElement> visible_elements = new HashSet<PageElement>();
-		String viewport_screenshot_url = null;
 		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
         log.info("retrieved viewport screenshot");
 		int param_index = page_url.toString().indexOf("?");
@@ -224,32 +222,19 @@ public class BrowserService {
 		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(viewport_screenshot));
 		log.info("calculated page state key :: "+ page_key);
 
-		PageState page_state = null;
-		//PageState page_record = page_state_repo.findByKey(page_key);
-
-		/*
-		if(page_record != null){
-			page_state = page_record;
-			page_state.setSrc(org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
-			page_state = page_state_repo.save(page_state);
+		PageState page_state = page_state_service.findByKey(page_key);
+		if(page_state != null){
+			page_state.setElements(page_state_service.getPageElements(page_key));
+			page_state.setBrowserScreenshots(page_state_service.getScreenshots(page_key));
+			return page_state;
 		}
-		else{
-		*/
+		
 		log.info("Getting visible elements...");
-		visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
+		Set<PageElement> visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
 
-		viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
+		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
 		
 		ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
-		/*
-		ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
-		if(screenshot_record != null){
-			screenshot_set = screenshot_record;
-		}
-		else{
-			screenshot_set = screenshot_set_repo.save(screenshot_set);
-		}
-		*/
 		HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
 		screenshots.add(screenshot_set);
 		
@@ -258,11 +243,7 @@ public class BrowserService {
 				screenshots,
 				visible_elements,
 				org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())));
-		//page_state = page_state_repo.save(page_state);
-		
-		//page_state = page_state_repo.save(page_state);
-		//}
-		
+			
 		return page_state;
 	}
 	

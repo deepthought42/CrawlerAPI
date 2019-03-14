@@ -41,6 +41,17 @@ public class PageStateService {
 	 * @return
 	 */
 	public PageState save(PageState page_state){
+		
+		PageState page_state_record = findByKey(page_state.getKey());
+		if(page_state_record != null){
+			page_state_record.setElements(getPageElements(page_state.getKey()));
+			page_state_record.setBrowserScreenshots(getScreenshots(page_state.getKey()));
+			
+			page_state_record.setLandable(page_state.isLandable());
+			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
+			
+			return page_state_repo.save(page_state_record);
+		}
 		//iterate over page elements
 		Set<PageElement> element_records = new HashSet<>();
 		for(PageElement element : page_state.getElements()){
@@ -84,5 +95,17 @@ public class PageStateService {
 
 		
 		return page_state;
+	}
+
+	public PageState findByKey(String page_key) {
+		return page_state_repo.findByKey(page_key);
+	}
+	
+	public Set<PageElement> getPageElements(String page_key){
+		return page_state_repo.getPageElements(page_key);
+	}
+
+	public Set<ScreenshotSet> getScreenshots(String page_key) {
+		return page_state_repo.getScreenshotSets(page_key);
 	}
 }

@@ -17,11 +17,10 @@ import akka.event.LoggingAdapter;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
-import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
-import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.PageElementService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
@@ -38,7 +37,7 @@ public class MemoryRegistryActor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private DomainRepository domain_repo;
+	private DomainService domain_service;
 	
 	@Autowired
 	private TestService test_service;
@@ -87,10 +86,8 @@ public class MemoryRegistryActor extends AbstractActor{
 						if(record == null){
 							log.info("Test REPO :: "+test_service);
 							log.info("Test ::  "+test);
-							test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
-							Domain domain = domain_repo.findByHost(host_url);
-							domain.addTest(test);
-							domain_repo.save(domain);
+							test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
+							domain_service.addTest(host_url, test);
 							
 							MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
 						}

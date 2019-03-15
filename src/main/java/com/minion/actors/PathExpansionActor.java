@@ -33,7 +33,6 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.SubscriptionService;
@@ -54,7 +53,7 @@ public class PathExpansionActor extends AbstractActor {
 	private DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
-	private AccountRepository account_repo;
+	private AccountService account_repo;
 	
 	@Autowired
 	private SubscriptionService subscription_service;

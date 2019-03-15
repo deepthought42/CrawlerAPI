@@ -15,7 +15,6 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.StripeClient;
 
 import com.qanairy.models.enums.SubscriptionPlan;
-import com.qanairy.models.repository.AccountRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
@@ -34,7 +33,7 @@ public class SubscriptionService {
 	private StripeClient stripe_client;
 	
 	@Autowired
-	private AccountRepository account_repo;
+	private AccountService account_repo;
 	
 	
 	

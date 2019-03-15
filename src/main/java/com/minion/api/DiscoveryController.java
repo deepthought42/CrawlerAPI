@@ -30,8 +30,8 @@ import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.services.AccountService;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.workmanagement.WorkAllowanceStatus;
 import com.segment.analytics.Analytics;
@@ -56,10 +56,10 @@ public class DiscoveryController {
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
     
     @Autowired
-    private AccountRepository account_repo;
+    private AccountService account_service;
     
     @Autowired
-    private DomainRepository domain_repo;
+    private DomainService domain_service;
     
     @Autowired
     private ActorSystem actor_system;
@@ -73,7 +73,7 @@ public class DiscoveryController {
     														throws UnknownAccountException{
 		Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_repo.findByUserId(id);
+    	Account acct = account_service.findByUserId(id);
     	
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -82,7 +82,7 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	return domain_repo.getMostRecentDiscoveryRecord(url, acct.getUserId());
+    	return domain_service.getMostRecentDiscoveryRecord(url, acct.getUserId());
     }
 	
     /**
@@ -105,7 +105,7 @@ public class DiscoveryController {
 										   	  						PaymentDueException, StripeException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_repo.findByUserId(id);
+    	Account acct = account_service.findByUserId(id);
     	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	
@@ -118,11 +118,11 @@ public class DiscoveryController {
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
     	
-    	Domain domain = domain_repo.findByHost(url); 
+    	Domain domain = domain_service.findByHost(url); 
 
 		DiscoveryRecord last_discovery_record = null;
 		Date started_date = new Date(0L);
-		for(DiscoveryRecord record : domain_repo.getDiscoveryRecords(url)){
+		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
 			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
 				started_date = record.getStartTime();
 				last_discovery_record = record;
@@ -143,11 +143,11 @@ public class DiscoveryController {
 			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
         	
 			acct.addDiscoveryRecord(discovery_record);
-			acct = account_repo.save(acct);
+			acct = account_service.save(acct);
 			
 			domain.addDiscoveryRecord(discovery_record);
-			domain_repo.save(domain);
-                	
+			domain_service.save(domain);
+
 			WorkAllowanceStatus.register(acct.getUsername());
 			//ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Map<String, Object> options = new HashMap<String, Object>();
@@ -215,7 +215,7 @@ public class DiscoveryController {
 			throws MalformedURLException, UnknownAccountException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_repo.findByUserId(id);
+    	Account acct = account_service.findByUserId(id);
     	
     	if(acct == null){
     		throw new UnknownAccountException();

@@ -30,9 +30,9 @@ import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.AccountService;
+import com.qanairy.services.DomainService;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -59,7 +59,7 @@ public class IdeTestExportController {
 	private AccountService account_service;
 
 	@Autowired
-	private DomainRepository domain_repo;
+	private DomainService domain_repo;
 
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s

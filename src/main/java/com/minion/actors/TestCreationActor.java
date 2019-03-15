@@ -36,10 +36,10 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.PageElementService;
 
 import akka.actor.AbstractActor;
@@ -63,7 +63,7 @@ public class TestCreationActor extends AbstractActor  {
 	private BrowserService browser_service;
 
 	@Autowired
-	private DomainRepository domain_repo;
+	private DomainService domain_service;
 
 	@Autowired
 	private PageElementService page_element_service;
@@ -129,8 +129,7 @@ public class TestCreationActor extends AbstractActor  {
 							    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
 
 						    		test = test_repo.save(test);
-						    		domain.addTest(test);
-							    	domain_repo.save(domain);
+						    		domain_service.addTest(domain.getUrl(), test);
 
 							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
 								    	Test old_test = test_repo.findByKey(test_json.get("key").toString());
@@ -195,7 +194,7 @@ public class TestCreationActor extends AbstractActor  {
     		    	if(dot_idx == last_dot_idx){
     		    		formatted_url = "www."+host;
     		    	}
-    				domain = domain_repo.findByHost(formatted_url);
+    				domain = domain_service.findByHost(formatted_url);
     			}
 
     			PageState page_state = navigateToAndCreatePageState(url, browser);

@@ -28,7 +28,6 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.DomainRepository;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

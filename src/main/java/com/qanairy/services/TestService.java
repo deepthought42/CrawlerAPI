@@ -18,7 +18,6 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
-import com.qanairy.models.Domain;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -26,7 +25,6 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
 
 @Component
@@ -34,7 +32,7 @@ public class TestService {
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
 	@Autowired
-	private DomainRepository domain_repo;
+	private DomainService domain_service;
 	
 	@Autowired
 	private TestRepository test_repo;
@@ -129,12 +127,10 @@ public class TestService {
 	
 			log.info("Test REPO :: "+test_repo);
 			log.info("Test ::  "+test);
-			test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
+			test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
 	  		
 	  		test = test_repo.save(test);
-			Domain domain = domain_repo.findByHost(host_url);
-			domain.addTest(test);
-			domain = domain_repo.save(domain);
+			domain_service.addTest(host_url, test);
 		
 			try {
 				MessageBroadcaster.broadcastDiscoveredTest(test, host_url);

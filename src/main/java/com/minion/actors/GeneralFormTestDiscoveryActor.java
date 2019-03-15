@@ -19,13 +19,13 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
+import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.PageElementService;
 import com.qanairy.services.TestService;
 import com.minion.structs.Message;
 
@@ -49,10 +49,10 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private TestService test_service;
 	
 	@Autowired
-	private ActionRepository action_repo;
+	private ActionService action_service;
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private PageElementService page_element_service;
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
@@ -97,17 +97,17 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				
 							  			if(obj.getType().equals("PageElement")){
 							  				PageElement page_elem = (PageElement)obj;
-							  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
+							  				PageElement elem_record = page_element_service.findByKey(obj.getKey());
 							  				if(elem_record == null){
-							  					elem_record = page_element_repo.save(page_elem);
+							  					elem_record = page_element_service.save(page_elem);
 							  				}
 							  				test_path_objects.add(page_elem);
 							  			}
 							  			else if(obj.getType().equals("Action")){
 							  				Action action = (Action)obj;
-							  				Action action_record = action_repo.findByKey(obj.getKey());
+							  				Action action_record = action_service.findByKey(obj.getKey());
 							  				if(action_record == null){
-							  					action_record = action_repo.save(action);
+							  					action_record = action_service.save(action);
 							  					MessageBroadcaster.broadcastPathObject(action_record, message.getOptions().get("host").toString());
 							  				}
 							  				test_path_objects.add(action_record);

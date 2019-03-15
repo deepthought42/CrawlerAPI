@@ -30,9 +30,9 @@ import com.qanairy.models.TestUser;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.ActionRepository;
-import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.FormService;
+import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.ClusterEvent.MemberRemoved;
@@ -56,7 +56,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	private DomainService domain_service;
 	
 	@Autowired
-	private TestRepository test_repo;
+	private TestService test_service;
 	
 	@Autowired 
 	private ActionRepository action_repo;
@@ -158,7 +158,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString(), null);
 									}catch(NullPointerException e){
 										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
-										e.printStackTrace();
 									} catch (GridException e) {
 										e.printStackTrace();
 									} catch (WebDriverException e) {
@@ -173,16 +172,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								}while(result_page == null && tries < Integer.MAX_VALUE);
 						
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
-								Test test_record = test_repo.findByKey(test.getKey());
-								if(test_record == null){
-									test = test_repo.save(test);
-									MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
-								}
-								else{
-									test = test_record;
-								}
-								domain.addTest(test);
-								domain_service.save(domain);
+								test = test_service.save(test, domain.getUrl());
+								MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
+							
 							}
 						}
 					}

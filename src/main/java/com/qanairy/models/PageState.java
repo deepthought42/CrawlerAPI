@@ -215,18 +215,13 @@ public class PageState implements Persistable, PathObject {
 		Set<PageElement> elements = new HashSet<PageElement>(getElements());
 		Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>(getBrowserScreenshots());
 
-		PageState page;
+		PageState page = null;
 		try {
 			page = new PageState(getUrl().toString(), screenshots, elements, isLandable(), getSrc());
-			return page;
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (NoSuchAlgorithmException | IOException e) {
+			log.info("Error cloning page : " + page.getKey() + ";  "+e.getMessage());
 		}
-
-		return null;
+		return page;
 	}
 
 	public String getKey() {
@@ -337,7 +332,7 @@ public class PageState implements Persistable, PathObject {
 			byte[] thedigest = sha.digest(data);
 			return Hex.encodeHexString(thedigest);
 		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+			log.error("Error generating checksum of buffered image");
 		}
 		return "";
 

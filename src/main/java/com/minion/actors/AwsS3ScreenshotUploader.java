@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.repository.PageElementRepository;
+import com.qanairy.services.PageElementService;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -29,7 +29,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 	Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private PageElementService page_element_service;
 	
 	public static Props props() {
 	  return Props.create(AwsS3ScreenshotUploader.class);
@@ -68,9 +68,9 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 					HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
 					screenshots.add(screenshot_set);
 					*/
-					PageElement page_elem_record = page_element_repo.findByKey(screenshot_upload.page_elem_key);
+					PageElement page_elem_record = page_element_service.findByKey(screenshot_upload.page_elem_key);
 					page_elem_record.setScreenshot(viewport_screenshot_url);
-					page_elem_record = page_element_repo.save(page_elem_record);
+					page_elem_record = page_element_service.save(page_elem_record);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

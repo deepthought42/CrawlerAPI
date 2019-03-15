@@ -16,5 +16,9 @@ public class FormService {
 	public PageState getPageState(Form form) {
 		return form_repo.getPageState(form.getKey());
 	}
+	
+	public Form findByKey(String key){
+		return form_repo.findByKey(key);
+	}
 
 }

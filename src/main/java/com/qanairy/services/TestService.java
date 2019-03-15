@@ -85,8 +85,7 @@ public class TestService {
 				 pages_dont_match = true;
 			 }
 			 catch (Exception e) {
-				 e.printStackTrace();
-				 System.err.println(e.getLocalizedMessage());
+				 log.error(e.getLocalizedMessage());
 			 } 
 			 finally{
 				browser.close();
@@ -171,5 +170,9 @@ public class TestService {
 	public void init(Crawler crawler, BrowserService browser_service){
 		this.crawler = crawler;
 		this.browser_service = browser_service;
+	}
+	
+	public Test findByKey(String key){
+		return test_repo.findByKey(key);
 	}
 }

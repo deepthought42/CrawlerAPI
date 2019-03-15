@@ -28,13 +28,11 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageElement;
@@ -42,15 +40,12 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.EmailService;
+import com.qanairy.services.PageElementService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
@@ -79,19 +74,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	private DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
-	private DomainRepository domain_repo;
-	
-	@Autowired
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private PageElementService page_element_service;
 	
 	@Autowired
-	private TestRepository test_repo;
-	
-	@Autowired
-	private ActionRepository action_repo;
+	private ActionService action_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -142,11 +131,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
 									Duration minimum_diff = Duration.ofHours(24);
 									if(time_diff.compareTo(minimum_diff) > 0){
+										log.info("Checking for page landability");
 										//have page checked for landability
 										page_state.setLastLandabilityCheck(LocalDateTime.now());
-										page_state = page_state_service.save(page_state);
-
-										log.info("Checking for page landability");
 										boolean isLandable = browser_service.checkIfLandable(browser_name, page_state);										page_state.setLandable(isLandable);
 										page_state = page_state_service.save(page_state);
 									}
@@ -167,7 +154,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 							for(Action action : exploratory_path.getPossibleActions()){
 								ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
-								Action action_record = action_repo.findByKey(action.getKey());
+								Action action_record = action_service.findByKey(action.getKey());
 								if(action_record != null){
 									action = action_record;
 								}
@@ -296,17 +283,21 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @throws MalformedURLException 
 	 */
 	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Message<?> acct_msg ) throws JsonProcessingException, MalformedURLException {
+		log.info("Creating test........");
+		Test test = new Test(path_keys, path_objects, result_page, null);
 		
-		Test test = new Test(path_keys, path_objects, result_page, null);							
-		Test test_db = test_repo.findByKey(test.getKey());
+		log.info("Looking up test by key ..... ");
+		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db != null){
 			test = test_db;
 		}
 		
+		log.info("Setting test data");
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
+		log.info("Creating test record");
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
@@ -407,7 +398,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), parent);
 				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent), screenshot_url );
 				
-				PageElement parent_tag_record = page_element_repo.findByKey(parent_tag.getKey());
+				PageElement parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
 				if(parent_tag_record != null){
 					parent_tag = parent_tag_record;
 				}

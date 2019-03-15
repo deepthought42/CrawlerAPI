@@ -36,11 +36,11 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.PageElementService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -66,13 +66,13 @@ public class TestCreationActor extends AbstractActor  {
 	private DomainRepository domain_repo;
 
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private PageElementService page_element_service;
 
 	@Autowired
 	private TestRepository test_repo;
 
 	@Autowired
-	private ActionRepository action_repo;
+	private ActionService action_service;
 
 
 	//subscribe to cluster changes
@@ -146,7 +146,6 @@ public class TestCreationActor extends AbstractActor  {
 				    		}
 				    		catch(Exception e){
 				    			log.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
-				    			e.printStackTrace();
 				    		}
 				    		finally {
 						  		browser.close();
@@ -210,7 +209,7 @@ public class TestCreationActor extends AbstractActor  {
 
     			PageElement element = createPageElement(element_json.getString("xpath"), browser);
 
-    			PageElement page_elem_record = page_element_repo.findByKey(element.getKey());
+    			PageElement page_elem_record = page_element_service.findByKey(element.getKey());
     			if(page_elem_record == null){
 					path_objects.add(element);
 				}
@@ -256,7 +255,7 @@ public class TestCreationActor extends AbstractActor  {
 
 	private Action createAction(String action_type, String action_value) {
 		Action action = new Action(action_type, action_value);
-		Action action_record = action_repo.findByKey(action.getKey());
+		Action action_record = action_service.findByKey(action.getKey());
 		if(action_record != null){
 			action = action_record;
 		}
@@ -273,7 +272,7 @@ public class TestCreationActor extends AbstractActor  {
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
 		PageElement elem = new PageElement(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);
-		PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+		PageElement elem_record = page_element_service.findByKey(elem.getKey());
 
 		if(elem_record != null){
 			elem = elem_record;

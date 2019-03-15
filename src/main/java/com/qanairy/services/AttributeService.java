@@ -20,4 +20,8 @@ public class AttributeService {
 		
 		return attribute_record;
 	}
+	
+	public Attribute findByKey(String key){
+		return attribute_repo.findByKey(key);
+	}
 }

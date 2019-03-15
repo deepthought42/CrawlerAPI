@@ -27,8 +27,8 @@ public class BrowserFactory {
 		else if(environment.equals(BrowserEnvironment.DISCOVERY)){
 			System.err.println("Discovery enviroment...");
 			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(2);
-			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
+			int randomInt = randomGenerator.nextInt(100);
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt%2]+"/wd/hub");
 		}
 		
 		System.err.println("done building browser :: " + environment);

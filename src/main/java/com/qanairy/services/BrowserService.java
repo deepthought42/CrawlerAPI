@@ -46,7 +46,6 @@ import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
-import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.Rule;
 
 /**
@@ -62,7 +61,7 @@ public class BrowserService {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private PageElementService page_element_service;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -94,7 +93,7 @@ public class BrowserService {
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
-	public boolean checkIfLandable(String browser, PageState page_state) throws GridException, IOException {
+	public boolean checkIfLandable(String browser, PageState page_state){
 		boolean isLandable = false;
 		boolean page_visited_successfully = false;
 		int cnt  = 0;
@@ -205,10 +204,13 @@ public class BrowserService {
 		log.info("calculated page state key :: "+ page_key);
 
 		PageState page_state = page_state_service.findByKey(page_key);
-		
+		if(page_state != null){
+			return page_state;
+		}
 		log.info("Getting visible elements...");
 		Set<PageElement> visible_elements = getVisibleElements(browser.getDriver(), "", page_url.getHost());
 
+		log.info("uploading element screenshot to S3");
 		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
 		
 		ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
@@ -247,8 +249,6 @@ public class BrowserService {
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
-			
-			
 			try{
 				boolean is_child = getChildElements(elem).isEmpty();
 
@@ -256,12 +256,11 @@ public class BrowserService {
 						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
 						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
 					
-					Set<Attribute> attributes = extractAttributes(elem, driver);
-					String this_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
-
 					BufferedImage img = null;
 					String checksum = "";
 					String screenshot = null;
+					PageElement page_element_record = null;
+					PageElement page_element = null;
 					try{
 						log.info("Checking if element visible in viewport");
 						if(!isElementVisibleInPane(driver, elem)){
@@ -271,24 +270,46 @@ public class BrowserService {
 						BufferedImage page_screenshot = Browser.getViewportScreenshot(driver);
 						img = Browser.getElementScreenshot(driver, elem, page_screenshot);
 						checksum = PageState.getFileChecksum(img);		
-						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+						
 						page_screenshot.flush();
 					}
 					catch(RasterFormatException e){
 						log.warn("Raster Format Exception : "+e.getMessage());
+						continue;
 					}
+					page_element = new PageElement(elem.getText(), null, elem.getTagName(), null,  null, screenshot, checksum);
 					
-					Map<String, String> css_props = Browser.loadCssProperties(elem);
+					page_element_record = page_element_service.findByKey(page_element.getKey()) ;
+					if(page_element_record == null){
+						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+						long start = System.currentTimeMillis();
+						
+						Map<String, String> css_props = Browser.loadCssProperties(elem);
+						long end = System.currentTimeMillis();
+						log.info("CSS EXTRACTION TIME ::     " +(end-start));
 
-					PageElement tag = new PageElement(elem.getText(), this_xpath, elem.getTagName(), attributes,  css_props, screenshot);
-					
-					if(!elementList.contains(tag)){
-						elementList.add(tag);
+						start = System.currentTimeMillis();
+						Set<Attribute> attributes = extractAttributes(elem, driver);
+						end = System.currentTimeMillis();
+						log.info("attributed extraction time    ::     " + (end-start));
+						
+						String element_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
+						
+						page_element.setCssValues(css_props);
+						page_element.setScreenshot(screenshot);
+						page_element.setAttributes(attributes);
+						page_element.setXpath(element_xpath);
+						
+					}
+					else{
+						page_element = page_element_record;
+					}
+					if(!elementList.contains(page_element)){
+						elementList.add(page_element);
 					}
 				}
 			}catch(Exception e) {
 				log.warn("Error getting visible element "+ e.getMessage());
-				e.printStackTrace();
 			}
 		}
 		
@@ -681,7 +702,7 @@ public class BrowserService {
 				}
 			}catch(InvalidSelectorException e){
 				parent = null;
-				e.printStackTrace();
+				log.info("Invalid selector exception occurred " + e.getMessage());
 				break;
 			}
 			
@@ -695,13 +716,13 @@ public class BrowserService {
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(driver, child);
 
 					PageElement elem = new PageElement(child.getText(), generateXpath(child, "", new HashMap<String, Integer>(), driver, attributes), child.getTagName(), attributes, Browser.loadCssProperties(child), screenshot_url );
-					PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+					PageElement elem_record = page_element_service.findByKey(elem.getKey());
 					
 					if(elem_record != null){
 						elem=elem_record;
 					}
 					else{
-						elem = page_element_repo.save(elem);
+						elem = page_element_service.save(elem);
 					}
 					
 					//FormField input_field = new FormField(elem);
@@ -717,12 +738,12 @@ public class BrowserService {
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(driver, page_elem);
 
 					PageElement input_tag = new PageElement(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), driver, attributes), page_elem.getTagName(), attributes, Browser.loadCssProperties(page_elem), screenshot_url );
-					PageElement elem_record = page_element_repo.findByKey(input_tag.getKey());
+					PageElement elem_record = page_element_service.findByKey(input_tag.getKey());
 					if(elem_record != null){
 						input_tag=elem_record;
 					}
 					else{
-						input_tag = page_element_repo.save(input_tag);
+						input_tag = page_element_service.save(input_tag);
 					}
 										
 					child_inputs.add(input_tag);
@@ -750,7 +771,7 @@ public class BrowserService {
 		Set<Attribute> attributes = extractAttributes(submit_element, browser.getDriver());
 		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser.getDriver(), form_elem);
 		PageElement elem = new PageElement(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url );
-		PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+		PageElement elem_record = page_element_service.findByKey(elem.getKey());
 		if(elem_record != null){
 			elem = elem_record;
 		}

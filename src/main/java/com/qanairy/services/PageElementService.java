@@ -8,19 +8,17 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Attribute;
 import com.qanairy.models.PageElement;
-import com.qanairy.models.repository.AttributeRepository;
 import com.qanairy.models.repository.PageElementRepository;
-import com.qanairy.models.repository.RuleRepository;
 import com.qanairy.models.rules.Rule;
 
 @Service
 public class PageElementService {
 	
 	@Autowired
-	private AttributeRepository attribute_service;
+	private AttributeService attribute_service;
 	
 	@Autowired
-	private RuleRepository rule_service;
+	private RuleService rule_service;
 	
 	@Autowired
 	private PageElementRepository page_element_repo;
@@ -44,5 +42,13 @@ public class PageElementService {
 			element_record = page_element_repo.save(element);
 		}
 		return element_record;
+	}
+	
+	public PageElement findByKey(String key){
+		return page_element_repo.findByKey(key);
+	}
+	
+	public PageElement findByTextAndName(String text, String name){
+		return page_element_repo.findByTextAndName(text, name);
 	}
 }

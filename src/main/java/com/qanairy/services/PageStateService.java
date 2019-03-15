@@ -41,7 +41,7 @@ public class PageStateService {
 	 * @return
 	 */
 	public PageState save(PageState page_state){
-		
+		System.err.println("Saving page state");
 		PageState page_state_record = findByKey(page_state.getKey());
 		if(page_state_record != null){
 			page_state_record.setElements(getPageElements(page_state.getKey()));

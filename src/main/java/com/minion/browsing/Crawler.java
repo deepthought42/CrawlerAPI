@@ -101,7 +101,7 @@ public class Crawler {
 			}catch(Exception e){
 				browser.close();
 				browser = browser_service.getConnection(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
-				e.printStackTrace();
+				log.error("Error occurred while navigating to page and scrolling to element");
 			}
 		}while(current_page_state == null);
 		
@@ -204,12 +204,10 @@ public class Crawler {
 				result_page = crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 			}catch(NullPointerException e){
 				log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
-				e.printStackTrace();
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 			} catch (WebDriverException e) {
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-				e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 			} catch(Exception e){

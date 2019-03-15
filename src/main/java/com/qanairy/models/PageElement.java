@@ -36,6 +36,7 @@ public class PageElement implements Persistable, PathObject {
 	
     private String key;
     private String screenshot;
+    private String screenshot_checksum;
 	private String name;
 	private String text;
 	private String xpath;
@@ -85,6 +86,36 @@ public class PageElement implements Persistable, PathObject {
 		setKey(generateKey());
 	}
 	
+	/**
+	 * 
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * 
+	 * @pre attributes != null
+	 * @pre css_map != null
+	 * @pre xpath != null
+	 * @pre name != null
+	 * @pre screenshot_url != null
+	 * @pre !screenshot_url.isEmpty()
+	 */
+	public PageElement(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url, String checksum){
+		assert name != null;
+		assert checksum != null;
+		assert !checksum.isEmpty();
+		
+		setType("PageElement");
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setScreenshot(screenshot_url);
+		setText(text);
+		setCssValues(css_map);
+		setScreenshotChecksum(checksum);
+		setKey(generateKey());
+	}
 	/**
 	 * Print Attributes for this element in a prettyish format
 	 */
@@ -231,6 +262,14 @@ public class PageElement implements Persistable, PathObject {
 		this.type = type;
 	}
 	
+	public String getScreenshotChecksum() {
+		return screenshot_checksum;
+	}
+
+	public void setScreenshotChecksum(String screenshot_checksum) {
+		this.screenshot_checksum = screenshot_checksum;
+	}
+
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
 	 * as easy identity of {@link Test} when generated in the wild via discovery
@@ -238,7 +277,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getScreenshot()+":"+getXpath()+":"+getText());   
+		return "pageelement::"+getScreenshotChecksum();   
 	}
 	
 

@@ -1,5 +1,7 @@
 package com.qanairy.services;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
@@ -7,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
+import com.minion.structs.Message;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageElement;
@@ -25,6 +29,9 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DomainRepository;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 @Component
 public class TestCreatorService {
@@ -41,6 +48,10 @@ public class TestCreatorService {
 	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private ActorSystem actor_system;
+	
 	/**
 	 * Generates a landing page test based on a given URL
 	 * 
@@ -56,27 +67,30 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test generateLandingPageTest(String discovery_key, String host, String url, Browser browser) 
+	public Test generateLandingPageTest(String discovery_key, String host, String url, Browser browser, Message<?> message) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		browser.navigateTo(url);
-		log.info("building page for landability test");
+		log.info("building page for landing test");
 	  	PageState page_obj = browser_service.buildPage(browser);
-	  	PageState page_record = page_state_service.findByKey(page_obj.getKey());
-	  	if(page_record == null){
-		  	page_obj.setLandable(true);
-		  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
-	  		page_obj = page_state_service.save(page_obj);
-	  	}
-	  	else{
-	  		page_obj = page_record;
-	  	}
-	  		  	
+	  	page_obj.setLandable(true);
+	  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
+  		page_obj = page_state_service.save(page_obj);
+  	
+  	//SEND RESULT PAGE TO MEMORY REGISTRY ACTOR
+		Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), page_obj, message.getOptions());
+
+	  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
+	  	memory_registry_actor.tell(page_state_msg, null );
+	  	
 	  	List<String> path_keys = new ArrayList<String>();	  	
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_keys.add(page_obj.getKey());
 	  	path_objects.add(page_obj);
 
+	  	log.info("path keys size ::   " + path_keys.size());
+	  	log.info("Path objects size   :::   " + path_objects.size());
 		Domain domain = domain_repo.findByHost( host);
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser.getBrowserName());
 		test = test_service.save(test, domain.getUrl());

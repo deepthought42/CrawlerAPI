@@ -4,6 +4,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public class TestCreatorService {
 	private static Logger log = LoggerFactory.getLogger(TestCreatorService.class.getName());
 
 	@Autowired
-	private DomainRepository domain_repo;
+	private DomainService domain_service;
 
 	@Autowired
 	private PageStateService page_state_service;
@@ -66,7 +67,7 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test generateLandingPageTest(String discovery_key, String host, String url, Browser browser, Message<?> message) 
+	public Test generateLandingPageTest(String url, Browser browser) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		browser.navigateTo(url);
@@ -75,14 +76,7 @@ public class TestCreatorService {
 	  	page_obj.setLandable(true);
 	  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
   		page_obj = page_state_service.save(page_obj);
-  	
-  	//SEND RESULT PAGE TO MEMORY REGISTRY ACTOR
-		Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), page_obj, message.getOptions());
-
-	  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
-	  	memory_registry_actor.tell(page_state_msg, null );
-	  	
+  	  	
 	  	List<String> path_keys = new ArrayList<String>();	  	
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_keys.add(page_obj.getKey());
@@ -90,10 +84,19 @@ public class TestCreatorService {
 
 	  	log.info("path keys size ::   " + path_keys.size());
 	  	log.info("Path objects size   :::   " + path_objects.size());
-		Domain domain = domain_repo.findByHost( host);
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser.getBrowserName());
-		test = test_service.save(test, domain.getUrl());
+		if(!url.contains("http")){
+			url = "http://"+url;
+		}
+		String url_path = new URL(url).getPath();
+		url_path.replaceFirst("/", "");
+		test.setName(url_path + " loaded test");
 		
+		//add group "smoke" to test
+		/*Group group = new Group("smoke");
+		group = group_service.save(group);
+		test.addGroup(group);
+		*/
 		return test;
 	}
 	

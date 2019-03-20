@@ -63,5 +63,9 @@ public class AccountService {
 	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(String username, int month) {
 		return account_repo.getDiscoveryRecordsByMonth(username, month);
 	}
+
+	public int getTestCountByMonth(String username, int month) {
+		return account_repo.getTestCountByMonth(username, month);
+	}
 	
 }

@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -76,6 +79,7 @@ public class PageState implements Persistable, PathObject {
 		setType(PageState.class.getSimpleName());
 		setUrl(url.replace("/#", ""));
 		setBrowserScreenshots(browser_screenshots);
+		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
@@ -107,6 +111,7 @@ public class PageState implements Persistable, PathObject {
 		setType(PageState.class.getSimpleName());
 		setUrl(url.replace("/#", ""));
 		setBrowserScreenshots(browser_screenshots);
+		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);

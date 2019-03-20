@@ -30,7 +30,6 @@ public class BrowserServiceTest {
 		
 		
 		Set<PathObject> path_objects = DomainController.merge(page_state, actions);
-
 	}
 	
 	@Test

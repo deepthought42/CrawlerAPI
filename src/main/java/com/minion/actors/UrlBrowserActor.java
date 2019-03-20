@@ -29,6 +29,7 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestCreatorService;
+import com.qanairy.services.TestService;
 
 /**
  * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
@@ -47,12 +48,13 @@ public class UrlBrowserActor extends AbstractActor {
 	
 	@Autowired
 	private TestCreatorService test_creator_service;
-
-	@Autowired
-	private DiscoveryRecordRepository discovery_record_repo;
 	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private TestService test_service;
+	
 	
 	/**
 	 * {@inheritDoc}
@@ -70,53 +72,53 @@ public class UrlBrowserActor extends AbstractActor {
 						int attempts = 0;
 						Browser browser = null;
 						Test test = null;
+						String url = ((URL)message.getData()).toString();
+						String host = ((URL)message.getData()).getHost();
+						String browser_name = message.getOptions().get("browser").toString();
+
 						do{
 							try{
-								String browser_name = message.getOptions().get("browser").toString();
-								String host = message.getOptions().get("host").toString();
-								String url = ((URL)message.getData()).toString();
 								browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-								test = test_creator_service.generateLandingPageTest(discovery_key, host, url, browser, message);
+								test = test_creator_service.generateLandingPageTest(url, browser);
 								
 								test_generated_successfully = true;
-								break;								
 							}
 							catch(Exception e){
 								log.error("Exception occurred while exploring url --  " + e.getMessage());
-								e.printStackTrace();
 							}
 							finally{
-								browser.close();
-							}
-							
-
-							DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
-							
-							Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
-							
-							log.info("Discovery record :: " + discovery_record);
-							log.info("test :: " + test);
-							log.info("test result " + test.getResult());
-							if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
-								discovery_record.addExpandedPageState(test.getResult().getKey());
-								discovery_record_repo.save(discovery_record);
-								
-								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-								form_discoverer.tell(page_state_msg, getSelf() );
-								
-								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-		
-								/**  path expansion temporarily disabled
-								 */
-								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-								path_expansion_actor.tell(test_msg, getSelf() );
-							}
-							
+								if(browser!=null){
+									browser.close();
+								}
+							}							
 						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
 						
+						
+						test = test_service.save(test, host);
+
 						DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
+						
+						Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
+						
+						log.info("Discovery record :: " + discovery_record);
+						log.info("test :: " + test);
+						log.info("test result " + test.getResult());
+						if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
+							log.info("discovery path does not have expanded page state");
+							discovery_record.addExpandedPageState(test.getResult().getKey());
+							
+							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+							form_discoverer.tell(page_state_msg, getSelf() );
+							
+							Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
+	
+							/**  path expansion temporarily disabled
+							 */
+							final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+							path_expansion_actor.tell(test_msg, getSelf() );
+						}
 						discovery_record.setLastPathRanAt(new Date());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						discovery_record.setTestCount(discovery_record.getTestCount()+1);

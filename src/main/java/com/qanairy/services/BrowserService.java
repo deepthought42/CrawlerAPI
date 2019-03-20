@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -37,6 +36,7 @@ import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
@@ -111,10 +111,7 @@ public class BrowserService {
 				else{
 					isLandable = false;
 				}
-				page_state.setLastLandabilityCheck(LocalDateTime.now());
-				page_state.setLandable(isLandable);
-				
-				page_state_service.save(page_state);
+
 				page_visited_successfully = true;
 			}
 			catch(GridException e){
@@ -235,9 +232,11 @@ public class BrowserService {
 	 *  
 	 * @param driver
 	 * @return list of webelements that are currently visible on the page
+	 * @throws IOException 
+	 * @throws GridException 
 	 */
 	private Set<PageElement> getVisibleElements(WebDriver driver, String xpath, String host) 
-															 throws WebDriverException{
+															 throws WebDriverException, GridException, IOException{
 		
 		List<WebElement> pageElements = driver.findElements(By.cssSelector("*"));
 
@@ -249,67 +248,68 @@ public class BrowserService {
 		
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
-			try{
-				boolean is_child = getChildElements(elem).isEmpty();
-
-				if(is_child && elem.getSize().getHeight() > 0 && elem.getSize().width >0 && elem.isDisplayed()
-						&& !elem.getTagName().equals("body") && !elem.getTagName().equals("html") 
-						&& !elem.getTagName().equals("script") && !elem.getTagName().equals("link")){
+			boolean is_child = getChildElements(elem).isEmpty();
+			String elem_tag_name = elem.getTagName();
+			Dimension elem_size = elem.getSize();
+			if(is_child && elem_size.getHeight() > 0 && elem_size.width >0 && elem.isDisplayed()
+					&& !elem_tag_name.equals("body") && !elem_tag_name.equals("html") 
+					&& !elem_tag_name.equals("script") && !elem_tag_name.equals("link")){
+				
+				BufferedImage img = null;
+				String checksum = "";
+				String screenshot = null;
+				PageElement page_element_record = null;
+				PageElement page_element = null;
+				try{
+					log.info("Checking if element visible in viewport");
+					if(!isElementVisibleInPane(driver, elem)){
+						log.info("element not visible in viewport. SCROLLING TO ELEMENT");
+						Browser.scrollToElement(driver, elem);
+					}
+					BufferedImage page_screenshot = Browser.getViewportScreenshot(driver);
+					img = Browser.getElementScreenshot(driver, elem, page_screenshot);
+					checksum = PageState.getFileChecksum(img);		
 					
-					BufferedImage img = null;
-					String checksum = "";
-					String screenshot = null;
-					PageElement page_element_record = null;
-					PageElement page_element = null;
-					try{
-						log.info("Checking if element visible in viewport");
-						if(!isElementVisibleInPane(driver, elem)){
-							log.info("element not visible in viewport. SCROLLING TO ELEMENT");
-							Browser.scrollToElement(driver, elem);
-						}
-						BufferedImage page_screenshot = Browser.getViewportScreenshot(driver);
-						img = Browser.getElementScreenshot(driver, elem, page_screenshot);
-						checksum = PageState.getFileChecksum(img);		
-						
-						page_screenshot.flush();
-					}
-					catch(RasterFormatException e){
-						log.warn("Raster Format Exception : "+e.getMessage());
-						continue;
-					}
-					page_element = new PageElement(elem.getText(), null, elem.getTagName(), null,  null, screenshot, checksum);
-					
-					page_element_record = page_element_service.findByKey(page_element.getKey()) ;
-					if(page_element_record == null){
-						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-						long start = System.currentTimeMillis();
-						
-						Map<String, String> css_props = Browser.loadCssProperties(elem);
-						long end = System.currentTimeMillis();
-						log.info("CSS EXTRACTION TIME ::     " +(end-start));
-
-						start = System.currentTimeMillis();
-						Set<Attribute> attributes = extractAttributes(elem, driver);
-						end = System.currentTimeMillis();
-						log.info("attributed extraction time    ::     " + (end-start));
-						
-						String element_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
-						
-						page_element.setCssValues(css_props);
-						page_element.setScreenshot(screenshot);
-						page_element.setAttributes(attributes);
-						page_element.setXpath(element_xpath);
-						
-					}
-					else{
-						page_element = page_element_record;
-					}
-					if(!elementList.contains(page_element)){
-						elementList.add(page_element);
-					}
+					page_screenshot.flush();
 				}
-			}catch(Exception e) {
-				log.warn("Error getting visible element "+ e.getMessage());
+				catch(RasterFormatException e){
+					log.warn("Raster Format Exception : "+e.getMessage());
+					continue;
+				}
+				page_element = new PageElement(elem.getText(), null, elem.getTagName(), null,  null, null, checksum);
+				
+				page_element_record = page_element_service.findByKey(page_element.getKey()) ;
+				if(page_element_record == null){
+					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(driver.getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+					long start = System.currentTimeMillis();
+					
+					Map<String, String> css_props = Browser.loadCssProperties(elem);
+					long end = System.currentTimeMillis();
+					log.info("CSS EXTRACTION TIME ::     " +(end-start));
+
+					start = System.currentTimeMillis();
+					Set<Attribute> attributes = extractAttributes(elem, driver);
+					end = System.currentTimeMillis();
+					log.info("attributed extraction time    ::     " + (end-start));
+					
+					start = System.currentTimeMillis();
+					String element_xpath = generateXpath(elem, xpath, xpath_map, driver, attributes);
+					end = System.currentTimeMillis();
+					log.info("xpath generation time    ::     " + (end-start));
+					
+					page_element.setCssValues(css_props);
+					page_element.setScreenshot(screenshot);
+					page_element.setAttributes(attributes);
+					page_element.setXpath(element_xpath);
+					
+					page_element = page_element_service.save(page_element);
+				}
+				else{
+					page_element = page_element_record;
+				}
+				if(!elementList.contains(page_element)){
+					elementList.add(page_element);
+				}
 			}
 		}
 		
@@ -379,6 +379,7 @@ public class BrowserService {
 	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver, Set<Attribute> attributes){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
 
+		long start = System.currentTimeMillis();
 		xpath += "//"+element.getTagName();
 		for(Attribute attr : attributes){
 			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
@@ -402,17 +403,25 @@ public class BrowserService {
 			}
 			xpath += "]";
 		}
-	    
+		long end = System.currentTimeMillis();
+		
+		start = System.currentTimeMillis();
+		
+		log.info("leaf level xpath loaded with attributes in    "+(end-start));
 	    WebElement parent = element;
 	    int count = 0;
-	    while(!parent.getTagName().equals("html") && !parent.getTagName().equals("body") && parent != null && count < 4){
+	    while(!parent.getTagName().equals("body") && count < 4){
 	    	try{
+	    		long start_2 = System.currentTimeMillis();
 	    		parent = getParentElement(parent);
-	    		if(driver.findElements(By.xpath("//"+parent.getTagName() + xpath)).size() == 1){
-	    			return "//"+parent.getTagName() + xpath;
+	    		long end_2 = System.currentTimeMillis();
+	    		log.info("time to find parent element :: " + (end_2-start_2));
+	    		xpath = parent.getTagName() + xpath;
+	    		if(driver.findElements(By.xpath("//"+xpath)).size() == 1){
+	    			return "//"+xpath;
 	    		}
 	    		else{
-		    		xpath = "/" + parent.getTagName() + xpath;		
+		    		xpath = "/"+xpath;		
 	    		}
 	    	}catch(InvalidSelectorException e){
 	    		parent = null;
@@ -421,6 +430,9 @@ public class BrowserService {
 	    	}
 	    	count++;
 	    }
+
+		end = System.currentTimeMillis();
+		log.info("full xpath loaded in    "+(end-start));
 	    xpath = "/"+xpath;
 		return uniqifyXpath(element, xpathHash, xpath, driver);
 	}
@@ -508,30 +520,38 @@ public class BrowserService {
 	/**
 	 * creates a unique xpath based on a given hash of xpaths
 	 * 
-	 * @param driver
+	 * @param elem
 	 * @param xpathHash
-	 * 
+	 * @param xpath
+	 * @param driver
 	 * @return
 	 */
 	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath, WebDriver driver){
+		long start = System.currentTimeMillis();
 		try {
 			List<WebElement> elements = driver.findElements(By.xpath(xpath));
-			
+			String elem_text = elem.getText();
 			if(elements.size()>1){
 				int count = 1;
 				for(WebElement element : elements){
-					if(element.getTagName().equals(elem.getTagName())
-							&& element.getText().equals(elem.getText())){
+
+					long start_2 = System.currentTimeMillis();
+					if(element.getText().equals(elem_text)){
 						return "("+xpath+")[" + count + "]";	
 					}					
 					count++;
+
+					long end_2 = System.currentTimeMillis();
+					log.info("applying index " + (count-1) + " to xpath ::    " + (end_2-start_2));
 				}
 			}
 			
 		}catch(InvalidSelectorException e){
 			log.warn(e.getMessage());
 		}
-
+		
+		long end = System.currentTimeMillis();
+		log.info("uniqifying xpath effort time   ::    " + (end-start));
 		return xpath;
 	}	
 	

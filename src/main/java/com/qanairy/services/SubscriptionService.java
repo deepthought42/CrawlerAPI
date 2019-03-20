@@ -33,12 +33,10 @@ public class SubscriptionService {
 	private StripeClient stripe_client;
 	
 	@Autowired
-	private AccountService account_repo;
+	private AccountService account_service;
 	
-	
-	
-	public SubscriptionService(AccountRepository account_repo){
-		this.account_repo = account_repo;
+	public SubscriptionService(AccountService account_service){
+		this.account_service = account_service;
 	}
 
 	/**
@@ -61,7 +59,7 @@ public class SubscriptionService {
 	    		stripe_client.cancelSubscription(acct.getSubscriptionToken());
 	    		acct.setSubscriptionToken("");
 	    		acct.setSubscriptionType("FREE");
-	    		account_repo.save(acct);
+	    		account_service.save(acct);
 			}
 			else{
 				log.warn("User already has free plan");
@@ -103,7 +101,7 @@ public class SubscriptionService {
 	    	
 	    	acct.setSubscriptionToken(subscription.getId());
     		acct.setSubscriptionType("PRO");
-	    	account_repo.save(acct);
+	    	account_service.save(acct);
 		}
 	}
 	
@@ -119,7 +117,7 @@ public class SubscriptionService {
 	public boolean hasExceededSubscriptionTestRunsLimit(Account acct, SubscriptionPlan plan) throws StripeException{
     	//check if user has exceeded freemium plan
     	Date date = new Date();
-    	int test_run_cnt = account_repo.getTestCountByMonth(acct.getUsername(), date.getMonth());
+    	int test_run_cnt = account_service.getTestCountByMonth(acct.getUsername(), date.getMonth());
     	
     	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 400){
     		return true;
@@ -147,7 +145,7 @@ public class SubscriptionService {
 	public boolean hasExceededSubscriptionDiscoveredLimit(Account acct, SubscriptionPlan plan) throws StripeException{    	
     	//check if user has exceeded freemium plan
     	Date date = new Date();
-    	Set<DiscoveryRecord> discovery_records = account_repo.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
+    	Set<DiscoveryRecord> discovery_records = account_service.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
     	int discovered_test_cnt = 0;
     	
     	for(DiscoveryRecord record : discovery_records){

@@ -9,7 +9,7 @@ import com.qanairy.models.enums.BrowserEnvironment;
 public class BrowserFactory {
 
 	//GOOGLE CLOUD CLUSTER
-	private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444"};
+	private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444", "35.239.245.6:4444", "173.255.118.118:4444"};
 	private static final String TEST_HUB_IP_ADDRESS = "34.73.96.186:4444";
 
 	// PRODUCTION HUB ADDRESS
@@ -28,7 +28,7 @@ public class BrowserFactory {
 			System.err.println("Discovery enviroment...");
 			Random randomGenerator = new Random();
 			int randomInt = randomGenerator.nextInt(100);
-			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt%2]+"/wd/hub");
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt%4]+"/wd/hub");
 		}
 		
 		System.err.println("done building browser :: " + environment);

@@ -127,8 +127,9 @@ public class TestService {
 	
 			log.info("Test REPO :: "+test_repo);
 			log.info("Test ::  "+test);
-			test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
-	  		
+			if(test.getName() == null || test.getName().isEmpty()){
+				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
+			}
 	  		test = test_repo.save(test);
 			domain_service.addTest(host_url, test);
 		

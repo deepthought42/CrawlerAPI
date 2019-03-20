@@ -59,7 +59,7 @@ public class IdeTestExportController {
 	private AccountService account_service;
 
 	@Autowired
-	private DomainService domain_repo;
+	private DomainService domain_service;
 
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
@@ -116,10 +116,10 @@ public class IdeTestExportController {
     	if(dot_idx == last_dot_idx){
     		formatted_url = "www."+host;
     	}
-    	Domain domain = domain_repo.findByHost(formatted_url);
+    	Domain domain = domain_service.findByHost(formatted_url);
     	if(domain == null){
     		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","");
-    		domain = domain_repo.save(domain);
+    		domain = domain_service.save(domain);
     	}
 
     	Map<String, Object> options = new HashMap<String, Object>();

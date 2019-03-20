@@ -3,6 +3,8 @@ package com.qanairy.services;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
+	private static Logger log = LoggerFactory.getLogger(BrowserService.class);
 
 	@Autowired
 	private DomainRepository domain_repo;
@@ -35,7 +38,10 @@ public class DomainService {
 	}
 	
 	public Domain addTest(String host, Test test){
+		log.info("domain host :: "+host);
 		Domain domain = domain_repo.findByHost(host);
+		log.info("Domain :: " + domain);
+		log.info("test ::  " + test);
 		domain.addTest(test);
 		return save(domain);
 	}

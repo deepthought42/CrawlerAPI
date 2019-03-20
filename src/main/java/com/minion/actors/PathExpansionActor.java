@@ -4,6 +4,8 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,11 +23,9 @@ import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
-import com.minion.api.exception.PaymentDueException;
 import com.minion.browsing.ActionOrderOfOperations;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
-import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
@@ -35,7 +35,8 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
-import com.qanairy.services.SubscriptionService;
+import com.qanairy.services.BrowserService;
+import com.qanairy.services.PageStateService;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -53,10 +54,10 @@ public class PathExpansionActor extends AbstractActor {
 	private DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
-	private AccountService account_repo;
+	private PageStateService page_state_service;
 	
 	@Autowired
-	private SubscriptionService subscription_service;
+	private BrowserService browser_service;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -73,35 +74,54 @@ public class PathExpansionActor extends AbstractActor {
 				Test test = (Test)message.getData();
 				System.err.println("expanding path");
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
-				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
-
-		    	Account acct = account_repo.findByUsername(message.getAccountKey());
+				String discovery_key = message.getOptions().get("discovery_key").toString();
+				/*
+				 * TODO: uncomment once ready for pricing again. 
+		    	Account acct = account_service.findByUsername(message.getAccountKey());
 		    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
-		    	
+		    	*/
 				if(	(!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					
-					
 					// if path is a single page 
 					//		then send path to urlBrowserActor
-					if(test.getPathKeys().size() > 1 && test.getResult().isLandable()){
-						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						discovery_record = discovery_repo.save(discovery_record);
+					if(test.getPathKeys().size() > 1){
+						PageState result_page = test.getResult();
 						
-						try{
-							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-					  	}catch(Exception e){
+						//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
+						Duration time_diff = Duration.between(result_page.getLastLandabilityCheck(), LocalDateTime.now());
+						Duration minimum_diff = Duration.ofHours(24);
 						
+						DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+						if(time_diff.compareTo(minimum_diff) > 0){
+							log.info("Checking for page landability");
+							//have page checked for landability
+							boolean isLandable = browser_service.checkIfLandable(discovery_record.getBrowserName(), result_page);
+							result_page.setLastLandabilityCheck(LocalDateTime.now());
+							result_page.setLandable(isLandable);
+							result_page = page_state_service.save(result_page);
 						}
 						
-						log.info("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
-						final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+						if(result_page.isLandable()){
 
-						Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(test.getResult().getUrl()), message.getOptions());
-						work_allocator.tell(url_msg, getSelf() );
+							discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+							discovery_record = discovery_repo.save(discovery_record);
+							
+							try{
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+						  	}catch(Exception e){
+							
+							}
+							
+							log.info("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
+							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+	
+							Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
+							work_allocator.tell(url_msg, getSelf() );
+						}
 
 						return;
 					}
@@ -118,6 +138,8 @@ public class PathExpansionActor extends AbstractActor {
 						}
 					}
 					
+					DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
 					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
 					System.err.println("expected total path count :: "+new_total_path_count);
@@ -145,7 +167,7 @@ public class PathExpansionActor extends AbstractActor {
 			log.info("Member is Removed: {}", mRemoved.member());
 		})	
 		.matchAny(o -> {
-			log.info("received unknown message :: "+o.getClass().getName());
+			log.info("received unknown message :: "+o);
 		})
 		.build();
 	}

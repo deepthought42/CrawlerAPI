@@ -75,39 +75,24 @@ public class Browser {
 	public Browser(String browser, URL hub_node_url) throws MalformedURLException {
 		assert browser != null;
 		
-		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < Integer.MAX_VALUE){
-			try{
-				if("chrome".equals(browser)){
-					this.driver = openWithChrome(hub_node_url);
-				}
-				else if("firefox".equals(browser)){
-					this.driver = openWithFirefox(hub_node_url);
-				}
-				else if("internet_explorer".equals(browser)){
-					this.driver = openWithInternetExplorer(hub_node_url);
-				}
-				else if("safari".equals(browser)){
-					this.driver = openWithSafari(hub_node_url);
-				}
-				else if("opera".equals(browser)){
-					this.driver = openWithOpera(hub_node_url);
-				}
-				System.err.println("returning "+browser+" instance");
-				return;
-			}
-			catch(UnreachableBrowserException e){
-				log.warn(e.getMessage());
-			}
-			catch(WebDriverException e){
-				log.warn(e.getMessage());
-			}
-			catch(GridException e){
-				log.warn(e.getMessage());
-			}
-			cnt++;
+		if("chrome".equals(browser)){
+			this.driver = openWithChrome(hub_node_url);
 		}
+		else if("firefox".equals(browser)){
+			this.driver = openWithFirefox(hub_node_url);
+		}
+		else if("internet_explorer".equals(browser)){
+			this.driver = openWithInternetExplorer(hub_node_url);
+		}
+		else if("safari".equals(browser)){
+			this.driver = openWithSafari(hub_node_url);
+		}
+		else if("opera".equals(browser)){
+			this.driver = openWithOpera(hub_node_url);
+		}
+		System.err.println("returning "+browser+" instance");
+		return;
 	}
 	
 	/**
@@ -457,6 +442,7 @@ public class Browser {
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
 		Timing.pauseThread(500);
+
     }
 	
 	private static Point getLocationInViewport(WebDriver driver, WebElement element) {
@@ -497,7 +483,7 @@ public class Browser {
 	public static void waitForPageToLoad(WebDriver driver) {
 		log.info("waiting for page to load");
 		System.err.println("waitinf or page to load");
-		new WebDriverWait(driver, 60).until(
+		new WebDriverWait(driver, 300).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
 		log.info("done waiting for page to load");
 	}

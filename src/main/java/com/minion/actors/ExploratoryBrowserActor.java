@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +26,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
@@ -40,6 +39,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.services.ActionService;
@@ -116,42 +116,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							PageState result_page = null;
 		
 							//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
-							//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 
-							int start_idx = 0;
-							int landable_page_cnt = 0;
-							int idx = 0;
-							for(PathObject path_obj : exploratory_path.getPathObjects()){
-								if(path_obj instanceof PageState){
-									PageState page_state = page_state_service.findByKey(path_obj.getKey());
-									if(page_state == null){
-										page_state =(PageState)path_obj;
-									}
-									
-
-									Duration time_diff = Duration.between(page_state.getLastLandabilityCheck(), LocalDateTime.now());
-									Duration minimum_diff = Duration.ofHours(24);
-									if(time_diff.compareTo(minimum_diff) > 0){
-										log.info("Checking for page landability");
-										//have page checked for landability
-										page_state.setLastLandabilityCheck(LocalDateTime.now());
-										boolean isLandable = browser_service.checkIfLandable(browser_name, page_state);										page_state.setLandable(isLandable);
-										page_state = page_state_service.save(page_state);
-									}
-									
-									
-									if(page_state.isLandable() && exploratory_path.getPathObjects().size() > 1){
-										start_idx=idx;
-										landable_page_cnt++;
-									}
-									idx++;
-								}
-							}
-							
-							if(start_idx > 0 && landable_page_cnt > 1){
-								exploratory_path.setPathKeys(exploratory_path.getPathKeys().subList(start_idx, exploratory_path.getPathKeys().size()));
-								exploratory_path.setPathObjects(exploratory_path.getPathObjects().subList(start_idx, exploratory_path.getPathObjects().size()));
-							}
-
+							//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 						
 							for(Action action : exploratory_path.getPossibleActions()){
 								ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
 								Action action_record = action_service.findByKey(action.getKey());
@@ -164,18 +129,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlStartTime = System.currentTimeMillis();
 								result_page = crawler.performPathCrawl(browser_name, path, acct_msg.getOptions().get("host").toString());
 								
+								result_page = page_state_service.save(result_page);
 								
-								//SEND RESULT PAGE TO MEMORY REGISTRY ACTOR
-								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), result_page, message.getOptions());
-
-							  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
-							  	memory_registry_actor.tell(page_state_msg, getSelf() );
-							  	
-							  	
 								//have page checked for landability
 								//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
-								
+								String page_url = acct_msg.getOptions().get("host").toString();
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
@@ -184,7 +142,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		ExploratoryPath last_path = null;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-							  		/*
+							  		
 							  		int cnt=0;
 							  		do{
 						  				log.info("building parent path...attempt # ::  "+cnt);
@@ -197,23 +155,23 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								  				break;
 								  			}
 								  			
-							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, domain.getUrl());
+							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, page_url);
 							  				log.info("Does path produce expected result???  "+results_match);
 								  			if(results_match){
 								  				last_path = path;
 								  				path = parent_path;
 								  			}
-							  				browser.close();
 								  			break;
 							  			}catch(Exception e){
-							  				browser.close();
 							  				log.warn("Exception thrown while building parent path : " + e.getLocalizedMessage());
-							  				browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 							  				results_match = false;
+							  			}
+							  			finally{
+							  				browser.close();
 							  			}
 							  			cnt++;
 							  		}while(results_match && cnt < Integer.MAX_VALUE);
-							  		*/
+							  		
 							  		if(last_path == null){
 							  			last_path = path;
 							  		}
@@ -389,14 +347,14 @@ public class ExploratoryBrowserActor extends AbstractActor {
 			//get parent of element
 			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
 			WebElement parent = browser_service.getParentElement(web_elem);
-
-			if(!parent.getTagName().equals("body")){
+			String parent_tag_name = parent.getTagName();
+			if(!parent_tag_name.equals("body")){
 				//clone test and swap page element with parent
 				ExploratoryPath parent_path = ExploratoryPath.clone(path);
 				Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
 				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
 				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), parent);
-				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent), screenshot_url );
+				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent_tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
 				
 				PageElement parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
 				if(parent_tag_record != null){

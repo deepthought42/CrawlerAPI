@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
@@ -90,26 +91,20 @@ public class Crawler {
 		PageState current_page_state = null;
 				
 		log.info("building page for host channel :: " + host_channel);
-		do{
-			try{
-				browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
-				WebElement next_elem = browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(1)).getXpath()));
-				if(!browser_service.isElementVisibleInPane(browser.getDriver(), next_elem)){
-					Browser.scrollToElement(browser.getDriver(), next_elem);
-				}
-				current_page_state = browser_service.buildPage(browser);
-			}catch(Exception e){
-				browser.close();
-				browser = browser_service.getConnection(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
-				log.error("Error occurred while navigating to page and scrolling to element");
-			}
-		}while(current_page_state == null);
+
+		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
+		
 		
 		
 		int idx=0;
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
+				WebElement next_elem = browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(idx+1)).getXpath()));
+				if(!browser_service.isElementVisibleInPane(browser.getDriver(), next_elem)){
+					Browser.scrollToElement(browser.getDriver(), next_elem);
+				}
+				current_page_state = browser_service.buildPage(browser);
 
 				/*
 				PageState page_record = page_state_service.findByKey(expected_page.getKey());
@@ -150,7 +145,7 @@ public class Crawler {
 					Browser.waitForPageToLoad(browser.getDriver());
 				}
 				else{
-					Timing.pauseThread(1000);
+					Timing.pauseThread(2000);
 				}
 			}
 			else if(current_obj instanceof PageAlert){
@@ -206,7 +201,14 @@ public class Crawler {
 				log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
-			} catch (WebDriverException e) {
+			}
+			catch (NoSuchElementException e){
+				e.printStackTrace();
+				log.error("Unable to locage element while performing path crawl   ::    "+ e.getLocalizedMessage());
+			}
+			catch (WebDriverException e) {
+				log.warn("EXCEPTION OCCURRED WHILE CRAWLING PATH FOR HOST :: "+host);
+				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());

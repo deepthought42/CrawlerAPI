@@ -7,10 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -62,7 +61,7 @@ public class TestingActor extends AbstractActor {
 							int cnt = 0;
 							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
-									browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
+									browser = BrowserConnectionFactory.getConnection((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString(), null);
 								}catch(NullPointerException e){
 									log.error(e.getMessage());

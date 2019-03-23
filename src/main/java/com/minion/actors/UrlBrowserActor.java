@@ -68,7 +68,6 @@ public class UrlBrowserActor extends AbstractActor {
 					if(message.getData() instanceof URL){
 						
 						String discovery_key = message.getOptions().get("discovery_key").toString();
-						boolean test_generated_successfully = false;
 						int attempts = 0;
 						Browser browser = null;
 						Test test = null;
@@ -80,8 +79,6 @@ public class UrlBrowserActor extends AbstractActor {
 							try{
 								browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 								test = test_creator_service.generateLandingPageTest(url, browser);
-								
-								test_generated_successfully = true;
 							}
 							catch(Exception e){
 								log.error("Exception occurred while exploring url --  " + e.getMessage());
@@ -91,8 +88,7 @@ public class UrlBrowserActor extends AbstractActor {
 									browser.close();
 								}
 							}							
-						}while(!test_generated_successfully && attempts < Integer.MAX_VALUE);
-						
+						}while(test==null && attempts < Integer.MAX_VALUE);
 						
 						test = test_service.save(test, host);
 

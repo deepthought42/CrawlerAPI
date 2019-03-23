@@ -55,7 +55,9 @@ public class Browser {
 	
 	private WebDriver driver = null;
 	private String browser_name; 
-
+	private int y_scroll_offset;
+	private int x_scroll_offset;
+	
     public Browser(){}
 
 	/**
@@ -92,7 +94,8 @@ public class Browser {
 			this.driver = openWithOpera(hub_node_url);
 		}
 		System.err.println("returning "+browser+" instance");
-		return;
+		setYScrollOffset(0);
+		setXScrollOffset(0);
 	}
 	
 	/**
@@ -144,7 +147,7 @@ public class Browser {
 			driver.quit();
 		}
 		catch(Exception e){
-			log.warn("Unknown exception occurred when closing browser", e.getLocalizedMessage());
+			log.info("Unknown exception occurred when closing browser" + e.getMessage());
 		}
 	}
 	
@@ -291,14 +294,14 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(WebDriver driver, WebElement elem, BufferedImage page_screenshot) throws IOException{
+	public static BufferedImage getElementScreenshot(Browser browser, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		
 		//calculate element position within screen
-		Point point = getLocationInViewport(driver, elem);
+		Point point = browser.getLocationInViewport(elem);
 		Dimension dimension = elem.getSize();
 		
 		// Get width and height of the element
-		int elem_width = dimension.getWidth()+DIMENSION_OFFSET_PIXELS;
+		int elem_width = dimension.getWidth();
 		int elem_height = dimension.getHeight()+DIMENSION_OFFSET_PIXELS;
 		
 		int point_x = point.getX();
@@ -314,14 +317,12 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point, WebDriver driver) throws IOException{
+	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point, Browser browser) throws IOException{
 		// Get width and height of the element
 		int elemWidth = dimension.getWidth();
 		int elemHeight = dimension.getHeight();
 
-		JavascriptExecutor executor = (JavascriptExecutor) driver;
-		Long viewport_offset = (Long) executor.executeScript("return window.pageYOffset;");
-		int y_coord = point.getY()-viewport_offset.intValue();
+		int y_coord = point.getY()-browser.getYScrollOffset();
 		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
 	}
 	
@@ -438,14 +439,41 @@ public class Browser {
 		this.browser_name = browser_name;
 	}
 	
-	public static void scrollToElement(WebDriver driver, WebElement elem) 
+
+	public int getYScrollOffset() {
+		return y_scroll_offset;
+	}
+
+	public void setYScrollOffset(int y_scroll_offset) {
+		this.y_scroll_offset = y_scroll_offset;
+	}
+
+	public int getXScrollOffset() {
+		return x_scroll_offset;
+	}
+
+	public void setXScrollOffset(int x_scroll_offset) {
+		this.x_scroll_offset = x_scroll_offset;
+	}
+	
+	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		Timing.pauseThread(500);
+		Timing.pauseThread(1000);
 
+		Point offsets = getViewportScrollOffset();
+		this.setXScrollOffset(offsets.getX());
+		this.setYScrollOffset(offsets.getY());
     }
 	
-	private static Point getLocationInViewport(WebDriver driver, WebElement element) {
+	/**
+	 * Retrieves the x and y scroll offset of the viewport as a {@link Point}
+	 * 
+	 * @param browser
+	 * 
+	 * @return {@link Point} containing offsets
+	 */
+	private Point getViewportScrollOffset(){		
 		Object objy = ((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
 		Object objx = ((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
 
@@ -466,8 +494,18 @@ public class Browser {
 			x_offset = ((Long)objx).intValue(); 
 		}
 		
-		int y_coord = calculateYCoordinate(y_offset, element.getLocation());
-		int x_coord = calculateXCoordinate(x_offset, element.getLocation());
+		return new Point(x_offset, y_offset);
+	}
+	
+	/**
+	 * Retrieve coordinates of {@link WebElement} in the current viewport
+	 * 
+	 * @param element {@link WebElement}
+	 * @return {@link Point} coordinates
+	 */
+	private Point getLocationInViewport(WebElement element) {
+		int y_coord = calculateYCoordinate(this.getYScrollOffset(), element.getLocation());
+		int x_coord = calculateXCoordinate(this.getXScrollOffset(), element.getLocation());
        
 		return new Point(x_coord, y_coord);
 	}
@@ -485,6 +523,7 @@ public class Browser {
 		System.err.println("waitinf or page to load");
 		new WebDriverWait(driver, 300).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+		Timing.pauseThread(1000);
 		log.info("done waiting for page to load");
 	}
 	

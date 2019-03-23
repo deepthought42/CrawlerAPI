@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
@@ -107,7 +107,7 @@ public class TestCreationActor extends AbstractActor  {
 					    	Browser browser = null;
 
 				    		try{
-				    			browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.TEST);
+				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
@@ -147,7 +147,9 @@ public class TestCreationActor extends AbstractActor  {
 				    			log.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
 				    		}
 				    		finally {
-						  		browser.close();
+				    			if(browser != null){
+				    				browser.close();
+				    			}
 				    		}
 				    		attempts++;
 				    	}while(test == null && attempts < Integer.MAX_VALUE);
@@ -267,7 +269,7 @@ public class TestCreationActor extends AbstractActor  {
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
 		Set<Attribute> attributes = browser_service.extractAttributes(element, browser.getDriver());
-		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), element);
+		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element);
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
 		PageElement elem = new PageElement(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);

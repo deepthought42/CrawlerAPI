@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.integrations.DeepthoughtApi;
@@ -90,7 +90,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		
 					  		try{
 					  			System.err.println("Getting browser for form extraction");
-						  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+						  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 
 					  			System.err.println("navigating to url :: "+page_state.getUrl());
 						  		browser.navigateTo(page_state.getUrl());
@@ -133,11 +133,12 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	System.err.println("FORM DISCOVERY HAS ENDED");
 							  	forms_created = true;
 							} catch(Exception e){
-								browser.close();
 						  		log.warning(e.getMessage());
 						  	}
 					  		finally{
-					  			browser.close();
+					  			if(browser != null){
+					  				browser.close();
+					  			}
 					  		}
 							cnt++;
 						}while(!forms_created && cnt < Integer.MAX_VALUE);

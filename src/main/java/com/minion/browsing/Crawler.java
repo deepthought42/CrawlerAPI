@@ -101,8 +101,8 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
 				WebElement next_elem = browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(idx+1)).getXpath()));
-				if(!browser_service.isElementVisibleInPane(browser.getDriver(), next_elem)){
-					Browser.scrollToElement(browser.getDriver(), next_elem);
+				if(!BrowserService.isElementVisibleInPane(browser.getDriver(), next_elem)){
+					browser.scrollToElement(next_elem);
 				}
 				current_page_state = browser_service.buildPage(browser);
 
@@ -117,6 +117,7 @@ public class Crawler {
 					return current_page_state;
 				}
 				*/
+				
 				
 				if(idx==0 && !current_page_state.equals(expected_page)){
 					updated_path_objects.set(idx, current_page_state);
@@ -195,30 +196,31 @@ public class Crawler {
 
 		do{
 			try{
-				browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.DISCOVERY);
+				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				result_page = crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 			}catch(NullPointerException e){
 				log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
 			} catch (GridException e) {
-				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
-				e.printStackTrace();
-				log.error("Unable to locage element while performing path crawl   ::    "+ e.getLocalizedMessage());
+				log.error("Unable to locage element while performing path crawl   ::    "+ e.getMessage());
 			}
 			catch (WebDriverException e) {
-				log.warn("EXCEPTION OCCURRED WHILE CRAWLING PATH FOR HOST :: "+host);
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {
-				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getLocalizedMessage());
+				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
 				log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
 			}
 			finally{
-				browser.close();
+				if(browser != null){
+					browser.close();
+				}
 			}
 			tries++;
+			Timing.pauseThread(10000);
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
 	} 

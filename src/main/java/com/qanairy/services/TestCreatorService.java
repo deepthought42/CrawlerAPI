@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -20,8 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
-import com.minion.structs.Message;
-import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
@@ -30,15 +27,11 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
 @Component
 public class TestCreatorService {
 	private static Logger log = LoggerFactory.getLogger(TestCreatorService.class.getName());
-
-	@Autowired
-	private DomainService domain_service;
 
 	@Autowired
 	private PageStateService page_state_service;
@@ -50,7 +43,7 @@ public class TestCreatorService {
 	private BrowserService browser_service;
 	
 	@Autowired
-	private ActorSystem actor_system;
+	private GroupService group_service;
 	
 	/**
 	 * Generates a landing page test based on a given URL
@@ -89,14 +82,17 @@ public class TestCreatorService {
 			url = "http://"+url;
 		}
 		String url_path = new URL(url).getPath();
-		url_path.replaceFirst("/", "");
-		test.setName(url_path + " loaded test");
+		url_path = url_path.replace("/", " ");
+		if(url_path.isEmpty()){
+			url_path = "home";
+		}
+		test.setName(url_path.trim() + " page loaded");
 		
 		//add group "smoke" to test
-		/*Group group = new Group("smoke");
+		Group group = new Group("smoke");
 		group = group_service.save(group);
 		test.addGroup(group);
-		*/
+		
 		return test;
 	}
 	

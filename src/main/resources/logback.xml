@@ -10,10 +10,10 @@
             <level>INFO</level>
         </filter>
     </appender>
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
-		<!--  <appender-ref ref="SENTRY" /> -->
+		<!--  <appender-ref ref="SENTRY" />  -->
     </root>
 
 </configuration>

@@ -36,6 +36,8 @@ import com.qanairy.models.Test;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.DiscoveryRecordService;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
 
 /**
@@ -54,10 +56,16 @@ public class PathExpansionActor extends AbstractActor {
 	private DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
+	private DiscoveryRecordService discovery_service;
+	
+	@Autowired
 	private PageStateService page_state_service;
 	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -75,6 +83,8 @@ public class PathExpansionActor extends AbstractActor {
 				System.err.println("expanding path");
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				String discovery_key = message.getOptions().get("discovery_key").toString();
+				String browser_name = message.getOptions().get("browser").toString();
+
 				/*
 				 * TODO: uncomment once ready for pricing again. 
 		    	Account acct = account_service.findByUsername(message.getAccountKey());
@@ -94,20 +104,17 @@ public class PathExpansionActor extends AbstractActor {
 						Duration time_diff = Duration.between(result_page.getLastLandabilityCheck(), LocalDateTime.now());
 						Duration minimum_diff = Duration.ofHours(24);
 						
-						DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
 						if(time_diff.compareTo(minimum_diff) > 0){
 							log.info("Checking for page landability");
 							//have page checked for landability
-							boolean isLandable = browser_service.checkIfLandable(discovery_record.getBrowserName(), result_page);
+							boolean isLandable = browser_service.checkIfLandable(browser_name, result_page);
 							result_page.setLastLandabilityCheck(LocalDateTime.now());
 							result_page.setLandable(isLandable);
 							result_page = page_state_service.save(result_page);
 						}
 						
 						if(result_page.isLandable()){
-
-							discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-							discovery_record = discovery_repo.save(discovery_record);
+							DiscoveryRecord discovery_record = discovery_service.incrementTestCount(discovery_key);
 							
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
@@ -143,6 +150,7 @@ public class PathExpansionActor extends AbstractActor {
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
 					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
 					System.err.println("expected total path count :: "+new_total_path_count);
+					
 					discovery_record.setTotalPathCount(new_total_path_count);
 					discovery_record = discovery_repo.save(discovery_record);
 

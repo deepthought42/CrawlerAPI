@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.models.Action;
@@ -75,7 +75,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					  	
 					  	while(browser == null && cnt < Integer.MAX_VALUE){
 					  		try{
-						  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+						  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 						  		browser.navigateTo(page.getUrl());
 						  		
 						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
@@ -121,7 +121,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		cnt = 0;
 							  		PageState result_page = null;
 							  		do{
-								  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+								  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  			try{
 							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString(), null);
 							  				break;

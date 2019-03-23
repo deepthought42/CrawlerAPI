@@ -1,0 +1,49 @@
+package com.qanairy.services;
+
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
+
+@Service
+public class DiscoveryRecordService {
+
+	@Autowired
+	private DiscoveryRecordRepository discovery_repo;
+	
+	public DiscoveryRecord incrementTestCount(String discovery_key){
+		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+		discovery_record.setTestCount(discovery_record.getTestCount()+1);
+  		return save(discovery_record);		
+	}
+	
+	public DiscoveryRecord save(DiscoveryRecord discovery){
+		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery.getKey());
+		if(discovery_record == null){
+			discovery_record = discovery;
+		}
+		else{
+			discovery_record.setExaminedPathCount(discovery.getExaminedPathCount());
+			discovery_record.setExpandedPageStates(discovery.getExpandedPageStates());
+			discovery_record.setLastPathRanAt(discovery.getLastPathRanAt());
+			discovery_record.setTestCount(discovery.getTestCount());
+			discovery_record.setTotalPathCount(discovery.getTotalPathCount());
+		}
+		
+		return discovery_repo.save(discovery_record);
+	}
+	
+	public DiscoveryRecord findByKey(String key){
+		return discovery_repo.findByKey(key);
+	}
+
+	public DiscoveryRecord increaseExaminedPathCount(String key, int path_cnt) {
+		DiscoveryRecord discovery_record = discovery_repo.findByKey(key);
+		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+path_cnt);
+  		discovery_record.setLastPathRanAt(new Date());
+  		return discovery_repo.save(discovery_record);
+	}
+}

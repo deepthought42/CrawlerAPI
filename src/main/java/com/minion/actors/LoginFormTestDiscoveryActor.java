@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
@@ -154,7 +154,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								do{
 									try{
 										log.info("Crawling path for login form test discovery");
-										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
+										browser = BrowserConnectionFactory.getConnection(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString(), null);
 									}catch(NullPointerException e){
 										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
@@ -166,7 +166,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 										e.printStackTrace();
 									}
 									finally{
-								  		browser.close();
+										if(browser != null){
+											browser.close();
+										}
 									}
 							  		tries++;
 								}while(result_page == null && tries < Integer.MAX_VALUE);

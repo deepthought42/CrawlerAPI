@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.services.BrowserService;
@@ -77,7 +77,7 @@ public class LandabilityChecker extends AbstractActor{
 						page_visited_successfully = false;
 						Browser landable_browser = null;
 						try{							
-							landable_browser = BrowserFactory.buildBrowser(bps.browser_name, BrowserEnvironment.DISCOVERY);
+							landable_browser = BrowserConnectionFactory.getConnection(bps.browser_name, BrowserEnvironment.DISCOVERY);
 							landable_browser.navigateTo(page_state.getUrl());
 							log.info("screenshots of page state :: "+page_state.getBrowserScreenshots().size());
 							if(page_state.equals(browser_service.buildPage(landable_browser))){
@@ -90,11 +90,12 @@ public class LandabilityChecker extends AbstractActor{
 							page_state = page_state_service.save(page_state);
 						}
 						catch(Exception e){
-							landable_browser.close();
 							log.warning(e.getLocalizedMessage());
 						}
 						finally{
-							landable_browser.close();
+							if(landable_browser != null){
+								landable_browser.close();
+							}
 						}
 
 						cnt++;

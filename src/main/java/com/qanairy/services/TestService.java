@@ -86,7 +86,9 @@ public class TestService {
 				 log.error(e.getLocalizedMessage());
 			 } 
 			 finally{
-				browser.close();
+				 if(browser != null){
+					 browser.close();
+				 }
 			 }
 			 
 			 cnt++;

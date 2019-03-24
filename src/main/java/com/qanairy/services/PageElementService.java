@@ -24,23 +24,29 @@ public class PageElementService {
 	private PageElementRepository page_element_repo;
 	
 	public PageElement save(PageElement element){
-		//iterate over attributes
-		Set<Attribute> new_attributes = new HashSet<Attribute>();
-		for(Attribute attribute : element.getAttributes()){
-			new_attributes.add(attribute_service.save(attribute));
-		}
-		element.setAttributes(new_attributes);
-		
-		Set<Rule> rule_records = new HashSet<>();
-		for(Rule rule : element.getRules()){
-			rule_records.add(rule_service.save(rule));
-		}
-		element.setRules(rule_records);
-		
 		PageElement element_record = page_element_repo.findByKey(element.getKey());
 		if(element_record == null){
+			//iterate over attributes
+			Set<Attribute> new_attributes = new HashSet<Attribute>();
+			for(Attribute attribute : element.getAttributes()){
+				new_attributes.add(attribute_service.save(attribute));
+			}
+			element.setAttributes(new_attributes);
+			
+			Set<Rule> rule_records = new HashSet<>();
+			for(Rule rule : element.getRules()){
+				rule_records.add(rule_service.save(rule));
+			}
+			element.setRules(rule_records);
+			
 			element_record = page_element_repo.save(element);
 		}
+		else{
+			element_record.setScreenshot(element.getScreenshot());
+			element_record.setXpath(element.getXpath());
+			page_element_repo.save(element);
+		}
+		
 		return element_record;
 	}
 	

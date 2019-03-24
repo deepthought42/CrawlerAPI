@@ -67,7 +67,9 @@ public class TestingActor extends AbstractActor {
 									log.error(e.getMessage());
 								}
 								finally{
-							  		browser.close();
+									if(browser != null){
+										browser.close();
+									}
 								}
 								cnt++;
 							}

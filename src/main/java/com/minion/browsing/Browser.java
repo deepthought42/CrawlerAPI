@@ -57,6 +57,7 @@ public class Browser {
 	private String browser_name; 
 	private int y_scroll_offset;
 	private int x_scroll_offset;
+	private Dimension viewport_size;
 	
     public Browser(){}
 
@@ -96,6 +97,7 @@ public class Browser {
 		System.err.println("returning "+browser+" instance");
 		setYScrollOffset(0);
 		setXScrollOffset(0);
+		setViewportSize(getViewportSize(driver));
 	}
 	
 	/**
@@ -242,7 +244,6 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-		
 		log.info("Requesting chrome remote driver from hub");
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		//driver.manage().window().setSize(new Dimension(1024, 768));
@@ -504,8 +505,9 @@ public class Browser {
 	 * @return {@link Point} coordinates
 	 */
 	private Point getLocationInViewport(WebElement element) {
-		int y_coord = calculateYCoordinate(this.getYScrollOffset(), element.getLocation());
-		int x_coord = calculateXCoordinate(this.getXScrollOffset(), element.getLocation());
+		Point location = element.getLocation();
+		int y_coord = calculateYCoordinate(this.getYScrollOffset(), location);
+		int x_coord = calculateXCoordinate(this.getXScrollOffset(), location);
        
 		return new Point(x_coord, y_coord);
 	}
@@ -527,22 +529,30 @@ public class Browser {
 		log.info("done waiting for page to load");
 	}
 	
-	public static Dimension getViewportSize(WebDriver driver) {
+	private static Dimension getViewportSize(WebDriver driver) {
 		int width = extractViewportWidth(driver);
 		int height = extractViewportHeight(driver);
 		return new Dimension(width, height);
 	}
 
-	protected static int extractViewportWidth(WebDriver driver) {
+	private static int extractViewportWidth(WebDriver driver) {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		int viewportWidth = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_WIDTH, new Object[0]).toString());
 		return viewportWidth;
 	}
 
-	protected static int extractViewportHeight(WebDriver driver) {
+	private static int extractViewportHeight(WebDriver driver) {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		int result = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_HEIGHT, new Object[0]).toString());
 		return result;
+	}
+
+	public Dimension getViewportSize() {
+		return viewport_size;
+	}
+
+	public void setViewportSize(Dimension viewport_size) {
+		this.viewport_size = viewport_size;
 	}
 
 	private static final String JS_GET_VIEWPORT_WIDTH = "var width = undefined; if (window.innerWidth) {width = window.innerWidth;} else if (document.documentElement && document.documentElement.clientWidth) {width = document.documentElement.clientWidth;} else { var b = document.getElementsByTagName('body')[0]; if (b.clientWidth) {width = b.clientWidth;}};return width;";

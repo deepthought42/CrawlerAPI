@@ -101,7 +101,7 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
 				WebElement next_elem = browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(idx+1)).getXpath()));
-				if(!BrowserService.isElementVisibleInPane(browser.getDriver(), next_elem)){
+				if(!BrowserService.isElementVisibleInPane(browser, next_elem)){
 					browser.scrollToElement(next_elem);
 				}
 				current_page_state = browser_service.buildPage(browser);
@@ -220,7 +220,6 @@ public class Crawler {
 				}
 			}
 			tries++;
-			Timing.pauseThread(10000);
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
 	} 

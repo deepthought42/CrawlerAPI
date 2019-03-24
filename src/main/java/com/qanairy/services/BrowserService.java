@@ -1,4 +1,6 @@
 package com.qanairy.services;
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
@@ -45,7 +49,11 @@ import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
+import com.qanairy.models.message.ElementScreenshotUpload;
 import com.qanairy.models.rules.Rule;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 
 /**
  * 
@@ -64,6 +72,9 @@ public class BrowserService {
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
+	
+	@Autowired
+	private ActorSystem actor_system;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
 	
@@ -260,7 +271,7 @@ public class BrowserService {
 				PageElement page_element = null;
 				try{
 					log.info("Checking if element visible in viewport");
-					if(!isElementVisibleInPane(browser.getDriver(), elem)){
+					if(!isElementVisibleInPane(browser, elem)){
 						log.info("element not visible in viewport. SCROLLING TO ELEMENT");
 						browser.scrollToElement(elem);
 						page_screenshot = Browser.getViewportScreenshot(browser.getDriver());
@@ -282,7 +293,8 @@ public class BrowserService {
 				if(page_element_record == null){
 					long start = System.currentTimeMillis();
 
-					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+					//screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+					
 					long end = System.currentTimeMillis();
 					System.err.println("Saved element screenshot to S3 in   ::     " +(end-start));
 
@@ -303,11 +315,15 @@ public class BrowserService {
 					System.err.println("xpath generation time    ::     " + (end-start));
 					
 					page_element.setCssValues(css_props);
-					page_element.setScreenshot(screenshot);
+					//page_element.setScreenshot(screenshot);
 					page_element.setAttributes(attributes);
 					page_element.setXpath(element_xpath);
 					
 					page_element = page_element_service.save(page_element);
+					ElementScreenshotUpload screenshot_upload = new ElementScreenshotUpload(img, new URL(browser.getDriver().getCurrentUrl()), page_element.getKey(), browser.getBrowserName());
+					final ActorRef aws_s3_screenshot_uploader = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							  .props("awsS3ScreenshotUploader"), "aws_s3_screenshot_uploader"+UUID.randomUUID());
+					aws_s3_screenshot_uploader.tell(screenshot_upload, null);
 				}
 				else{
 					page_element = page_element_record;
@@ -322,9 +338,9 @@ public class BrowserService {
 		return elementList;
 	}
 	
-	public static boolean isElementVisibleInPane(WebDriver driver, WebElement elem){
-		Object objy = ((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
-		Object objx = ((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
+	public static boolean isElementVisibleInPane(Browser browser, WebElement elem){
+		Object objy = browser.getYScrollOffset(); //((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
+		Object objx = browser.getXScrollOffset(); //((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
 
 		int y_offset = 0;
 		int x_offset = 0;
@@ -345,13 +361,12 @@ public class BrowserService {
 		
 		int x = elem.getLocation().getX();
 		int y = elem.getLocation().getY();
-		Dimension viewport_size = Browser.getViewportSize(driver);
 		
 		int height = elem.getSize().getHeight();
 		int width = elem.getSize().getWidth();
 		
-		if(x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset-DIMENSION_OFFSET_PIXELS) 
-				&& (y+height) <= (viewport_size.getHeight()+y_offset-DIMENSION_OFFSET_PIXELS)){
+		if(x >= x_offset && y >= y_offset && (x+width) <= (browser.getViewportSize().getWidth()+x_offset-DIMENSION_OFFSET_PIXELS) 
+				&& (y+height) <= (browser.getViewportSize().getHeight()+y_offset-DIMENSION_OFFSET_PIXELS)){
 			return true;
 		}
 		return false;
@@ -399,6 +414,12 @@ public class BrowserService {
 				}
 			}
 		}
+		
+		String element_text = element.getText();
+		if(!element_text.isEmpty()){
+			attributeChecks.add("contains(text(), \"" + element_text + "\")");
+		}
+		
 		if(attributeChecks.size()>0){
 			xpath += "[";
 			for(int i = 0; i < attributeChecks.size(); i++){
@@ -409,6 +430,7 @@ public class BrowserService {
 			}
 			xpath += "]";
 		}
+		
 		long end = System.currentTimeMillis();
 		System.err.println("leaf level xpath loaded with attributes in    "+(end-start));
 
@@ -437,6 +459,7 @@ public class BrowserService {
 	    		log.error("Invalid selector exception occurred while generating xpath through parent nodes");
 	    		break;
 	    	}
+	    	System.err.println("generated parent");
 	    }while(!element_name.equals("body"));
 
 		end = System.currentTimeMillis();
@@ -444,7 +467,7 @@ public class BrowserService {
 	    xpath = "/"+xpath;
 	    
 		start = System.currentTimeMillis();
-		xpath = uniqifyXpath(element, xpathHash, xpath, driver, similar_elements);
+		xpath = uniqifyXpath(element, xpathHash, xpath, driver);
 		end = System.currentTimeMillis();
 		System.err.println("uniqifying xpath effort time   ::    " + (end-start));
 
@@ -540,29 +563,21 @@ public class BrowserService {
 	 * @param driver
 	 * @return
 	 */
-	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath, WebDriver driver, List<WebElement> similar_elements){
+	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath, WebDriver driver){
 		try {
 			String elem_text = elem.getText();
+			List<WebElement> similar_elements = driver.findElements(By.xpath(xpath));
 			if(similar_elements.size()>1){
 				int count = 1;
+				
 				for(WebElement element : similar_elements){
 					long start_2 = System.currentTimeMillis();
-					element.getText();
-					long end_2 = System.currentTimeMillis();
-					System.err.println("Time to get text from element  :::   " + (end_2-start_2));
-
-					start_2 = System.currentTimeMillis();
-					elem.getLocation();
-					end_2 = System.currentTimeMillis();
-					System.err.println("Time to get location from element  :::   " + (end_2-start_2));
-
-					start_2 = System.currentTimeMillis();
 					if(element.getText().equals(elem_text)){
-						return "("+xpath+")[" + count + "]";	
+						return xpath + "[" + count + "]";	
 					}					
 					count++;
 
-					end_2 = System.currentTimeMillis();
+					long end_2 = System.currentTimeMillis();
 					System.err.println("applying index " + (count-1) + " to xpath ::    " + (end_2-start_2));
 				}
 			}
@@ -601,7 +616,7 @@ public class BrowserService {
 			}
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page_screenshot)));
-			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver(), browser.getDriver().findElements(By.xpath("//form"))), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
+			PageElement form_tag = new PageElement(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url );
 			
 			form_tag.setScreenshot(screenshot_url);
 			

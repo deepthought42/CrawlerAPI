@@ -416,8 +416,11 @@ public class BrowserService {
 		}
 		
 		String element_text = element.getText();
-		if(!element_text.isEmpty()){
-			attributeChecks.add("contains(text(), \"" + element_text + "\")");
+		String[] element_arr = element_text.split(" ");
+		for(String text : element_arr){
+			if(!element_text.isEmpty()){
+				attributeChecks.add("contains(text(), \"" + text + "\")");
+			}
 		}
 		
 		if(attributeChecks.size()>0){
@@ -573,7 +576,7 @@ public class BrowserService {
 				for(WebElement element : similar_elements){
 					long start_2 = System.currentTimeMillis();
 					if(element.getText().equals(elem_text)){
-						return xpath + "[" + count + "]";	
+						return "(" + xpath + ")[" + count + "]";	
 					}					
 					count++;
 

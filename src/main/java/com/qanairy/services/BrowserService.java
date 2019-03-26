@@ -213,6 +213,8 @@ public class BrowserService {
 
 		PageState page_state = page_state_service.findByKey(page_key);
 		if(page_state != null){
+			page_state.setElements(page_state_service.getPageElements(page_key));
+			page_state.setBrowserScreenshots(page_state_service.getScreenshots(page_key));
 			return page_state;
 		}
 		log.info("Getting visible elements...");
@@ -399,39 +401,58 @@ public class BrowserService {
 	 */
 	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver, Set<Attribute> attributes){
 		ArrayList<String> attributeChecks = new ArrayList<String>();
-
+		String element_text = element.getText();
+		
 		long start = System.currentTimeMillis();
 		xpath += "//"+element.getTagName();
-		for(Attribute attr : attributes){
-			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
-				
-				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
-				if(attribute_values.contains("\"")){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(attribute_values.trim())+ "\")");
-				}
-				else{
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(attribute_values.trim()) + "\")");
-				}
-			}
+		
+		if(!element_text.isEmpty()){
+			attributeChecks.add("contains(text(), \"" + element_text + "\")");
 		}
 		
-		String element_text = element.getText();
-		String[] element_arr = element_text.split(" ");
-		for(String text : element_arr){
-			if(!element_text.isEmpty()){
-				attributeChecks.add("contains(text(), \"" + text + "\")");
-			}
-		}
-		
+		String new_xpath = xpath;
+
 		if(attributeChecks.size()>0){
-			xpath += "[";
+			new_xpath += "[";
 			for(int i = 0; i < attributeChecks.size(); i++){
-				xpath += attributeChecks.get(i).toString();
+				new_xpath += attributeChecks.get(i).toString();
 				if(i < attributeChecks.size()-1){
-					xpath += " and ";
+					new_xpath += " and ";
 				}
 			}
-			xpath += "]";
+			new_xpath += "]";
+		}
+		
+		try{
+			List<WebElement> element_list = driver.findElements(By.xpath(new_xpath));
+			if(element_list.size() == 1){
+				xpath = new_xpath;
+			}
+		}
+		catch(NoSuchElementException e){
+			for(Attribute attr : attributes){
+				if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
+					
+					String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
+					if(attribute_values.contains("\"")){
+						attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(attribute_values.trim())+ "\")");
+					}
+					else{
+						attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(attribute_values.trim()) + "\")");
+					}
+				}
+			}
+			
+			if(attributeChecks.size()>0){
+				xpath += "[";
+				for(int i = 0; i < attributeChecks.size(); i++){
+					xpath += attributeChecks.get(i).toString();
+					if(i < attributeChecks.size()-1){
+						xpath += " and ";
+					}
+				}
+				xpath += "]";
+			}
 		}
 		
 		long end = System.currentTimeMillis();

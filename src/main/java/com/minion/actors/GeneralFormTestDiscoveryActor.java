@@ -126,7 +126,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString(), null);
 							  				break;
 							  			}catch(Exception e){
-							  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
+							  				log.warning("Exception occurred while crawling FORM path -- "+e.getMessage());
 							  			}
 							  			finally{
 									  		browser.close();

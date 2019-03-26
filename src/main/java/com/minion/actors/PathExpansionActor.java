@@ -150,7 +150,6 @@ public class PathExpansionActor extends AbstractActor {
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
 					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
 					System.err.println("expected total path count :: "+new_total_path_count);
-					
 					discovery_record.setTotalPathCount(new_total_path_count);
 					discovery_record = discovery_repo.save(discovery_record);
 

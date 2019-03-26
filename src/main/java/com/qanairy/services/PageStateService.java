@@ -44,13 +44,13 @@ public class PageStateService {
 		System.err.println("Saving page state");
 		PageState page_state_record = findByKey(page_state.getKey());
 		if(page_state_record != null){
-			page_state_record.setElements(getPageElements(page_state.getKey()));
-			page_state_record.setBrowserScreenshots(getScreenshots(page_state.getKey()));
-			
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 			
-			return page_state_repo.save(page_state_record);
+			page_state = page_state_repo.save(page_state_record);
+			page_state.setElements(getPageElements(page_state.getKey()));
+			page_state.setBrowserScreenshots(getScreenshots(page_state.getKey()));
+			return page_state;
 		}
 		//iterate over page elements
 		Set<PageElement> element_records = new HashSet<>();

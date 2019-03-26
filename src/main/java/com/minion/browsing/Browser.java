@@ -94,7 +94,6 @@ public class Browser {
 		else if("opera".equals(browser)){
 			this.driver = openWithOpera(hub_node_url);
 		}
-		System.err.println("returning "+browser+" instance");
 		setYScrollOffset(0);
 		setXScrollOffset(0);
 		setViewportSize(getViewportSize(driver));
@@ -113,10 +112,8 @@ public class Browser {
 	 * @param url
 	 */
 	public void navigateTo(String url){
-		log.info("Navigating to url.... " +url);
-		System.err.println("Seriously navigating yo");
 		getDriver().get(url);
-		log.info("successfully navigated to "+url);
+		log.debug("successfully navigated to "+url);
 		Browser.waitForPageToLoad(getDriver());
 	}
 
@@ -521,12 +518,9 @@ public class Browser {
 	}
 
 	public static void waitForPageToLoad(WebDriver driver) {
-		log.info("waiting for page to load");
-		System.err.println("waitinf or page to load");
-		new WebDriverWait(driver, 300).until(
+		new WebDriverWait(driver, 600).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		Timing.pauseThread(1000);
-		log.info("done waiting for page to load");
+		Timing.pauseThread(500);
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {

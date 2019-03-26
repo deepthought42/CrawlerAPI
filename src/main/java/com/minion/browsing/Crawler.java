@@ -74,13 +74,13 @@ public class Crawler {
 			}
 		}
 		
-		log.info("#########################################################################");
-		log.info("#########################################################################");
-		log.info("PATH  Keys size ::   " + path.getPathKeys().size());
-		log.info("PATH  Objects size ::   " + path.getPathObjects().size());
+		System.err.println("#########################################################################");
+		System.err.println("#########################################################################");
+		System.err.println("PATH  Keys size ::   " + path.getPathKeys().size());
+		System.err.println("PATH  Objects size ::   " + path.getPathObjects().size());
 
-		log.info("#########################################################################");
-		log.info("#########################################################################");
+		System.err.println("#########################################################################");
+		System.err.println("#########################################################################");
 		
 		updated_path_objects.addAll(ordered_path_objects);
 		
@@ -90,7 +90,7 @@ public class Crawler {
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
 				
-		log.info("building page for host channel :: " + host_channel);
+		log.debug("building page for host channel :: " + host_channel);
 
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
 		
@@ -100,11 +100,19 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
-				WebElement next_elem = browser.getDriver().findElement(By.xpath(((PageElement)ordered_path_objects.get(idx+1)).getXpath()));
+				String xpath = ((PageElement)ordered_path_objects.get(idx+1)).getXpath();
+				WebElement next_elem = browser.getDriver().findElement(By.xpath(xpath));
 				if(!BrowserService.isElementVisibleInPane(browser, next_elem)){
 					browser.scrollToElement(next_elem);
 				}
+				
+
+				long start = System.currentTimeMillis();
 				current_page_state = browser_service.buildPage(browser);
+				long end = System.currentTimeMillis();
+				System.err.println("TOTAL TIME TO BUILD PAGE :: " + (end-start));
+				
+				//current_page_state = browser_service.buildPage(browser);
 
 				/*
 				PageState page_record = page_state_service.findByKey(expected_page.getKey());
@@ -157,8 +165,12 @@ public class Crawler {
 			idx++;
 		}
 		
+		long start = System.currentTimeMillis();
+		PageState return_page = browser_service.buildPage(browser);
+		long end = System.currentTimeMillis();
+		System.err.println("TOTAL TIME TO BUILD PAGE :: " + (end-start));
 		
-		return browser_service.buildPage(browser);
+		return return_page;
 	}
 	
 	/**
@@ -205,10 +217,12 @@ public class Crawler {
 			}
 			catch (NoSuchElementException e){
 				log.error("Unable to locage element while performing path crawl   ::    "+ e.getMessage());
+				e.printStackTrace();
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){

@@ -1,6 +1,7 @@
 package com.qanairy.models.message;
 
 import java.util.List;
+import java.util.Map;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
@@ -15,11 +16,13 @@ public class ExplorationPathMessage{
 	private List<ExploratoryPath> paths;
 	private DiscoveryRecord discovery;
 	private Account account;
-
-	public ExplorationPathMessage(List<ExploratoryPath> paths, DiscoveryRecord discovery, Account account){
+	private Map<String, Object> options;
+	
+	public ExplorationPathMessage(List<ExploratoryPath> paths, DiscoveryRecord discovery, Account account, Map<String, Object> options){
 		this.paths = paths;
 		this.discovery = discovery;
 		this.account = account;
+		this.options = options;
 	}
 
 	public List<ExploratoryPath> getPaths() {
@@ -32,5 +35,9 @@ public class ExplorationPathMessage{
 
 	public Account getAccount() {
 		return account;
+	}
+
+	public Map<String, Object> getOptions() {
+		return options;
 	}
 }

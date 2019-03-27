@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Test;
+import com.qanairy.models.message.ExplorationPathMessage;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -83,6 +84,11 @@ public class WorkAllocationActor extends AbstractActor  {
 					}
 					getSender().tell("Status: ok", getSelf());
 					postStop();
+				})
+				.match(ExplorationPathMessage.class, message -> {
+					final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
+					exploratory_browser_actor.tell(message, getSelf() );
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

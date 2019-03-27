@@ -37,7 +37,6 @@ import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
-import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
 
 /**
@@ -63,9 +62,6 @@ public class PathExpansionActor extends AbstractActor {
 	
 	@Autowired
 	private BrowserService browser_service;
-	
-	@Autowired
-	private DomainService domain_service;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -114,7 +110,7 @@ public class PathExpansionActor extends AbstractActor {
 						}
 						
 						if(result_page.isLandable()){
-							DiscoveryRecord discovery_record = discovery_service.incrementTestCount(discovery_key);
+							DiscoveryRecord discovery_record = discovery_service.incrementTotalPathCount(discovery_key);
 							
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
@@ -151,7 +147,7 @@ public class PathExpansionActor extends AbstractActor {
 					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
 					System.err.println("expected total path count :: "+new_total_path_count);
 					discovery_record.setTotalPathCount(new_total_path_count);
-					discovery_record = discovery_repo.save(discovery_record);
+					discovery_record = discovery_service.save(discovery_record);
 
 					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 					
@@ -252,11 +248,11 @@ public class PathExpansionActor extends AbstractActor {
 			else{
 				System.err.println("Checking if element exists previously as a path object or within a page state");
 				//check if element exists in previous pageStates
-				
+				/*
 				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
 					continue;
 				}
-				
+				*/
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
 
@@ -267,11 +263,9 @@ public class PathExpansionActor extends AbstractActor {
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 				
-				System.err.println("adding actions lists to exploratory paths");
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-					System.err.println("exploratory path being created...");
 					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
 					
 					//check for element action sequence. 
@@ -281,7 +275,6 @@ public class PathExpansionActor extends AbstractActor {
 					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 						continue;
 					}*/
-					System.err.println("added action path to path list");
 					pathList.add(action_path);
 				}
 			}

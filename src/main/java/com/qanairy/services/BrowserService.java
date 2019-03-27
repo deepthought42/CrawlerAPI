@@ -1,5 +1,4 @@
 package com.qanairy.services;
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
@@ -16,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
@@ -26,6 +23,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -49,10 +47,8 @@ import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
-import com.qanairy.models.message.ElementScreenshotUpload;
 import com.qanairy.models.rules.Rule;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
 /**
@@ -72,9 +68,6 @@ public class BrowserService {
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
-	
-	@Autowired
-	private ActorSystem actor_system;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
 	
@@ -263,8 +256,9 @@ public class BrowserService {
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		for(WebElement elem : pageElements){
 			boolean is_child = getChildElements(elem).isEmpty();
-			Dimension elem_size = elem.getSize();
-			if(is_child && elem_size.getHeight() > 0 && elem_size.getWidth() >0 && elem.isDisplayed()){
+			
+			if(is_child && elem.isDisplayed() 
+					&& isElementVisibleInPane(browser, elem)){
 				
 				BufferedImage img = null;
 				String checksum = "";
@@ -272,64 +266,46 @@ public class BrowserService {
 				PageElement page_element_record = null;
 				PageElement page_element = null;
 				try{
-					log.info("Checking if element visible in viewport");
+					log.debug("Checking if element visible in viewport");
 					if(!isElementVisibleInPane(browser, elem)){
 						log.info("element not visible in viewport. SCROLLING TO ELEMENT");
 						browser.scrollToElement(elem);
 						page_screenshot = Browser.getViewportScreenshot(browser.getDriver());
 					}
-					long start = System.currentTimeMillis();
 					img = Browser.getElementScreenshot(browser, elem, page_screenshot);
-					long end = System.currentTimeMillis();
-					System.err.println("TIME TO GET ELEMENT SCEENSHOT :: "+(end-start));
-
 					checksum = PageState.getFileChecksum(img);		
 				}
 				catch(RasterFormatException e){
 					log.info("Raster Format Exception : "+e.getMessage());
 					continue;
 				}
-				page_element = new PageElement(elem.getText(), null, elem.getTagName(), null,  null, null, checksum);
 				
+				page_element = new PageElement(elem.getText(), null, elem.getTagName(), null,  null, null, checksum);				
 				page_element_record = page_element_service.findByKey(page_element.getKey()) ;
+
 				if(page_element_record == null){
-					long start = System.currentTimeMillis();
 
-					//screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 					
-					long end = System.currentTimeMillis();
-					System.err.println("Saved element screenshot to S3 in   ::     " +(end-start));
-
-					start = System.currentTimeMillis();
-					
+					//TODO: refactor code to handle this asynchronously. Loading CSS properties currently ranges from 470ms-800ms as of 3/25/2019
 					Map<String, String> css_props = Browser.loadCssProperties(elem);
-					end = System.currentTimeMillis();
-					System.err.println("CSS EXTRACTION TIME ::     " +(end-start));
 
-					start = System.currentTimeMillis();
 					Set<Attribute> attributes = extractAttributes(elem, browser.getDriver());
-					end = System.currentTimeMillis();
-					System.err.println("attributed extraction time    ::     " + (end-start));
 					
-					start = System.currentTimeMillis();
+					//TODO: refactor xpath to generation to be faster. Generating xpath can take over 1.6s
 					String element_xpath = generateXpath(elem, xpath, xpath_map, browser.getDriver(), attributes);
-					end = System.currentTimeMillis();
-					System.err.println("xpath generation time    ::     " + (end-start));
 					
 					page_element.setCssValues(css_props);
-					//page_element.setScreenshot(screenshot);
+					page_element.setScreenshot(screenshot);
 					page_element.setAttributes(attributes);
 					page_element.setXpath(element_xpath);
 					
 					page_element = page_element_service.save(page_element);
-					ElementScreenshotUpload screenshot_upload = new ElementScreenshotUpload(img, new URL(browser.getDriver().getCurrentUrl()), page_element.getKey(), browser.getBrowserName());
-					final ActorRef aws_s3_screenshot_uploader = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							  .props("awsS3ScreenshotUploader"), "aws_s3_screenshot_uploader"+UUID.randomUUID());
-					aws_s3_screenshot_uploader.tell(screenshot_upload, null);
 				}
 				else{
 					page_element = page_element_record;
 				}
+				
 				if(!elementList.contains(page_element)){
 					elementList.add(page_element);
 				}
@@ -360,12 +336,13 @@ public class BrowserService {
 		else if(objx instanceof Long){
 			x_offset = ((Long)objx).intValue(); 
 		}
+		Point location = elem.getLocation();
+		int x = location.getX();
+		int y = location.getY();
 		
-		int x = elem.getLocation().getX();
-		int y = elem.getLocation().getY();
-		
-		int height = elem.getSize().getHeight();
-		int width = elem.getSize().getWidth();
+		Dimension dimension = elem.getSize();
+		int height = dimension.getHeight();
+		int width = dimension.getWidth();
 		
 		if(x >= x_offset && y >= y_offset && (x+width) <= (browser.getViewportSize().getWidth()+x_offset-DIMENSION_OFFSET_PIXELS) 
 				&& (y+height) <= (browser.getViewportSize().getHeight()+y_offset-DIMENSION_OFFSET_PIXELS)){
@@ -403,7 +380,6 @@ public class BrowserService {
 		ArrayList<String> attributeChecks = new ArrayList<String>();
 		String element_text = element.getText();
 		
-		long start = System.currentTimeMillis();
 		xpath += "//"+element.getTagName();
 		
 		if(!element_text.isEmpty()){
@@ -454,21 +430,13 @@ public class BrowserService {
 				xpath += "]";
 			}
 		}
-		
-		long end = System.currentTimeMillis();
-		System.err.println("leaf level xpath loaded with attributes in    "+(end-start));
 
-		start = System.currentTimeMillis();
-		
 	    WebElement parent = element;
 	    String element_name = parent.getTagName();
 	    List<WebElement> similar_elements = new ArrayList<>();
 	    do{
 	    	try{
-	    		long start_2 = System.currentTimeMillis();
 	    		parent = getParentElement(parent);
-	    		long end_2 = System.currentTimeMillis();
-	    		System.err.println("time to find parent element :: " + (end_2-start_2));
 	    		element_name = parent.getTagName();
 	    		xpath = element_name + xpath;
 	    		similar_elements = driver.findElements(By.xpath("//"+xpath));
@@ -483,17 +451,10 @@ public class BrowserService {
 	    		log.error("Invalid selector exception occurred while generating xpath through parent nodes");
 	    		break;
 	    	}
-	    	System.err.println("generated parent");
 	    }while(!element_name.equals("body"));
 
-		end = System.currentTimeMillis();
-		System.err.println("full xpath loaded in    "+(end-start));
-	    xpath = "/"+xpath;
-	    
-		start = System.currentTimeMillis();
+		xpath = "/"+xpath;	    
 		xpath = uniqifyXpath(element, xpathHash, xpath, driver);
-		end = System.currentTimeMillis();
-		System.err.println("uniqifying xpath effort time   ::    " + (end-start));
 
 		return xpath;
 	}
@@ -595,14 +556,10 @@ public class BrowserService {
 				int count = 1;
 				
 				for(WebElement element : similar_elements){
-					long start_2 = System.currentTimeMillis();
 					if(element.getText().equals(elem_text)){
 						return "(" + xpath + ")[" + count + "]";	
 					}					
 					count++;
-
-					long end_2 = System.currentTimeMillis();
-					System.err.println("applying index " + (count-1) + " to xpath ::    " + (end_2-start_2));
 				}
 			}
 			

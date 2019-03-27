@@ -20,6 +20,12 @@ public class DiscoveryRecordService {
   		return save(discovery_record);		
 	}
 	
+	public DiscoveryRecord incrementTotalPathCount(String discovery_key){
+		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+  		return save(discovery_record);		
+	}
+	
 	public DiscoveryRecord save(DiscoveryRecord discovery){
 		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery.getKey());
 		if(discovery_record == null){

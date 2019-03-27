@@ -74,14 +74,6 @@ public class Crawler {
 			}
 		}
 		
-		System.err.println("#########################################################################");
-		System.err.println("#########################################################################");
-		System.err.println("PATH  Keys size ::   " + path.getPathKeys().size());
-		System.err.println("PATH  Objects size ::   " + path.getPathObjects().size());
-
-		System.err.println("#########################################################################");
-		System.err.println("#########################################################################");
-		
 		updated_path_objects.addAll(ordered_path_objects);
 		
 		PageElement last_element = null;
@@ -106,11 +98,7 @@ public class Crawler {
 					browser.scrollToElement(next_elem);
 				}
 				
-
-				long start = System.currentTimeMillis();
 				current_page_state = browser_service.buildPage(browser);
-				long end = System.currentTimeMillis();
-				System.err.println("TOTAL TIME TO BUILD PAGE :: " + (end-start));
 				
 				//current_page_state = browser_service.buildPage(browser);
 
@@ -165,12 +153,7 @@ public class Crawler {
 			idx++;
 		}
 		
-		long start = System.currentTimeMillis();
-		PageState return_page = browser_service.buildPage(browser);
-		long end = System.currentTimeMillis();
-		System.err.println("TOTAL TIME TO BUILD PAGE :: " + (end-start));
-		
-		return return_page;
+		return browser_service.buildPage(browser);
 	}
 	
 	/**
@@ -221,8 +204,52 @@ public class Crawler {
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				//e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
+			} catch(Exception e){
+				log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
+			}
+			finally{
+				if(browser != null){
+					browser.close();
+				}
+			}
+			tries++;
+		}while(result_page == null && tries < Integer.MAX_VALUE);
+		return result_page;
+	}
+	
+	/**
+	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
+	 * @param browser
+	 * @param path
+	 * @param host
+	 * @return
+	 */
+	public PageState performPathCrawl(String browser_name, List<String> path_keys, List<PathObject> path_objects, String host) {
+		PageState result_page = null;
+		int tries = 0;
+		Browser browser = null;
+
+		do{
+			try{
+				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				result_page = crawlPath(path_keys, path_objects, browser, host, null);
+			}catch(NullPointerException e){
+				log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
+			} catch (GridException e) {
+				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
+			}
+			catch (NoSuchElementException e){
+				log.error("Unable to locage element while performing path crawl   ::    "+ e.getMessage());
 				e.printStackTrace();
+			}
+			catch (WebDriverException e) {
+				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
+				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				//e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
@@ -237,4 +264,5 @@ public class Crawler {
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
 	} 
+
 }

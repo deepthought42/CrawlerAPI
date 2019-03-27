@@ -64,7 +64,6 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
-					System.err.println("URL ACTOR RECIEVED MESSAGE :: "+message.getData().getClass().getName());
 					if(message.getData() instanceof URL){
 						
 						String discovery_key = message.getOptions().get("discovery_key").toString();
@@ -79,6 +78,10 @@ public class UrlBrowserActor extends AbstractActor {
 							try{
 								browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 								test = test_creator_service.generateLandingPageTest(url, browser);
+								System.err.println("###############################################################");
+								System.err.println("host value when saving page load test :: "+host);
+								System.err.println("###############################################################");
+								test = test_service.save(test, host);
 							}
 							catch(Exception e){
 								log.error("Exception occurred while exploring url --  " + e.getMessage());
@@ -88,19 +91,17 @@ public class UrlBrowserActor extends AbstractActor {
 									browser.close();
 								}
 							}							
-						}while(test==null && attempts < Integer.MAX_VALUE);
-						
-						test = test_service.save(test, host);
+						}while(test==null);
 
 						DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
 						
 						Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 						
-						log.info("Discovery record :: " + discovery_record);
-						log.info("test :: " + test);
-						log.info("test result " + test.getResult());
+						log.debug("Discovery record :: " + discovery_record);
+						log.debug("test :: " + test);
+						log.debug("test result " + test.getResult());
 						if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
-							log.info("discovery path does not have expanded page state");
+							log.debug("discovery path does not have expanded page state");
 							discovery_record.addExpandedPageState(test.getResult().getKey());
 							
 							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)

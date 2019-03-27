@@ -83,7 +83,6 @@ public class FormDiscoveryActor extends AbstractActor{
 						
 						//get first page in path
 			
-						int cnt = 0;
 					  	Browser browser = null;
 					  	boolean forms_created = false;
 					  	do{
@@ -134,14 +133,14 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	forms_created = true;
 							} catch(Exception e){
 						  		log.warning(e.getMessage());
+						  		forms_created = false;
 						  	}
 					  		finally{
 					  			if(browser != null){
 					  				browser.close();
 					  			}
 					  		}
-							cnt++;
-						}while(!forms_created && cnt < Integer.MAX_VALUE);
+						}while(!forms_created);
 					  	
 					}
 					postStop();

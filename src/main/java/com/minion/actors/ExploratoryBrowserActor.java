@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
@@ -42,6 +43,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
@@ -141,12 +143,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 							  		
-							  		/*
+							  		
 							  		//get index of last page element in path
 							  		int last_elem_idx = getIndexOfLastPageElement(path);
 							  		//crawl to last element of path and gather all parent elements in a list where the first is the immediate parent and the last is the furthest parent
 
-							  		List<PageElement> parent_elements = getParentXpaths(path, browser, last_elem_idx);
+							  		/*
+							  		List<PageElement> parent_elements = getParentXpaths(path, browser_name, last_elem_idx);
 		
 							  		for(PageElement parent_elem : parent_elements){
 							  			//generate parent path
@@ -159,8 +162,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			parent_path_keys.add(path.getPathKeys().get(last_elem_idx+1));
 							  			
 							  			//crawl parent path
-						  				results_match = doesPathProduceExpectedResult(parent_path_keys, parent_path_objects, result_page, browser, page_url);
 
+							  			results_match = doesPathProduceExpectedResult(parent_path_keys, parent_path_objects, result_page, browser_name, page_url);
 						  				//if result of crawl is same as original path then set last path to parent path
 							  			if(!results_match){
 							  				break;
@@ -308,8 +311,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @throws WebDriverException 
 	 * @throws GridException 
 	 */
-	private boolean doesPathProduceExpectedResult(List<String> path_keys, List<PathObject> path_objects, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
-		PageState parent_result = crawler.crawlPath(path_keys, path_objects, browser, host_channel, null);
+	private boolean doesPathProduceExpectedResult(List<String> path_keys, List<PathObject> path_objects, PageState result_page, String browser_name, String host) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
+		PageState parent_result = crawler.performPathCrawl(browser_name, path_keys, path_objects, host);
+		//PageState parent_result = crawler.crawlPath(path_keys, path_objects, browser, host_channel, null);
 		return parent_result.equals(result_page);
 	}
 	
@@ -327,39 +331,54 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		return idx;
 	}
 	
-	private List<PageElement> getParentXpaths(ExploratoryPath path, Browser browser, int last_elem_idx) throws GridException, IOException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	private List<PageElement> getParentXpaths(ExploratoryPath path, String browser_name, int last_elem_idx) throws GridException, IOException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		List<PageElement> parent_page_elements = new ArrayList<PageElement>();
 		List<String> path_keys = path.getPathKeys().subList(0, last_elem_idx+1);
 		List<PathObject> path_objects = path.getPathObjects().subList(0, last_elem_idx+1);
 		System.err.println("path objects length :: " + path.getPathObjects().size());
-		crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
-		
-		PageElement original_elem = ((PageElement)path.getPathObjects().get(last_elem_idx));
-		//perform action on the element
-		//ensure page is equal to expected page
-		//get parent of element
-		WebElement web_elem = browser.getDriver().findElement(By.xpath(original_elem.getXpath()));
-		WebElement last_element = web_elem;
-		String tag_name = web_elem.getTagName();
+		Browser browser = null;
+		boolean success = false;
 		do{
-			
-			WebElement parent = browser_service.getParentElement(web_elem);
-			//clone test and swap page element with parent
-			Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
-			String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
-			
-			BufferedImage page_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-			BufferedImage img = Browser.getElementScreenshot(browser, parent, page_screenshot);
-			String checksum = PageState.getFileChecksum(img);		
-			String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-
-			PageElement parent_elem = new PageElement(parent.getText(), this_xpath, tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
-			parent_page_elements.add(parent_elem);
-			last_element = parent;
-
-			tag_name = last_element.getTagName();
-		}while(!tag_name.equals("body"));
-	
+			try{
+				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				PageState result = crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
+				
+				PageElement original_elem = ((PageElement)path.getPathObjects().get(last_elem_idx));
+				//perform action on the element
+				//ensure page is equal to expected page
+				//get parent of element
+				WebElement web_elem = browser.getDriver().findElement(By.xpath(original_elem.getXpath()));
+				WebElement last_element = web_elem;
+				String tag_name = web_elem.getTagName();
+				do{
+					
+					WebElement parent = browser_service.getParentElement(web_elem);
+					//clone test and swap page element with parent
+					Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
+					String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
+					
+					BufferedImage page_screenshot = Browser.getViewportScreenshot(browser.getDriver());
+					BufferedImage img = Browser.getElementScreenshot(browser, parent, page_screenshot);
+					String checksum = PageState.getFileChecksum(img);		
+					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
+		
+					PageElement parent_elem = new PageElement(parent.getText(), this_xpath, tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
+					parent_page_elements.add(parent_elem);
+					last_element = parent;
+		
+					tag_name = last_element.getTagName();
+				}while(!tag_name.equals("body"));
+				success = true;
+			}
+			catch(Exception e){
+				success = false;
+			}
+			finally{
+				if(browser != null){
+					browser.close();
+				}
+			}
+		}while(!success);
 		
 		return parent_page_elements;
 	}

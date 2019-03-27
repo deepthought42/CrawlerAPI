@@ -145,37 +145,45 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		
 							  		
 							  		//get index of last page element in path
-							  		int last_elem_idx = getIndexOfLastPageElement(path);
+							  		//int last_elem_idx = getIndexOfLastPageElement(path);
+							  		
 							  		//crawl to last element of path and gather all parent elements in a list where the first is the immediate parent and the last is the furthest parent
-
+							  		ExploratoryPath last_path = null;
+							  		//crawl test and get result
+							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 							  		int cnt=0;
+							  		Browser browser = null;
 							  		do{
-						  				log.info("building parent path...attempt # ::  "+cnt);
+						  				System.err.println("building parent path...attempt # ::  "+cnt);
 
 							  			try{
-							  				browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+							  				browser = BrowserConnectionFactory.getConnection(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
+
 							  				ExploratoryPath parent_path = buildParentPath(path, browser);
 							  			
 								  			if(parent_path == null){
 								  				break;
 								  			}
 								  			
-							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, domain.getUrl());
-							  				log.info("Does path produce expected result???  "+results_match);
+							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, page_url);
+							  				System.err.println("Does path produce expected result???  "+results_match);
 								  			if(results_match){
 								  				last_path = path;
 								  				path = parent_path;
 								  			}
-							  				browser.close();
-								  			break;
+								  			results_match = true;
 							  			}catch(Exception e){
-							  				browser.close();
 							  				log.warn("Exception thrown while building parent path : " + e.getLocalizedMessage());
-							  				browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
 							  				results_match = false;
+							  			}
+							  			finally{
+							  				if(browser != null){
+							  					browser.close();
+							  				}
 							  			}
 							  			cnt++;
 							  		}while(results_match && cnt < Integer.MAX_VALUE);
+							  		
 							  		System.err.println("Creating test for parent path");
 							  		Test test = createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
 							  		
@@ -432,7 +440,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
   				ExploratoryPath parent_path = ExploratoryPath.clone(path);
   				Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
   				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
-  				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), parent);
+  				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, parent);
   				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent), screenshot_url );
   				
   				PageElement parent_tag_record = page_element_service.findByKey(parent_tag.getKey());

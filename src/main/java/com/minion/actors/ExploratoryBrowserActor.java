@@ -184,6 +184,15 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			cnt++;
 							  		}while(results_match && cnt < Integer.MAX_VALUE);
 							  		
+							  		if(last_path == null){
+							  			last_path = path;
+							  		}
+									
+							  		PageState result_page_record = page_state_service.findByKey(result_page.getKey());
+							  		if(result_page_record != null){
+							  			result_page = result_page_record;
+							  		}
+							  		
 							  		System.err.println("Creating test for parent path");
 							  		Test test = createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
 							  		

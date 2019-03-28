@@ -520,7 +520,7 @@ public class Browser {
 	public static void waitForPageToLoad(WebDriver driver) {
 		new WebDriverWait(driver, 600).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		Timing.pauseThread(3000);
+		Timing.pauseThread(1000);
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {

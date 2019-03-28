@@ -145,54 +145,33 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		
 							  		
 							  		//get index of last page element in path
-							  		//int last_elem_idx = getIndexOfLastPageElement(path);
+							  		int last_elem_idx = getIndexOfLastPageElement(path);
 							  		
 							  		//crawl to last element of path and gather all parent elements in a list where the first is the immediate parent and the last is the furthest parent
-							  		ExploratoryPath last_path = null;
-							  		//crawl test and get result
-							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-							  		int cnt=0;
-							  		Browser browser = null;
-							  		do{
-						  				System.err.println("building parent path...attempt # ::  "+cnt);
 
-							  			try{
-							  				browser = BrowserConnectionFactory.getConnection(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
-
-							  				ExploratoryPath parent_path = buildParentPath(path, browser);
+							  		List<PageElement> parent_elements = getParentXpaths(path, browser_name, last_elem_idx);
+		
+							  		for(PageElement parent_elem : parent_elements){
+							  			//generate parent path
+							  			List<PathObject> parent_path_objects = path.getPathObjects().subList(0, last_elem_idx);
+							  			parent_path_objects.add(parent_elem);
+							  			parent_path_objects.add(path.getPathObjects().get(last_elem_idx+1));
 							  			
-								  			if(parent_path == null){
-								  				break;
-								  			}
-								  			
-							  				results_match = doesPathProduceExpectedResult(parent_path, result_page, browser, page_url);
-							  				System.err.println("Does path produce expected result???  "+results_match);
-								  			if(results_match){
-								  				last_path = path;
-								  				path = parent_path;
-								  			}
-								  			results_match = true;
-							  			}catch(Exception e){
-							  				log.warn("Exception thrown while building parent path : " + e.getLocalizedMessage());
-							  				results_match = false;
+							  			List<String> parent_path_keys = path.getPathKeys().subList(0, last_elem_idx);
+							  			parent_path_keys.add(parent_elem.getKey());
+							  			parent_path_keys.add(path.getPathKeys().get(last_elem_idx+1));
+							  			
+							  			//crawl parent path
+
+							  			results_match = doesPathProduceExpectedResult(parent_path_keys, parent_path_objects, result_page, browser_name, page_url);
+						  				//if result of crawl is same as original path then set last path to parent path
+							  			if(!results_match){
+							  				break;
 							  			}
-							  			finally{
-							  				if(browser != null){
-							  					browser.close();
-							  				}
-							  			}
-							  			cnt++;
-							  		}while(results_match && cnt < Integer.MAX_VALUE);
-							  		
-							  		if(last_path == null){
-							  			last_path = path;
+							  			path.setPathKeys(parent_path_keys);
+						  				path.setPathObjects(parent_path_objects);
 							  		}
 									
-							  		PageState result_page_record = page_state_service.findByKey(result_page.getKey());
-							  		if(result_page_record != null){
-							  			result_page = result_page_record;
-							  		}
-							  		
 							  		System.err.println("Creating test for parent path");
 							  		Test test = createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
 							  		
@@ -405,64 +384,65 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	}
 	
 	/**
-  	 * Takes in a {@link Test test} and {@link WebDriver driver} and builds a new test such that
-  	 *  the last {@link PageElement element} is replaced with it's parent element from the html document controlled by the 
-  	 *  given {@link WebDriver driver}
-  	 *  
-  	 * @param test
-  	 * @param driver
-  	 * 
-  	 * @return
-  	 * @throws Exception 
-  	 * 
-  	 * @pre path != null
-  	 * @pre browser != null
-  	 */
-  	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser) throws Exception{
-  		assert path != null;
-  		assert browser != null;
-  		
-  		PageElement elem = null;
-  		int idx = 0;
-  		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
-  			if(path.getPathObjects().get(element_idx).getType().equals("PageElement")){
-  				elem = (PageElement)path.getPathObjects().get(element_idx);
-  				idx = element_idx;
-  				break;
-  			}
-  		}
-  		
-  		if(elem != null){
-  			List<String> path_keys = path.getPathKeys().subList(0, idx+1);
-  			List<PathObject> path_objects = path.getPathObjects().subList(0, idx+1);
-  			System.err.println("path objects length :: " + path.getPathObjects().size());
-  			crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
-  			
-  			//perform action on the element
-  			//ensure page is equal to expected page
-  			//get parent of element
-  			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
-  			WebElement parent = browser_service.getParentElement(web_elem);
-  
-  			if(!parent.getTagName().equals("body")){
-  				//clone test and swap page element with parent
-  				ExploratoryPath parent_path = ExploratoryPath.clone(path);
-  				Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
-  				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
-  				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, parent);
-  				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent.getTagName(), attributes, Browser.loadCssProperties(parent), screenshot_url );
-  				
-  				PageElement parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
-  				if(parent_tag_record != null){
-  					parent_tag = parent_tag_record;
-  				}
-  				
-  				parent_path.getPathObjects().set(idx, parent_tag);
-  				
-  				parent_path.getPathKeys().set(idx, parent_tag.getKey());
-  				return parent_path;
-  			}
-  		}
-  		return null;
-  	}
+
+	 * Takes in a {@link Test test} and {@link WebDriver driver} and builds a new test such that
+	 *  the last {@link PageElement element} is replaced with it's parent element from the html document controlled by the 
+	 *  given {@link WebDriver driver}
+	 *  
+	 * @param test
+	 * @param driver
+	 * 
+	 * @return
+	 * @throws Exception 
+	 * 
+	 * @pre path != null
+	 * @pre browser != null
+	 */
+	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser) throws Exception{
+		assert path != null;
+		assert browser != null;
+		
+		PageElement elem = null;
+		int idx = 0;
+		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
+			if(path.getPathObjects().get(element_idx).getType().equals("PageElement")){
+				elem = (PageElement)path.getPathObjects().get(element_idx);
+				idx = element_idx;
+				break;
+			}
+		}
+		
+		if(elem != null){
+			List<String> path_keys = path.getPathKeys().subList(0, idx+2);
+			List<PathObject> path_objects = path.getPathObjects().subList(0, idx+2);
+			System.err.println("path objects length :: " + path.getPathObjects().size());
+			crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
+			
+			//perform action on the element
+			//ensure page is equal to expected page
+			//get parent of element
+			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
+			WebElement parent = browser_service.getParentElement(web_elem);
+			String parent_tag_name = parent.getTagName();
+			if(!parent_tag_name.equals("body")){
+				//clone test and swap page element with parent
+				ExploratoryPath parent_path = ExploratoryPath.clone(path);
+				Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
+				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
+				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, parent);
+				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent_tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
+				
+				PageElement parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
+				if(parent_tag_record != null){
+					parent_tag = parent_tag_record;
+				}
+				
+				parent_path.getPathObjects().set(idx, parent_tag);
+				
+				parent_path.getPathKeys().set(idx, parent_tag.getKey());
+				return parent_path;
+			}
+		}
+		return null;
+	}
 }

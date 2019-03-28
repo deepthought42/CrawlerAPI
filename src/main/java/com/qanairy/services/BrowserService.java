@@ -190,11 +190,11 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		log.info("building page");
+		log.debug("building page");
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
 		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
-        log.info("retrieved viewport screenshot");
+        
 		int param_index = page_url.toString().indexOf("?");
 		String url_without_params = page_url.toString();
 		if(param_index >= 0){
@@ -202,7 +202,7 @@ public class BrowserService {
 		}
 		
 		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(viewport_screenshot));
-		log.info("calculated page state key :: "+ page_key);
+		log.debug("calculated page state key :: "+ page_key);
 
 		PageState page_state = page_state_service.findByKey(page_key);
 		if(page_state != null){
@@ -210,17 +210,16 @@ public class BrowserService {
 			page_state.setBrowserScreenshots(page_state_service.getScreenshots(page_key));
 			return page_state;
 		}
-		log.info("Getting visible elements...");
+		log.debug("Getting visible elements...");
 		Set<PageElement> visible_elements = getVisibleElements(browser, "", page_url.getHost());
 
-		log.info("uploading element screenshot to S3");
+		log.debug("uploading element screenshot to S3");
 		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
 		
 		ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());
 		HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
 		screenshots.add(screenshot_set);
 		
-		log.info("building page state object");
 		page_state = new PageState(	page_url.toString(),
 				screenshots,
 				visible_elements,
@@ -257,8 +256,7 @@ public class BrowserService {
 		for(WebElement elem : pageElements){
 			boolean is_child = getChildElements(elem).isEmpty();
 			
-			if(is_child && elem.isDisplayed() 
-					&& isElementVisibleInPane(browser, elem)){
+			if(is_child && elem.isDisplayed()){
 				
 				BufferedImage img = null;
 				String checksum = "";
@@ -317,9 +315,9 @@ public class BrowserService {
 	}
 	
 	public static boolean isElementVisibleInPane(Browser browser, WebElement elem){
-		Object objy = browser.getYScrollOffset(); //((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
-		Object objx = browser.getXScrollOffset(); //((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
-
+		Object objy = browser.getYScrollOffset();
+		Object objx = browser.getXScrollOffset();
+		
 		int y_offset = 0;
 		int x_offset = 0;
 		

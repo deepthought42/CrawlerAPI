@@ -457,7 +457,7 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		Timing.pauseThread(750);
+		Timing.pauseThread(500);
 
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());

@@ -369,6 +369,94 @@ public class BrowserService {
 	}
 	
 	/**
+	 * generates a unique xpath for this element.
+	 * 
+	 * @return an xpath that identifies this element uniquely
+	 */
+	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver, Set<Attribute> attributes){
+		ArrayList<String> attributeChecks = new ArrayList<String>();
+		String element_text = element.getText();
+		
+		xpath += "//"+element.getTagName();
+		
+		if(!element_text.isEmpty()){
+			attributeChecks.add("contains(text(), \"" + element_text + "\")");
+		}
+		
+		String new_xpath = xpath;
+
+		if(attributeChecks.size()>0){
+			new_xpath += "[";
+			for(int i = 0; i < attributeChecks.size(); i++){
+				new_xpath += attributeChecks.get(i).toString();
+				if(i < attributeChecks.size()-1){
+					new_xpath += " and ";
+				}
+			}
+			new_xpath += "]";
+		}
+		
+		try{
+			List<WebElement> element_list = driver.findElements(By.xpath(new_xpath));
+			if(element_list.size() == 1){
+				xpath = new_xpath;
+			}
+		}
+		catch(NoSuchElementException e){
+			for(Attribute attr : attributes){
+				if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
+					
+					String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
+					if(attribute_values.contains("\"")){
+						attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(attribute_values.trim())+ "\")");
+					}
+					else{
+						attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(attribute_values.trim()) + "\")");
+					}
+				}
+			}
+			
+			if(attributeChecks.size()>0){
+				xpath += "[";
+				for(int i = 0; i < attributeChecks.size(); i++){
+					xpath += attributeChecks.get(i).toString();
+					if(i < attributeChecks.size()-1){
+						xpath += " and ";
+					}
+				}
+				xpath += "]";
+			}
+		}
+
+	    WebElement parent = element;
+	    String element_name = parent.getTagName();
+	    List<WebElement> similar_elements = new ArrayList<>();
+	    do{
+	    	try{
+	    		parent = getParentElement(parent);
+	    		element_name = parent.getTagName();
+	    		xpath = element_name + xpath;
+	    		similar_elements = driver.findElements(By.xpath("//"+xpath));
+	    		if(similar_elements.size() == 1){
+	    			return "//"+xpath;
+	    		}
+	    		else{
+		    		xpath = "/"+xpath;		
+	    		}
+	    	}catch(InvalidSelectorException e){
+	    		parent = null;
+	    		log.error("Invalid selector exception occurred while generating xpath through parent nodes");
+	    		break;
+	    	}
+	    }while(!element_name.equals("body"));
+
+		xpath = "/"+xpath;	    
+		xpath = uniqifyXpath(element, xpathHash, xpath, driver);
+
+		return xpath;
+	}
+	
+	/**
 	 * Extract all attributes from a given {@link WebElement}
 	 * 
 	 * @param element {@link WebElement} to have attributes loaded for
@@ -449,79 +537,24 @@ public class BrowserService {
 	}
 
 	/**
-	 * generates a unique xpath for this element.
-	 * 
-	 * @return an xpath that identifies this element uniquely
-	 */
-	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver, Set<Attribute> attributes){
-		ArrayList<String> attributeChecks = new ArrayList<String>();
-
-		xpath += "//"+element.getTagName();
-		for(Attribute attr : attributes){
-			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
-				
-				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
-				if(attribute_values.contains("\"")){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(attribute_values.trim())+ "\")");
-				}
-				else{
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(attribute_values.trim()) + "\")");
-				}
-			}
-		}
-		if(attributeChecks.size()>0){
-			xpath += "[";
-			for(int i = 0; i < attributeChecks.size(); i++){
-				xpath += attributeChecks.get(i).toString();
-				if(i < attributeChecks.size()-1){
-					xpath += " and ";
-				}
-			}
-			xpath += "]";
-		}
-	    
-	    WebElement parent = element;
-	    int count = 0;
-	    while(!parent.getTagName().equals("html") && !parent.getTagName().equals("body") && parent != null && count < 4){
-	    	try{
-	    		parent = getParentElement(parent);
-	    		if(driver.findElements(By.xpath("//"+parent.getTagName() + xpath)).size() == 1){
-	    			return "//"+parent.getTagName() + xpath;
-	    		}
-	    		else{
-		    		xpath = "/" + parent.getTagName() + xpath;		
-	    		}
-	    	}catch(InvalidSelectorException e){
-	    		parent = null;
-	    		log.warn("Invalid selector exception occurred while generating xpath through parent nodes");
-	    		break;
-	    	}
-	    	count++;
-	    }
-	    xpath = "/"+xpath;
-		return uniqifyXpath(element, xpathHash, xpath, driver);
-	}
-	
-	/**
 	 * creates a unique xpath based on a given hash of xpaths
 	 * 
-	 * @param driver
+	 * @param elem
 	 * @param xpathHash
-	 * 
+	 * @param xpath
+	 * @param driver
 	 * @return
 	 */
 	public static String uniqifyXpath(WebElement elem, Map<String, Integer> xpathHash, String xpath, WebDriver driver){
 		try {
-			List<WebElement> elements = driver.findElements(By.xpath(xpath));
-			String element_tag_name = elem.getTagName();
-			String element_text = elem.getText();
-			
-			if(elements.size()>1){
+			String elem_text = elem.getText();
+			List<WebElement> similar_elements = driver.findElements(By.xpath(xpath));
+			if(similar_elements.size()>1){
 				int count = 1;
-				for(WebElement element : elements){
-					if(element.getTagName().equals(element_tag_name)
-							&& element.getText().equals(element_text)){
-						return "("+xpath+")[" + count + "]";	
+				
+				for(WebElement element : similar_elements){
+					if(element.getText().equals(elem_text)){
+						return "(" + xpath + ")[" + count + "]";	
 					}					
 					count++;
 				}
@@ -530,7 +563,7 @@ public class BrowserService {
 		}catch(InvalidSelectorException e){
 			log.warn(e.getMessage());
 		}
-
+		
 		return xpath;
 	}	
 	

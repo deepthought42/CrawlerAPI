@@ -49,15 +49,16 @@ public class PageState implements Persistable, PathObject {
 	private String type;
 
 	@Relationship(type = "HAS_SCREENSHOT")
-	private Set<ScreenshotSet> browser_screenshots = new HashSet<>();
+	private Set<ScreenshotSet> browser_screenshots;
 
 	@Relationship(type = "HAS_ELEMENT")
-	private Set<PageElement> elements = new HashSet<>();
+	private Set<PageElement> elements;
 
 	@Relationship(type = "HAS_FORM")
-	private Set<Form> forms = new HashSet<>();
+	private Set<Form> forms;
 
 	public PageState() {
+		setForms(new HashSet<Form>());
 	}
 	
 	/**
@@ -84,6 +85,7 @@ public class PageState implements Persistable, PathObject {
 		setLandable(false);
 		setImageWeight(0);
 		setSrc(src);
+		setForms(new HashSet<Form>());
 		setKey(generateKey());
 	}
 
@@ -116,6 +118,7 @@ public class PageState implements Persistable, PathObject {
 		setLandable(isLandable);
 		setImageWeight(0);
 		setSrc(src);
+		setForms(new HashSet<Form>());
 		setKey(generateKey());
 	}
 

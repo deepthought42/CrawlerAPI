@@ -141,9 +141,6 @@ public class Crawler {
 				if(!browser.getDriver().getCurrentUrl().equals(current_page_state.getUrl())){
 					Browser.waitForPageToLoad(browser.getDriver());
 				}
-				else{
-					Timing.pauseThread(1000);
-				}
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -204,7 +201,7 @@ public class Crawler {
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				//e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());

@@ -114,7 +114,7 @@ public class Browser {
 	public void navigateTo(String url){
 		getDriver().get(url);
 		log.debug("successfully navigated to "+url);
-		Browser.waitForPageToLoad(getDriver());
+		//Browser.waitForPageToLoad(getDriver());
 	}
 
 	/**
@@ -457,7 +457,7 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		Timing.pauseThread(500);
+//		Timing.pauseThread(500);
 
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -518,9 +518,9 @@ public class Browser {
 	}
 
 	public static void waitForPageToLoad(WebDriver driver) {
-		new WebDriverWait(driver, 600).until(
+		new WebDriverWait(driver, 15).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		Timing.pauseThread(1000);
+		Timing.pauseThread(1500);
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {

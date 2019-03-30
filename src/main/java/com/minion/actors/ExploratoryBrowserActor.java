@@ -148,7 +148,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		int last_elem_idx = getIndexOfLastPageElement(path);
 							  		
 							  		//crawl to last element of path and gather all parent elements in a list where the first is the immediate parent and the last is the furthest parent
-
+							  		
+							  		/*
 							  		List<PageElement> parent_elements = getParentXpaths(path, browser_name, last_elem_idx);
 		
 							  		for(PageElement parent_elem : parent_elements){
@@ -171,7 +172,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			path.setPathKeys(parent_path_keys);
 						  				path.setPathObjects(parent_path_objects);
 							  		}
-									
+									*/
 							  		System.err.println("Creating test for parent path");
 							  		Test test = createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
 							  		
@@ -229,29 +230,29 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	 * @throws MalformedURLException 
 	 */
 	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Message<?> acct_msg ) throws JsonProcessingException, MalformedURLException {
-		log.info("Creating test........");
+		log.warn("Creating test........");
 		Test test = new Test(path_keys, path_objects, result_page, null);
 		
-		log.info("Looking up test by key ..... ");
+		log.warn("Looking up test by key ..... ");
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db != null){
 			test = test_db;
 		}
 		
-		log.info("Setting test data");
+		log.warn("Setting test data");
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		log.info("Creating test record");
+		log.warn("Creating test record");
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
-		log.info("Test :: "+test);
-		log.info("Test first page :: "+test.firstPage());
-		log.info("Test first page url  :: "+test.firstPage().getUrl());
-		log.info("Test Result  :: "+test.getResult());
-		log.info("Test result url  :: "+test.getResult().getUrl());
+		log.warn("Test :: "+test);
+		log.warn("Test first page :: "+test.firstPage());
+		log.warn("Test first page url  :: "+test.firstPage().getUrl());
+		log.warn("Test Result  :: "+test.getResult());
+		log.warn("Test result url  :: "+test.getResult().getUrl());
 		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()));
 		test.setSpansMultipleDomains(leaves_domain);
 		return test_service.save(test, acct_msg.getOptions().get("host").toString());

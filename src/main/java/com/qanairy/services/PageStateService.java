@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ import com.qanairy.models.repository.ScreenshotSetRepository;
  */
 @Service
 public class PageStateService {
+	private static Logger log = LoggerFactory.getLogger(PageStateService.class.getName());
 	
 	@Autowired
 	private PageStateRepository page_state_repo;
@@ -39,8 +42,12 @@ public class PageStateService {
 	 * Save a {@link PageState} object and its associated objects
 	 * @param page_state
 	 * @return
+	 * 
+	 * @pre page_state != null
 	 */
 	public PageState save(PageState page_state){
+		assert page_state != null;
+		
 		System.err.println("Saving page state");
 		PageState page_state_record = findByKey(page_state.getKey());
 		if(page_state_record != null){
@@ -50,6 +57,7 @@ public class PageStateService {
 			page_state = page_state_repo.save(page_state_record);
 			page_state.setElements(getPageElements(page_state.getKey()));
 			page_state.setBrowserScreenshots(getScreenshots(page_state.getKey()));
+			
 			return page_state;
 		}
 		//iterate over page elements
@@ -93,7 +101,6 @@ public class PageStateService {
 		
 		page_state = page_state_repo.save(page_state);
 
-		
 		return page_state;
 	}
 

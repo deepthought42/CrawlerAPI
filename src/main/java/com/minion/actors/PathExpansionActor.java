@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,12 +89,14 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	*/
+				System.err.println("checking if test has cycle, spans multiple domains or is only a single node");
 				if(	(!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
-					
+					System.err.println("test qualifies for expansion");
 					// if path is a single page 
 					//		then send path to urlBrowserActor
 					if(test.getPathKeys().size() > 1){
+						System.err.println("test has a single path key");
 						PageState result_page = test.getResult();
 						
 						//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
@@ -101,7 +104,7 @@ public class PathExpansionActor extends AbstractActor {
 						Duration minimum_diff = Duration.ofHours(24);
 						
 						if(time_diff.compareTo(minimum_diff) > 0){
-							log.info("Checking for page landability");
+							log.warn("Checking for page landability");
 							//have page checked for landability
 							boolean isLandable = browser_service.checkIfLandable(browser_name, result_page);
 							result_page.setLastLandabilityCheck(LocalDateTime.now());
@@ -114,11 +117,9 @@ public class PathExpansionActor extends AbstractActor {
 							
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-						  	}catch(Exception e){
+						  	}catch(Exception e){}
 							
-							}
-							
-							log.info("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
+							log.warn("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 	
@@ -129,8 +130,9 @@ public class PathExpansionActor extends AbstractActor {
 						return;
 					}
 					else{
+						System.err.println("expanding path");
 						pathExpansions = expandPath(test);
-
+						System.err.println("path expansions size :: "+pathExpansions);
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
@@ -191,10 +193,12 @@ public class PathExpansionActor extends AbstractActor {
 			return null;
 		}
 
+		Set<PageElement> elements = result_page.getElements();
 		//iterate over all elements
-		log.info("Page elements for expansion :: "+result_page.getElements().size());
+		log.warn("Page elements for expansion :: "+elements.size());
 		for(PageElement page_element : result_page.getElements()){
 			
+			log.warn("expanding page element :: "+page_element.getKey());
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -248,11 +252,13 @@ public class PathExpansionActor extends AbstractActor {
 			else{
 				System.err.println("Checking if element exists previously as a path object or within a page state");
 				//check if element exists in previous pageStates
+				
 				/*
 				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
 					continue;
 				}
 				*/
+				
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
 
@@ -279,7 +285,7 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 		}
-		System.err.println("path list size :: " + pathList.size());
+		log.warn("path expansion list size :: " + pathList.size());
 		return pathList;
 	}
 

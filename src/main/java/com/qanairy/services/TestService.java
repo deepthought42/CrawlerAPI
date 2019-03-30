@@ -161,6 +161,7 @@ public class TestService {
 			test = record;
 			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
 			test.setPathObjects(path_objects);
+			test.setResult(page_state_service.findByKey(test.getResult().getKey()));
 		}
 		
 		return test;

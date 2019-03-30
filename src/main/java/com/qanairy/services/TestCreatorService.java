@@ -64,7 +64,7 @@ public class TestCreatorService {
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		browser.navigateTo(url);
-		log.info("building page for landing test");
+		log.warn("building page for landing test");
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	page_obj.setLandable(true);
 	  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
@@ -75,8 +75,8 @@ public class TestCreatorService {
 	  	path_keys.add(page_obj.getKey());
 	  	path_objects.add(page_obj);
 
-	  	log.info("path keys size ::   " + path_keys.size());
-	  	log.info("Path objects size   :::   " + path_objects.size());
+	  	log.warn("path keys size ::   " + path_keys.size());
+	  	log.warn("Path objects size   :::   " + path_objects.size());
 		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser.getBrowserName());
 		if(!url.contains("http")){
 			url = "http://"+url;

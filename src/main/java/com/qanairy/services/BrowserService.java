@@ -190,7 +190,7 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		log.debug("building page");
+		log.warn("building page");
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
 		BufferedImage viewport_screenshot = Browser.getViewportScreenshot(browser.getDriver());		
@@ -202,18 +202,17 @@ public class BrowserService {
 		}
 		
 		String page_key = "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ PageState.getFileChecksum(viewport_screenshot));
-		log.debug("calculated page state key :: "+ page_key);
+		log.warn("calculated page state key :: "+ page_key);
 
 		PageState page_state = page_state_service.findByKey(page_key);
 		if(page_state != null){
 			page_state.setElements(page_state_service.getPageElements(page_key));
 			page_state.setBrowserScreenshots(page_state_service.getScreenshots(page_key));
+			
 			return page_state;
 		}
-		log.debug("Getting visible elements...");
+		log.warn("Getting visible elements...");
 		Set<PageElement> visible_elements = getVisibleElements(browser, "", page_url.getHost());
-
-		log.debug("uploading element screenshot to S3");
 		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_key, "viewport");
 		
 		ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, browser.getBrowserName());

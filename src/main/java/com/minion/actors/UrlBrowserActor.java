@@ -97,11 +97,12 @@ public class UrlBrowserActor extends AbstractActor {
 						
 						Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
 						
-						log.debug("Discovery record :: " + discovery_record);
-						log.debug("test :: " + test);
-						log.debug("test result " + test.getResult());
+						log.warn("Discovery record :: " + discovery_record);
+						log.warn("test :: " + test);
+						log.warn("test result " + test.getResult());
+						log.warn("test result elements size   ::  " + test.getResult().getElements().size());
 						if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
-							log.debug("discovery path does not have expanded page state");
+							log.warn("discovery path does not have expanded page state");
 							discovery_record.addExpandedPageState(test.getResult().getKey());
 							
 							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)

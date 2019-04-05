@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -22,6 +22,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,13 +47,15 @@ public class PageState implements Persistable, PathObject {
 	private String url;
 	private int total_weight;
 	private int image_weight;
+	private int scrollXOffset;
+	private int scrollYOffset;
 	private String type;
 
 	@Relationship(type = "HAS_SCREENSHOT")
 	private Set<ScreenshotSet> browser_screenshots;
 
 	@Relationship(type = "HAS_ELEMENT")
-	private Set<PageElement> elements;
+	private Set<PageElementState> elements;
 
 	@Relationship(type = "HAS_FORM")
 	private Set<Form> forms;
@@ -73,7 +76,7 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre browser_screenshots != null;
 	 */
-	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, String src){
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElementState> elements, String src, int scroll_x_offset, int scroll_y_offset){
 		assert elements != null;
 		assert browser_screenshots != null;
 
@@ -86,6 +89,8 @@ public class PageState implements Persistable, PathObject {
 		setImageWeight(0);
 		setSrc(src);
 		setForms(new HashSet<Form>());
+		setScrollXOffset(scroll_x_offset);
+		setScrollYOffset(scroll_y_offset);
 		setKey(generateKey());
 	}
 
@@ -105,8 +110,8 @@ public class PageState implements Persistable, PathObject {
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException 
 	 */
-	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable,
-			String src) throws IOException, NoSuchAlgorithmException {
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElementState> elements, boolean isLandable,
+			String src, int scroll_x_offset, int scroll_y_offset) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
 		assert browser_screenshots != null;
 
@@ -117,23 +122,26 @@ public class PageState implements Persistable, PathObject {
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
+
+		setScrollXOffset(scroll_x_offset);
+		setScrollYOffset(scroll_y_offset);
 		setSrc(src);
 		setForms(new HashSet<Form>());
 		setKey(generateKey());
 	}
 
 	/**
-	 * Gets counts for all tags based on {@link PageElement}s passed
+	 * Gets counts for all tags based on {@link PageElementState}s passed
 	 * 
 	 * @param page_elements
-	 *            list of {@link PageElement}s
+	 *            list of {@link PageElementState}s
 	 * 
-	 * @return Hash of counts for all tag names in list of {@PageElement}s
+	 * @return Hash of counts for all tag names in list of {@PageElementState}s
 	 *         passed
 	 */
-	public Map<String, Integer> countTags(Set<PageElement> tags) {
+	public Map<String, Integer> countTags(Set<PageElementState> tags) {
 		Map<String, Integer> elem_cnts = new HashMap<String, Integer>();
-		for (PageElement tag : tags) {
+		for (PageElementState tag : tags) {
 			if (elem_cnts.containsKey(tag.getName())) {
 				int cnt = elem_cnts.get(tag.getName());
 				cnt += 1;
@@ -195,13 +203,29 @@ public class PageState implements Persistable, PathObject {
 
 		PageState that = (PageState) o;
 
+		//boolean pages_match = false;
 		boolean pages_match = this.getKey().equals(that.getKey());
-		
 		/*
 		if(!pages_match){
 			pages_match = this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));
 		}
 		*/
+		
+		if(!pages_match){
+			//check if elements match
+			Map<String, PageElementState> element_map = new HashMap<String,PageElementState>();
+			for(PageElementState elem : this.getElements()){
+				element_map.put(elem.getKey(), elem);
+			}
+			
+			for(PageElementState elem: that.getElements()){
+				element_map.remove(elem.getKey());
+			}
+	
+			if(element_map.keySet().isEmpty()){
+				pages_match = true;
+			}
+		}
 		//boolean sources_match = this.getSrc().equals(that.getSrc());
 
 		return pages_match;
@@ -220,12 +244,12 @@ public class PageState implements Persistable, PathObject {
 	 */
 	@Override
 	public PathObject clone() {
-		Set<PageElement> elements = new HashSet<PageElement>(getElements());
+		Set<PageElementState> elements = new HashSet<PageElementState>(getElements());
 		Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>(getBrowserScreenshots());
 
 		PageState page = null;
 		try {
-			page = new PageState(getUrl().toString(), screenshots, elements, isLandable(), getSrc());
+			page = new PageState(getUrl().toString(), screenshots, elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset());
 		} catch (NoSuchAlgorithmException | IOException e) {
 			log.info("Error cloning page : " + page.getKey() + ";  "+e.getMessage());
 		}
@@ -241,12 +265,12 @@ public class PageState implements Persistable, PathObject {
 	}
 
 	@JsonIgnore
-	public Set<PageElement> getElements() {
+	public Set<PageElementState> getElements() {
 		return this.elements;
 	}
 
 	@JsonIgnore
-	public void setElements(Set<PageElement> elements) {
+	public void setElements(Set<PageElementState> elements) {
 		this.elements = elements;
 	}
 
@@ -308,7 +332,7 @@ public class PageState implements Persistable, PathObject {
 		this.browser_screenshots.add(browser_screenshots);
 	}
 
-	public void addElement(PageElement element) {
+	public void addElement(PageElementState element) {
 		this.elements.add(element);
 	}
 
@@ -363,7 +387,10 @@ public class PageState implements Persistable, PathObject {
 		}
 
 		try{
-			return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot));
+			BufferedImage buff_img = ImageIO.read(new URL(screenshot));
+			Image scaled_image = buff_img.getScaledInstance(64, 64, Image.SCALE_DEFAULT);
+
+			return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ getFileChecksum(scaled_image));
 		}
 		catch(NoSuchAlgorithmException e){
 			log.error("Couldnt find SHA-256 algorithm :: " + e.getLocalizedMessage());
@@ -406,5 +433,21 @@ public class PageState implements Persistable, PathObject {
 
 	public void setSrc(String src) {
 		this.src = src;
+	}
+
+	public int getScrollXOffset() {
+		return scrollXOffset;
+	}
+
+	public void setScrollXOffset(int scrollXOffset) {
+		this.scrollXOffset = scrollXOffset;
+	}
+	
+	public int getScrollYOffset() {
+		return scrollYOffset;
+	}
+
+	public void setScrollYOffset(int scrollYOffset) {
+		this.scrollYOffset = scrollYOffset;
 	}
 }

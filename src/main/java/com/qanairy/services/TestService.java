@@ -18,7 +18,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -44,7 +44,7 @@ public class TestService {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageElementService page_element_service;
+	private PageElementStateService page_element_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -117,8 +117,8 @@ public class TestService {
 				if(path_obj instanceof PageState){
 					path_objects.add(page_state_service.save((PageState)path_obj));
 				}
-				else if(path_obj instanceof PageElement){
-					path_objects.add(page_element_service.save((PageElement)path_obj));
+				else if(path_obj instanceof PageElementState){
+					path_objects.add(page_element_service.save((PageElementState)path_obj));
 				}
 				else if(path_obj instanceof Action){
 					path_objects.add(action_service.save((Action)path_obj));

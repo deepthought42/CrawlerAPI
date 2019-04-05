@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.repository.FormRepository;
@@ -30,7 +30,7 @@ public class PageStateService {
 	private PageStateRepository page_state_repo;
 	
 	@Autowired
-	private PageElementService page_element_service;
+	private PageElementStateService page_element_service;
 	
 	@Autowired
 	private ScreenshotSetRepository screenshot_repo;
@@ -55,51 +55,50 @@ public class PageStateService {
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 			
 			page_state = page_state_repo.save(page_state_record);
-			page_state.setElements(getPageElements(page_state.getKey()));
+			page_state.setElements(getPageElementStates(page_state.getKey()));
 			page_state.setBrowserScreenshots(getScreenshots(page_state.getKey()));
-			
-			return page_state;
 		}
-		//iterate over page elements
-		Set<PageElement> element_records = new HashSet<>();
-		for(PageElement element : page_state.getElements()){
-			PageElement element_record = page_element_service.save(element);
-			
-			element_records.add(element_record);
-		}
-		
-		page_state.setElements(element_records);
-		
-		Set<ScreenshotSet> screenshot_records = new HashSet<>();
-		for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
-			ScreenshotSet screenshot_record = screenshot_repo.findByKey(screenshot.getKey());
-			if(screenshot_record == null){
-				screenshot_record = screenshot_repo.save(screenshot);
+		else {
+			//iterate over page elements
+			Set<PageElementState> element_records = new HashSet<>();
+			for(PageElementState element : page_state.getElements()){
+				PageElementState element_record = page_element_service.save(element);
+				
+				element_records.add(element_record);
 			}
-			screenshot_records.add(screenshot_record);
-		}
-		page_state.setBrowserScreenshots(screenshot_records);
-		
-		Set<Form> form_records = new HashSet<>();
-		for(Form form : page_state.getForms()){
-			Form form_record = form_repo.findByKey(form.getKey());
-			if(form_record == null){
-				List<PageElement> form_element_records = new ArrayList<>();
-				for(PageElement element : page_state.getElements()){
-					PageElement element_record = page_element_service.save(element);
-					
-					form_element_records.add(element_record);
+			
+			page_state.setElements(element_records);
+			
+			Set<ScreenshotSet> screenshot_records = new HashSet<>();
+			for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
+				ScreenshotSet screenshot_record = screenshot_repo.findByKey(screenshot.getKey());
+				if(screenshot_record == null){
+					screenshot_record = screenshot_repo.save(screenshot);
 				}
-				
-				form.setFormFields(form_element_records);
-				
-				form_record = form_repo.save(form);
+				screenshot_records.add(screenshot_record);
 			}
-			form_records.add(form_record);
+			page_state.setBrowserScreenshots(screenshot_records);
+			
+			Set<Form> form_records = new HashSet<>();
+			for(Form form : page_state.getForms()){
+				Form form_record = form_repo.findByKey(form.getKey());
+				if(form_record == null){
+					List<PageElementState> form_element_records = new ArrayList<>();
+					for(PageElementState element : page_state.getElements()){
+						PageElementState element_record = page_element_service.save(element);
+						
+						form_element_records.add(element_record);
+					}
+					
+					form.setFormFields(form_element_records);
+					
+					form_record = form_repo.save(form);
+				}
+				form_records.add(form_record);
+			}
+			page_state.setForms(form_records);
+			page_state = page_state_repo.save(page_state);
 		}
-		page_state.setForms(form_records);
-		
-		page_state = page_state_repo.save(page_state);
 
 		return page_state;
 	}
@@ -107,14 +106,14 @@ public class PageStateService {
 	public PageState findByKey(String page_key) {
 		PageState page_state = page_state_repo.findByKey(page_key);
 		if(page_state != null){
-			page_state.setElements(getPageElements(page_key));
+			page_state.setElements(getPageElementStates(page_key));
 			page_state.setBrowserScreenshots(getScreenshots(page_key));
 		}
 		return page_state;
 	}
 	
-	public Set<PageElement> getPageElements(String page_key){
-		return page_state_repo.getPageElements(page_key);
+	public Set<PageElementState> getPageElementStates(String page_key){
+		return page_state_repo.getPageElementStates(page_key);
 	}
 
 	public Set<ScreenshotSet> getScreenshots(String page_key) {

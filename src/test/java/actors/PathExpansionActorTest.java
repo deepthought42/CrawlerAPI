@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 
@@ -20,10 +20,10 @@ public class PathExpansionActorTest {
 	private PageState page_state_1;
 	
 	@Mock
-	private PageElement page_element;
+	private PageElementState page_element;
 	
 	@Mock
-	private PageElement page_element_1;
+	private PageElementState page_element_1;
 	
 	@Before
 	public void setup(){
@@ -36,7 +36,7 @@ public class PathExpansionActorTest {
 		path.add(page_state);
 		path.add(page_element);
 		
-		Set<PageElement> elements = new HashSet<PageElement>();
+		Set<PageElementState> elements = new HashSet<PageElementState>();
 		elements.add(page_element);
 		
 		when(page_state.getElements()).thenReturn(elements);
@@ -54,10 +54,10 @@ public class PathExpansionActorTest {
 		path.add(page_state_1);
 		path.add(page_element);
 		
-		Set<PageElement> elements = new HashSet<PageElement>();
+		Set<PageElementState> elements = new HashSet<PageElementState>();
 		elements.add(page_element);
 		
-		Set<PageElement> elements_1 = new HashSet<PageElement>();
+		Set<PageElementState> elements_1 = new HashSet<PageElementState>();
 		elements_1.add(page_element_1);
 		
 		when(test.getPathObjects()).thenReturn(path);
@@ -81,10 +81,10 @@ public class PathExpansionActorTest {
 		path.add(page_state_1);
 		path.add(page_element);
 		
-		Set<PageElement> elements = new HashSet<PageElement>();
+		Set<PageElementState> elements = new HashSet<PageElementState>();
 		elements.add(page_element);
 		
-		Set<PageElement> elements_1 = new HashSet<PageElement>();
+		Set<PageElementState> elements_1 = new HashSet<PageElementState>();
 		elements_1.add(page_element);
 		
 		when(page_state.getElements()).thenReturn(elements);

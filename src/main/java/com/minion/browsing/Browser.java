@@ -41,7 +41,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 
 /**
@@ -161,7 +161,9 @@ public class Browser {
 		FirefoxOptions options = new FirefoxOptions();
 		//options.setHeadless(true);
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
-	    //driver.manage().window().setSize(new Dimension(1024, 768));
+		//driver.manage().window().maximize();
+
+	    driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -243,7 +245,9 @@ public class Browser {
 		}*/
 		log.info("Requesting chrome remote driver from hub");
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
-		//driver.manage().window().setSize(new Dimension(1024, 768));
+		//driver.manage().window().maximize();
+
+		driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -283,6 +287,16 @@ public class Browser {
 	 */
 	public static BufferedImage getViewportScreenshot(WebDriver driver) throws IOException, GridException{
 		return ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
+	}
+	
+	/**
+	 * Gets image as a base 64 string
+	 * 
+	 * @return File png file of image
+	 * @throws IOException
+	 */
+	public static BufferedImage getElementScreenshot(WebElement elem) throws IOException, GridException{
+		return ImageIO.read(elem.getScreenshotAs(OutputType.FILE));
 	}
 	
 	/**
@@ -328,9 +342,9 @@ public class Browser {
 		return null;
 	}
 	
-	public static PageElement findLabelFor(Set<PageElement> elements, String for_id){
-		for(PageElement elem : elements){
-			//PageElement tag = (PageElement)elem;
+	public static PageElementState findLabelFor(Set<PageElementState> elements, String for_id){
+		for(PageElementState elem : elements){
+			//PageElementState tag = (PageElementState)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
 					if(attr.getName().equals("for")){
@@ -354,10 +368,10 @@ public class Browser {
 	 * @param for_ids
 	 * @return
 	 */
-	public static Set<PageElement> findLabelsFor(Set<PageElement> elements, String[] for_ids){
-		Set<PageElement> labels = new HashSet<PageElement>();
-		for(PageElement elem : elements){
-			//PageElement tag = (PageElement)elem;
+	public static Set<PageElementState> findLabelsFor(Set<PageElementState> elements, String[] for_ids){
+		Set<PageElementState> labels = new HashSet<PageElementState>();
+		for(PageElementState elem : elements){
+			//PageElementState tag = (PageElementState)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
 					if(attr.getName().equals("for")){
@@ -382,7 +396,7 @@ public class Browser {
 	 * @param page_element
 	 * @param driver
 	 */
-	public static void outlineElement(PageElement page_element, WebDriver driver) {
+	public static void outlineElement(PageElementState page_element, WebDriver driver) {
 		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
 	}
@@ -457,11 +471,20 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-//		Timing.pauseThread(500);
+		Timing.pauseThread(500);
 
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
+    }
+	
+	public void scrollTo(int x_offset, int y_offset) 
+    { 
+		//only scroll to position if it isn't the same position
+		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
+		Timing.pauseThread(500);
+		this.setXScrollOffset(x_offset);
+		this.setYScrollOffset(y_offset);
     }
 	
 	/**
@@ -477,7 +500,8 @@ public class Browser {
 
 		int y_offset = 0;
 		int x_offset = 0;
-		
+		System.err.println("viewport scroll offset x  : "+objx);
+		System.err.println("viewport scroll offset y  : "+objy);
 		if(objy instanceof Double){
 			y_offset = ((Double)objy).intValue(); 
 		}
@@ -518,9 +542,9 @@ public class Browser {
 	}
 
 	public static void waitForPageToLoad(WebDriver driver) {
-		new WebDriverWait(driver, 15).until(
+		new WebDriverWait(driver, 30).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		Timing.pauseThread(1500);
+		Timing.pauseThread(1000);
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {

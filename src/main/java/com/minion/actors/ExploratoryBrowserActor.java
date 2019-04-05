@@ -38,7 +38,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -49,7 +49,7 @@ import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.EmailService;
-import com.qanairy.services.PageElementService;
+import com.qanairy.services.PageElementStateService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
@@ -81,7 +81,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageElementService page_element_service;
+	private PageElementStateService page_element_service;
 	
 	@Autowired
 	private ActionService action_service;
@@ -130,7 +130,14 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								String page_url = acct_msg.getOptions().get("host").toString();
 
 								final long pathCrawlStartTime = System.currentTimeMillis();
-								result_page = crawler.performPathCrawl(browser_name, path, page_url);
+								try{
+									result_page = crawler.performPathCrawl(browser_name, path, page_url);
+								}
+								catch(WebDriverException e){
+									//e.printStackTrace();
+									postStop();
+									return;
+								}
 								result_page = page_state_service.save(result_page);
 								
 								//have page checked for landability
@@ -138,21 +145,31 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								final long pathCrawlEndTime = System.currentTimeMillis();
 								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
-								if(!ExploratoryPath.hasCycle(path.getPathObjects(), result_page)){
+								//get page states 
+								List<PageState> page_states = new ArrayList<PageState>();
+								for(PathObject path_obj : path.getPathObjects()){
+									if(path_obj instanceof PageState){
+										PageState page_state = (PageState)path_obj;
+										page_state.setElements(page_state_service.getPageElementStates(page_state.getKey()));
+										page_states.add(page_state);										
+									}
+								}
+								System.err.println("checking page states for cycle   :::   " + page_states.size());
+								if(!ExploratoryPath.hasCycle(page_states, result_page, path.getPathObjects().size() == 1)){
 							  		boolean results_match = false;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 							  		
 							  		
 							  		//get index of last page element in path
-							  		int last_elem_idx = getIndexOfLastPageElement(path);
+							  		int last_elem_idx = getIndexOfLastPageElementState(path);
 							  		
 							  		//crawl to last element of path and gather all parent elements in a list where the first is the immediate parent and the last is the furthest parent
 							  		
 							  		/*
-							  		List<PageElement> parent_elements = getParentXpaths(path, browser_name, last_elem_idx);
+							  		List<PageElementState> parent_elements = getParentXpaths(path, browser_name, last_elem_idx);
 		
-							  		for(PageElement parent_elem : parent_elements){
+							  		for(PageElementState parent_elem : parent_elements){
 							  			//generate parent path
 							  			List<PathObject> parent_path_objects = path.getPathObjects().subList(0, last_elem_idx);
 							  			parent_path_objects.add(parent_elem);
@@ -244,15 +261,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		log.warn("Creating test record");
+		log.warn("Creating test record " + test.firstPage());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
-		log.warn("Test :: "+test);
-		log.warn("Test first page :: "+test.firstPage());
-		log.warn("Test first page url  :: "+test.firstPage().getUrl());
-		log.warn("Test Result  :: "+test.getResult());
-		log.warn("Test result url  :: "+test.getResult().getUrl());
 		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()));
 		test.setSpansMultipleDomains(leaves_domain);
 		return test_service.save(test, acct_msg.getOptions().get("host").toString());
@@ -266,8 +278,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	private void addFormGroupsToPath(Test test) {
 		//check if test has any form elements
 		for(PathObject path_obj: test.getPathObjects()){
-			if(path_obj.getClass().equals(PageElement.class)){
-				PageElement elem = (PageElement)path_obj;
+			if(path_obj.getClass().equals(PageElementState.class)){
+				PageElementState elem = (PageElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
 					test_service.save(test, test.firstPage().getUrl()); 
@@ -318,12 +330,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		return parent_result.equals(result_page);
 	}
 	
-	private int getIndexOfLastPageElement(ExploratoryPath path){
-		PageElement elem = null;
+	private int getIndexOfLastPageElementState(ExploratoryPath path){
+		PageElementState elem = null;
 		int idx = 0;
 		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
-			if(path.getPathObjects().get(element_idx).getType().equals("PageElement")){
-				elem = (PageElement)path.getPathObjects().get(element_idx);
+			if(path.getPathObjects().get(element_idx).getType().equals("PageElementState")){
+				elem = (PageElementState)path.getPathObjects().get(element_idx);
 				idx = element_idx;
 				break;
 			}
@@ -332,8 +344,8 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		return idx;
 	}
 	
-	private List<PageElement> getParentXpaths(ExploratoryPath path, String browser_name, int last_elem_idx) throws GridException, IOException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
-		List<PageElement> parent_page_elements = new ArrayList<PageElement>();
+	private List<PageElementState> getParentXpaths(ExploratoryPath path, String browser_name, int last_elem_idx) throws GridException, IOException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+		List<PageElementState> parent_page_elements = new ArrayList<PageElementState>();
 		List<String> path_keys = path.getPathKeys().subList(0, last_elem_idx+1);
 		List<PathObject> path_objects = path.getPathObjects().subList(0, last_elem_idx+1);
 		System.err.println("path objects length :: " + path.getPathObjects().size());
@@ -344,7 +356,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				PageState result = crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
 				
-				PageElement original_elem = ((PageElement)path.getPathObjects().get(last_elem_idx));
+				PageElementState original_elem = ((PageElementState)path.getPathObjects().get(last_elem_idx));
 				//perform action on the element
 				//ensure page is equal to expected page
 				//get parent of element
@@ -363,7 +375,10 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					String checksum = PageState.getFileChecksum(img);		
 					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 		
-					PageElement parent_elem = new PageElement(parent.getText(), this_xpath, tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
+					PageElementState parent_elem = new PageElementState(parent.getText(), this_xpath, tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
+					parent_elem.setXLocation(parent.getLocation().getX());
+					parent_elem.setYLocation(parent.getLocation().getY());
+					
 					parent_page_elements.add(parent_elem);
 					last_element = parent;
 		
@@ -387,7 +402,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	/**
 
 	 * Takes in a {@link Test test} and {@link WebDriver driver} and builds a new test such that
-	 *  the last {@link PageElement element} is replaced with it's parent element from the html document controlled by the 
+	 *  the last {@link PageElementState element} is replaced with it's parent element from the html document controlled by the 
 	 *  given {@link WebDriver driver}
 	 *  
 	 * @param test
@@ -403,11 +418,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		assert path != null;
 		assert browser != null;
 		
-		PageElement elem = null;
+		PageElementState elem = null;
 		int idx = 0;
 		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
-			if(path.getPathObjects().get(element_idx).getType().equals("PageElement")){
-				elem = (PageElement)path.getPathObjects().get(element_idx);
+			if(path.getPathObjects().get(element_idx).getType().equals("PageElementState")){
+				elem = (PageElementState)path.getPathObjects().get(element_idx);
 				idx = element_idx;
 				break;
 			}
@@ -431,16 +446,20 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
 				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
 				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, parent);
-				PageElement parent_tag = new PageElement(parent.getText(), this_xpath, parent_tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
+				PageElementState parent_tag = new PageElementState(parent.getText(), this_xpath, parent_tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url );
+				parent_tag.setXLocation(parent.getLocation().getX());
+				parent_tag.setYLocation(parent.getLocation().getY());
 				
-				PageElement parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
+				PageElementState parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
 				if(parent_tag_record != null){
 					parent_tag = parent_tag_record;
 				}
-				
+				else{
+					parent_tag = page_element_service.save(parent_tag);
+				}
 				parent_path.getPathObjects().set(idx, parent_tag);
-				
 				parent_path.getPathKeys().set(idx, parent_tag.getKey());
+				
 				return parent_path;
 			}
 		}

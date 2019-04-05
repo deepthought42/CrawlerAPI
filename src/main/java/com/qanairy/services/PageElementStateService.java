@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.repository.PageElementRepository;
+import com.qanairy.models.PageElementState;
+import com.qanairy.models.repository.PageElementStateRepository;
 import com.qanairy.models.rules.Rule;
 
 @Service
-public class PageElementService {
+public class PageElementStateService {
 	
 	@Autowired
 	private AttributeService attribute_service;
@@ -21,10 +21,10 @@ public class PageElementService {
 	private RuleService rule_service;
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private PageElementStateRepository page_element_repo;
 	
-	public PageElement save(PageElement element){
-		PageElement element_record = page_element_repo.findByKey(element.getKey());
+	public PageElementState save(PageElementState element){
+		PageElementState element_record = page_element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
@@ -44,17 +44,17 @@ public class PageElementService {
 		else{
 			element_record.setScreenshot(element.getScreenshot());
 			element_record.setXpath(element.getXpath());
-			page_element_repo.save(element);
+			page_element_repo.save(element_record);
 		}
 		
 		return element_record;
 	}
 	
-	public PageElement findByKey(String key){
+	public PageElementState findByKey(String key){
 		return page_element_repo.findByKey(key);
 	}
 	
-	public PageElement findByTextAndName(String text, String name){
+	public PageElementState findByTextAndName(String text, String name){
 		return page_element_repo.findByTextAndName(text, name);
 	}
 }

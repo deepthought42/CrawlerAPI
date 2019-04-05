@@ -3,7 +3,7 @@ package com.qanairy.models.rules;
 import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -32,7 +32,7 @@ public class DisabledRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(PageElement elem) {
+	public Boolean evaluate(PageElementState elem) {
 		/* 
 		 * Also check for 
 		 * 

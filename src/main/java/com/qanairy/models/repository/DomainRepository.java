@@ -10,7 +10,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -27,8 +27,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH a=(p:PageState)-[:HAS_SCREENSHOT]->() WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH a=(t)-[]->(p:PageElement) OPTIONAL MATCH b=(p)-->(attr) RETURN p,attr as f")
-	public Set<PageElement> getPageElements(@Param("domain_host") String host);
+	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH a=(t)-[]->(p:PageElementState) OPTIONAL MATCH b=(p)-->(attr) RETURN p,attr as f")
+	public Set<PageElementState> getPageElementStates(@Param("domain_host") String host);
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) RETURN a")
 	public Set<Action> getActions(@Param("domain_host") String host);

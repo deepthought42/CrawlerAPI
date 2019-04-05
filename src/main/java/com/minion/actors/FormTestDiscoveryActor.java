@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.FormType;
 import com.minion.structs.Message;
@@ -83,7 +83,7 @@ public class FormTestDiscoveryActor extends AbstractActor {
 	
 	
 	@Deprecated
-	public static List<List<PathObject>> generateRequirementChecks(PageElement input, boolean isRequired){
+	public static List<List<PathObject>> generateRequirementChecks(PageElementState input, boolean isRequired){
 		assert input.getName().equals("input");
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();

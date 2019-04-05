@@ -4,7 +4,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 
 @NodeEntity
 public class RequirementRule extends Rule{
@@ -30,7 +30,7 @@ public class RequirementRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(PageElement elem) {
+	public Boolean evaluate(PageElementState elem) {
 		return elem.getAttributes().contains("required");
 	}
 

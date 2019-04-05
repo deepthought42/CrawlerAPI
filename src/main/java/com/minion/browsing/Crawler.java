@@ -23,7 +23,7 @@ import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -76,55 +76,39 @@ public class Crawler {
 		
 		updated_path_objects.addAll(ordered_path_objects);
 		
-		PageElement last_element = null;
+		PageElementState last_element = null;
 		
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
 		PageState current_page_state = null;
 				
-		log.debug("building page for host channel :: " + host_channel);
+		log.warn("building page for host channel :: " + host_channel);
 
 		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
-		
-		
 		
 		int idx=0;
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
-				String xpath = ((PageElement)ordered_path_objects.get(idx+1)).getXpath();
-				WebElement next_elem = browser.getDriver().findElement(By.xpath(xpath));
-				if(!BrowserService.isElementVisibleInPane(browser, next_elem)){
-					browser.scrollToElement(next_elem);
+				
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+					current_page_state = browser_service.buildPage(browser);
+					if(idx==0 && !current_page_state.equals(expected_page)){
+						updated_path_objects.set(idx, current_page_state);
+						path_keys.set(idx, current_page_state.getKey());
+						
+						path.setPathObjects(updated_path_objects);
+						path.setPathKeys(path_keys);
+					}
 				}
-				
-				current_page_state = browser_service.buildPage(browser);
-				
-				//current_page_state = browser_service.buildPage(browser);
-
-				/*
-				PageState page_record = page_state_service.findByKey(expected_page.getKey());
-				if(page_record != null){
-					expected_page = page_record;
-				}
-				
-				screenshot_matches = current_page_state.equals(expected_page);
-				if(!screenshot_matches){
-					return current_page_state;
-				}
-				*/
-				
-				
-				if(idx==0 && !current_page_state.equals(expected_page)){
-					updated_path_objects.set(idx, current_page_state);
-					path_keys.set(idx, current_page_state.getKey());
-					
-					path.setPathObjects(updated_path_objects);
-					path.setPathKeys(path_keys);
+				else{
+					current_page_state = expected_page;
 				}
 			}
-			else if(current_obj instanceof PageElement){
-				last_element = (PageElement) current_obj;
+			else if(current_obj instanceof PageElementState){
+				last_element = (PageElementState) current_obj;
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -140,6 +124,9 @@ public class Crawler {
 				performAction(action, last_element, browser.getDriver());
 				if(!browser.getDriver().getCurrentUrl().equals(current_page_state.getUrl())){
 					Browser.waitForPageToLoad(browser.getDriver());
+				}
+				else{
+					Timing.pauseThread(2000);
 				}
 			}
 			else if(current_obj instanceof PageAlert){
@@ -159,13 +146,13 @@ public class Crawler {
 	 * 
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static boolean performAction(Action action, PageElement elem, WebDriver driver){
+	public static boolean performAction(Action action, PageElementState elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
-		
+
 		return wasPerformedSuccessfully;
 	}
 	
@@ -192,8 +179,10 @@ public class Crawler {
 				result_page = crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 			}catch(NullPointerException e){
 				log.warn("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
+				e.printStackTrace();
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
+				e.getStackTrace();
 			}
 			catch (NoSuchElementException e){
 				log.error("Unable to locage element while performing path crawl   ::    "+ e.getMessage());
@@ -201,12 +190,17 @@ public class Crawler {
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
-				//e.printStackTrace();
+				log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
+				if(e.getMessage().contains("viewport")){
+					throw e;
+				}
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
 				log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
+				if(e.getMessage().contains("viewport")){
+					e.printStackTrace();
+				}
 			}
 			finally{
 				if(browser != null){
@@ -245,8 +239,8 @@ public class Crawler {
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
-				//e.printStackTrace();
+				log.warn("WebDriver exception encountered while performing path crawl"+e.getMessage());
+				e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
@@ -260,6 +254,19 @@ public class Crawler {
 			tries++;
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
+	}
+
+	public static List<PageState> createPageStates(Browser browser, String url) {
+		browser.navigateTo(url);
+		
+		//get all page elements
+		//while elements is not null
+			//get all elements that are currently visible within viewport
+			//build all elements visible in viewport
+			//build page state and add it to page state list
+			
+		
+		return null;
 	} 
 
 }

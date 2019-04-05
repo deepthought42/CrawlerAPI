@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -60,11 +60,13 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
+	@Deprecated
 	public Test generateLandingPageTest(String url, Browser browser) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		
 		browser.navigateTo(url);
 		log.warn("building page for landing test");
+
 	  	PageState page_obj = browser_service.buildPage(browser);
 	  	page_obj.setLandable(true);
 	  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
@@ -87,6 +89,57 @@ public class TestCreatorService {
 			url_path = "home";
 		}
 		test.setName(url_path.trim() + " page loaded");
+		
+		//add group "smoke" to test
+		Group group = new Group("smoke");
+		group = group_service.save(group);
+		test.addGroup(group);
+		
+		return test;
+	}
+	
+	/**
+	 * Generates a landing page test based on a given URL
+	 * 
+	 * @param browser
+	 * @param msg
+	 * 
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
+	 * 
+	 * @pre browser != null
+	 * @pre msg != null
+	 */
+	public Test createLandingPageTest(PageState page_state, String browser_name) 
+			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
+		
+		
+		page_state.setLandable(true);
+		page_state.setLastLandabilityCheck(LocalDateTime.now());
+		page_state = page_state_service.save(page_state);
+  	  	
+	  	List<String> path_keys = new ArrayList<String>();	  	
+	  	List<PathObject> path_objects = new ArrayList<PathObject>();
+	  	path_keys.add(page_state.getKey());
+	  	path_objects.add(page_state);
+
+	  	log.warn("path keys size ::   " + path_keys.size());
+	  	log.warn("Path objects size   :::   " + path_objects.size());
+		Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name);
+		
+		String url = page_state.getUrl();
+		if(!url.contains("http")){
+			url = "http://"+url;
+		}
+		String url_path = new URL(url).getPath();
+		url_path = url_path.replace("/", " ").trim();
+		if(url_path.isEmpty()){
+			url_path = "home";
+		}
+		test.setName(url_path + " page loaded");
 		
 		//add group "smoke" to test
 		Group group = new Group("smoke");
@@ -124,8 +177,8 @@ public class TestCreatorService {
 	private void addFormGroupsToPath(Test test) {
 		//check if test has any form elements
 		for(PathObject path_obj: test.getPathObjects()){
-			if(path_obj.getClass().equals(PageElement.class)){
-				PageElement elem = (PageElement)path_obj;
+			if(path_obj.getClass().equals(PageElementState.class)){
+				PageElementState elem = (PageElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
 					test_service.save(test, test.firstPage().getUrl());

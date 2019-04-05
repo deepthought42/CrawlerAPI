@@ -26,7 +26,13 @@ public class DiscoveryRecordService {
   		return save(discovery_record);		
 	}
 	
-	public DiscoveryRecord save(DiscoveryRecord discovery){
+	public synchronized DiscoveryRecord increaseTotalPathCount(String discovery_key, int cnt){
+		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+cnt);
+  		return save(discovery_record);		
+	}
+	
+	public synchronized DiscoveryRecord save(DiscoveryRecord discovery){
 		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery.getKey());
 		if(discovery_record == null){
 			discovery_record = discovery;

@@ -22,7 +22,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -84,9 +84,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 
 								//  clone test
 								//  get username element and add it to path
-								List<PageElement> elements = form.getFormFields();
+								List<PageElementState> elements = form.getFormFields();
 								//find username input element
-								PageElement username_elem = findInputElementByAttribute(elements, "username");
+								PageElementState username_elem = findInputElementByAttribute(elements, "username");
 								
 								if(username_elem == null){
 									username_elem = findInputElementByAttribute(elements, "email");
@@ -110,7 +110,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								
 								//  get password element and add it to the path
-								PageElement password_elem = findInputElementByAttribute(elements, "password");
+								PageElementState password_elem = findInputElementByAttribute(elements, "password");
 
 								if(password_elem == null){
 									log.info("could not find password !!!!!!!!");
@@ -210,8 +210,8 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		return new ExploratoryPath(path_keys, path_objects, new ArrayList<Action>());
 	}
 
-	private PageElement findInputElementByAttribute(List<PageElement> elements, String search_val) {
-		for(PageElement element : elements){
+	private PageElementState findInputElementByAttribute(List<PageElementState> elements, String search_val) {
+		for(PageElementState element : elements){
 			//check if element is type email
 			if(element.getType().contains(search_val)){
 				return element;

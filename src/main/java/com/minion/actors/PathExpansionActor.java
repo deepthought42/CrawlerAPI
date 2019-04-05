@@ -7,6 +7,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -25,15 +26,19 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
+import com.minion.browsing.Browser;
+import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.PageElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.message.PageStateMessage;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -90,13 +95,22 @@ public class PathExpansionActor extends AbstractActor {
 		    	}
 		    	*/
 				System.err.println("checking if test has cycle, spans multiple domains or is only a single node");
-				if(	(!ExploratoryPath.hasCycle(test.getPathObjects(), test.getResult()) 
+				//get page states 
+				List<PageState> page_states = new ArrayList<PageState>();
+				for(PathObject path_obj : test.getPathObjects()){
+					if(path_obj instanceof PageState){
+						PageState page_state = (PageState)path_obj;
+						page_state.setElements(page_state_service.getPageElementStates(page_state.getKey()));
+						page_states.add(page_state);										
+					}
+				}
+				if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					System.err.println("test qualifies for expansion");
 					// if path is a single page 
 					//		then send path to urlBrowserActor
 					if(test.getPathKeys().size() > 1){
-						System.err.println("test has a single path key");
+						System.err.println("test multiple path keys :: "+test.getPathKeys().size());
 						PageState result_page = test.getResult();
 						
 						//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
@@ -162,6 +176,31 @@ public class PathExpansionActor extends AbstractActor {
 			}
 			postStop();
 		})
+		.match(PageStateMessage.class, message -> {
+			List<ExploratoryPath> exploratory_paths = expandPath(message.getPageState());
+
+			DiscoveryRecord discovery_record = discovery_service.increaseTotalPathCount(message.getDiscovery().getKey(), exploratory_paths.size());
+			discovery_record.addExpandedPageState(message.getPageState().getKey());
+			discovery_record = discovery_service.save(discovery_record);
+			
+			log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+			
+			try{
+				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+		  	}catch(Exception e){
+			
+			}
+			
+			for(ExploratoryPath expanded : exploratory_paths){
+				final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+
+				Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
+				
+				work_allocator.tell(expanded_path_msg, getSelf() );
+			}
+
+		})
 		.match(MemberUp.class, mUp -> {
 			log.info("Member is Up: {}", mUp.member());
 		})
@@ -193,10 +232,12 @@ public class PathExpansionActor extends AbstractActor {
 			return null;
 		}
 
-		Set<PageElement> elements = result_page.getElements();
+		Set<PageElementState> elements = result_page.getElements();		
+		//get List of page states for page
+
 		//iterate over all elements
 		log.warn("Page elements for expansion :: "+elements.size());
-		for(PageElement page_element : result_page.getElements()){
+		for(PageElementState page_element : result_page.getElements()){
 			
 			log.warn("expanding page element :: "+page_element.getKey());
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
@@ -249,15 +290,12 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}
 			}
-			else{
+			else{				
 				System.err.println("Checking if element exists previously as a path object or within a page state");
-				//check if element exists in previous pageStates
 				
-				/*
 				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
 					continue;
-				}
-				*/
+				}				
 				
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
@@ -266,6 +304,7 @@ public class PathExpansionActor extends AbstractActor {
 					new_test.getPathKeys().add(test.getResult().getKey());
 					new_test.getPathObjects().add(test.getResult());
 				}
+								
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
 				
@@ -289,19 +328,122 @@ public class PathExpansionActor extends AbstractActor {
 		return pathList;
 	}
 
+	
 	/**
-	 * Checks if a given {@link PageElement} exists in a {@link PageState} within the {@link Test} path
+	 * Produces all possible element, action combinations that can be produced from the given path
+	 * 
+	 * @throws MalformedURLException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * 
+	 * @pre page_state != null
+	 */
+	public ArrayList<ExploratoryPath> expandPath(PageState page_state)  {
+		assert page_state != null;
+		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
+		
+		Set<PageElementState> elements = page_state.getElements();		
+		//get List of page states for page
+
+		List<String> path_keys = new ArrayList<>();
+		path_keys.add(page_state.getKey());
+		List<PathObject> path_objects = new ArrayList<>();
+		path_objects.add(page_state);
+		
+		//iterate over all elements
+		log.warn("Page elements for expansion :: "+elements.size());
+		for(PageElementState page_element : elements){
+			
+			log.warn("expanding page element :: "+page_element.getKey());
+			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
+			/*DataDecomposer data_decomp = new DataDecomposer();
+			try {
+				Brain.predict(DataDecomposer.decompose(page_element), actions);
+			} catch (IllegalArgumentException | IllegalAccessException | NullPointerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			*/
+			//END OF PREDICTION CODE
+			
+			
+			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
+			if(page_element.getXpath().contains("form")){
+				continue;
+			}
+			//check if page element is an input
+			else if(page_element.getName().equals("input")){
+				List<Rule> rules = extractor.extractInputRules(page_element);
+				for(Rule rule : rules){
+					page_element.addRule(rule);
+				}
+				for(Rule rule : page_element.getRules()){
+					List<List<PathObject>> tests = GeneralFormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
+					//paths.addAll(generateMouseRulePaths(page_element, rule)
+					for(List<PathObject> path_obj_list: tests){
+						//iterate over all actions
+						for(PathObject path_obj : path_obj_list){
+							path_keys.add(path_obj.getKey());
+							path_objects.add(path_obj);
+						}
+						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+							ExploratoryPath action_path = new ExploratoryPath(path_keys, path_objects, action_list);
+							//check for element action sequence. 
+							//if one exists with one of the actions in the action_list
+							// 	 then skip this action path
+							
+							
+							/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+								log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
+								continue;
+							}*/
+							pathList.add(action_path);
+						}
+					}
+				}
+			}
+			else{				
+				System.err.println("Checking if element exists previously as a path object or within a page state");
+				
+				List<String> keys = new ArrayList<>(path_keys);
+				List<PathObject> path = new ArrayList<>(path_objects);
+								
+				path.add(page_element);
+				keys.add(page_element.getKey());
+				
+				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
+				
+				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
+					ExploratoryPath action_path = new ExploratoryPath(keys, path, action_list);
+					
+					//check for element action sequence. 
+					//if one exists with one of the actions in the action_list
+					// 	 then load the existing path and process it for path expansion action path
+					/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
+					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+						continue;
+					}*/
+					pathList.add(action_path);
+				}
+			}
+		}
+		log.warn("path expansion list size :: " + pathList.size());
+		return pathList;
+	}
+	
+	/**
+	 * Checks if a given {@link PageElementState} exists in a {@link PageState} within the {@link Test} path
 	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
 	 * 
 	 * @param test {@link Test}
-	 * @param elem {@link PageElement}
+	 * @param elem {@link PageElementState}
 	 * 
 	 * @return
 	 * 
 	 * @pre test != null
 	 * @pre elem != null
 	 */
-	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, PageElement elem) {
+	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, PageElementState elem) {
 		assert test != null;
 		assert elem != null;
 		
@@ -313,7 +455,7 @@ public class PathExpansionActor extends AbstractActor {
 			if(obj.getType().equals("PageState")){
 				PageState page_state = ((PageState) obj);
 				log.debug("page state has # of elements  ::  "+page_state.getElements().size());
-				for(PageElement page_elem : page_state.getElements()){
+				for(PageElementState page_elem : page_state.getElements()){
 					if(elem.equals(page_elem)){
 						return true;
 					}

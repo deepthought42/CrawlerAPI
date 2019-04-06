@@ -91,21 +91,10 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				PageState expected_page = (PageState)current_obj;
 				
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-					current_page_state = browser_service.buildPage(browser);
-					if(idx==0 && !current_page_state.equals(expected_page)){
-						updated_path_objects.set(idx, current_page_state);
-						path_keys.set(idx, current_page_state.getKey());
-						
-						path.setPathObjects(updated_path_objects);
-						path.setPathKeys(path_keys);
-					}
-				}
-				else{
-					current_page_state = expected_page;
-				}
+				
+				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+		
+				current_page_state = expected_page;
 			}
 			else if(current_obj instanceof PageElementState){
 				last_element = (PageElementState) current_obj;
@@ -126,7 +115,7 @@ public class Crawler {
 					Browser.waitForPageToLoad(browser.getDriver());
 				}
 				else{
-					Timing.pauseThread(2000);
+					Timing.pauseThread(3000);
 				}
 			}
 			else if(current_obj instanceof PageAlert){

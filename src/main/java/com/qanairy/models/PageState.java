@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -370,6 +371,18 @@ public class PageState implements Persistable, PathObject {
 
 	}
 
+
+	public static BufferedImage resize(BufferedImage img, int newW, int newH) { 
+	    Image tmp = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
+	    BufferedImage dimg = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_ARGB);
+
+	    Graphics2D g2d = dimg.createGraphics();
+	    g2d.drawImage(tmp, 0, 0, null);
+	    g2d.dispose();
+
+	    return dimg;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 * @throws IOException 
@@ -387,13 +400,7 @@ public class PageState implements Persistable, PathObject {
 		}
 
 		try{
-			BufferedImage buff_img = ImageIO.read(new URL(screenshot));
-			Image scaled_image = buff_img.getScaledInstance(64, 64, Image.SCALE_DEFAULT);
-
-			return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ getFileChecksum(scaled_image));
-		}
-		catch(NoSuchAlgorithmException e){
-			log.error("Couldnt find SHA-256 algorithm :: " + e.getLocalizedMessage());
+			return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ getFileChecksum(ImageIO.read(new URL(screenshot))));
 		}
 		catch(IOException e){
 			log.error("Couldn't read file at "+screenshot+" ::  "+e.getLocalizedMessage());

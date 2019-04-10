@@ -39,7 +39,7 @@ import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.TestUser;
@@ -276,7 +276,7 @@ public class DomainController {
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        		
 		Set<PageState> page_state = domain_service.getPageStates(host);
-		Set<PageElementState> page_elem = domain_service.getPageElementStates(host);
+		Set<ElementState> page_elem = domain_service.getElementStates(host);
 		Set<Action> actions = domain_service.getActions(host);
 		Set<PathObject> path_objects = new HashSet<PathObject>();
 		//merge(page_state, page_elem, actions);
@@ -300,12 +300,12 @@ public class DomainController {
 	 * @param request
 	 * @param host
 	 * 
-	 * @return a unique set of {@link PageElementState}s belonging to all page states for the {@link Domain} with the given host
+	 * @return a unique set of {@link ElementState}s belonging to all page states for the {@link Domain} with the given host
 	 * @throws UnknownAccountException
 	 */
 	@PreAuthorize("hasAuthority('read:domains')")
     @RequestMapping(method = RequestMethod.GET, path="/page_elements")
-    public @ResponseBody Set<PageElementState> getAllPageElementStates(HttpServletRequest request, 
+    public @ResponseBody Set<ElementState> getAllElementStates(HttpServletRequest request, 
     													  @RequestParam(value="host", required=true) String host) 
     															throws UnknownAccountException {        
 		Principal principal = request.getUserPrincipal();
@@ -319,7 +319,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 
-		Set<PageElementState> page_elements = domain_service.getPageElementStates(host);
+		Set<ElementState> page_elements = domain_service.getElementStates(host);
 		log.info("###### PAGE ELEMENT COUNT :: "+page_elements.size());
 		return page_elements;
     }
@@ -329,7 +329,7 @@ public class DomainController {
 	 * @param request
 	 * @param host
 	 * 
-	 * @return a unique set of {@link PageElementState}s belonging to all page states for the {@link Domain} with the given host
+	 * @return a unique set of {@link ElementState}s belonging to all page states for the {@link Domain} with the given host
 	 * @throws UnknownAccountException
 	 */
 	@PreAuthorize("hasAuthority('read:domains')")

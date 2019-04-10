@@ -29,7 +29,7 @@ import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -40,7 +40,7 @@ import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageElementStateService;
+import com.qanairy.services.ElementStateService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -66,7 +66,7 @@ public class TestCreationActor extends AbstractActor  {
 	private DomainService domain_service;
 
 	@Autowired
-	private PageElementStateService page_element_service;
+	private ElementStateService page_element_service;
 
 	@Autowired
 	private TestRepository test_repo;
@@ -208,9 +208,9 @@ public class TestCreationActor extends AbstractActor  {
     		else {
     			JSONObject element_json = path_obj_json.getJSONObject("element");
 
-    			PageElementState element = createPageElementState(element_json.getString("xpath"), browser);
+    			ElementState element = createElementState(element_json.getString("xpath"), browser);
 
-    			PageElementState page_elem_record = page_element_service.findByKey(element.getKey());
+    			ElementState page_elem_record = page_element_service.findByKey(element.getKey());
     			if(page_elem_record == null){
 					path_objects.add(element);
 				}
@@ -264,7 +264,7 @@ public class TestCreationActor extends AbstractActor  {
 		return action;
 	}
 
-	private PageElementState createPageElementState(String temp_xpath, Browser browser) throws Exception {
+	private ElementState createElementState(String temp_xpath, Browser browser) throws Exception {
 		//use xpath to identify WebElement.
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
@@ -272,11 +272,9 @@ public class TestCreationActor extends AbstractActor  {
 		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element);
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
-		PageElementState elem = new PageElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);
-		elem.setYLocation(element.getLocation().getY());
-		elem.setXLocation(element.getLocation().getX());
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight());
 		
-		PageElementState elem_record = page_element_service.findByKey(elem.getKey());
+		ElementState elem_record = page_element_service.findByKey(elem.getKey());
 
 		if(elem_record != null){
 			elem = elem_record;

@@ -18,7 +18,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -44,7 +44,7 @@ public class TestService {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private PageElementStateService page_element_service;
+	private ElementStateService page_element_service;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -117,8 +117,8 @@ public class TestService {
 				if(path_obj instanceof PageState){
 					path_objects.add(page_state_service.save((PageState)path_obj));
 				}
-				else if(path_obj instanceof PageElementState){
-					path_objects.add(page_element_service.save((PageElementState)path_obj));
+				else if(path_obj instanceof ElementState){
+					path_objects.add(page_element_service.save((ElementState)path_obj));
 				}
 				else if(path_obj instanceof Action){
 					path_objects.add(action_service.save((Action)path_obj));
@@ -150,7 +150,6 @@ public class TestService {
 			}
 		}
 		else{
-			
 			log.info("Test already exists  !!!!!!!");
 			try {
 				MessageBroadcaster.broadcastTest(test, host_url);
@@ -161,6 +160,7 @@ public class TestService {
 			test = record;
 			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
 			test.setPathObjects(path_objects);
+			
 			test.setResult(page_state_service.findByKey(test.getResult().getKey()));
 		}
 		

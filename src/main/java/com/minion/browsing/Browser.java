@@ -41,7 +41,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 
 /**
@@ -114,7 +114,7 @@ public class Browser {
 	public void navigateTo(String url){
 		getDriver().get(url);
 		log.debug("successfully navigated to "+url);
-		//Browser.waitForPageToLoad(getDriver());
+		Browser.waitForPageToLoad(getDriver());
 	}
 
 	/**
@@ -163,7 +163,7 @@ public class Browser {
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		//driver.manage().window().maximize();
 
-	    driver.manage().window().setSize(new Dimension(1024, 768));
+	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -247,7 +247,7 @@ public class Browser {
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		//driver.manage().window().maximize();
 
-		driver.manage().window().setSize(new Dimension(1024, 768));
+		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -306,15 +306,15 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(Browser browser, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		
+	public static BufferedImage getElementScreenshot(Browser browser, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		//calculate element position within screen
 		Point point = browser.getLocationInViewport(elem);
 		Dimension dimension = elem.getSize();
 		
 		// Get width and height of the element
 		int elem_width = dimension.getWidth();
-		int elem_height = dimension.getHeight()+DIMENSION_OFFSET_PIXELS;
+		int elem_height = dimension.getHeight();
 		
 		int point_x = point.getX();
 		int point_y = point.getY();
@@ -342,9 +342,9 @@ public class Browser {
 		return null;
 	}
 	
-	public static PageElementState findLabelFor(Set<PageElementState> elements, String for_id){
-		for(PageElementState elem : elements){
-			//PageElementState tag = (PageElementState)elem;
+	public static ElementState findLabelFor(Set<ElementState> elements, String for_id){
+		for(ElementState elem : elements){
+			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
 					if(attr.getName().equals("for")){
@@ -368,10 +368,10 @@ public class Browser {
 	 * @param for_ids
 	 * @return
 	 */
-	public static Set<PageElementState> findLabelsFor(Set<PageElementState> elements, String[] for_ids){
-		Set<PageElementState> labels = new HashSet<PageElementState>();
-		for(PageElementState elem : elements){
-			//PageElementState tag = (PageElementState)elem;
+	public static Set<ElementState> findLabelsFor(Set<ElementState> elements, String[] for_ids){
+		Set<ElementState> labels = new HashSet<ElementState>();
+		for(ElementState elem : elements){
+			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
 					if(attr.getName().equals("for")){
@@ -396,7 +396,7 @@ public class Browser {
 	 * @param page_element
 	 * @param driver
 	 */
-	public static void outlineElement(PageElementState page_element, WebDriver driver) {
+	public static void outlineElement(ElementState page_element, WebDriver driver) {
 		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
 	}
@@ -426,7 +426,7 @@ public class Browser {
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
+		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "transform"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){
@@ -483,8 +483,10 @@ public class Browser {
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
 		Timing.pauseThread(500);
-		this.setXScrollOffset(x_offset);
-		this.setYScrollOffset(y_offset);
+		
+		Point offsets = getViewportScrollOffset();
+		this.setXScrollOffset(offsets.getX());
+		this.setYScrollOffset(offsets.getY());
     }
 	
 	/**
@@ -500,8 +502,6 @@ public class Browser {
 
 		int y_offset = 0;
 		int x_offset = 0;
-		System.err.println("viewport scroll offset x  : "+objx);
-		System.err.println("viewport scroll offset y  : "+objy);
 		if(objy instanceof Double){
 			y_offset = ((Double)objy).intValue(); 
 		}
@@ -544,7 +544,6 @@ public class Browser {
 	public static void waitForPageToLoad(WebDriver driver) {
 		new WebDriverWait(driver, 30).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		Timing.pauseThread(1000);
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {

@@ -8,7 +8,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 
 /**
  * Defines a regular expression based rule that applies to the entire text content(beginning to end) of a field.
@@ -27,7 +27,7 @@ public class PatternRule extends Rule {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(PageElementState elem) {
+	public Boolean evaluate(ElementState elem) {
 		for(Attribute attribute: elem.getAttributes()){
 			if(attribute.getName().equals("vals")){
 				String pattern = "/^" + attribute.getVals().toString() + " $/";

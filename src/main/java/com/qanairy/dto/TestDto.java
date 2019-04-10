@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -43,9 +43,9 @@ public class TestDto {
 				first_page = false;
 				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));
 			}
-			else if(ordered_path_objects.get(idx).getType().equals("PageElementState")){
+			else if(ordered_path_objects.get(idx).getType().equals("ElementState")){
 				System.err.println("PATH OBJECT :: " + ordered_path_objects.get(idx));
-				this.path.add(new ElementActionDto((PageElementState)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
+				this.path.add(new ElementActionDto((ElementState)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
 			}
 		}
 	}

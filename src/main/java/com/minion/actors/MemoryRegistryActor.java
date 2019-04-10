@@ -17,11 +17,11 @@ import akka.event.LoggingAdapter;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.structs.Message;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageElementStateService;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
@@ -46,7 +46,7 @@ public class MemoryRegistryActor extends AbstractActor{
 	private PageStateService page_service;
 	
 	@Autowired
-	private PageElementStateService element_service;
+	private ElementStateService element_service;
 	
 	public static Props props() {
 	  return Props.create(MemoryRegistryActor.class);
@@ -96,8 +96,8 @@ public class MemoryRegistryActor extends AbstractActor{
 							MessageBroadcaster.broadcastTest(test, host_url);
 						}
 					}
-					else if(msg.getData() instanceof PageElementState){
-						PageElementState elem = (PageElementState)msg.getData();
+					else if(msg.getData() instanceof ElementState){
+						ElementState elem = (ElementState)msg.getData();
 						if(element_service.findByKey(elem.getKey()) == null){
 							element_service.save(elem);
 						}

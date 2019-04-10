@@ -6,9 +6,9 @@ import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.util.Timing;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.message.ElementScreenshotUpload;
-import com.qanairy.services.PageElementStateService;
+import com.qanairy.services.ElementStateService;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -29,7 +29,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 	Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private PageElementStateService page_element_service;
+	private ElementStateService page_element_service;
 	
 	public static Props props() {
 	  return Props.create(AwsS3ScreenshotUploader.class);
@@ -53,7 +53,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 		return receiveBuilder()
 				.match(ElementScreenshotUpload.class, screenshot_upload -> {
 					String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot_upload.getScreenshot(), screenshot_upload.getPageUrl().getHost(), screenshot_upload.getPageElemKey(), screenshot_upload.getBrowserName());					
-					PageElementState page_elem_record = page_element_service.findByKey(screenshot_upload.getPageElemKey());
+					ElementState page_elem_record = page_element_service.findByKey(screenshot_upload.getPageElemKey());
 					page_elem_record.setScreenshot(viewport_screenshot_url);
 					page_element_service.save(page_elem_record);
 					

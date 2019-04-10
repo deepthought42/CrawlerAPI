@@ -7,7 +7,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
 
 /**
@@ -24,14 +24,14 @@ public class FormField {
 	
 	private String key;
 	private List<Rule> rules;
-	private PageElementState form_field;
+	private ElementState form_field;
 	
 	/**
 	 * Constructs new FormField
 	 * 
 	 * @param form_field combo element defining the input grouping for this FormField
 	 */
-	public FormField(PageElementState form_field){
+	public FormField(ElementState form_field){
 		this.form_field = form_field;
 		this.rules = new ArrayList<Rule>();
 		setKey(generateKey());
@@ -47,7 +47,7 @@ public class FormField {
 	 * @param form_field combo element defining the input grouping for this FormField
 	 * @param rules list of {@link Rule} defined on this FormField
 	 */
-	public FormField(PageElementState form_field, List<Rule> rules){
+	public FormField(ElementState form_field, List<Rule> rules){
 		this.form_field = form_field;
 		this.rules = rules;
 	}
@@ -84,11 +84,11 @@ public class FormField {
 		this.rules = rules;
 	}
 	
-	public PageElementState getInputElement() {
+	public ElementState getInputElement() {
 		return form_field;
 	}
 	
-	public void setInputElement(PageElementState form_field) {
+	public void setInputElement(ElementState form_field) {
 		this.form_field = form_field;
 	}
 	

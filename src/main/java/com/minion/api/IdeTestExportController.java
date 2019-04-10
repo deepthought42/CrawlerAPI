@@ -26,7 +26,7 @@ import com.minion.structs.Message;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
@@ -63,7 +63,7 @@ public class IdeTestExportController {
 
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link PageElementState}s and {@link Action}s
+     *  {@link ElementState}s and {@link Action}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -81,7 +81,7 @@ public class IdeTestExportController {
 
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link PageElementState}s and {@link Action}s
+     *  {@link ElementState}s and {@link Action}s
 	 *
 	 * @param json_str JSON String
 	 *

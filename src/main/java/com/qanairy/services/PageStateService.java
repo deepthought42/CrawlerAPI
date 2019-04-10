@@ -8,12 +8,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.ScreenshotSetRepository;
@@ -30,10 +30,7 @@ public class PageStateService {
 	private PageStateRepository page_state_repo;
 	
 	@Autowired
-	private PageElementStateService page_element_service;
-	
-	@Autowired
-	private ScreenshotSetRepository screenshot_repo;
+	private ElementStateService page_element_service;
 	
 	@Autowired
 	private FormRepository form_repo;
@@ -48,75 +45,81 @@ public class PageStateService {
 	public PageState save(PageState page_state){
 		assert page_state != null;
 		
-		System.err.println("Saving page state");
 		PageState page_state_record = findByKey(page_state.getKey());
+		
 		if(page_state_record != null){
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
+			page_state_record.setElements(page_state.getElements());
 			
 			page_state = page_state_repo.save(page_state_record);
-			page_state.setElements(getPageElementStates(page_state.getKey()));
-			page_state.setBrowserScreenshots(getScreenshots(page_state.getKey()));
+			page_state.setElements(getElementStates(page_state.getKey()));
+			return page_state;
 		}
 		else {
-			//iterate over page elements
-			Set<PageElementState> element_records = new HashSet<>();
-			for(PageElementState element : page_state.getElements()){
-				PageElementState element_record = page_element_service.save(element);
+			page_state_record = findByScreenshotChecksum(page_state.getScreenshotChecksum());
+			if(page_state_record != null){
+				page_state_record.setLandable(page_state.isLandable());
+				page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
+				page_state_record.setElements(page_state.getElements());
 				
-				element_records.add(element_record);
+				page_state = page_state_repo.save(page_state_record);
+				page_state.setElements(getElementStates(page_state.getKey()));
+				return page_state;
 			}
-			
-			page_state.setElements(element_records);
-			
-			Set<ScreenshotSet> screenshot_records = new HashSet<>();
-			for(ScreenshotSet screenshot : page_state.getBrowserScreenshots()){
-				ScreenshotSet screenshot_record = screenshot_repo.findByKey(screenshot.getKey());
-				if(screenshot_record == null){
-					screenshot_record = screenshot_repo.save(screenshot);
+			else{
+				//iterate over page elements
+				Set<ElementState> element_records = new HashSet<>();
+				for(ElementState element : page_state.getElements()){
+					ElementState element_record = page_element_service.save(element);
+					
+					element_records.add(element_record);
 				}
-				screenshot_records.add(screenshot_record);
-			}
-			page_state.setBrowserScreenshots(screenshot_records);
-			
-			Set<Form> form_records = new HashSet<>();
-			for(Form form : page_state.getForms()){
-				Form form_record = form_repo.findByKey(form.getKey());
-				if(form_record == null){
-					List<PageElementState> form_element_records = new ArrayList<>();
-					for(PageElementState element : page_state.getElements()){
-						PageElementState element_record = page_element_service.save(element);
+				page_state.setElements(element_records);
+				
+				Set<Form> form_records = new HashSet<>();
+				for(Form form : page_state.getForms()){
+					Form form_record = form_repo.findByKey(form.getKey());
+					if(form_record == null){
+						List<ElementState> form_element_records = new ArrayList<>();
+						for(ElementState element : page_state.getElements()){
+							ElementState element_record = page_element_service.save(element);
+							
+							form_element_records.add(element_record);
+						}
 						
-						form_element_records.add(element_record);
+						form.setFormFields(form_element_records);
+						
+						form_record = form_repo.save(form);
 					}
-					
-					form.setFormFields(form_element_records);
-					
-					form_record = form_repo.save(form);
+					form_records.add(form_record);
 				}
-				form_records.add(form_record);
+				page_state.setForms(form_records);
+				page_state = page_state_repo.save(page_state);
 			}
-			page_state.setForms(form_records);
-			page_state = page_state_repo.save(page_state);
 		}
-
+		
 		return page_state;
 	}
 
 	public PageState findByKey(String page_key) {
 		PageState page_state = page_state_repo.findByKey(page_key);
 		if(page_state != null){
-			page_state.setElements(getPageElementStates(page_key));
-			page_state.setBrowserScreenshots(getScreenshots(page_key));
+			page_state.setElements(getElementStates(page_key));
 		}
 		return page_state;
 	}
 	
-	public Set<PageElementState> getPageElementStates(String page_key){
-		return page_state_repo.getPageElementStates(page_key);
+	public PageState findByScreenshotChecksum(String screenshot_checksum){
+		return page_state_repo.findByScreenshotChecksum(screenshot_checksum);
+		
 	}
-
-	public Set<ScreenshotSet> getScreenshots(String page_key) {
-		return page_state_repo.getScreenshotSets(page_key);
+	
+	public Set<ElementState> getElementStates(String page_key){
+		return page_state_repo.getElementStates(page_key);
+	}
+	
+	public Set<PageState> getElementPageStatesWithSameUrl(String url, String key){
+		return page_state_repo.getElementPageStatesWithSameUrl(url, key);
 	}
 }

@@ -14,7 +14,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -25,7 +25,7 @@ import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.PageElementStateService;
+import com.qanairy.services.ElementStateService;
 import com.qanairy.services.TestService;
 import com.minion.structs.Message;
 
@@ -52,7 +52,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private ActionService action_service;
 	
 	@Autowired
-	private PageElementStateService page_element_service;
+	private ElementStateService page_element_service;
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
@@ -95,9 +95,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		for(PathObject obj : path_obj_list){
 							  			path_keys.add(obj.getKey());
 				
-							  			if(obj.getType().equals("PageElementState")){
-							  				PageElementState page_elem = (PageElementState)obj;
-							  				PageElementState elem_record = page_element_service.findByKey(obj.getKey());
+							  			if(obj.getType().equals("ElementState")){
+							  				ElementState page_elem = (ElementState)obj;
+							  				ElementState elem_record = page_element_service.findByKey(obj.getKey());
 							  				if(elem_record == null){
 							  					elem_record = page_element_service.save(page_elem);
 							  				}
@@ -187,14 +187,14 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		//for each field in the complex field generate a set of tests for all known rules
-		for(PageElementState input_elem : form.getFormFields()){
+		for(ElementState input_elem : form.getFormFields()){
 			
 			boolean field_exists = false;
 			
 			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
 			for(PathObject path_obj : test.getPathObjects()){
-				if(path_obj instanceof PageElementState){
-					PageElementState page_elem = (PageElementState)path_obj;
+				if(path_obj instanceof ElementState){
+					ElementState page_elem = (ElementState)path_obj;
 					if(page_elem.equals(input_elem)){
 						field_exists = true;
 						break;
@@ -218,7 +218,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 	
 
-	public static List<List<PathObject>> generateLengthBoundaryTests(PageElementState input, Rule rule){
+	public static List<List<PathObject>> generateLengthBoundaryTests(ElementState input, Rule rule){
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
@@ -323,7 +323,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	 * @param rule
 	 * @return
 	 */
-	private static List<List<PathObject>> generateAlphabeticRestrictionTests(PageElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateAlphabeticRestrictionTests(ElementState input_elem, Rule rule) {
 		//generate single character str test		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -335,7 +335,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateNumericRestrictionTests(PageElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateNumericRestrictionTests(ElementState input_elem, Rule rule) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -348,7 +348,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(PageElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem, Rule rule) {
 		//generate single character str test
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -361,22 +361,22 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateEnabledTests(PageElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateEnabledTests(ElementState input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateReadOnlyTests(PageElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateReadOnlyTests(ElementState input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<List<PathObject>> generatePatternTests(PageElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generatePatternTests(ElementState input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateEmailTests(PageElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateEmailTests(ElementState input_elem, Rule rule) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -419,13 +419,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 
 	/**
-	 * Generates rule tests for a given {@link PageElementState} and {@link Rule}
+	 * Generates rule tests for a given {@link ElementState} and {@link Rule}
 	 * 
 	 * @param input_elem
 	 * @param rule
 	 * @return
 	 */
-	public static List<List<PathObject>> generateFormRuleTests(PageElementState input_elem, Rule rule, PageElementState submitField){
+	public static List<List<PathObject>> generateFormRuleTests(ElementState input_elem, Rule rule, ElementState submitField){
 		assert rule != null;
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
@@ -470,13 +470,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 	
 	/**
-	 * Generates rule tests for a given {@link PageElementState} and {@link Rule}
+	 * Generates rule tests for a given {@link ElementState} and {@link Rule}
 	 * 
 	 * @param input_elem
 	 * @param rule
 	 * @return
 	 */
-	public static List<List<PathObject>> generateInputRuleTests(PageElementState input_elem, Rule rule){
+	public static List<List<PathObject>> generateInputRuleTests(ElementState input_elem, Rule rule){
 		assert rule != null;
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
@@ -516,13 +516,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 	
-	public static List<List<PathObject>> generateBoundaryTests(PageElementState input){
+	public static List<List<PathObject>> generateBoundaryTests(ElementState input){
 		
 		return null;
 		
 	}
 	
-	public static List<List<PathObject>> generateLengthBoundaryTests(PageElementState input, Rule rule, PageElementState submit){
+	public static List<List<PathObject>> generateLengthBoundaryTests(ElementState input, Rule rule, ElementState submit){
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
@@ -636,11 +636,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		
 	}
 	
-	public static List<List<PathObject>> generateValueBoundaryTests(PageElementState input){
+	public static List<List<PathObject>> generateValueBoundaryTests(ElementState input){
 		return null;	
 	}
 	
-	public static List<List<PathObject>> generateRequirementChecks(PageElementState input, boolean isRequired, PageElementState submit){
+	public static List<List<PathObject>> generateRequirementChecks(ElementState input, boolean isRequired, ElementState submit){
 		assert input.getName().equals("input");
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
@@ -703,7 +703,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	 * @param rule
 	 * @return
 	 */
-	private static List<List<PathObject>> generateAlphabeticRestrictionTests(PageElementState input_elem, Rule rule, PageElementState submit) {
+	private static List<List<PathObject>> generateAlphabeticRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
 		//generate single character str test		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -717,7 +717,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateNumericRestrictionTests(PageElementState input_elem, Rule rule, PageElementState submit) {
+	private static List<List<PathObject>> generateNumericRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -732,7 +732,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(PageElementState input_elem, Rule rule, PageElementState submit) {
+	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
 		//generate single character str test
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -747,22 +747,22 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateEnabledTests(PageElementState input_elem, Rule rule, PageElementState submit) {
+	private static List<List<PathObject>> generateEnabledTests(ElementState input_elem, Rule rule, ElementState submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateReadOnlyTests(PageElementState input_elem, Rule rule, PageElementState submit) {
+	private static List<List<PathObject>> generateReadOnlyTests(ElementState input_elem, Rule rule, ElementState submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<List<PathObject>> generatePatternTests(PageElementState input_elem, Rule rule, PageElementState submit) {
+	private static List<List<PathObject>> generatePatternTests(ElementState input_elem, Rule rule, ElementState submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateEmailTests(PageElementState input_elem, Rule rule, PageElementState submit) {
+	private static List<List<PathObject>> generateEmailTests(ElementState input_elem, Rule rule, ElementState submit) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();

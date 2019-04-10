@@ -29,7 +29,6 @@ public class BrowserConnectionFactory {
 			hub_url = new URL( "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub" );
 		}
 		else if(environment.equals(BrowserEnvironment.DISCOVERY)){
-			log.warn("Loading discovery environment...");
 			Random randomGenerator = new Random();
 			int randomInt = randomGenerator.nextInt(4);
 			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");

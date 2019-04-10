@@ -6,10 +6,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
 
-public class SelectElement extends PageElementState {
+public class SelectElement extends ElementState {
     @SuppressWarnings("unused")
     private static Logger log = LoggerFactory.getLogger(SelectElement.class);
 

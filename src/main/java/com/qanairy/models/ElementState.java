@@ -1,14 +1,12 @@
 package com.qanairy.models;
 
-import java.io.File;
-import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.imageio.ImageIO;
+import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -21,14 +19,14 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.rules.Rule;
 /**
- * Contains all the pertinent information for an element on a page. A PageElementState
- *  may be a Parent and/or child of another PageElementState. This heirarchy is not
- *  maintained by PageElementState though. 
+ * Contains all the pertinent information for an element on a page. A ElementState
+ *  may be a Parent and/or child of another ElementState. This heirarchy is not
+ *  maintained by ElementState though. 
  */
 @NodeEntity
-public class PageElementState implements Persistable, PathObject {
+public class ElementState implements Persistable, PathObject {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PageElementState.class);
+	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
 	@GeneratedValue
     @Id
@@ -43,6 +41,8 @@ public class PageElementState implements Persistable, PathObject {
 	private String type;
 	private int x_location;
 	private int y_location;
+	private int width;
+	private int height;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -53,7 +53,7 @@ public class PageElementState implements Persistable, PathObject {
 	@Relationship(type = "HAS_RULE")
 	private Set<Rule> rules = new HashSet<>();
 			
-	public PageElementState(){}
+	public ElementState(){}
 	
 	/**
 	 * 
@@ -70,7 +70,8 @@ public class PageElementState implements Persistable, PathObject {
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
 	 */
-	public PageElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url){
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
+			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -78,13 +79,17 @@ public class PageElementState implements Persistable, PathObject {
 		assert screenshot_url != null;
 		assert !screenshot_url.isEmpty();
 		
-		setType("PageElementState");
+		setType("ElementState");
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
 		setScreenshot(screenshot_url);
 		setText(text);
 		setCssValues(css_map);
+		setXLocation(x_location);
+		setYLocation(y_location);
+		setWidth(width);
+		setHeight(height);
 		setKey(generateKey());
 	}
 	
@@ -96,19 +101,19 @@ public class PageElementState implements Persistable, PathObject {
 	 * @param attributes
 	 * @param css_map
 	 * 
-	 * @pre attributes != null
-	 * @pre css_map != null
 	 * @pre xpath != null
 	 * @pre name != null
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
+	 *  
 	 */
-	public PageElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url, String checksum){
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url, String checksum, int x_location, int y_location, int width, int height){
 		assert name != null;
+		assert xpath != null;
 		assert checksum != null;
 		assert !checksum.isEmpty();
 		
-		setType("PageElementState");
+		setType("ElementState");
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
@@ -116,6 +121,10 @@ public class PageElementState implements Persistable, PathObject {
 		setText(text);
 		setCssValues(css_map);
 		setScreenshotChecksum(checksum);
+		setXLocation(x_location);
+		setYLocation(y_location);
+		setWidth(width);
+		setHeight(height);
 		setKey(generateKey());
 	}
 	/**
@@ -138,7 +147,7 @@ public class PageElementState implements Persistable, PathObject {
 	 * @param elem
 	 * @return whether attributes match or not
 	 */
-	public boolean cssMatches(PageElementState elem){
+	public boolean cssMatches(ElementState elem){
 		for(String propertyName : cssValues.keySet()){
 			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
 				continue;
@@ -157,7 +166,7 @@ public class PageElementState implements Persistable, PathObject {
 	 * @param elem
 	 * @return
 	 */
-	public boolean isChildElement(PageElementState elem){
+	public boolean isChildElement(ElementState elem){
 		return elem.getXpath().equals(this.getXpath()) && elem.getXpath().contains(this.getXpath());
 	}
 		
@@ -279,7 +288,25 @@ public class PageElementState implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
-		return "pageelementstate::"+getScreenshotChecksum();   
+		String key = "";
+		
+		List<String> css_keys = getCssValues().keySet().stream().collect(Collectors.toList());
+		Collections.sort(css_keys, (o1, o2) -> o1.compareTo(o2));
+		for(String css_key : css_keys){
+			key += css_key+cssValues.get(css_key);
+		}
+		
+		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
+		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+		
+		for(Attribute attribute : attributes){
+			key += attribute.getKey();
+		}
+		
+		key += this.getName();
+		key += this.getText();
+
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 	
 
@@ -291,7 +318,7 @@ public class PageElementState implements Persistable, PathObject {
 	}
 
 	/**
-	 * Checks if {@link PageElementState elements} are equal
+	 * Checks if {@link ElementState elements} are equal
 	 * 
 	 * @param elem
 	 * @return whether or not elements are equal
@@ -299,15 +326,15 @@ public class PageElementState implements Persistable, PathObject {
 	@Override
 	public boolean equals(Object o){
 		if (this == o) return true;
-        if (!(o instanceof PageElementState)) return false;
+        if (!(o instanceof ElementState)) return false;
         
-        PageElementState that = (PageElementState)o;
-		return this.getKey().equals(that.getKey());
+        ElementState that = (ElementState)o;
+		return this.getKey().equals(that.getKey()) || getScreenshotChecksum().equals(that.getScreenshotChecksum());
 	}
 
 
 	public PathObject clone() {
-		PageElementState page_elem = new PageElementState();
+		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
 		page_elem.setCssValues(this.getCssValues());
 		page_elem.setKey(this.getKey());
@@ -336,5 +363,21 @@ public class PageElementState implements Persistable, PathObject {
 
 	public void setYLocation(int y_location) {
 		this.y_location = y_location;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
 	}
 }

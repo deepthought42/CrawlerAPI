@@ -12,7 +12,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestUser;
@@ -74,8 +74,8 @@ public class DomainService {
 		return domain_repo.getForms(url);
 	}
 
-	public Set<PageElementState> getPageElementStates(String host) {
-		return domain_repo.getPageElementStates(host);
+	public Set<ElementState> getElementStates(String host) {
+		return domain_repo.getElementStates(host);
 	}
 
 	public Set<Action> getActions(String host) {

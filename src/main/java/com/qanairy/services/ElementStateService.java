@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElementState;
-import com.qanairy.models.repository.PageElementStateRepository;
+import com.qanairy.models.ElementState;
+import com.qanairy.models.repository.ElementStateRepository;
 import com.qanairy.models.rules.Rule;
 
 @Service
-public class PageElementStateService {
+public class ElementStateService {
 	
 	@Autowired
 	private AttributeService attribute_service;
@@ -21,10 +21,10 @@ public class PageElementStateService {
 	private RuleService rule_service;
 	
 	@Autowired
-	private PageElementStateRepository page_element_repo;
+	private ElementStateRepository page_element_repo;
 	
-	public PageElementState save(PageElementState element){
-		PageElementState element_record = page_element_repo.findByKey(element.getKey());
+	public ElementState save(ElementState element){
+		ElementState element_record = page_element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
@@ -50,11 +50,16 @@ public class PageElementStateService {
 		return element_record;
 	}
 	
-	public PageElementState findByKey(String key){
+	public ElementState findByKey(String key){
 		return page_element_repo.findByKey(key);
 	}
 	
-	public PageElementState findByTextAndName(String text, String name){
+	public ElementState findByTextAndName(String text, String name){
 		return page_element_repo.findByTextAndName(text, name);
+	}
+	
+	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(ElementState element){
+		
+		return false;
 	}
 }

@@ -7,7 +7,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 
 /**
  * Defines a {@link Rule} where all letters a-z are not allowed regardless of case
@@ -26,7 +26,7 @@ public class AlphabeticRestrictionRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(PageElementState elem) {
+	public Boolean evaluate(ElementState elem) {
 		Pattern pattern = Pattern.compile(this.value);
 
         Matcher matcher = pattern.matcher(elem.getText());

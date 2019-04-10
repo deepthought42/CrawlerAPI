@@ -11,6 +11,8 @@ import com.qanairy.models.repository.DiscoveryRecordRepository;
 @Service
 public class DiscoveryRecordService {
 
+	private boolean in_progress = false;
+	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
 	
@@ -27,9 +29,20 @@ public class DiscoveryRecordService {
 	}
 	
 	public synchronized DiscoveryRecord increaseTotalPathCount(String discovery_key, int cnt){
+		while(in_progress){
+			try{
+				wait();
+			}
+			catch(Exception e){}
+		}
 		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
 		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+cnt);
-  		return save(discovery_record);		
+  		discovery_record = save(discovery_record);
+  		
+  		in_progress = false;
+  		notify();
+  		
+  		return discovery_record;
 	}
 	
 	public synchronized DiscoveryRecord save(DiscoveryRecord discovery){

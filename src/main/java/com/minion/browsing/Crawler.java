@@ -23,7 +23,7 @@ import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -76,28 +76,32 @@ public class Crawler {
 		
 		updated_path_objects.addAll(ordered_path_objects);
 		
-		PageElementState last_element = null;
+		ElementState last_element = null;
 		
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
-		PageState current_page_state = null;
+		PageState expected_page = ((PageState)ordered_path_objects.get(0));
 				
-		log.warn("building page for host channel :: " + host_channel);
 
-		browser.navigateTo(((PageState)ordered_path_objects.get(0)).getUrl().toString());
-		
-		int idx=0;
+		browser.navigateTo(expected_page.getUrl());
+		browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+
 		for(PathObject current_obj: ordered_path_objects){
-			if(current_obj instanceof PageState){
-				PageState expected_page = (PageState)current_obj;
+			if(current_obj.getClass().getSimpleName().equals("PageState")){
+				expected_page = (PageState)current_obj;
 				
-				
-				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-		
-				current_page_state = expected_page;
+				do{
+					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset());
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				}while(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset());
 			}
-			else if(current_obj instanceof PageElementState){
-				last_element = (PageElementState) current_obj;
+			else if(current_obj instanceof ElementState){
+				last_element = (ElementState) current_obj;
+				if(!BrowserService.isElementVisibleInPane(browser, last_element)){
+					log.warn("last element is not visible in current viewport" + last_element.getKey());
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				}
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -111,11 +115,11 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				if(!browser.getDriver().getCurrentUrl().equals(current_page_state.getUrl())){
+				if(!browser.getDriver().getCurrentUrl().equals(expected_page.getUrl())){
 					Browser.waitForPageToLoad(browser.getDriver());
 				}
 				else{
-					Timing.pauseThread(3000);
+					Timing.pauseThread(1000);
 				}
 			}
 			else if(current_obj instanceof PageAlert){
@@ -123,7 +127,6 @@ public class Crawler {
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
 			}
-			idx++;
 		}
 		
 		return browser_service.buildPage(browser);
@@ -135,7 +138,7 @@ public class Crawler {
 	 * 
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static boolean performAction(Action action, PageElementState elem, WebDriver driver){
+	public static boolean performAction(Action action, ElementState elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		boolean wasPerformedSuccessfully = true;
 
@@ -179,7 +182,7 @@ public class Crawler {
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
+				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 				if(e.getMessage().contains("viewport")){
 					throw e;
 				}
@@ -187,9 +190,7 @@ public class Crawler {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
 				log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
-				if(e.getMessage().contains("viewport")){
-					e.printStackTrace();
-				}
+				e.printStackTrace();
 			}
 			finally{
 				if(browser != null){
@@ -234,6 +235,7 @@ public class Crawler {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
 				log.warn("Exception occurred in explortatory actor. \n"+e.getMessage());
+				e.printStackTrace();
 			}
 			finally{
 				if(browser != null){

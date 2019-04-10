@@ -34,14 +34,14 @@ public class Form {
 	private Date date_discovered;
 	private String status;	
 
-	private PageElementState form_tag;
-	private List<PageElementState> form_fields;
-	private PageElementState submit_field;
+	private ElementState form_tag;
+	private List<ElementState> form_fields;
+	private ElementState submit_field;
 	private String type;
 	
 	public Form(){}
 	
-	public Form(PageElementState form_tag, List<PageElementState> form_fields, PageElementState submit_field, 
+	public Form(ElementState form_tag, List<ElementState> form_fields, ElementState submit_field, 
 				String name, double[] predictions, FormType[] type_options, FormType type, Date date_discovered, 
 				FormStatus status){
 		setFormTag(form_tag);
@@ -58,7 +58,7 @@ public class Form {
 	
 	private String generateKey() {
 		String elements_key = "";
-		for(PageElementState elem : getFormFields()){
+		for(ElementState elem : getFormFields()){
 			elements_key += elem.getKey();
 		}
 		return "form::"+elements_key+""+getFormTag().getKey()+""+getSubmitField().getKey();
@@ -109,35 +109,35 @@ public class Form {
 	public void setDateDiscovered(Date date_discovered) {
 		this.date_discovered = date_discovered;
 	}
-	public List<PageElementState> getFormFields() {
+	public List<ElementState> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(PageElementState form_field) {
+	public boolean addFormField(ElementState form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public boolean addFormFields(List<PageElementState> form_field) {
+	public boolean addFormFields(List<ElementState> form_field) {
 		return this.form_fields.addAll(form_field);
 	}
 	
-	public void setFormFields(List<PageElementState> form_fields2) {
+	public void setFormFields(List<ElementState> form_fields2) {
 		this.form_fields = form_fields2;
 	}
 
-	public PageElementState getSubmitField() {
+	public ElementState getSubmitField() {
 		return submit_field;
 	}
 
-	public void setSubmitField(PageElementState submit_field) {
+	public void setSubmitField(ElementState submit_field) {
 		this.submit_field = submit_field;
 	}
 
-	public PageElementState getFormTag() {
+	public ElementState getFormTag() {
 		return form_tag;
 	}
 
-	public void setFormTag(PageElementState form_tag) {
+	public void setFormTag(ElementState form_tag) {
 		this.form_tag = form_tag;
 	}
 

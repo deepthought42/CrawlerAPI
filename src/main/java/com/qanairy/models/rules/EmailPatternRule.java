@@ -8,7 +8,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 
 @NodeEntity
 public class EmailPatternRule extends Rule {
@@ -28,7 +28,7 @@ public class EmailPatternRule extends Rule {
 	}
 
 	@Override
-	public Boolean evaluate(PageElementState page_element) {
+	public Boolean evaluate(ElementState page_element) {
 		for(Attribute attribute: page_element.getAttributes()){
 			if(attribute.getName().equals("vals")){
 				String pattern = "/^" + attribute.getVals().toString() + " $/";

@@ -16,7 +16,7 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.rules.Rule;
@@ -103,7 +103,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
 
 							  	for(Form form : forms){
-								  	for(PageElementState field: form.getFormFields()){
+								  	for(ElementState field: form.getFormFields()){
 										//for each field in the complex field generate a set of tests for all known rules
 								  		List<Rule> rules = rule_extractor.extractInputRules(field);
 										

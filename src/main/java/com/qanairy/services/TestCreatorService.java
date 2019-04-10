@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -115,8 +115,6 @@ public class TestCreatorService {
 	 */
 	public Test createLandingPageTest(PageState page_state, String browser_name) 
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
-		
-		
 		page_state.setLandable(true);
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
 		page_state = page_state_service.save(page_state);
@@ -126,9 +124,7 @@ public class TestCreatorService {
 	  	path_keys.add(page_state.getKey());
 	  	path_objects.add(page_state);
 
-	  	log.warn("path keys size ::   " + path_keys.size());
-	  	log.warn("Path objects size   :::   " + path_objects.size());
-		Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name);
+	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name);
 		
 		String url = page_state.getUrl();
 		if(!url.contains("http")){
@@ -177,8 +173,8 @@ public class TestCreatorService {
 	private void addFormGroupsToPath(Test test) {
 		//check if test has any form elements
 		for(PathObject path_obj: test.getPathObjects()){
-			if(path_obj.getClass().equals(PageElementState.class)){
-				PageElementState elem = (PageElementState)path_obj;
+			if(path_obj.getClass().equals(ElementState.class)){
+				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
 					test_service.save(test, test.firstPage().getUrl());

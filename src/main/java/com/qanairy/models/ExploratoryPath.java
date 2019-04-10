@@ -102,22 +102,22 @@ public class ExploratoryPath {
 		}
 		
 		//iterate through path
-		//if path object is of type PageElementState
+		//if path object is of type ElementState
 		//	then load path object
 		//		check if path object leads to an action that exists in the paths possible actions list
 		//		If there exists an action that matches a possible action 
 		//			then get next path object
-		//				if path object is of type PageElementState
+		//				if path object is of type ElementState
 		//					then load path object
 		//						check if path object leads to an action that exists in the paths possible actions list
 		/*for(PathObject path_obj : path.getPathObjects()){
-			if(path_obj instanceof PageElementState){
-				PageElementStateDao page_elem_dao = new PageElementStateDaoImpl();
+			if(path_obj instanceof ElementState){
+				ElementStateDao page_elem_dao = new ElementStateDaoImpl();
 				OrientConnectionFactory connection = new OrientConnectionFactory();
-				PageElementState page_elem = page_elem_dao.find(path_obj.getKey());
+				ElementState page_elem = page_elem_dao.find(path_obj.getKey());
 				if(page_elem != null){
 					List<Action> actions = path.getPossibleActions();
-					PageElementState ipage_elem = page_elem_dao.save(page_elem);
+					ElementState ipage_elem = page_elem_dao.save(page_elem);
 					Iterator<PathEdge> path_edge_iter = ipage_elem.getPathEdges().iterator();
 					while(path_edge_iter.hasNext()){
 						PathEdge edge = path_edge_iter.next();

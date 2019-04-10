@@ -1,19 +1,19 @@
 package com.minion.browsing.element;
 
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 
 /**
  * Defines an error element by tag and the string contained within
  */
 public class ErrorField {
-	private PageElementState tag;
+	private ElementState tag;
 	private String error;
 	
-	public PageElementState getTag() {
+	public ElementState getTag() {
 		return tag;
 	}
 	
-	public void setTag(PageElementState tag) {
+	public void setTag(ElementState tag) {
 		this.tag = tag;
 	}
 	

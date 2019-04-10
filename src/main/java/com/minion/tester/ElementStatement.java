@@ -2,7 +2,7 @@ package com.minion.tester;
 
 import org.slf4j.LoggerFactory;
 
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 
 import org.slf4j.Logger;
 
@@ -19,8 +19,8 @@ public class ElementStatement implements IStatementFactory {
 	 * {@inheritDoc}
 	 */
 	public String generateStatement(Object o) {
-		if(o instanceof PageElementState){
-			PageElementState element = (PageElementState)o;
+		if(o instanceof ElementState){
+			ElementState element = (ElementState)o;
 			return "document.evaluate("+ element.getXpath() +", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null ).singleNodeValue";
 		}
 		return null;

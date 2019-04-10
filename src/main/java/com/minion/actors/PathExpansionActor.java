@@ -23,6 +23,7 @@ import akka.actor.AbstractActor;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+import akka.remote.WireFormats.TimeUnit;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
@@ -33,7 +34,7 @@ import com.minion.structs.Message;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.PageElementState;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -100,7 +101,7 @@ public class PathExpansionActor extends AbstractActor {
 				for(PathObject path_obj : test.getPathObjects()){
 					if(path_obj instanceof PageState){
 						PageState page_state = (PageState)path_obj;
-						page_state.setElements(page_state_service.getPageElementStates(page_state.getKey()));
+						page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
 						page_states.add(page_state);										
 					}
 				}
@@ -139,9 +140,11 @@ public class PathExpansionActor extends AbstractActor {
 	
 							Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
 							work_allocator.tell(url_msg, getSelf() );
+							return;
 						}
-
-						return;
+						else{
+							pathExpansions = expandPath(test);
+						}
 					}
 					else{
 						System.err.println("expanding path");
@@ -232,14 +235,30 @@ public class PathExpansionActor extends AbstractActor {
 			return null;
 		}
 
-		Set<PageElementState> elements = result_page.getElements();		
+		Set<ElementState> elements = result_page.getElements();		
 		//get List of page states for page
 
 		//iterate over all elements
 		log.warn("Page elements for expansion :: "+elements.size());
-		for(PageElementState page_element : result_page.getElements()){
+		for(ElementState page_element : result_page.getElements()){
 			
 			log.warn("expanding page element :: "+page_element.getKey());
+			
+			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(result_page.getUrl(), page_element.getKey());
+			boolean higher_order_page_state_found = false;
+			//check if there is a page state with a lower x or y scroll offset
+			for(PageState page_state : element_page_states){
+				if(!page_state.getKey().equals(result_page.getKey()) 
+						&& (page_state.getScrollXOffset()< result_page.getScrollXOffset() 
+								|| page_state.getScrollYOffset() < result_page.getScrollYOffset())){
+					higher_order_page_state_found = true;
+				}
+			}
+			
+			if(higher_order_page_state_found){
+				continue;
+			}
+			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -342,7 +361,7 @@ public class PathExpansionActor extends AbstractActor {
 		assert page_state != null;
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
-		Set<PageElementState> elements = page_state.getElements();		
+		Set<ElementState> elements = page_state.getElements();		
 		//get List of page states for page
 
 		List<String> path_keys = new ArrayList<>();
@@ -352,9 +371,24 @@ public class PathExpansionActor extends AbstractActor {
 		
 		//iterate over all elements
 		log.warn("Page elements for expansion :: "+elements.size());
-		for(PageElementState page_element : elements){
+		for(ElementState page_element : elements){
 			
 			log.warn("expanding page element :: "+page_element.getKey());
+			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(page_state.getUrl(), page_element.getKey());
+			boolean higher_order_page_state_found = false;
+			//check if there is a page state with a lower x or y scroll offset
+			for(PageState page : element_page_states){
+				if(!page.getKey().equals(page.getKey()) 
+						&& (page_state.getScrollXOffset() < page.getScrollXOffset() 
+								|| page_state.getScrollYOffset() < page.getScrollYOffset())){
+					higher_order_page_state_found = true;
+				}
+			}
+			
+			if(higher_order_page_state_found){
+				continue;
+			}
+			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -432,18 +466,18 @@ public class PathExpansionActor extends AbstractActor {
 	}
 	
 	/**
-	 * Checks if a given {@link PageElementState} exists in a {@link PageState} within the {@link Test} path
+	 * Checks if a given {@link ElementState} exists in a {@link PageState} within the {@link Test} path
 	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
 	 * 
 	 * @param test {@link Test}
-	 * @param elem {@link PageElementState}
+	 * @param elem {@link ElementState}
 	 * 
 	 * @return
 	 * 
 	 * @pre test != null
 	 * @pre elem != null
 	 */
-	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, PageElementState elem) {
+	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, ElementState elem) {
 		assert test != null;
 		assert elem != null;
 		
@@ -455,7 +489,7 @@ public class PathExpansionActor extends AbstractActor {
 			if(obj.getType().equals("PageState")){
 				PageState page_state = ((PageState) obj);
 				log.debug("page state has # of elements  ::  "+page_state.getElements().size());
-				for(PageElementState page_elem : page_state.getElements()){
+				for(ElementState page_elem : page_state.getElements()){
 					if(elem.equals(page_elem)){
 						return true;
 					}

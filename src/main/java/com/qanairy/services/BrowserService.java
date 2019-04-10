@@ -160,33 +160,40 @@ public class BrowserService {
 				web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
 
 				int iter_idx=0;
+				int cycle_cnt = 0;
 				List<WebElement> web_elements_unfiltered = new ArrayList<>(web_elements);
 				int last_web_element_size = web_elements.size();
-				while(!web_elements.isEmpty()){					
-					log.warn("BrowserService ...identifying page state iteration ...."+iter_idx+".... elements remaining ...."+web_elements.size());
+				while(!web_elements.isEmpty() && cycle_cnt < 5){					
+					log.warn("BrowserService ...identifying page state iteration ...."+iter_idx+"....cycle::... "+cycle_cnt+" elements remaining ...."+web_elements.size());
 					if(!isElementVisibleInPane(browser, web_elements.get(0))){
 						log.warn("element not visible in viewport. SCROLLING TO ELEMENT the scrolling to offset for continuity of screenshots");
 						browser.scrollToElement(web_elements.get(0));
 					}
 					PageState page_state = buildPage(browser, web_elements_unfiltered);
 					
-					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-					log.warn("Page state visible elements ::: " + page_state.getElements().size());
-					log.warn("Browser offset :: "+browser.getXScrollOffset()+","+browser.getYScrollOffset() );
-					log.warn("Browser dimension :: " +browser.getViewportSize().getWidth()+","+browser.getViewportSize().getHeight());
-					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-					
 					if(iter_idx > 2){
+						cycle_cnt++;
+						log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+						log.warn("Page state visible elements ::: " + page_state.getElements().size());
+						log.warn("Browser offset :: "+browser.getXScrollOffset()+","+browser.getYScrollOffset() );
+						log.warn("Browser dimension :: " +browser.getViewportSize().getWidth()+","+browser.getViewportSize().getHeight());
+						
+						
 						for(WebElement elem : web_elements){
 							log.warn("element location  :::   ("+elem.getLocation().getX()+","+elem.getLocation().getY()+");  dim:: ("+elem.getSize().getWidth()+","+elem.getSize().getHeight()+ ";   visible? ::  " +isElementVisibleInPane(browser, elem));
 							if(isElementVisibleInPane(browser, elem)){
 								ElementState element_state = buildElementState(browser, elem, ImageIO.read(new URL(page_state.getScreenshotUrl())), "");
+								element_state = page_element_service.save(element_state);
 								//add element to page state
 								page_state.addElement(element_state);
 							}
 						}
 						iter_idx = 0;
-						page_state_service.save(page_state);
+						page_state = page_state_service.save(page_state);
+						log.warn("page state elements after :: " + page_state.getElements().size());
+						log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+						
+						
 						log.warn("***************************************************************************************");
 					}				
 					Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
@@ -521,7 +528,7 @@ public class BrowserService {
 		
 		//TODO: refactor code to handle this asynchronously. Loading CSS properties currently ranges from 470ms-800ms as of 3/25/2019
 		Map<String, String> css_props = Browser.loadCssProperties(elem);
-		Set<Attribute> attributes = extractAttributes(elem, browser.getDriver());
+		Set<Attribute> attributes = browser.extractAttributes(elem);
 
 		page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, elem.getLocation().getX(), elem.getLocation().getY(), elem.getSize().getWidth(), elem.getSize().getHeight() );				
 		page_element_record = page_element_service.findByKey(page_element.getKey()) ;
@@ -617,47 +624,6 @@ public class BrowserService {
 		return elem.findElement(By.xpath(".."));
 	}
 	
-	/**
-	 * Extract all attributes from a given {@link WebElement}
-	 * 
-	 * @param element {@link WebElement} to have attributes loaded for
-	 * @param javascriptDriver - 
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public Set<Attribute> extractAttributes(WebElement element, WebDriver driver) {
-		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
-		return loadAttributes(attribute_strings);
-	}
-	
-	/**
-	 * Loads attributes for this element into a list of {@link Attribute}s
-	 * 
-	 * @param attributeList
-	 */
-	private Set<Attribute> loadAttributes( List<String> attributeList){
-		Set<Attribute> attr_set = new HashSet<Attribute>();
-		
-		Map<String, Boolean> attributes_seen = new HashMap<String, Boolean>();
-		
-		for(int i = 0; i < attributeList.size(); i++){
-			String[] attributes = attributeList.get(i).split("::");
-			
-			if(attributes.length > 1){
-				String attribute_name = attributes[0].trim().replace("\'", "'");
-				String[] attributeVals = attributes[1].split(" ");
-
-				if(!attributes_seen.containsKey(attribute_name)){
-					attributes_seen.put(attribute_name, true);
-					Attribute attribute = new Attribute(attribute_name, Arrays.asList(attributeVals));
-					attr_set.add(attribute);	
-				}
-			}
-		}
-
-		return attr_set;
-	}
-
 	/**
 	 * 
 	 * @param a_xPathQueryString
@@ -802,7 +768,7 @@ public class BrowserService {
 			String page_screenshot = "";
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page_screenshot)));
-			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", extractAttributes(form_elem, browser.getDriver()), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight() );
+			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight() );
 			
 			form_tag.setScreenshot(screenshot_url);
 			
@@ -813,7 +779,7 @@ public class BrowserService {
 									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 			for(WebElement input_elem : input_elements){
-				Set<Attribute> attributes = extractAttributes(input_elem, browser.getDriver());
+				Set<Attribute> attributes = browser.extractAttributes(input_elem);
 				
 				screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page_screenshot)));
 				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), screenshot_url, input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight() );
@@ -945,7 +911,7 @@ public class BrowserService {
 				child_inputs = new ArrayList<ElementState>();
 
 				for(WebElement child : children){
-					Set<Attribute> attributes = extractAttributes(child, browser.getDriver());
+					Set<Attribute> attributes = browser.extractAttributes(child);
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, child);
 
 					ElementState elem = new ElementState(child.getText(), generateXpath(child, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), child.getTagName(), attributes, Browser.loadCssProperties(child), screenshot_url, child.getLocation().getX(), child.getLocation().getY(), child.getSize().getWidth(), child.getSize().getHeight() );
@@ -968,7 +934,7 @@ public class BrowserService {
 			}
 			else{
 				if(child_inputs.size() == 0){
-					Set<Attribute> attributes = extractAttributes(page_elem, browser.getDriver());
+					Set<Attribute> attributes = browser.extractAttributes(page_elem);
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, page_elem);
 
 					ElementState input_tag = new ElementState(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), browser.getDriver(), attributes), page_elem.getTagName(), attributes, Browser.loadCssProperties(page_elem), screenshot_url, page_elem.getLocation().getX(), page_elem.getLocation().getY(), page_elem.getSize().getWidth(), page_elem.getSize().getHeight() );
@@ -1002,7 +968,7 @@ public class BrowserService {
 		catch(NoSuchElementException e){
 			submit_element = form_elem.findElement(By.xpath("//input[@type='submit']"));
 		}
-		Set<Attribute> attributes = extractAttributes(submit_element, browser.getDriver());
+		Set<Attribute> attributes = browser.extractAttributes(submit_element);
 		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem);
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url, submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight() );
 		

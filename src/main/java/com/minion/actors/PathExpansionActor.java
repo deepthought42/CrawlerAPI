@@ -7,7 +7,6 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -23,12 +22,9 @@ import akka.actor.AbstractActor;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
-import akka.remote.WireFormats.TimeUnit;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
-import com.minion.browsing.Browser;
-import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
@@ -39,7 +35,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.PageStateMessage;
-import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -378,9 +373,8 @@ public class PathExpansionActor extends AbstractActor {
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page : element_page_states){
-				if(!page.getKey().equals(page.getKey()) 
-						&& (page_state.getScrollXOffset() < page.getScrollXOffset() 
-								|| page_state.getScrollYOffset() < page.getScrollYOffset())){
+				if(page_state.getScrollXOffset() < page.getScrollXOffset() 
+						|| page_state.getScrollYOffset() < page.getScrollYOffset()){
 					higher_order_page_state_found = true;
 				}
 			}

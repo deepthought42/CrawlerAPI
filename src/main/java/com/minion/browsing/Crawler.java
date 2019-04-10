@@ -119,7 +119,7 @@ public class Crawler {
 					Browser.waitForPageToLoad(browser.getDriver());
 				}
 				else{
-					Timing.pauseThread(1000);
+					Timing.pauseThread(5000);
 				}
 			}
 			else if(current_obj instanceof PageAlert){

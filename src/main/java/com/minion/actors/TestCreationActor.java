@@ -268,7 +268,7 @@ public class TestCreationActor extends AbstractActor  {
 		//use xpath to identify WebElement.
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
-		Set<Attribute> attributes = browser_service.extractAttributes(element, browser.getDriver());
+		Set<Attribute> attributes = browser.extractAttributes(element);
 		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element);
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);

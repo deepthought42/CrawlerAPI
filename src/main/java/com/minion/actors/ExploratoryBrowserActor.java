@@ -367,7 +367,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					
 					WebElement parent = browser_service.getParentElement(web_elem);
 					//clone test and swap page element with parent
-					Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
+					Set<Attribute> attributes = browser.extractAttributes(parent);
 					String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
 					
 					BufferedImage page_screenshot = Browser.getViewportScreenshot(browser.getDriver());
@@ -441,7 +441,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 			if(!parent_tag_name.equals("body")){
 				//clone test and swap page element with parent
 				ExploratoryPath parent_path = ExploratoryPath.clone(path);
-				Set<Attribute> attributes = browser_service.extractAttributes(parent, browser.getDriver());
+				Set<Attribute> attributes = browser.extractAttributes(parent);
 				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
 				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, parent);
 				ElementState parent_tag = new ElementState(parent.getText(), this_xpath, parent_tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url, parent.getLocation().getX(), parent.getLocation().getY(), parent.getSize().getWidth(), parent.getSize().getHeight() );

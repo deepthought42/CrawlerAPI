@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -482,12 +484,57 @@ public class Browser {
     { 
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		Timing.pauseThread(500);
+		//Timing.pauseThread(500);
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
     }
+	
+	
+	/**
+	 * Extract all attributes from a given {@link WebElement}
+	 * 
+	 * @param element {@link WebElement} to have attributes loaded for
+	 * @param javascriptDriver - 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Set<Attribute> extractAttributes(WebElement element) {
+		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
+		return loadAttributes(attribute_strings);
+	}
+	
+
+	
+	/**
+	 * Loads attributes for this element into a list of {@link Attribute}s
+	 * 
+	 * @param attributeList
+	 */
+	private Set<Attribute> loadAttributes( List<String> attributeList){
+		Set<Attribute> attr_set = new HashSet<Attribute>();
+		
+		Map<String, Boolean> attributes_seen = new HashMap<String, Boolean>();
+		
+		for(int i = 0; i < attributeList.size(); i++){
+			String[] attributes = attributeList.get(i).split("::");
+			
+			if(attributes.length > 1){
+				String attribute_name = attributes[0].trim().replace("\'", "'");
+				String[] attributeVals = attributes[1].split(" ");
+
+				if(!attributes_seen.containsKey(attribute_name)){
+					attributes_seen.put(attribute_name, true);
+					Attribute attribute = new Attribute(attribute_name, Arrays.asList(attributeVals));
+					attr_set.add(attribute);	
+				}
+			}
+		}
+
+		return attr_set;
+	}
+
 	
 	/**
 	 * Retrieves the x and y scroll offset of the viewport as a {@link Point}

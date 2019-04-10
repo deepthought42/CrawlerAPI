@@ -1,30 +1,44 @@
 package browser;
 
+import static org.junit.Assert.*;
+import static org.testng.Assert.assertEquals;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.openqa.selenium.Point;
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.ScreenshotSet;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.services.BrowserService;
 
 /**
  * 
  */
+@SpringBootTest
 public class BrowserTest {
+	
+	@Autowired
+	private BrowserService browser_service;
 	
 	@Test
 	public void verifyCleanSrc(){
@@ -79,6 +93,46 @@ public class BrowserTest {
 	@Test
 	public void scrollToElementInChrome() throws MalformedURLException{
 		Browser browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+		browser.navigateTo("https://qa-testbed.qanairy.com/viewport_pages/element_out_of_view_y_axis.html");
+		WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 		
+		browser.scrollToElement(element);
+		
+		assertEquals(0, browser.getXScrollOffset());
+		assertEquals(553, browser.getYScrollOffset());
+	}
+	
+	public void verifyAttributes() throws MalformedURLException{
+		int cnt = 0;
+		do{
+			try{
+				Browser browser = BrowserConnectionFactory.getConnection("firefox", BrowserEnvironment.DISCOVERY);
+				browser.navigateTo("https://qa-testbed.qanairy.com/elements/index.html");
+				WebElement element = browser.getDriver().findElement(By.xpath("//button"));
+				
+				Set<Attribute> attributes = browser.extractAttributes(element);
+		
+				Map<String, List<String>> attribute_map = new HashMap<String, List<String>>();
+				for(Attribute attr : attributes){
+					attribute_map.put(attr.getName(), attr.getVals());
+				}
+				
+				assertTrue(attribute_map.containsKey("id"));
+				assertEquals(1, attribute_map.get("id").size());
+				
+				assertTrue(attribute_map.containsKey("class"));
+				assertEquals(3, attribute_map.get("class").size());
+				
+				assertTrue(attribute_map.containsKey("style"));
+				assertEquals(1, attribute_map.get("style").size());
+				break;
+			}catch(GridException e){
+				
+			}
+			catch(WebDriverException e){
+				
+			}
+			cnt++;
+		}while(cnt<5);
 	}
 }

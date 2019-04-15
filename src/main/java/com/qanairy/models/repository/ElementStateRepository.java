@@ -8,4 +8,6 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	public ElementState findByKey(@Param("key") String key);
 	
 	public ElementState findByTextAndName(@Param("text") String text, @Param("name") String name);
+
+	public ElementState findByScreenshotChecksum(@Param("screenshot_checksum") String screenshotChecksum);
 }

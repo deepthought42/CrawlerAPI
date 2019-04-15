@@ -62,4 +62,8 @@ public class ElementStateService {
 		
 		return false;
 	}
+	
+	public ElementState findByScreenshotChecksum(String screenshotChecksum) {
+		return page_element_repo.findByScreenshotChecksum(screenshotChecksum);
+	}
 }

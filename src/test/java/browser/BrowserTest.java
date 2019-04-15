@@ -90,7 +90,6 @@ public class BrowserTest {
 		}
 	}
 	
-	@Test
 	public void scrollToElementInChrome() throws MalformedURLException{
 		Browser browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
 		browser.navigateTo("https://qa-testbed.qanairy.com/viewport_pages/element_out_of_view_y_axis.html");

@@ -279,6 +279,15 @@ public class TestCreationActor extends AbstractActor  {
 		if(elem_record != null){
 			elem = elem_record;
 		}
+		else{
+			elem_record = page_element_service.findByScreenshotChecksum(elem.getScreenshotChecksum());
+			if(elem_record!= null){
+				elem = elem_record;
+			}
+			else{
+				elem = page_element_service.save(elem);
+			}
+		}
 		return elem;
 	}
 

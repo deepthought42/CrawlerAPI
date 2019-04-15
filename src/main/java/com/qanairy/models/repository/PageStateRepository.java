@@ -5,6 +5,7 @@ import java.util.Set;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -12,6 +13,7 @@ import com.qanairy.models.PageState;
 /**
  * 
  */
+@Repository
 public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	public PageState findByKey(@Param("key") String key);
 

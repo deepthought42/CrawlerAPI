@@ -129,7 +129,6 @@ public class PathExpansionActor extends AbstractActor {
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						  	}catch(Exception e){}
 							
-							log.warn("SENDING URL TO WORK ALLOCATOR :: "+test.getResult().getUrl());
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 	
@@ -142,9 +141,8 @@ public class PathExpansionActor extends AbstractActor {
 						}
 					}
 					else{
-						System.err.println("expanding path");
 						pathExpansions = expandPath(test);
-						System.err.println("path expansions size :: "+pathExpansions);
+						log.warn("path expansions size :: "+pathExpansions.size()+"....." + test.getResult().getUrl());
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
@@ -158,8 +156,8 @@ public class PathExpansionActor extends AbstractActor {
 					DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
 
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-					System.err.println("existing total path count :: "+discovery_record.getTotalPathCount());
-					System.err.println("expected total path count :: "+new_total_path_count);
+					log.warn("existing total path count :: "+discovery_record.getTotalPathCount()+"...."+test.getResult().getUrl());
+					log.warn("expected total path count :: "+new_total_path_count);
 					discovery_record.setTotalPathCount(new_total_path_count);
 					discovery_record = discovery_service.save(discovery_record);
 
@@ -235,10 +233,10 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		log.warn("Page elements for expansion :: "+elements.size());
-		for(ElementState page_element : result_page.getElements()){
-			
-			log.warn("expanding page element :: "+page_element.getKey());
-			
+		for(ElementState page_element : result_page.getElements()){			
+			if(page_element == null){
+				continue;
+			}
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(result_page.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
@@ -304,9 +302,7 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}
 			}
-			else{				
-				System.err.println("Checking if element exists previously as a path object or within a page state");
-				
+			else{
 				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
 					continue;
 				}				
@@ -338,7 +334,6 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 		}
-		log.warn("path expansion list size :: " + pathList.size());
 		return pathList;
 	}
 
@@ -367,8 +362,6 @@ public class PathExpansionActor extends AbstractActor {
 		//iterate over all elements
 		log.warn("Page elements for expansion :: "+elements.size());
 		for(ElementState page_element : elements){
-			
-			log.warn("expanding page element :: "+page_element.getKey());
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(page_state.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
@@ -431,8 +424,6 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{				
-				System.err.println("Checking if element exists previously as a path object or within a page state");
-				
 				List<String> keys = new ArrayList<>(path_keys);
 				List<PathObject> path = new ArrayList<>(path_objects);
 								
@@ -455,7 +446,6 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 		}
-		log.warn("path expansion list size :: " + pathList.size());
 		return pathList;
 	}
 	

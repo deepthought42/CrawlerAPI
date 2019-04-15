@@ -114,7 +114,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
 		
 						if(exploratory_path.getPathObjects() != null){
-							System.err.println("EXPLORATORY PATH OBJECTS  ::   " + exploratory_path.getPathObjects().size());
 							PageState result_page = null;
 		
 							//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
@@ -250,18 +249,15 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		log.warn("Creating test........");
 		Test test = new Test(path_keys, path_objects, result_page, null);
 		
-		log.warn("Looking up test by key ..... ");
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db != null){
 			test = test_db;
 		}
-		
-		log.warn("Setting test data");
+
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		log.warn("Creating test record " + test.firstPage());
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
 		test.addRecord(test_record);
 
@@ -371,7 +367,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
 					
 					BufferedImage page_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-					BufferedImage img = Browser.getElementScreenshot(browser, parent, page_screenshot);
+					BufferedImage img = browser.getElementScreenshot(parent, page_screenshot);
 					String checksum = PageState.getFileChecksum(img);		
 					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
 		
@@ -445,15 +441,19 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
 				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, parent);
 				ElementState parent_tag = new ElementState(parent.getText(), this_xpath, parent_tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url, parent.getLocation().getX(), parent.getLocation().getY(), parent.getSize().getWidth(), parent.getSize().getHeight() );
-				parent_tag.setXLocation(parent.getLocation().getX());
-				parent_tag.setYLocation(parent.getLocation().getY());
 				
 				ElementState parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
 				if(parent_tag_record != null){
 					parent_tag = parent_tag_record;
 				}
 				else{
-					parent_tag = page_element_service.save(parent_tag);
+					parent_tag_record = page_element_service.findByScreenshotChecksum(parent_tag.getScreenshotChecksum());
+					if(parent_tag_record!= null){
+						parent_tag = parent_tag_record;
+					}
+					else{
+						parent_tag = page_element_service.save(parent_tag);
+					}
 				}
 				parent_path.getPathObjects().set(idx, parent_tag);
 				parent_path.getPathKeys().set(idx, parent_tag.getKey());

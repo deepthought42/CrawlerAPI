@@ -123,7 +123,6 @@ public class UrlBrowserActor extends AbstractActor {
 							System.err.println("Page states elements ....  "+page_state.getElements().size());
 							System.err.println("###############################################################");
 							
-							log.warn("Discovery record :: " + discovery_record);
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 								log.warn("discovery path does not have expanded page state");
 								discovery_record.addExpandedPageState(page_state.getKey());
@@ -136,10 +135,7 @@ public class UrlBrowserActor extends AbstractActor {
 								final ActorRef path_expansion_actor_2 = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 								path_expansion_actor_2.tell(page_state_msg, getSelf() );
-								
-								
 							}
-							
 						}
 						
 						discovery_record.setLastPathRanAt(new Date());

@@ -116,7 +116,7 @@ public class Browser {
 	public void navigateTo(String url){
 		getDriver().get(url);
 		log.debug("successfully navigated to "+url);
-		Browser.waitForPageToLoad(getDriver());
+		waitForPageToLoad();
 	}
 
 	/**
@@ -297,7 +297,7 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(WebElement elem) throws IOException, GridException{
+	public BufferedImage getElementScreenshot(WebElement elem) throws IOException, GridException{
 		return ImageIO.read(elem.getScreenshotAs(OutputType.FILE));
 	}
 	
@@ -309,9 +309,9 @@ public class Browser {
 	 * @throws IOException
 	 */
 		
-	public static BufferedImage getElementScreenshot(Browser browser, WebElement elem, BufferedImage page_screenshot) throws IOException{
+	public BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot) throws IOException{
 		//calculate element position within screen
-		Point point = browser.getLocationInViewport(elem);
+		Point point = getLocationInViewport(elem);
 		Dimension dimension = elem.getSize();
 		
 		// Get width and height of the element
@@ -428,17 +428,13 @@ public class Browser {
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "transform"};
+		String[] cssList = {"visible", "display", "position", "color", "font-family", "font-size"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){
-			try{
-				String element_value = element.getCssValue(propertyName);
-				if(element_value != null && !element_value.isEmpty()){
-					css_map.put(propertyName, element_value);
-				}
-			}catch(Exception e){
-				
+			String element_value = element.getCssValue(propertyName);
+			if(element_value != null && !element_value.isEmpty()){
+				css_map.put(propertyName, element_value);
 			}
 		}
 		
@@ -484,7 +480,7 @@ public class Browser {
     { 
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		//Timing.pauseThread(500);
+		Timing.pauseThread(500);
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -543,7 +539,7 @@ public class Browser {
 	 * 
 	 * @return {@link Point} containing offsets
 	 */
-	private Point getViewportScrollOffset(){		
+	public Point getViewportScrollOffset(){		
 		Object objy = ((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
 		Object objx = ((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
 
@@ -588,9 +584,10 @@ public class Browser {
 		return location.getX() - x_offset;
 	}
 
-	public static void waitForPageToLoad(WebDriver driver) {
+	public void waitForPageToLoad() {
 		new WebDriverWait(driver, 30).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+		Timing.pauseThread(2000);
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {

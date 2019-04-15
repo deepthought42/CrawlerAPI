@@ -153,7 +153,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										page_states.add(page_state);										
 									}
 								}
-								System.err.println("checking page states for cycle   :::   " + page_states.size());
 								if(!ExploratoryPath.hasCycle(page_states, result_page, path.getPathObjects().size() == 1)){
 							  		boolean results_match = false;
 							  		//crawl test and get result

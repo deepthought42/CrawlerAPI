@@ -96,14 +96,7 @@ public class UrlBrowserActor extends AbstractActor {
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name);
 
 						Page page = new Page(url);
-						System.err.println("###############################################################");
-						System.err.println("Page states returned ....  "+page_states.size());
-						System.err.println("###############################################################");
-					
-						System.err.println("###############################################################");
-						System.err.println("Page states 0 elements ....  "+page_states.get(0).getElements().size());
-						System.err.println("###############################################################");
-					
+
 						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name);
 						test = test_service.save(test, host);
 						
@@ -119,10 +112,6 @@ public class UrlBrowserActor extends AbstractActor {
 
 						DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
 						for(PageState page_state : page_states.subList(1, page_states.size())){
-							System.err.println("###############################################################");
-							System.err.println("Page states elements ....  "+page_state.getElements().size());
-							System.err.println("###############################################################");
-							
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 								log.warn("discovery path does not have expanded page state");
 								discovery_record.addExpandedPageState(page_state.getKey());

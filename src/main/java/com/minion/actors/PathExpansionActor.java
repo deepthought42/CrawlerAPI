@@ -142,7 +142,6 @@ public class PathExpansionActor extends AbstractActor {
 					}
 					else{
 						pathExpansions = expandPath(test);
-						log.warn("path expansions size :: "+pathExpansions.size()+"....." + test.getResult().getUrl());
 						for(ExploratoryPath expanded : pathExpansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
@@ -156,13 +155,9 @@ public class PathExpansionActor extends AbstractActor {
 					DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
 
 					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
-					log.warn("existing total path count :: "+discovery_record.getTotalPathCount()+"...."+test.getResult().getUrl());
-					log.warn("expected total path count :: "+new_total_path_count);
 					discovery_record.setTotalPathCount(new_total_path_count);
 					discovery_record = discovery_service.save(discovery_record);
 
-					log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-					
 					try{
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				  	}catch(Exception e){
@@ -232,7 +227,6 @@ public class PathExpansionActor extends AbstractActor {
 		//get List of page states for page
 
 		//iterate over all elements
-		log.warn("Page elements for expansion :: "+elements.size());
 		for(ElementState page_element : result_page.getElements()){			
 			if(page_element == null){
 				continue;
@@ -360,7 +354,6 @@ public class PathExpansionActor extends AbstractActor {
 		path_objects.add(page_state);
 		
 		//iterate over all elements
-		log.warn("Page elements for expansion :: "+elements.size());
 		for(ElementState page_element : elements){
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(page_state.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;

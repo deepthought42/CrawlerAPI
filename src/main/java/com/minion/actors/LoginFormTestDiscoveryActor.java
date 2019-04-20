@@ -35,6 +35,9 @@ import com.qanairy.services.FormService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -45,6 +48,7 @@ import akka.event.LoggingAdapter;
 @Scope("prototype")
 public class LoginFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
 	private Crawler crawler;
@@ -61,6 +65,19 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	@Autowired 
 	private ActionRepository action_repo;
 	
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()

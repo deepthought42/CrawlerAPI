@@ -38,6 +38,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.minion.util.Timing;
@@ -45,6 +46,8 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.services.BrowserService;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -112,8 +115,9 @@ public class Browser {
 	 * Navigates to a given url and waits for it the readyState to be complete
 	 * 
 	 * @param url
+	 * @throws MalformedURLException 
 	 */
-	public void navigateTo(String url){
+	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
 		log.debug("successfully navigated to "+url);
 		waitForPageToLoad();
@@ -287,7 +291,7 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static BufferedImage getViewportScreenshot(WebDriver driver) throws IOException, GridException{
+	public BufferedImage getViewportScreenshot() throws IOException, GridException{
 		return ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
 	}
 	
@@ -470,7 +474,9 @@ public class Browser {
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
 		Timing.pauseThread(500);
-
+		//WebDriverWait wait = new WebDriverWait(driver, 10);
+		//wait.until(ExpectedConditions.visibilityOf(elem));
+		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
@@ -481,6 +487,8 @@ public class Browser {
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
 		Timing.pauseThread(500);
+		//WebDriverWait wait = new WebDriverWait(driver, 10);
+		//wait.until(ExpectedConditions.visibilityOf(elem));
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -584,10 +592,10 @@ public class Browser {
 		return location.getX() - x_offset;
 	}
 
-	public void waitForPageToLoad() {
+	public void waitForPageToLoad() throws MalformedURLException {
 		new WebDriverWait(driver, 30).until(
 				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		Timing.pauseThread(2000);
+		List<String> page_transition = BrowserUtils.getPageTransition(this);
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {

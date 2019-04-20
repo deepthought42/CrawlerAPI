@@ -19,6 +19,9 @@ import org.springframework.stereotype.Component;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.AbstractActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -49,6 +52,7 @@ import com.qanairy.services.PageStateService;
 @Scope("prototype")
 public class PathExpansionActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
 	private ActorSystem actor_system;
@@ -68,6 +72,19 @@ public class PathExpansionActor extends AbstractActor {
 	@Autowired
 	private ElementRuleExtractor extractor;
 	
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+	
 	/**
      * {@inheritDoc}
      */
@@ -78,8 +95,7 @@ public class PathExpansionActor extends AbstractActor {
 			
 			if(message.getData() instanceof Test){				
 				Test test = (Test)message.getData();
-				System.err.println("expanding path");
-				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
+				ArrayList<ExploratoryPath> path_expansions = new ArrayList<ExploratoryPath>();
 				String discovery_key = message.getOptions().get("discovery_key").toString();
 				String browser_name = message.getOptions().get("browser").toString();
 
@@ -90,7 +106,10 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	*/
-				System.err.println("checking if test has cycle, spans multiple domains or is only a single node");
+				DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+				if(discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
+					return;					
+				}
 				//get page states 
 				List<PageState> page_states = new ArrayList<PageState>();
 				for(PathObject path_obj : test.getPathObjects()){
@@ -102,11 +121,9 @@ public class PathExpansionActor extends AbstractActor {
 				}
 				if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
-					System.err.println("test qualifies for expansion");
 					// if path is a single page 
 					//		then send path to urlBrowserActor
 					if(test.getPathKeys().size() > 1){
-						System.err.println("test multiple path keys :: "+test.getPathKeys().size());
 						PageState result_page = test.getResult();
 						
 						//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
@@ -114,7 +131,6 @@ public class PathExpansionActor extends AbstractActor {
 						Duration minimum_diff = Duration.ofHours(24);
 						
 						if(time_diff.compareTo(minimum_diff) > 0){
-							log.warn("Checking for page landability");
 							//have page checked for landability
 							boolean isLandable = browser_service.checkIfLandable(browser_name, result_page);
 							result_page.setLastLandabilityCheck(LocalDateTime.now());
@@ -123,7 +139,7 @@ public class PathExpansionActor extends AbstractActor {
 						}
 						
 						if(result_page.isLandable()){
-							DiscoveryRecord discovery_record = discovery_service.incrementTotalPathCount(discovery_key);
+							discovery_record = discovery_service.incrementTotalPathCount(discovery_key);
 							
 							try{
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
@@ -137,12 +153,18 @@ public class PathExpansionActor extends AbstractActor {
 							return;
 						}
 						else{
-							pathExpansions = expandPath(test);
+							path_expansions = expandPath(test);
+							discovery_record = discovery_repo.findByKey(discovery_key);
+							discovery_record.addExpandedPageState(test.getResult().getKey());
+							discovery_record = discovery_service.save(discovery_record);
 						}
 					}
 					else{
-						pathExpansions = expandPath(test);
-						for(ExploratoryPath expanded : pathExpansions){
+						path_expansions = expandPath(test);
+						discovery_record = discovery_repo.findByKey(discovery_key);
+						discovery_record.addExpandedPageState(test.getResult().getKey());
+						discovery_record = discovery_service.save(discovery_record);
+						for(ExploratoryPath expanded : path_expansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 	
@@ -152,9 +174,9 @@ public class PathExpansionActor extends AbstractActor {
 						}
 					}
 					
-					DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+					discovery_record = discovery_repo.findByKey(discovery_key);
 
-					int new_total_path_count = (discovery_record.getTotalPathCount()+pathExpansions.size());
+					int new_total_path_count = (discovery_record.getTotalPathCount()+path_expansions.size());
 					discovery_record.setTotalPathCount(new_total_path_count);
 					discovery_record = discovery_service.save(discovery_record);
 
@@ -170,7 +192,11 @@ public class PathExpansionActor extends AbstractActor {
 		.match(PageStateMessage.class, message -> {
 			List<ExploratoryPath> exploratory_paths = expandPath(message.getPageState());
 
+			
 			DiscoveryRecord discovery_record = discovery_service.increaseTotalPathCount(message.getDiscovery().getKey(), exploratory_paths.size());
+			if(discovery_record.getExpandedPageStates().contains(message.getPageState().getKey())){
+				return;					
+			}
 			discovery_record.addExpandedPageState(message.getPageState().getKey());
 			discovery_record = discovery_service.save(discovery_record);
 			
@@ -182,10 +208,10 @@ public class PathExpansionActor extends AbstractActor {
 			
 			}
 			
-			for(ExploratoryPath expanded : exploratory_paths){
-				final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+			final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
+			for(ExploratoryPath expanded : exploratory_paths){
 				Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 				
 				work_allocator.tell(expanded_path_msg, getSelf() );
@@ -222,8 +248,6 @@ public class PathExpansionActor extends AbstractActor {
 		if(result_page == null){
 			return null;
 		}
-
-		Set<ElementState> elements = result_page.getElements();		
 		//get List of page states for page
 
 		//iterate over all elements
@@ -232,11 +256,15 @@ public class PathExpansionActor extends AbstractActor {
 				continue;
 			}
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(result_page.getUrl(), page_element.getKey());
+			log.warn("page states found for current page element : " + page_element +"    ;  "+element_page_states.size());
+			
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page_state : element_page_states){
-				if(!page_state.getKey().equals(result_page.getKey()) 
-						&& (page_state.getScrollXOffset()< result_page.getScrollXOffset() 
+				log.warn("is page  x lower than result page "+(page_state.getScrollXOffset() < result_page.getScrollXOffset()));
+
+				log.warn("is page  y lower than result page "+(page_state.getScrollYOffset() < result_page.getScrollYOffset()));
+				if((page_state.getScrollXOffset() < result_page.getScrollXOffset() 
 								|| page_state.getScrollYOffset() < result_page.getScrollYOffset())){
 					higher_order_page_state_found = true;
 				}

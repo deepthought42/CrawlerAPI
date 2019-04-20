@@ -19,6 +19,7 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
@@ -75,74 +76,73 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(Message.class, message -> {
-					if(message.getData() instanceof PageState){
-					  	System.err.println("FORM DISCOVERY HAS STARTED");
+				.match(PageStateMessage.class, message -> {
+					
+				  	System.err.println("FORM DISCOVERY HAS STARTED");
 
-						PageState page_state = ((PageState)message.getData());
-						
-						//get first page in path
-			
-					  	Browser browser = null;
-					  	boolean forms_created = false;
-					  	do{
+					PageState page_state = message.getPageState();
+					
+					//get first page in path
+		
+				  	Browser browser = null;
+				  	boolean forms_created = false;
+				  	do{
+				  		
+				  		try{
+				  			System.err.println("Getting browser for form extraction");
+					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+
+				  			System.err.println("navigating to url :: "+page_state.getUrl());
+					  		browser.navigateTo(page_state.getUrl());
 					  		
-					  		try{
-					  			System.err.println("Getting browser for form extraction");
-						  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 
-					  			System.err.println("navigating to url :: "+page_state.getUrl());
-						  		browser.navigateTo(page_state.getUrl());
-						  		
+				  			System.err.println("Looking up page state by key");
+					  		page_state = page_state_service.findByKey(page_state.getKey());
+							  
+					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
+						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+					  		System.err.println("FORM DISCOVERY ACTOR EXTRACTED FORMS :: " + forms.size());
 
-					  			System.err.println("Looking up page state by key");
-						  		page_state = page_state_service.findByKey(page_state.getKey());
-								  
-						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
-							  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
-
-							  	for(Form form : forms){
-								  	for(ElementState field: form.getFormFields()){
-										//for each field in the complex field generate a set of tests for all known rules
-								  		List<Rule> rules = rule_extractor.extractInputRules(field);
-										
-										log.info("Total RULES   :::   "+rules.size());
-										for(Rule rule : rules){
-											field.addRule(rule);
-										}
-									}
-								  							  	
-								    DeepthoughtApi.predict(form);
-							       
-								    System.err.println("PREDICTION DONE !!! ");
-								    System.err.println("********************************************************");
-								  	
-								  	page_state.addForm(form);
-								  	
-							  		Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), page_state, message.getOptions());
-
-								  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
-								  	memory_registry_actor.tell(page_state_msg, getSelf() );
+						  	for(Form form : forms){
+							  	for(ElementState field: form.getFormFields()){
+									//for each field in the complex field generate a set of tests for all known rules
+							  		List<Rule> rules = rule_extractor.extractInputRules(field);
 									
-							        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
-								  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
-							  	}
-							  	System.err.println("FORM DISCOVERY HAS ENDED");
-							  	forms_created = true;
-							} catch(Exception e){
-						  		log.warning(e.getMessage());
-						  		forms_created = false;
+									log.info("Total RULES   :::   "+rules.size());
+									for(Rule rule : rules){
+										field.addRule(rule);
+									}
+								}
+							  							  	
+							    DeepthoughtApi.predict(form);
+						       
+							    System.err.println("PREDICTION DONE !!! ");
+							    System.err.println("********************************************************");
+							  	
+							  	page_state.addForm(form);
+							  	
+						  		Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), page_state, message.getOptions());
+
+							  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
+							  	memory_registry_actor.tell(page_state_msg, getSelf() );
+								
+						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
+							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 						  	}
-					  		finally{
-					  			if(browser != null){
-					  				browser.close();
-					  			}
-					  		}
-						}while(!forms_created);
-					  	
-					}
+						  	System.err.println("FORM DISCOVERY HAS ENDED");
+						  	forms_created = true;
+						} catch(Exception e){
+					  		log.warning(e.getMessage());
+					  		forms_created = false;
+					  	}
+				  		finally{
+				  			if(browser != null){
+				  				browser.close();
+				  			}
+				  		}
+					}while(!forms_created);
+					
 					postStop();
 				})
 				.match(MemberUp.class, mUp -> {

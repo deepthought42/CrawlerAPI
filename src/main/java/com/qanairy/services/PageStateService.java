@@ -8,7 +8,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Form;
@@ -16,7 +15,6 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageStateRepository;
-import com.qanairy.models.repository.ScreenshotSetRepository;
 
 /**
  * Service layer object for interacting with {@link PageState} database layer
@@ -45,8 +43,7 @@ public class PageStateService {
 	public PageState save(PageState page_state){
 		assert page_state != null;
 		
-		PageState page_state_record = findByKey(page_state.getKey());
-		
+		PageState page_state_record = findByScreenshotChecksum(page_state.getScreenshotChecksum());
 		if(page_state_record != null){
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
@@ -57,7 +54,8 @@ public class PageStateService {
 			return page_state;
 		}
 		else {
-			page_state_record = findByScreenshotChecksum(page_state.getScreenshotChecksum());
+			page_state_record = findByKey(page_state.getKey());
+
 			if(page_state_record != null){
 				page_state_record.setLandable(page_state.isLandable());
 				page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());

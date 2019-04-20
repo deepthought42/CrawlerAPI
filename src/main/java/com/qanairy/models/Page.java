@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -35,6 +36,8 @@ public class Page implements Persistable{
 	public Page(String url){
 		setUrl(url);
 		setKey(generateKey());
+		setPageStates(new HashSet<PageState>());
+		setPageElements(new HashSet<Element>());
 	}
 	
 	/**
@@ -99,6 +102,14 @@ public class Page implements Persistable{
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public Set<Element> getPageElements() {
+		return page_elements;
+	}
+
+	public void setPageElements(Set<Element> page_elements) {
+		this.page_elements = page_elements;
 	}
 
 }

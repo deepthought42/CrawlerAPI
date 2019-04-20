@@ -3,18 +3,10 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,22 +16,19 @@ import org.springframework.stereotype.Component;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.AbstractActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
-import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.Test;
-import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.ElementState;
-import com.qanairy.models.Page;
 import com.qanairy.models.PageState;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageService;
@@ -55,7 +44,8 @@ import com.qanairy.services.TestService;
 @Scope("prototype")
 public class UrlBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
-	
+	private Cluster cluster = Cluster.get(getContext().getSystem());
+
 	@Autowired
 	DiscoveryRecordRepository discovery_repo;
 	
@@ -77,6 +67,19 @@ public class UrlBrowserActor extends AbstractActor {
 	@Autowired 
 	private PageService page_service;
 	
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -95,8 +98,10 @@ public class UrlBrowserActor extends AbstractActor {
 						
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name);
 
-						Page page = new Page(url);
-
+						//Page page = new Page(url);
+						//page.getPageStates().addAll(page_states);
+						//page_service.save(page);
+						
 						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name);
 						test = test_service.save(test, host);
 						
@@ -110,20 +115,18 @@ public class UrlBrowserActor extends AbstractActor {
 						path_expansion_actor.tell(test_msg, getSelf() );
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
 
+						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+						
 						DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
 						for(PageState page_state : page_states.subList(1, page_states.size())){
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 								log.warn("discovery path does not have expanded page state");
-								discovery_record.addExpandedPageState(page_state.getKey());
 								PageStateMessage page_state_msg = new PageStateMessage(message.getAccountKey(), page_state, discovery_record, message.getOptions());
 
-								final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 								form_discoverer.tell(page_state_msg, getSelf() );
 									
-								final ActorRef path_expansion_actor_2 = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-								path_expansion_actor_2.tell(page_state_msg, getSelf() );
+								//path_expansion_actor.tell(page_state_msg, getSelf() );
 							}
 						}
 						
@@ -133,31 +136,6 @@ public class UrlBrowserActor extends AbstractActor {
 						discovery_record.setTestCount(discovery_record.getTestCount()+1);
 						discovery_record = discovery_repo.save(discovery_record);
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-						
-						
-						
-						/*
-						do{
-							try{
-								browser = browser_service.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-								test = test_creator_service.generateLandingPageTest(url, browser);
-								System.err.println("###############################################################");
-								System.err.println("host value when saving page load test :: "+host);
-								System.err.println("###############################################################");
-								test = test_service.save(test, host);
-							}
-							catch(Exception e){
-								log.error("Exception occurred while exploring url --  " + e.getMessage());
-							}
-							finally{
-								if(browser!=null){
-									browser.close();
-								}
-							}							
-						}while(test==null);
-						*/
-						
-						
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 					postStop();

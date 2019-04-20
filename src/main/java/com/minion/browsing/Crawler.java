@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
-import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
@@ -30,6 +29,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -64,7 +64,7 @@ public class Crawler {
 		assert path_keys != null;
 		
 		List<PathObject> updated_path_objects = new ArrayList<PathObject>();
-
+		
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//Ensure Order path objects
 		for(String path_obj_key : path_keys){
@@ -82,7 +82,6 @@ public class Crawler {
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
 		PageState expected_page = ((PageState)ordered_path_objects.get(0));
-				
 
 		browser.navigateTo(expected_page.getUrl());
 		browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
@@ -112,12 +111,19 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
+				List<String> state_values = BrowserUtils.getPageTransition(browser);
+				if(state_values.size() > 1){
+					//create and transition for page state
+				}
+				
+				/*
 				if(!browser.getDriver().getCurrentUrl().equals(expected_page.getUrl())){
 					browser.waitForPageToLoad();
 				}
 				else{
-					Timing.pauseThread(2000);
+					Timing.pauseThread(1000);
 				}
+				*/
 				
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -134,19 +140,92 @@ public class Crawler {
 	}
 	
 	/**
+	 * Crawls the path using the provided {@link Browser browser}
+	 * 
+	 * @param path list of vertex keys
+	 * @param browser
+	 * @return {@link Page result_page} state that resulted from crawling path
+	 * 
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
+	 * @throws WebDriverException 
+	 * @throws GridException 
+	 * 
+	 * @pre path != null
+	 * @pre path != null
+	 */
+	public void crawlPathExplorer(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+		assert browser != null;
+		assert path_keys != null;
+		
+		ElementState last_element = null;
+		
+		//boolean screenshot_matches = false;
+		//check if page is the same as expected. 
+		PageState expected_page = ((PageState)path_objects.get(0));
+
+		browser.navigateTo(expected_page.getUrl());
+		browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+
+		for(PathObject current_obj: path_objects){
+			if(current_obj instanceof PageState){
+				expected_page = (PageState)current_obj;
+				
+				while(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				}
+			}
+			else if(current_obj instanceof ElementState){
+				last_element = (ElementState) current_obj;
+			}
+			//String is action in this context
+			else if(current_obj instanceof Action){
+				Action action = (Action)current_obj;
+				Action action_record = action_repo.findByKey(action.getKey());
+				if(action_record==null){
+					action = action_repo.save(action);
+				}
+				else{
+					action = action_record;
+				}
+				
+				performAction(action, last_element, browser.getDriver());
+				List<String> state_values = BrowserUtils.getPageTransition(browser);
+				if(state_values.size() > 1){
+					//create and transition for page state
+				}
+				/*
+				if(!browser.getDriver().getCurrentUrl().equals(expected_page.getUrl())){
+					browser.waitForPageToLoad();
+				}
+				else{
+					Timing.pauseThread(1000);
+				}
+				*/
+				Point p = browser.getViewportScrollOffset();
+				browser.setXScrollOffset(p.getX());
+				browser.setYScrollOffset(p.getY());
+			}
+			else if(current_obj instanceof PageAlert){
+				log.debug("Current path node is a PageAlert");
+				PageAlert alert = (PageAlert)current_obj;
+				alert.performChoice(browser.getDriver());
+			}
+		}
+	}
+	
+	/**
 	 * Executes the given {@link ElementAction element action} pair such that
 	 * the action is executed against the element 
 	 * 
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static boolean performAction(Action action, ElementState elem, WebDriver driver){
+	public static void performAction(Action action, ElementState elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
-		boolean wasPerformedSuccessfully = true;
-
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
-
-		return wasPerformedSuccessfully;
 	}
 	
 	public static void scrollDown(WebDriver driver, int distance) 
@@ -172,7 +251,6 @@ public class Crawler {
 				result_page = crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 			}catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
-				e.printStackTrace();
 			} catch (GridException e) {
 				log.info("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 				e.getStackTrace();
@@ -247,18 +325,4 @@ public class Crawler {
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
 	}
-
-	public static List<PageState> createPageStates(Browser browser, String url) {
-		browser.navigateTo(url);
-		
-		//get all page elements
-		//while elements is not null
-			//get all elements that are currently visible within viewport
-			//build all elements visible in viewport
-			//build page state and add it to page state list
-			
-		
-		return null;
-	} 
-
 }

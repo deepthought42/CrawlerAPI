@@ -167,6 +167,10 @@ public class TestService {
 		return test;
 	}
 	 
+	public List<Test> findTestsWithElementState(String page_state_key, String element_state_key){
+		return test_repo.findTestWithElementState(page_state_key, element_state_key);
+	}
+	
 	public void init(Crawler crawler, BrowserService browser_service){
 		this.crawler = crawler;
 		this.browser_service = browser_service;

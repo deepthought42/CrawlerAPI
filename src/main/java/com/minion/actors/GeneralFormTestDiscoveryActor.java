@@ -30,6 +30,9 @@ import com.qanairy.services.TestService;
 import com.minion.structs.Message;
 
 import akka.actor.AbstractActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -38,7 +41,8 @@ import akka.event.LoggingAdapter;
 
 public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-	
+	private Cluster cluster = Cluster.get(getContext().getSystem());
+
 	@Autowired
 	private Crawler crawler;
 	
@@ -59,6 +63,19 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
+	
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
 	
 	@Override
 	public Receive createReceive() {

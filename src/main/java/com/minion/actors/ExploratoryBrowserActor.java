@@ -56,6 +56,9 @@ import com.qanairy.services.TestService;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -67,6 +70,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Scope("prototype")
 public class ExploratoryBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
 	private EmailService email_service;
@@ -95,6 +99,19 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	@Autowired
 	private Crawler crawler;
 	
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+	
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -112,7 +129,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					if (acct_msg.getData() instanceof ExploratoryPath){
 						String browser_name = acct_msg.getOptions().get("browser").toString();
 						ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-		
+						final ActorRef path_expansion = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
+						
 						if(exploratory_path.getPathObjects() != null){
 							PageState result_page = null;
 		
@@ -163,11 +182,16 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		int last_elem_idx = getIndexOfLastElementState(path);
 							  		
 							  		//crawl to last element of path and gather all parent elements in a list where the first is the immediate parent and the last is the furthest parent
-							  		
 							  		/*
+							  		log.warn("generating parent xpaths");
+							  		long start = System.currentTimeMillis();
 							  		List<ElementState> parent_elements = getParentXpaths(path, browser_name, last_elem_idx);
-		
+							  		long end = System.currentTimeMillis();
+							  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start)); 
+							  		*/
+							  		/*
 							  		for(ElementState parent_elem : parent_elements){
+							  			log.warn("testing parent for outcome :: "+parent_elem);
 							  			//generate parent path
 							  			List<PathObject> parent_path_objects = path.getPathObjects().subList(0, last_elem_idx);
 							  			parent_path_objects.add(parent_elem);
@@ -182,19 +206,105 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  			results_match = doesPathProduceExpectedResult(parent_path_keys, parent_path_objects, result_page, browser_name, page_url);
 						  				//if result of crawl is same as original path then set last path to parent path
 							  			if(!results_match){
+							  				log.warn("PARENT element results don't match!!!!");
 							  				break;
 							  			}
 							  			path.setPathKeys(parent_path_keys);
 						  				path.setPathObjects(parent_path_objects);
 							  		}
 									*/
-							  		System.err.println("Creating test for parent path");
+							  		
+							  		System.err.println("last idx :: "+ last_elem_idx);
+									System.err.println("path length :: " + path.getPathObjects().size());
+									
+									List<String> path_keys = path.getPathKeys().subList(0, last_elem_idx+1);
+									List<PathObject> path_objects = path.getPathObjects().subList(0, last_elem_idx+1);
+									System.err.println("path objects length :: " + path_objects.size());
+							  		Browser browser = null;
+									boolean same_result = false;
+									boolean success = false;
+									
+									log.warn("generating parent xpaths");
+							  		long start = System.currentTimeMillis();
+							  		//get parent web element
+									ElementState child_elem = ((ElementState)path.getPathObjects().get(last_elem_idx));
+									ElementState last_elem = null;
+									
+									int cnt = 0;
+							  		do{
+										try{
+											browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+											log.warn("starting search for parent  :  "+cnt);
+
+											if(cnt > 20){
+												break;
+											}
+											do{
+												last_elem = child_elem;
+									  			log.warn("crawling path using child element : "+ child_elem.getName());
+
+									  			//get browser connection
+									  			
+												//crawl path until element we are exploring
+												crawler.crawlPathExplorer(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
+												log.warn("crawled path for parent element");
+												//perform action on the element
+												//ensure page is equal to expected page
+												//get parent of element
+												WebElement web_elem = browser.getDriver().findElement(By.xpath(child_elem.getXpath()));
+												WebElement parent = browser_service.getParentElement(web_elem);
+												log.warn("getting parent element for :: "+parent.getTagName());
+												
+												//build parent element state
+												log.warn("building parent element state");
+												if(parent.getSize().height > 0 && parent.getSize().width > 0 && parent.isDisplayed() 
+														&& BrowserService.isElementVisibleInPane(browser, parent)){
+													ElementState parent_elem = browser_service.buildElementState(browser, parent, browser.getViewportScreenshot());
+													
+										  			//perform desired action from original path
+													Crawler.performAction((Action)path.getPathObjects().get(last_elem_idx+1), parent_elem, browser.getDriver());
+										  			//buildPage
+													log.warn("performed action against parent element");
+													PageState parent_result_page = browser_service.buildPage(browser);
+													
+													log.warn("built page after parent element action");
+										  			//if the built page matches the expected result then repeat, otherwise break
+													same_result = parent_result_page.equals(result_page);
+													log.warn("does parent action have same affect   :   " + same_result);
+													if(same_result){
+														child_elem = parent_elem;
+														path_keys.set(last_elem_idx, parent_elem.getKey());
+														path_objects.set(last_elem_idx, parent_elem);
+														
+														path.getPathObjects().set(last_elem_idx, parent_elem);
+														path.getPathKeys().set(last_elem_idx, parent_elem.getKey());
+													}
+												}
+												else {
+													break;
+												}
+											}while(same_result && !last_elem.getName().equals("body"));
+											success= true;
+										}
+										catch(Exception e){
+											//e.printStackTrace();
+											success = false;
+										}
+										finally{
+											if(browser != null){
+												browser.close();
+											}
+										}
+										cnt++;
+									}while(!success);
+							  		
+							  		long end = System.currentTimeMillis();
+							  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start)); 
+							  		
 							  		Test test = createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
 							  		
 							  		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
 
-									final ActorRef path_expansion = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
 									path_expansion.tell(test_msg, getSelf());
 									
 									discovery_service.incrementTestCount(acct_msg.getOptions().get("discovery_key").toString());
@@ -235,6 +345,39 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					log.info("received unknown message");
 				})
 				.build();
+	}
+	
+	public static List<String> getPageTransition(Browser browser) throws MalformedURLException{
+		List<String> transition_keys = new ArrayList<String>();
+		boolean transition_detected = false;
+		
+		long start_ms = System.currentTimeMillis();
+		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
+		String last_key = null;
+		do{
+			URL url = new URL(browser.getDriver().getCurrentUrl());
+			String url_string = url.getProtocol()+"://"+url.getHost()+"/"+url.getPath();
+			log.warn("current url retrieved");
+			
+			int element_count = browser.getDriver().findElements(By.xpath("//*")).size();
+			String new_key = url_string+":"+element_count;
+			log.warn("page key generated :: " + new_key);
+			
+			transition_detected = (last_key != null && !new_key.equals(last_key));
+			log.warn("Is a transition occurring  :   " + transition_detected);
+			
+			log.warn("transition keys size :: " + transition_keys.size());
+			last_key = new_key;
+			
+			if(transition_detected){
+				log.warn("setting transition start time to now");
+				start_ms = System.currentTimeMillis();
+				transition_keys.add(new_key);
+			}
+			//transition is detected if keys are different
+		}while((System.currentTimeMillis() - start_ms) < 5000);
+		
+		return transition_keys;
 	}
 	
 	/**
@@ -330,7 +473,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		int idx = 0;
 		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
 			if(path.getPathObjects().get(element_idx).getType().equals("ElementState")){
-				elem = (ElementState)path.getPathObjects().get(element_idx);
 				idx = element_idx;
 				break;
 			}
@@ -340,10 +482,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	}
 	
 	private List<ElementState> getParentXpaths(ExploratoryPath path, String browser_name, int last_elem_idx) throws GridException, IOException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+		System.err.println("last idx :: "+ last_elem_idx);
+		System.err.println("path length :: " + path.getPathObjects().size());
+		
 		List<ElementState> parent_page_elements = new ArrayList<ElementState>();
 		List<String> path_keys = path.getPathKeys().subList(0, last_elem_idx+1);
 		List<PathObject> path_objects = path.getPathObjects().subList(0, last_elem_idx+1);
-		System.err.println("path objects length :: " + path.getPathObjects().size());
+		System.err.println("path objects length :: " + path_objects.size());
 		Browser browser = null;
 		boolean success = false;
 		do{
@@ -356,28 +501,17 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				//ensure page is equal to expected page
 				//get parent of element
 				WebElement web_elem = browser.getDriver().findElement(By.xpath(original_elem.getXpath()));
-				WebElement last_element = web_elem;
 				String tag_name = web_elem.getTagName();
 				do{
-					
+					log.warn("getting parent element for :: "+tag_name);
 					WebElement parent = browser_service.getParentElement(web_elem);
-					//clone test and swap page element with parent
-					Set<Attribute> attributes = browser.extractAttributes(parent);
-					String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
-					
-					BufferedImage page_screenshot = Browser.getViewportScreenshot(browser.getDriver());
-					BufferedImage img = browser.getElementScreenshot(parent, page_screenshot);
-					String checksum = PageState.getFileChecksum(img);		
-					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");	
-		
-					ElementState parent_elem = new ElementState(parent.getText(), this_xpath, tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url, parent.getLocation().getX(), parent.getLocation().getY(), parent.getSize().getWidth(), parent.getSize().getHeight() );
-					
-					parent_page_elements.add(parent_elem);
-					last_element = parent;
-		
-					tag_name = last_element.getTagName();
+					log.warn("building parent element state");
+					ElementState parent_elem = browser_service.buildElementState(browser, parent, browser.getViewportScreenshot());
+					parent_page_elements.add(parent_elem);		
+					tag_name = parent_elem.getName();
 				}while(!tag_name.equals("body"));
 				success = true;
+				break;
 			}
 			catch(Exception e){
 				success = false;

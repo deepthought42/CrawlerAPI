@@ -42,6 +42,7 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.Redirect;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.FormStatus;
@@ -51,6 +52,7 @@ import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.RedirectService;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -65,6 +67,9 @@ public class DomainController {
 
 	@Autowired
 	private AccountService account_service;
+	
+	@Autowired
+	private RedirectService redirect_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -114,7 +119,6 @@ public class DomainController {
     	}
     	formatted_url = formatted_url.replace("http://", "");
     	formatted_url = formatted_url.replace("https://", "");
-    	protocol = "http";
     	URL url_obj = new URL(protocol+"://"+formatted_url);
 		
     	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
@@ -278,9 +282,11 @@ public class DomainController {
 		Set<PageState> page_state = domain_service.getPageStates(host);
 		Set<ElementState> page_elem = domain_service.getElementStates(host);
 		Set<Action> actions = domain_service.getActions(host);
+		Set<Redirect> redirects = redirect_service.getRedirects(host);
 		Set<PathObject> path_objects = new HashSet<PathObject>();
 		//merge(page_state, page_elem, actions);
 
+		path_objects.addAll(redirects);
 		path_objects.addAll(page_state);
 		path_objects.addAll(page_elem);
 		path_objects.addAll(actions);

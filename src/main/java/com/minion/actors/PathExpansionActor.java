@@ -36,6 +36,7 @@ import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
@@ -93,7 +94,8 @@ public class PathExpansionActor extends AbstractActor {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 			
-			if(message.getData() instanceof Test){				
+			if(message.getData() instanceof Test){			
+				log.warn("test recieved by path expansion");
 				Test test = (Test)message.getData();
 				ArrayList<ExploratoryPath> path_expansions = new ArrayList<ExploratoryPath>();
 				String discovery_key = message.getOptions().get("discovery_key").toString();
@@ -106,10 +108,15 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	*/
+				log.warn("looking up discovery record");
 				DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+				
 				if(discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
+					log.warn("discovery record already has page state expanded  ::    " + test.getResult().getKey());
+					log.warn("Discovery record  expanded page states ::   " + discovery_record.getExpandedPageStates());
 					return;					
 				}
+				
 				//get page states 
 				List<PageState> page_states = new ArrayList<PageState>();
 				for(PathObject path_obj : test.getPathObjects()){
@@ -119,17 +126,20 @@ public class PathExpansionActor extends AbstractActor {
 						page_states.add(page_state);										
 					}
 				}
+				log.warn("checking if path has cycle");
 				if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					// if path is a single page 
 					//		then send path to urlBrowserActor
 					if(test.getPathKeys().size() > 1){
+						log.warn("test has more than one path key");
 						PageState result_page = test.getResult();
 						
 						//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
 						Duration time_diff = Duration.between(result_page.getLastLandabilityCheck(), LocalDateTime.now());
 						Duration minimum_diff = Duration.ofHours(24);
 						
+						log.warn("checking if landability needs to be tested");
 						if(time_diff.compareTo(minimum_diff) > 0){
 							//have page checked for landability
 							boolean isLandable = browser_service.checkIfLandable(browser_name, result_page);
@@ -138,6 +148,7 @@ public class PathExpansionActor extends AbstractActor {
 							result_page = page_state_service.save(result_page);
 						}
 						
+						log.warn("is result page landable  ::    "+result_page.isLandable());
 						if(result_page.isLandable()){
 							discovery_record = discovery_service.incrementTotalPathCount(discovery_key);
 							
@@ -148,15 +159,26 @@ public class PathExpansionActor extends AbstractActor {
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 	
+							log.warn("sedning url to work allocator");
 							Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
 							work_allocator.tell(url_msg, getSelf() );
 							return;
 						}
 						else{
+							log.warn("expanding path for test");
 							path_expansions = expandPath(test);
 							discovery_record = discovery_repo.findByKey(discovery_key);
 							discovery_record.addExpandedPageState(test.getResult().getKey());
 							discovery_record = discovery_service.save(discovery_record);
+							log.warn("discovery record :: "+discovery_record);
+							
+							for(ExploratoryPath expanded : path_expansions){
+								final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+								Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
+								
+								work_allocator.tell(expanded_path_msg, getSelf() );
+							}
 						}
 					}
 					else{
@@ -167,7 +189,6 @@ public class PathExpansionActor extends AbstractActor {
 						for(ExploratoryPath expanded : path_expansions){
 							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-	
 							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 							
 							work_allocator.tell(expanded_path_msg, getSelf() );
@@ -175,11 +196,11 @@ public class PathExpansionActor extends AbstractActor {
 					}
 					
 					discovery_record = discovery_repo.findByKey(discovery_key);
-
 					int new_total_path_count = (discovery_record.getTotalPathCount()+path_expansions.size());
 					discovery_record.setTotalPathCount(new_total_path_count);
 					discovery_record = discovery_service.save(discovery_record);
 
+					log.warn("discovery updated and status being broadcast");
 					try{
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				  	}catch(Exception e){
@@ -190,6 +211,7 @@ public class PathExpansionActor extends AbstractActor {
 			postStop();
 		})
 		.match(PageStateMessage.class, message -> {
+			log.warn("page state message encountered");
 			List<ExploratoryPath> exploratory_paths = expandPath(message.getPageState());
 
 			
@@ -242,7 +264,7 @@ public class PathExpansionActor extends AbstractActor {
 	 */
 	public ArrayList<ExploratoryPath> expandPath(Test test)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
-		
+		log.warn("expanding path method called....");
 		//get last page
 		PageState result_page = test.getResult();
 		if(result_page == null){
@@ -271,8 +293,11 @@ public class PathExpansionActor extends AbstractActor {
 			}
 			
 			if(higher_order_page_state_found){
+				log.warn("higher order state found");
 				continue;
 			}
+			
+			log.warn("checking expansion conditions");
 			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -325,14 +350,19 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
+				log.warn("checking if element exists in a previous page state");
 				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
 					continue;
 				}				
 				
+				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
 
-				if(test.getPathKeys().size() > 1){
+				//check if test should be considered landing page test or not
+				boolean is_landing_page_test = (test.getPathObjects().get(0) instanceof Redirect && test.getPathKeys().size() == 2) 
+														|| test.getPathKeys().size() == 1;
+				if(!is_landing_page_test){
 					new_test.getPathKeys().add(test.getResult().getKey());
 					new_test.getPathObjects().add(test.getResult());
 				}
@@ -354,6 +384,7 @@ public class PathExpansionActor extends AbstractActor {
 					}*/
 					pathList.add(action_path);
 				}
+				log.warn("action list  ::   "+pathList.size());
 			}
 		}
 		return pathList;

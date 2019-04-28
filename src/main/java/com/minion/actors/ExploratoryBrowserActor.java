@@ -181,39 +181,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		//get index of last page element in path
 							  		int last_elem_idx = getIndexOfLastElementState(path);
 							  		
-							  		//crawl to last element of path and gather all parent elements in a list where the first is the immediate parent and the last is the furthest parent
-							  		/*
-							  		log.warn("generating parent xpaths");
-							  		long start = System.currentTimeMillis();
-							  		List<ElementState> parent_elements = getParentXpaths(path, browser_name, last_elem_idx);
-							  		long end = System.currentTimeMillis();
-							  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start)); 
-							  		*/
-							  		/*
-							  		for(ElementState parent_elem : parent_elements){
-							  			log.warn("testing parent for outcome :: "+parent_elem);
-							  			//generate parent path
-							  			List<PathObject> parent_path_objects = path.getPathObjects().subList(0, last_elem_idx);
-							  			parent_path_objects.add(parent_elem);
-							  			parent_path_objects.add(path.getPathObjects().get(last_elem_idx+1));
-							  			
-							  			List<String> parent_path_keys = path.getPathKeys().subList(0, last_elem_idx);
-							  			parent_path_keys.add(parent_elem.getKey());
-							  			parent_path_keys.add(path.getPathKeys().get(last_elem_idx+1));
-							  			
-							  			//crawl parent path
-
-							  			results_match = doesPathProduceExpectedResult(parent_path_keys, parent_path_objects, result_page, browser_name, page_url);
-						  				//if result of crawl is same as original path then set last path to parent path
-							  			if(!results_match){
-							  				log.warn("PARENT element results don't match!!!!");
-							  				break;
-							  			}
-							  			path.setPathKeys(parent_path_keys);
-						  				path.setPathObjects(parent_path_objects);
-							  		}
-									*/
-							  		
 							  		System.err.println("last idx :: "+ last_elem_idx);
 									System.err.println("path length :: " + path.getPathObjects().size());
 									

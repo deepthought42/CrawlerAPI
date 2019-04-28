@@ -51,7 +51,7 @@ public class DomainService {
 	}
 
 	public DiscoveryRecord getMostRecentDiscoveryRecord(String url, String user_id) {
-		return domain_repo.getMostRecentDiscoveryRecord(url, user_id);
+		return domain_repo.getMostRecentDiscoveryRecord(url);
 	}
 
 	public Set<DiscoveryRecord> getDiscoveryRecords(String url) {

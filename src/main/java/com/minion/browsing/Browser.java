@@ -46,6 +46,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -120,7 +121,6 @@ public class Browser {
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
 		log.debug("successfully navigated to "+url);
-		waitForPageToLoad();
 	}
 
 	/**
@@ -592,10 +592,14 @@ public class Browser {
 		return location.getX() - x_offset;
 	}
 
+	/**
+	 * Waits for the document ready state to be complete, then observes page transition if it exists
+	 */
 	public void waitForPageToLoad() throws MalformedURLException {
 		new WebDriverWait(driver, 30).until(
-				webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		List<String> page_transition = BrowserUtils.getPageTransition(this);
+				webDriver -> ((JavascriptExecutor) webDriver)
+					.executeScript("return document.readyState")
+					.equals("complete"));
 	}
 	
 	private static Dimension getViewportSize(WebDriver driver) {
@@ -625,6 +629,5 @@ public class Browser {
 	}
 
 	private static final String JS_GET_VIEWPORT_WIDTH = "var width = undefined; if (window.innerWidth) {width = window.innerWidth;} else if (document.documentElement && document.documentElement.clientWidth) {width = document.documentElement.clientWidth;} else { var b = document.getElementsByTagName('body')[0]; if (b.clientWidth) {width = b.clientWidth;}};return width;";
-
 	private static final String JS_GET_VIEWPORT_HEIGHT = "var height = undefined;  if (window.innerHeight) {height = window.innerHeight;}  else if (document.documentElement && document.documentElement.clientHeight) {height = document.documentElement.clientHeight;}  else { var b = document.getElementsByTagName('body')[0]; if (b.clientHeight) {height = b.clientHeight;}};return height;";
 }

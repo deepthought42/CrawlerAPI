@@ -25,6 +25,9 @@ public class PageStateService {
 	private static Logger log = LoggerFactory.getLogger(PageStateService.class.getName());
 	
 	@Autowired
+	private FormService form_service;
+	
+	@Autowired
 	private PageStateRepository page_state_repo;
 	
 	@Autowired
@@ -48,6 +51,13 @@ public class PageStateService {
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 			page_state_record.setElements(page_state.getElements());
+	
+			Set<Form> forms = new HashSet<Form>();
+			for(Form form : page_state.getForms()){
+				forms.add(form_service.save(form));
+			}
+			
+			page_state_record.setForms(forms);
 			
 			page_state = page_state_repo.save(page_state_record);
 			page_state.setElements(getElementStates(page_state.getKey()));
@@ -60,7 +70,8 @@ public class PageStateService {
 				page_state_record.setLandable(page_state.isLandable());
 				page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 				page_state_record.setElements(page_state.getElements());
-				
+				page_state_record.setForms(page_state.getForms());
+
 				page_state = page_state_repo.save(page_state_record);
 				page_state.setElements(getElementStates(page_state.getKey()));
 				return page_state;
@@ -100,6 +111,12 @@ public class PageStateService {
 		return page_state;
 	}
 
+	public void addToForms(String page_key, Form form){
+		PageState page_state = page_state_repo.findByKey(page_key);
+		page_state.addForm(form);
+		page_state_repo.save(page_state);
+	}
+	
 	public PageState findByKey(String page_key) {
 		PageState page_state = page_state_repo.findByKey(page_key);
 		if(page_state != null){
@@ -109,8 +126,7 @@ public class PageStateService {
 	}
 	
 	public PageState findByScreenshotChecksum(String screenshot_checksum){
-		return page_state_repo.findByScreenshotChecksum(screenshot_checksum);
-		
+		return page_state_repo.findByScreenshotChecksum(screenshot_checksum);		
 	}
 	
 	public Set<ElementState> getElementStates(String page_key){

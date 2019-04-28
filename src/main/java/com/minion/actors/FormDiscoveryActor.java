@@ -1,9 +1,6 @@
 package com.minion.actors;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -15,14 +12,16 @@ import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.integrations.DeepthoughtApi;
-import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.FormService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -52,6 +51,9 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private PageStateService page_state_service;
+	
+	@Autowired
+	private FormService form_service;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -91,11 +93,10 @@ public class FormDiscoveryActor extends AbstractActor{
 				  		try{
 				  			System.err.println("Getting browser for form extraction");
 					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
-
-				  			System.err.println("navigating to url :: "+page_state.getUrl());
 					  		browser.navigateTo(page_state.getUrl());
+					  		browser.waitForPageToLoad();
+					  		BrowserUtils.getPageTransition(page_state.getUrl(), browser);
 					  		
-
 				  			System.err.println("Looking up page state by key");
 					  		page_state = page_state_service.findByKey(page_state.getKey());
 							  
@@ -104,6 +105,7 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		System.err.println("FORM DISCOVERY ACTOR EXTRACTED FORMS :: " + forms.size());
 
 						  	for(Form form : forms){
+						  		log.warning("Total input fields for form :: "+form.getFormFields().size());
 							  	for(ElementState field: form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
@@ -119,14 +121,11 @@ public class FormDiscoveryActor extends AbstractActor{
 							    System.err.println("PREDICTION DONE !!! ");
 							    System.err.println("********************************************************");
 							  	
+							    form = form_service.save(form);
 							  	page_state.addForm(form);
+							  	page_state_service.save(page_state);
 							  	
-						  		Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), page_state, message.getOptions());
-
-							  	final ActorRef memory_registry_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("memoryRegistryActor"), "memory_registry_actor"+UUID.randomUUID());
-							  	memory_registry_actor.tell(page_state_msg, getSelf() );
-								
+						  										
 						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 						  	}
@@ -135,6 +134,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						} catch(Exception e){
 					  		log.warning(e.getMessage());
 					  		forms_created = false;
+					  		e.printStackTrace();
 					  	}
 				  		finally{
 				  			if(browser != null){

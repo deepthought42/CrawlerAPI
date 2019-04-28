@@ -2,7 +2,6 @@ package com.qanairy.models.message;
 
 import java.util.Map;
 
-import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
 

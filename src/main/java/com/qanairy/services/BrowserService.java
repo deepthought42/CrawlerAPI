@@ -46,6 +46,7 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * 
@@ -144,15 +145,11 @@ public class BrowserService {
 			try{
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
+				browser.waitForPageToLoad();
+				BrowserUtils.getPageTransition(url, browser);
 				//get current viewport screenshot
 				String browser_url = browser.getDriver().getCurrentUrl();
 				URL page_url = new URL(browser_url);
-		        
-				int param_index = page_url.toString().indexOf("?");
-				String url_without_params = page_url.toString();
-				if(param_index >= 0){
-					url_without_params = url_without_params.substring(0, param_index);
-				}
 				
 				List<WebElement> web_elements = browser.getDriver().findElements(By.cssSelector("*"));
 
@@ -737,9 +734,8 @@ public class BrowserService {
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
-			String page_screenshot = "";
 			
-			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page_screenshot)));
+			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page.getScreenshotUrl())));
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight() );
 			
 			form_tag.setScreenshot(screenshot_url);
@@ -753,7 +749,7 @@ public class BrowserService {
 			for(WebElement input_elem : input_elements){
 				Set<Attribute> attributes = browser.extractAttributes(input_elem);
 				
-				screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page_screenshot)));
+				screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page.getScreenshotUrl())));
 				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), screenshot_url, input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight() );
 												
 				if(input_tag == null || input_tag.getScreenshot()== null || input_tag.getScreenshot().isEmpty()){

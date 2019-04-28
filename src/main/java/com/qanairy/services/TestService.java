@@ -21,6 +21,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -48,6 +49,9 @@ public class TestService {
 	
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private RedirectService redirect_service;
 	
 	@Autowired
 	private Crawler crawler;
@@ -123,15 +127,24 @@ public class TestService {
 				else if(path_obj instanceof Action){
 					path_objects.add(action_service.save((Action)path_obj));
 				}
+				else if(path_obj instanceof Redirect){
+					path_objects.add(redirect_service.save((Redirect)path_obj));
+				}
 			}
 			test.setPathObjects(path_objects);
 			test.setResult(page_state_service.save(test.getResult()));
 	
-			log.info("Test REPO :: "+test_repo);
-			log.info("Test ::  "+test);
+			log.warn("groups   ::: "+test.getGroups());
+			log.warn("test records ::  "+test.getRecords());
+			
+			log.warn("path keys :: " + test.getPathKeys());
+			 
+			log.warn("path objects :: " + path_objects);
+			log.warn("Test ::  "+test);
 			if(test.getName() == null || test.getName().isEmpty()){
 				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
 			}
+			
 	  		test = test_repo.save(test);
 			domain_service.addTest(host_url, test);
 		
@@ -178,5 +191,13 @@ public class TestService {
 	
 	public Test findByKey(String key){
 		return test_repo.findByKey(key);
+	}
+
+	public List<Test> findTestsWithPageState(String key) {
+		return test_repo.findTestWithPageState(key);		
+	}
+
+	public List<PathObject> getPathObjects(String test_key) {
+		return test_repo.getPathObjects(test_key);
 	}
 }

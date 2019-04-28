@@ -33,11 +33,12 @@ public class Form {
 	private String[] type_options;
 	private Date date_discovered;
 	private String status;	
-
+	
 	private ElementState form_tag;
 	private List<ElementState> form_fields;
 	private ElementState submit_field;
 	private String type;
+	private List<String> path_keys;
 	
 	public Form(){}
 	
@@ -191,5 +192,13 @@ public class Form {
 
 	public void setMemoryId(Long memory_id) {
 		this.memory_id = memory_id;
+	}
+
+	public List<String> getPathKeys() {
+		return path_keys;
+	}
+
+	public void setPathKeys(List<String> path_keys) {
+		this.path_keys = path_keys;
 	}
 }

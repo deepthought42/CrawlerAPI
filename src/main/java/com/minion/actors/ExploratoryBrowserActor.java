@@ -2,23 +2,16 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.UUID;
-import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,14 +20,10 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
-import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Group;
@@ -43,13 +32,11 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.ActionService;
-import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.EmailService;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
@@ -85,13 +72,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	private PageStateService page_state_service;
 	
 	@Autowired
-	private ElementStateService page_element_service;
-	
-	@Autowired
 	private ActionService action_service;
-	
-	@Autowired
-	private BrowserService browser_service;
 	
 	@Autowired
 	private TestService test_service;
@@ -99,11 +80,16 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	@Autowired
 	private Crawler crawler;
 	
+	private ActorRef parent_path_explorer;
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
-	      MemberEvent.class, UnreachableMember.class);
+		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+				MemberEvent.class, UnreachableMember.class);
+	  
+
+		parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				.props("parentPathExplorer"), "parent_path_explorer"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -129,8 +115,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					if (acct_msg.getData() instanceof ExploratoryPath){
 						String browser_name = acct_msg.getOptions().get("browser").toString();
 						ExploratoryPath exploratory_path = (ExploratoryPath)acct_msg.getData();
-						final ActorRef path_expansion = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
+						boolean candidate_identified = false;
 						
 						if(exploratory_path.getPathObjects() != null){
 							PageState result_page = null;
@@ -140,19 +125,24 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							for(Action action : exploratory_path.getPossibleActions()){
 								ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
 								Action action_record = action_service.findByKey(action.getKey());
-								if(action_record != null){
-									action = action_record;
-								}
-								path.addPathObject(action);
-								path.addToPathKeys(action.getKey());
+								
+								//if(!exploratory_path.getPathKeys().contains("action")){
+									
+									if(action_record != null){
+										action = action_record;
+									}
+									
+									path.addPathObject(action);
+									path.addToPathKeys(action.getKey());
+								//}
 								String page_url = acct_msg.getOptions().get("host").toString();
 
 								final long pathCrawlStartTime = System.currentTimeMillis();
 								try{
-									result_page = crawler.performPathCrawl(browser_name, path, page_url);
+									result_page = crawler.performPathExploratoryCrawl(browser_name, path, page_url);
 								}
 								catch(WebDriverException e){
-									//e.printStackTrace();
+									e.printStackTrace();
 									postStop();
 									return;
 								}
@@ -172,121 +162,35 @@ public class ExploratoryBrowserActor extends AbstractActor {
 										page_states.add(page_state);										
 									}
 								}
+								
+								for(String key : path.getPathKeys()){
+									log.warn("PATH KEY 1 : "+key);
+								}
+								log.warn("RESULT  : " +result_page);
 								if(!ExploratoryPath.hasCycle(page_states, result_page, path.getPathObjects().size() == 1)){
-							  		boolean results_match = false;
+									log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+									log.warn("sending test candidate to parent path explorer");
+									candidate_identified = true;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-							  		
-							  		
-							  		//get index of last page element in path
-							  		int last_elem_idx = getIndexOfLastElementState(path);
-							  		
-							  		System.err.println("last idx :: "+ last_elem_idx);
-									System.err.println("path length :: " + path.getPathObjects().size());
-									
-									List<String> path_keys = path.getPathKeys().subList(0, last_elem_idx+1);
-									List<PathObject> path_objects = path.getPathObjects().subList(0, last_elem_idx+1);
-									System.err.println("path objects length :: " + path_objects.size());
-							  		Browser browser = null;
-									boolean same_result = false;
-									boolean success = false;
-									
-									log.warn("generating parent xpaths");
-							  		long start = System.currentTimeMillis();
-							  		//get parent web element
-									ElementState child_elem = ((ElementState)path.getPathObjects().get(last_elem_idx));
-									ElementState last_elem = null;
-									
-									int cnt = 0;
-							  		do{
-										try{
-											browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-											log.warn("starting search for parent  :  "+cnt);
+									DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
 
-											if(cnt > 20){
-												break;
-											}
-											do{
-												last_elem = child_elem;
-									  			log.warn("crawling path using child element : "+ child_elem.getName());
-
-									  			//get browser connection
-									  			
-												//crawl path until element we are exploring
-												crawler.crawlPathExplorer(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
-												log.warn("crawled path for parent element");
-												//perform action on the element
-												//ensure page is equal to expected page
-												//get parent of element
-												WebElement web_elem = browser.getDriver().findElement(By.xpath(child_elem.getXpath()));
-												WebElement parent = browser_service.getParentElement(web_elem);
-												log.warn("getting parent element for :: "+parent.getTagName());
-												
-												//build parent element state
-												log.warn("building parent element state");
-												if(parent.getSize().height > 0 && parent.getSize().width > 0 && parent.isDisplayed() 
-														&& BrowserService.isElementVisibleInPane(browser, parent)){
-													ElementState parent_elem = browser_service.buildElementState(browser, parent, browser.getViewportScreenshot());
-													
-										  			//perform desired action from original path
-													Crawler.performAction((Action)path.getPathObjects().get(last_elem_idx+1), parent_elem, browser.getDriver());
-										  			//buildPage
-													log.warn("performed action against parent element");
-													PageState parent_result_page = browser_service.buildPage(browser);
-													
-													log.warn("built page after parent element action");
-										  			//if the built page matches the expected result then repeat, otherwise break
-													same_result = parent_result_page.equals(result_page);
-													log.warn("does parent action have same affect   :   " + same_result);
-													if(same_result){
-														child_elem = parent_elem;
-														path_keys.set(last_elem_idx, parent_elem.getKey());
-														path_objects.set(last_elem_idx, parent_elem);
-														
-														path.getPathObjects().set(last_elem_idx, parent_elem);
-														path.getPathKeys().set(last_elem_idx, parent_elem.getKey());
-													}
-												}
-												else {
-													break;
-												}
-											}while(same_result && !last_elem.getName().equals("body"));
-											success= true;
-										}
-										catch(Exception e){
-											//e.printStackTrace();
-											success = false;
-										}
-										finally{
-											if(browser != null){
-												browser.close();
-											}
-										}
-										cnt++;
-									}while(!success);
-							  		
-							  		long end = System.currentTimeMillis();
-							  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start)); 
-							  		
-							  		Test test = createTest(path.getPathKeys(), path.getPathObjects(), result_page, pathCrawlRunTime, acct_msg);
-							  		
-							  		Message<Test> test_msg = new Message<Test>(acct_msg.getAccountKey(), test, acct_msg.getOptions());
-
-									path_expansion.tell(test_msg, getSelf());
-									
-									discovery_service.incrementTestCount(acct_msg.getOptions().get("discovery_key").toString());
+									TestCandidateMessage msg = new TestCandidateMessage(path.getPathKeys(), path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
+							  		parent_path_explorer.tell(msg, getSelf());
 								}
 							}
 							
-							DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
-							//send email if this is the last test
-					  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
-						    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
-							}
-							try{
-								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-						  	}catch(Exception e){
-						  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
+							if(!candidate_identified){
+								DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+								//send email if this is the last test
+						  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
+							    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
+								}
+								try{
+									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+							  	}catch(Exception e){
+							  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
+								}
 							}
 						}
 		
@@ -294,7 +198,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						//PLACE CALL TO LEARNING SYSTEM HERE
 						//Brain.learn(test, test.getIsUseful());
 					}
-					postStop();
 
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 		
@@ -394,173 +297,15 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		}
 	}
 	
-	/**
-	 * Checks if the result of crawling a given {@link Test test} results in an identical {@link PageState page state} to the 
-	 *   result_page that is passed in.
-	 * 
-	 * @param test
-	 * @param result_page
-	 * @param browser
-	 * @return
-	 * 
-	 * @throws NoSuchElementException
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
-	 */
-	private boolean doesPathProduceExpectedResult(ExploratoryPath path, PageState result_page, Browser browser, String host_channel) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
-		PageState parent_result = crawler.crawlPath(path.getPathKeys(), path.getPathObjects(), browser, host_channel, path);
-		return parent_result.equals(result_page);
-	}
-	
-	/**
-	 * Checks if the result of crawling a given {@link Test test} results in an identical {@link PageState page state} to the 
-	 *   result_page that is passed in.
-	 * 
-	 * @param test
-	 * @param result_page
-	 * @param browser
-	 * @return
-	 * 
-	 * @throws NoSuchElementException
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
-	 */
-	private boolean doesPathProduceExpectedResult(List<String> path_keys, List<PathObject> path_objects, PageState result_page, String browser_name, String host) throws NoSuchElementException, IOException, GridException, WebDriverException, NoSuchAlgorithmException{
-		PageState parent_result = crawler.performPathCrawl(browser_name, path_keys, path_objects, host);
-		//PageState parent_result = crawler.crawlPath(path_keys, path_objects, browser, host_channel, null);
-		return parent_result.equals(result_page);
-	}
-	
 	private int getIndexOfLastElementState(ExploratoryPath path){
-		ElementState elem = null;
 		int idx = 0;
 		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
-			if(path.getPathObjects().get(element_idx).getType().equals("ElementState")){
+			if(path.getPathObjects().get(element_idx) instanceof ElementState){
 				idx = element_idx;
 				break;
 			}
 		}
 		
 		return idx;
-	}
-	
-	private List<ElementState> getParentXpaths(ExploratoryPath path, String browser_name, int last_elem_idx) throws GridException, IOException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
-		System.err.println("last idx :: "+ last_elem_idx);
-		System.err.println("path length :: " + path.getPathObjects().size());
-		
-		List<ElementState> parent_page_elements = new ArrayList<ElementState>();
-		List<String> path_keys = path.getPathKeys().subList(0, last_elem_idx+1);
-		List<PathObject> path_objects = path.getPathObjects().subList(0, last_elem_idx+1);
-		System.err.println("path objects length :: " + path_objects.size());
-		Browser browser = null;
-		boolean success = false;
-		do{
-			try{
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				PageState result = crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
-				
-				ElementState original_elem = ((ElementState)path.getPathObjects().get(last_elem_idx));
-				//perform action on the element
-				//ensure page is equal to expected page
-				//get parent of element
-				WebElement web_elem = browser.getDriver().findElement(By.xpath(original_elem.getXpath()));
-				String tag_name = web_elem.getTagName();
-				do{
-					log.warn("getting parent element for :: "+tag_name);
-					WebElement parent = browser_service.getParentElement(web_elem);
-					log.warn("building parent element state");
-					ElementState parent_elem = browser_service.buildElementState(browser, parent, browser.getViewportScreenshot());
-					parent_page_elements.add(parent_elem);		
-					tag_name = parent_elem.getName();
-				}while(!tag_name.equals("body"));
-				success = true;
-				break;
-			}
-			catch(Exception e){
-				success = false;
-			}
-			finally{
-				if(browser != null){
-					browser.close();
-				}
-			}
-		}while(!success);
-		
-		return parent_page_elements;
-	}
-	
-	/**
-
-	 * Takes in a {@link Test test} and {@link WebDriver driver} and builds a new test such that
-	 *  the last {@link ElementState element} is replaced with it's parent element from the html document controlled by the 
-	 *  given {@link WebDriver driver}
-	 *  
-	 * @param test
-	 * @param driver
-	 * 
-	 * @return
-	 * @throws Exception 
-	 * 
-	 * @pre path != null
-	 * @pre browser != null
-	 */
-	private ExploratoryPath buildParentPath(ExploratoryPath path, Browser browser) throws Exception{
-		assert path != null;
-		assert browser != null;
-		
-		ElementState elem = null;
-		int idx = 0;
-		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
-			if(path.getPathObjects().get(element_idx).getType().equals("ElementState")){
-				elem = (ElementState)path.getPathObjects().get(element_idx);
-				idx = element_idx;
-				break;
-			}
-		}
-		
-		if(elem != null){
-			List<String> path_keys = path.getPathKeys().subList(0, idx+2);
-			List<PathObject> path_objects = path.getPathObjects().subList(0, idx+2);
-			System.err.println("path objects length :: " + path.getPathObjects().size());
-			crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl(), path);
-			
-			//perform action on the element
-			//ensure page is equal to expected page
-			//get parent of element
-			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
-			WebElement parent = browser_service.getParentElement(web_elem);
-			String parent_tag_name = parent.getTagName();
-			if(!parent_tag_name.equals("body")){
-				//clone test and swap page element with parent
-				ExploratoryPath parent_path = ExploratoryPath.clone(path);
-				Set<Attribute> attributes = browser.extractAttributes(parent);
-				String this_xpath = browser_service.generateXpath(parent, "", new HashMap<String, Integer>(), browser.getDriver(), attributes); 
-				String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, parent);
-				ElementState parent_tag = new ElementState(parent.getText(), this_xpath, parent_tag_name, attributes, Browser.loadCssProperties(parent), screenshot_url, parent.getLocation().getX(), parent.getLocation().getY(), parent.getSize().getWidth(), parent.getSize().getHeight() );
-				
-				ElementState parent_tag_record = page_element_service.findByKey(parent_tag.getKey());
-				if(parent_tag_record != null){
-					parent_tag = parent_tag_record;
-				}
-				else{
-					parent_tag_record = page_element_service.findByScreenshotChecksum(parent_tag.getScreenshotChecksum());
-					if(parent_tag_record!= null){
-						parent_tag = parent_tag_record;
-					}
-					else{
-						parent_tag = page_element_service.save(parent_tag);
-					}
-				}
-				parent_path.getPathObjects().set(idx, parent_tag);
-				parent_path.getPathKeys().set(idx, parent_tag.getKey());
-				
-				return parent_path;
-			}
-		}
-		return null;
 	}
 }

@@ -127,6 +127,9 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}
 				log.warn("checking if path has cycle");
+				final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+				
 				if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1) 
 						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
 					// if path is a single page 
@@ -156,9 +159,6 @@ public class PathExpansionActor extends AbstractActor {
 								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						  	}catch(Exception e){}
 							
-							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-	
 							log.warn("sedning url to work allocator");
 							Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
 							work_allocator.tell(url_msg, getSelf() );
@@ -171,10 +171,7 @@ public class PathExpansionActor extends AbstractActor {
 							discovery_record.addExpandedPageState(test.getResult().getKey());
 							discovery_record = discovery_service.save(discovery_record);
 							log.warn("discovery record :: "+discovery_record);
-							
 							for(ExploratoryPath expanded : path_expansions){
-								final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 								Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 								
 								work_allocator.tell(expanded_path_msg, getSelf() );
@@ -187,8 +184,6 @@ public class PathExpansionActor extends AbstractActor {
 						discovery_record.addExpandedPageState(test.getResult().getKey());
 						discovery_record = discovery_service.save(discovery_record);
 						for(ExploratoryPath expanded : path_expansions){
-							final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 							
 							work_allocator.tell(expanded_path_msg, getSelf() );
@@ -283,9 +278,6 @@ public class PathExpansionActor extends AbstractActor {
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page_state : element_page_states){
-				log.warn("is page  x lower than result page "+(page_state.getScrollXOffset() < result_page.getScrollXOffset()));
-
-				log.warn("is page  y lower than result page "+(page_state.getScrollYOffset() < result_page.getScrollYOffset()));
 				if((page_state.getScrollXOffset() < result_page.getScrollXOffset() 
 								|| page_state.getScrollYOffset() < result_page.getScrollYOffset())){
 					higher_order_page_state_found = true;
@@ -296,9 +288,7 @@ public class PathExpansionActor extends AbstractActor {
 				log.warn("higher order state found");
 				continue;
 			}
-			
-			log.warn("checking expansion conditions");
-			
+						
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {

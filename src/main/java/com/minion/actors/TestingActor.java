@@ -78,7 +78,7 @@ public class TestingActor extends AbstractActor {
 							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
 									browser = BrowserConnectionFactory.getConnection((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
-									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString(), null);
+									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
 								}catch(NullPointerException e){
 									log.error(e.getMessage());
 								}

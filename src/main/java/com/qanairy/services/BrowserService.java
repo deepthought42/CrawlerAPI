@@ -135,7 +135,7 @@ public class BrowserService {
 		return isLandable;
 	}
 	
-	public List<PageState> buildPageStates(String url, String browser_name){
+	public List<PageState> buildPageStates(String url, String browser_name, String host){
 		List<PageState> page_states = new ArrayList<>();
 		boolean error_occurred = false;		
 		Map<String, ElementState> seen_element_state = new HashMap<String, ElementState>();
@@ -145,12 +145,10 @@ public class BrowserService {
 			try{
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
+				BrowserUtils.getPageTransition(url, browser, host);
 				browser.waitForPageToLoad();
-				BrowserUtils.getPageTransition(url, browser);
-				//get current viewport screenshot
-				String browser_url = browser.getDriver().getCurrentUrl();
-				URL page_url = new URL(browser_url);
 				
+				//get current viewport screenshot				
 				List<WebElement> web_elements = browser.getDriver().findElements(By.cssSelector("*"));
 
 				web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
@@ -206,6 +204,7 @@ public class BrowserService {
 				error_occurred = true;
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
+				e.printStackTrace();
 				error_occurred = true;
 			}
 			catch (NoSuchElementException e){
@@ -329,6 +328,7 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
+		browser.moveMouseOutOfFrame();
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
         
@@ -358,6 +358,7 @@ public class BrowserService {
 				browser.getViewportSize().height,
 				browser.getBrowserName());
 
+		log.warn("initialized page state");
 		PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 		if(page_state_record != null){			
 			page_state = page_state_record;
@@ -368,6 +369,7 @@ public class BrowserService {
 			page_state = page_state_service.save(page_state);
 		}
 
+		log.warn("saved page state");
 		viewport_screenshot.flush();
 		return page_state;
 	}
@@ -489,7 +491,7 @@ public class BrowserService {
 				page_element_record = page_element_service.findByScreenshotChecksum(checksum);
 			}
 			catch(RasterFormatException e){
-				log.warn("Raster Format Exception : "+e.getMessage());
+				log.warn("Raster Format Exception (buildElementState) : "+e.getMessage());
 			}
 		}while(img == null);
 
@@ -972,7 +974,7 @@ public class BrowserService {
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum);
 		}
 		catch(RasterFormatException e){
-			log.warn("Raster Format Exception : "+e.getMessage());
+			log.warn("Raster Format Exception (retrieveAndUploadBrowserScreenshot): "+e.getMessage());
 		} catch (GridException e) {
 			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
 		} catch (IOException e) {
@@ -1004,7 +1006,7 @@ public class BrowserService {
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum);	
 		}
 		catch(RasterFormatException e){
-			log.warn("Raster Format Exception : "+e.getMessage());
+			log.warn("Raster Format Exception (retrieveAndUploadBrowserScreenshot): "+e.getMessage());
 		} catch (GridException e) {
 			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
 		} catch (IOException e) {

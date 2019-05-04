@@ -95,7 +95,8 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 					  		browser.navigateTo(page_state.getUrl());
 					  		browser.waitForPageToLoad();
-					  		BrowserUtils.getPageTransition(page_state.getUrl(), browser);
+					  		BrowserUtils.getPageTransition(page_state.getUrl(), browser, message.getDiscovery().getDomainUrl());
+					  		browser.waitForPageToLoad();
 					  		
 				  			System.err.println("Looking up page state by key");
 					  		page_state = page_state_service.findByKey(page_state.getKey());

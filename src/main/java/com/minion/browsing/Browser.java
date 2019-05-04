@@ -1,5 +1,6 @@
 package com.minion.browsing;
 
+import java.awt.AWTException;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -34,11 +35,11 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.minion.util.Timing;
@@ -46,9 +47,6 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.Redirect;
-import com.qanairy.services.BrowserService;
-import com.qanairy.utils.BrowserUtils;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -120,6 +118,8 @@ public class Browser {
 	 */
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
+		waitForPageToLoad();
+
 		log.debug("successfully navigated to "+url);
 	}
 
@@ -630,4 +630,25 @@ public class Browser {
 
 	private static final String JS_GET_VIEWPORT_WIDTH = "var width = undefined; if (window.innerWidth) {width = window.innerWidth;} else if (document.documentElement && document.documentElement.clientWidth) {width = document.documentElement.clientWidth;} else { var b = document.getElementsByTagName('body')[0]; if (b.clientWidth) {width = b.clientWidth;}};return width;";
 	private static final String JS_GET_VIEWPORT_HEIGHT = "var height = undefined;  if (window.innerHeight) {height = window.innerHeight;}  else if (document.documentElement && document.documentElement.clientHeight) {height = document.documentElement.clientHeight;}  else { var b = document.getElementsByTagName('body')[0]; if (b.clientHeight) {height = b.clientHeight;}};return height;";
+
+	public void moveMouseOutOfFrame() {
+		Actions mouseMoveAction = new Actions(driver).moveByOffset(-1000, 0);
+		mouseMoveAction.build().perform();
+	}
+
+	/**
+	 * 
+	 * @param driver
+	 * @return
+	 */
+	public Alert isAlertPresent(){
+	    try 
+	    { 
+	        return driver.switchTo().alert(); 
+	    }   // try 
+	    catch (NoAlertPresentException Ex) 
+	    { 
+	        return null; 
+	    }   // catch 
+	}
 }

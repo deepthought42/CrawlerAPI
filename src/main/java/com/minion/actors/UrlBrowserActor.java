@@ -94,14 +94,15 @@ public class UrlBrowserActor extends AbstractActor {
 						String url = ((URL)message.getData()).toString();
 						String host = ((URL)message.getData()).getHost();
 						String browser_name = message.getOptions().get("browser").toString();
-						
+						log.warn("starting redirect detection");
 						Redirect redirect = null;
 						do{
 							Browser browser = null;
 							try{
 								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 								browser.navigateTo(url);
-								redirect = BrowserUtils.getPageTransition(url, browser);
+								redirect = BrowserUtils.getPageTransition(url, browser, host);
+								browser.waitForPageToLoad();
 							}
 							catch(Exception e){
 								e.printStackTrace();
@@ -112,15 +113,16 @@ public class UrlBrowserActor extends AbstractActor {
 								}
 							}
 						}while(redirect == null);
-						
-						List<PageState> page_states = browser_service.buildPageStates(url, browser_name);
+						log.warn("redirect detection complete");
+						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
+						log.warn("Done building page states ");
 						//Page page = new Page(url);
 						//page.getPageStates().addAll(page_states);
 						//page_service.save(page);
 						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name);
-						
-						if(redirect.getImageUrls().size() > 0){
+						log.warn("finished creating landing page test");
+						if(redirect.getUrls().size() > 0){
 							
 							List<String> path_keys = new ArrayList<>();
 							path_keys.add(redirect.getKey());

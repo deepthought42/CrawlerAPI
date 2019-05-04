@@ -1,5 +1,7 @@
 package com.qanairy.models;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,12 +22,12 @@ public class Redirect implements PathObject, Persistable {
 	private List<String> image_checksums;
 	private List<String> image_urls;
 	
-	public Redirect(){
+	public Redirect() throws MalformedURLException{
 		setUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 	
-	public Redirect(String start_url, List<String> urls){
+	public Redirect(String start_url, List<String> urls) throws MalformedURLException{
 		assert urls != null;
 		assert !urls.isEmpty();
 		assert start_url != null;
@@ -65,8 +67,16 @@ public class Redirect implements PathObject, Persistable {
 		return urls;
 	}
 
-	public void setUrls(List<String> urls) {
-		this.urls = urls;
+	public void setUrls(List<String> urls) throws MalformedURLException {
+		List<String> clean_urls = new ArrayList<>();
+		for(String url : urls){
+
+			URL init_url = new URL(url);
+			url = init_url.getProtocol()+"://"+init_url.getHost()+init_url.getPath();
+			
+			clean_urls.add(url);
+		}
+		this.urls = clean_urls;
 	}
 
 
@@ -95,6 +105,11 @@ public class Redirect implements PathObject, Persistable {
 	}
 
 	public void setStartUrl(String start_url) {
+		int params_idx = start_url.indexOf("?");
+
+		if(params_idx > -1){
+			start_url = start_url.substring(0, params_idx);
+		}
 		this.start_url = start_url;
 	}
 

@@ -2,30 +2,25 @@ package com.qanairy.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
-import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
 
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
 
-	public static Redirect getPageTransition(String initial_url, Browser browser){
-		log.warn("starting check for page redirect");
+	public static Redirect getPageTransition(String initial_url, Browser browser, String host) throws GridException, IOException{
 		List<String> transition_urls = new ArrayList<String>();
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
@@ -35,84 +30,109 @@ public class BrowserUtils {
 		long start_ms = System.currentTimeMillis();
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 		
-		String last_key = initial_url;
+		URL init_url = new URL(initial_url);
+		String last_key = init_url.getProtocol()+"://"+init_url.getHost()+init_url.getPath();
+		int last_elem_count = 0;
 		int iterations = 0;
 		do{
-			log.warn("Getting page transition..");
-			try{
-				WebDriverWait wait = new WebDriverWait(browser.getDriver(), 2);
-				wait.until(ExpectedConditions.not(ExpectedConditions.urlMatches(last_key)));
-			}catch(TimeoutException e){
-				log.warn(e.getMessage());
-			}
-			log.warn("getting current url ");
-			
 			String new_key = browser.getDriver().getCurrentUrl();
-			
-			int params_idx = new_key.indexOf("?");
-			if(params_idx > -1){
-				new_key = new_key.substring(0, params_idx);
-			}
-			
-			params_idx = new_key.indexOf("?");
-			if(params_idx > -1){
-				last_key = last_key.substring(0, params_idx);
-			}
-			transition_detected = !(new_key.equals(last_key));
+			int element_count = browser.getDriver().findElements(By.xpath("//*")).size();
+			URL new_url = new URL(new_key);
+			new_key = new_url.getProtocol()+"://"+new_url.getHost()+new_url.getPath();
+	        
+	        transition_detected = !new_key.equals(last_key) || element_count != last_elem_count;
 
-			log.warn("was transition detected :: " + transition_detected+"  ....."+new_key+" :::  "+last_key);
 			if(transition_detected ){
-				start_ms = System.currentTimeMillis();
-				
-				transition_urls.add(new_key);
-				
-				log.warn("does last key = new key :: " + "  ....."+new_key+" :::  "+last_key);
-				
-				last_key = new_key;
-				try {
+				try{
 					BufferedImage screenshot = browser.getViewportScreenshot();
 					images.add(screenshot);
-				} catch (GridException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				}catch(Exception e){}
+				//start_ms = System.currentTimeMillis();
+				if(!new_key.equals(last_key)){
+					transition_urls.add(new_key);
+					last_key = new_key;
 				}
-				
-				log.warn("Resetting iteration during redirect detection");
 				iterations=0;
 			}
-			log.warn("current iteration value :: " + iterations);
 			iterations++;
-
 			//transition is detected if keys are different
-		}while(iterations < 2 && (System.currentTimeMillis() - start_ms) < 30000);
+		}while(iterations < 5 && (System.currentTimeMillis() - start_ms) < 10000);
 		
-		log.warn("redirect detection complete. uploading screenshots");
 		int idx = 0;
 		for(BufferedImage img : images){
-			try {
-				image_checksums.add(PageState.getFileChecksum(img));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+			try{
+				String new_checksum = PageState.getFileChecksum(img);
+				image_checksums.add(new_checksum);
+
+				if(idx > transition_urls.size()){
+					idx = transition_urls.size()-1;
+				}
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, image_checksums.get(idx), browser.getBrowserName()));
+			}
+			catch(Exception e){
 				e.printStackTrace();
 			}
-			if(idx > transition_urls.size()){
-				idx = transition_urls.size()-1;
-			}
-			image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, transition_urls.get(idx), image_checksums.get(idx), browser.getBrowserName()));
 		}
-		log.warn("uploaded all images :: " + image_urls.size());
-		int params_idx = initial_url.indexOf("?");
-
-		if(params_idx > -1){
-			initial_url = initial_url.substring(0, params_idx);
-		}
+		
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);
-		log.warn("created redirect POJO");
+
 		return redirect;
+	}
+
+	public static void getElementAnimation(Browser browser, ElementState element, String host) throws IOException {
+		// TODO Auto-generated method stub
+		List<String> image_checksums = new ArrayList<String>();
+		List<String> image_urls = new ArrayList<String>();
+		List<BufferedImage> images = new ArrayList<>();
+		boolean transition_detected = false;
+		
+		long start_ms = System.currentTimeMillis();
+		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
+		
+		String last_checksum = element.getScreenshotChecksum();
+		int iterations = 0;
+		do{
+			//get element screenshot
+			BufferedImage element_screenshot = browser.getElementScreenshot(browser.getDriver().findElement(By.xpath(element.getXpath())));
+			
+			//calculate screenshot checksum
+			String new_checksum = PageState.getFileChecksum(element_screenshot);
+			
+			//check for cycle in checksums
+			boolean cycle_detected = false;
+			for(String checksum : image_checksums){
+				if(new_checksum.equals(checksum)){
+					cycle_detected = true;
+					log.warn("cycle detected in animation");
+					break;
+				}
+			}
+			if(cycle_detected){
+				break;
+			}
+			transition_detected = !new_checksum.equals(last_checksum);
+			
+			if(!cycle_detected && transition_detected ){
+				//start_ms = System.currentTimeMillis();
+				image_checksums.add(new_checksum);								
+				last_checksum = new_checksum;
+				iterations=0;
+			}
+			iterations++;
+
+			//transition is detected if keys are different
+		}while(iterations < 2 && (System.currentTimeMillis() - start_ms) < 5000);
+		
+		int idx = 0;
+		for(BufferedImage img : images){
+			try{
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, image_checksums.get(idx), browser.getBrowserName()));
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 	}
 }

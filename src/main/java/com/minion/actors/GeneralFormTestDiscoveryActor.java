@@ -140,7 +140,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		do{
 								  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  			try{
-							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString(), null);
+							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
 							  				break;
 							  			}catch(Exception e){
 							  				log.warning("Exception occurred while crawling FORM path -- "+e.getMessage());

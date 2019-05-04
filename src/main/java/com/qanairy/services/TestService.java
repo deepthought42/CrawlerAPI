@@ -81,7 +81,7 @@ public class TestService {
 		 do{
 			 try {
 				browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);	
-				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, null);
+				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
 				 pages_dont_match = true;

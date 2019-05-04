@@ -413,11 +413,22 @@ public class PageState implements Persistable, PathObject {
 	public String generateKey() {
 		//NOTE: generating key using screenshot can be problematic in situations where the screen is a different size, shape, or slight differences in rendering
 		//String screenshot = getScreenshotUrl();
-		int param_index = this.getUrl().indexOf("?");
-		String url_without_params = this.getUrl();
-		if(param_index >= 0){
-			url_without_params = url_without_params.substring(0, param_index);
+		URL url = null;
+		String url_without_params = null;
+		try {
+			url = new URL(this.getUrl());
+			url_without_params = url.getProtocol()+"://"+url.getHost()+url.getPath();
+		} catch (MalformedURLException e) {
+			int param_index = this.getUrl().indexOf("?");
+			url_without_params = this.getUrl();
+			if(param_index >= 0){
+				url_without_params = url_without_params.substring(0, param_index);
+			}
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
+		
 		String key = "";
 		List<ElementState> elements = getElements().stream().collect(Collectors.toList());
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));

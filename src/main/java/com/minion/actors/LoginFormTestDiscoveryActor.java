@@ -173,10 +173,15 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								log.warning("performing path exploratory crawl");
 								PageState result_page = crawler.performPathExploratoryCrawl(domain.getDiscoveryBrowserName(), exploratory_path, message.getOptions().get("host").toString());
 								
+								log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
 								test = test_service.save(test, domain.getUrl());
 								MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 							
+								for(String key : test.getPathKeys()){
+									log.warning("test key ::   " + key);
+								}
+								
 								DiscoveryRecord discovery = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), null);
 								//send test for exploration
 								message.getOptions().put("discovery_key", discovery.getKey());

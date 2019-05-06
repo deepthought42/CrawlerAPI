@@ -133,14 +133,7 @@ public class TestService {
 			}
 			test.setPathObjects(path_objects);
 			test.setResult(page_state_service.save(test.getResult()));
-	
-			log.warn("groups   ::: "+test.getGroups());
-			log.warn("test records ::  "+test.getRecords());
-			
-			log.warn("path keys :: " + test.getPathKeys());
-			 
-			log.warn("path objects :: " + path_objects);
-			log.warn("Test ::  "+test);
+
 			if(test.getName() == null || test.getName().isEmpty()){
 				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
 			}

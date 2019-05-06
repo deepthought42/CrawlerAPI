@@ -164,6 +164,8 @@ public class PageState implements Persistable, PathObject {
 		setBrowser(browser_name);
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
+		setViewportWidth(viewport_width);
+		setViewportHeight(viewport_height);
 		setSrc(src);
 		setForms(new HashSet<Form>());
 		setKey(generateKey());

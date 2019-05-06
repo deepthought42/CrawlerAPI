@@ -116,11 +116,11 @@ public class Redirect implements PathObject, Persistable {
 
 	public void setStartUrl(String start_url) {
 		int params_idx = start_url.indexOf("?");
-
+		String new_url = start_url;
 		if(params_idx > -1){
-			start_url = start_url.substring(0, params_idx);
+			new_url = start_url.substring(0, params_idx);
 		}
-		this.start_url = start_url;
+		this.start_url = new_url;
 	}
 
 }

@@ -1,10 +1,5 @@
 package com.minion.api;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,8 +8,6 @@ import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfigura
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
-
-import akka.actor.ActorSystem;
 
 /**
  * Initializes the system and launches it. 
@@ -29,14 +22,9 @@ import akka.actor.ActorSystem;
 })
 @EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
 public class EntryPoint {
-
-	@Autowired
-	private static ActorSystem actor_system;
 	
 	public static void main(String[] args){
         SpringApplication.run(EntryPoint.class, args);
-        
-        //actor_system.actorOf(SpringExtProvider.get(actor_system).props("memoryRegistryActor"), "memoryRegistryActor");
    	}
 }
 

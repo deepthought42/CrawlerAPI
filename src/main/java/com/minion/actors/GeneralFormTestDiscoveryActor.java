@@ -337,10 +337,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	/**
 	 * Generates a test with an alphabetic character to verify an alphabetic restriction
 	 * @param input_elem
-	 * @param rule
 	 * @return
 	 */
-	private static List<List<PathObject>> generateAlphabeticRestrictionTests(ElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateAlphabeticRestrictionTests(ElementState input_elem) {
 		//generate single character str test		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -352,7 +351,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateNumericRestrictionTests(ElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateNumericRestrictionTests(ElementState input_elem) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -365,7 +364,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem) {
 		//generate single character str test
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -393,7 +392,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return null;
 	}
 
-	private static List<List<PathObject>> generateEmailTests(ElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateEmailTests(ElementState input_elem) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -498,13 +497,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
-			tests.addAll(generateAlphabeticRestrictionTests(input_elem, rule));
+			tests.addAll(generateAlphabeticRestrictionTests(input_elem));
 		}
 		else if(rule.getType().equals(RuleType.NUMERIC_RESTRICTION)){
-			tests.addAll(generateNumericRestrictionTests(input_elem, rule));
+			tests.addAll(generateNumericRestrictionTests(input_elem));
 		}
 		else if(rule.getType().equals(RuleType.SPECIAL_CHARACTER_RESTRICTION)){
-			tests.addAll(generateSpecialCharacterRestrictionTests(input_elem, rule));
+			tests.addAll(generateSpecialCharacterRestrictionTests(input_elem));
 		}
 		else if(rule.getType().equals(RuleType.DISABLED)){
 			tests.addAll(generateEnabledTests(input_elem, rule));
@@ -512,23 +511,17 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		else if(rule.getType().equals(RuleType.READ_ONLY)){
 			tests.addAll(generateReadOnlyTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(RuleType.MAX_LENGTH)){
-			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
-		}
-		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
-			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
-		}
-		else if(rule.getType().equals(RuleType.MAX_VALUE)){
-			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
-		}
-		else if(rule.getType().equals(RuleType.MIN_VALUE)){
+		else if(rule.getType().equals(RuleType.MAX_LENGTH) 
+				|| rule.getType().equals(RuleType.MIN_LENGTH)
+				|| rule.getType().equals(RuleType.MAX_VALUE)
+				|| rule.getType().equals(RuleType.MIN_VALUE)){
 			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.PATTERN)){
 			tests.addAll(generatePatternTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.EMAIL_PATTERN)){
-			tests.addAll(generateEmailTests(input_elem, rule));	
+			tests.addAll(generateEmailTests(input_elem));	
 		}
 		return tests;
 	}

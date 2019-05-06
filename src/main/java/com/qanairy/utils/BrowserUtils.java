@@ -43,11 +43,11 @@ public class BrowserUtils {
 	        
 	        transition_detected = !new_key.equals(last_key) || element_count != last_elem_count;
 
-	        /*
+	        
 	        try{
 				images.add(browser.getViewportScreenshot());
 			}catch(Exception e){}
-	        */
+	        
 			if(transition_detected ){
 				start_ms = System.currentTimeMillis();
 				if(!new_key.equals(last_key)){

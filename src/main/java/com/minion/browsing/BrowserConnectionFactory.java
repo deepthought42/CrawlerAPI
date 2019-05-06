@@ -3,14 +3,9 @@ package com.minion.browsing;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Random;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.qanairy.models.enums.BrowserEnvironment;
 
 public class BrowserConnectionFactory {
-	private static Logger log = LoggerFactory.getLogger(BrowserConnectionFactory.class);
 
 	//GOOGLE CLOUD CLUSTER
 	private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444", "35.239.245.6:4444", "173.255.118.118:4444"};

@@ -27,8 +27,6 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.ActionRepository;
-import com.qanairy.services.AccountService;
-import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.TestService;
@@ -62,9 +60,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	
 	@Autowired
 	private TestService test_service;
-	
-	@Autowired
-	private AccountService account_service;
 	
 	@Autowired 
 	private ActionRepository action_repo;

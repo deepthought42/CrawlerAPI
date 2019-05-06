@@ -2,11 +2,9 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -18,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
@@ -31,8 +28,6 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
-import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.ActionService;
 import com.qanairy.services.DiscoveryRecordService;
@@ -248,34 +243,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	}
 	
 	/**
-	 * Generates {@link Test Tests} for test
-	 * @param test
-	 * @param result_page
-	 * @throws JsonProcessingException 
-	 * @throws MalformedURLException 
-	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, Message<?> acct_msg ) throws JsonProcessingException, MalformedURLException {
-		log.warn("Creating test........");
-		Test test = new Test(path_keys, path_objects, result_page, null);
-		
-		Test test_db = test_service.findByKey(test.getKey());
-		if(test_db != null){
-			test = test_db;
-		}
-
-		test.setRunTime(crawl_time);
-		test.setLastRunTimestamp(new Date());
-		addFormGroupsToPath(test);
-		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, acct_msg.getOptions().get("browser").toString(), test.getResult(), crawl_time);
-		test.addRecord(test_record);
-
-		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()));
-		test.setSpansMultipleDomains(leaves_domain);
-		return test_service.save(test, acct_msg.getOptions().get("host").toString());
-	}
-	
-	/**
 	 * Adds Group labeled "form" to test if the test has any elements in it that have form in the xpath
 	 * 
 	 * @param test {@linkplain Test} that you want to label
@@ -292,17 +259,5 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				}
 			}
 		}
-	}
-	
-	private int getIndexOfLastElementState(ExploratoryPath path){
-		int idx = 0;
-		for(int element_idx=path.getPathKeys().size()-1; element_idx > 0 ; element_idx--){
-			if(path.getPathObjects().get(element_idx) instanceof ElementState){
-				idx = element_idx;
-				break;
-			}
-		}
-		
-		return idx;
 	}
 }

@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
-import com.minion.util.Timing;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.message.ElementScreenshotUpload;
 import com.qanairy.services.ElementStateService;
@@ -57,6 +56,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 					page_elem_record.setScreenshot(viewport_screenshot_url);
 					page_element_service.save(page_elem_record);
 					
+					//tell requester what response is
 					postStop();
 				})
 				.match(MemberUp.class, mUp -> {

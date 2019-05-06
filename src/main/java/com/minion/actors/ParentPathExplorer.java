@@ -302,7 +302,6 @@ public class ParentPathExplorer extends AbstractActor {
 		ElementState original_element = (ElementState)path_objects_list.get(last_elem_idx);
 
 		List<String> parent_xpaths = new ArrayList<String>();
-		List<ElementState> parent_page_elements = new ArrayList<ElementState>();
 		List<String> path_keys = path_keys_list.subList(0, last_elem_idx);
 		List<PathObject> path_objects = path_objects_list.subList(0, last_elem_idx);
 		System.err.println("path objects length :: " + path_objects_list.size());
@@ -311,7 +310,7 @@ public class ParentPathExplorer extends AbstractActor {
 		do{
 			try{
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				PageState result = crawler.crawlPath(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
+				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, ((PageState) path_objects.get(0)).getUrl());
 				
 				//perform action on the element
 				//ensure page is equal to expected page
@@ -327,7 +326,7 @@ public class ParentPathExplorer extends AbstractActor {
 					//ElementState parent_elem = browser_service.buildElementState(browser, parent, browser.getViewportScreenshot());
 					//parent_page_elements.add(parent_elem);		
 					tag_name = parent.getTagName();
-				}while(!tag_name.equals("body"));
+				}while(!"body".equals(tag_name));
 				success = true;
 				break;
 			}
@@ -387,7 +386,7 @@ public class ParentPathExplorer extends AbstractActor {
 			WebElement web_elem = browser.getDriver().findElement(By.xpath(elem.getXpath()));
 			WebElement parent = browser_service.getParentElement(web_elem);
 			String parent_tag_name = parent.getTagName();
-			if(!parent_tag_name.equals("body")){
+			if(!"body".equals(parent_tag_name)){
 				//clone test and swap page element with parent
 				ExploratoryPath parent_path = ExploratoryPath.clone(path);
 				Set<Attribute> attributes = browser.extractAttributes(parent);
@@ -507,7 +506,6 @@ public class ParentPathExplorer extends AbstractActor {
 	}
 	
 	private int getIndexOfLastElementState(List<String> path_keys){
-		int idx = 0;
 		for(int element_idx=path_keys.size()-1; element_idx > 0; element_idx--){
 			if(path_keys.get(element_idx).contains("elementstate")){
 				return element_idx;

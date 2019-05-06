@@ -10,7 +10,6 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.form.ElementRuleExtractor;
-import com.minion.structs.Message;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
@@ -25,8 +24,6 @@ import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -54,9 +51,6 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private FormService form_service;
-	
-	@Autowired
-	private ActorSystem actor_system;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);

@@ -1,7 +1,5 @@
 package com.qanairy.services;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,8 +24,6 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
-
-import akka.actor.ActorSystem;
 
 @Component
 public class TestCreatorService {

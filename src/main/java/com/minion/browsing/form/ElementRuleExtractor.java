@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.PageElement;
 import com.qanairy.models.repository.AlphabeticRestrictionRuleRepository;
 import com.qanairy.models.repository.DisabledRuleRepository;
 import com.qanairy.models.repository.EmailPatternRuleRepository;
@@ -59,7 +59,7 @@ public class ElementRuleExtractor {
 	@Autowired 
 	private PatternRuleRepository pattern_rule_repo;
 	
-	public List<Rule> extractInputRules(ElementState elem){
+	public List<Rule> extractInputRules(PageElement elem){
 		Map<String, Boolean> input_rules = new HashMap<String, Boolean>();
 		List<Rule> rules = new ArrayList<Rule>();
 		for(Attribute attr : elem.getAttributes()){
@@ -154,7 +154,7 @@ public class ElementRuleExtractor {
 		return rules;
 	}
 
-	public List<Rule> extractMouseRules(ElementState page_element) {
+	public List<Rule> extractMouseRules(PageElement page_element) {
 		List<Rule> rules = new ArrayList<Rule>();
 
 		//iterate over possible mouse actions. 

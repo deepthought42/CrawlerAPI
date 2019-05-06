@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
+import com.minion.browsing.BrowserFactory;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -33,10 +33,10 @@ public class FormTestExtractionTests {
 	//@Test
 	public void testRequirementRuleExtractions() throws Exception{
 		//String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/requiredFieldForm.html";
-		Browser browser = null;
+		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
@@ -52,6 +52,7 @@ public class FormTestExtractionTests {
 					rule_is_required = true;
 				}
 			}
+			browser.close();
 			assert rule_is_required;
 		} 
 		catch (MalformedURLException e) {
@@ -59,9 +60,6 @@ public class FormTestExtractionTests {
 		}
 		catch (IOException e){
 			e.printStackTrace();
-		}
-		finally{
-			browser.close();
 		}
 	}
 	
@@ -72,11 +70,11 @@ public class FormTestExtractionTests {
 	//@Test
 	public void testNumericRestrictionRuleExtractions() throws Exception{
 		//String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/numericRestrictionForm.html";
-		Browser browser = null;
+		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
 
-			browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
@@ -98,6 +96,7 @@ public class FormTestExtractionTests {
 					special_char_restrict_rule = true;
 				}
 			}
+			browser.close();
 			assert alphabetic_restrict_rule && special_char_restrict_rule;
 		} 
 		catch (MalformedURLException e) {
@@ -105,9 +104,6 @@ public class FormTestExtractionTests {
 		}
 		catch (IOException e){
 			e.printStackTrace();
-		}
-		finally{
-			browser.close();
 		}
 	}
 	
@@ -121,7 +117,7 @@ public class FormTestExtractionTests {
 		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			log.info("Extracting forms");
 			List<Form> form = browser_service.extractAllForms(page, browser);
@@ -142,6 +138,7 @@ public class FormTestExtractionTests {
 					special_char_restrict_rule = true;
 				}
 			}
+			browser.close();
 			assert numeric_restrict_rule && special_char_restrict_rule;
 		} 
 		catch (MalformedURLException e) {
@@ -152,9 +149,6 @@ public class FormTestExtractionTests {
 			browser.close();
 			e.printStackTrace();
 		}
-		finally{
-			browser.close();
-		}
 	}
 	
 	/**
@@ -164,10 +158,10 @@ public class FormTestExtractionTests {
 	//@Test
 	public void testReadonlyRestrictionRuleExtractions() throws Exception{
 		//String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/readonlyFieldForm.html";
-		Browser browser = null;
+		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			List<Form> form = browser_service.extractAllForms(page, browser);
 
@@ -179,6 +173,7 @@ public class FormTestExtractionTests {
 					readonly_restrict_rule = true;
 				}
 			}
+			browser.close();
 			assert readonly_restrict_rule;
 		} 
 		catch (MalformedURLException e) {
@@ -186,9 +181,6 @@ public class FormTestExtractionTests {
 		}
 		catch (IOException e){
 			e.printStackTrace();
-		}
-		finally{
-			browser.close();
 		}
 	}
 	
@@ -199,10 +191,10 @@ public class FormTestExtractionTests {
 	//@Test
 	public void testMinValueRuleExtractions() throws Exception{
 		//String url = "file:///C:/Users/brand/workspace/WebTestVisualizer/src/test/resources/form_tests/minValueFieldForm.html";
-		Browser browser = null;
+		Browser browser;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			List<Form> form = browser_service.extractAllForms(page, browser);
 
@@ -224,9 +216,6 @@ public class FormTestExtractionTests {
 		catch (IOException e){
 			e.printStackTrace();
 		}
-		finally{
-			browser.close();
-		}
 	}
 	
 	/**
@@ -239,7 +228,7 @@ public class FormTestExtractionTests {
 		Browser browser = null;
 		try {
 			BrowserService browser_service = new BrowserService();
-			browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+			browser = BrowserFactory.buildBrowser("chrome", BrowserEnvironment.DISCOVERY);
 			PageState page = browser_service.buildPage(browser);
 			List<Form> form = browser_service.extractAllForms(page, browser);
 
@@ -250,6 +239,7 @@ public class FormTestExtractionTests {
 					max_value_rule = true;
 				}
 			}
+			browser.close();
 			assert max_value_rule;
 		} 
 		catch (MalformedURLException e) {
@@ -259,9 +249,6 @@ public class FormTestExtractionTests {
 		catch (IOException e){
 			browser.close();
 			e.printStackTrace();
-		}
-		finally{
-			browser.close();
 		}
 	}
 }

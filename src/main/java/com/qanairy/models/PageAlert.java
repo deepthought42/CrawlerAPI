@@ -5,20 +5,18 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.UnhandledAlertException;
+import org.openqa.selenium.UnsupportedCommandException;
 import org.openqa.selenium.WebDriver;
 
 /**
  *
  */
-public class PageAlert implements PathObject, Persistable {
+public class PageAlert  {
 	private static Logger log = LoggerFactory.getLogger(PageAlert.class);
 
 	public PageState page = null;
 	public String choice;
 	public String message;
-	public String type;
-	
-	private String key;
 	
 	/**
 	 * 
@@ -33,7 +31,6 @@ public class PageAlert implements PathObject, Persistable {
 		this.page = page;
 		this.choice = alertChoice;
 		this.message = message;
-		this.setKey(generateKey());
 	}
 	
 	/**
@@ -63,6 +60,35 @@ public class PageAlert implements PathObject, Persistable {
 		return this.choice;
 	}
 	
+	public static boolean isAlertPresent(WebDriver driver) throws UnsupportedCommandException 
+	{ 
+	    try 
+	    { 
+	        driver.switchTo().alert(); 
+	        return true; 
+	    }   // try 
+	    catch (NoAlertPresentException Ex) 
+	    { 
+	        return false; 
+	    }   // catch 
+	} 
+	
+	/**
+	 * 
+	 * @param driver
+	 * @return
+	 */
+	public static Alert getAlert(WebDriver driver){
+	    try 
+	    { 
+	        return driver.switchTo().alert(); 
+	    }   // try 
+	    catch (NoAlertPresentException Ex) 
+	    { 
+	        return null; 
+	    }   // catch 
+	}
+	
 	public String getMessage() throws UnhandledAlertException{
 		return this.message; 
 	}
@@ -85,34 +111,19 @@ public class PageAlert implements PathObject, Persistable {
         return isEqual;        
 	}
 
+	public double getCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public double getReward() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	@Override
 	public PathObject clone() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public String getKey() {
-		return this.key;
-	}
-
-	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	@Override
-	public String getType() {
-		return "PageAlert";
-	}
-
-	@Override
-	public void setType(String type) {
-		this.type = "PageAlert";
-	}
-
-	@Override
-	public String generateKey() {
-		return "alert::"+this.getPage().getKey()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(this.getMessage());
 	}
 }

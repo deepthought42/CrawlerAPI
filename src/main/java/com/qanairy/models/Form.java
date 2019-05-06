@@ -33,16 +33,15 @@ public class Form {
 	private String[] type_options;
 	private Date date_discovered;
 	private String status;	
-	
-	private ElementState form_tag;
-	private List<ElementState> form_fields;
-	private ElementState submit_field;
+
+	private PageElement form_tag;
+	private List<PageElement> form_fields;
+	private PageElement submit_field;
 	private String type;
-	private List<String> path_keys;
 	
 	public Form(){}
 	
-	public Form(ElementState form_tag, List<ElementState> form_fields, ElementState submit_field, 
+	public Form(PageElement form_tag, List<PageElement> form_fields, PageElement submit_field, 
 				String name, double[] predictions, FormType[] type_options, FormType type, Date date_discovered, 
 				FormStatus status){
 		setFormTag(form_tag);
@@ -59,7 +58,7 @@ public class Form {
 	
 	private String generateKey() {
 		String elements_key = "";
-		for(ElementState elem : getFormFields()){
+		for(PageElement elem : getFormFields()){
 			elements_key += elem.getKey();
 		}
 		return "form::"+elements_key+""+getFormTag().getKey()+""+getSubmitField().getKey();
@@ -110,35 +109,35 @@ public class Form {
 	public void setDateDiscovered(Date date_discovered) {
 		this.date_discovered = date_discovered;
 	}
-	public List<ElementState> getFormFields() {
+	public List<PageElement> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(ElementState form_field) {
+	public boolean addFormField(PageElement form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public boolean addFormFields(List<ElementState> form_field) {
+	public boolean addFormFields(List<PageElement> form_field) {
 		return this.form_fields.addAll(form_field);
 	}
 	
-	public void setFormFields(List<ElementState> form_fields2) {
+	public void setFormFields(List<PageElement> form_fields2) {
 		this.form_fields = form_fields2;
 	}
 
-	public ElementState getSubmitField() {
+	public PageElement getSubmitField() {
 		return submit_field;
 	}
 
-	public void setSubmitField(ElementState submit_field) {
+	public void setSubmitField(PageElement submit_field) {
 		this.submit_field = submit_field;
 	}
 
-	public ElementState getFormTag() {
+	public PageElement getFormTag() {
 		return form_tag;
 	}
 
-	public void setFormTag(ElementState form_tag) {
+	public void setFormTag(PageElement form_tag) {
 		this.form_tag = form_tag;
 	}
 
@@ -192,13 +191,5 @@ public class Form {
 
 	public void setMemoryId(Long memory_id) {
 		this.memory_id = memory_id;
-	}
-
-	public List<String> getPathKeys() {
-		return path_keys;
-	}
-
-	public void setPathKeys(List<String> path_keys) {
-		this.path_keys = path_keys;
 	}
 }

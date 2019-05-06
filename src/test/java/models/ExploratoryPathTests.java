@@ -29,11 +29,11 @@ public class ExploratoryPathTests {
 	
 	@Test
 	public void verifyEmptyPathReturnsFalse(){
-		List<PageState> path_objects = new ArrayList<>();
+		List<PathObject> path_objects = new ArrayList<>();
 		
 		when(page.getKey()).thenReturn("this is a test key");
 		
-		boolean isCycle = ExploratoryPath.hasCycle(path_objects, page, false);
+		boolean isCycle = ExploratoryPath.hasCycle(path_objects, page);
 		assertFalse(isCycle);
 
 	}
@@ -41,10 +41,10 @@ public class ExploratoryPathTests {
 	@Test
 	public void verifySingleNodePathReturnsFalse(){
 		when(page.getKey()).thenReturn("this is a test key");
-		List<PageState> path_objs= new ArrayList<>();
+		List<PathObject> path_objs= new ArrayList<>();
 		path_objs.add(page);
 		System.err.println("page  : " + page);
-		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page, true);
+		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page);
 		assertFalse(isCycle);
 	}
 	
@@ -52,25 +52,25 @@ public class ExploratoryPathTests {
 	public void verifyTwoConsecutiveEqualsNodeInPathReturnsTrue(){
 		when(page.getKey()).thenReturn("this is a test key");
 		page.setKey("this is a test key");
-		List<PageState> path_objs = new ArrayList<>();
+		List<PathObject> path_objs = new ArrayList<>();
 		path_objs.add(page);
 		path_objs.add(page);
 
 		System.err.println("page  : " + page);
-		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page, false);
+		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page);
 		assertTrue(isCycle);
 	}
 	
 	@Test
 	public void verifyTwoEqualsNodeSeparatedByNullInPathReturnsTrue(){
 		when(page.getKey()).thenReturn("this is a test key");
-		List<PageState> path_objs = new ArrayList<>();
+		List<PathObject> path_objs = new ArrayList<>();
 		path_objs.add(page);
 		path_objs.add(null);
 		path_objs.add(page);
 
 		System.err.println("page  : " + page);
-		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page, false);
+		boolean isCycle = ExploratoryPath.hasCycle(path_objs, page);
 		assertTrue(isCycle);
 	}
 }

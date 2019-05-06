@@ -1,4 +1,8 @@
-2019-03-15 05:56:15.876  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
-2019-03-15 05:56:15.884  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
-2019-03-15 05:56:17.854  WARN   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browser
-2019-03-15 05:56:17.865  WARN   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browser
+2018-12-15 18:16:13.363  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2018-12-15 18:16:13.371  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2018-12-15 18:23:39.636  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2018-12-15 18:23:39.641  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2018-12-15 18:24:54.729  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2018-12-15 18:24:54.745  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2018-12-15 18:27:00.055  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2018-12-15 18:27:00.062  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle

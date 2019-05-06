@@ -9,19 +9,10 @@ package com.qanairy.models;
 public class Message<T> {
 	private final String account_key;
 	private final T datum;
-	private final DiscoveryRecord discovery;
 	
-	@Deprecated
 	public Message(String account_key, T data){
 		this.account_key = account_key;
 		this.datum = data;
-		this.discovery = null;
-	}
-	
-	public Message(String account_key, T data, DiscoveryRecord discovery){
-		this.account_key = account_key;
-		this.datum = data;
-		this.discovery = discovery;
 	}
 	
 	public String getAccountKey(){
@@ -30,9 +21,5 @@ public class Message<T> {
 	
 	public T getData(){
 		return this.datum;
-	}
-
-	public DiscoveryRecord getDiscovery() {
-		return discovery;
 	}	
 }

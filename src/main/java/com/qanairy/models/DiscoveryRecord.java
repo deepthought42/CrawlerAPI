@@ -26,7 +26,7 @@ public class DiscoveryRecord implements Persistable {
 	private int total_path_count;
 	private int examined_path_count;
 	private int test_cnt;
-	private List<String> expanded_page_state;
+	private List<String> expanded_page_state = new ArrayList<>();
 
 	public DiscoveryRecord(){}
 	
@@ -37,7 +37,6 @@ public class DiscoveryRecord implements Persistable {
 		assert test_cnt > -1;
 		assert total_cnt > 0;
 		
-		setExpandedPageStates(new ArrayList<String>());
 		setStartTime(started_timestamp);
 		setBrowserName(browser_name);
 		setDomainUrl(domain_url);

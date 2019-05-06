@@ -71,17 +71,17 @@ public class ExploratoryPath {
 	 * 
 	 * @return true if sequence appears more than once
 	 */
-	public static boolean hasCycle(List<PageState> path_objects, PageState page, boolean isSinglePage){
+	public static boolean hasCycle(List<PathObject> path_objects, PageState page){
 		assert page != null;
 	
-		if(isSinglePage){
+		if(path_objects.size() <= 1){
 			return false;
 		}
 		
 		//extract all pages
 		//iterate through pages to see if any match
 		log.info("Checking if exploratory path has a cycle");
-		for(PageState path_obj : path_objects){
+		for(PathObject path_obj : path_objects){
 			if(path_obj.equals(page)){
 				return true;
 			}
@@ -89,7 +89,7 @@ public class ExploratoryPath {
 
 		return false;
 	}
-	
+
 	/**
 	 * Checks if the path has the same page more than once. 
 	 * 
@@ -102,22 +102,22 @@ public class ExploratoryPath {
 		}
 		
 		//iterate through path
-		//if path object is of type ElementState
+		//if path object is of type PageElement
 		//	then load path object
 		//		check if path object leads to an action that exists in the paths possible actions list
 		//		If there exists an action that matches a possible action 
 		//			then get next path object
-		//				if path object is of type ElementState
+		//				if path object is of type PageElement
 		//					then load path object
 		//						check if path object leads to an action that exists in the paths possible actions list
 		/*for(PathObject path_obj : path.getPathObjects()){
-			if(path_obj instanceof ElementState){
-				ElementStateDao page_elem_dao = new ElementStateDaoImpl();
+			if(path_obj instanceof PageElement){
+				PageElementDao page_elem_dao = new PageElementDaoImpl();
 				OrientConnectionFactory connection = new OrientConnectionFactory();
-				ElementState page_elem = page_elem_dao.find(path_obj.getKey());
+				PageElement page_elem = page_elem_dao.find(path_obj.getKey());
 				if(page_elem != null){
 					List<Action> actions = path.getPossibleActions();
-					ElementState ipage_elem = page_elem_dao.save(page_elem);
+					PageElement ipage_elem = page_elem_dao.save(page_elem);
 					Iterator<PathEdge> path_edge_iter = ipage_elem.getPathEdges().iterator();
 					while(path_edge_iter.hasNext()){
 						PathEdge edge = path_edge_iter.next();

@@ -3,36 +3,36 @@ package com.minion.browsing;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ElementNode<T> {
-	private List<ElementNode<T>> children = new ArrayList<ElementNode<T>>();
-	private ElementNode<T> parent = null;
+public class PageElementNode<T> {
+	private List<PageElementNode<T>> children = new ArrayList<PageElementNode<T>>();
+	private PageElementNode<T> parent = null;
 	private T data = null;
 
-	public ElementNode(T data) {
+	public PageElementNode(T data) {
         this.data = data;
     }
 
-    public ElementNode(T data, ElementNode<T> parent) {
+    public PageElementNode(T data, PageElementNode<T> parent) {
         this.data = data;
         this.parent = parent;
     }
 
-    public List<ElementNode<T>> getChildren() {
+    public List<PageElementNode<T>> getChildren() {
         return children;
     }
 
-    public void setParent(ElementNode<T> parent) {
+    public void setParent(PageElementNode<T> parent) {
         parent.addChild(this);
         this.parent = parent;
     }
 
     public void addChild(T data) {
-        ElementNode<T> child = new ElementNode<T>(data);
+        PageElementNode<T> child = new PageElementNode<T>(data);
         child.setParent(this);
         this.children.add(child);
     }
 
-    public void addChild(ElementNode<T> child) {
+    public void addChild(PageElementNode<T> child) {
         child.setParent(this);
         this.children.add(child);
     }

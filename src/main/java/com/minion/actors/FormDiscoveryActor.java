@@ -8,19 +8,17 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.form.ElementRuleExtractor;
+import com.minion.structs.Message;
 import com.qanairy.integrations.DeepthoughtApi;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
+import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.message.PageStateMessage;
+import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.FormService;
-import com.qanairy.services.PageStateService;
-import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -44,13 +42,10 @@ public class FormDiscoveryActor extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
-	private ElementRuleExtractor rule_extractor;
+	ElementRuleExtractor rule_extractor;
 	
 	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
-	private FormService form_service;
+	PageStateRepository page_state_repo;
 	
 	public static Props props() {
 	  return Props.create(FormDiscoveryActor.class);
@@ -72,72 +67,68 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PageStateMessage.class, message -> {
-					
-				  	System.err.println("FORM DISCOVERY HAS STARTED");
+				.match(Message.class, message -> {
+					if(message.getData() instanceof PageState){
+					  	System.err.println("FORM DISCOVERY HAS STARTED");
 
-					PageState page_state = message.getPageState();
-					
-					//get first page in path
-		
-				  	Browser browser = null;
-				  	boolean forms_created = false;
-				  	do{
-				  		
-				  		try{
-				  			System.err.println("Getting browser for form extraction");
-					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
-					  		browser.navigateTo(page_state.getUrl());
-					  		browser.waitForPageToLoad();
-					  		BrowserUtils.getPageTransition(page_state.getUrl(), browser, message.getDiscovery().getDomainUrl());
-					  		browser.waitForPageToLoad();
+						PageState page_state = ((PageState)message.getData());
+						
+						//get first page in path
+			
+						int cnt = 0;
+					  	Browser browser = null;
+					  	boolean forms_created = false;
+					  	do{
 					  		
-				  			System.err.println("Looking up page state by key");
-					  		page_state = page_state_service.findByKey(page_state.getKey());
-							  
-					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
-						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-					  		System.err.println("FORM DISCOVERY ACTOR EXTRACTED FORMS :: " + forms.size());
+					  		try{
+					  			System.err.println("Getting browser for form extraction");
+						  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 
-						  	for(Form form : forms){
-						  		log.warning("Total input fields for form :: "+form.getFormFields().size());
-							  	for(ElementState field: form.getFormFields()){
-									//for each field in the complex field generate a set of tests for all known rules
-							  		List<Rule> rules = rule_extractor.extractInputRules(field);
-									
-									log.info("Total RULES   :::   "+rules.size());
-									for(Rule rule : rules){
-										field.addRule(rule);
+					  			System.err.println("navigating to url :: "+page_state.getUrl());
+						  		browser.navigateTo(page_state.getUrl());
+						  		
+
+					  			System.err.println("Looking up page state by key");
+						  		page_state = page_state_repo.findByKey(page_state.getKey());
+								  
+						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
+							  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+						  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS :: " + forms.size());
+
+							  	for(Form form : forms){
+								  	for(PageElement field: form.getFormFields()){
+										//for each field in the complex field generate a set of tests for all known rules
+								  		List<Rule> rules = rule_extractor.extractInputRules(field);
+										
+										log.info("Total RULES   :::   "+rules.size());
+										for(Rule rule : rules){
+											field.addRule(rule);
+										}
 									}
-								}
-							  							  	
-							    DeepthoughtApi.predict(form);
-						       
-							    System.err.println("PREDICTION DONE !!! ");
-							    System.err.println("********************************************************");
-							  	
-							    form = form_service.save(form);
-							  	page_state.addForm(form);
-							  	page_state_service.save(page_state);
-							  	
-						  										
-						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
-							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
+								  							  	
+								    DeepthoughtApi.predict(form);
+							       
+								    System.err.println("PREDICTION DONE !!! ");
+								    System.err.println("********************************************************");
+								  	
+								  	page_state.addForm(form);
+								  	page_state_repo.save(page_state);
+							        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
+								  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
+							  	}
+							  	System.err.println("FORM DISCOVERY HAS ENDED");
+							  	forms_created = true;
+							  	browser.close();
+								break;
+							} catch(Exception e){
+								browser.close();
+						  		log.warning(e.getMessage());
 						  	}
-						  	System.err.println("FORM DISCOVERY HAS ENDED");
-						  	forms_created = true;
-						} catch(Exception e){
-					  		log.warning(e.getMessage());
-					  		forms_created = false;
-					  		e.printStackTrace();
-					  	}
-				  		finally{
-				  			if(browser != null){
-				  				browser.close();
-				  			}
-				  		}
-					}while(!forms_created);
-					
+							cnt++;
+
+						}while(!forms_created && cnt < Integer.MAX_VALUE);
+					  	
+					}
 					postStop();
 				})
 				.match(MemberUp.class, mUp -> {

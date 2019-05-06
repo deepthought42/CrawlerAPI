@@ -7,32 +7,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Form;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
+import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
-import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.TestService;
 import com.minion.structs.Message;
 
 import akka.actor.AbstractActor;
-import akka.cluster.Cluster;
-import akka.cluster.ClusterEvent;
-import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -41,8 +38,7 @@ import akka.event.LoggingAdapter;
 
 public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-	private Cluster cluster = Cluster.get(getContext().getSystem());
-
+	
 	@Autowired
 	private Crawler crawler;
 	
@@ -53,29 +49,16 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private TestService test_service;
 	
 	@Autowired
-	private ActionService action_service;
+	private ActionRepository action_repo;
 	
 	@Autowired
-	private ElementStateService page_element_service;
+	private PageElementRepository page_element_repo;
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
 	
 	@Autowired
 	private ElementRuleExtractor extractor;
-	
-	//subscribe to cluster changes
-	@Override
-	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
-	      MemberEvent.class, UnreachableMember.class);
-	}
-
-	//re-subscribe when restart
-	@Override
-    public void postStop() {
-	  cluster.unsubscribe(getSelf());
-    }
 	
 	@Override
 	public Receive createReceive() {
@@ -92,7 +75,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					  	
 					  	while(browser == null && cnt < Integer.MAX_VALUE){
 					  		try{
-						  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+						  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 						  		browser.navigateTo(page.getUrl());
 						  		
 						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
@@ -112,19 +95,19 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		for(PathObject obj : path_obj_list){
 							  			path_keys.add(obj.getKey());
 				
-							  			if(obj.getType().equals("ElementState")){
-							  				ElementState page_elem = (ElementState)obj;
-							  				ElementState elem_record = page_element_service.findByKey(obj.getKey());
+							  			if(obj.getType().equals("PageElement")){
+							  				PageElement page_elem = (PageElement)obj;
+							  				PageElement elem_record = page_element_repo.findByKey(obj.getKey());
 							  				if(elem_record == null){
-							  					elem_record = page_element_service.save(page_elem);
+							  					elem_record = page_element_repo.save(page_elem);
 							  				}
 							  				test_path_objects.add(page_elem);
 							  			}
 							  			else if(obj.getType().equals("Action")){
 							  				Action action = (Action)obj;
-							  				Action action_record = action_service.findByKey(obj.getKey());
+							  				Action action_record = action_repo.findByKey(obj.getKey());
 							  				if(action_record == null){
-							  					action_record = action_service.save(action);
+							  					action_record = action_repo.save(action);
 							  					MessageBroadcaster.broadcastPathObject(action_record, message.getOptions().get("host").toString());
 							  				}
 							  				test_path_objects.add(action_record);
@@ -134,25 +117,24 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 									final long pathCrawlStartTime = System.currentTimeMillis();
 									
 							  		log.info("Crawling potential form test path");
+							  		browser = BrowserFactory.buildBrowser(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  		
 							  		cnt = 0;
 							  		PageState result_page = null;
 							  		do{
-								  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  			try{
 							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
 							  				break;
 							  			}catch(Exception e){
-							  				log.warning("Exception occurred while crawling FORM path -- "+e.getMessage());
-							  			}
-							  			finally{
-									  		browser.close();
+							  				log.warning("Exception occurred while crawling path -- "+e.getLocalizedMessage());
 							  			}
 						  			}while(cnt < Integer.MAX_VALUE && result_page == null);
 							  		
 							  		final long pathCrawlEndTime = System.currentTimeMillis();
 									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-																		
+									
+							  		browser.close();
+									
 							  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
 				
 							  		new_test.setRunTime(crawl_time_in_ms);
@@ -168,11 +150,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  	}
 								break;
 							}catch(Exception e){
+						  		browser.close();
 								log.warning(e.getLocalizedMessage());
 							}
-					  		finally{
-					  			browser.close();
-					  		}
 							cnt++;
 						}					  	
 					}
@@ -204,14 +184,14 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
 		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
 		//for each field in the complex field generate a set of tests for all known rules
-		for(ElementState input_elem : form.getFormFields()){
+		for(PageElement input_elem : form.getFormFields()){
 			
 			boolean field_exists = false;
 			
 			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
 			for(PathObject path_obj : test.getPathObjects()){
-				if(path_obj instanceof ElementState){
-					ElementState page_elem = (ElementState)path_obj;
+				if(path_obj instanceof PageElement){
+					PageElement page_elem = (PageElement)path_obj;
 					if(page_elem.equals(input_elem)){
 						field_exists = true;
 						break;
@@ -235,7 +215,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 	
 
-	public static List<List<PathObject>> generateLengthBoundaryTests(ElementState input, Rule rule){
+	public static List<List<PathObject>> generateLengthBoundaryTests(PageElement input, Rule rule){
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
@@ -337,9 +317,10 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	/**
 	 * Generates a test with an alphabetic character to verify an alphabetic restriction
 	 * @param input_elem
+	 * @param rule
 	 * @return
 	 */
-	private static List<List<PathObject>> generateAlphabeticRestrictionTests(ElementState input_elem) {
+	private static List<List<PathObject>> generateAlphabeticRestrictionTests(PageElement input_elem, Rule rule) {
 		//generate single character str test		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -351,7 +332,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateNumericRestrictionTests(ElementState input_elem) {
+	private static List<List<PathObject>> generateNumericRestrictionTests(PageElement input_elem, Rule rule) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -364,7 +345,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem) {
+	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(PageElement input_elem, Rule rule) {
 		//generate single character str test
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -377,22 +358,22 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateEnabledTests(ElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateEnabledTests(PageElement input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateReadOnlyTests(ElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generateReadOnlyTests(PageElement input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<List<PathObject>> generatePatternTests(ElementState input_elem, Rule rule) {
+	private static List<List<PathObject>> generatePatternTests(PageElement input_elem, Rule rule) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateEmailTests(ElementState input_elem) {
+	private static List<List<PathObject>> generateEmailTests(PageElement input_elem, Rule rule) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -435,13 +416,13 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 
 	/**
-	 * Generates rule tests for a given {@link ElementState} and {@link Rule}
+	 * Generates rule tests for a given {@link PageElement} and {@link Rule}
 	 * 
 	 * @param input_elem
 	 * @param rule
 	 * @return
 	 */
-	public static List<List<PathObject>> generateFormRuleTests(ElementState input_elem, Rule rule, ElementState submitField){
+	public static List<List<PathObject>> generateFormRuleTests(PageElement input_elem, Rule rule, PageElement submitField){
 		assert rule != null;
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
@@ -486,24 +467,24 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	}
 	
 	/**
-	 * Generates rule tests for a given {@link ElementState} and {@link Rule}
+	 * Generates rule tests for a given {@link PageElement} and {@link Rule}
 	 * 
 	 * @param input_elem
 	 * @param rule
 	 * @return
 	 */
-	public static List<List<PathObject>> generateInputRuleTests(ElementState input_elem, Rule rule){
+	public static List<List<PathObject>> generateInputRuleTests(PageElement input_elem, Rule rule){
 		assert rule != null;
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
-			tests.addAll(generateAlphabeticRestrictionTests(input_elem));
+			tests.addAll(generateAlphabeticRestrictionTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.NUMERIC_RESTRICTION)){
-			tests.addAll(generateNumericRestrictionTests(input_elem));
+			tests.addAll(generateNumericRestrictionTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.SPECIAL_CHARACTER_RESTRICTION)){
-			tests.addAll(generateSpecialCharacterRestrictionTests(input_elem));
+			tests.addAll(generateSpecialCharacterRestrictionTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.DISABLED)){
 			tests.addAll(generateEnabledTests(input_elem, rule));
@@ -511,28 +492,34 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		else if(rule.getType().equals(RuleType.READ_ONLY)){
 			tests.addAll(generateReadOnlyTests(input_elem, rule));
 		}
-		else if(rule.getType().equals(RuleType.MAX_LENGTH) 
-				|| rule.getType().equals(RuleType.MIN_LENGTH)
-				|| rule.getType().equals(RuleType.MAX_VALUE)
-				|| rule.getType().equals(RuleType.MIN_VALUE)){
+		else if(rule.getType().equals(RuleType.MAX_LENGTH)){
+			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+		}
+		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
+			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+		}
+		else if(rule.getType().equals(RuleType.MAX_VALUE)){
+			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
+		}
+		else if(rule.getType().equals(RuleType.MIN_VALUE)){
 			tests.addAll(generateLengthBoundaryTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.PATTERN)){
 			tests.addAll(generatePatternTests(input_elem, rule));
 		}
 		else if(rule.getType().equals(RuleType.EMAIL_PATTERN)){
-			tests.addAll(generateEmailTests(input_elem));	
+			tests.addAll(generateEmailTests(input_elem, rule));	
 		}
 		return tests;
 	}
 	
-	public static List<List<PathObject>> generateBoundaryTests(ElementState input){
+	public static List<List<PathObject>> generateBoundaryTests(PageElement input){
 		
 		return null;
 		
 	}
 	
-	public static List<List<PathObject>> generateLengthBoundaryTests(ElementState input, Rule rule, ElementState submit){
+	public static List<List<PathObject>> generateLengthBoundaryTests(PageElement input, Rule rule, PageElement submit){
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		if(rule.getType().equals(RuleType.MAX_LENGTH)){
@@ -646,11 +633,11 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		
 	}
 	
-	public static List<List<PathObject>> generateValueBoundaryTests(ElementState input){
+	public static List<List<PathObject>> generateValueBoundaryTests(PageElement input){
 		return null;	
 	}
 	
-	public static List<List<PathObject>> generateRequirementChecks(ElementState input, boolean isRequired, ElementState submit){
+	public static List<List<PathObject>> generateRequirementChecks(PageElement input, boolean isRequired, PageElement submit){
 		assert input.getName().equals("input");
 		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
@@ -713,7 +700,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	 * @param rule
 	 * @return
 	 */
-	private static List<List<PathObject>> generateAlphabeticRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<PathObject>> generateAlphabeticRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		//generate single character str test		
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -727,7 +714,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateNumericRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<PathObject>> generateNumericRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -742,7 +729,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<PathObject>> generateSpecialCharacterRestrictionTests(PageElement input_elem, Rule rule, PageElement submit) {
 		//generate single character str test
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();
@@ -757,22 +744,22 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return tests;
 	}
 
-	private static List<List<PathObject>> generateEnabledTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<PathObject>> generateEnabledTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateReadOnlyTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<PathObject>> generateReadOnlyTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
-	private static List<List<PathObject>> generatePatternTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<PathObject>> generatePatternTests(PageElement input_elem, Rule rule, PageElement submit) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private static List<List<PathObject>> generateEmailTests(ElementState input_elem, Rule rule, ElementState submit) {
+	private static List<List<PathObject>> generateEmailTests(PageElement input_elem, Rule rule, PageElement submit) {
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 		
 		List<PathObject> path_obj_list = new ArrayList<PathObject>();

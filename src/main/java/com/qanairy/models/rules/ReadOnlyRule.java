@@ -4,7 +4,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.ElementState;
+import com.qanairy.models.PageElement;
 
 /**
  * Creates a read-only {@link FormRule} on a {@link FormField}  
@@ -29,7 +29,7 @@ public class ReadOnlyRule extends Rule {
 
 	
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(PageElement elem) {
 		//Check if field is read-only
 		return elem.getAttributes().contains("readonly");
 	}

@@ -26,13 +26,13 @@ import com.minion.structs.Message;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.Domain;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.DomainService;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -59,11 +59,11 @@ public class IdeTestExportController {
 	private AccountService account_service;
 
 	@Autowired
-	private DomainService domain_service;
+	private DomainRepository domain_repo;
 
 	/**
      * Updates {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link ElementState}s and {@link Action}s
+     *  {@link PageElement}s and {@link Action}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -81,7 +81,7 @@ public class IdeTestExportController {
 
     /**
      * Contructs a new {@link Test} using an array of {@link JSONObject}s containing info for {@link PageState}s
-     *  {@link ElementState}s and {@link Action}s
+     *  {@link PageElement}s and {@link Action}s
 	 *
 	 * @param json_str JSON String
 	 *
@@ -116,10 +116,10 @@ public class IdeTestExportController {
     	if(dot_idx == last_dot_idx){
     		formatted_url = "www."+host;
     	}
-    	Domain domain = domain_service.findByHost(formatted_url);
+    	Domain domain = domain_repo.findByHost(formatted_url);
     	if(domain == null){
     		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","");
-    		domain = domain_service.save(domain);
+    		domain = domain_repo.save(domain);
     	}
 
     	Map<String, Object> options = new HashMap<String, Object>();

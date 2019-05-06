@@ -1,9 +1,7 @@
 package com.qanairy.services;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -17,15 +15,14 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
-import com.qanairy.models.Action;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.TestRepository;
 
 @Component
@@ -33,25 +30,13 @@ public class TestService {
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
 	@Autowired
-	private DomainService domain_service;
+	private DomainRepository domain_repo;
 	
 	@Autowired
 	private TestRepository test_repo;
 	
 	@Autowired
-	private ActionService action_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
-	private ElementStateService page_element_service;
-	
-	@Autowired
 	private BrowserService browser_service;
-	
-	@Autowired
-	private RedirectService redirect_service;
 	
 	@Autowired
 	private Crawler crawler;
@@ -77,23 +62,22 @@ public class TestService {
 		 
 		 int cnt = 0;
 		 boolean pages_dont_match = false;
-		 Browser browser = null;
 		 do{
 			 try {
-				browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);	
+				Browser browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);
+				
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
+				browser.close();
+				break;
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
 				 pages_dont_match = true;
+				 break;
 			 }
 			 catch (Exception e) {
-				 log.error(e.getLocalizedMessage());
+				 e.printStackTrace();
+				 System.err.println(e.getLocalizedMessage());
 			 } 
-			 finally{
-				 if(browser != null){
-					 browser.close();
-				 }
-			 }
 			 
 			 cnt++;
 		 }while(cnt < Integer.MAX_VALUE && page == null);
@@ -114,39 +98,16 @@ public class TestService {
 	 
 	 public Test save(Test test, String host_url){
 		Test record = test_repo.findByKey(test.getKey());
-				
+			
 		if(record == null){
-			List<PathObject> path_objects = new ArrayList<PathObject>();
-			for(PathObject path_obj : test.getPathObjects()){
-				if(path_obj instanceof PageState){
-					path_objects.add(page_state_service.save((PageState)path_obj));
-				}
-				else if(path_obj instanceof ElementState){
-					path_objects.add(page_element_service.save((ElementState)path_obj));
-				}
-				else if(path_obj instanceof Action){
-					path_objects.add(action_service.save((Action)path_obj));
-				}
-				else if(path_obj instanceof Redirect){
-					path_objects.add(redirect_service.save((Redirect)path_obj));
-				}
-			}
-			test.setPathObjects(path_objects);
-			test.setResult(page_state_service.save(test.getResult()));
-	
-			log.warn("groups   ::: "+test.getGroups());
-			log.warn("test records ::  "+test.getRecords());
-			
-			log.warn("path keys :: " + test.getPathKeys());
-			 
-			log.warn("path objects :: " + path_objects);
-			log.warn("Test ::  "+test);
-			if(test.getName() == null || test.getName().isEmpty()){
-				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
-			}
-			
+			log.info("Test REPO :: "+test_repo);
+			log.info("Test ::  "+test);
+			test.setName("Test #" + (domain_repo.getTestCount(host_url)+1));
+	  		
 	  		test = test_repo.save(test);
-			domain_service.addTest(host_url, test);
+			Domain domain = domain_repo.findByHost(host_url);
+			domain.addTest(test);
+			domain = domain_repo.save(domain);
 		
 			try {
 				MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
@@ -163,41 +124,21 @@ public class TestService {
 			}
 		}
 		else{
+			
 			log.info("Test already exists  !!!!!!!");
 			try {
 				MessageBroadcaster.broadcastTest(test, host_url);
 			} catch (JsonProcessingException e) {
 				log.error(e.getLocalizedMessage());
 			}
-			
 			test = record;
-			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
-			test.setPathObjects(path_objects);
-			
-			test.setResult(page_state_service.findByKey(test.getResult().getKey()));
 		}
 		
 		return test;
 	}
 	 
-	public List<Test> findTestsWithElementState(String page_state_key, String element_state_key){
-		return test_repo.findTestWithElementState(page_state_key, element_state_key);
-	}
-	
 	public void init(Crawler crawler, BrowserService browser_service){
 		this.crawler = crawler;
 		this.browser_service = browser_service;
-	}
-	
-	public Test findByKey(String key){
-		return test_repo.findByKey(key);
-	}
-
-	public List<Test> findTestsWithPageState(String key) {
-		return test_repo.findTestWithPageState(key);		
-	}
-
-	public List<PathObject> getPathObjects(String test_key) {
-		return test_repo.getPathObjects(test_key);
 	}
 }

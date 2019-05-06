@@ -1,27 +1,27 @@
 package com.qanairy.dto;
 
 import com.qanairy.models.Action;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.PageElement;
 
 /**
- * Data Transfer object that describes an object composed of both {@link ElementState} and {@link Action}
+ * Data Transfer object that describes an object composed of both {@link PageElement} and {@link Action}
  * 
  */
 public class ElementActionDto{
 
-	private ElementStateDto element;
+	private PageElementDto element;
 	private ActionDto action;
 	
-	public ElementActionDto(ElementState elem, Action action){
-		setElement(new ElementStateDto(elem));
+	public ElementActionDto(PageElement elem, Action action){
+		setElement(new PageElementDto(elem));
 		setAction(new ActionDto(action));
 	}
 
-	public ElementStateDto getElement() {
+	public PageElementDto getElement() {
 		return element;
 	}
 
-	private void setElement(ElementStateDto element_dto) {
+	private void setElement(PageElementDto element_dto) {
 		this.element = element_dto;
 	}
 

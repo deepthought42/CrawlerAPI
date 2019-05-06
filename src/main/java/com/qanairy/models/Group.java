@@ -19,8 +19,6 @@ public class Group implements Persistable{
 	private String key;
 	private String name;
 	private String description;
-	
-	
 
 	public Group(){}
 	

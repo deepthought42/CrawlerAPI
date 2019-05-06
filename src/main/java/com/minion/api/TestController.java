@@ -33,11 +33,11 @@ import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.dto.TestDto;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.GroupRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
-import com.qanairy.services.AccountService;
-import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 
@@ -64,10 +64,10 @@ public class TestController {
 	private static Logger log = LoggerFactory.getLogger(TestController.class);
 	
     @Autowired
-    private DomainService domain_service;
+    private DomainRepository domain_repo;
     
     @Autowired
-    private AccountService account_service;
+    private AccountRepository account_repo;
     
     @Autowired
     private TestRepository test_repo;
@@ -97,7 +97,7 @@ public class TestController {
 	public @ResponseBody Set<Test> getTestByDomain(HttpServletRequest request, 
 													@RequestParam(value="url", required=true) String url) 
 			throws UnknownAccountException, DomainNotOwnedByAccountException {    	
-		return domain_service.getVerifiedTests(url);
+		return domain_repo.getVerifiedTests(url);
     }
 
     /**
@@ -169,7 +169,7 @@ public class TestController {
 			   								 	 	@RequestParam(value="url", required=true) String url) 
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {    	
 		int failed_tests = 0;
-		Domain domain = domain_service.findByHost(url);
+		Domain domain = domain_repo.findByHost(url);
 		try{
 			Iterator<Test> tests = domain.getTests().iterator();
 			
@@ -217,7 +217,7 @@ public class TestController {
 	public @ResponseBody Set<Test> getUnverifiedTests(HttpServletRequest request, 
 														@RequestParam(value="url", required=true) String url) 
 																throws DomainNotOwnedByAccountException, UnknownAccountException {
-    	Set<Test> tests = domain_service.getUnverifiedTests(url);
+    	Set<Test> tests = domain_repo.getUnverifiedTests(url);
     	
     	for(Test test : tests){
     		List<TestRecord> records = test_repo.findAllTestRecords(test.getKey());
@@ -244,7 +244,7 @@ public class TestController {
     	//make sure domain belongs to user account first
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
+    	Account acct = account_repo.findByUserId(id);
     	
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -354,18 +354,16 @@ public class TestController {
     	
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
+    	Account acct = account_repo.findByUserId(id);
     	
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
     	
-    	/*
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
-    	 */
-    	
+    	    	
     	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	
     	//Fire test run started event	
@@ -413,7 +411,7 @@ public class TestController {
 			test_repo.save(test);
 
 			acct.addTestRecord(record);
-			account_service.save(acct);
+			account_repo.save(acct);
 			MessageBroadcaster.broadcastTestStatus(host, record, test);
     	}
 		    	
@@ -524,7 +522,7 @@ public class TestController {
 	public @ResponseBody List<Group> getGroups(HttpServletRequest request, 
 			   								   @RequestParam(value="url", required=true) String url) {
 		List<Group> groups = new ArrayList<Group>();
-		Set<Test> test_list = domain_service.getTests(url);
+		Set<Test> test_list = domain_repo.getTests(url);
 		
 		for(Test test : test_list){
 			if(test.getGroups() != null){
@@ -552,7 +550,7 @@ public class TestController {
 			   								   @PathVariable(value="test_key") String test_key) throws UnknownAccountException, JsonProcessingException {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
+    	Account acct = account_repo.findByUserId(id);
     	
     	if(acct == null){
     		throw new UnknownAccountException();

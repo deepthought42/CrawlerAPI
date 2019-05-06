@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.qanairy.models.Account;
 import com.qanairy.models.enums.SubscriptionPlan;
-import com.qanairy.services.AccountService;
+import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.services.SubscriptionService;
 
 @RestController
@@ -22,7 +22,7 @@ import com.qanairy.services.SubscriptionService;
 public class SubscriptionController {
     
     @Autowired
-    private AccountService account_service;
+    private AccountRepository account_repo;
     
     @Autowired
     private SubscriptionService subscription_service;
@@ -41,7 +41,7 @@ public class SubscriptionController {
 					 		@RequestParam(value="source_token", required=true) String source_token) throws Exception {
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
-    	Account acct = account_service.findByUserId(id);
+    	Account acct = account_repo.findByUserId(id);
     	
     	subscription_service.changeSubscription(acct, SubscriptionPlan.valueOf(plan.toUpperCase()), source_token);
     }

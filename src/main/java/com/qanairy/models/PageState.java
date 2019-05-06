@@ -3,20 +3,14 @@ package com.qanairy.models;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -28,6 +22,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.minion.browsing.Browser;
 
 /**
  * A reference to a web page
@@ -35,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 @NodeEntity
 public class PageState implements Persistable, PathObject {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageState.class);
 
 	@GeneratedValue
@@ -45,94 +41,51 @@ public class PageState implements Persistable, PathObject {
 	private String key;
 	private boolean landable;
 	private LocalDateTime last_landability_check;
-	private String screenshot_url;
-	private String browser;
-	
+
 	private String url;
 	private int total_weight;
 	private int image_weight;
-	private int scrollXOffset;
-	private int scrollYOffset;
-	private int viewport_width;
-	private int viewport_height;
 	private String type;
-	private String screenshot_checksum;
+
+	@Relationship(type = "HAS_SCREENSHOT")
+	private Set<ScreenshotSet> browser_screenshots = new HashSet<>();
 
 	@Relationship(type = "HAS_ELEMENT")
-	private Set<ElementState> elements;
+	private Set<PageElement> elements = new HashSet<>();
 
 	@Relationship(type = "HAS_FORM")
-	private Set<Form> forms;
+	private Set<Form> forms = new HashSet<>();
 
 	public PageState() {
-		setForms(new HashSet<Form>());
-	}
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 * 
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws MalformedURLException 
-	 * @throws IOException
-	 * 
-	 * @pre elements != null
-	 * @pre screenshot_url != null;
-	 */
-	public PageState(String url, String screenshot_url, Set<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, String browser_name) throws MalformedURLException, IOException{
-		assert elements != null;
-		assert screenshot_url != null;
-
-		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
-		setScreenshotUrl(screenshot_url);
-		setViewportWidth(viewport_width);
-		setViewportHeight(viewport_height);
-		setBrowser(browser_name);
-		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setSrc(src);
-		setForms(new HashSet<Form>());
-		setScrollXOffset(scroll_x_offset);
-		setScrollYOffset(scroll_y_offset);
-		setKey(generateKey());
-	}
-
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 * 
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null
-	 * @pre screenshot_url != null;
-	 */
-	public PageState(String url, Set<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset, 
-			int viewport_width, int viewport_height, String browser_name){
-		assert elements != null;
-
-		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
-		setBrowser(browser_name);
-		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setSrc(src);
-		setForms(new HashSet<Form>());
-		setScrollXOffset(scroll_x_offset);
-		setScrollYOffset(scroll_y_offset);
-		setViewportWidth(viewport_width);
-		setViewportHeight(viewport_height);
-		setKey(generateKey());
 	}
 	
+	/**
+	 * Creates a page instance that is meant to contain information about a
+	 * state of a webpage
+	 * 
+	 * @param url
+	 * @param screenshot
+	 * @param elements
+	 * @throws IOException
+	 * 
+	 * @pre elements != null
+	 * @pre browser_screenshots != null;
+	 */
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, String src)
+			throws IOException {
+		assert elements != null;
+		assert browser_screenshots != null;
+
+		setType(PageState.class.getSimpleName());
+		setUrl(url.replace("/#", ""));
+		setBrowserScreenshots(browser_screenshots);
+		setElements(elements);
+		setLandable(false);
+		setImageWeight(0);
+		setSrc(src);
+		setKey(generateKey());
+	}
+
 	/**
 	 * Creates a page instance that is meant to contain information about a
 	 * state of a webpage
@@ -144,45 +97,38 @@ public class PageState implements Persistable, PathObject {
 	 * @param isLandable
 	 * 
 	 * @pre elements != null;
-	 * @pre screenshot_url != null;
+	 * @pre browser_screenshots != null;
 	 * 
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException 
 	 */
-	public PageState(String url, String screenshot_url, Set<ElementState> elements, boolean isLandable,
-			String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, String browser_name) throws IOException, NoSuchAlgorithmException {
+	public PageState(String url, Set<ScreenshotSet> browser_screenshots, Set<PageElement> elements, boolean isLandable,
+			String src) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
-		assert screenshot_url != null;
+		assert browser_screenshots != null;
 
 		setType(PageState.class.getSimpleName());
 		setUrl(url.replace("/#", ""));
-		setScreenshotUrl(screenshot_url);
-		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
+		setBrowserScreenshots(browser_screenshots);
 		setElements(elements);
 		setLandable(isLandable);
 		setImageWeight(0);
-		setBrowser(browser_name);
-		setScrollXOffset(scroll_x_offset);
-		setScrollYOffset(scroll_y_offset);
-		setViewportWidth(viewport_width);
-		setViewportHeight(viewport_height);
 		setSrc(src);
-		setForms(new HashSet<Form>());
 		setKey(generateKey());
 	}
-	
+
 	/**
-	 * Gets counts for all tags based on {@link ElementState}s passed
+	 * Gets counts for all tags based on {@link PageElement}s passed
 	 * 
 	 * @param page_elements
-	 *            list of {@link ElementState}s
+	 *            list of {@link PageElement}s
 	 * 
-	 * @return Hash of counts for all tag names in list of {@ElementState}s
+	 * @return Hash of counts for all tag names in list of {@PageElement}s
 	 *         passed
 	 */
-	public Map<String, Integer> countTags(Set<ElementState> tags) {
+	public Map<String, Integer> countTags(Set<PageElement> tags) {
 		Map<String, Integer> elem_cnts = new HashMap<String, Integer>();
-		for (ElementState tag : tags) {
+		for (PageElement tag : tags) {
 			if (elem_cnts.containsKey(tag.getName())) {
 				int cnt = elem_cnts.get(tag.getName());
 				cnt += 1;
@@ -243,40 +189,15 @@ public class PageState implements Persistable, PathObject {
 			return false;
 
 		PageState that = (PageState) o;
-		//boolean pages_match = false;
-		boolean keys_match = this.getKey().equals(that.getKey());
-		boolean checksums_match = this.getScreenshotChecksum().equals(that.getScreenshotChecksum());
-		/*
+
+		boolean pages_match = this.getKey().equals(that.getKey());
+		
 		if(!pages_match){
 			pages_match = this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));
 		}
-		*/
-		/*
-		if(!pages_match && this.getElements().size() == that.getElements().size()){
-			System.err.println("Checking page elements match ....... ");
-			//check if elements match
-			Map<String, ElementState> element_map = new HashMap<String,ElementState>();
-			
-			System.err.println("Element states for this page state :: "+this.getElements().size());
-			for(ElementState elem : this.getElements()){
-				element_map.put(elem.getKey(), elem);
-			}
-
-			System.err.println("Element states for that page state :: "+that.getElements().size());
-			for(ElementState elem: that.getElements()){
-				element_map.remove(elem.getKey());
-			}
-	
-			if(element_map.keySet().isEmpty()){
-				pages_match = true;
-			}
-			System.err.println("Element keys left in map   :: "+element_map.keySet().size());
-
-		}
-		*/
 		//boolean sources_match = this.getSrc().equals(that.getSrc());
 
-		return keys_match || checksums_match;
+		return pages_match;
 	}
 
 	/**
@@ -292,15 +213,21 @@ public class PageState implements Persistable, PathObject {
 	 */
 	@Override
 	public PathObject clone() {
-		Set<ElementState> elements = new HashSet<ElementState>(getElements());
+		Set<PageElement> elements = new HashSet<PageElement>(getElements());
+		Set<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>(getBrowserScreenshots());
 
-		PageState page = null;
+		PageState page;
 		try {
-			page = new PageState(getUrl().toString(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
-		} catch (NoSuchAlgorithmException | IOException e) {
-			log.info("Error cloning page : " + page.getKey() + ";  "+e.getMessage());
+			page = new PageState(getUrl().toString(), screenshots, elements, isLandable(), getSrc());
+			return page;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return page;
+
+		return null;
 	}
 
 	public String getKey() {
@@ -312,12 +239,12 @@ public class PageState implements Persistable, PathObject {
 	}
 
 	@JsonIgnore
-	public Set<ElementState> getElements() {
+	public Set<PageElement> getElements() {
 		return this.elements;
 	}
 
 	@JsonIgnore
-	public void setElements(Set<ElementState> elements) {
+	public void setElements(Set<PageElement> elements) {
 		this.elements = elements;
 	}
 
@@ -357,6 +284,14 @@ public class PageState implements Persistable, PathObject {
 		this.image_weight = image_weight;
 	}
 
+	public Set<ScreenshotSet> getBrowserScreenshots() {
+		return browser_screenshots;
+	}
+
+	public void setBrowserScreenshots(Set<ScreenshotSet> browser_screenshots) {
+		this.browser_screenshots = browser_screenshots;
+	}
+
 	@Override
 	public String getType() {
 		return this.type;
@@ -367,7 +302,11 @@ public class PageState implements Persistable, PathObject {
 		this.type = type;
 	}
 
-	public void addElement(ElementState element) {
+	public void addBrowserScreenshot(ScreenshotSet browser_screenshots) {
+		this.browser_screenshots.add(browser_screenshots);
+	}
+
+	public void addElement(PageElement element) {
 		this.elements.add(element);
 	}
 
@@ -399,12 +338,12 @@ public class PageState implements Persistable, PathObject {
 			byte[] thedigest = sha.digest(data);
 			return Hex.encodeHexString(thedigest);
 		} catch (NoSuchAlgorithmException e) {
-			log.error("Error generating checksum of buffered image");
+			e.printStackTrace();
 		}
 		return "";
 
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * @throws IOException 
@@ -413,32 +352,25 @@ public class PageState implements Persistable, PathObject {
 	 * @pre page != null
 	 */
 	public String generateKey() {
-		//NOTE: generating key using screenshot can be problematic in situations where the screen is a different size, shape, or slight differences in rendering
-		//String screenshot = getScreenshotUrl();
-		URL url = null;
-		String url_without_params = null;
-		try {
-			url = new URL(this.getUrl());
-			url_without_params = url.getProtocol()+"://"+url.getHost()+url.getPath();
-		} catch (MalformedURLException e) {
-			int param_index = this.getUrl().indexOf("?");
-			url_without_params = this.getUrl();
-			if(param_index >= 0){
-				url_without_params = url_without_params.substring(0, param_index);
-			}
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		Set<ScreenshotSet> screenshots = this.getBrowserScreenshots();
+		String screenshot = screenshots.iterator().next().getViewportScreenshot();
+		int param_index = this.getUrl().indexOf("?");
+		String url_without_params = this.getUrl();
+		if(param_index >= 0){
+			url_without_params = url_without_params.substring(0, param_index);
+		}
+
+		try{
+			return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+ getFileChecksum(MessageDigest.getInstance("SHA-256"), screenshot));
+		}
+		catch(NoSuchAlgorithmException e){
+			log.error("Couldnt find SHA-256 algorithm :: " + e.getLocalizedMessage());
+		}
+		catch(IOException e){
+			log.error("Couldn't read file at "+screenshot+" ::  "+e.getLocalizedMessage());
 		}
 		
-		
-		String key = "";
-		List<ElementState> elements = getElements().stream().collect(Collectors.toList());
-		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
-		for(ElementState element : elements){
-			key += element.getKey();
-		}
-		
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+key);
+		return "";
 	}
 
 	public void addForm(Form form) {
@@ -452,10 +384,6 @@ public class PageState implements Persistable, PathObject {
 
 	public Set<Form> getForms() {
 		return this.forms;
-	}
-	
-	public void setForms(Set<Form> form_set){
-		this.forms = form_set;
 	}
 
 	public LocalDateTime getLastLandabilityCheck() {
@@ -472,62 +400,5 @@ public class PageState implements Persistable, PathObject {
 
 	public void setSrc(String src) {
 		this.src = src;
-	}
-
-	public int getScrollXOffset() {
-		return scrollXOffset;
-	}
-
-	public void setScrollXOffset(int scrollXOffset) {
-		this.scrollXOffset = scrollXOffset;
-	}
-	
-	public int getScrollYOffset() {
-		return scrollYOffset;
-	}
-
-	public void setScrollYOffset(int scrollYOffset) {
-		this.scrollYOffset = scrollYOffset;
-	}
-
-	public String getScreenshotUrl() {
-		return screenshot_url;
-	}
-
-	public void setScreenshotUrl(String screenshot_url) throws MalformedURLException, IOException {
-		this.screenshot_url = screenshot_url;
-		setScreenshotChecksum(getFileChecksum(ImageIO.read(new URL(screenshot_url))));
-	}
-
-	public String getBrowser() {
-		return browser;
-	}
-
-	public void setBrowser(String browser) {
-		this.browser = browser;
-	}
-
-	public String getScreenshotChecksum() {
-		return screenshot_checksum;
-	}
-
-	public void setScreenshotChecksum(String screenshot_checksum) {
-		this.screenshot_checksum = screenshot_checksum;
-	}
-
-	public int getViewportWidth() {
-		return viewport_width;
-	}
-
-	public void setViewportWidth(int viewport_width) {
-		this.viewport_width = viewport_width;
-	}
-
-	public int getViewportHeight() {
-		return viewport_height;
-	}
-
-	public void setViewportHeight(int viewport_height) {
-		this.viewport_height = viewport_height;
 	}
 }

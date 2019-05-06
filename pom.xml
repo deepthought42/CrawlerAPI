@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  	<version>0.1.19</version>
+  	<version>0.1.17</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 
@@ -11,7 +11,7 @@
 
 	<properties>
    		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	    <selenium-version>3.141.59</selenium-version>
+	    <selenium-version>3.14.0</selenium-version>
 	    <java.version>1.8</java.version>
 	    <springboot.version>2.0.2.RELEASE</springboot.version>
         <akka.version>2.5.13</akka.version>
@@ -55,10 +55,6 @@
               </execution>
           </executions>
 	    </plugin>
-	    <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-        </plugin>
 	</plugins>
 </build>
 
@@ -81,6 +77,19 @@
 		    <groupId>org.seleniumhq.selenium</groupId>
 		    <artifactId>selenium-server</artifactId>
 		    <version>${selenium-version}</version>
+		    <exclusions>
+			    <exclusion>
+			        <groupId>javax.servlet</groupId>
+			        <artifactId>servlet-api</artifactId>
+			    </exclusion>
+			</exclusions>
+		</dependency>
+
+	    <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium.grid/selenium-grid-hub -->
+		<dependency>
+		    <groupId>org.seleniumhq.selenium.grid</groupId>
+		    <artifactId>selenium-grid-hub</artifactId>
+		    <version>1.0.5</version>
 		    <exclusions>
 			    <exclusion>
 			        <groupId>javax.servlet</groupId>

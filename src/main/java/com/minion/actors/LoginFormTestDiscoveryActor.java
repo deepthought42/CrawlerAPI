@@ -1,42 +1,40 @@
 package com.minion.actors;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
+import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
+import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Form;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.PageElement;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestUser;
+import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.repository.ActionRepository;
+import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.FormService;
-import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.cluster.Cluster;
-import akka.cluster.ClusterEvent;
-import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -47,7 +45,6 @@ import akka.event.LoggingAdapter;
 @Scope("prototype")
 public class LoginFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
 	private Crawler crawler;
@@ -59,27 +56,11 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	private DomainService domain_service;
 	
 	@Autowired
-	private TestService test_service;
+	private TestRepository test_repo;
 	
 	@Autowired 
 	private ActionRepository action_repo;
 	
-	@Autowired
-	private ActorSystem actor_system;
-	
-	//subscribe to cluster changes
-	@Override
-	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
-	      MemberEvent.class, UnreachableMember.class);
-	}
-
-	//re-subscribe when restart
-	@Override
-    public void postStop() {
-	  cluster.unsubscribe(getSelf());
-    }
-
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
@@ -103,9 +84,9 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 
 								//  clone test
 								//  get username element and add it to path
-								List<ElementState> elements = form.getFormFields();
+								List<PageElement> elements = form.getFormFields();
 								//find username input element
-								ElementState username_elem = findInputElementByAttribute(elements, "username");
+								PageElement username_elem = findInputElementByAttribute(elements, "username");
 								
 								if(username_elem == null){
 									username_elem = findInputElementByAttribute(elements, "email");
@@ -129,7 +110,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								
 								//  get password element and add it to the path
-								ElementState password_elem = findInputElementByAttribute(elements, "password");
+								PageElement password_elem = findInputElementByAttribute(elements, "password");
 
 								if(password_elem == null){
 									log.info("could not find password !!!!!!!!");
@@ -165,28 +146,43 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								//exploratory_path.setPossibleActions(action_list);
 								exploratory_path.addPathObject(submit_login);
 								exploratory_path.addToPathKeys(submit_login.getKey());
-								log.warning("performing path exploratory crawl");
-								PageState result_page = crawler.performPathExploratoryCrawl(domain.getDiscoveryBrowserName(), exploratory_path, message.getOptions().get("host").toString());
 								
-								log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
+								PageState result_page = null;
+								Browser browser = null;
+								int tries = 0;
+								
+								do{
+									try{
+										log.info("Crawling path for login form test discovery");
+										browser = BrowserFactory.buildBrowser(browser.getBrowserName(), BrowserEnvironment.DISCOVERY);
+										result_page = crawler.crawlPath(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), browser, message.getOptions().get("host").toString());
+								  		browser.close();
+										break;
+									}catch(NullPointerException e){
+										log.error("Error happened while login form test discovery actor attempted to crawl test "+e.getLocalizedMessage());
+										e.printStackTrace();
+									} catch (GridException e) {
+										e.printStackTrace();
+									} catch (WebDriverException e) {
+										e.printStackTrace();
+									} catch (NoSuchAlgorithmException e) {
+										e.printStackTrace();
+									}
+							  		browser.close();
+							  		tries++;
+								}while(result_page == null && tries < Integer.MAX_VALUE);
+						
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
-								test = test_service.save(test, domain.getUrl());
-								MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
-							
-								for(String key : test.getPathKeys()){
-									log.warning("test key ::   " + key);
+								Test test_record = test_repo.findByKey(test.getKey());
+								if(test_record == null){
+									test = test_repo.save(test);
+									MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 								}
-								
-								DiscoveryRecord discovery = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), null);
-								//send test for exploration
-								message.getOptions().put("discovery_key", discovery.getKey());
-								message.getOptions().put("browser", domain.getDiscoveryBrowserName());
-								
-								Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-								log.warning("sending path expansion actor");
-								final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-								path_expansion_actor.tell(test_msg, getSelf() );
+								else{
+									test = test_record;
+								}
+								domain.addTest(test);
+								domain_service.save(domain);
 							}
 						}
 					}
@@ -213,41 +209,15 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		
 		List<String> path_keys = new ArrayList<String>();
 		List<PathObject> path_objects = new ArrayList<PathObject>();
-		
-		//get page state		
 		PageState page = form_service.getPageState(form);
-		
-		//get all tests that contain page state as path object
-		List<Test> tests = test_service.findTestsWithPageState(page.getKey());
-		//get test with smallest path
-		int shortest_length = Integer.MAX_VALUE;
-		Test shortest_test = null;
-		for(Test test : tests){
-			if(test.getPathKeys().size() < shortest_length){
-				shortest_length = test.getPathKeys().size();
-				shortest_test = test;
-			}
-		}
-	
-		log.warning("shortest test :: " + shortest_test.getPathKeys().size());
-		//add test path to path objects and keys
-		List<PathObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey());
-		log.warning("path objects size ::   "+test_path_objects);
-		for(String key : shortest_test.getPathKeys()){
-			for(PathObject obj : test_path_objects){
-				if(key.equals(obj.getKey())){
-					path_objects.add(obj);
-					path_keys.add(key);
-				}
-			}
-		}
-		log.warning("path keys size   :     "+path_keys.size());
+		path_objects.add(page);
+		path_keys.add(page.getKey());
 		
 		return new ExploratoryPath(path_keys, path_objects, new ArrayList<Action>());
 	}
 
-	private ElementState findInputElementByAttribute(List<ElementState> elements, String search_val) {
-		for(ElementState element : elements){
+	private PageElement findInputElementByAttribute(List<PageElement> elements, String search_val) {
+		for(PageElement element : elements){
 			//check if element is type email
 			if(element.getType().contains(search_val)){
 				return element;

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Test;
-import com.qanairy.models.message.ExplorationPathMessage;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -40,7 +39,7 @@ public class WorkAllocationActor extends AbstractActor  {
 
 	@Autowired
 	private ActorSystem actor_system;
-		
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -65,9 +64,9 @@ public class WorkAllocationActor extends AbstractActor  {
 						msg.getOptions().put("browser", browser_name);
 						
 						if(acct_message.getData() instanceof ExploratoryPath){
-							ActorRef exploratory_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-							exploratory_actor.tell(msg, getSelf() );
+							exploratory_browser_actor.tell(msg, getSelf() );
 						}
 						else if(acct_message.getData() instanceof URL){
 							log.info("Sending URL to UrlBrowserActor");
@@ -84,11 +83,6 @@ public class WorkAllocationActor extends AbstractActor  {
 					}
 					getSender().tell("Status: ok", getSelf());
 					postStop();
-				})
-				.match(ExplorationPathMessage.class, message -> {
-					final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-					exploratory_browser_actor.tell(message, getSelf() );
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

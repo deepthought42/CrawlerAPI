@@ -6,11 +6,11 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.PageElement;
 
 
 /**
- * Defines a min/max value or length {@link Rule} on a {@link ElementState}
+ * Defines a min/max value or length {@link Rule} on a {@link PageElement}
  */
 @NodeEntity
 public class NumericRule extends Rule{
@@ -60,7 +60,7 @@ public class NumericRule extends Rule{
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(ElementState elem) {
+	public Boolean evaluate(PageElement elem) {
 		for(Attribute attribute: elem.getAttributes()){
 			if(attribute.getName().equals("val")){
 				String field_value = attribute.getVals().toString();

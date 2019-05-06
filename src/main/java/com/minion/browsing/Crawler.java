@@ -256,7 +256,8 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				BrowserUtils.getElementAnimation(browser, last_element, host_channel);
+				Timing.pauseThread(1000);
+				//BrowserUtils.getElementAnimation(browser, last_element, host_channel);
 				
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -371,10 +372,8 @@ public class Crawler {
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
-				log.warn("watching page transition for index :: " + current_idx);
 				//if redirect is preceded by a page state or nothing then initiate navigation
 				if(last_obj == null || last_obj instanceof PageState){
-					log.warn("last_obj :  "+last_obj);
 					log.warn("navigating to redirect start url");
 					browser.navigateTo(redirect.getStartUrl());
 				}
@@ -415,7 +414,7 @@ public class Crawler {
 							|| current_idx == path_objects.size()-1){
 						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
-						if(redirect.getUrls().size() > 0){
+						if(redirect.getUrls().size() > 1){
 							log.warn("transition with states found :: " + redirect.getUrls().size());
 							//browser.waitForPageToLoad();
 							log.warn("#########################################################################");
@@ -436,8 +435,8 @@ public class Crawler {
 					else if(current_idx < path_objects.size()-1 && !path_objects.get(current_idx+1).getKey().contains("redirect") ){
 						log.warn("PAUSING AFTER ACTION PERFORMED   !!!!!!!!!");
 						//TODO: Replace the following with animation detection
-						BrowserUtils.getElementAnimation(browser, last_element, host_channel);
-						//Timing.pauseThread(1000);
+						//BrowserUtils.getElementAnimation(browser, last_element, host_channel);
+						Timing.pauseThread(1000);
 					}
 				
 					Point p = browser.getViewportScrollOffset();
@@ -644,8 +643,8 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				BrowserUtils.getElementAnimation(browser, last_element, host);
-				
+				//BrowserUtils.getElementAnimation(browser, last_element, host);
+				Timing.pauseThread(1000);
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
 				browser.setYScrollOffset(p.getY());

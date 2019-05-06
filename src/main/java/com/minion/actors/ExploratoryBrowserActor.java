@@ -80,16 +80,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	@Autowired
 	private Crawler crawler;
 	
-	private ActorRef parent_path_explorer;
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
 				MemberEvent.class, UnreachableMember.class);
-	  
-
-		parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				.props("parentPathExplorer"), "parent_path_explorer"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -176,7 +171,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
 
 									TestCandidateMessage msg = new TestCandidateMessage(path.getPathKeys(), path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
-							  		parent_path_explorer.tell(msg, getSelf());
+									ActorRef parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											.props("parentPathExplorer"), "parent_path_explorer"+UUID.randomUUID());
+									parent_path_explorer.tell(msg, getSelf());
 								}
 							}
 							

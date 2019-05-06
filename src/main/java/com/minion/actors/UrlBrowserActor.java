@@ -163,7 +163,7 @@ public class UrlBrowserActor extends AbstractActor {
 
 								form_discoverer.tell(page_state_msg, getSelf() );
 									
-								//path_expansion_actor.tell(page_state_msg, getSelf() );
+								path_expansion_actor.tell(page_state_msg, getSelf() );
 							}
 						}
 						

@@ -57,7 +57,7 @@ public class TestServiceTest {
 	public void runTestIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException {
 		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");
-		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any(), Matchers.any())).thenReturn(page_state);
+		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state);
 		
 		when(test.getResult()).thenReturn(page_state);
 		TestRecord record = test_service.runTest(test, "firefox", TestStatus.PASSING);
@@ -71,7 +71,7 @@ public class TestServiceTest {
 		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");
 		when(page_state1.getKey()).thenReturn("invalid_key");
-		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any(), Matchers.any())).thenReturn(page_state1);
+		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state1);
 		
 		when(test.getResult()).thenReturn(page_state);
 		TestRecord record = test_service.runTest(test, "firefox", TestStatus.PASSING);

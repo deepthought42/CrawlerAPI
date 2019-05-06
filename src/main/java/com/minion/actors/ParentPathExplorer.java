@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -122,8 +123,8 @@ public class ParentPathExplorer extends AbstractActor {
 				.match(TestCandidateMessage.class, message-> {
 					//get index of last page element in path
 			  		int last_elem_idx = getIndexOfLastElementState(message.getKeys());
-			  		List<String> final_path_keys = null;
-			  		List<PathObject> final_path_objects = null;
+			  		List<String> final_path_keys = message.getKeys();
+			  		List<PathObject> final_path_objects = message.getPathObjects();
 			  		
 			  		System.err.println("last idx :: "+ last_elem_idx);
 					System.err.println("path length :: " + message.getPathObjects().size());
@@ -202,8 +203,18 @@ public class ParentPathExplorer extends AbstractActor {
 							WebElement parent_web_element = browser_service.getParentElement(current_element);
 							
 							log.warn("Builing element state");
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(((PageState)path_objects.get(last_elem_idx-1)).getScreenshotUrl())));
-	
+							ElementState parent_element = null;
+							try{							
+								parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(((PageState)path_objects.get(last_elem_idx-1)).getScreenshotUrl())));
+								if(parent_element == null){
+									break;
+								}
+							}
+							catch(RasterFormatException e){
+								break;
+							}
+							
+							
 							log.warn("crawling partial path");
 							//finish crawling using array of elements following last page element
 							crawler.crawlPartialPath(end_path_keys, end_path_objects, browser, message.getDiscovery().getDomainUrl(), parent_element);
@@ -231,11 +242,7 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							log.warn("Setting last element to parent element");
 							last_element = parent_element;
-						}catch(WebDriverException e){
-							error_occurred = true;
-							e.printStackTrace();
-						}
-						catch(GridException e){
+						}catch(Exception e){
 							error_occurred = true;
 							e.printStackTrace();
 						}
@@ -261,7 +268,6 @@ public class ParentPathExplorer extends AbstractActor {
 					path_expansion.tell(test_msg, getSelf());
 					
 					discovery_service.incrementTestCount(message.getDiscovery().getKey());
-					
 					
 					DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
 					//send email if this is the last test

@@ -328,7 +328,10 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		browser.moveMouseOutOfFrame();
+		try{
+			browser.moveMouseOutOfFrame();
+		}catch(Exception e){}
+		
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
         
@@ -483,17 +486,11 @@ public class BrowserService {
 		String screenshot = null;
 		ElementState page_element_record = null;
 		ElementState page_element = null;
-		do{
-			try{
-				//log.warn("Checking if element visible in viewport");
-				img = browser.getElementScreenshot(elem, page_screenshot);
-				checksum = PageState.getFileChecksum(img);	
-				page_element_record = page_element_service.findByScreenshotChecksum(checksum);
-			}
-			catch(RasterFormatException e){
-				log.warn("Raster Format Exception (buildElementState) : "+e.getMessage());
-			}
-		}while(img == null);
+		//log.warn("Checking if element visible in viewport");
+		img = browser.getElementScreenshot(elem, page_screenshot);
+		checksum = PageState.getFileChecksum(img);	
+		page_element_record = page_element_service.findByScreenshotChecksum(checksum);
+
 
 		if(page_element_record != null){
 			page_element = page_element_record;

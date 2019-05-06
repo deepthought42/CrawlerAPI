@@ -642,12 +642,10 @@ public class Browser {
 	 * @return
 	 */
 	public Alert isAlertPresent(){
-	    try 
-	    { 
+	    try { 
 	        return driver.switchTo().alert(); 
 	    }   // try 
-	    catch (NoAlertPresentException Ex) 
-	    { 
+	    catch (NoAlertPresentException Ex) { 
 	        return null; 
 	    }   // catch 
 	}

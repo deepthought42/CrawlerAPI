@@ -93,7 +93,17 @@ public class Redirect implements PathObject, Persistable {
 	}
 
 	public void setImageUrls(List<String> image_urls) {
-		this.image_urls = image_urls;
+		List<String> deduped_list = new ArrayList<>();
+		//remove sequential duplicates from list
+		String last_url = "";
+		for(String url : image_urls){
+			if(!last_url.equals(url)){
+				deduped_list.add(url);
+				last_url = url;
+			}
+		}
+		
+		this.image_urls = deduped_list;
 	}
 
 	public Long getId() {

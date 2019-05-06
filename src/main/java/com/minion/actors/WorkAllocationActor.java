@@ -95,7 +95,7 @@ public class WorkAllocationActor extends AbstractActor  {
 						if(acct_message.getData() instanceof ExploratoryPath){
 							Random random = new Random();
 							int index = random.nextInt(exploratory_browser_actors.size());
-							exploratory_actor.tell(msg, getSelf() );
+							exploratory_browser_actors.get(index).tell(msg, getSelf() );
 						}
 						else if(acct_message.getData() instanceof URL){
 							log.info("Sending URL to UrlBrowserActor");

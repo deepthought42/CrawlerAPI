@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,38 +43,36 @@ public class BrowserUtils {
 	        
 	        transition_detected = !new_key.equals(last_key) || element_count != last_elem_count;
 
+	        /*
+	        try{
+				images.add(browser.getViewportScreenshot());
+			}catch(Exception e){}
+	        */
 			if(transition_detected ){
-				try{
-					BufferedImage screenshot = browser.getViewportScreenshot();
-					images.add(screenshot);
-				}catch(Exception e){}
-				//start_ms = System.currentTimeMillis();
+				start_ms = System.currentTimeMillis();
 				if(!new_key.equals(last_key)){
 					transition_urls.add(new_key);
 					last_key = new_key;
 				}
+				last_elem_count = element_count;
 				iterations=0;
 			}
 			iterations++;
 			//transition is detected if keys are different
 		}while(iterations < 5 && (System.currentTimeMillis() - start_ms) < 10000);
 		
-		int idx = 0;
+		/*
 		for(BufferedImage img : images){
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
 				image_checksums.add(new_checksum);
-
-				if(idx > transition_urls.size()){
-					idx = transition_urls.size()-1;
-				}
-				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, image_checksums.get(idx), browser.getBrowserName()));
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, new_checksum, browser.getBrowserName()));
 			}
 			catch(Exception e){
 				e.printStackTrace();
 			}
 		}
-		
+		*/
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);
@@ -81,8 +80,7 @@ public class BrowserUtils {
 		return redirect;
 	}
 
-	public static void getElementAnimation(Browser browser, ElementState element, String host) throws IOException {
-		// TODO Auto-generated method stub
+	public static void getElementAnimation(Browser browser, ElementState element, String host, WebElement web_element) throws IOException {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		List<BufferedImage> images = new ArrayList<>();
@@ -95,7 +93,7 @@ public class BrowserUtils {
 		int iterations = 0;
 		do{
 			//get element screenshot
-			BufferedImage element_screenshot = browser.getElementScreenshot(browser.getDriver().findElement(By.xpath(element.getXpath())));
+			BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
 			
 			//calculate screenshot checksum
 			String new_checksum = PageState.getFileChecksum(element_screenshot);

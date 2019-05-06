@@ -22,6 +22,7 @@ import com.qanairy.models.repository.PageStateRepository;
  */
 @Service
 public class PageStateService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageStateService.class.getName());
 	
 	@Autowired
@@ -59,9 +60,9 @@ public class PageStateService {
 			
 			page_state_record.setForms(forms);
 			
-			page_state = page_state_repo.save(page_state_record);
-			page_state.setElements(getElementStates(page_state.getKey()));
-			return page_state;
+			page_state_record = page_state_repo.save(page_state_record);
+			page_state_record.setElements(getElementStates(page_state.getKey()));
+			return page_state_record;
 		}
 		else {
 			page_state_record = findByKey(page_state.getKey());
@@ -72,9 +73,9 @@ public class PageStateService {
 				page_state_record.setElements(page_state.getElements());
 				page_state_record.setForms(page_state.getForms());
 
-				page_state = page_state_repo.save(page_state_record);
-				page_state.setElements(getElementStates(page_state.getKey()));
-				return page_state;
+				page_state_record = page_state_repo.save(page_state_record);
+				page_state_record.setElements(getElementStates(page_state_record.getKey()));
+				return page_state_record;
 			}
 			else{
 				//iterate over page elements
@@ -104,11 +105,11 @@ public class PageStateService {
 					form_records.add(form_record);
 				}
 				page_state.setForms(form_records);
-				page_state = page_state_repo.save(page_state);
+				page_state_record = page_state_repo.save(page_state);
 			}
 		}
 		
-		return page_state;
+		return page_state_record;
 	}
 
 	public void addToForms(String page_key, Form form){

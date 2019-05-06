@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.minion.browsing.Browser;
 import com.qanairy.models.Group;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -36,63 +35,7 @@ public class TestCreatorService {
 	private TestService test_service;
 	
 	@Autowired
-	private BrowserService browser_service;
-	
-	@Autowired
 	private GroupService group_service;
-	
-	/**
-	 * Generates a landing page test based on a given URL
-	 * 
-	 * @param browser
-	 * @param msg
-	 * 
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException 
-	 * @throws WebDriverException 
-	 * @throws GridException 
-	 * 
-	 * @pre browser != null
-	 * @pre msg != null
-	 */
-	@Deprecated
-	public Test generateLandingPageTest(String url, Browser browser) 
-			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
-		
-		browser.navigateTo(url);
-		log.warn("building page for landing test");
-
-	  	PageState page_obj = browser_service.buildPage(browser);
-	  	page_obj.setLandable(true);
-	  	page_obj.setLastLandabilityCheck(LocalDateTime.now());
-  		page_obj = page_state_service.save(page_obj);
-  	  	
-	  	List<String> path_keys = new ArrayList<String>();	  	
-	  	List<PathObject> path_objects = new ArrayList<PathObject>();
-	  	path_keys.add(page_obj.getKey());
-	  	path_objects.add(page_obj);
-
-	  	log.warn("path keys size ::   " + path_keys.size());
-	  	log.warn("Path objects size   :::   " + path_objects.size());
-		Test test = createTest(path_keys, path_objects, page_obj, 1L, browser.getBrowserName());
-		if(!url.contains("http")){
-			url = "http://"+url;
-		}
-		String url_path = new URL(url).getPath();
-		url_path = url_path.replace("/", " ");
-		if(url_path.isEmpty()){
-			url_path = "home";
-		}
-		test.setName(url_path.trim() + " page loaded");
-		
-		//add group "smoke" to test
-		Group group = new Group("smoke");
-		group = group_service.save(group);
-		test.addGroup(group);
-		
-		return test;
-	}
 	
 	/**
 	 * Generates a landing page test based on a given URL

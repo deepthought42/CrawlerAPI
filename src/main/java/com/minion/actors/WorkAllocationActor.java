@@ -3,9 +3,6 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -43,37 +40,12 @@ public class WorkAllocationActor extends AbstractActor  {
 
 	@Autowired
 	private ActorSystem actor_system;
-	
-	private List<ActorRef> exploratory_browser_actors;
-	private ActorRef exploratory_actor;
-	
+		
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
 	      MemberEvent.class, UnreachableMember.class);
-	  ActorRef exploratory_browser_actor0 = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-	  
-	  ActorRef exploratory_browser_actor1 = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-	  
-	  ActorRef exploratory_browser_actor2 = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-	  
-	  ActorRef exploratory_browser_actor3 = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-	  
-	  ActorRef exploratory_browser_actor4 = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-	  
-	  exploratory_browser_actors = new ArrayList<ActorRef>();
-	  exploratory_browser_actors.add(exploratory_browser_actor0);
-	  exploratory_browser_actors.add(exploratory_browser_actor1);
-	  exploratory_browser_actors.add(exploratory_browser_actor2);
-	  exploratory_browser_actors.add(exploratory_browser_actor3);
-	  exploratory_browser_actors.add(exploratory_browser_actor4);
-	  exploratory_actor = exploratory_browser_actor0;
 	}
 
 	//re-subscribe when restart
@@ -93,9 +65,9 @@ public class WorkAllocationActor extends AbstractActor  {
 						msg.getOptions().put("browser", browser_name);
 						
 						if(acct_message.getData() instanceof ExploratoryPath){
-							Random random = new Random();
-							int index = random.nextInt(exploratory_browser_actors.size());
-							exploratory_browser_actors.get(index).tell(msg, getSelf() );
+							ActorRef exploratory_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
+							exploratory_actor.tell(msg, getSelf() );
 						}
 						else if(acct_message.getData() instanceof URL){
 							log.info("Sending URL to UrlBrowserActor");

@@ -378,7 +378,7 @@ public class Crawler {
 				}
 				
 				//if redirect follows an action then watch page transition
-				Redirect new_redirect = BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
+				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
 			}
@@ -604,16 +604,6 @@ public class Crawler {
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
 		PageState expected_page  = null;
-		String init_url = null;
-		if(ordered_path_objects.get(0) instanceof Redirect){
-			expected_page = ((PageState)ordered_path_objects.get(1));
-			Redirect redirect = (Redirect)ordered_path_objects.get(0);
-			init_url = redirect.getStartUrl();
-		}
-		else if(ordered_path_objects.get(0) instanceof PageState){
-			expected_page = ((PageState)ordered_path_objects.get(0));
-			init_url = expected_page.getUrl();
-		}
 		
 		PathObject last_obj = null;
 		for(PathObject current_obj: ordered_path_objects){

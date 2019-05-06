@@ -16,7 +16,8 @@ public class PageAlert implements PathObject, Persistable {
 	public PageState page = null;
 	public String choice;
 	public String message;
-
+	public String type;
+	
 	private String key;
 	
 	/**
@@ -107,7 +108,7 @@ public class PageAlert implements PathObject, Persistable {
 
 	@Override
 	public void setType(String type) {
-		
+		this.type = "PageAlert";
 	}
 
 	@Override

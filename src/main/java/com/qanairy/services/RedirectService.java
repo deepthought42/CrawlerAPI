@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.qanairy.models.Action;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.RedirectRepository;

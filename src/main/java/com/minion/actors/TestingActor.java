@@ -7,10 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -19,6 +18,9 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
@@ -31,6 +33,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Scope("prototype")
 public class TestingActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(TestingActor.class);
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
 	private Crawler crawler;
@@ -38,7 +41,19 @@ public class TestingActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 	
-	
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+		
     /**
      * Inputs
      * 
@@ -62,15 +77,16 @@ public class TestingActor extends AbstractActor {
 							int cnt = 0;
 							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
-									browser = BrowserFactory.buildBrowser((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
+									browser = BrowserConnectionFactory.getConnection((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
-									browser.close();
-									break;
 								}catch(NullPointerException e){
 									log.error(e.getMessage());
 								}
-								browser.close();
-
+								finally{
+									if(browser != null){
+										browser.close();
+									}
+								}
 								cnt++;
 							}
 						}
@@ -99,7 +115,6 @@ public class TestingActor extends AbstractActor {
 						}
 		
 					  	test_service.save(test, message.getOptions().get("host").toString());
-						browser.close();
 					}
 					else{
 						log.warn("ERROR : Message contains unknown format");

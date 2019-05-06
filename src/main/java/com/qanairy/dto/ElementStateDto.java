@@ -1,16 +1,16 @@
 package com.qanairy.dto;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.models.ElementState;
 
 /**
- * Data transfer object for {@link PageElement} object that stores data in a format for browser extension
+ * Data transfer object for {@link ElementState} object that stores data in a format for browser extension
  */
-public class PageElementDto {
+public class ElementStateDto {
 
 	private String key;
 	private String xpath;
 	
-	public PageElementDto(PageElement elem){
+	public ElementStateDto(ElementState elem){
 		setKey(elem.getKey());
 		setXpath(elem.getXpath());
 	}

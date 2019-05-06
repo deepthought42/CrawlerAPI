@@ -22,25 +22,25 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserFactory;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.minion.util.Timing;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.repository.ActionRepository;
-import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.PageElementRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.DomainService;
+import com.qanairy.services.ElementStateService;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -63,16 +63,16 @@ public class TestCreationActor extends AbstractActor  {
 	private BrowserService browser_service;
 
 	@Autowired
-	private DomainRepository domain_repo;
+	private DomainService domain_service;
 
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private ElementStateService page_element_service;
 
 	@Autowired
 	private TestRepository test_repo;
 
 	@Autowired
-	private ActionRepository action_repo;
+	private ActionService action_service;
 
 
 	//subscribe to cluster changes
@@ -107,7 +107,7 @@ public class TestCreationActor extends AbstractActor  {
 					    	Browser browser = null;
 
 				    		try{
-				    			browser = BrowserFactory.buildBrowser(browser_name, BrowserEnvironment.TEST);
+				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
@@ -129,8 +129,7 @@ public class TestCreationActor extends AbstractActor  {
 							    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
 
 						    		test = test_repo.save(test);
-						    		domain.addTest(test);
-							    	domain_repo.save(domain);
+						    		domain_service.addTest(domain.getUrl(), test);
 
 							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
 								    	Test old_test = test_repo.findByKey(test_json.get("key").toString());
@@ -143,15 +142,14 @@ public class TestCreationActor extends AbstractActor  {
 						    		test.setName(name);
 						    		test = test_repo.save(test);
 						    	}
-						    	browser.close();
-						    	break;
 				    		}
 				    		catch(Exception e){
 				    			log.warn("Error occurred while creating new test from IDE ::  "+e.getLocalizedMessage());
-				    			e.printStackTrace();
-					    		if(browser != null){
-					    			browser.close();
-					    		}
+				    		}
+				    		finally {
+				    			if(browser != null){
+				    				browser.close();
+				    			}
 				    		}
 				    		attempts++;
 				    	}while(test == null && attempts < Integer.MAX_VALUE);
@@ -198,7 +196,7 @@ public class TestCreationActor extends AbstractActor  {
     		    	if(dot_idx == last_dot_idx){
     		    		formatted_url = "www."+host;
     		    	}
-    				domain = domain_repo.findByHost(formatted_url);
+    				domain = domain_service.findByHost(formatted_url);
     			}
 
     			PageState page_state = navigateToAndCreatePageState(url, browser);
@@ -210,9 +208,9 @@ public class TestCreationActor extends AbstractActor  {
     		else {
     			JSONObject element_json = path_obj_json.getJSONObject("element");
 
-    			PageElement element = createPageElement(element_json.getString("xpath"), browser);
+    			ElementState element = createElementState(element_json.getString("xpath"), browser);
 
-    			PageElement page_elem_record = page_element_repo.findByKey(element.getKey());
+    			ElementState page_elem_record = page_element_service.findByKey(element.getKey());
     			if(page_elem_record == null){
 					path_objects.add(element);
 				}
@@ -235,7 +233,7 @@ public class TestCreationActor extends AbstractActor  {
     			path_objects.add(action);
 
     			Crawler.performAction(action, element, browser.getDriver());
-    			Timing.pauseThread(3000L);
+    			Timing.pauseThread(1500L);
 
     			//******************************************************
     			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.
@@ -258,7 +256,7 @@ public class TestCreationActor extends AbstractActor  {
 
 	private Action createAction(String action_type, String action_value) {
 		Action action = new Action(action_type, action_value);
-		Action action_record = action_repo.findByKey(action.getKey());
+		Action action_record = action_service.findByKey(action.getKey());
 		if(action_record != null){
 			action = action_record;
 		}
@@ -266,19 +264,29 @@ public class TestCreationActor extends AbstractActor  {
 		return action;
 	}
 
-	private PageElement createPageElement(String temp_xpath, Browser browser) throws Exception {
+	private ElementState createElementState(String temp_xpath, Browser browser) throws Exception {
 		//use xpath to identify WebElement.
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
-		Set<Attribute> attributes = browser_service.extractAttributes(element, browser.getDriver());
-		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser.getDriver(), element);
+		Set<Attribute> attributes = browser.extractAttributes(element);
+		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element);
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
-		PageElement elem = new PageElement(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url);
-		PageElement elem_record = page_element_repo.findByKey(elem.getKey());
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight());
+		
+		ElementState elem_record = page_element_service.findByScreenshotChecksum(elem.getScreenshotChecksum());
 
 		if(elem_record != null){
 			elem = elem_record;
+		}
+		else{
+			elem_record = page_element_service.findByKey(elem.getKey());
+			if(elem_record!= null){
+				elem = elem_record;
+			}
+			else{
+				elem = page_element_service.save(elem);
+			}
 		}
 		return elem;
 	}

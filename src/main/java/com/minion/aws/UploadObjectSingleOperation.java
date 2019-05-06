@@ -63,6 +63,7 @@ public class UploadObjectSingleOperation {
             log.error("AWS Error Code:   " + ase.getErrorCode());
             log.error("Error Type:       " + ase.getErrorType());
             log.error("Request ID:       " + ase.getRequestId());
+            ase.printStackTrace();
         } catch (AmazonClientException ace) {
             log.error("Caught an AmazonClientException, which " +
             		"means the client encountered " +

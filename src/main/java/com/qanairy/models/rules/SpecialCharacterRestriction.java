@@ -8,7 +8,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.qanairy.models.Attribute;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.ElementState;
 
 /**
  * Verifies that an element doesn't have any special characters in its value
@@ -31,7 +31,7 @@ public class SpecialCharacterRestriction extends Rule {
 	}
 
 	@Override
-	public Boolean evaluate(PageElement elem) {
+	public Boolean evaluate(ElementState elem) {
 		Pattern pattern = Pattern.compile(this.value);
 		for(Attribute attribute: elem.getAttributes()){
 			if(attribute.getName().equals("vals")){

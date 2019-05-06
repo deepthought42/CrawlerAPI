@@ -1,13 +1,12 @@
 package com.qanairy.models;
 
-import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.imageio.ImageIO;
+import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -20,14 +19,14 @@ import org.slf4j.LoggerFactory;
 
 import com.qanairy.models.rules.Rule;
 /**
- * Contains all the pertinent information for an element on a page. A PageElement
- *  may be a Parent and/or child of another PageElement. This heirarchy is not
- *  maintained by PageElement though. 
+ * Contains all the pertinent information for an element on a page. A ElementState
+ *  may be a Parent and/or child of another ElementState. This heirarchy is not
+ *  maintained by ElementState though. 
  */
 @NodeEntity
-public class PageElement implements Persistable, PathObject {
+public class ElementState implements Persistable, PathObject {
 	@SuppressWarnings("unused")
-	private static Logger log = LoggerFactory.getLogger(PageElement.class);
+	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
 	@GeneratedValue
     @Id
@@ -35,10 +34,15 @@ public class PageElement implements Persistable, PathObject {
 	
     private String key;
     private String screenshot;
+    private String screenshot_checksum;
 	private String name;
 	private String text;
 	private String xpath;
 	private String type;
+	private int x_location;
+	private int y_location;
+	private int width;
+	private int height;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -49,7 +53,7 @@ public class PageElement implements Persistable, PathObject {
 	@Relationship(type = "HAS_RULE")
 	private Set<Rule> rules = new HashSet<>();
 			
-	public PageElement(){}
+	public ElementState(){}
 	
 	/**
 	 * 
@@ -66,7 +70,8 @@ public class PageElement implements Persistable, PathObject {
 	 * @pre screenshot_url != null
 	 * @pre !screenshot_url.isEmpty()
 	 */
-	public PageElement(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url){
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
+			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -74,16 +79,54 @@ public class PageElement implements Persistable, PathObject {
 		assert screenshot_url != null;
 		assert !screenshot_url.isEmpty();
 		
-		setType("PageElement");
+		setType("ElementState");
 		setName(name);
 		setXpath(xpath);
 		setAttributes(attributes);
 		setScreenshot(screenshot_url);
 		setText(text);
 		setCssValues(css_map);
+		setXLocation(x_location);
+		setYLocation(y_location);
+		setWidth(width);
+		setHeight(height);
 		setKey(generateKey());
 	}
 	
+	/**
+	 * 
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * 
+	 * @pre xpath != null
+	 * @pre name != null
+	 * @pre screenshot_url != null
+	 * @pre !screenshot_url.isEmpty()
+	 *  
+	 */
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url, String checksum, int x_location, int y_location, int width, int height){
+		assert name != null;
+		assert xpath != null;
+		assert checksum != null;
+		assert !checksum.isEmpty();
+		
+		setType("ElementState");
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setScreenshot(screenshot_url);
+		setText(text);
+		setCssValues(css_map);
+		setScreenshotChecksum(checksum);
+		setXLocation(x_location);
+		setYLocation(y_location);
+		setWidth(width);
+		setHeight(height);
+		setKey(generateKey());
+	}
 	/**
 	 * Print Attributes for this element in a prettyish format
 	 */
@@ -104,7 +147,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @param elem
 	 * @return whether attributes match or not
 	 */
-	public boolean cssMatches(PageElement elem){
+	public boolean cssMatches(ElementState elem){
 		for(String propertyName : cssValues.keySet()){
 			if(propertyName.contains("-moz-") || propertyName.contains("-webkit-") || propertyName.contains("-o-") || propertyName.contains("-ms-")){
 				continue;
@@ -123,7 +166,7 @@ public class PageElement implements Persistable, PathObject {
 	 * @param elem
 	 * @return
 	 */
-	public boolean isChildElement(PageElement elem){
+	public boolean isChildElement(ElementState elem){
 		return elem.getXpath().equals(this.getXpath()) && elem.getXpath().contains(this.getXpath());
 	}
 		
@@ -230,6 +273,14 @@ public class PageElement implements Persistable, PathObject {
 		this.type = type;
 	}
 	
+	public String getScreenshotChecksum() {
+		return screenshot_checksum;
+	}
+
+	public void setScreenshotChecksum(String screenshot_checksum) {
+		this.screenshot_checksum = screenshot_checksum;
+	}
+
 	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
 	 * as easy identity of {@link Test} when generated in the wild via discovery
@@ -237,13 +288,25 @@ public class PageElement implements Persistable, PathObject {
 	 * @return
 	 */
 	public String generateKey() {
+		String key = "";
 		
-		String checksum = "";
-		try{
-			checksum = PageState.getFileChecksum(ImageIO.read(new File(getScreenshot())));
+		List<String> css_keys = getCssValues().keySet().stream().collect(Collectors.toList());
+		Collections.sort(css_keys, (o1, o2) -> o1.compareTo(o2));
+		for(String css_key : css_keys){
+			key += css_key+cssValues.get(css_key);
 		}
-		catch(Exception e){}
-		return "pageelement::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(checksum+":"+getXpath()+":"+getText());   
+		
+		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
+		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+		
+		for(Attribute attribute : attributes){
+			key += attribute.getKey();
+		}
+		
+		key += this.getName();
+		key += this.getText();
+
+		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 	
 
@@ -255,7 +318,7 @@ public class PageElement implements Persistable, PathObject {
 	}
 
 	/**
-	 * Checks if {@link PageElement elements} are equal
+	 * Checks if {@link ElementState elements} are equal
 	 * 
 	 * @param elem
 	 * @return whether or not elements are equal
@@ -263,15 +326,15 @@ public class PageElement implements Persistable, PathObject {
 	@Override
 	public boolean equals(Object o){
 		if (this == o) return true;
-        if (!(o instanceof PageElement)) return false;
+        if (!(o instanceof ElementState)) return false;
         
-        PageElement that = (PageElement)o;
-		return this.getKey().equals(that.getKey());
+        ElementState that = (ElementState)o;
+		return this.getKey().equals(that.getKey()) || getScreenshotChecksum().equals(that.getScreenshotChecksum());
 	}
 
 
 	public PathObject clone() {
-		PageElement page_elem = new PageElement();
+		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
 		page_elem.setCssValues(this.getCssValues());
 		page_elem.setKey(this.getKey());
@@ -280,7 +343,41 @@ public class PageElement implements Persistable, PathObject {
 		page_elem.setText(this.getText());
 		page_elem.setType(this.getType());
 		page_elem.setXpath(this.getXpath());
+		page_elem.setYLocation(this.getYLocation());
+		page_elem.setXLocation(this.getXLocation());
 		
 		return page_elem;
+	}
+
+	public int getXLocation() {
+		return x_location;
+	}
+
+	public void setXLocation(int x_location) {
+		this.x_location = x_location;
+	}
+
+	public int getYLocation() {
+		return y_location;
+	}
+
+	public void setYLocation(int y_location) {
+		this.y_location = y_location;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
 	}
 }

@@ -1,9 +1,12 @@
 package com.qanairy.services;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Account;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.repository.AccountRepository;
 
@@ -31,4 +34,38 @@ public class AccountService {
 			account_repo.save(acct);
 		}
 	}
+
+	public Account findByUsername(String username) {
+		return account_repo.findByUsername(username);
+	}
+
+	public Account save(Account acct) {
+		return account_repo.save(acct);
+	}
+
+	public Account findByUserId(String id) {
+		return account_repo.findByUserId(id);
+	}
+
+	public void deleteAccount(String userId) {
+        account_repo.deleteAccountEdges(userId);
+        account_repo.deleteAccount(userId);
+	}
+
+	public void removeDomain(String username, String domain_key) {
+		account_repo.removeDomain(username, domain_key);
+	}
+
+	public Set<Domain> getDomains(String user_id) {
+		return account_repo.getDomains(user_id);
+	}
+
+	public Set<DiscoveryRecord> getDiscoveryRecordsByMonth(String username, int month) {
+		return account_repo.getDiscoveryRecordsByMonth(username, month);
+	}
+
+	public int getTestCountByMonth(String username, int month) {
+		return account_repo.getTestCountByMonth(username, month);
+	}
+	
 }

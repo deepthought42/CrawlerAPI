@@ -145,7 +145,7 @@ public class TestService {
 				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
 			}
 			
-	  		test = test_repo.save(test);
+	  		record = test_repo.save(test);
 			domain_service.addTest(host_url, test);
 		
 			try {
@@ -154,7 +154,7 @@ public class TestService {
 				log.error(e.getLocalizedMessage());
 			}
 			
-			for(PathObject path_obj : test.getPathObjects()){
+			for(PathObject path_obj : record.getPathObjects()){
 				try {
 					MessageBroadcaster.broadcastPathObject(path_obj, host_url);
 				} catch (JsonProcessingException e) {
@@ -170,14 +170,13 @@ public class TestService {
 				log.error(e.getLocalizedMessage());
 			}
 			
-			test = record;
-			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
-			test.setPathObjects(path_objects);
+			List<PathObject> path_objects = test_repo.getPathObjects(record.getKey());
+			record.setPathObjects(path_objects);
 			
-			test.setResult(page_state_service.findByKey(test.getResult().getKey()));
+			record.setResult(page_state_service.findByKey(test.getResult().getKey()));
 		}
 		
-		return test;
+		return record;
 	}
 	 
 	public List<Test> findTestsWithElementState(String page_state_key, String element_state_key){

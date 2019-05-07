@@ -8,8 +8,6 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import com.minion.browsing.Browser;
-
 @NodeEntity
 public class Page implements Persistable{
 
@@ -20,24 +18,19 @@ public class Page implements Persistable{
 	private String key;
 	private String url;
 	private String path;
-	private String src;
 	
 	@Relationship(type = "HAS")
 	private Set<PageState> page_states;
-	
-	@Relationship(type = "CONTAINS")
-	private Set<Element> page_elements;
 
 	@Override
 	public String generateKey() {
-		return getUrl();
+		return org.apache.commons.codec.digest.DigestUtils.sha256Hex(getUrl());
 	}
 	
 	public Page(String url){
 		setUrl(url);
 		setKey(generateKey());
 		setPageStates(new HashSet<PageState>());
-		setPageElements(new HashSet<Element>());
 	}
 	
 	/**
@@ -59,7 +52,7 @@ public class Page implements Persistable{
 
 		Page that = (Page) o;	
 		
-		return this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));
+		return this.getUrl().equals(that.getUrl());
 	}
 	
 	//GETTERS AND SETTERS
@@ -80,14 +73,6 @@ public class Page implements Persistable{
 		this.url = url;
 	}
 
-	public String getSrc() {
-		return src;
-	}
-
-	public void setSrc(String src) {
-		this.src = src;
-	}
-
 	public Set<PageState> getPageStates() {
 		return page_states;
 	}
@@ -103,13 +88,4 @@ public class Page implements Persistable{
 	public void setKey(String key) {
 		this.key = key;
 	}
-
-	public Set<Element> getPageElements() {
-		return page_elements;
-	}
-
-	public void setPageElements(Set<Element> page_elements) {
-		this.page_elements = page_elements;
-	}
-
 }

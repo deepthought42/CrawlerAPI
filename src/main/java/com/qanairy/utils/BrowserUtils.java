@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
+import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
@@ -42,7 +43,6 @@ public class BrowserUtils {
 			new_key = new_url.getProtocol()+"://"+new_url.getHost()+new_url.getPath();
 	        
 	        transition_detected = !new_key.equals(last_key) || element_count != last_elem_count;
-
 	        
 	        try{
 				images.add(browser.getViewportScreenshot());
@@ -80,7 +80,7 @@ public class BrowserUtils {
 		return redirect;
 	}
 
-	public static void getElementAnimation(Browser browser, ElementState element, String host, WebElement web_element) throws IOException {
+	public static Animation getElementAnimation(Browser browser, ElementState element, String host, WebElement web_element) throws IOException {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		List<BufferedImage> images = new ArrayList<>();
@@ -98,22 +98,10 @@ public class BrowserUtils {
 			//calculate screenshot checksum
 			String new_checksum = PageState.getFileChecksum(element_screenshot);
 			
-			//check for cycle in checksums
-			boolean cycle_detected = false;
-			for(String checksum : image_checksums){
-				if(new_checksum.equals(checksum)){
-					cycle_detected = true;
-					log.warn("cycle detected in animation");
-					break;
-				}
-			}
-			if(cycle_detected){
-				break;
-			}
 			transition_detected = !new_checksum.equals(last_checksum);
 			
-			if(!cycle_detected && transition_detected ){
-				//start_ms = System.currentTimeMillis();
+			if(transition_detected ){
+				start_ms = System.currentTimeMillis();
 				image_checksums.add(new_checksum);								
 				last_checksum = new_checksum;
 				iterations=0;
@@ -132,5 +120,7 @@ public class BrowserUtils {
 				e.printStackTrace();
 			}
 		}
+		
+		return new Animation(image_urls, element);
 	}
 }

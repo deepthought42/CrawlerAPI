@@ -82,7 +82,7 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	return domain_service.getMostRecentDiscoveryRecord(url, acct.getUserId());
+    	return domain_service.getMostRecentDiscoveryRecord(url);
     }
 	
     /**

@@ -153,10 +153,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									}
 								}
 								
-								for(String key : path.getPathKeys()){
-									log.warn("PATH KEY 1 : "+key);
-								}
-								log.warn("RESULT  : " +result_page);
 								if(!ExploratoryPath.hasCycle(page_states, result_page, path.getPathObjects().size() == 1)){
 									log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 									log.warn("sending test candidate to parent path explorer");

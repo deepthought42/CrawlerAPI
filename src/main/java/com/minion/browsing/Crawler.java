@@ -306,15 +306,6 @@ public class Crawler {
 		PathObject last_obj = null;
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
-		
-		PageState expected_page = null;
-		
-		for(PathObject obj : path_object_list){
-			if(obj instanceof PageState){
-				expected_page = ((PageState)obj);
-				break;
-			}
-		}
 
 		List<String> path_keys = new ArrayList<String>();
 		List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -344,6 +335,15 @@ public class Crawler {
 		ordered_path_objects = reduced_path_obj;
 		path_objects = new ArrayList<PathObject>(ordered_path_objects);
 		
+		PageState expected_page = null;
+		
+		for(PathObject obj : path_objects){
+			if(obj instanceof PageState){
+				expected_page = ((PageState)obj);
+				break;
+			}
+		}
+
 		if(!(path_objects.get(0) instanceof Redirect)){
 			browser.navigateTo(expected_page.getUrl());
 
@@ -355,6 +355,9 @@ public class Crawler {
 				path_objects.add(0,initial_redirect);
 			}
 		}
+		
+		//TODO: check for continuously animated elements
+		
 		
 		String last_url = null;
 		int current_idx = 0;

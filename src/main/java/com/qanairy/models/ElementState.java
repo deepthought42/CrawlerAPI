@@ -31,7 +31,6 @@ public class ElementState implements Persistable, PathObject {
 	@GeneratedValue
     @Id
     private Long id;
-	
     private String key;
     private String screenshot;
     private String screenshot_checksum;
@@ -43,6 +42,7 @@ public class ElementState implements Persistable, PathObject {
 	private int y_location;
 	private int width;
 	private int height;
+	private boolean is_continuously_animated;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();

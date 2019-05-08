@@ -177,7 +177,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									log.warning("test key ::   " + key);
 								}
 								
-								DiscoveryRecord discovery = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), null);
+								DiscoveryRecord discovery = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
 								//send test for exploration
 								message.getOptions().put("discovery_key", discovery.getKey());
 								message.getOptions().put("browser", domain.getDiscoveryBrowserName());

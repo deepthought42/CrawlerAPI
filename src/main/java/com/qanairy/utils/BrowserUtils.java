@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,34 +33,27 @@ public class BrowserUtils {
 		
 		URL init_url = new URL(initial_url);
 		String last_key = init_url.getProtocol()+"://"+init_url.getHost()+init_url.getPath();
-		int last_elem_count = 0;
-		int iterations = 0;
 		do{
 			String new_key = browser.getDriver().getCurrentUrl();
-			int element_count = browser.getDriver().findElements(By.xpath("//*")).size();
 			URL new_url = new URL(new_key);
 			new_key = new_url.getProtocol()+"://"+new_url.getHost()+new_url.getPath();
-	        
-	        transition_detected = !new_key.equals(last_key) || element_count != last_elem_count;
-	        
-	        try{
-				images.add(browser.getViewportScreenshot());
+
+			try{
+	        	BufferedImage img = browser.getViewportScreenshot();
+				images.add(img);
 			}catch(Exception e){}
 	        
+	        transition_detected = !new_key.equals(last_key);
+	        
 			if(transition_detected ){
+				log.warn("redirect transition detected");
 				start_ms = System.currentTimeMillis();
-				if(!new_key.equals(last_key)){
-					transition_urls.add(new_key);
-					last_key = new_key;
-				}
-				last_elem_count = element_count;
-				iterations=0;
+				transition_urls.add(new_key);
+				last_key = new_key;
 			}
-			iterations++;
 			//transition is detected if keys are different
-		}while(iterations < 5 && (System.currentTimeMillis() - start_ms) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 2000);
 		
-		/*
 		for(BufferedImage img : images){
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
@@ -72,7 +64,7 @@ public class BrowserUtils {
 				e.printStackTrace();
 			}
 		}
-		*/
+		
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);

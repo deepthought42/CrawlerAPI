@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,12 @@ import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.AccountUsage;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Domain;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
+import com.qanairy.services.DomainService;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -53,6 +56,9 @@ public class AccountController {
 
     @Autowired
     private AccountService account_service;
+    
+    @Autowired
+    private DomainService domain_service;
     
     private StripeClient stripeClient;
 
@@ -214,7 +220,7 @@ public class AccountController {
 	
     @PreAuthorize("hasAuthority('read:accounts')")
 	@RequestMapping(path ="/usage", method = RequestMethod.GET)
-    public AccountUsage getUsageStats(HttpServletRequest request) throws UnknownAccountException{
+    public AccountUsage getUsageStats(HttpServletRequest request,@RequestParam(value="domain_host", required=true) String domain_host) throws UnknownAccountException{
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
@@ -224,9 +230,8 @@ public class AccountController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-        
+                
     	int monthly_test_count = 0;
-    	//Check if account has exceeded test run limit
     	for(TestRecord record : acct.getTestRecords()){
     		Calendar cal = Calendar.getInstance(); 
     		cal.setTime(record.getRanAt()); 
@@ -241,10 +246,12 @@ public class AccountController {
     			monthly_test_count++;
     		}
     	}
-    	int tests_used = acct.getTestRecords().size();
     	
+    	//get count of monthly tests discovered
     	int monthly_discovery_count = 0;
-    	//check if account has exceeded allowed discovery threshold
+        int total_discovered_tests = 0;
+        int domain_discovery_count = 0;
+        int domain_total_discovered_tests = 0;
     	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
     		Calendar cal = Calendar.getInstance(); 
     		cal.setTime(record.getStartTime()); 
@@ -257,12 +264,39 @@ public class AccountController {
 
     		if(month_started == month_now && year_started == year_now){
     			monthly_discovery_count++;
+    			total_discovered_tests += record.getTestCount();
+    		}
+    		
+    		if(record.getDomainUrl().equals(domain_host)){
+    			domain_discovery_count++;
+    			domain_total_discovered_tests += record.getTestCount();
+    		}
+    	}
+    	        
+    	//calculate number of test records for domain
+        int domain_tests_ran = 0;
+    	for(TestRecord record : domain_service.getTestRecords(domain_host)){
+    		Calendar cal = Calendar.getInstance(); 
+    		cal.setTime(record.getRanAt()); 
+    		int month_started = cal.get(Calendar.MONTH);
+    		int year_started = cal.get(Calendar.YEAR);
+   
+    		Calendar c = Calendar.getInstance();
+    		int month_now = c.get(Calendar.MONTH);
+    		int year_now = c.get(Calendar.YEAR);
+
+    		if(month_started == month_now && year_started == year_now){
+    			domain_tests_ran++;
     		}
     	}
     	
-        int discoveries_used = acct.getDiscoveryRecords().size();
-        
-        return new AccountUsage(discoveries_used, tests_used);
+    	DiscoveryRecord most_recent_discovery = domain_service.getMostRecentDiscoveryRecord(domain_host);
+    	
+    	long discovery_run_time = System.currentTimeMillis() - most_recent_discovery.getStartTime().getTime();
+    			
+        return new AccountUsage(monthly_discovery_count, monthly_test_count, total_discovered_tests, 
+        							domain_discovery_count, domain_tests_ran, domain_total_discovered_tests, 
+        							most_recent_discovery.getStartTime(), discovery_run_time, most_recent_discovery.getLastPathRanAt());
     }
 }
 

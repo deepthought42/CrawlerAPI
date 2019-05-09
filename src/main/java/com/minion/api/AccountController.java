@@ -30,7 +30,6 @@ import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.AccountUsage;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.StripeClient;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
@@ -231,16 +230,16 @@ public class AccountController {
     		throw new MissingSubscriptionException();
     	}
                 
+		Calendar c = Calendar.getInstance();
+		int month_now = c.get(Calendar.MONTH);
+		int year_now = c.get(Calendar.YEAR);
+
     	int monthly_test_count = 0;
-    	for(TestRecord record : acct.getTestRecords()){
+    	for(TestRecord record : account_service.getTestRecords(acct.getUsername())){
     		Calendar cal = Calendar.getInstance(); 
     		cal.setTime(record.getRanAt()); 
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
-   
-    		Calendar c = Calendar.getInstance();
-    		int month_now = c.get(Calendar.MONTH);
-    		int year_now = c.get(Calendar.YEAR);
 
     		if(month_started == month_now && year_started == year_now){
     			monthly_test_count++;
@@ -252,15 +251,11 @@ public class AccountController {
         int total_discovered_tests = 0;
         int domain_discovery_count = 0;
         int domain_total_discovered_tests = 0;
-    	for(DiscoveryRecord record : acct.getDiscoveryRecords()){
+    	for(DiscoveryRecord record :  account_service.getDiscoveryRecordsByMonth(acct.getUsername(), month_now)){
     		Calendar cal = Calendar.getInstance(); 
     		cal.setTime(record.getStartTime()); 
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
-   
-    		Calendar c = Calendar.getInstance();
-    		int month_now = c.get(Calendar.MONTH);
-    		int year_now = c.get(Calendar.YEAR);
 
     		if(month_started == month_now && year_started == year_now){
     			monthly_discovery_count++;
@@ -280,11 +275,7 @@ public class AccountController {
     		cal.setTime(record.getRanAt()); 
     		int month_started = cal.get(Calendar.MONTH);
     		int year_started = cal.get(Calendar.YEAR);
-   
-    		Calendar c = Calendar.getInstance();
-    		int month_now = c.get(Calendar.MONTH);
-    		int year_now = c.get(Calendar.YEAR);
-
+    		
     		if(month_started == month_now && year_started == year_now){
     			domain_tests_ran++;
     		}

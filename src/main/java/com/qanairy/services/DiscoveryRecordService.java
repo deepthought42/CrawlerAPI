@@ -28,19 +28,10 @@ public class DiscoveryRecordService {
   		return save(discovery_record);		
 	}
 	
-	public synchronized DiscoveryRecord increaseTotalPathCount(String discovery_key, int cnt){
-		while(in_progress){
-			try{
-				wait();
-			}
-			catch(Exception e){}
-		}
+	public DiscoveryRecord increaseTotalPathCount(String discovery_key, int cnt){
 		DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
 		discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+cnt);
   		discovery_record = save(discovery_record);
-  		
-  		in_progress = false;
-  		notify();
   		
   		return discovery_record;
 	}

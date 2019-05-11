@@ -6,12 +6,18 @@ public class Animation implements PathObject, Persistable {
 
 	private String type;
 	private String key;
-	List<String> image_urls;
-	ElementState element;
+	private List<String> image_urls;
 	
-	public Animation(List<String> image_urls, ElementState element) {
+	public List<String> getImageUrls() {
+		return image_urls;
+	}
+
+	public void setImageUrls(List<String> image_urls) {
 		this.image_urls = image_urls;
-		this.element = element;
+	}
+
+	public Animation(List<String> image_urls) {
+		this.image_urls = image_urls;
 		setKey(generateKey());
 	}
 

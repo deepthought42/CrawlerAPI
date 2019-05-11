@@ -18,6 +18,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -52,6 +53,9 @@ public class TestService {
 	
 	@Autowired
 	private RedirectService redirect_service;
+	
+	@Autowired
+	private AnimationService animation_service;
 	
 	@Autowired
 	private Crawler crawler;
@@ -129,6 +133,9 @@ public class TestService {
 				}
 				else if(path_obj instanceof Redirect){
 					path_objects.add(redirect_service.save((Redirect)path_obj));
+				}
+				else if(path_obj instanceof Animation){
+					path_objects.add(animation_service.save((Animation)path_obj));
 				}
 			}
 			test.setPathObjects(path_objects);

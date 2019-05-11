@@ -13,7 +13,7 @@ public class AttributeService {
 	private AttributeRepository attribute_repo;
 	
 	public Attribute save(Attribute attribute){
-		Attribute attribute_record = attribute_repo.findByKey(attribute.getKey());
+		Attribute attribute_record = findByKey(attribute.getKey());
 		if(attribute_record == null){
 			attribute_record = attribute_repo.save(attribute);
 		}

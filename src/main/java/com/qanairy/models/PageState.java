@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +59,8 @@ public class PageState implements Persistable, PathObject {
 	private String type;
 	private String screenshot_checksum;
 
+	private List<String> animated_image_urls;
+	
 	@Relationship(type = "HAS_ELEMENT")
 	private Set<ElementState> elements;
 
@@ -98,6 +101,7 @@ public class PageState implements Persistable, PathObject {
 		setForms(new HashSet<Form>());
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
+		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 
@@ -130,6 +134,7 @@ public class PageState implements Persistable, PathObject {
 		setScrollYOffset(scroll_y_offset);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
+		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 	
@@ -168,6 +173,7 @@ public class PageState implements Persistable, PathObject {
 		setViewportHeight(viewport_height);
 		setSrc(src);
 		setForms(new HashSet<Form>());
+		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 	
@@ -297,6 +303,7 @@ public class PageState implements Persistable, PathObject {
 		PageState page = null;
 		try {
 			page = new PageState(getUrl().toString(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
+			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
 		} catch (NoSuchAlgorithmException | IOException e) {
 			log.info("Error cloning page : " + page.getKey() + ";  "+e.getMessage());
 		}
@@ -529,5 +536,11 @@ public class PageState implements Persistable, PathObject {
 
 	public void setViewportHeight(int viewport_height) {
 		this.viewport_height = viewport_height;
+	}
+	public List<String> getAnimatedImageUrls() {
+		return animated_image_urls;
+	}
+	public void setAnimatedImageUrls(List<String> animated_image_urls) {
+		this.animated_image_urls = animated_image_urls;
 	}
 }

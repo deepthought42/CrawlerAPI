@@ -88,7 +88,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			System.err.println("Getting browser for form extraction");
 					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 					  		browser.navigateTo(page_state.getUrl());
-					  		browser.waitForPageToLoad();
+					  		
 					  		BrowserUtils.getPageTransition(page_state.getUrl(), browser, message.getDiscovery().getDomainUrl());
 					  		browser.waitForPageToLoad();
 					  		
@@ -119,8 +119,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							    form = form_service.save(form);
 							  	page_state.addForm(form);
 							  	page_state_service.save(page_state);
-							  	
-						  										
+							  								
 						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
 						  	}

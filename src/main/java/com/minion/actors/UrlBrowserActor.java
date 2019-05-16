@@ -66,11 +66,15 @@ public class UrlBrowserActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 	
+	private ActorRef path_expansion_actor;
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
 	      MemberEvent.class, UnreachableMember.class);
+	  path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+			  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -144,8 +148,6 @@ public class UrlBrowserActor extends AbstractActor {
 						/**  path expansion temporarily disabled
 						 */
 						
-						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						path_expansion_actor.tell(test_msg, getSelf() );
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
 						

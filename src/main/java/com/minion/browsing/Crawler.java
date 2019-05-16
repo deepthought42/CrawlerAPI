@@ -153,7 +153,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				browser.waitForPageToLoad();
+				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -271,7 +271,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				browser.waitForPageToLoad();
+				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -344,6 +344,9 @@ public class Crawler {
 			}
 		}
 
+		browser.navigateTo(expected_page.getUrl());
+		browser.waitForPageToLoad();
+/*
 		if(!(path_objects.get(0) instanceof Redirect)){
 			browser.navigateTo(expected_page.getUrl());
 
@@ -355,7 +358,7 @@ public class Crawler {
 				path_objects.add(0,initial_redirect);
 			}
 		}
-		
+	*/	
 		//TODO: check for continuously animated elements
 		
 		
@@ -436,9 +439,7 @@ public class Crawler {
 					}
 					else if(current_idx < path_objects.size()-1 && !path_objects.get(current_idx+1).getKey().contains("redirect") ){
 						log.warn("PAUSING AFTER ACTION PERFORMED   !!!!!!!!!");
-						//TODO: Replace the following with animation detection
-						//BrowserUtils.getElementAnimation(browser, last_element, host_channel);
-						Timing.pauseThread(1000);
+						//TODO: Replace the following with animation detection						Timing.pauseThread(1000);
 					}
 				
 					Point p = browser.getViewportScrollOffset();
@@ -512,9 +513,6 @@ public class Crawler {
 				//e.printStackTrace();
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
-				if(e.getMessage().contains("viewport")){
-					throw e;
-				}
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 				e.printStackTrace();
@@ -635,7 +633,6 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				//BrowserUtils.getElementAnimation(browser, last_element, host);
 				Timing.pauseThread(1000);
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -650,7 +647,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host);
-				browser.waitForPageToLoad();
+				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");

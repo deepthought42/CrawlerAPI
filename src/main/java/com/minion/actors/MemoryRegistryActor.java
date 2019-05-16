@@ -98,9 +98,7 @@ public class MemoryRegistryActor extends AbstractActor{
 					}
 					else if(msg.getData() instanceof ElementState){
 						ElementState elem = (ElementState)msg.getData();
-						if(element_service.findByKey(elem.getKey()) == null){
-							element_service.save(elem);
-						}
+						element_service.save(elem);
 					}
 					postStop();
 

@@ -62,7 +62,6 @@ public class PageStateService {
 			
 			page_state_record = page_state_repo.save(page_state_record);
 			page_state_record.setElements(getElementStates(page_state.getKey()));
-			return page_state_record;
 		}
 		else {
 			page_state_record = findByKey(page_state.getKey());
@@ -75,7 +74,6 @@ public class PageStateService {
 
 				page_state_record = page_state_repo.save(page_state_record);
 				page_state_record.setElements(getElementStates(page_state_record.getKey()));
-				return page_state_record;
 			}
 			else{
 				//iterate over page elements
@@ -109,7 +107,7 @@ public class PageStateService {
 			}
 		}
 		
-		return page_state_record;
+		return page_state;
 	}
 
 	public void addToForms(String page_key, Form form){

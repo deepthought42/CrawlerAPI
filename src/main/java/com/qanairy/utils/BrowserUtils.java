@@ -5,12 +5,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,6 +89,8 @@ public class BrowserUtils {
 		
 		Map<String, BufferedImage> animated_state_imgs = new HashMap<String, BufferedImage>();
 		String last_checksum = null;
+		int index = 0;
+
 		do{
 			//get element screenshot
 			BufferedImage screenshot = browser.getViewportScreenshot();
@@ -100,21 +100,25 @@ public class BrowserUtils {
 			
 			transition_detected = !new_checksum.equals(last_checksum);
 			
-			if(transition_detected && !animated_state_imgs.containsKey(new_checksum)){
+			log.warn("new checksum :: " + new_checksum);
+			log.warn("has key been seen before :: " + animated_state_imgs.containsKey(new_checksum));
+			if( animated_state_imgs.containsKey(new_checksum)){
+				break;
+			}
+			else if( transition_detected ){
 				start_ms = System.currentTimeMillis();
 				image_checksums.add(new_checksum);
 				animated_state_imgs.put(new_checksum, screenshot);
 				last_checksum = new_checksum;
+				index++;
 			}
 
 			//transition is detected if keys are different
-		}while(System.currentTimeMillis() - start_ms < 10000);
-		
-		int idx = 0;
-		Iterator<BufferedImage> screenshot_iterator = animated_state_imgs.values().iterator();
-		while(screenshot_iterator.hasNext()){
+		}while((System.currentTimeMillis() - start_ms) < 10000 && index < 10);
+				
+		for(Map.Entry<String, BufferedImage> entry : animated_state_imgs.entrySet()){
 			try{
-				image_urls.add(UploadObjectSingleOperation.saveImageToS3(screenshot_iterator.next(), host, image_checksums.get(idx), browser.getBrowserName()));
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3(entry.getValue(), host, entry.getKey(), browser.getBrowserName()));
 			}
 			catch(Exception e){
 				e.printStackTrace();

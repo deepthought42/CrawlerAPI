@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Group;
@@ -29,7 +27,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.TestCandidateMessage;
-import com.qanairy.services.ActionService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.EmailService;
 import com.qanairy.services.PageStateService;
@@ -65,9 +62,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	
 	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private ActionService action_service;
 	
 	@Autowired
 	private TestService test_service;
@@ -112,40 +106,32 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		
 							//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
 							//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 						
-							for(Action action : exploratory_path.getPossibleActions()){
-								ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
-								Action action_record = action_service.findByKey(action.getKey());
+							//for(Action action : exploratory_path.getPossibleActions()){
+								//ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
+								//Action action_record = action_service.findByKey(action.getKey());
 								
 								//if(!exploratory_path.getPathKeys().contains("action")){
 									
+								/*
 									if(action_record != null){
 										action = action_record;
 									}
 									
 									path.addPathObject(action);
 									path.addToPathKeys(action.getKey());
+									*/
 								//}
 								String page_url = acct_msg.getOptions().get("host").toString();
 
-								final long pathCrawlStartTime = System.currentTimeMillis();
-								try{
-									result_page = crawler.performPathExploratoryCrawl(browser_name, path, page_url);
-								}
-								catch(WebDriverException e){
-									e.printStackTrace();
-									postStop();
-									return;
-								}
+								result_page = crawler.performPathExploratoryCrawl(browser_name, exploratory_path, page_url);
 								result_page = page_state_service.save(result_page);
 								
 								//have page checked for landability
 								//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
-								final long pathCrawlEndTime = System.currentTimeMillis();
-								long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 							
 								//get page states 
 								List<PageState> page_states = new ArrayList<PageState>();
-								for(PathObject path_obj : path.getPathObjects()){
+								for(PathObject path_obj : exploratory_path.getPathObjects()){
 									if(path_obj instanceof PageState){
 										PageState page_state = (PageState)path_obj;
 										page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
@@ -153,7 +139,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									}
 								}
 								
-								if(!ExploratoryPath.hasCycle(page_states, result_page, path.getPathObjects().size() == 1)){
+								boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
+								
+								if(!ExploratoryPath.hasCycle(page_states, result_page, exploratory_path.getPathObjects().size() == 1)
+										&& !isResultAnimatedState){
+									//check if result is an animated image from previous page
+									
 									log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 									log.warn("sending test candidate to parent path explorer");
 									candidate_identified = true;
@@ -161,12 +152,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 									DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
 
-									TestCandidateMessage msg = new TestCandidateMessage(path.getPathKeys(), path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
+									TestCandidateMessage msg = new TestCandidateMessage(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
 									ActorRef parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 											.props("parentPathExplorer"), "parent_path_explorer"+UUID.randomUUID());
 									parent_path_explorer.tell(msg, getSelf());
 								}
-							}
+							//}
 							
 							if(!candidate_identified){
 								DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
@@ -205,6 +196,21 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				.build();
 	}
 	
+	private boolean isResultAnimatedState(List<PageState> page_states, PageState result_page) {
+		for(PageState page_state : page_states){
+			if(!page_state.getAnimatedImageUrls().isEmpty()){
+				for(String image_url : page_state.getAnimatedImageUrls()){
+					//if result screenshot image url is the same as a previous animated state then return true
+					if(result_page.getScreenshotUrl().equals(image_url)){
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
 	public static List<String> getPageTransition(Browser browser) throws MalformedURLException{
 		List<String> transition_keys = new ArrayList<String>();
 		boolean transition_detected = false;

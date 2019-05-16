@@ -38,6 +38,7 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -173,6 +174,11 @@ public class BrowserService {
 						browser.scrollToElement(web_elements.get(0));
 					}
 					PageState page_state = buildPage(browser);
+					/*
+					Animation animation = BrowserUtils.getAnimation(browser, host);
+					log.warn("setting animated image urls :: " + animation.getImageUrls().size());
+					page_state.setAnimatedImageUrls(animation.getImageUrls());
+	*/
 					Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
 
 					for(ElementState element : page_state.getElements()){
@@ -360,7 +366,7 @@ public class BrowserService {
 				browser.getViewportSize().width,
 				browser.getViewportSize().height,
 				browser.getBrowserName());
-
+		
 		log.warn("initialized page state");
 		PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 		if(page_state_record != null){			
@@ -491,12 +497,10 @@ public class BrowserService {
 		checksum = PageState.getFileChecksum(img);	
 		page_element_record = page_element_service.findByScreenshotChecksum(checksum);
 
-
 		if(page_element_record != null){
 			page_element = page_element_record;
 		}
 		else{
-			//TODO: refactor code to handle this asynchronously. Loading CSS properties currently ranges from 470ms-800ms as of 3/25/2019
 			Map<String, String> css_props = Browser.loadCssProperties(elem);
 			Set<Attribute> attributes = browser.extractAttributes(elem);
 
@@ -884,20 +888,7 @@ public class BrowserService {
 
 					ElementState elem = new ElementState(child.getText(), generateXpath(child, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), child.getTagName(), attributes, Browser.loadCssProperties(child), screenshot_url, child.getLocation().getX(), child.getLocation().getY(), child.getSize().getWidth(), child.getSize().getHeight() );
 					
-					ElementState elem_record = page_element_service.findByKey(elem.getKey());
-					
-					if(elem_record != null){
-						elem=elem_record;
-					}
-					else{
-						elem_record = page_element_service.findByScreenshotChecksum(elem.getScreenshotChecksum());
-						if(elem_record!= null){
-							elem = elem_record;
-						}
-						else{
-							elem = page_element_service.save(elem);
-						}
-					}
+					elem = page_element_service.save(elem);
 					
 					//FormField input_field = new FormField(elem);
 					

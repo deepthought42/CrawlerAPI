@@ -106,8 +106,8 @@ public class BrowserService {
 				
 				PageState landable_page_state = buildPage(landable_browser);
 				log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				log.warn("page state key, checksum    : " + page_state.getKey()+"   ,   "+page_state.getScreenshotChecksum() +" :: "+page_state.getUrl());
-				log.warn("page state key, checksum    : " + landable_page_state.getKey()+"   ,   "+landable_page_state.getScreenshotChecksum()+" :: "+page_state.getUrl());
+				log.warn("page state key, checksum    : " + page_state.getKey()+"   ,   "+page_state.getScreenshotChecksums() +" :: "+page_state.getUrl());
+				log.warn("page state key, checksum    : " + landable_page_state.getKey()+"   ,   "+landable_page_state.getScreenshotChecksums()+" :: "+page_state.getUrl());
 				log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 				if(page_state.equals(landable_page_state)){
 					isLandable = true;
@@ -347,14 +347,19 @@ public class BrowserService {
 			url_without_params = url_without_params.substring(0, param_index);
 		}
 
-		BufferedImage viewport_screenshot = browser.getViewportScreenshot();		
-		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(PageState.getFileChecksum(viewport_screenshot));
+		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
+		log.warn("PageState record value :: " + page_state_record2);
+		
 		if(page_state_record2 != null){
+			log.warn("existing page with screenshot found");
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
 			return page_state_record2;
 		}
 		
+		log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
 		Set<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString());
 		log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 
@@ -369,8 +374,11 @@ public class BrowserService {
 		
 		log.warn("initialized page state");
 		PageState page_state_record = page_state_service.findByKey(page_state.getKey());
-		if(page_state_record != null){			
+		if(page_state_record != null){
+			log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums());
 			page_state = page_state_record;
+			page_state.addScreenshotChecksum(screenshot_checksum);
+			page_state = page_state_service.save(page_state);
 		}
 		else{
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
@@ -382,65 +390,6 @@ public class BrowserService {
 		viewport_screenshot.flush();
 		return page_state;
 	}
-
-	
-	/**
-	 * 
-	 * @return
-	 * @throws GridException 
-	 * @throws IOException 
-	 * @throws NoSuchAlgorithmException 
-	 * 
-	 * @pre browser != null
-	 * @post page_state != null
-	 */
-	public PageState buildPage(Browser browser, List<WebElement> elements) throws GridException, IOException, NoSuchAlgorithmException{
-		assert browser != null;
-		
-		String browser_url = browser.getDriver().getCurrentUrl();
-		URL page_url = new URL(browser_url);
-        
-		int param_index = page_url.toString().indexOf("?");
-		String url_without_params = page_url.toString();
-		if(param_index >= 0){
-			url_without_params = url_without_params.substring(0, param_index);
-		}
-
-		BufferedImage viewport_screenshot = browser.getViewportScreenshot();		
-		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(PageState.getFileChecksum(viewport_screenshot));
-		if(page_state_record2 != null){
-			viewport_screenshot.flush();
-			return page_state_record2;
-		}
-		
-		log.debug("Getting visible elements...");
-		Set<ElementState> visible_elements = getVisibleElements(browser, "", page_url.getHost());
-		
-		PageState page_state = new PageState(	page_url.toString(),
-				visible_elements,
-				org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
-				browser.getXScrollOffset(), 
-				browser.getYScrollOffset(),
-				browser.getViewportSize().width,
-				browser.getViewportSize().height,
-				browser.getBrowserName());
-
-		log.debug("calculated page state key :: "+ page_state.getKey());
-
-		PageState page_state_record = page_state_service.findByKey(page_state.getKey());
-		if(page_state_record != null){			
-			page_state = page_state_record;
-		}
-		else{
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
-			page_state.setScreenshotUrl(viewport_screenshot_url);
-			page_state = page_state_service.save(page_state);
-		}
-
-		viewport_screenshot.flush();
-		return page_state;
-	}
-
 	
 	/**
 	 * Retreives all elements on a given page that are visible. In this instance we take 

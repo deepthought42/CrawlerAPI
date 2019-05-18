@@ -46,8 +46,14 @@ public class PageStateService {
 	 */
 	public PageState save(PageState page_state){
 		assert page_state != null;
+		PageState page_state_record = null;
 		
-		PageState page_state_record = findByScreenshotChecksum(page_state.getScreenshotChecksum());
+		for(String screenshot_checksum : page_state.getScreenshotChecksums()){
+			page_state_record = findByScreenshotChecksum(screenshot_checksum);
+			if(page_state_record != null){
+				break;
+			}
+		}
 		if(page_state_record != null){
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
@@ -71,7 +77,9 @@ public class PageStateService {
 				page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 				page_state_record.setElements(page_state.getElements());
 				page_state_record.setForms(page_state.getForms());
-
+				for(String screenshot_checksum : page_state.getScreenshotChecksums()){
+					page_state_record.addScreenshotChecksum(screenshot_checksum);
+				}
 				page_state_record = page_state_repo.save(page_state_record);
 				page_state_record.setElements(getElementStates(page_state_record.getKey()));
 			}
@@ -125,7 +133,7 @@ public class PageStateService {
 	}
 	
 	public PageState findByScreenshotChecksum(String screenshot_checksum){
-		return page_state_repo.findByScreenshotChecksum(screenshot_checksum);		
+		return page_state_repo.findByScreenshotChecksumsContains(screenshot_checksum);		
 	}
 	
 	public Set<ElementState> getElementStates(String page_key){

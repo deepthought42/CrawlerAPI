@@ -17,8 +17,8 @@ import com.qanairy.models.PageState;
 public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	public PageState findByKey(@Param("key") String key);
 
-	@Query("MATCH a=(p:PageState{screenshot_checksum:{screenshot_checksum}})-[h:HAS_ELEMENT]->(e:ElementState) RETURN p")
-	public PageState findByScreenshotChecksum(@Param("screenshot_checksum") String checksum );
+	@Query("MATCH a=(p:PageState)-[h:HAS_ELEMENT]->(e:ElementState) WHERE {screenshot_checksum} IN p.screenshot_checksum RETURN a LIMIT 1")
+	public PageState findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
 	
 	@Query("MATCH (p:PageState{key:{page_key}})-[h:HAS_ELEMENT]->(e:ElementState) RETURN e")
 	public Set<ElementState> getElementStates(@Param("page_key") String key);

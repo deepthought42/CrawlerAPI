@@ -58,15 +58,15 @@ public class PageState implements Persistable, PathObject {
 	private int viewport_height;
 	private String type;
 	private List<String> screenshot_checksums;
-
-	private List<Screenshot> screenshots;
-	
 	private List<String> animated_image_urls;
-	
-	@Relationship(type = "HAS_ELEMENT")
+
+	@Relationship(type = "HAS")
+	private List<Screenshot> screenshots;
+		
+	@Relationship(type = "HAS")
 	private Set<ElementState> elements;
 
-	@Relationship(type = "HAS_FORM")
+	@Relationship(type = "HAS")
 	private Set<Form> forms;
 
 	public PageState() {
@@ -104,6 +104,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshotChecksum(new ArrayList<String>());
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
+		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
@@ -138,6 +139,7 @@ public class PageState implements Persistable, PathObject {
 		setScrollYOffset(scroll_y_offset);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
+		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
@@ -159,7 +161,8 @@ public class PageState implements Persistable, PathObject {
 	 * @throws NoSuchAlgorithmException 
 	 */
 	public PageState(String url, String screenshot_url, Set<ElementState> elements, boolean isLandable,
-			String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, String browser_name) throws IOException, NoSuchAlgorithmException {
+			String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, 
+			String browser_name) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
 		assert screenshot_url != null;
 
@@ -178,6 +181,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshotChecksum(new ArrayList<String>());
 		setSrc(src);
 		setForms(new HashSet<Form>());
+		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
@@ -572,7 +576,7 @@ public class PageState implements Persistable, PathObject {
 		this.screenshots = screenshots;
 	}
 	
-	public void addScreenshots(Screenshot screenshot){
+	public void addScreenshot(Screenshot screenshot){
 		this.screenshots.add(screenshot);
 	}
 }

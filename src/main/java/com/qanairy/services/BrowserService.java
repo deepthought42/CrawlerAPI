@@ -43,6 +43,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.Screenshot;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
@@ -222,7 +223,7 @@ public class BrowserService {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				error_occurred = true;
-				e.printStackTrace();
+				//e.printStackTrace();
 			} catch(Exception e){
 				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
 				e.printStackTrace();
@@ -356,13 +357,15 @@ public class BrowserService {
 			log.warn("existing page with screenshot found");
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
+			page_state_record2.setScreenshots(page_state_service.getScreenshots(page_state_record2.getKey()));
+			
 			return page_state_record2;
 		}
 		
 		log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
 		Set<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString());
 		log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
-
+		
 		PageState page_state = new PageState(	page_url.toString(),
 				visible_elements,
 				org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
@@ -372,17 +375,18 @@ public class BrowserService {
 				browser.getViewportSize().height,
 				browser.getBrowserName());
 		
+		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
+		page_state.setScreenshotUrl(viewport_screenshot_url);
+		
+		Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
+		page_state.addScreenshot(screenshot);
+		
 		log.warn("initialized page state");
 		PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 		if(page_state_record != null){
 			log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums());
 			page_state = page_state_record;
 			page_state.addScreenshotChecksum(screenshot_checksum);
-			page_state = page_state_service.save(page_state);
-		}
-		else{
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
-			page_state.setScreenshotUrl(viewport_screenshot_url);
 			page_state = page_state_service.save(page_state);
 		}
 
@@ -412,6 +416,7 @@ public class BrowserService {
 		web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
 		web_elements = BrowserService.filterNonChildElements(web_elements);
 		web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
+		web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
 		Set<ElementState> elementList = new HashSet<ElementState>(web_elements.size());
 
 		for(WebElement elem : web_elements){

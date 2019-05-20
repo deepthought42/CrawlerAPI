@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.Screenshot;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.PageStateRepository;
 
@@ -24,6 +25,9 @@ import com.qanairy.models.repository.PageStateRepository;
 public class PageStateService {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageStateService.class.getName());
+	
+	@Autowired
+	private ScreenshotService screenshot_service;
 	
 	@Autowired
 	private FormService form_service;
@@ -46,10 +50,11 @@ public class PageStateService {
 	 */
 	public PageState save(PageState page_state){
 		assert page_state != null;
+		
 		PageState page_state_record = null;
 		
-		for(String screenshot_checksum : page_state.getScreenshotChecksums()){
-			page_state_record = findByScreenshotChecksum(screenshot_checksum);
+		for(Screenshot screenshot : page_state.getScreenshots()){
+			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
 			if(page_state_record != null){
 				break;
 			}
@@ -68,6 +73,7 @@ public class PageStateService {
 			
 			page_state_record = page_state_repo.save(page_state_record);
 			page_state_record.setElements(getElementStates(page_state.getKey()));
+			page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
 		}
 		else {
 			page_state_record = findByKey(page_state.getKey());
@@ -80,8 +86,16 @@ public class PageStateService {
 				for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 					page_state_record.addScreenshotChecksum(screenshot_checksum);
 				}
+				
+				log.warn("page state screenshots for page update  :  "+page_state.getScreenshots());
+				List<Screenshot> screenshots = new ArrayList<Screenshot>(page_state.getScreenshots().size());
+				for(Screenshot screenshot : page_state.getScreenshots()){
+					screenshots.add(screenshot_service.save(screenshot));
+				}
+				page_state_record.setScreenshots(screenshots);
 				page_state_record = page_state_repo.save(page_state_record);
 				page_state_record.setElements(getElementStates(page_state_record.getKey()));
+				page_state_record.setScreenshots(screenshots);
 			}
 			else{
 				//iterate over page elements
@@ -110,12 +124,18 @@ public class PageStateService {
 					}
 					form_records.add(form_record);
 				}
+
+				List<Screenshot> screenshots = new ArrayList<Screenshot>(page_state.getScreenshots().size());
+				for(Screenshot screenshot : page_state.getScreenshots()){
+					screenshots.add(screenshot_service.save(screenshot));
+				}
+				page_state.setScreenshots(screenshots);
 				page_state.setForms(form_records);
 				page_state_record = page_state_repo.save(page_state);
 			}
 		}
 		
-		return page_state;
+		return page_state_record;
 	}
 
 	public void addToForms(String page_key, Form form){
@@ -128,6 +148,7 @@ public class PageStateService {
 		PageState page_state = page_state_repo.findByKey(page_key);
 		if(page_state != null){
 			page_state.setElements(getElementStates(page_key));
+			page_state.setScreenshots(getScreenshots(page_key));
 		}
 		return page_state;
 	}
@@ -138,6 +159,10 @@ public class PageStateService {
 	
 	public Set<ElementState> getElementStates(String page_key){
 		return page_state_repo.getElementStates(page_key);
+	}
+	
+	public List<Screenshot> getScreenshots(String page_key){
+		return page_state_repo.getScreenshots(page_key);
 	}
 	
 	public Set<PageState> getElementPageStatesWithSameUrl(String url, String key){

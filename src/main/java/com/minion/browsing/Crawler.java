@@ -439,7 +439,8 @@ public class Crawler {
 					}
 					else if(current_idx < path_objects.size()-1 && !path_objects.get(current_idx+1).getKey().contains("redirect") ){
 						log.warn("PAUSING AFTER ACTION PERFORMED   !!!!!!!!!");
-						//TODO: Replace the following with animation detection						Timing.pauseThread(1000);
+						//TODO: Replace the following with animation detection						
+						//Timing.pauseThread(1000);
 					}
 				
 					Point p = browser.getViewportScrollOffset();
@@ -471,7 +472,13 @@ public class Crawler {
 	public static void performAction(Action action, ElementState elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		actionFactory.execAction(element, action.getValue(), action.getName());
+		try{
+			actionFactory.execAction(element, action.getValue(), action.getName());
+		}catch(WebDriverException e){
+			if(!e.getMessage().contains("out of bounds of viewport")){
+				throw e;
+			}
+		}
 	}
 	
 	public static void scrollDown(WebDriver driver, int distance) 
@@ -509,7 +516,7 @@ public class Crawler {
 				e.printStackTrace();
 			}
 			catch (WebDriverException e) {
-				//log.warn("web driver exception occurred : " + e.getMessage());
+				log.warn("web driver exception occurred : " + e.getMessage());
 				//e.printStackTrace();
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
@@ -558,7 +565,7 @@ public class Crawler {
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.warn("WebDriver exception encountered while performing path crawl"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.info("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){

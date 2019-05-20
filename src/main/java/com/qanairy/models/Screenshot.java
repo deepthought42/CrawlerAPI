@@ -53,7 +53,7 @@ public class Screenshot implements Persistable {
 	}
 	
 	public String generateKey() {
-		return "screenshot::"+org.apache.commons.codec.digest.DigestUtils.sha512Hex(getScreenshotUrl());
+		return "screenshot::" + this.checksum;
 	}
 
 	public String getChecksum() {

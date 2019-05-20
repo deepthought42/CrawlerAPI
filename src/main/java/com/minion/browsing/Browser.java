@@ -118,7 +118,6 @@ public class Browser {
 	 */
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
-		waitForPageToLoad();
 
 		log.debug("successfully navigated to "+url);
 	}
@@ -473,7 +472,7 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		//Timing.pauseThread(500);
+		Timing.pauseThread(500);
 		//WebDriverWait wait = new WebDriverWait(driver, 10);
 		//wait.until(ExpectedConditions.visibilityOf(elem));
 		
@@ -486,7 +485,7 @@ public class Browser {
     { 
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		//Timing.pauseThread(500);
+		Timing.pauseThread(500);
 		//WebDriverWait wait = new WebDriverWait(driver, 10);
 		//wait.until(ExpectedConditions.visibilityOf(elem));
 		

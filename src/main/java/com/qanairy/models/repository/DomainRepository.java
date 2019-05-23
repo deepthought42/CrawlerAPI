@@ -25,10 +25,10 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Domain findByKey(@Param("key") String key);
 	public Domain findByHost(@Param("host") String host);
 	
-	@Query("MATCH (p:PageState) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p")
+	@Query("MATCH (p:PageState) MATCH a=(p)-[]->(:Screenshot) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p,a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH a=(t)-[]->(p:ElementState) OPTIONAL MATCH b=(p)-->(attr) RETURN p,attr as f")
+	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH a=(t)-[]->(p:PageState) MATCH (p)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN e,b")
 	public Set<ElementState> getElementStates(@Param("domain_host") String host);
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) RETURN a")
@@ -37,16 +37,16 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(p) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) MATCH z=(p)-[]->() MATCH (t)-[:HAS_RESULT]->(p1) MATCH x=(p1)-[]->() RETURN a,z,x as w")
 	public Set<PathObject> getPathObjects(@Param("domain_host") String host);
 	
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p) MATCH b=(t)-[]->() MATCH c=(p)-[]->() RETURN a,b,c as d")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p) MATCH b=(t)-[]->() MATCH c=(p)-[]->() OPTIONAL MATCH y=(t)-->(:Group) RETURN a,b,y,c as d")
 	public Set<Test> getTests(@Param("domain_host") String host);
 
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[]->(p:PageState) MATCH (p)-[]->(f:Form) MATCH a=(f)-[:FORM__TAG]->() MATCH b=(f)-[:SUBMIT__FIELD]->() MATCH c=(f)-[:FORM__FIELDS]->()  return a,b,c as d")
 	public Set<Form> getForms(@Param("domain_host") String host);
 	
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) RETURN a")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-[]->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->() MATCH c=(p)-[]->() WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,b,c as g")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->(z) MATCH c=(p)-[]->() MATCH d=(z)-[]->() WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,b,c,d")
 	public Set<Test> getVerifiedTests(@Param("domain_host") String host);
 
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")

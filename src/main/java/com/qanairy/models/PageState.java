@@ -90,7 +90,7 @@ public class PageState implements Persistable, PathObject {
 		assert screenshot_url != null;
 
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
+		setUrl(url);
 		setScreenshotUrl(screenshot_url);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
@@ -126,7 +126,7 @@ public class PageState implements Persistable, PathObject {
 		assert elements != null;
 
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
+		setUrl(url);
 		setBrowser(browser_name);
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
@@ -167,7 +167,7 @@ public class PageState implements Persistable, PathObject {
 		assert screenshot_url != null;
 
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
+		setUrl(url);
 		setScreenshotUrl(screenshot_url);
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);

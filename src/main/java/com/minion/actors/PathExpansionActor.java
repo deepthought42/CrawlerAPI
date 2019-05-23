@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
@@ -77,13 +78,15 @@ public class PathExpansionActor extends AbstractActor {
 	
 	private Map<String, ElementState> expanded_elements;
 	
+	public PathExpansionActor() {
+		this.expanded_elements = new HashMap<String, ElementState>();
+	}
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
 	      MemberEvent.class, UnreachableMember.class);
-	  
-	  expanded_elements = new HashMap<String, ElementState>();
 	}
 
 	//re-subscribe when restart
@@ -213,7 +216,7 @@ public class PathExpansionActor extends AbstractActor {
 			}
 		})
 		.match(PageStateMessage.class, message -> {
-			log.warn("page state message encountered");
+			log.warn("page state message encountered : "+message.getPageState());
 			List<ExploratoryPath> exploratory_paths = expandPath(message.getPageState());
 
 			
@@ -276,7 +279,11 @@ public class PathExpansionActor extends AbstractActor {
 		//get List of page states for page
 
 		//iterate over all elements
-		for(ElementState page_element : result_page.getElements()){			
+		for(ElementState page_element : result_page.getElements()){		
+			
+			for(String key : expanded_elements.keySet()){
+				log.warn("expanded element key :: " + key);
+			}
 			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
 				continue;
 			}
@@ -410,6 +417,14 @@ public class PathExpansionActor extends AbstractActor {
 		
 		//iterate over all elements
 		for(ElementState page_element : elements){
+			for(String key : expanded_elements.keySet()){
+				log.warn("expanded element key :: " + key);
+			}
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
+				continue;
+			}
+			expanded_elements.put(page_element.getKey(), page_element);
+
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(page_state.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset

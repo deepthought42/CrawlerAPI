@@ -361,38 +361,39 @@ public class BrowserService {
 			
 			return page_state_record2;
 		}
-		
-		log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
-		Set<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString());
-		log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
-		
-		PageState page_state = new PageState(	page_url.toString(),
-				visible_elements,
-				org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
-				browser.getXScrollOffset(), 
-				browser.getYScrollOffset(),
-				browser.getViewportSize().width,
-				browser.getViewportSize().height,
-				browser.getBrowserName());
-		
-		String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
-		page_state.setScreenshotUrl(viewport_screenshot_url);
-		
-		Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
-		page_state.addScreenshot(screenshot);
-		
-		log.warn("initialized page state");
-		PageState page_state_record = page_state_service.findByKey(page_state.getKey());
-		if(page_state_record != null){
-			log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums());
-			page_state = page_state_record;
-			page_state.addScreenshotChecksum(screenshot_checksum);
-			page_state = page_state_service.save(page_state);
+		else{
+			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
+			Set<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString());
+			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
+			
+			PageState page_state = new PageState(	page_url.toString(),
+					visible_elements,
+					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
+					browser.getXScrollOffset(), 
+					browser.getYScrollOffset(),
+					browser.getViewportSize().width,
+					browser.getViewportSize().height,
+					browser.getBrowserName());
+			
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
+			page_state.setScreenshotUrl(viewport_screenshot_url);
+			
+			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
+			page_state.addScreenshot(screenshot);
+			
+			log.warn("initialized page state");
+			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
+			if(page_state_record != null){
+				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums());
+				page_state = page_state_record;
+				page_state.addScreenshotChecksum(screenshot_checksum);
+				page_state = page_state_service.save(page_state);
+			}
+	
+			log.warn("saved page state");
+			viewport_screenshot.flush();
+			return page_state;
 		}
-
-		log.warn("saved page state");
-		viewport_screenshot.flush();
-		return page_state;
 	}
 	
 	/**

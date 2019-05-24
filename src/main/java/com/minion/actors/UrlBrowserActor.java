@@ -37,6 +37,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
+import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
@@ -66,6 +67,9 @@ public class UrlBrowserActor extends AbstractActor {
 	@Autowired
 	private TestService test_service;
 	
+	@Autowired
+	private DiscoveryRecordService discovery_service;
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -90,7 +94,8 @@ public class UrlBrowserActor extends AbstractActor {
 					if(message.getData() instanceof URL){
 						
 						String discovery_key = message.getOptions().get("discovery_key").toString();
-						
+						discovery_service.incrementTotalPathCount(discovery_key);
+
 						String url = ((URL)message.getData()).toString();
 						String host = ((URL)message.getData()).getHost();
 						String browser_name = message.getOptions().get("browser").toString();
@@ -140,15 +145,13 @@ public class UrlBrowserActor extends AbstractActor {
 						log.warn("path objects :: " + test.getPathObjects());
 						
 						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-						
-						/**  path expansion temporarily disabled
-						 */
+
 						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						path_expansion_actor.tell(test_msg, getSelf() );
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
 						
-						DiscoveryRecord discovery_record = discovery_repo.findByKey( discovery_key);
+						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
 						PageStateMessage page_state_msg = new PageStateMessage(message.getAccountKey(), page_states.get(0), discovery_record, message.getOptions());
 
 						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -170,12 +173,10 @@ public class UrlBrowserActor extends AbstractActor {
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						discovery_record.setTestCount(discovery_record.getTestCount()+1);
-						discovery_record = discovery_repo.save(discovery_record);
+						discovery_record = discovery_service.save(discovery_record);
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
-					postStop();
-
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

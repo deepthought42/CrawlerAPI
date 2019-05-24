@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
@@ -118,10 +117,9 @@ public class PathExpansionActor extends AbstractActor {
 		    	}
 		    	*/
 				log.warn("looking up discovery record");
-				DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
 				
 				if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
-					
 					
 					//get page states 
 					List<PageState> page_states = new ArrayList<PageState>();
@@ -158,9 +156,7 @@ public class PathExpansionActor extends AbstractActor {
 							}
 							
 							log.warn("is result page landable  ::    "+result_page.isLandable());
-							if(result_page.isLandable()){
-								discovery_record = discovery_service.incrementTotalPathCount(discovery_key);
-								
+							if(result_page.isLandable() && !discovery_record.getExpandedPageStates().contains(result_page.getKey())){								
 								try{
 									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 							  	}catch(Exception e){}
@@ -280,10 +276,6 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		for(ElementState page_element : result_page.getElements()){		
-			
-			for(String key : expanded_elements.keySet()){
-				log.warn("expanded element key :: " + key);
-			}
 			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
 				continue;
 			}
@@ -417,9 +409,6 @@ public class PathExpansionActor extends AbstractActor {
 		
 		//iterate over all elements
 		for(ElementState page_element : elements){
-			for(String key : expanded_elements.keySet()){
-				log.warn("expanded element key :: " + key);
-			}
 			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
 				continue;
 			}

@@ -322,9 +322,11 @@ public class Test implements Persistable {
 	 */
 	public PageState firstPage() {
 		for(String key : this.getPathKeys()){
-			for(PathObject path_obj: this.getPathObjects()){
-				if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
-					return (PageState)path_obj;
+			if(key.contains("pagestate")){
+				for(PathObject path_obj: this.getPathObjects()){
+					if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
+						return (PageState)path_obj;
+					}
 				}
 			}
 		}

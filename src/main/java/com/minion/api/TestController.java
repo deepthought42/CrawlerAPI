@@ -97,7 +97,11 @@ public class TestController {
 	public @ResponseBody Set<Test> getTestByDomain(HttpServletRequest request, 
 													@RequestParam(value="url", required=true) String url) 
 			throws UnknownAccountException, DomainNotOwnedByAccountException {    	
-		return domain_service.getVerifiedTests(url);
+		Set<Test> tests = domain_service.getVerifiedTests(url);
+		for(Test test : tests){
+			test.setGroups(test_service.getGroups(test.getKey()));
+		}
+		return tests;
     }
 
     /**
@@ -488,7 +492,7 @@ public class TestController {
 			group = group_record;
 		}
 		Test test = test_repo.findByKey(key);
-		test.getGroups().add(group);
+		test.addGroup(group);
 		
 		test = test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
 		return group;

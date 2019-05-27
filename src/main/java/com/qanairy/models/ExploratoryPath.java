@@ -21,12 +21,22 @@ public class ExploratoryPath {
 	 * 
 	 * @param current_path
 	 */
+	@Deprecated
 	public ExploratoryPath(List<String> path_keys, List<PathObject> current_path, List<Action> actions){
 		setPathKeys(path_keys);
 		setPathObjects(current_path);
 		setPossibleActions(actions);
 	}
 
+	/**
+	 * Creates new instance of path setting it to the given path
+	 * 
+	 * @param current_path
+	 */
+	public ExploratoryPath(List<String> path_keys, List<PathObject> current_path){
+		setPathKeys(path_keys);
+		setPathObjects(current_path);
+	}
 		
 	/**
 	 * Adds an object to path and sets whether or not this path spans multiple domains
@@ -240,9 +250,8 @@ public class ExploratoryPath {
 	public static ExploratoryPath clone(ExploratoryPath path){		
 		List<PathObject> path_objects = new ArrayList<PathObject>(path.getPathObjects());
 		List<String> path_keys = new ArrayList<String>(path.getPathKeys());
-		List<Action> possible_actions = new ArrayList<Action>(path.getPossibleActions());
 		
-		return new ExploratoryPath(path_keys, path_objects, possible_actions);
+		return new ExploratoryPath(path_keys, path_objects);
 	}
 	
 

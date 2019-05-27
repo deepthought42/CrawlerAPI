@@ -7,7 +7,9 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -73,6 +75,12 @@ public class PathExpansionActor extends AbstractActor {
 	@Autowired
 	private ElementRuleExtractor extractor;
 	
+	private Map<String, ElementState> expanded_elements;
+	
+	public PathExpansionActor() {
+		this.expanded_elements = new HashMap<String, ElementState>();
+	}
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -109,104 +117,102 @@ public class PathExpansionActor extends AbstractActor {
 		    	}
 		    	*/
 				log.warn("looking up discovery record");
-				DiscoveryRecord discovery_record = discovery_repo.findByKey(discovery_key);
+				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
 				
-				if(discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
-					log.warn("discovery record already has page state expanded  ::    " + test.getResult().getKey());
-					log.warn("Discovery record  expanded page states ::   " + discovery_record.getExpandedPageStates());
-					return;					
-				}
-				
-				//get page states 
-				List<PageState> page_states = new ArrayList<PageState>();
-				for(PathObject path_obj : test.getPathObjects()){
-					if(path_obj instanceof PageState){
-						PageState page_state = (PageState)path_obj;
-						page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
-						page_states.add(page_state);										
-					}
-				}
-				log.warn("checking if path has cycle");
-				final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-						  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-				
-				if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1) 
-						&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
-					// if path is a single page 
-					//		then send path to urlBrowserActor
-					if(test.getPathKeys().size() > 1){
-						log.warn("test has more than one path key");
-						PageState result_page = test.getResult();
-						
-						//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
-						Duration time_diff = Duration.between(result_page.getLastLandabilityCheck(), LocalDateTime.now());
-						Duration minimum_diff = Duration.ofHours(24);
-						
-						log.warn("checking if landability needs to be tested");
-						if(time_diff.compareTo(minimum_diff) > 0){
-							//have page checked for landability
-							boolean isLandable = browser_service.checkIfLandable(browser_name, result_page);
-							result_page.setLastLandabilityCheck(LocalDateTime.now());
-							result_page.setLandable(isLandable);
-							result_page = page_state_service.save(result_page);
+				if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
+					
+					//get page states 
+					List<PageState> page_states = new ArrayList<PageState>();
+					for(PathObject path_obj : test.getPathObjects()){
+						if(path_obj instanceof PageState){
+							PageState page_state = (PageState)path_obj;
+							page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
+							page_states.add(page_state);										
 						}
-						
-						log.warn("is result page landable  ::    "+result_page.isLandable());
-						if(result_page.isLandable()){
-							discovery_record = discovery_service.incrementTotalPathCount(discovery_key);
+					}
+					log.warn("checking if path has cycle");
+					final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+					
+					if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1) 
+							&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
+						// if path is a single page 
+						//		then send path to urlBrowserActor
+						if(test.getPathKeys().size() > 1){
+							log.warn("test has more than one path key");
+							PageState result_page = test.getResult();
 							
-							try{
-								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-						  	}catch(Exception e){}
+							//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
+							Duration time_diff = Duration.between(result_page.getLastLandabilityCheck(), LocalDateTime.now());
+							Duration minimum_diff = Duration.ofHours(24);
 							
-							log.warn("sedning url to work allocator");
-							Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
-							work_allocator.tell(url_msg, getSelf() );
-							return;
+							log.warn("checking if landability needs to be tested");
+							if(time_diff.compareTo(minimum_diff) > 0){
+								//have page checked for landability
+								boolean isLandable = browser_service.checkIfLandable(browser_name, result_page);
+								result_page.setLastLandabilityCheck(LocalDateTime.now());
+								result_page.setLandable(isLandable);
+								result_page = page_state_service.save(result_page);
+							}
+							
+							log.warn("is result page landable  ::    "+result_page.isLandable());
+							if(result_page.isLandable() && !discovery_record.getExpandedPageStates().contains(result_page.getKey())){								
+								try{
+									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+							  	}catch(Exception e){}
+								
+								log.warn("sedning url to work allocator");
+								Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
+								work_allocator.tell(url_msg, getSelf() );
+							}
+							else{
+								log.warn("expanding path for test");
+								path_expansions = expandPath(test);
+								discovery_record = discovery_repo.findByKey(discovery_key);
+								discovery_record.addExpandedPageState(test.getResult().getKey());
+								discovery_record = discovery_service.save(discovery_record);
+								log.warn("discovery record :: "+discovery_record);
+								for(ExploratoryPath expanded : path_expansions){
+									Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
+									
+									work_allocator.tell(expanded_path_msg, getSelf() );
+								}
+							}
 						}
 						else{
-							log.warn("expanding path for test");
 							path_expansions = expandPath(test);
 							discovery_record = discovery_repo.findByKey(discovery_key);
 							discovery_record.addExpandedPageState(test.getResult().getKey());
 							discovery_record = discovery_service.save(discovery_record);
-							log.warn("discovery record :: "+discovery_record);
 							for(ExploratoryPath expanded : path_expansions){
 								Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
 								
 								work_allocator.tell(expanded_path_msg, getSelf() );
 							}
 						}
-					}
-					else{
-						path_expansions = expandPath(test);
-						discovery_record = discovery_repo.findByKey(discovery_key);
-						discovery_record.addExpandedPageState(test.getResult().getKey());
-						discovery_record = discovery_service.save(discovery_record);
-						for(ExploratoryPath expanded : path_expansions){
-							Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-							
-							work_allocator.tell(expanded_path_msg, getSelf() );
+						
+						if(!path_expansions.isEmpty()){
+							discovery_record = discovery_repo.findByKey(discovery_key);
+							int new_total_path_count = (discovery_record.getTotalPathCount()+path_expansions.size());
+							discovery_record.setTotalPathCount(new_total_path_count);
+							discovery_record = discovery_service.save(discovery_record);
 						}
-					}
-					
-					discovery_record = discovery_repo.findByKey(discovery_key);
-					int new_total_path_count = (discovery_record.getTotalPathCount()+path_expansions.size());
-					discovery_record.setTotalPathCount(new_total_path_count);
-					discovery_record = discovery_service.save(discovery_record);
-
-					log.warn("discovery updated and status being broadcast");
-					try{
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-				  	}catch(Exception e){
-					
-					}
-				}	
+						log.warn("discovery updated and status being broadcast");
+						try{
+							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					  	}catch(Exception e){
+						
+						}
+					}	
+				}
+				else{
+					log.warn("discovery record already has page state expanded  ::    " + test.getResult().getKey());
+					log.warn("Discovery record  expanded page states ::   " + discovery_record.getExpandedPageStates());
+				}
 			}
-			postStop();
 		})
 		.match(PageStateMessage.class, message -> {
-			log.warn("page state message encountered");
+			log.warn("page state message encountered : "+message.getPageState());
 			List<ExploratoryPath> exploratory_paths = expandPath(message.getPageState());
 
 			
@@ -265,29 +271,18 @@ public class PathExpansionActor extends AbstractActor {
 		if(result_page == null){
 			return null;
 		}
+		
 		//get List of page states for page
 
 		//iterate over all elements
-		for(ElementState page_element : result_page.getElements()){			
-			if(page_element == null){
+		for(ElementState page_element : result_page.getElements()){		
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
 				continue;
 			}
+
+			expanded_elements.put(page_element.getKey(), page_element);
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(result_page.getUrl(), page_element.getKey());
 			log.warn("page states found for current page element : " + page_element +"    ;  "+element_page_states.size());
-			
-			boolean higher_order_page_state_found = false;
-			//check if there is a page state with a lower x or y scroll offset
-			for(PageState page_state : element_page_states){
-				if((page_state.getScrollXOffset() < result_page.getScrollXOffset() 
-								|| page_state.getScrollYOffset() < result_page.getScrollYOffset())){
-					higher_order_page_state_found = true;
-				}
-			}
-			
-			if(higher_order_page_state_found){
-				log.warn("higher order state found");
-				continue;
-			}
 						
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
@@ -324,17 +319,20 @@ public class PathExpansionActor extends AbstractActor {
 							path_objects.add(path_obj);
 						}
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							ExploratoryPath action_path = new ExploratoryPath(path_keys, path_objects, action_list);
-							//check for element action sequence. 
-							//if one exists with one of the actions in the action_list
-							// 	 then skip this action path
-							
-							
-							/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-								log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
-								continue;
-							}*/
-							pathList.add(action_path);
+							for(Action action : action_list){
+								ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(path_keys), new ArrayList<PathObject>(path_objects));
+								//check for element action sequence. 
+								//if one exists with one of the actions in the action_list
+								// 	 then skip this action path
+								action_path.getPathKeys().add(action.getKey());
+								action_path.getPathObjects().add(action);
+								
+								/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+									log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
+									continue;
+								}*/
+								pathList.add(action_path);
+							}
 						}
 					}
 				}
@@ -363,16 +361,23 @@ public class PathExpansionActor extends AbstractActor {
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-					ExploratoryPath action_path = new ExploratoryPath(new_test.getPathKeys(), new_test.getPathObjects(), action_list);
-					
-					//check for element action sequence. 
-					//if one exists with one of the actions in the action_list
-					// 	 then load the existing path and process it for path expansion action path
-					/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
-					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-						continue;
-					}*/
-					pathList.add(action_path);
+					for(Action action : action_list){
+						ArrayList<String> keys = new ArrayList<String>(new_test.getPathKeys());
+						ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_test.getPathObjects());
+						
+						keys.add(action.getKey());
+						path_objects.add(action);
+						
+						ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
+						//check for element action sequence. 
+						//if one exists with one of the actions in the action_list
+						// 	 then load the existing path and process it for path expansion action path
+						/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
+						/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+							continue;
+						}*/
+						pathList.add(action_path);
+					}
 				}
 				log.warn("action list  ::   "+pathList.size());
 			}
@@ -404,6 +409,11 @@ public class PathExpansionActor extends AbstractActor {
 		
 		//iterate over all elements
 		for(ElementState page_element : elements){
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
+				continue;
+			}
+			expanded_elements.put(page_element.getKey(), page_element);
+
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(page_state.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
@@ -449,18 +459,23 @@ public class PathExpansionActor extends AbstractActor {
 							path_keys.add(path_obj.getKey());
 							path_objects.add(path_obj);
 						}
+						
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							ExploratoryPath action_path = new ExploratoryPath(path_keys, path_objects, action_list);
-							//check for element action sequence. 
-							//if one exists with one of the actions in the action_list
-							// 	 then skip this action path
-							
-							
-							/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-								log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
-								continue;
-							}*/
-							pathList.add(action_path);
+							for(Action action : action_list){
+								ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(path_keys), new ArrayList<PathObject>(path_objects));
+								action_path.getPathKeys().add(action.getKey());
+								action_path.getPathObjects().add(action);
+								//check for element action sequence. 
+								//if one exists with one of the actions in the action_list
+								// 	 then skip this action path
+								
+								
+								/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+									log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
+									continue;
+								}*/
+								pathList.add(action_path);
+							}
 						}
 					}
 				}
@@ -475,16 +490,20 @@ public class PathExpansionActor extends AbstractActor {
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 				
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-					ExploratoryPath action_path = new ExploratoryPath(keys, path, action_list);
-					
-					//check for element action sequence. 
-					//if one exists with one of the actions in the action_list
-					// 	 then load the existing path and process it for path expansion action path
-					/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
-					/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-						continue;
-					}*/
-					pathList.add(action_path);
+					for(Action action : action_list){
+						ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(keys), new ArrayList<PathObject>(path));
+						action_path.getPathKeys().add(action.getKey());
+						action_path.getPathObjects().add(action);
+						
+						//check for element action sequence. 
+						//if one exists with one of the actions in the action_list
+						// 	 then load the existing path and process it for path expansion action path
+						/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
+						/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
+							continue;
+						}*/
+						pathList.add(action_path);
+					}
 				}
 			}
 		}

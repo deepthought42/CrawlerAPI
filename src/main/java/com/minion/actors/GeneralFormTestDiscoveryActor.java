@@ -114,10 +114,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 				
 							  			if(obj.getType().equals("ElementState")){
 							  				ElementState page_elem = (ElementState)obj;
-							  				ElementState elem_record = page_element_service.findByKey(obj.getKey());
-							  				if(elem_record == null){
-							  					elem_record = page_element_service.save(page_elem);
-							  				}
+							  				page_element_service.save(page_elem);
 							  				test_path_objects.add(page_elem);
 							  			}
 							  			else if(obj.getType().equals("Action")){

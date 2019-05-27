@@ -4,6 +4,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
@@ -18,7 +19,9 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
@@ -52,6 +55,9 @@ public class TestService {
 	
 	@Autowired
 	private RedirectService redirect_service;
+	
+	@Autowired
+	private AnimationService animation_service;
 	
 	@Autowired
 	private Crawler crawler;
@@ -130,17 +136,13 @@ public class TestService {
 				else if(path_obj instanceof Redirect){
 					path_objects.add(redirect_service.save((Redirect)path_obj));
 				}
+				else if(path_obj instanceof Animation){
+					path_objects.add(animation_service.save((Animation)path_obj));
+				}
 			}
 			test.setPathObjects(path_objects);
 			test.setResult(page_state_service.save(test.getResult()));
-	
-			log.warn("groups   ::: "+test.getGroups());
-			log.warn("test records ::  "+test.getRecords());
-			
-			log.warn("path keys :: " + test.getPathKeys());
-			 
-			log.warn("path objects :: " + path_objects);
-			log.warn("Test ::  "+test);
+
 			if(test.getName() == null || test.getName().isEmpty()){
 				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
 			}
@@ -170,11 +172,13 @@ public class TestService {
 				log.error(e.getLocalizedMessage());
 			}
 			
-			test = record;
 			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
-			test.setPathObjects(path_objects);
+			record.setPathObjects(path_objects);
+			record.setResult(page_state_service.findByKey(test.getResult().getKey()));
+			record.setGroups(test.getGroups());
 			
-			test.setResult(page_state_service.findByKey(test.getResult().getKey()));
+			test = test_repo.save(record);
+
 		}
 		
 		return test;
@@ -199,5 +203,9 @@ public class TestService {
 
 	public List<PathObject> getPathObjects(String test_key) {
 		return test_repo.getPathObjects(test_key);
+	}
+
+	public Set<Group> getGroups(String key) {
+		return test_repo.getGroups(key);
 	}
 }

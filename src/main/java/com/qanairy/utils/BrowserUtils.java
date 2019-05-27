@@ -4,19 +4,20 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openqa.grid.common.exception.GridException;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
-import com.qanairy.models.ElementState;
+import com.qanairy.models.Animation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
+
 
 public class BrowserUtils {
 	private static Logger log = LoggerFactory.getLogger(BrowserUtils.class);
@@ -33,35 +34,36 @@ public class BrowserUtils {
 		
 		URL init_url = new URL(initial_url);
 		String last_key = init_url.getProtocol()+"://"+init_url.getHost()+init_url.getPath();
-		int last_elem_count = 0;
-		int iterations = 0;
+		if(last_key.charAt(last_key.length()-1) == '/'){
+			last_key = last_key.substring(0, last_key.length()-1);
+		}
 		do{
 			String new_key = browser.getDriver().getCurrentUrl();
-			int element_count = browser.getDriver().findElements(By.xpath("//*")).size();
+			if(new_key.charAt(0) != 'h'){
+				new_key = 'h'+new_key;
+			}
 			URL new_url = new URL(new_key);
 			new_key = new_url.getProtocol()+"://"+new_url.getHost()+new_url.getPath();
-	        
-	        transition_detected = !new_key.equals(last_key) || element_count != last_elem_count;
-
-	        
-	        try{
-				images.add(browser.getViewportScreenshot());
+			if(new_key.charAt(new_key.length()-1) == '/'){
+				new_key = new_key.substring(0, new_key.length()-1);
+			}
+			
+			try{
+	        	BufferedImage img = browser.getViewportScreenshot();
+				images.add(img);
 			}catch(Exception e){}
 	        
+	        transition_detected = !new_key.equals(last_key);
+	        
 			if(transition_detected ){
+				log.warn("redirect transition detected");
 				start_ms = System.currentTimeMillis();
-				if(!new_key.equals(last_key)){
-					transition_urls.add(new_key);
-					last_key = new_key;
-				}
-				last_elem_count = element_count;
-				iterations=0;
+				transition_urls.add(new_key);
+				last_key = new_key;
 			}
-			iterations++;
 			//transition is detected if keys are different
-		}while(iterations < 5 && (System.currentTimeMillis() - start_ms) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 2000);
 		
-		/*
 		for(BufferedImage img : images){
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
@@ -72,7 +74,7 @@ public class BrowserUtils {
 				e.printStackTrace();
 			}
 		}
-		*/
+		
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);
@@ -80,57 +82,52 @@ public class BrowserUtils {
 		return redirect;
 	}
 
-	public static void getElementAnimation(Browser browser, ElementState element, String host, WebElement web_element) throws IOException {
+	public static Animation getAnimation(Browser browser, String host) throws IOException {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
-		List<BufferedImage> images = new ArrayList<>();
 		boolean transition_detected = false;
 		
 		long start_ms = System.currentTimeMillis();
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 		
-		String last_checksum = element.getScreenshotChecksum();
-		int iterations = 0;
+		Map<String, BufferedImage> animated_state_imgs = new HashMap<String, BufferedImage>();
+		String last_checksum = null;
+		int index = 0;
+
 		do{
 			//get element screenshot
-			BufferedImage element_screenshot = browser.getElementScreenshot(web_element);
+			BufferedImage screenshot = browser.getViewportScreenshot();
 			
 			//calculate screenshot checksum
-			String new_checksum = PageState.getFileChecksum(element_screenshot);
+			String new_checksum = PageState.getFileChecksum(screenshot);
 			
-			//check for cycle in checksums
-			boolean cycle_detected = false;
-			for(String checksum : image_checksums){
-				if(new_checksum.equals(checksum)){
-					cycle_detected = true;
-					log.warn("cycle detected in animation");
-					break;
-				}
-			}
-			if(cycle_detected){
-				break;
-			}
 			transition_detected = !new_checksum.equals(last_checksum);
 			
-			if(!cycle_detected && transition_detected ){
-				//start_ms = System.currentTimeMillis();
-				image_checksums.add(new_checksum);								
-				last_checksum = new_checksum;
-				iterations=0;
+			log.warn("new checksum :: " + new_checksum);
+			log.warn("has key been seen before :: " + animated_state_imgs.containsKey(new_checksum));
+			if( animated_state_imgs.containsKey(new_checksum)){
+				break;
 			}
-			iterations++;
+			else if( transition_detected ){
+				start_ms = System.currentTimeMillis();
+				image_checksums.add(new_checksum);
+				animated_state_imgs.put(new_checksum, screenshot);
+				last_checksum = new_checksum;
+				index++;
+			}
 
 			//transition is detected if keys are different
-		}while(iterations < 2 && (System.currentTimeMillis() - start_ms) < 5000);
-		
-		int idx = 0;
-		for(BufferedImage img : images){
+		}while((System.currentTimeMillis() - start_ms) < 10000 && index < 10);
+				
+		for(Map.Entry<String, BufferedImage> entry : animated_state_imgs.entrySet()){
 			try{
-				image_urls.add(UploadObjectSingleOperation.saveImageToS3(img, host, image_checksums.get(idx), browser.getBrowserName()));
+				image_urls.add(UploadObjectSingleOperation.saveImageToS3(entry.getValue(), host, entry.getKey(), browser.getBrowserName()));
 			}
 			catch(Exception e){
 				e.printStackTrace();
 			}
 		}
+		
+		return new Animation(image_urls);
 	}
 }

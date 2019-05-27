@@ -153,7 +153,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				browser.waitForPageToLoad();
+				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -271,7 +271,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				browser.waitForPageToLoad();
+				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -306,15 +306,6 @@ public class Crawler {
 		PathObject last_obj = null;
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
-		
-		PageState expected_page = null;
-		
-		for(PathObject obj : path_object_list){
-			if(obj instanceof PageState){
-				expected_page = ((PageState)obj);
-				break;
-			}
-		}
 
 		List<String> path_keys = new ArrayList<String>();
 		List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -344,6 +335,18 @@ public class Crawler {
 		ordered_path_objects = reduced_path_obj;
 		path_objects = new ArrayList<PathObject>(ordered_path_objects);
 		
+		PageState expected_page = null;
+		
+		for(PathObject obj : path_objects){
+			if(obj instanceof PageState){
+				expected_page = ((PageState)obj);
+				break;
+			}
+		}
+
+		browser.navigateTo(expected_page.getUrl());
+		browser.waitForPageToLoad();
+
 		if(!(path_objects.get(0) instanceof Redirect)){
 			browser.navigateTo(expected_page.getUrl());
 
@@ -355,6 +358,9 @@ public class Crawler {
 				path_objects.add(0,initial_redirect);
 			}
 		}
+		
+		//TODO: check for continuously animated elements
+		
 		
 		String last_url = null;
 		int current_idx = 0;
@@ -433,8 +439,7 @@ public class Crawler {
 					}
 					else if(current_idx < path_objects.size()-1 && !path_objects.get(current_idx+1).getKey().contains("redirect") ){
 						log.warn("PAUSING AFTER ACTION PERFORMED   !!!!!!!!!");
-						//TODO: Replace the following with animation detection
-						//BrowserUtils.getElementAnimation(browser, last_element, host_channel);
+						//TODO: Replace the following with animation detection						
 						Timing.pauseThread(1000);
 					}
 				
@@ -467,7 +472,13 @@ public class Crawler {
 	public static void performAction(Action action, ElementState elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		actionFactory.execAction(element, action.getValue(), action.getName());
+		try{
+			actionFactory.execAction(element, action.getValue(), action.getName());
+		}catch(WebDriverException e){
+			if(!e.getMessage().contains("out of bounds of viewport")){
+				throw e;
+			}
+		}
 	}
 	
 	public static void scrollDown(WebDriver driver, int distance) 
@@ -505,13 +516,10 @@ public class Crawler {
 				e.printStackTrace();
 			}
 			catch (WebDriverException e) {
-				//log.warn("web driver exception occurred : " + e.getMessage());
+				log.warn("web driver exception occurred : " + e.getMessage());
 				//e.printStackTrace();
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
-				if(e.getMessage().contains("viewport")){
-					throw e;
-				}
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 				e.printStackTrace();
@@ -557,7 +565,7 @@ public class Crawler {
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.warn("WebDriver exception encountered while performing path crawl"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			} catch (NoSuchAlgorithmException e) {
 				log.info("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
@@ -632,7 +640,6 @@ public class Crawler {
 				}
 				
 				performAction(action, last_element, browser.getDriver());
-				//BrowserUtils.getElementAnimation(browser, last_element, host);
 				Timing.pauseThread(1000);
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -647,7 +654,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host);
-				browser.waitForPageToLoad();
+				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");

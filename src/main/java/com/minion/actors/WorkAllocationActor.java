@@ -62,7 +62,6 @@ public class WorkAllocationActor extends AbstractActor  {
 							acct_message.getData() instanceof URL){
 						String browser_name = acct_message.getOptions().get("browser").toString();
 						Message<?> msg = acct_message.clone();	
-						msg.getOptions().put("browser", browser_name);
 						
 						if(acct_message.getData() instanceof ExploratoryPath){
 							ActorRef exploratory_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -83,7 +82,6 @@ public class WorkAllocationActor extends AbstractActor  {
 						testing_actor.tell(acct_message, getSelf() );
 					}
 					getSender().tell("Status: ok", getSelf());
-					postStop();
 				})
 				.match(ExplorationPathMessage.class, message -> {
 					final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

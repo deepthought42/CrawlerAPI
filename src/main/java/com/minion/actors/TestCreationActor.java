@@ -273,21 +273,8 @@ public class TestCreationActor extends AbstractActor  {
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
 		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight());
-		
-		ElementState elem_record = page_element_service.findByScreenshotChecksum(elem.getScreenshotChecksum());
 
-		if(elem_record != null){
-			elem = elem_record;
-		}
-		else{
-			elem_record = page_element_service.findByKey(elem.getKey());
-			if(elem_record!= null){
-				elem = elem_record;
-			}
-			else{
-				elem = page_element_service.save(elem);
-			}
-		}
+		elem = page_element_service.save(elem);
 		return elem;
 	}
 

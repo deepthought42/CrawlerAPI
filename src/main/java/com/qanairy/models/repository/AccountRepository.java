@@ -1,5 +1,6 @@
 package com.qanairy.models.repository;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
+import com.qanairy.models.TestRecord;
 
 
 public interface AccountRepository extends Neo4jRepository<Account, Long> {
@@ -35,5 +37,8 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	
 	@Query("MATCH (account:Account{user_id:{user_id}}) DELETE account")
 	public void deleteAccount(@Param("user_id") String user_id);
+
+	@Query("MATCH (account:Account{username:{username}})-[:HAS_DOMAIN]->(d:Domain) MATCH (d)-[:HAS_TEST]->(t) MATCH (t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
+	public List<TestRecord> getTestRecords(@Param("username") String username);
 
 }

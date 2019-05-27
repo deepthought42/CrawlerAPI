@@ -5,7 +5,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.qanairy.services.PageStateService;
+
 public class PageStateServiceTest {
+	PageStateService page_state_service = new PageStateService();
 	
 	@Test
 	public void listTest(){

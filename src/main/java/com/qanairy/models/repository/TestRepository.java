@@ -1,12 +1,14 @@
 package com.qanairy.models.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.Domain;
+import com.qanairy.models.Group;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -38,4 +40,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 	
 	@Query("MATCH (t)-[r:HAS_PATH_OBJECT]->(p:PageState{key:{page_state_key}}) RETURN t")
 	public List<Test> findTestWithPageState(@Param("page_state_key") String key);
+	
+	@Query("MATCH (:Test{key:{key}})-[:HAS_GROUP]-(g) RETURN g")
+	public Set<Group> getGroups(@Param("key") String key);
 }

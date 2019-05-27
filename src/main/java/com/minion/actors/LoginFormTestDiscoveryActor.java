@@ -3,6 +3,7 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -24,8 +25,10 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.enums.FormType;
+import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.FormService;
@@ -170,6 +173,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								
 								log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
+								test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L));
 								test = test_service.save(test, domain.getUrl());
 								MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 							
@@ -177,7 +181,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 									log.warning("test key ::   " + key);
 								}
 								
-								DiscoveryRecord discovery = domain_service.getMostRecentDiscoveryRecord(domain.getUrl(), null);
+								DiscoveryRecord discovery = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
 								//send test for exploration
 								message.getOptions().put("discovery_key", discovery.getKey());
 								message.getOptions().put("browser", domain.getDiscoveryBrowserName());
@@ -243,7 +247,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		}
 		log.warning("path keys size   :     "+path_keys.size());
 		
-		return new ExploratoryPath(path_keys, path_objects, new ArrayList<Action>());
+		return new ExploratoryPath(path_keys, path_objects);
 	}
 
 	private ElementState findInputElementByAttribute(List<ElementState> elements, String search_val) {

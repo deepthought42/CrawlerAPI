@@ -15,6 +15,7 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.repository.DomainRepository;
 
@@ -38,10 +39,10 @@ public class DomainService {
 	}
 	
 	public Domain addTest(String host, Test test){
-		log.info("domain host :: "+host);
+		log.warn("domain host :: "+host);
 		Domain domain = domain_repo.findByHost(host);
-		log.info("Domain :: " + domain);
-		log.info("test ::  " + test);
+		log.warn("Domain :: " + domain);
+		log.warn("test ::  " + test);
 		domain.addTest(test);
 		return save(domain);
 	}
@@ -50,7 +51,7 @@ public class DomainService {
 		return domain_repo.getTestCount(host_url);
 	}
 
-	public DiscoveryRecord getMostRecentDiscoveryRecord(String url, String user_id) {
+	public DiscoveryRecord getMostRecentDiscoveryRecord(String url) {
 		return domain_repo.getMostRecentDiscoveryRecord(url);
 	}
 
@@ -100,5 +101,9 @@ public class DomainService {
 
 	public Set<Test> getTests(String url) {
 		return domain_repo.getTests(url);
+	}
+	
+	public Set<TestRecord> getTestRecords(String url) {
+		return domain_repo.getTestRecords(url);
 	}
 }

@@ -29,7 +29,6 @@ public class BrowserConnectionFactory {
 			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
 		}
 		
-		
 		return new Browser(browser, hub_url);
 	}
 		

@@ -265,8 +265,10 @@ public class ParentPathExplorer extends AbstractActor {
 			  		
 			  		Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 
-					path_expansion.tell(test_msg, getSelf());
-					
+			  		if(!test.getSpansMultipleDomains()){
+			  			path_expansion.tell(test_msg, getSelf());
+			  		}
+			  		
 					discovery_service.incrementTestCount(message.getDiscovery().getKey());
 					
 					DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
@@ -399,13 +401,7 @@ public class ParentPathExplorer extends AbstractActor {
 					parent_tag = parent_tag_record;
 				}
 				else{
-					parent_tag_record = element_service.findByScreenshotChecksum(parent_tag.getScreenshotChecksum());
-					if(parent_tag_record!= null){
-						parent_tag = parent_tag_record;
-					}
-					else{
-						parent_tag = element_service.save(parent_tag);
-					}
+					parent_tag = element_service.save(parent_tag);
 				}
 				parent_path.getPathObjects().set(idx, parent_tag);
 				parent_path.getPathKeys().set(idx, parent_tag.getKey());
@@ -477,10 +473,10 @@ public class ParentPathExplorer extends AbstractActor {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, test.getResult(), crawl_time);
+		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
 		test.addRecord(test_record);
 
-		boolean leaves_domain = (!test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost()));
+		boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
 		test.setSpansMultipleDomains(leaves_domain);
 		return test_service.save(test, host);
 	}

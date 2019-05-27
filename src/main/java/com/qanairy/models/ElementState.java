@@ -31,7 +31,6 @@ public class ElementState implements Persistable, PathObject {
 	@GeneratedValue
     @Id
     private Long id;
-	
     private String key;
     private String screenshot;
     private String screenshot_checksum;

@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,12 +57,16 @@ public class PageState implements Persistable, PathObject {
 	private int viewport_width;
 	private int viewport_height;
 	private String type;
-	private String screenshot_checksum;
+	private List<String> screenshot_checksums;
+	private List<String> animated_image_urls;
 
-	@Relationship(type = "HAS_ELEMENT")
+	@Relationship(type = "HAS")
+	private List<Screenshot> screenshots;
+		
+	@Relationship(type = "HAS")
 	private Set<ElementState> elements;
 
-	@Relationship(type = "HAS_FORM")
+	@Relationship(type = "HAS")
 	private Set<Form> forms;
 
 	public PageState() {
@@ -85,7 +90,7 @@ public class PageState implements Persistable, PathObject {
 		assert screenshot_url != null;
 
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
+		setUrl(url);
 		setScreenshotUrl(screenshot_url);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
@@ -96,8 +101,11 @@ public class PageState implements Persistable, PathObject {
 		setImageWeight(0);
 		setSrc(src);
 		setForms(new HashSet<Form>());
+		setScreenshotChecksum(new ArrayList<String>());
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
+		setScreenshots(new ArrayList<Screenshot>());
+		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 
@@ -118,18 +126,21 @@ public class PageState implements Persistable, PathObject {
 		assert elements != null;
 
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
+		setUrl(url);
 		setBrowser(browser_name);
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
 		setLandable(false);
 		setImageWeight(0);
 		setSrc(src);
+		setScreenshotChecksum(new ArrayList<String>());
 		setForms(new HashSet<Form>());
 		setScrollXOffset(scroll_x_offset);
 		setScrollYOffset(scroll_y_offset);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
+		setScreenshots(new ArrayList<Screenshot>());
+		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 	
@@ -150,12 +161,13 @@ public class PageState implements Persistable, PathObject {
 	 * @throws NoSuchAlgorithmException 
 	 */
 	public PageState(String url, String screenshot_url, Set<ElementState> elements, boolean isLandable,
-			String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, String browser_name) throws IOException, NoSuchAlgorithmException {
+			String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, 
+			String browser_name) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
 		assert screenshot_url != null;
 
 		setType(PageState.class.getSimpleName());
-		setUrl(url.replace("/#", ""));
+		setUrl(url);
 		setScreenshotUrl(screenshot_url);
 		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
 		setElements(elements);
@@ -166,8 +178,11 @@ public class PageState implements Persistable, PathObject {
 		setScrollYOffset(scroll_y_offset);
 		setViewportWidth(viewport_width);
 		setViewportHeight(viewport_height);
+		setScreenshotChecksum(new ArrayList<String>());
 		setSrc(src);
 		setForms(new HashSet<Form>());
+		setScreenshots(new ArrayList<Screenshot>());
+		setAnimatedImageUrls(new ArrayList<String>());
 		setKey(generateKey());
 	}
 	
@@ -245,7 +260,7 @@ public class PageState implements Persistable, PathObject {
 		PageState that = (PageState) o;
 		//boolean pages_match = false;
 		boolean keys_match = this.getKey().equals(that.getKey());
-		boolean checksums_match = this.getScreenshotChecksum().equals(that.getScreenshotChecksum());
+		boolean checksums_match = this.getScreenshotChecksums().equals(that.getScreenshotChecksums());
 		/*
 		if(!pages_match){
 			pages_match = this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));
@@ -297,6 +312,7 @@ public class PageState implements Persistable, PathObject {
 		PageState page = null;
 		try {
 			page = new PageState(getUrl().toString(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
+			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
 		} catch (NoSuchAlgorithmException | IOException e) {
 			log.info("Error cloning page : " + page.getKey() + ";  "+e.getMessage());
 		}
@@ -496,7 +512,7 @@ public class PageState implements Persistable, PathObject {
 
 	public void setScreenshotUrl(String screenshot_url) throws MalformedURLException, IOException {
 		this.screenshot_url = screenshot_url;
-		setScreenshotChecksum(getFileChecksum(ImageIO.read(new URL(screenshot_url))));
+		addScreenshotChecksum(getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 	}
 
 	public String getBrowser() {
@@ -507,12 +523,25 @@ public class PageState implements Persistable, PathObject {
 		this.browser = browser;
 	}
 
-	public String getScreenshotChecksum() {
-		return screenshot_checksum;
+	public List<String> getScreenshotChecksums() {
+		return screenshot_checksums;
 	}
 
-	public void setScreenshotChecksum(String screenshot_checksum) {
-		this.screenshot_checksum = screenshot_checksum;
+	public void setScreenshotChecksum(List<String> screenshot_checksums) {
+		this.screenshot_checksums = screenshot_checksums;
+	}
+	
+	public boolean addScreenshotChecksum(String checksum){
+		boolean exists = false;
+		for(String screenshot_checksum : getScreenshotChecksums()){
+			if(checksum.equals(screenshot_checksum)){
+				exists = true;
+			}
+		}
+		if(!exists){
+			return this.screenshot_checksums.add(checksum);
+		}
+		return false;
 	}
 
 	public int getViewportWidth() {
@@ -529,5 +558,25 @@ public class PageState implements Persistable, PathObject {
 
 	public void setViewportHeight(int viewport_height) {
 		this.viewport_height = viewport_height;
+	}
+	
+	public List<String> getAnimatedImageUrls() {
+		return animated_image_urls;
+	}
+	
+	public void setAnimatedImageUrls(List<String> animated_image_urls) {
+		this.animated_image_urls = animated_image_urls;
+	}
+	
+	public List<Screenshot> getScreenshots() {
+		return screenshots;
+	}
+	
+	public void setScreenshots(List<Screenshot> screenshots) {
+		this.screenshots = screenshots;
+	}
+	
+	public void addScreenshot(Screenshot screenshot){
+		this.screenshots.add(screenshot);
 	}
 }

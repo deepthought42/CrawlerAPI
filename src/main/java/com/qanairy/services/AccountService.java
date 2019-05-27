@@ -1,5 +1,6 @@
 package com.qanairy.services;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
+import com.qanairy.models.TestRecord;
 import com.qanairy.models.repository.AccountRepository;
 
 /**
@@ -68,4 +70,7 @@ public class AccountService {
 		return account_repo.getTestCountByMonth(username, month);
 	}
 	
+	public List<TestRecord> getTestRecords(String username) {
+		return account_repo.getTestRecords(username);
+	}
 }

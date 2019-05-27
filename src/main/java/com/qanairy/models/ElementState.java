@@ -42,7 +42,6 @@ public class ElementState implements Persistable, PathObject {
 	private int y_location;
 	private int width;
 	private int height;
-	private boolean is_continuously_animated;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();

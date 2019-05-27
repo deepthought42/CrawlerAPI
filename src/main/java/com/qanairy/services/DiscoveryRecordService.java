@@ -10,8 +10,6 @@ import com.qanairy.models.repository.DiscoveryRecordRepository;
 
 @Service
 public class DiscoveryRecordService {
-
-	private boolean in_progress = false;
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;

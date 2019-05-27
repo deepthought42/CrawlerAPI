@@ -39,6 +39,9 @@ public class BrowserUtils {
 		}
 		do{
 			String new_key = browser.getDriver().getCurrentUrl();
+			if(new_key.charAt(0) != 'h'){
+				new_key = 'h'+new_key;
+			}
 			URL new_url = new URL(new_key);
 			new_key = new_url.getProtocol()+"://"+new_url.getHost()+new_url.getPath();
 			if(new_key.charAt(new_key.length()-1) == '/'){

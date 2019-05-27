@@ -346,7 +346,7 @@ public class Crawler {
 
 		browser.navigateTo(expected_page.getUrl());
 		browser.waitForPageToLoad();
-/*
+
 		if(!(path_objects.get(0) instanceof Redirect)){
 			browser.navigateTo(expected_page.getUrl());
 
@@ -358,7 +358,7 @@ public class Crawler {
 				path_objects.add(0,initial_redirect);
 			}
 		}
-	*/	
+		
 		//TODO: check for continuously animated elements
 		
 		

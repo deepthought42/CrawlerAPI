@@ -191,7 +191,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					log.info("Member is Removed: {}", mRemoved.member());
 				})	
 				.matchAny(o -> {
-					log.info("received unknown message");
+					log.info("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
 	}

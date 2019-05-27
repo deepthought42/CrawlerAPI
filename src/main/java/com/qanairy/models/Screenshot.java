@@ -56,6 +56,10 @@ public class Screenshot implements Persistable {
 		return "screenshot::" + this.checksum;
 	}
 
+	public Long getId() {
+		return id;
+	}
+
 	public String getChecksum() {
 		return checksum;
 	}

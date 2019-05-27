@@ -38,7 +38,6 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Action;
-import com.qanairy.models.Animation;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -885,7 +884,7 @@ public class BrowserService {
 		try{
 			submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
 		}
-		catch(NoSuchElementException e){
+		catch(Exception e){
 			submit_element = form_elem.findElement(By.xpath("//input[@type='submit']"));
 		}
 		Set<Attribute> attributes = browser.extractAttributes(submit_element);

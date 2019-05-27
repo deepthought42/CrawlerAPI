@@ -122,24 +122,9 @@ public class UrlBrowserActor extends AbstractActor {
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
 						log.warn("Done building page states ");
-						//Page page = new Page(url);
-						//page.getPageStates().addAll(page_states);
-						//page_service.save(page);
-						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name);
+						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect);
 						log.warn("finished creating landing page test");
-						if(redirect.getUrls().size() > 0){
-							
-							List<String> path_keys = new ArrayList<>();
-							path_keys.add(redirect.getKey());
-							path_keys.addAll(test.getPathKeys());
-							
-							List<PathObject> path_objects = new ArrayList<PathObject>();
-							path_objects.add(redirect);
-							path_objects.addAll(test.getPathObjects());
-							
-							test.setPathKeys(path_keys);
-							test.setPathObjects(path_objects);
-						}
+						
 						test = test_service.save(test, host);
 						log.warn("path keys :: " + test.getPathKeys());
 						log.warn("path objects :: " + test.getPathObjects());

@@ -38,11 +38,13 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Screenshot;
+import com.qanairy.models.Transition;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
@@ -146,9 +148,9 @@ public class BrowserService {
 			try{
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
-				BrowserUtils.getPageTransition(url, browser, host);
-				browser.waitForPageToLoad();
-				
+				log.warn("retrieving transition before building page states");
+				Transition transition = BrowserUtils.getTransition(url, browser, host);
+
 				//get current viewport screenshot				
 				List<WebElement> web_elements = browser.getDriver().findElements(By.cssSelector("*"));
 
@@ -174,11 +176,7 @@ public class BrowserService {
 						browser.scrollToElement(web_elements.get(0));
 					}
 					PageState page_state = buildPage(browser);
-					/*
-					Animation animation = BrowserUtils.getAnimation(browser, host);
-					log.warn("setting animated image urls :: " + animation.getImageUrls().size());
-					page_state.setAnimatedImageUrls(animation.getImageUrls());
-	*/
+					
 					Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
 
 					for(ElementState element : page_state.getElements()){
@@ -340,7 +338,6 @@ public class BrowserService {
 		
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
-        
 		int param_index = page_url.toString().indexOf("?");
 		String url_without_params = page_url.toString();
 		if(param_index >= 0){
@@ -361,6 +358,8 @@ public class BrowserService {
 			return page_state_record2;
 		}
 		else{
+			Animation animation = BrowserUtils.getAnimation(browser, page_url.getHost());
+			
 			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
 			Set<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString());
 			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
@@ -377,6 +376,9 @@ public class BrowserService {
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 			
+			log.warn("setting animated image urls :: " + animation.getImageUrls().size());
+			page_state.setAnimatedImageUrls(animation.getImageUrls());
+
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
 			page_state.addScreenshot(screenshot);
 			
@@ -388,7 +390,7 @@ public class BrowserService {
 				page_state.addScreenshotChecksum(screenshot_checksum);
 				page_state = page_state_service.save(page_state);
 			}
-	
+			
 			log.warn("saved page state");
 			viewport_screenshot.flush();
 			return page_state;
@@ -506,7 +508,7 @@ public class BrowserService {
 		int height = dimension.getHeight();
 		int width = dimension.getWidth();
 		
-		if(x >= x_offset && y >= y_offset && (x+width) < (browser.getViewportSize().getWidth()+x_offset) 
+		if(x > x_offset && y > y_offset && (x+width) < (browser.getViewportSize().getWidth()+x_offset) 
 				&& (y+height) < (browser.getViewportSize().getHeight()+y_offset)){
 			return true;
 		}

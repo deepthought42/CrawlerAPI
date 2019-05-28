@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.ElementState;
@@ -154,6 +155,9 @@ public class Crawler {
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				//browser.waitForPageToLoad();
+			}
+			else if(current_obj instanceof Animation){
+				BrowserUtils.getAnimation(browser, host_channel);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -345,20 +349,6 @@ public class Crawler {
 		}
 
 		browser.navigateTo(expected_page.getUrl());
-		browser.waitForPageToLoad();
-
-		if(!(path_objects.get(0) instanceof Redirect)){
-			browser.navigateTo(expected_page.getUrl());
-
-			log.warn("checking for page redirect");
-			Redirect initial_redirect = BrowserUtils.getPageTransition(expected_page.getUrl(), browser, host_channel);	
-			if(initial_redirect.getUrls().size() > 0){
-				log.warn("redirect found");
-				path_keys.add(0,initial_redirect.getKey());
-				path_objects.add(0,initial_redirect);
-			}
-		}
-		
 		//TODO: check for continuously animated elements
 		
 		
@@ -387,6 +377,9 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
+			}
+			else if(current_obj instanceof Animation){
+				BrowserUtils.getAnimation(browser, host_channel);
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;

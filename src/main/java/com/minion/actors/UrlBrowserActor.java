@@ -29,6 +29,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.structs.Message;
 import com.qanairy.models.Test;
+import com.qanairy.models.Transition;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
@@ -99,15 +100,16 @@ public class UrlBrowserActor extends AbstractActor {
 						String url = ((URL)message.getData()).toString();
 						String host = ((URL)message.getData()).getHost();
 						String browser_name = message.getOptions().get("browser").toString();
-						log.warn("starting redirect detection");
-						Redirect redirect = null;
+						log.warn("starting transition detection");
+						Transition transition = null;
+						int idx = 0;
 						do{
 							Browser browser = null;
 							try{
 								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 								browser.navigateTo(url);
-								redirect = BrowserUtils.getPageTransition(url, browser, host);
-								browser.waitForPageToLoad();
+								transition = BrowserUtils.getTransition(url, browser, host);
+								break;
 							}
 							catch(Exception e){
 								e.printStackTrace();
@@ -117,12 +119,14 @@ public class UrlBrowserActor extends AbstractActor {
 									browser.close();
 								}
 							}
-						}while(redirect == null);
+							idx++;
+							log.warn("Transition :: " + transition);
+						}while(transition == null && idx < 3);
 						log.warn("redirect detection complete");
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
 						log.warn("Done building page states ");
-						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect);
+						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, transition);
 						log.warn("finished creating landing page test");
 						
 						test = test_service.save(test, host);

@@ -82,11 +82,15 @@ public class FormDiscoveryActor extends AbstractActor{
 		
 				  	Browser browser = null;
 				  	boolean forms_created = false;
+				  	int count = 0;
 				  	do{
 				  		
 				  		try{
 				  			System.err.println("Getting browser for form extraction");
 					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+					  		System.err.println("navigating to page state :: "+page_state);
+					  		System.err.println("BROWSER  :  " + browser);
+					  		System.err.println("page state url   :  "+page_state.getUrl());
 					  		browser.navigateTo(page_state.getUrl());
 					  		
 					  		BrowserUtils.getPageTransition(page_state.getUrl(), browser, message.getDiscovery().getDomainUrl());
@@ -135,7 +139,8 @@ public class FormDiscoveryActor extends AbstractActor{
 				  				browser.close();
 				  			}
 				  		}
-					}while(!forms_created);
+				  		count++;
+					}while(!forms_created && count < 20);
 					
 					postStop();
 				})

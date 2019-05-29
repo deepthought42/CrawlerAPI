@@ -62,7 +62,7 @@ public class Form {
 		for(ElementState elem : getFormFields()){
 			elements_key += elem.getKey();
 		}
-		return "form::"+elements_key+""+getFormTag().getKey()+""+getSubmitField().getKey();
+		return "form::"+elements_key+""+getFormTag().getKey();
 	}
 
 	/**

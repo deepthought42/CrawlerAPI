@@ -61,7 +61,7 @@ public class TestCreatorService {
   	  	
 	  	List<String> path_keys = new ArrayList<String>();	  	
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
-	  	if(redirect != null && redirect.getUrls().size() > 0){
+	  	if(redirect != null && redirect.getUrls().size() > 1){
 	  		path_keys.add(redirect.getKey());
 	  		path_objects.add(redirect);
 	  	}

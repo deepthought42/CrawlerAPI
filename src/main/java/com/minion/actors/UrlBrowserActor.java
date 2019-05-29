@@ -137,6 +137,11 @@ public class UrlBrowserActor extends AbstractActor {
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
 						
 						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
+						
+						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+						System.err.println("page state  ::   " + page_states.get(0));
+						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+						
 						PageStateMessage page_state_msg = new PageStateMessage(message.getAccountKey(), page_states.get(0), discovery_record, message.getOptions());
 
 						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -146,6 +151,10 @@ public class UrlBrowserActor extends AbstractActor {
 						for(PageState page_state : page_states.subList(1, page_states.size())){
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 								log.warn("discovery path does not have expanded page state");
+								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+								System.err.println("page state  ::   " + page_state);
+								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+								
 								page_state_msg = new PageStateMessage(message.getAccountKey(), page_state, discovery_record, message.getOptions());
 
 								form_discoverer.tell(page_state_msg, getSelf() );

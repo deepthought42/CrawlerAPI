@@ -130,7 +130,7 @@ public class BrowserService {
 				}
 			}
 			cnt++;
-		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
+		}while(!page_visited_successfully && cnt < 100);
 		
 		log.warn("is page state landable  ?? :: "+isLandable);
 		return isLandable;
@@ -689,6 +689,12 @@ public class BrowserService {
 		List<Form> form_list = new ArrayList<Form>();
 
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
+		
+		form_elements = BrowserService.fitlerNonDisplayedElements(form_elements);
+		form_elements = BrowserService.filterStructureTags(form_elements);
+		form_elements = BrowserService.filterNoWidthOrHeight(form_elements);
+		form_elements = BrowserService.filterElementsWithNegativePositions(form_elements);
+
 		for(WebElement form_elem : form_elements){
 			List<String> form_xpath_list = new ArrayList<String>();
 			
@@ -881,14 +887,32 @@ public class BrowserService {
 	 */
 	private ElementState findFormSubmitButton(WebElement form_elem, Browser browser) throws Exception {
 		WebElement submit_element = null;
-		try{
-			submit_element = form_elem.findElement(By.xpath("//button[@type='submit']"));
+		
+		boolean submit_elem_found = false;
+		List<WebElement> form_elements = getChildElements(form_elem);
+		Set<Attribute> attributes = null;
+		
+		for(WebElement elem : form_elements){
+			attributes = browser.extractAttributes(elem);
+			for(Attribute attribute : attributes){
+				if(attribute.contains("submit")){
+					submit_elem_found = true;		
+					break;
+				}
+			}
+			
+			if(submit_elem_found){
+				submit_element = elem;
+				break;
+			}
 		}
-		catch(Exception e){
-			submit_element = form_elem.findElement(By.xpath("//input[@type='submit']"));
+		
+		log.warn("SUBMIT BUTTON :: " + submit_element);
+		if(submit_element == null){
+			return null;
 		}
-		Set<Attribute> attributes = browser.extractAttributes(submit_element);
-		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem);
+		
+		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, submit_element);
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url, submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight() );
 		
 		ElementState elem_record = page_element_service.findByKey(elem.getKey());

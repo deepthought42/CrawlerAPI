@@ -324,6 +324,11 @@ public class Browser {
 		int point_x = point.getX();
 		int point_y = point.getY();
 		
+		log.warn("Y-coordinate 1  :: " + point_y);
+		log.warn("X-coordinate 1  :: " + point_x);
+		log.warn("element witdth 1  ::   " + elem_width);
+		log.warn("element height 1  ::   "  + elem_height);
+		
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	
@@ -340,6 +345,12 @@ public class Browser {
 		int elemHeight = dimension.getHeight();
 
 		int y_coord = point.getY()-browser.getYScrollOffset();
+		
+		log.warn("Y-coordinate :: " + y_coord);
+		log.warn("X-coordinate :: " + point.getX());
+		log.warn("element witdth   ::   " + elemWidth);
+		log.warn("element height   ::   " + elemHeight);
+		
 		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
 	}
 	

@@ -52,9 +52,17 @@ public class PageStateService {
 		assert page_state != null;
 		
 		PageState page_state_record = null;
-		
+		log.warn("Page state service saving   :: " + page_state);
+		log.warn("page state browser " + page_state.getBrowser());
+		log.warn("page state key " + page_state.getKey());
+		log.warn("page state screenshot url ::  " + page_state.getScreenshotUrl());
+		log.warn("page state source  ::  " + page_state.getSrc());
+		log.warn("page state animated urls :: "+page_state.getAnimatedImageUrls());
+		log.warn("page state screenshots  :: "+page_state.getScreenshots());
+				
 		for(Screenshot screenshot : page_state.getScreenshots()){
 			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
+			log.warn("page state record found :: " + page_state_record);
 			if(page_state_record != null){
 				break;
 			}
@@ -149,6 +157,8 @@ public class PageStateService {
 		if(page_state != null){
 			page_state.setElements(getElementStates(page_key));
 			page_state.setScreenshots(getScreenshots(page_key));
+			
+			log.warn("FINDING BY KEY :: " + page_state.getScreenshots());
 		}
 		return page_state;
 	}

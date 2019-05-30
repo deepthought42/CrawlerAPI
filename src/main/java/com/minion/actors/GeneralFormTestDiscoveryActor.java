@@ -98,6 +98,8 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
 							  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 							  	for(Form form : forms){
+							  		browser.scrollTo(form.getFormTag().getXLocation(), form.getFormTag().getYLocation());
+
 							  		path_object_lists.addAll(generateAllFormTestPaths(test, form));
 							  	}
 							  	

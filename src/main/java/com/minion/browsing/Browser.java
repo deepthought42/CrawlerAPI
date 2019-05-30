@@ -312,9 +312,9 @@ public class Browser {
 	 * @throws IOException
 	 */
 		
-	public BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot) throws IOException{
+	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
 		//calculate element position within screen
-		Point point = getLocationInViewport(elem);
+		Point point = getLocationInViewport(elem, x_offset, y_offset);
 		Dimension dimension = elem.getSize();
 		
 		// Get width and height of the element
@@ -323,35 +323,8 @@ public class Browser {
 		
 		int point_x = point.getX();
 		int point_y = point.getY();
-		
-		log.warn("Y-coordinate 1  :: " + point_y);
-		log.warn("X-coordinate 1  :: " + point_x);
-		log.warn("element witdth 1  ::   " + elem_width);
-		log.warn("element height 1  ::   "  + elem_height);
-		
-		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
-	}
-	
-	/**
-	 * 
-	 * @param screenshot
-	 * @param elem
-	 * @return
-	 * @throws IOException
-	 */
-	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point, Browser browser) throws IOException{
-		// Get width and height of the element
-		int elemWidth = dimension.getWidth();
-		int elemHeight = dimension.getHeight();
 
-		int y_coord = point.getY()-browser.getYScrollOffset();
-		
-		log.warn("Y-coordinate :: " + y_coord);
-		log.warn("X-coordinate :: " + point.getX());
-		log.warn("element witdth   ::   " + elemWidth);
-		log.warn("element height   ::   " + elemHeight);
-		
-		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
+		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
@@ -586,10 +559,10 @@ public class Browser {
 	 * @param element {@link WebElement}
 	 * @return {@link Point} coordinates
 	 */
-	private Point getLocationInViewport(WebElement element) {
+	private static Point getLocationInViewport(WebElement element, int x_offset, int y_offset) {
 		Point location = element.getLocation();
-		int y_coord = calculateYCoordinate(this.getYScrollOffset(), location);
-		int x_coord = calculateXCoordinate(this.getXScrollOffset(), location);
+		int y_coord = calculateYCoordinate(x_offset, location);
+		int x_coord = calculateXCoordinate(y_offset, location);
        
 		return new Point(x_coord, y_coord);
 	}

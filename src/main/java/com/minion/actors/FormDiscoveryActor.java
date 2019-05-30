@@ -94,10 +94,10 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser.navigateTo(page_state.getUrl());
 					  		
 					  		BrowserUtils.getPageTransition(page_state.getUrl(), browser, message.getDiscovery().getDomainUrl());
-					  		browser.waitForPageToLoad();
+					  		browser.scrollTo(page_state.getScrollXOffset(), page_state.getScrollYOffset());
 					  		
 				  			System.err.println("Looking up page state by key");
-					  		page_state = page_state_service.findByKey(page_state.getKey());
+					  		//page_state = page_state_service.findByKey(page_state.getKey());
 							  
 					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
 import org.mockito.Matchers;
@@ -54,7 +55,7 @@ public class TestServiceTest {
 	}
 	
 	@org.junit.Test
-	public void runTestIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException {
+	public void runTestIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException, InterruptedException, ExecutionException {
 		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");
 		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state);
@@ -67,7 +68,7 @@ public class TestServiceTest {
 	}
 	
 	@org.junit.Test
-	public void runTestIsPassingWhenNotExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException {
+	public void runTestIsPassingWhenNotExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException, InterruptedException, ExecutionException {
 		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");
 		when(page_state1.getKey()).thenReturn("invalid_key");

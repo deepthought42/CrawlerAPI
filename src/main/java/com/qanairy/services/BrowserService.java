@@ -289,11 +289,26 @@ public class BrowserService {
 		return elements;
 	}
 
+	@Deprecated
 	public static List<WebElement> filterNotVisibleInViewport(Browser browser, List<WebElement> web_elements) {
+		List<WebElement> elements = new ArrayList<>();
+		int y_offset = browser.getYScrollOffset();
+		int x_offset = browser.getXScrollOffset();
+		
+		for(WebElement element : web_elements){
+			if(isElementVisibleInPane( x_offset, y_offset, element, browser.getViewportSize())){
+				elements.add(element);
+			}
+		}
+		
+		return elements;
+	}
+	
+	public static List<WebElement> filterNotVisibleInViewport(int x_offset, int y_offset, List<WebElement> web_elements, Dimension viewport_size) {
 		List<WebElement> elements = new ArrayList<>();
 		
 		for(WebElement element : web_elements){
-			if(isElementVisibleInPane(browser, element)){
+			if(isElementVisibleInPane( x_offset, y_offset, element, viewport_size)){
 				elements.add(element);
 			}
 		}
@@ -357,7 +372,7 @@ public class BrowserService {
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
 			page_state_record2.setScreenshots(page_state_service.getScreenshots(page_state_record2.getKey()));
-			
+			log.warn("Page state screenshots :: " + page_state_record2.getScreenshots());
 			return page_state_record2;
 		}
 		else{
@@ -412,7 +427,7 @@ public class BrowserService {
 		List<WebElement> web_elements = browser.getDriver().findElements(By.xpath("//*"));
 		BufferedImage page_screenshot = browser.getViewportScreenshot();
 
-		web_elements = BrowserService.filterNotVisibleInViewport(browser, web_elements);
+		web_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), web_elements, browser.getViewportSize());
 		web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
 		web_elements = BrowserService.filterNonChildElements(web_elements);
 		web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
@@ -447,7 +462,7 @@ public class BrowserService {
 		ElementState page_element_record = null;
 		ElementState page_element = null;
 		//log.warn("Checking if element visible in viewport");
-		img = browser.getElementScreenshot(elem, page_screenshot);
+		img = Browser.getElementScreenshot(elem, page_screenshot, browser.getXScrollOffset(), browser.getYScrollOffset());
 		checksum = PageState.getFileChecksum(img);	
 		page_element_record = page_element_service.findByScreenshotChecksum(checksum);
 
@@ -493,7 +508,7 @@ public class BrowserService {
 		return elements;
 	}
 	
-
+	@Deprecated
 	public static boolean isElementVisibleInPane(Browser browser, WebElement elem){
 		int y_offset = browser.getYScrollOffset();
 		int x_offset = browser.getXScrollOffset();
@@ -513,6 +528,23 @@ public class BrowserService {
 		return false;
 	}
 	
+	public static boolean isElementVisibleInPane(int x_offset, int y_offset, WebElement elem, Dimension viewport_size){
+		
+		Point location = elem.getLocation();
+		int x = location.getX();
+		int y = location.getY();
+		
+		Dimension dimension = elem.getSize();
+		int height = dimension.getHeight();
+		int width = dimension.getWidth();
+		
+		if(x >= x_offset && y >= y_offset && (x+width) < (viewport_size.getWidth()+x_offset) 
+				&& (y+height) < (viewport_size.getHeight()+y_offset)){
+			return true;
+		}
+		return false;
+	}
+	
 	public static boolean isElementVisibleInPane(Browser browser, ElementState elem){
 		int y_offset = browser.getYScrollOffset();
 		int x_offset = browser.getXScrollOffset();
@@ -523,8 +555,8 @@ public class BrowserService {
 		int height = elem.getHeight();
 		int width = elem.getWidth();
 		
-		if(x >= x_offset && y >= y_offset && (x+width) <= (browser.getViewportSize().getWidth()-1+x_offset) 
-				&& (y+height) <= (browser.getViewportSize().getHeight()-1+y_offset)){
+		if(x >= x_offset && y >= y_offset && (x+width) < (browser.getViewportSize().getWidth()+x_offset) 
+				&& (y+height) < (browser.getViewportSize().getHeight()+y_offset)){
 			return true;
 		}
 		return false;
@@ -538,6 +570,16 @@ public class BrowserService {
 	 */
 	public static List<WebElement> getChildElements(WebElement elem) throws WebDriverException{
 		return elem.findElements(By.xpath("./*"));
+	}
+	
+	/**
+	 * Get immediate child elements for a given element
+	 * 
+	 * @param elem	WebElement to get children for
+	 * @return list of WebElements
+	 */
+	public static List<WebElement> getNestedElements(WebElement elem) throws WebDriverException{
+		return elem.findElements(By.xpath(".//*"));
 	}
 	
 	/**
@@ -655,13 +697,13 @@ public class BrowserService {
 		try {
 			List<WebElement> elements = driver.findElements(By.xpath(xpath));
 			String element_tag_name = elem.getTagName();
-			String element_text = elem.getText();
 			
 			if(elements.size()>1){
 				int count = 1;
 				for(WebElement element : elements){
 					if(element.getTagName().equals(element_tag_name)
-							&& element.getText().equals(element_text)){
+							&& element.getLocation().getX() == elem.getLocation().getX()
+							&& element.getLocation().getY() == elem.getLocation().getY()){
 						return "("+xpath+")[" + count + "]";	
 					}					
 					count++;
@@ -694,8 +736,9 @@ public class BrowserService {
 		form_elements = BrowserService.filterStructureTags(form_elements);
 		form_elements = BrowserService.filterNoWidthOrHeight(form_elements);
 		form_elements = BrowserService.filterElementsWithNegativePositions(form_elements);
-
+		
 		for(WebElement form_elem : form_elements){
+			browser.scrollToElement(form_elem);
 			List<String> form_xpath_list = new ArrayList<String>();
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, ImageIO.read(new URL(page.getScreenshotUrl())));
@@ -708,7 +751,14 @@ public class BrowserService {
 			
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(form_elem, browser), 
 									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
+			
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
+
+			input_elements = BrowserService.fitlerNonDisplayedElements(input_elements);
+			input_elements = BrowserService.filterStructureTags(input_elements);
+			input_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), input_elements, browser.getViewportSize());
+			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
+			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
 			for(WebElement input_elem : input_elements){
 				Set<Attribute> attributes = browser.extractAttributes(input_elem);
 				
@@ -723,7 +773,7 @@ public class BrowserService {
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
 					}
-					BufferedImage img = Browser.getElementScreenshot(viewport, input_elem.getSize(), input_elem.getLocation(), browser);
+					BufferedImage img = Browser.getElementScreenshot(input_elem, viewport, browser.getXScrollOffset(), browser.getYScrollOffset());
 
 					viewport.flush();
 					String screenshot= null;
@@ -840,6 +890,12 @@ public class BrowserService {
 			if(allChildrenMatch){
 				//create list with new elements
 				List<WebElement> children = parent.findElements(By.xpath(".//input"));
+				children = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), children, browser.getViewportSize());
+				children = BrowserService.fitlerNonDisplayedElements(children);
+				children = BrowserService.filterNonChildElements(children);
+				children = BrowserService.filterNoWidthOrHeight(children);
+				children = BrowserService.filterElementsWithNegativePositions(children);
+				
 				child_inputs = new ArrayList<ElementState>();
 
 				for(WebElement child : children){
@@ -889,7 +945,7 @@ public class BrowserService {
 		WebElement submit_element = null;
 		
 		boolean submit_elem_found = false;
-		List<WebElement> form_elements = getChildElements(form_elem);
+		List<WebElement> form_elements = getNestedElements(form_elem);
 		Set<Attribute> attributes = null;
 		
 		for(WebElement elem : form_elements){
@@ -906,8 +962,7 @@ public class BrowserService {
 				break;
 			}
 		}
-		
-		log.warn("SUBMIT BUTTON :: " + submit_element);
+
 		if(submit_element == null){
 			return null;
 		}
@@ -935,7 +990,7 @@ public class BrowserService {
 		String screenshot_url = "";
 		try{
 			
-			img = Browser.getElementScreenshot(browser.getViewportScreenshot(), elem.getSize(), elem.getLocation(), browser);
+			img = Browser.getElementScreenshot(elem, browser.getViewportScreenshot(), browser.getXScrollOffset(), browser.getYScrollOffset());
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum);
 		}
@@ -967,7 +1022,7 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot_url = "";
 		try{
-			img = Browser.getElementScreenshot(browser.getViewportScreenshot(), elem.getSize(), elem.getLocation(), browser);
+			img = Browser.getElementScreenshot(elem, browser.getViewportScreenshot(), browser.getXScrollOffset(), browser.getYScrollOffset());
 			checksum = PageState.getFileChecksum(img);		
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum);	
 		}

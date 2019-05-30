@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutionException;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
@@ -57,11 +58,13 @@ public class Crawler {
 	 * @throws NoSuchAlgorithmException 
 	 * @throws WebDriverException 
 	 * @throws GridException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 * 
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
 		assert browser != null;
 		assert path_keys != null;
 		
@@ -108,7 +111,7 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				
-				while(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
@@ -226,15 +229,13 @@ public class Crawler {
 		
 		//log.warn("navigating to url :: " + init_url);
 		browser.navigateTo(init_url);
-		//browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-
 		
 		for(PathObject current_obj: ordered_path_objects){
 			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				
-				while(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
@@ -369,7 +370,7 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
-				while(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
@@ -437,12 +438,12 @@ public class Crawler {
 							current_idx++;
 						}
 					}
-					else if(current_idx < path_objects.size()-1 && !path_objects.get(current_idx+1).getKey().contains("redirect") ){
+					else {
 						log.warn("PAUSING AFTER ACTION PERFORMED   !!!!!!!!!");
 						//TODO: Replace the following with animation detection						
 						Timing.pauseThread(1000);
 					}
-				
+					
 					Point p = browser.getViewportScrollOffset();
 					browser.setXScrollOffset(p.getX());
 					browser.setYScrollOffset(p.getY());
@@ -619,7 +620,7 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				
-				while(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset() 
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
@@ -641,6 +642,7 @@ public class Crawler {
 				
 				performAction(action, last_element, browser.getDriver());
 				Timing.pauseThread(1000);
+				
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
 				browser.setYScrollOffset(p.getY());

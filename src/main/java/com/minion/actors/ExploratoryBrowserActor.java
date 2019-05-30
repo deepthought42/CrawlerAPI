@@ -124,7 +124,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								String page_url = acct_msg.getOptions().get("host").toString();
 
 								result_page = crawler.performPathExploratoryCrawl(browser_name, exploratory_path, page_url);
-								result_page = page_state_service.save(result_page);
+								page_state_service.save(result_page);
 								
 								//have page checked for landability
 								//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());

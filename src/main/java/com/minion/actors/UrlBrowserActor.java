@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -94,11 +95,19 @@ public class UrlBrowserActor extends AbstractActor {
 					if(message.getData() instanceof URL){
 						
 						String discovery_key = message.getOptions().get("discovery_key").toString();
+						String url = ((URL)message.getData()).toString();
+						DiscoveryRecord discovery = discovery_service.findByKey(discovery_key);
+						if(discovery.getExpandedUrls().contains(url)){
+							return;
+						}
+						discovery.getExpandedUrls().add(url);
+						discovery_service.save(discovery);
+						
 						discovery_service.incrementTotalPathCount(discovery_key);
 
-						String url = ((URL)message.getData()).toString();
 						String host = ((URL)message.getData()).getHost();
 						String browser_name = message.getOptions().get("browser").toString();
+						String screenshot_checksum = "";
 						log.warn("starting redirect detection");
 						Redirect redirect = null;
 						do{
@@ -108,6 +117,9 @@ public class UrlBrowserActor extends AbstractActor {
 								browser.navigateTo(url);
 								redirect = BrowserUtils.getPageTransition(url, browser, host);
 								browser.waitForPageToLoad();
+								BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+								screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+								
 							}
 							catch(Exception e){
 								e.printStackTrace();
@@ -118,9 +130,14 @@ public class UrlBrowserActor extends AbstractActor {
 								}
 							}
 						}while(redirect == null);
+						
+						
 						log.warn("redirect detection complete");
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
+						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+						
 						log.warn("Done building page states ");
 						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect);
 						log.warn("finished creating landing page test");
@@ -129,12 +146,8 @@ public class UrlBrowserActor extends AbstractActor {
 						log.warn("path keys :: " + test.getPathKeys());
 						log.warn("path objects :: " + test.getPathObjects());
 						
-						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-
-						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-						path_expansion_actor.tell(test_msg, getSelf() );
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
+						
 						
 						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
 						
@@ -142,20 +155,17 @@ public class UrlBrowserActor extends AbstractActor {
 						System.err.println("page state  ::   " + page_states.get(0));
 						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 						
-						PageStateMessage page_state_msg = new PageStateMessage(message.getAccountKey(), page_states.get(0), discovery_record, message.getOptions());
-
 						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-						form_discoverer.tell(page_state_msg, getSelf() );
 						
-						for(PageState page_state : page_states.subList(1, page_states.size())){
+						for(PageState page_state : page_states){
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 								log.warn("discovery path does not have expanded page state");
 								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 								System.err.println("page state  ::   " + page_state);
 								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 								
-								page_state_msg = new PageStateMessage(message.getAccountKey(), page_state, discovery_record, message.getOptions());
+								PageStateMessage page_state_msg = new PageStateMessage(message.getAccountKey(), page_state, discovery_record, message.getOptions());
 
 								form_discoverer.tell(page_state_msg, getSelf() );
 									

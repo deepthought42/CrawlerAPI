@@ -156,7 +156,7 @@ public class PathExpansionActor extends AbstractActor {
 							}
 							
 							log.warn("is result page landable  ::    "+result_page.isLandable());
-							if(result_page.isLandable() && !discovery_record.getExpandedPageStates().contains(result_page.getKey())){								
+							if(result_page.isLandable()){								
 								try{
 									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 							  	}catch(Exception e){}
@@ -399,7 +399,7 @@ public class PathExpansionActor extends AbstractActor {
 		assert page_state != null;
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		
-		Set<ElementState> elements = page_state.getElements();		
+		List<ElementState> elements = page_state.getElements();		
 		//get List of page states for page
 
 		List<String> path_keys = new ArrayList<>();

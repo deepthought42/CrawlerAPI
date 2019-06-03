@@ -375,6 +375,7 @@ public class Crawler {
 					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 				}
+				log.warn("last url for expected page state ::   "  + last_url);
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -388,6 +389,7 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
+				log.warn("seting last url to redirect url :: " + last_url);
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;

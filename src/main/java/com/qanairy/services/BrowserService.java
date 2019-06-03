@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -66,7 +65,7 @@ public class BrowserService {
 	@Autowired
 	private ElementRuleExtractor extractor;
 	
-	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};	
+	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "src", "alt", "href"};	
 	
 	/**
 	 * retrieves a new browser connection
@@ -141,13 +140,13 @@ public class BrowserService {
 		boolean error_occurred = false;		
 		Map<String, ElementState> seen_element_state = new HashMap<String, ElementState>();
 		
+		List<WebElement> all_elements = null;
 		Browser browser = null;
 		do{
 			try{
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
 				BrowserUtils.getPageTransition(url, browser, host);
-				browser.waitForPageToLoad();
 				
 				//get current viewport screenshot				
 				List<WebElement> web_elements = browser.getDriver().findElements(By.cssSelector("*"));
@@ -157,12 +156,17 @@ public class BrowserService {
 				web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
 				web_elements = BrowserService.filterNonChildElements(web_elements);
 				web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
+
+				all_elements = new ArrayList<>(web_elements);
 				web_elements = BrowserService.filterElementStatesFromList(web_elements, new ArrayList<ElementState>(seen_element_state.values()) );
 
 				int iter_idx=0;
 				int last_web_element_size = web_elements.size();
-				while(!web_elements.isEmpty()){					
-					//log.warn("BrowserService ...identifying page state iteration ...."+iter_idx+"....cycle::... "+cycle_cnt+" elements remaining ...."+web_elements.size());
+				int idx = 0;
+				while(!web_elements.isEmpty()){		
+					log.warn("run : " + idx + ";    init browser scroll offsets  ::   "+browser.getXScrollOffset()+" : "+browser.getYScrollOffset());
+					log.warn("run : " + idx + ";    BrowserService ...identifying page state iteration ...."+idx+" elements remaining ...."+web_elements.size() + "    :    " + url);
+					idx++;
 					if(iter_idx > 1){
 						web_elements = web_elements.subList(1, web_elements.size());
 						iter_idx=0;
@@ -171,14 +175,20 @@ public class BrowserService {
 						break;
 					}
 					if(!isElementVisibleInPane(browser, web_elements.get(0)) || iter_idx > 0){
+						log.warn("run : " + idx + ";    element is not visible in pane :: " + web_elements.get(0).getLocation()  + "    :    " + url);
 						browser.scrollToElement(web_elements.get(0));
 					}
-					PageState page_state = buildPage(browser);
+					log.warn("run : " + idx + ";    browser scroll offsets  ::   "+browser.getXScrollOffset()+" : "+browser.getYScrollOffset());
+
+					PageState page_state = buildPage(browser, all_elements);
+					
+					log.warn("Page state element count ::  " + page_state.getElements().size() + "   :   "+ url);
 					/*
 					Animation animation = BrowserUtils.getAnimation(browser, host);
 					log.warn("setting animated image urls :: " + animation.getImageUrls().size());
 					page_state.setAnimatedImageUrls(animation.getImageUrls());
 	*/
+					log.warn("run : " + idx + ";    elements left to go :: " + web_elements.size() + "    :    " + url);
 					Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
 
 					for(ElementState element : page_state.getElements()){
@@ -193,7 +203,10 @@ public class BrowserService {
 						}
 					}
 					
+					log.warn("run : " + idx + ";    seen states :: " + seen_element_state.size() + "    :    " + url);
 					web_elements = filtered_list;
+					
+					log.warn("run : " + idx + ";    elements left after filtered list :: " + web_elements.size() + "    :    " + url);
 					
 					page_states.add(page_state);
 					
@@ -234,9 +247,84 @@ public class BrowserService {
 				}
 			}
 		}while(error_occurred);
-		
+		log.warn("returning page states : "+page_states.size()+ "   :    "+url);
 		return page_states;
 	}
+
+	/**
+	 * 
+	 * @return
+	 * @throws GridException 
+	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException 
+	 * 
+	 * @pre browser != null
+	 * @post page_state != null
+	 */
+	public PageState buildPage(Browser browser, List<WebElement> all_elements) throws GridException, IOException, NoSuchAlgorithmException{
+		assert browser != null;
+		
+		try{
+			browser.moveMouseOutOfFrame();
+		}catch(Exception e){}
+		
+		String browser_url = browser.getDriver().getCurrentUrl();
+		URL page_url = new URL(browser_url);
+        
+		int param_index = page_url.toString().indexOf("?");
+		String url_without_params = page_url.toString();
+		if(param_index >= 0){
+			url_without_params = url_without_params.substring(0, param_index);
+		}
+
+		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
+		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url_without_params);
+		
+		if(page_state_record2 != null){
+			log.warn("existing page with screenshot found   :    " + url_without_params);
+			viewport_screenshot.flush();
+			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
+			page_state_record2.setScreenshots(page_state_service.getScreenshots(page_state_record2.getKey()));
+			log.warn("Page state screenshots :: " + page_state_record2.getScreenshots() + "    :    " + url_without_params);
+			return page_state_record2;
+		}
+		else{
+			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum + "    :    " + url_without_params);
+			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), all_elements);
+			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
+			
+			PageState page_state = new PageState( page_url.toString(),
+					visible_elements,
+					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
+					browser.getXScrollOffset(), 
+					browser.getYScrollOffset(),
+					browser.getViewportSize().width,
+					browser.getViewportSize().height,
+					browser.getBrowserName());
+			
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
+			page_state.setScreenshotUrl(viewport_screenshot_url);
+			
+			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
+			page_state.addScreenshot(screenshot);
+			
+			log.warn("initialized page state      :    " + url_without_params);
+			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
+			if(page_state_record != null){
+				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url_without_params);
+				page_state = page_state_record;
+				page_state.addScreenshotChecksum(screenshot_checksum);
+				page_state = page_state_service.save(page_state);
+			}
+	
+			log.warn("saved page state       :    " + url_without_params);
+			viewport_screenshot.flush();
+			return page_state;
+		}
+	}
+
 	
 	private static List<WebElement> filterElementStatesFromList(List<WebElement> web_elements,
 			List<ElementState> values) {
@@ -282,21 +370,6 @@ public class BrowserService {
 		for(WebElement element : web_elements){
 			Point location = element.getLocation();
 			if(location.getX() >= 0 && location.getY() >= 0){
-				elements.add(element);
-			}
-		}
-		
-		return elements;
-	}
-
-	@Deprecated
-	public static List<WebElement> filterNotVisibleInViewport(Browser browser, List<WebElement> web_elements) {
-		List<WebElement> elements = new ArrayList<>();
-		int y_offset = browser.getYScrollOffset();
-		int x_offset = browser.getXScrollOffset();
-		
-		for(WebElement element : web_elements){
-			if(isElementVisibleInPane( x_offset, y_offset, element, browser.getViewportSize())){
 				elements.add(element);
 			}
 		}
@@ -365,22 +438,22 @@ public class BrowserService {
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
-		log.warn("PageState record value :: " + page_state_record2);
+		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url_without_params);
 		
 		if(page_state_record2 != null){
-			log.warn("existing page with screenshot found");
+			log.warn("existing page with screenshot found   :    " + url_without_params);
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
 			page_state_record2.setScreenshots(page_state_service.getScreenshots(page_state_record2.getKey()));
-			log.warn("Page state screenshots :: " + page_state_record2.getScreenshots());
+			log.warn("Page state screenshots :: " + page_state_record2.getScreenshots() + "    :    " + url_without_params);
 			return page_state_record2;
 		}
 		else{
-			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
-			Set<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString());
+			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum + "    :    " + url_without_params);
+			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString());
 			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 			
-			PageState page_state = new PageState(	page_url.toString(),
+			PageState page_state = new PageState( page_url.toString(),
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(), 
@@ -395,19 +468,53 @@ public class BrowserService {
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
 			page_state.addScreenshot(screenshot);
 			
-			log.warn("initialized page state");
+			log.warn("initialized page state      :    " + url_without_params);
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 			if(page_state_record != null){
-				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums());
+				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url_without_params);
 				page_state = page_state_record;
 				page_state.addScreenshotChecksum(screenshot_checksum);
 				page_state = page_state_service.save(page_state);
 			}
 	
-			log.warn("saved page state");
+			log.warn("saved page state       :    " + url_without_params);
 			viewport_screenshot.flush();
 			return page_state;
 		}
+	}
+
+	/**
+	 * Retreives all elements on a given page that are visible. In this instance we take 
+	 *  visible to mean that it is not currently set to {@css display: none} and that it
+	 *  is visible within the confines of the screen. If an element is not hidden but is also 
+	 *  outside of the bounds of the screen it is assumed hidden
+	 *  
+	 * @param driver
+	 * @return list of webelements that are currently visible on the page
+	 * @throws IOException 
+	 * @throws GridException 
+	 */
+	public List<ElementState> getVisibleElements(Browser browser, String xpath, String host) 
+															 throws WebDriverException, GridException, IOException{
+		
+		List<WebElement> web_elements = browser.getDriver().findElements(By.xpath("//*"));
+		BufferedImage page_screenshot = browser.getViewportScreenshot();
+
+		web_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), web_elements, browser.getViewportSize());
+		web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
+		web_elements = BrowserService.filterNonChildElements(web_elements);
+		web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
+		web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
+		List<ElementState> elementList = new ArrayList<ElementState>(web_elements.size());
+
+		for(WebElement elem : web_elements){
+			ElementState element_state = buildElementState(browser, elem, page_screenshot);
+			elementList.add(element_state);
+		}
+		
+		page_screenshot.flush();
+
+		return elementList;
 	}
 	
 	/**
@@ -421,18 +528,14 @@ public class BrowserService {
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
-	public Set<ElementState> getVisibleElements(Browser browser, String xpath, String host) 
+	public List<ElementState> getVisibleElements(Browser browser, String xpath, String host, List<WebElement> web_elements) 
 															 throws WebDriverException, GridException, IOException{
 		
-		List<WebElement> web_elements = browser.getDriver().findElements(By.xpath("//*"));
 		BufferedImage page_screenshot = browser.getViewportScreenshot();
 
 		web_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), web_elements, browser.getViewportSize());
-		web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
-		web_elements = BrowserService.filterNonChildElements(web_elements);
-		web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
-		web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
-		Set<ElementState> elementList = new HashSet<ElementState>(web_elements.size());
+		
+		List<ElementState> elementList = new ArrayList<ElementState>(web_elements.size());
 
 		for(WebElement elem : web_elements){
 			ElementState element_state = buildElementState(browser, elem, page_screenshot);
@@ -508,7 +611,6 @@ public class BrowserService {
 		return elements;
 	}
 	
-	@Deprecated
 	public static boolean isElementVisibleInPane(Browser browser, WebElement elem){
 		int y_offset = browser.getYScrollOffset();
 		int x_offset = browser.getXScrollOffset();
@@ -540,23 +642,6 @@ public class BrowserService {
 		
 		if(x >= x_offset && y >= y_offset && (x+width) < (viewport_size.getWidth()+x_offset) 
 				&& (y+height) < (viewport_size.getHeight()+y_offset)){
-			return true;
-		}
-		return false;
-	}
-	
-	public static boolean isElementVisibleInPane(Browser browser, ElementState elem){
-		int y_offset = browser.getYScrollOffset();
-		int x_offset = browser.getXScrollOffset();
-		
-		int x = elem.getXLocation();
-		int y = elem.getYLocation();
-		
-		int height = elem.getHeight();
-		int width = elem.getWidth();
-		
-		if(x >= x_offset && y >= y_offset && (x+width) < (browser.getViewportSize().getWidth()+x_offset) 
-				&& (y+height) < (browser.getViewportSize().getHeight()+y_offset)){
 			return true;
 		}
 		return false;
@@ -995,7 +1080,7 @@ public class BrowserService {
 			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum);
 		}
 		catch(RasterFormatException e){
-			log.warn("Raster Format Exception (retrieveAndUploadBrowserScreenshot): "+e.getMessage());
+			log.warn("Raster Format Exception (retrieveAndUploadBrowserScreenshot)  2: "+e.getMessage());
 		} catch (GridException e) {
 			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
 		} catch (IOException e) {

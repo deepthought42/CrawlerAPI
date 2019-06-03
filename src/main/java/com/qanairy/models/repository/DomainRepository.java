@@ -28,7 +28,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (p:PageState) MATCH a=(p)-[]->(:Screenshot) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p,a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
-	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH a=(t)-[]->(p:PageState) MATCH (p)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN e,b")
+	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN e,b")
 	public Set<ElementState> getElementStates(@Param("domain_host") String host);
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Action) RETURN a")

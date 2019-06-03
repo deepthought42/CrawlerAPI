@@ -46,7 +46,7 @@ public class Attribute implements Persistable {
 	 */
 	public boolean contains(String val){
 		for(String value : this.vals){
-			if(value.trim().contains(val)){
+			if(value.trim().equals(val)){
 				return true;
 			}
 		}

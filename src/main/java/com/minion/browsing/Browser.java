@@ -323,7 +323,7 @@ public class Browser {
 		
 		int point_x = point.getX();
 		int point_y = point.getY();
-
+		
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	
@@ -561,8 +561,8 @@ public class Browser {
 	 */
 	private static Point getLocationInViewport(WebElement element, int x_offset, int y_offset) {
 		Point location = element.getLocation();
-		int y_coord = calculateYCoordinate(x_offset, location);
-		int x_coord = calculateXCoordinate(y_offset, location);
+		int y_coord = calculateYCoordinate(y_offset, location);
+		int x_coord = calculateXCoordinate(x_offset, location);
        
 		return new Point(x_coord, y_coord);
 	}

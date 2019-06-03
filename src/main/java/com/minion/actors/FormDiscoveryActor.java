@@ -129,6 +129,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	}
 						  	System.err.println("FORM DISCOVERY HAS ENDED");
 						  	forms_created = true;
+						  	break;
 						} catch(Exception e){
 					  		log.warning(e.getMessage());
 					  		forms_created = false;
@@ -140,7 +141,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 20);
+					}while(!forms_created && count < 10);
 					
 					postStop();
 				})

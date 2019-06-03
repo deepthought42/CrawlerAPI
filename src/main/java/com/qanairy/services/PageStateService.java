@@ -52,17 +52,9 @@ public class PageStateService {
 		assert page_state != null;
 		
 		PageState page_state_record = null;
-		log.warn("Page state service saving   :: " + page_state);
-		log.warn("page state browser " + page_state.getBrowser());
-		log.warn("page state key " + page_state.getKey());
-		log.warn("page state screenshot url ::  " + page_state.getScreenshotUrl());
-		log.warn("page state source  ::  " + page_state.getSrc());
-		log.warn("page state animated urls :: "+page_state.getAnimatedImageUrls());
-		log.warn("page state screenshots  :: "+page_state.getScreenshots());
 				
 		for(Screenshot screenshot : page_state.getScreenshots()){
 			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
-			log.warn("page state record found :: " + page_state_record);
 			if(page_state_record != null){
 				break;
 			}
@@ -95,7 +87,6 @@ public class PageStateService {
 					page_state_record.addScreenshotChecksum(screenshot_checksum);
 				}
 				
-				log.warn("page state screenshots for page update  :  "+page_state.getScreenshots());
 				List<Screenshot> screenshots = new ArrayList<Screenshot>(page_state.getScreenshots().size());
 				for(Screenshot screenshot : page_state.getScreenshots()){
 					screenshots.add(screenshot_service.save(screenshot));
@@ -107,7 +98,7 @@ public class PageStateService {
 			}
 			else{
 				//iterate over page elements
-				Set<ElementState> element_records = new HashSet<>();
+				List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
 				for(ElementState element : page_state.getElements()){
 					ElementState element_record = page_element_service.save(element);
 					
@@ -157,8 +148,6 @@ public class PageStateService {
 		if(page_state != null){
 			page_state.setElements(getElementStates(page_key));
 			page_state.setScreenshots(getScreenshots(page_key));
-			
-			log.warn("FINDING BY KEY :: " + page_state.getScreenshots());
 		}
 		return page_state;
 	}
@@ -167,7 +156,7 @@ public class PageStateService {
 		return page_state_repo.findByScreenshotChecksumsContains(screenshot_checksum);		
 	}
 	
-	public Set<ElementState> getElementStates(String page_key){
+	public List<ElementState> getElementStates(String page_key){
 		return page_state_repo.getElementStates(page_key);
 	}
 	

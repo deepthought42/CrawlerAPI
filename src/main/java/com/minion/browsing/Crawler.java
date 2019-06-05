@@ -167,6 +167,8 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 		
+		log.warn("browser service :: "+browser_service );
+		log.warn("Browser ::  " + browser);
 		return browser_service.buildPage(browser);
 	}
 	
@@ -346,19 +348,6 @@ public class Crawler {
 		}
 
 		browser.navigateTo(expected_page.getUrl());
-		browser.waitForPageToLoad();
-
-		if(!(path_objects.get(0) instanceof Redirect)){
-			browser.navigateTo(expected_page.getUrl());
-
-			log.warn("checking for page redirect");
-			Redirect initial_redirect = BrowserUtils.getPageTransition(expected_page.getUrl(), browser, host_channel);	
-			if(initial_redirect.getUrls().size() > 0){
-				log.warn("redirect found");
-				path_keys.add(0,initial_redirect.getKey());
-				path_objects.add(0,initial_redirect);
-			}
-		}
 		
 		//TODO: check for continuously animated elements
 		
@@ -422,7 +411,7 @@ public class Crawler {
 							|| current_idx == path_objects.size()-1){
 						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
-						if(redirect.getUrls().size() > 1){
+						if(redirect.getUrls().size() > 2){
 							log.warn("transition with states found :: " + redirect.getUrls().size());
 							//browser.waitForPageToLoad();
 							log.warn("#########################################################################");
@@ -536,7 +525,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 100);
+		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
 	}
 	
@@ -581,7 +570,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 100);
+		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
 	}
 
@@ -589,7 +578,6 @@ public class Crawler {
 		assert browser != null;
 		assert path_keys != null;
 		
-		List<PathObject> updated_path_objects = new ArrayList<PathObject>();
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//Ensure Order path objects
 		for(String path_obj_key : path_keys){
@@ -609,7 +597,6 @@ public class Crawler {
 			}
 		}
 		ordered_path_objects = reduced_path_obj;
-		updated_path_objects.addAll(ordered_path_objects);
 				
 		log.warn("getting expected page value");
 		//boolean screenshot_matches = false;

@@ -154,7 +154,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			}
 				    		}
 				    		attempts++;
-				    	}while(test == null && attempts < 100);
+				    	}while(test == null && attempts < Integer.MAX_VALUE);
 
 				    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct_message.getAccountKey());
 				    	MessageBroadcaster.broadcastTest(test, acct_message.getAccountKey());

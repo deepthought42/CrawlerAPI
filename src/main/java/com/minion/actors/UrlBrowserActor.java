@@ -32,6 +32,7 @@ import com.minion.structs.Message;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PageStateMessage;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
@@ -102,7 +103,6 @@ public class UrlBrowserActor extends AbstractActor {
 						}
 						discovery.getExpandedUrls().add(url);
 						discovery_service.save(discovery);
-						
 						discovery_service.incrementTotalPathCount(discovery_key);
 
 						String host = ((URL)message.getData()).getHost();
@@ -116,10 +116,8 @@ public class UrlBrowserActor extends AbstractActor {
 								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 								browser.navigateTo(url);
 								redirect = BrowserUtils.getPageTransition(url, browser, host);
-								browser.waitForPageToLoad();
 								BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-								screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-								
+								screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);	
 							}
 							catch(Exception e){
 								e.printStackTrace();
@@ -164,12 +162,20 @@ public class UrlBrowserActor extends AbstractActor {
 								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 								System.err.println("page state  ::   " + page_state);
 								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-								
-								PageStateMessage page_state_msg = new PageStateMessage(message.getAccountKey(), page_state, discovery_record, message.getOptions());
+																
+								List<String> path_keys = new ArrayList<String>();	  	
+							  	List<PathObject> path_objects = new ArrayList<PathObject>();
+							  	if(redirect != null && redirect.getUrls().size() > 1){
+							  		path_keys.add(redirect.getKey());
+							  		path_objects.add(redirect);
+							  	}
+							  	path_keys.add(page_state.getKey());
+							  	path_objects.add(page_state);
 
-								form_discoverer.tell(page_state_msg, getSelf() );
-									
-								path_expansion_actor.tell(page_state_msg, getSelf() );
+								PathMessage path_message = new PathMessage(path_keys, path_objects, discovery, message.getAccountKey(), message.getOptions());
+								
+								form_discoverer.tell(path_message, getSelf() );	
+								path_expansion_actor.tell(path_message, getSelf() );
 							}
 						}
 						

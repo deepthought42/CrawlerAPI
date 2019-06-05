@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
+import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.ElementState;
@@ -16,6 +17,7 @@ import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PageStateMessage;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.FormService;
@@ -39,6 +41,9 @@ import akka.event.LoggingAdapter;
 public class FormDiscoveryActor extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 	Cluster cluster = Cluster.get(getContext().getSystem());
+	
+	@Autowired
+	private Crawler crawler;
 	
 	@Autowired
 	private BrowserService browser_service;
@@ -97,7 +102,6 @@ public class FormDiscoveryActor extends AbstractActor{
 					  		browser.scrollTo(page_state.getScrollXOffset(), page_state.getScrollYOffset());
 					  		
 				  			System.err.println("Looking up page state by key");
-					  		//page_state = page_state_service.findByKey(page_state.getKey());
 							  
 					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
@@ -129,7 +133,76 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	}
 						  	System.err.println("FORM DISCOVERY HAS ENDED");
 						  	forms_created = true;
-						  	break;
+						  	return;
+						} catch(Exception e){
+					  		log.warning(e.getMessage());
+					  		forms_created = false;
+					  		//e.printStackTrace();
+					  	}
+				  		finally{
+				  			if(browser != null){
+				  				browser.close();
+				  			}
+				  		}
+				  		count++;
+					}while(!forms_created && count < 10);
+				})
+				.match(PathMessage.class, message -> {
+					
+				  	System.err.println("FORM DISCOVERY HAS STARTED");
+					
+					//get first page in path
+		
+				  	Browser browser = null;
+				  	boolean forms_created = false;
+				  	int count = 0;
+				  	do{
+				  		
+				  		try{
+				  			System.err.println("Getting browser for form extraction");
+					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, message.getDiscovery().getDomainUrl());
+					  		
+							PageState page_state = null;
+							for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
+								if(message.getPathObjects().get(idx) instanceof PageState){
+									page_state = (PageState)message.getPathObjects().get(idx);
+									break;
+								}
+							}
+				  			System.err.println("Looking up page state by key");
+							  
+					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
+						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
+					  		System.err.println("FORM DISCOVERY ACTOR EXTRACTED FORMS :: " + forms.size());
+
+						  	for(Form form : forms){
+						  		log.warning("Total input fields for form :: "+form.getFormFields().size());
+							  	for(ElementState field: form.getFormFields()){
+									//for each field in the complex field generate a set of tests for all known rules
+							  		List<Rule> rules = rule_extractor.extractInputRules(field);
+									
+									log.info("Total RULES   :::   "+rules.size());
+									for(Rule rule : rules){
+										field.addRule(rule);
+									}
+								}
+							  							  	
+							    DeepthoughtApi.predict(form);
+						       
+							    System.err.println("PREDICTION DONE !!! ");
+							    System.err.println("********************************************************");
+							  	
+							    form = form_service.save(form);
+							  	page_state.addForm(form);
+							  	page_state_service.save(page_state);
+							  								
+						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
+							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
+						  	}
+						  	System.err.println("FORM DISCOVERY HAS ENDED");
+						  	forms_created = true;
+						  	return;
 						} catch(Exception e){
 					  		log.warning(e.getMessage());
 					  		forms_created = false;
@@ -141,9 +214,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 10);
-					
-					postStop();
+					}while(!forms_created && count < 1000);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

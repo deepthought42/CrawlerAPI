@@ -75,7 +75,7 @@ public class TestingActor extends AbstractActor {
 						PageState resulting_page = null;
 						if(test.getPathKeys() != null){
 							int cnt = 0;
-							while(browser == null && cnt < 100){
+							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
 									browser = BrowserConnectionFactory.getConnection((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
 									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());

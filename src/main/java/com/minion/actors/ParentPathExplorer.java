@@ -206,7 +206,7 @@ public class ParentPathExplorer extends AbstractActor {
 							log.warn("Builing element state");
 							ElementState parent_element = null;
 							try{							
-								parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(((PageState)path_objects.get(last_elem_idx-1)).getScreenshotUrl())));
+								parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(message.getResultPage().getScreenshotUrl())));
 								if(parent_element == null){
 									break;
 								}

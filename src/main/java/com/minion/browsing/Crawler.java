@@ -431,7 +431,7 @@ public class Crawler {
 					else {
 						log.warn("PAUSING AFTER ACTION PERFORMED   !!!!!!!!!");
 						//TODO: Replace the following with animation detection						
-						Timing.pauseThread(1000);
+						//Timing.pauseThread(1000);
 					}
 					Point p = browser.getViewportScrollOffset();
 					browser.setXScrollOffset(p.getX());

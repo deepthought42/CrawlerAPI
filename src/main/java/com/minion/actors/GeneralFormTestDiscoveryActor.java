@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
@@ -39,6 +41,8 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+@Component
+@Scope("prototype")
 public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
@@ -98,6 +102,8 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
 							  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 							  	for(Form form : forms){
+							  		browser.scrollTo(form.getFormTag().getXLocation(), form.getFormTag().getYLocation());
+
 							  		path_object_lists.addAll(generateAllFormTestPaths(test, form));
 							  	}
 							  	
@@ -168,7 +174,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 								log.warning(e.getLocalizedMessage());
 							}
 					  		finally{
-					  			browser.close();
+					  			if(browser != null){
+					  				browser.close();
+					  			}
 					  		}
 							cnt++;
 						}					  	

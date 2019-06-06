@@ -8,11 +8,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -288,9 +290,12 @@ public class TestCreationActor extends AbstractActor  {
 	 * @throws GridException
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
+	 * @throws WebDriverException 
 	 */
 	private PageState navigateToAndCreatePageState(String url, Browser browser)
-									throws GridException, NoSuchAlgorithmException, IOException {
+									throws GridException, NoSuchAlgorithmException, IOException, WebDriverException, InterruptedException, ExecutionException {
 		browser.navigateTo(url);
 
 		//construct a new page

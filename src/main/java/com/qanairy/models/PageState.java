@@ -64,7 +64,7 @@ public class PageState implements Persistable, PathObject {
 	private List<Screenshot> screenshots;
 		
 	@Relationship(type = "HAS")
-	private Set<ElementState> elements;
+	private List<ElementState> elements;
 
 	@Relationship(type = "HAS")
 	private Set<Form> forms;
@@ -85,7 +85,8 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre screenshot_url != null;
 	 */
-	public PageState(String url, String screenshot_url, Set<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, String browser_name) throws MalformedURLException, IOException{
+	public PageState(String url, String screenshot_url, List<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset, 
+			int viewport_width, int viewport_height, String browser_name) throws MalformedURLException, IOException{
 		assert elements != null;
 		assert screenshot_url != null;
 
@@ -121,7 +122,7 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre screenshot_url != null;
 	 */
-	public PageState(String url, Set<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset, 
+	public PageState(String url, List<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset, 
 			int viewport_width, int viewport_height, String browser_name){
 		assert elements != null;
 
@@ -160,7 +161,7 @@ public class PageState implements Persistable, PathObject {
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException 
 	 */
-	public PageState(String url, String screenshot_url, Set<ElementState> elements, boolean isLandable,
+	public PageState(String url, String screenshot_url, List<ElementState> elements, boolean isLandable,
 			String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height, 
 			String browser_name) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
@@ -307,7 +308,7 @@ public class PageState implements Persistable, PathObject {
 	 */
 	@Override
 	public PathObject clone() {
-		Set<ElementState> elements = new HashSet<ElementState>(getElements());
+		List<ElementState> elements = new ArrayList<ElementState>(getElements());
 
 		PageState page = null;
 		try {
@@ -328,12 +329,12 @@ public class PageState implements Persistable, PathObject {
 	}
 
 	@JsonIgnore
-	public Set<ElementState> getElements() {
+	public List<ElementState> getElements() {
 		return this.elements;
 	}
 
 	@JsonIgnore
-	public void setElements(Set<ElementState> elements) {
+	public void setElements(List<ElementState> elements) {
 		this.elements = elements;
 	}
 
@@ -443,7 +444,7 @@ public class PageState implements Persistable, PathObject {
 				url_without_params = url_without_params.substring(0, param_index);
 			}
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		

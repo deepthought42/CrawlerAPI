@@ -24,7 +24,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 	public PageState findByScreenshotChecksumsContains(@Param("screenshot_checksum") String checksum );
 	
 	@Query("MATCH (p:PageState{key:{page_key}})-[h:HAS]->(e:ElementState) RETURN e")
-	public Set<ElementState> getElementStates(@Param("page_key") String key);
+	public List<ElementState> getElementStates(@Param("page_key") String key);
 	
 	@Query("MATCH (p:PageState{url:{url}})-[h:HAS]->(e:ElementState{key:{element_key}}) RETURN p")
 	public Set<PageState> getElementPageStatesWithSameUrl(@Param("url") String url, @Param("element_key") String key);

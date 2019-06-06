@@ -37,17 +37,18 @@ public class BrowserUtils {
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 		
 		URL init_url = new URL(initial_url);
-		String last_key = init_url.getProtocol()+"://"+init_url.getHost()+init_url.getPath();
+		String last_key = init_url.getHost()+init_url.getPath();
 		if(last_key.charAt(last_key.length()-1) == '/'){
 			last_key = last_key.substring(0, last_key.length()-1);
 		}
+		transition_urls.add(last_key);
 		do{
 			String new_key = browser.getDriver().getCurrentUrl();
 			if(new_key.charAt(0) != 'h'){
 				new_key = 'h'+new_key;
 			}
-			URL new_url = new URL(new_key);
-			new_key = new_url.getProtocol()+"://"+new_url.getHost()+new_url.getPath();
+			URL new_url = new URL("http://"+new_key);
+			new_key = new_url.getHost()+new_url.getPath();
 			if(new_key.charAt(new_key.length()-1) == '/'){
 				new_key = new_key.substring(0, new_key.length()-1);
 			}
@@ -66,7 +67,7 @@ public class BrowserUtils {
 				last_key = new_key;
 			}
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000);
+		}while((System.currentTimeMillis() - start_ms) < 1000);
 		
 		for(BufferedImage img : images){
 			try{

@@ -60,7 +60,11 @@ public class Redirect implements Transition, Persistable {
 
 	@Override
 	public String generateKey() {
-		return "redirect::"+urls.toString().replace(",", "").replace(" ", "").replace("[", "").replace("]", "");
+		String url_string = "";
+		for(String url : urls){
+			url_string += url;
+		}
+		return "redirect::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_string);
 	}
 
 	public List<String> getUrls() {
@@ -70,10 +74,6 @@ public class Redirect implements Transition, Persistable {
 	public void setUrls(List<String> urls) throws MalformedURLException {
 		List<String> clean_urls = new ArrayList<>();
 		for(String url : urls){
-
-			URL init_url = new URL(url);
-			url = init_url.getProtocol()+"://"+init_url.getHost()+init_url.getPath();
-			
 			clean_urls.add(url);
 		}
 		this.urls = clean_urls;

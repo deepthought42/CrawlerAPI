@@ -52,7 +52,7 @@ public class PageStateService {
 		assert page_state != null;
 		
 		PageState page_state_record = null;
-		
+				
 		for(Screenshot screenshot : page_state.getScreenshots()){
 			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
 			if(page_state_record != null){
@@ -87,7 +87,6 @@ public class PageStateService {
 					page_state_record.addScreenshotChecksum(screenshot_checksum);
 				}
 				
-				log.warn("page state screenshots for page update  :  "+page_state.getScreenshots());
 				List<Screenshot> screenshots = new ArrayList<Screenshot>(page_state.getScreenshots().size());
 				for(Screenshot screenshot : page_state.getScreenshots()){
 					screenshots.add(screenshot_service.save(screenshot));
@@ -99,7 +98,7 @@ public class PageStateService {
 			}
 			else{
 				//iterate over page elements
-				Set<ElementState> element_records = new HashSet<>();
+				List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
 				for(ElementState element : page_state.getElements()){
 					ElementState element_record = page_element_service.save(element);
 					
@@ -157,7 +156,7 @@ public class PageStateService {
 		return page_state_repo.findByScreenshotChecksumsContains(screenshot_checksum);		
 	}
 	
-	public Set<ElementState> getElementStates(String page_key){
+	public List<ElementState> getElementStates(String page_key){
 		return page_state_repo.getElementStates(page_key);
 	}
 	

@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,6 +33,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.Transition;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PageStateMessage;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
@@ -44,7 +46,7 @@ import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
- * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
+ * Manages a browser instance and sets a crawler upon the instance using a given path to traverse
  *
  */
 @Component
@@ -55,26 +57,26 @@ public class UrlBrowserActor extends AbstractActor {
 
 	@Autowired
 	DiscoveryRecordRepository discovery_repo;
-	
+
 	@Autowired
 	private ActorSystem actor_system;
-	
+
 	@Autowired
 	private TestCreatorService test_creator_service;
-	
+
 	@Autowired
 	private BrowserService browser_service;
-	
+
 	@Autowired
 	private TestService test_service;
-	
+
 	@Autowired
 	private DiscoveryRecordService discovery_service;
-	
+
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 	      MemberEvent.class, UnreachableMember.class);
 	}
 
@@ -86,23 +88,31 @@ public class UrlBrowserActor extends AbstractActor {
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 */
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
-						
+
 						String discovery_key = message.getOptions().get("discovery_key").toString();
+						String url = ((URL)message.getData()).toString();
+						DiscoveryRecord discovery = discovery_service.findByKey(discovery_key);
+						if(discovery.getExpandedUrls().contains(url)){
+							return;
+						}
+						discovery.getExpandedUrls().add(url);
+						discovery_service.save(discovery);
 						discovery_service.incrementTotalPathCount(discovery_key);
 
-						String url = ((URL)message.getData()).toString();
 						String host = ((URL)message.getData()).getHost();
 						String browser_name = message.getOptions().get("browser").toString();
 						log.warn("starting transition detection");
 						Transition transition = null;
 						int idx = 0;
+						String screenshot_checksum = "";
+
 						do{
 							Browser browser = null;
 							try{
@@ -110,6 +120,9 @@ public class UrlBrowserActor extends AbstractActor {
 								browser.navigateTo(url);
 								transition = BrowserUtils.getTransition(url, browser, host);
 								break;
+
+								BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+								screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 							}
 							catch(Exception e){
 								e.printStackTrace();
@@ -125,42 +138,55 @@ public class UrlBrowserActor extends AbstractActor {
 						log.warn("redirect detection complete");
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
+						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+
 						log.warn("Done building page states ");
 						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, transition);
 						log.warn("finished creating landing page test");
-						
+
 						test = test_service.save(test, host);
 						log.warn("path keys :: " + test.getPathKeys());
 						log.warn("path objects :: " + test.getPathObjects());
-						
-						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 
-						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-						path_expansion_actor.tell(test_msg, getSelf() );
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
-						
+
+
 						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
-						PageStateMessage page_state_msg = new PageStateMessage(message.getAccountKey(), page_states.get(0), discovery_record, message.getOptions());
+
+						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+						System.err.println("page state  ::   " + page_states.get(0));
+						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 
 						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-						form_discoverer.tell(page_state_msg, getSelf() );
-						
-						for(PageState page_state : page_states.subList(1, page_states.size())){
+
+						for(PageState page_state : page_states){
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 								log.warn("discovery path does not have expanded page state");
-								page_state_msg = new PageStateMessage(message.getAccountKey(), page_state, discovery_record, message.getOptions());
+								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+								System.err.println("page state  ::   " + page_state);
+								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 
-								form_discoverer.tell(page_state_msg, getSelf() );
-									
-								path_expansion_actor.tell(page_state_msg, getSelf() );
+								List<String> path_keys = new ArrayList<String>();
+							  	List<PathObject> path_objects = new ArrayList<PathObject>();
+							  	if(redirect != null && redirect.getUrls().size() > 1){
+							  		path_keys.add(redirect.getKey());
+							  		path_objects.add(redirect);
+							  	}
+							  	path_keys.add(page_state.getKey());
+							  	path_objects.add(page_state);
+
+								PathMessage path_message = new PathMessage(path_keys, path_objects, discovery, message.getAccountKey(), message.getOptions());
+
+								form_discoverer.tell(path_message, getSelf() );
+								path_expansion_actor.tell(path_message, getSelf() );
 							}
 						}
-						
+
 						discovery_record.setLastPathRanAt(new Date());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-						
+
 						discovery_record.setTestCount(discovery_record.getTestCount()+1);
 						discovery_record = discovery_service.save(discovery_record);
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
@@ -175,7 +201,7 @@ public class UrlBrowserActor extends AbstractActor {
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.info("Member is Removed: {}", mRemoved.member());
-				})	
+				})
 				.matchAny(o -> {
 					log.info("received unknown message");
 				})

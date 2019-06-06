@@ -24,6 +24,9 @@ public class ElementStateService {
 	private ElementStateRepository element_repo;
 	
 	public ElementState save(ElementState element){
+		if(element == null){
+			return null;
+		}
 		ElementState element_record = findByScreenshotChecksum(element.getScreenshotChecksum());
 		if(element_record == null){
 			element_record = element_repo.findByKey(element.getKey());

@@ -45,6 +45,7 @@ public class DiscoveryRecordService {
 			discovery_record.setLastPathRanAt(discovery.getLastPathRanAt());
 			discovery_record.setTestCount(discovery.getTestCount());
 			discovery_record.setTotalPathCount(discovery.getTotalPathCount());
+			discovery_record.setExpandedUrls(discovery.getExpandedUrls());
 		}
 		
 		return discovery_repo.save(discovery_record);

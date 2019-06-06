@@ -8,6 +8,7 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +34,16 @@ public class Form {
 	private String[] type_options;
 	private Date date_discovered;
 	private String status;	
-	
-	private ElementState form_tag;
-	private List<ElementState> form_fields;
-	private ElementState submit_field;
 	private String type;
-	private List<String> path_keys;
+	
+	@Relationship(type = "DEFINED_BY")
+	private ElementState form_tag;
+	
+	@Relationship(type = "HAS")
+	private List<ElementState> form_fields;
+	
+	@Relationship(type = "HAS_SUBMIT")
+	private ElementState submit_field;
 	
 	public Form(){}
 	
@@ -62,7 +67,7 @@ public class Form {
 		for(ElementState elem : getFormFields()){
 			elements_key += elem.getKey();
 		}
-		return "form::"+elements_key+""+getFormTag().getKey()+""+getSubmitField().getKey();
+		return "form::"+elements_key+""+getFormTag().getKey();
 	}
 
 	/**
@@ -192,13 +197,5 @@ public class Form {
 
 	public void setMemoryId(Long memory_id) {
 		this.memory_id = memory_id;
-	}
-
-	public List<String> getPathKeys() {
-		return path_keys;
-	}
-
-	public void setPathKeys(List<String> path_keys) {
-		this.path_keys = path_keys;
 	}
 }

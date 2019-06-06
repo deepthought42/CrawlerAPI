@@ -26,6 +26,7 @@ public class DiscoveryRecord implements Persistable {
 	private int total_path_count;
 	private int examined_path_count;
 	private int test_cnt;
+	private List<String> expanded_urls;
 	private List<String> expanded_page_state;
 
 	public DiscoveryRecord(){}
@@ -38,6 +39,7 @@ public class DiscoveryRecord implements Persistable {
 		assert total_cnt > 0;
 		
 		setExpandedPageStates(new ArrayList<String>());
+		setExpandedUrls(new ArrayList<String>());
 		setStartTime(started_timestamp);
 		setBrowserName(browser_name);
 		setDomainUrl(domain_url);
@@ -126,5 +128,13 @@ public class DiscoveryRecord implements Persistable {
 	
 	public void addExpandedPageState(String expanded_page_state_key) {
 		this.expanded_page_state.add(expanded_page_state_key);
+	}
+
+	public List<String> getExpandedUrls() {
+		return expanded_urls;
+	}
+
+	public void setExpandedUrls(List<String> expanded_urls) {
+		this.expanded_urls = expanded_urls;
 	}
 }

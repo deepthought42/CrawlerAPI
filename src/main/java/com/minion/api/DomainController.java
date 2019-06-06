@@ -37,6 +37,7 @@ import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -47,10 +48,10 @@ import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
-import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
+import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.RedirectService;
 
@@ -73,6 +74,9 @@ public class DomainController {
 	
 	@Autowired
 	private DomainService domain_service;
+	
+	@Autowired
+	private DiscoveryRecordService discovery_service;
 	
 	@Autowired
 	private FormRepository form_repo;
@@ -483,7 +487,7 @@ public class DomainController {
     	}
 		
 		Form form_record = form_repo.findByKey(key);
-
+		
 		if(form_record == null){
 			throw new FormNotFoundException();
 		}
@@ -514,6 +518,11 @@ public class DomainController {
 		        options.put("host", domain.getUrl());
 		        Message<Form> form_msg = new Message<Form>(acct.getUsername(), form_record, options);
 	
+		        //look up discovery for domain and increment
+		        DiscoveryRecord record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+		        record.setTotalPathCount(record.getTotalPathCount()+1);
+		        discovery_service.save(record);
+		        
 		        log.info("Sending form message  :: "+form_msg.toString());
 	    		final ActorRef form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 	  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());

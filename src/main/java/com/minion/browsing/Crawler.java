@@ -310,11 +310,8 @@ public class Crawler {
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected. 
 
-		List<String> path_keys = new ArrayList<String>();
-		List<PathObject> path_objects = new ArrayList<PathObject>();
-		
-		path_keys.addAll(keys);
-		path_objects.addAll(path_object_list);	
+		List<String> path_keys = new ArrayList<String>(keys);
+		List<PathObject> path_objects = new ArrayList<PathObject>(path_object_list);
 		
 		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
 		//Ensure Order path objects
@@ -370,14 +367,14 @@ public class Crawler {
 				Redirect redirect = (Redirect)current_obj;
 				//if redirect is preceded by a page state or nothing then initiate navigation
 				if(last_obj == null || last_obj instanceof PageState){
-					log.warn("navigating to redirect start url");
+					log.warn("navigating to redirect start url  ::   "+redirect.getStartUrl());
 					browser.navigateTo(redirect.getStartUrl());
 				}
 				
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
+
 				log.warn("seting last url to redirect url :: " + last_url);
 			}
 			else if(current_obj instanceof ElementState){
@@ -394,6 +391,8 @@ public class Crawler {
 					action = action_record;
 				}
 				
+				log.warn("last element :: " + last_element);
+				log.warn("action being performed  ::  " + action);
 				performAction(action, last_element, browser.getDriver());
 				//check for page alert presence
 				Alert alert = browser.isAlertPresent();
@@ -434,7 +433,6 @@ public class Crawler {
 						//TODO: Replace the following with animation detection						
 						Timing.pauseThread(1000);
 					}
-					
 					Point p = browser.getViewportScrollOffset();
 					browser.setXScrollOffset(p.getX());
 					browser.setYScrollOffset(p.getY());
@@ -463,8 +461,11 @@ public class Crawler {
 	 */
 	public static void performAction(Action action, ElementState elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
+		log.warn("looking up element with xpath :: " + elem.getXpath());
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		try{
+			log.warn("action name to perform :: " + action.getName());
+			log.warn("action value to input :: " + action.getValue());
 			actionFactory.execAction(element, action.getValue(), action.getName());
 		}catch(WebDriverException e){
 			if(!e.getMessage().contains("out of bounds of viewport")){

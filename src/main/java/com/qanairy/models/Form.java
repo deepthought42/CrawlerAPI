@@ -42,7 +42,7 @@ public class Form {
 	@Relationship(type = "HAS")
 	private List<ElementState> form_fields;
 	
-	@Relationship(type = "HAS")
+	@Relationship(type = "HAS_SUBMIT")
 	private ElementState submit_field;
 	
 	public Form(){}

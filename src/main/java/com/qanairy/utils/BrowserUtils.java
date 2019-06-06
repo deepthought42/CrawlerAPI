@@ -63,7 +63,7 @@ public class BrowserUtils {
 				last_key = new_key;
 			}
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 1500);
+		}while((System.currentTimeMillis() - start_ms) < 1000);
 		
 		for(BufferedImage img : images){
 			try{

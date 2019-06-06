@@ -317,7 +317,7 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		for(ElementState page_element : result_page.getElements()){		
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void()")){
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
 				continue;
 			}
 
@@ -452,7 +452,7 @@ public class PathExpansionActor extends AbstractActor {
 		
 		//iterate over all elements
 		for(ElementState page_element : elements){
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void()")){
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
 				continue;
 			}
 			expanded_elements.put(page_element.getKey(), page_element);
@@ -572,7 +572,7 @@ public class PathExpansionActor extends AbstractActor {
 		if(test.getPathKeys().size() == 1){
 			return false;
 		}
-		for(int path_idx = test.getPathObjects().size(); path_idx >= 0; path_idx-- ){
+		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);
 			if(obj instanceof PageState){
 				PageState page_state = ((PageState) obj);

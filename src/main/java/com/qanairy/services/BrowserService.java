@@ -518,9 +518,9 @@ public class BrowserService {
 	 */
 	public List<ElementState> getVisibleElements(Browser browser, String xpath, String host, List<WebElement> web_elements, BufferedImage page_screenshot) 
 															 throws WebDriverException, GridException, IOException{
-		web_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), web_elements, browser.getViewportSize());
+		List<WebElement> filtered_web_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), web_elements, browser.getViewportSize());
 		
-		List<ElementState> elementList = new ArrayList<ElementState>(web_elements.size());
+		List<ElementState> elementList = new ArrayList<ElementState>(filtered_web_elements.size());
 
 		for(WebElement elem : web_elements){
 			ElementState element_state = buildElementState(browser, elem, page_screenshot);

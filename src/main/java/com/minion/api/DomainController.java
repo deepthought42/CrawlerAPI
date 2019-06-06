@@ -487,7 +487,7 @@ public class DomainController {
     	}
 		
 		Form form_record = form_repo.findByKey(key);
-
+		
 		if(form_record == null){
 			throw new FormNotFoundException();
 		}

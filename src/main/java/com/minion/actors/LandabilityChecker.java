@@ -98,7 +98,7 @@ public class LandabilityChecker extends AbstractActor{
 						}
 
 						cnt++;
-					}while(!page_visited_successfully && cnt < 100);
+					}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
 					
 					log.info("is page state landable  ?? :: "+page_state.isLandable());
 					postStop();

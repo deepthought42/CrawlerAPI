@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
@@ -39,6 +41,8 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+@Component
+@Scope("prototype")
 public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
@@ -90,7 +94,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						int cnt = 0;
 					  	Browser browser = null;
 					  	
-					  	while(browser == null && cnt < 100){
+					  	while(browser == null && cnt < Integer.MAX_VALUE){
 					  		try{
 						  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 						  		browser.navigateTo(page.getUrl());
@@ -147,7 +151,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  			finally{
 									  		browser.close();
 							  			}
-						  			}while(cnt < 100 && result_page == null);
+						  			}while(cnt < Integer.MAX_VALUE && result_page == null);
 							  		
 							  		final long pathCrawlEndTime = System.currentTimeMillis();
 									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
@@ -170,7 +174,9 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 								log.warning(e.getLocalizedMessage());
 							}
 					  		finally{
-					  			browser.close();
+					  			if(browser != null){
+					  				browser.close();
+					  			}
 					  		}
 							cnt++;
 						}					  	

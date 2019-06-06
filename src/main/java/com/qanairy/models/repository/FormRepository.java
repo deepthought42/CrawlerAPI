@@ -12,6 +12,6 @@ public interface FormRepository extends Neo4jRepository<Form, Long> {
 
 	public Form findByKey(@Param("key") String key);
 	
-	@Query("Match (p:PageState)-[:HAS_FORM]->(:Form{key:{key}}) RETURN p")
+	@Query("Match (p:PageState)-[:HAS]->(:Form{key:{key}}) RETURN p")
 	public PageState getPageState(@Param("key") String key);
 }

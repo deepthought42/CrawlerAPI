@@ -444,7 +444,7 @@ public class PageState implements Persistable, PathObject {
 				url_without_params = url_without_params.substring(0, param_index);
 			}
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		

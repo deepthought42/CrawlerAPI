@@ -107,6 +107,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								//  clone test
 								//  get username element and add it to path
 								List<ElementState> elements = form.getFormFields();
+								System.err.println("form ELEMENTS SIZE  :: " + form.getFormFields());
 								//find username input element
 								ElementState username_elem = findInputElementByAttribute(elements, "username");
 								
@@ -150,8 +151,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 								}
 								exploratory_path.addPathObject(type_password);
 								exploratory_path.addToPathKeys(type_password.getKey());
-								
-								
+
 								//find submit button
 								exploratory_path.addPathObject(form.getSubmitField());
 								exploratory_path.addToPathKeys(form.getSubmitField().getKey());
@@ -221,6 +221,8 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		//get page state		
 		PageState page = form_service.getPageState(form);
 		
+		System.err.println("page state for form :: "+page);
+		System.err.println("TEST SERVICE VALUE :: " + test_service);
 		//get all tests that contain page state as path object
 		List<Test> tests = test_service.findTestsWithPageState(page.getKey());
 		//get test with smallest path

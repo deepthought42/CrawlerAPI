@@ -470,8 +470,6 @@ public class Browser {
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
 		Timing.pauseThread(500);
-		//WebDriverWait wait = new WebDriverWait(driver, 10);
-		//wait.until(ExpectedConditions.visibilityOf(elem));
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());

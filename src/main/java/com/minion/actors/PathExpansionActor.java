@@ -41,6 +41,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.PageStateMessage;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -241,6 +242,46 @@ public class PathExpansionActor extends AbstractActor {
 			}
 
 		})
+		.match(PathMessage.class, message -> {
+	  		//get last page state
+			PageState page_state = null;
+			for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
+				if(message.getPathObjects().get(idx) instanceof PageState){
+					page_state = (PageState)message.getPathObjects().get(idx);
+					break;
+				}
+			}
+			
+			
+			//get sublist of path from beginning to page state index
+			List<ExploratoryPath> exploratory_paths = expandPath(page_state);
+
+			
+			DiscoveryRecord discovery_record = discovery_service.increaseTotalPathCount(message.getDiscovery().getKey(), exploratory_paths.size());
+			if(discovery_record.getExpandedPageStates().contains(page_state.getKey())){
+				return;					
+			}
+			discovery_record.addExpandedPageState(page_state.getKey());
+			discovery_record = discovery_service.save(discovery_record);
+			
+			log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+			
+			try{
+				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+		  	}catch(Exception e){
+			
+			}
+			
+			final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
+
+			for(ExploratoryPath expanded : exploratory_paths){
+				Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
+				
+				work_allocator.tell(expanded_path_msg, getSelf() );
+			}
+
+		})
 		.match(MemberUp.class, mUp -> {
 			log.info("Member is Up: {}", mUp.member());
 		})
@@ -276,14 +317,23 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		for(ElementState page_element : result_page.getElements()){		
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
 				continue;
 			}
 
 			expanded_elements.put(page_element.getKey(), page_element);
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(result_page.getUrl(), page_element.getKey());
 			log.warn("page states found for current page element : " + page_element +"    ;  "+element_page_states.size());
-						
+					
+			//check if test should be considered landing page test or not
+			boolean is_landing_page_test = (test.getPathObjects().get(0) instanceof Redirect && test.getPathKeys().size() == 2) 
+													|| test.getPathKeys().size() == 1;
+			
+			log.warn("checking if element exists in a previous page state");
+			if(!is_landing_page_test && doesElementExistInMultiplePageStatesWithinTest(test, page_element, result_page.getUrl())){
+				continue;
+			}
+			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -337,19 +387,12 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}
 			}
-			else{
-				log.warn("checking if element exists in a previous page state");
-				if(doesElementExistInMultiplePageStatesWithinTest(test, page_element)){
-					continue;
-				}				
+			else{				
 				
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
 
-				//check if test should be considered landing page test or not
-				boolean is_landing_page_test = (test.getPathObjects().get(0) instanceof Redirect && test.getPathKeys().size() == 2) 
-														|| test.getPathKeys().size() == 1;
 				if(!is_landing_page_test){
 					new_test.getPathKeys().add(test.getResult().getKey());
 					new_test.getPathObjects().add(test.getResult());
@@ -409,7 +452,7 @@ public class PathExpansionActor extends AbstractActor {
 		
 		//iterate over all elements
 		for(ElementState page_element : elements){
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey())){
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
 				continue;
 			}
 			expanded_elements.put(page_element.getKey(), page_element);
@@ -427,7 +470,7 @@ public class PathExpansionActor extends AbstractActor {
 			if(higher_order_page_state_found){
 				continue;
 			}
-			
+						
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -522,20 +565,23 @@ public class PathExpansionActor extends AbstractActor {
 	 * @pre test != null
 	 * @pre elem != null
 	 */
-	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, ElementState elem) {
+	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, ElementState elem, String page_url) {
 		assert test != null;
 		assert elem != null;
 		
 		if(test.getPathKeys().size() == 1){
 			return false;
 		}
-		for(int path_idx = test.getPathObjects().size()-2; path_idx >= 0; path_idx-- ){
+		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
 			PathObject obj = test.getPathObjects().get(path_idx);
-			if(obj.getType().equals("PageState")){
+			if(obj instanceof PageState){
 				PageState page_state = ((PageState) obj);
 				log.debug("page state has # of elements  ::  "+page_state.getElements().size());
 				for(ElementState page_elem : page_state.getElements()){
-					if(elem.equals(page_elem)){
+					if(elem.getXpath().equals(page_elem.getXpath()) && page_url.equals(page_state.getUrl())){
+						return true;
+					}
+					else if(elem.equals(page_elem)){
 						return true;
 					}
 				}

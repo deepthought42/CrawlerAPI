@@ -522,7 +522,7 @@ public class BrowserService {
 		
 		List<ElementState> elementList = new ArrayList<ElementState>(filtered_web_elements.size());
 
-		for(WebElement elem : web_elements){
+		for(WebElement elem : filtered_web_elements){
 			ElementState element_state = buildElementState(browser, elem, page_screenshot);
 			elementList.add(element_state);
 		}

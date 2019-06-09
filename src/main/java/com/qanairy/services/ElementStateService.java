@@ -48,6 +48,7 @@ public class ElementStateService {
 			}
 			else{
 				element_record.setScreenshot(element.getScreenshot());
+				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 				element_record.setXpath(element.getXpath());
 				element_repo.save(element_record);
 			}

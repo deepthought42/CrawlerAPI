@@ -233,6 +233,7 @@ public class Browser {
 	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
+		
 		//options.setHeadless(true);
 
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.

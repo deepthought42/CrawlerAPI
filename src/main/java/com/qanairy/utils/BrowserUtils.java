@@ -52,15 +52,14 @@ public class BrowserUtils {
 			if(new_key.charAt(new_key.length()-1) == '/'){
 				new_key = new_key.substring(0, new_key.length()-1);
 			}
-			
-			try{
-	        	BufferedImage img = browser.getViewportScreenshot();
-				images.add(img);
-			}catch(Exception e){}
 	        
 	        transition_detected = !new_key.equals(last_key);
 	        
-			if(transition_detected ){
+			if( transition_detected ){
+				try{
+		        	BufferedImage img = browser.getViewportScreenshot();
+					images.add(img);
+				}catch(Exception e){}
 				log.warn("redirect transition detected");
 				start_ms = System.currentTimeMillis();
 				transition_urls.add(new_key);
@@ -69,6 +68,7 @@ public class BrowserUtils {
 			//transition is detected if keys are different
 		}while((System.currentTimeMillis() - start_ms) < 1000);
 		
+		log.warn("uploading screenshots " );
 		for(BufferedImage img : images){
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
@@ -80,6 +80,7 @@ public class BrowserUtils {
 			}
 		}
 		
+		log.warn("creating redirect object");
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);
@@ -101,7 +102,7 @@ public class BrowserUtils {
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 		
 		URL init_url = new URL(initial_url);
-		String last_key = init_url.getProtocol()+"://"+init_url.getHost()+init_url.getPath();
+		String last_key = init_url.getHost()+init_url.getPath();
 		if(last_key.charAt(last_key.length()-1) == '/'){
 			last_key = last_key.substring(0, last_key.length()-1);
 		}
@@ -117,8 +118,8 @@ public class BrowserUtils {
 			if(new_key.charAt(0) != 'h'){
 				new_key = 'h'+new_key;
 			}
-			URL new_url = new URL(new_key);
-			new_key = new_url.getProtocol()+"://"+new_url.getHost()+new_url.getPath();
+			URL new_url = new URL("http://"+new_key);
+			new_key = new_url.getHost()+new_url.getPath();
 			if(new_key.charAt(new_key.length()-1) == '/'){
 				new_key = new_key.substring(0, new_key.length()-1);
 			}
@@ -166,7 +167,7 @@ public class BrowserUtils {
 				last_key = new_key;
 			}
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000);
+		}while((System.currentTimeMillis() - start_ms) < 30000);
 		
 		for(Future<String> future: url_futures){
 			try {
@@ -213,7 +214,6 @@ public class BrowserUtils {
 		
 		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
-		int index = 0;
 		List<Future<String>> url_futures = new ArrayList<>();
 		do{
 			//get element screenshot
@@ -235,11 +235,10 @@ public class BrowserUtils {
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
-				index++;
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 10000 && index < 10);
+		}while((System.currentTimeMillis() - start_ms) < 10000);
 				
 		for(Future<String> future: url_futures){
 			try {

@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,9 +29,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.structs.Message;
 import com.qanairy.models.Test;
-import com.qanairy.models.Transition;
 import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
@@ -109,20 +106,18 @@ public class UrlBrowserActor extends AbstractActor {
 						String host = ((URL)message.getData()).getHost();
 						String browser_name = message.getOptions().get("browser").toString();
 						log.warn("starting transition detection");
-						Transition transition = null;
-						int idx = 0;
-						String screenshot_checksum = "";
+						Redirect redirect = null;
 
 						do{
 							Browser browser = null;
 							try{
 								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+								log.warn("navigating to url :: "+url);
 								browser.navigateTo(url);
-								transition = BrowserUtils.getTransition(url, browser, host);
+								
+								log.warn("getting page transition");
+								redirect = BrowserUtils.getPageTransition(url, browser, host);
 								break;
-
-								BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-								screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 							}
 							catch(Exception e){
 								e.printStackTrace();
@@ -132,17 +127,13 @@ public class UrlBrowserActor extends AbstractActor {
 									browser.close();
 								}
 							}
-							idx++;
-							log.warn("Transition :: " + transition);
-						}while(transition == null && idx < 3);
+							log.warn("Transition :: " + redirect);
+						}while(redirect == null);
 						log.warn("redirect detection complete");
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
-						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-
 						log.warn("Done building page states ");
-						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, transition);
+						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect);
 						log.warn("finished creating landing page test");
 
 						test = test_service.save(test, host);
@@ -151,15 +142,10 @@ public class UrlBrowserActor extends AbstractActor {
 
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
 
-
 						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
 
-						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-						System.err.println("page state  ::   " + page_states.get(0));
-						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-
-						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+						final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 
 						for(PageState page_state : page_states){
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
@@ -170,7 +156,7 @@ public class UrlBrowserActor extends AbstractActor {
 
 								List<String> path_keys = new ArrayList<String>();
 							  	List<PathObject> path_objects = new ArrayList<PathObject>();
-							  	if(redirect != null && redirect.getUrls().size() > 1){
+							  	if(redirect != null){
 							  		path_keys.add(redirect.getKey());
 							  		path_objects.add(redirect);
 							  	}
@@ -179,14 +165,13 @@ public class UrlBrowserActor extends AbstractActor {
 
 								PathMessage path_message = new PathMessage(path_keys, path_objects, discovery, message.getAccountKey(), message.getOptions());
 
-								form_discoverer.tell(path_message, getSelf() );
-								path_expansion_actor.tell(path_message, getSelf() );
+								//send message to animation detection actor
+								animation_actor.tell(path_message, getSelf() );
 							}
 						}
 
 						discovery_record.setLastPathRanAt(new Date());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-
 						discovery_record.setTestCount(discovery_record.getTestCount()+1);
 						discovery_record = discovery_service.save(discovery_record);
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);

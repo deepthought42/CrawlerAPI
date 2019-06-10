@@ -39,24 +39,25 @@ public class BrowserUtils {
 		}
 		transition_urls.add(last_key);
 		do{
-			String new_key = browser.getDriver().getCurrentUrl();
-			if(new_key.charAt(0) != 'h'){
-				new_key = 'h'+new_key;
+			String domain = browser.getDriver().getCurrentUrl();
+			if(domain.charAt(0) != 'h'){
+				domain= 'h'+domain;
 			}
-			URL new_url = new URL("http://"+new_key);
-			new_key = new_url.getHost()+new_url.getPath();
+			URL new_url = new URL(domain);
+			String new_key = new_url.getHost()+new_url.getPath();
 			if(new_key.charAt(new_key.length()-1) == '/'){
 				new_key = new_key.substring(0, new_key.length()-1);
 			}
-			
-			try{
+	        
+	        transition_detected = !new_key.equals(last_key);
+	        
+	        try{
 	        	BufferedImage img = browser.getViewportScreenshot();
 				images.add(img);
 			}catch(Exception e){}
 	        
-	        transition_detected = !new_key.equals(last_key);
-	        
 			if(transition_detected ){
+				
 				log.warn("redirect transition detected");
 				start_ms = System.currentTimeMillis();
 				transition_urls.add(new_key);

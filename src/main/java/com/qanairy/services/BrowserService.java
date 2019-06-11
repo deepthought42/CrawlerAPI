@@ -177,39 +177,7 @@ public class BrowserService {
 						last_elem_idx++;
 					}
 				}
-				elements_built_successfully = true;
-				int iter_idx=0;
-				int idx = 0;
-				while(all_elements.size() > element_hash.keySet().size()){
-					log.warn("run : " + idx + ";    init browser scroll offsets  ::   "+browser.getXScrollOffset()+" : "+browser.getYScrollOffset());
-					log.warn("run : " + idx + ";    BrowserService ...identifying page state iteration ...."+idx+" elements remaining ...."+elements.size() + "    :    " + url);
-					idx++;
-					if(iter_idx > 1){
-						elements = elements.subList(1, elements.size());
-						iter_idx=0;
-					}
-					
-					if(elements.isEmpty()){
-						break;
-					}
-					
-					if(!isElementVisibleInPane(browser, elements.get(0)) || iter_idx > 0){
-						log.warn("run : " + idx + ";    element is not visible in pane :: " + elements.get(0).getXLocation()  + " : "+ elements.get(0).getXLocation() + "    :    " + url);
-						browser.scrollTo(elements.get(0).getXLocation(), elements.get(0).getYLocation());
-					}
-					
-					PageState page_state = buildPage(browser, all_elements);
-					page_states.add(page_state);
-					for(ElementState element : page_state.getElements()){
-						element_hash.put(element.getXpath(), element);
-					}
-					
-					elements = BrowserService.filterElementStatesFromList(elements, page_state.getElements());
-
-					iter_idx++;
-				}
-				error_occurred = false;
-				break;
+				
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				e.printStackTrace();
@@ -241,6 +209,45 @@ public class BrowserService {
 			}
 		}while(error_occurred);
 		log.warn("returning page states : "+page_states.size()+ "   :    "+url);
+		
+		
+		elements_built_successfully = true;
+		int iter_idx=0;
+		int idx = 0;
+		while(all_elements.size() > element_hash.keySet().size()){
+			try{
+
+			log.warn("run : " + idx + ";    init browser scroll offsets  ::   "+browser.getXScrollOffset()+" : "+browser.getYScrollOffset());
+			log.warn("run : " + idx + ";    BrowserService ...identifying page state iteration ...."+idx+" elements remaining ...."+elements.size() + "    :    " + url);
+			idx++;
+			if(iter_idx > 1){
+				elements = elements.subList(1, elements.size());
+				iter_idx=0;
+			}
+			
+			if(elements.isEmpty()){
+				break;
+			}
+			
+			if(!isElementVisibleInPane(browser, elements.get(0)) || iter_idx > 0){
+				log.warn("run : " + idx + ";    scrolling to element at :: " + elements.get(0).getXLocation()  + " : "+ elements.get(0).getYLocation() + "  :   " + elements.get(0).getWidth()  + " : "+ elements.get(0).getHeight()+ "    :    " + url);
+				browser.scrollTo(elements.get(0).getXLocation(), elements.get(0).getYLocation());
+			}
+			
+			PageState page_state = buildPage(browser, all_elements);
+			page_states.add(page_state);
+			for(ElementState element : page_state.getElements()){
+				element_hash.put(element.getXpath(), element);
+			}
+			
+			elements = BrowserService.filterElementStatesFromList(elements, page_state.getElements());
+
+			iter_idx++;
+			
+			}catch(Exception e){}
+		}
+		error_occurred = false;
+		
 		return page_states;
 	}
 

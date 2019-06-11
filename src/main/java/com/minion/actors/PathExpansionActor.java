@@ -117,6 +117,7 @@ public class PathExpansionActor extends AbstractActor {
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	*/
+				
 				log.warn("looking up discovery record");
 				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
 				
@@ -129,6 +130,9 @@ public class PathExpansionActor extends AbstractActor {
 							PageState page_state = (PageState)path_obj;
 							page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
 							page_states.add(page_state);										
+						}
+						else if(path_obj.getKey().contains("mouseover")){
+							return;
 						}
 					}
 					log.warn("checking if path has cycle");
@@ -252,6 +256,11 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			
+			for(PathObject path_obj : message.getPathObjects()){
+				if(path_obj.getKey().contains("mouseover")){
+					return;
+				}
+			}
 			
 			//get sublist of path from beginning to page state index
 			List<ExploratoryPath> exploratory_paths = expandPath(page_state);

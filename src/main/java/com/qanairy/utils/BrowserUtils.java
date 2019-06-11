@@ -44,6 +44,11 @@ public class BrowserUtils {
 				domain= 'h'+domain;
 			}
 			URL new_url = new URL(domain);
+			
+			String new_host = new_url.getHost();
+			if(new_host.startsWith("www.")){
+				new_host = "www."+new_host;
+			}
 			String new_key = new_url.getHost()+new_url.getPath();
 			if(new_key.charAt(new_key.length()-1) == '/'){
 				new_key = new_key.substring(0, new_key.length()-1);

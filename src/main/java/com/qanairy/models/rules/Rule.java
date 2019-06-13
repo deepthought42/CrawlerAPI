@@ -5,7 +5,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import com.minion.browsing.form.FormField;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.Persistable;
 import com.qanairy.models.rules.RuleType;
 
@@ -34,7 +34,7 @@ public abstract class Rule implements Persistable {
 	 * 
 	 * @return boolean value indicating the rule is satisfied or not
 	 */
-	abstract Boolean evaluate(PageElement val);	
+	abstract Boolean evaluate(ElementState val);	
 
 	
 	@Override

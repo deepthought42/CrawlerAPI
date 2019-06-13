@@ -1,4 +1,4 @@
-package com.minion.WorkManagement;
+package com.qanairy.workmanagement;
 
 import java.util.HashMap;
 import java.util.Map;

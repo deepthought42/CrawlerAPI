@@ -8,6 +8,7 @@ import java.util.Set;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,15 +34,20 @@ public class Form {
 	private String[] type_options;
 	private Date date_discovered;
 	private String status;	
-
-	private PageElement form_tag;
-	private List<PageElement> form_fields;
-	private PageElement submit_field;
 	private String type;
+	
+	@Relationship(type = "DEFINED_BY")
+	private ElementState form_tag;
+	
+	@Relationship(type = "HAS")
+	private List<ElementState> form_fields;
+	
+	@Relationship(type = "HAS_SUBMIT")
+	private ElementState submit_field;
 	
 	public Form(){}
 	
-	public Form(PageElement form_tag, List<PageElement> form_fields, PageElement submit_field, 
+	public Form(ElementState form_tag, List<ElementState> form_fields, ElementState submit_field, 
 				String name, double[] predictions, FormType[] type_options, FormType type, Date date_discovered, 
 				FormStatus status){
 		setFormTag(form_tag);
@@ -57,7 +63,11 @@ public class Form {
 	}
 	
 	private String generateKey() {
-		return "form::"+getFormFields().hashCode()+""+getFormTag().hashCode()+""+getSubmitField().hashCode();
+		String elements_key = "";
+		for(ElementState elem : getFormFields()){
+			elements_key += elem.getKey();
+		}
+		return "form::"+elements_key+""+getFormTag().getKey();
 	}
 
 	/**
@@ -105,35 +115,35 @@ public class Form {
 	public void setDateDiscovered(Date date_discovered) {
 		this.date_discovered = date_discovered;
 	}
-	public List<PageElement> getFormFields() {
+	public List<ElementState> getFormFields() {
 		return form_fields;
 	}
 	
-	public boolean addFormField(PageElement form_field) {
+	public boolean addFormField(ElementState form_field) {
 		return this.form_fields.add(form_field);
 	}
 	
-	public boolean addFormFields(List<PageElement> form_field) {
+	public boolean addFormFields(List<ElementState> form_field) {
 		return this.form_fields.addAll(form_field);
 	}
 	
-	public void setFormFields(List<PageElement> form_fields2) {
+	public void setFormFields(List<ElementState> form_fields2) {
 		this.form_fields = form_fields2;
 	}
 
-	public PageElement getSubmitField() {
+	public ElementState getSubmitField() {
 		return submit_field;
 	}
 
-	public void setSubmitField(PageElement submit_field) {
+	public void setSubmitField(ElementState submit_field) {
 		this.submit_field = submit_field;
 	}
 
-	public PageElement getFormTag() {
+	public ElementState getFormTag() {
 		return form_tag;
 	}
 
-	public void setFormTag(PageElement form_tag) {
+	public void setFormTag(ElementState form_tag) {
 		this.form_tag = form_tag;
 	}
 

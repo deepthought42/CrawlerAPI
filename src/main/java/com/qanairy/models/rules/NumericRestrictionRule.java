@@ -7,7 +7,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.models.ElementState;
 
 /**
  * Defines a {@link Rule} where the numbers 1-9 cannot appear in a given value when evaluated
@@ -32,7 +32,7 @@ public class NumericRestrictionRule extends Rule {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Boolean evaluate(PageElement elem) {
+	public Boolean evaluate(ElementState elem) {
 		Pattern pattern = Pattern.compile(this.value);
 
         Matcher matcher = pattern.matcher(elem.getText());

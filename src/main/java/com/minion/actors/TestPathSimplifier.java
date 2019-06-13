@@ -42,6 +42,8 @@ public class TestPathSimplifier extends AbstractActor{
 	@Autowired
 	private ActorSystem actor_system;
 	
+	private ActorRef path_expansion_actor;
+	
 	public static Props props() {
 	  return Props.create(TestPathSimplifier.class);
 	}
@@ -51,6 +53,8 @@ public class TestPathSimplifier extends AbstractActor{
 	public void preStart() {
 	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
 	      MemberEvent.class, UnreachableMember.class);
+	  path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+			  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 	}
 	
 	//re-subscribe when restart
@@ -132,8 +136,7 @@ public class TestPathSimplifier extends AbstractActor{
 						Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
 						
 						log.info("!!!!!!!!!!!!!!!!!!     TEST PATH SIMPLIFIER ACTOR SENDING TEST TO PATH EXPANSION");
-						final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+						
 						path_expansion_actor.tell(test_msg, getSelf());
 					}
 				})

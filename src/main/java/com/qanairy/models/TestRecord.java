@@ -13,7 +13,7 @@ import com.qanairy.models.enums.TestStatus;
 
 /**
  * A {@link Test} record for reflecting an execution of a test 
- * indicating whether the execution is aligned with the test and therefore passing
+ * indicating whether the execution is aligned with the test and therefore status
  * or mis-aligned with the expectations of the test and therefore failing in 
  * which case a {@link PageState} can be saved as a record of what the state of the page
  * was after the test was executed.
@@ -31,7 +31,7 @@ public class TestRecord implements Persistable {
 	private String key;
 	private Date ran_at;
 	private String browser;
-	private TestStatus passing;
+	private TestStatus status;
 	private long run_time_length;
 
 	@Relationship(type = "HAS_RESULT", direction = Relationship.OUTGOING)
@@ -44,7 +44,7 @@ public class TestRecord implements Persistable {
 		setRanAt(ran_at);
 		setResult(result);
 		setRunTime(run_time);
-		setPassing(status);
+		setStatus(status);
 		setBrowser(browser_name);
 		setKey(generateKey());
 	}
@@ -74,15 +74,15 @@ public class TestRecord implements Persistable {
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public TestStatus getPassing(){
-		return this.passing;
+	public TestStatus getStatus(){
+		return this.status;
 	}
 	
 	/**
 	 * @return whether or not the test passes compared to expected {@link Test test} path
 	 */
-	public void setPassing(TestStatus status){
-		this.passing = status;
+	public void setStatus(TestStatus status){
+		this.status = status;
 	}
 	
 	public String getKey() {
@@ -115,6 +115,6 @@ public class TestRecord implements Persistable {
 	 */
 	@Override
 	public String generateKey() {
-		return "testrecord::"+getRanAt().toString()+"::"+getPassing();
+		return "testrecord::"+getRanAt().hashCode()+getResult().getKey();
 	}
 }

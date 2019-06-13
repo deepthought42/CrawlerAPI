@@ -1,14 +1,13 @@
 package com.minion.actors;
 
-import java.awt.image.BufferedImage;
-import java.net.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
-import com.qanairy.models.PageElement;
-import com.qanairy.models.repository.PageElementRepository;
+import com.qanairy.models.ElementState;
+import com.qanairy.models.message.ElementScreenshotUpload;
+import com.qanairy.services.ElementStateService;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -29,7 +28,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 	Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private PageElementRepository page_element_repo;
+	private ElementStateService page_element_service;
 	
 	public static Props props() {
 	  return Props.create(AwsS3ScreenshotUploader.class);
@@ -52,25 +51,13 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(ElementScreenshotUpload.class, screenshot_upload -> {
-					String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot_upload.screenshot, screenshot_upload.page_url.getHost(), screenshot_upload.page_elem_key, "element_screenshot");
-
-					log.info("Screenshot uploaded to :: "+viewport_screenshot_url);
-					/*ScreenshotSet screenshot_set = new ScreenshotSet(viewport_screenshot_url, screenshot_upload.browser_name);
-					
-					ScreenshotSet screenshot_record = screenshot_set_repo.findByKey(screenshot_set.getKey());
-					if(screenshot_record != null){
-						screenshot_set = screenshot_record;
-					}
-					else{
-						screenshot_set = screenshot_set_repo.save(screenshot_set);
-					}
-					
-					HashSet<ScreenshotSet> screenshots = new HashSet<ScreenshotSet>();
-					screenshots.add(screenshot_set);
-					*/
-					PageElement page_elem_record = page_element_repo.findByKey(screenshot_upload.page_elem_key);
+					String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot_upload.getScreenshot(), screenshot_upload.getPageUrl().getHost(), screenshot_upload.getPageElemKey(), screenshot_upload.getBrowserName());					
+					ElementState page_elem_record = page_element_service.findByKey(screenshot_upload.getPageElemKey());
 					page_elem_record.setScreenshot(viewport_screenshot_url);
-					page_elem_record = page_element_repo.save(page_elem_record);
+					page_element_service.save(page_elem_record);
+					
+					//tell requester what response is
+					postStop();
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -86,18 +73,5 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 					log.info("received unknown message");
 				})
 				.build();
-	}
-	
-	public static final class ElementScreenshotUpload{
-		
-		private BufferedImage screenshot;
-		private URL page_url;
-		private String page_elem_key;
-		
-		public ElementScreenshotUpload(BufferedImage screenshot, URL url, String page_elem_key, String browser_name){
-			this.screenshot = screenshot;
-			this.page_elem_key = page_elem_key;
-			this.page_url = url;
-		}
 	}
 }

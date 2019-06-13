@@ -34,7 +34,7 @@ public class UploadObjectSingleOperation {
 		assert page_key != null;
 		assert !page_key.isEmpty();
 	
-		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");
+		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
@@ -63,6 +63,7 @@ public class UploadObjectSingleOperation {
             log.error("AWS Error Code:   " + ase.getErrorCode());
             log.error("Error Type:       " + ase.getErrorType());
             log.error("Request ID:       " + ase.getRequestId());
+            ase.printStackTrace();
         } catch (AmazonClientException ace) {
             log.error("Caught an AmazonClientException, which " +
             		"means the client encountered " +
@@ -78,7 +79,7 @@ public class UploadObjectSingleOperation {
     }
 	
 	public static String saveImageToS3(BufferedImage image, String domain, String page_key) {
-		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");
+		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
 		String filepath = null;
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
@@ -123,13 +124,13 @@ public class UploadObjectSingleOperation {
     }
 	
 	public static InputStream getImageFromS3(String url){
-		AWSCredentials credentials = new BasicAWSCredentials("AKIAIYBDBXPUQPKLDDXA","NUOCJBgqo943B784dTjjF6JC5PyK9lWg9hh73Mk2");
+		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
 
 		// credentials=new ProfileCredentialsProvider().getCredentials();
         AmazonS3 s3client = new AmazonS3Client(credentials);
         
         try {
-            log.info("Uploading a new object to S3 from a filen: "+url);
+            log.info("Uploading a new object to S3 from a file: "+url);
             S3Object object = s3client.getObject(new GetObjectRequest(bucketName, url));
             InputStream objectData = object.getObjectContent();
             

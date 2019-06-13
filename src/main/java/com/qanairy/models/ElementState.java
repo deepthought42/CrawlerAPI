@@ -24,7 +24,7 @@ import com.qanairy.models.rules.Rule;
  *  maintained by ElementState though. 
  */
 @NodeEntity
-public class ElementState implements Persistable, PathObject {
+public class ElementState implements Persistable, PathObject, Comparable<ElementState> {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
@@ -378,5 +378,12 @@ public class ElementState implements Persistable, PathObject {
 
 	public void setHeight(int height) {
 		this.height = height;
+	}
+
+	@Override
+	public int compareTo(ElementState o) {
+		 if(this.getYLocation() == o.getYLocation())
+             return 0;
+         return this.getYLocation() < o.getYLocation() ? -1 : 1;
 	}
 }

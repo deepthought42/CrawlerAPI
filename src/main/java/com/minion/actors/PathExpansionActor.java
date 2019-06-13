@@ -332,8 +332,19 @@ public class PathExpansionActor extends AbstractActor {
 
 			expanded_elements.put(page_element.getKey(), page_element);
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(result_page.getUrl(), page_element.getKey());
-			log.warn("page states found for current page element : " + page_element +"    ;  "+element_page_states.size());
-					
+			boolean higher_order_page_state_found = false;
+			//check if there is a page state with a lower x or y scroll offset
+			for(PageState page : element_page_states){
+				if(result_page.getScrollXOffset() > page.getScrollXOffset() 
+						|| result_page.getScrollYOffset() > page.getScrollYOffset()){
+					higher_order_page_state_found = true;
+				}
+			}
+			
+			if(higher_order_page_state_found){
+				continue;
+			}
+			
 			//check if test should be considered landing page test or not
 			boolean is_landing_page_test = (test.getPathObjects().get(0) instanceof Redirect && test.getPathKeys().size() == 2) 
 													|| test.getPathKeys().size() == 1;
@@ -416,6 +427,9 @@ public class PathExpansionActor extends AbstractActor {
 					for(Action action : action_list){
 						ArrayList<String> keys = new ArrayList<String>(new_test.getPathKeys());
 						ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_test.getPathObjects());
+						if(action.getName().equals("mouseover") && path_objects.size()> 1){
+							continue;
+						}
 						
 						keys.add(action.getKey());
 						path_objects.add(action);
@@ -428,6 +442,7 @@ public class PathExpansionActor extends AbstractActor {
 						/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 							continue;
 						}*/
+						
 						pathList.add(action_path);
 					}
 				}
@@ -470,8 +485,8 @@ public class PathExpansionActor extends AbstractActor {
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page : element_page_states){
-				if(page_state.getScrollXOffset() < page.getScrollXOffset() 
-						|| page_state.getScrollYOffset() < page.getScrollYOffset()){
+				if(page_state.getScrollXOffset() > page.getScrollXOffset() 
+						|| page_state.getScrollYOffset() > page.getScrollYOffset()){
 					higher_order_page_state_found = true;
 				}
 			}

@@ -40,6 +40,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
@@ -60,32 +61,32 @@ public class PathExpansionActor extends AbstractActor {
 
 	@Autowired
 	private ActorSystem actor_system;
-	
+
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
-	
+
 	@Autowired
 	private DiscoveryRecordService discovery_service;
-	
+
 	@Autowired
 	private PageStateService page_state_service;
-	
+
 	@Autowired
 	private BrowserService browser_service;
-	
+
 	@Autowired
 	private ElementRuleExtractor extractor;
-	
+
 	private Map<String, ElementState> expanded_elements;
-	
+
 	public PathExpansionActor() {
 		this.expanded_elements = new HashMap<String, ElementState>();
 	}
-	
+
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 	      MemberEvent.class, UnreachableMember.class);
 	}
 
@@ -94,7 +95,7 @@ public class PathExpansionActor extends AbstractActor {
     public void postStop() {
 	  cluster.unsubscribe(getSelf());
     }
-	
+
 	/**
      * {@inheritDoc}
      */
@@ -102,34 +103,40 @@ public class PathExpansionActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
-			
-			if(message.getData() instanceof Test){			
+
+			if(message.getData() instanceof Test){
 				log.warn("test recieved by path expansion");
 				Test test = (Test)message.getData();
 				ArrayList<ExploratoryPath> path_expansions = new ArrayList<ExploratoryPath>();
 				String discovery_key = message.getOptions().get("discovery_key").toString();
 				String browser_name = message.getOptions().get("browser").toString();
 
+				log.warn("looking up discovery record");
+				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
+
+				if(discovery_record.getStatus().equals(DiscoveryStatus.STOPPED)){
+					log.info("Discovery is flagged as 'STOPPED' so expansion is being ignored");
+					return;
+				}
+
 				/*
-				 * TODO: uncomment once ready for pricing again. 
+				 * TODO: uncomment once ready for pricing again.
 		    	Account acct = account_service.findByUsername(message.getAccountKey());
 		    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
 		    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
 		    	}
 		    	*/
-				
-				log.warn("looking up discovery record");
-				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
+
 				
 				if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
-					
-					//get page states 
+
+					//get page states
 					List<PageState> page_states = new ArrayList<PageState>();
 					for(PathObject path_obj : test.getPathObjects()){
 						if(path_obj instanceof PageState){
 							PageState page_state = (PageState)path_obj;
 							page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
-							page_states.add(page_state);										
+							page_states.add(page_state);
 						}
 						else if(path_obj.getKey().contains("mouseover")){
 							return;
@@ -138,19 +145,19 @@ public class PathExpansionActor extends AbstractActor {
 					log.warn("checking if path has cycle");
 					final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-					
-					if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1) 
-							&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){	
-						// if path is a single page 
+
+					if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1)
+							&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
+						// if path is a single page
 						//		then send path to urlBrowserActor
 						if(test.getPathKeys().size() > 1){
 							log.warn("test has more than one path key");
 							PageState result_page = test.getResult();
-							
+
 							//check if result page has been checked for landability in last 24 hours. If not then check landability of page state
 							Duration time_diff = Duration.between(result_page.getLastLandabilityCheck(), LocalDateTime.now());
 							Duration minimum_diff = Duration.ofHours(24);
-							
+
 							log.warn("checking if landability needs to be tested");
 							if(time_diff.compareTo(minimum_diff) > 0){
 								//have page checked for landability
@@ -159,13 +166,13 @@ public class PathExpansionActor extends AbstractActor {
 								result_page.setLandable(isLandable);
 								result_page = page_state_service.save(result_page);
 							}
-							
+
 							log.warn("is result page landable  ::    "+result_page.isLandable());
-							if(result_page.isLandable()){								
+							if(result_page.isLandable()){
 								try{
 									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 							  	}catch(Exception e){}
-								
+
 								log.warn("sedning url to work allocator");
 								Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
 								work_allocator.tell(url_msg, getSelf() );
@@ -179,7 +186,7 @@ public class PathExpansionActor extends AbstractActor {
 								log.warn("discovery record :: "+discovery_record);
 								for(ExploratoryPath expanded : path_expansions){
 									Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-									
+
 									work_allocator.tell(expanded_path_msg, getSelf() );
 								}
 							}
@@ -191,11 +198,11 @@ public class PathExpansionActor extends AbstractActor {
 							discovery_record = discovery_service.save(discovery_record);
 							for(ExploratoryPath expanded : path_expansions){
 								Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-								
+
 								work_allocator.tell(expanded_path_msg, getSelf() );
 							}
 						}
-						
+
 						if(!path_expansions.isEmpty()){
 							discovery_record = discovery_repo.findByKey(discovery_key);
 							int new_total_path_count = (discovery_record.getTotalPathCount()+path_expansions.size());
@@ -206,9 +213,9 @@ public class PathExpansionActor extends AbstractActor {
 						try{
 							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 					  	}catch(Exception e){
-						
+
 						}
-					}	
+					}
 				}
 				else{
 					log.warn("discovery record already has page state expanded  ::    " + test.getResult().getKey());
@@ -220,28 +227,28 @@ public class PathExpansionActor extends AbstractActor {
 			log.warn("page state message encountered : "+message.getPageState());
 			List<ExploratoryPath> exploratory_paths = expandPath(message.getPageState());
 
-			
+
 			DiscoveryRecord discovery_record = discovery_service.increaseTotalPathCount(message.getDiscovery().getKey(), exploratory_paths.size());
 			if(discovery_record.getExpandedPageStates().contains(message.getPageState().getKey())){
-				return;					
+				return;
 			}
 			discovery_record.addExpandedPageState(message.getPageState().getKey());
 			discovery_record = discovery_service.save(discovery_record);
-			
+
 			log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-			
+
 			try{
 				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 		  	}catch(Exception e){
-			
+
 			}
-			
+
 			final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
 			for(ExploratoryPath expanded : exploratory_paths){
 				Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-				
+
 				work_allocator.tell(expanded_path_msg, getSelf() );
 			}
 
@@ -255,38 +262,38 @@ public class PathExpansionActor extends AbstractActor {
 					break;
 				}
 			}
-			
+
 			for(PathObject path_obj : message.getPathObjects()){
 				if(path_obj.getKey().contains("mouseover")){
 					return;
 				}
 			}
-			
+
 			//get sublist of path from beginning to page state index
 			List<ExploratoryPath> exploratory_paths = expandPath(page_state);
 
-			
+
 			DiscoveryRecord discovery_record = discovery_service.increaseTotalPathCount(message.getDiscovery().getKey(), exploratory_paths.size());
 			if(discovery_record.getExpandedPageStates().contains(page_state.getKey())){
-				return;					
+				return;
 			}
 			discovery_record.addExpandedPageState(page_state.getKey());
 			discovery_record = discovery_service.save(discovery_record);
-			
+
 			log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-			
+
 			try{
 				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 		  	}catch(Exception e){
-			
+
 			}
-			
+
 			final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
 			for(ExploratoryPath expanded : exploratory_paths){
 				Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-				
+
 				work_allocator.tell(expanded_path_msg, getSelf() );
 			}
 
@@ -299,16 +306,16 @@ public class PathExpansionActor extends AbstractActor {
 		})
 		.match(MemberRemoved.class, mRemoved -> {
 			log.info("Member is Removed: {}", mRemoved.member());
-		})	
+		})
 		.matchAny(o -> {
 			log.info("received unknown message :: "+o);
 		})
 		.build();
 	}
-	
+
     /**
 	 * Produces all possible element, action combinations that can be produced from the given path
-	 * 
+	 *
 	 * @throws MalformedURLException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
@@ -321,11 +328,11 @@ public class PathExpansionActor extends AbstractActor {
 		if(result_page == null){
 			return null;
 		}
-		
+
 		//get List of page states for page
 
 		//iterate over all elements
-		for(ElementState page_element : result_page.getElements()){		
+		for(ElementState page_element : result_page.getElements()){
 			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
 				continue;
 			}
@@ -335,25 +342,25 @@ public class PathExpansionActor extends AbstractActor {
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page : element_page_states){
-				if(result_page.getScrollXOffset() > page.getScrollXOffset() 
+				if(result_page.getScrollXOffset() > page.getScrollXOffset()
 						|| result_page.getScrollYOffset() > page.getScrollYOffset()){
 					higher_order_page_state_found = true;
 				}
 			}
-			
+
 			if(higher_order_page_state_found){
 				continue;
 			}
-			
+
 			//check if test should be considered landing page test or not
-			boolean is_landing_page_test = (test.getPathObjects().get(0) instanceof Redirect && test.getPathKeys().size() == 2) 
+			boolean is_landing_page_test = (test.getPathObjects().get(0) instanceof Redirect && test.getPathKeys().size() == 2)
 													|| test.getPathKeys().size() == 1;
-			
+
 			log.warn("checking if element exists in a previous page state");
 			if(!is_landing_page_test && doesElementExistInMultiplePageStatesWithinTest(test, page_element, result_page.getUrl())){
 				continue;
 			}
-			
+
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -364,8 +371,8 @@ public class PathExpansionActor extends AbstractActor {
 			}
 			*/
 			//END OF PREDICTION CODE
-			
-			
+
+
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
 			if(page_element.getXpath().contains("form")){
 				continue;
@@ -382,7 +389,7 @@ public class PathExpansionActor extends AbstractActor {
 					for(List<PathObject> path_obj_list: tests){
 						//iterate over all actions
 						List<PathObject> path_objects = new ArrayList<PathObject>(test.getPathObjects());
-						
+
 						List<String> path_keys = new ArrayList<String>(test.getPathKeys());
 						for(PathObject path_obj : path_obj_list){
 							path_keys.add(path_obj.getKey());
@@ -391,12 +398,12 @@ public class PathExpansionActor extends AbstractActor {
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 							for(Action action : action_list){
 								ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(path_keys), new ArrayList<PathObject>(path_objects));
-								//check for element action sequence. 
+								//check for element action sequence.
 								//if one exists with one of the actions in the action_list
 								// 	 then skip this action path
 								action_path.getPathKeys().add(action.getKey());
 								action_path.getPathObjects().add(action);
-								
+
 								/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 									log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
 									continue;
@@ -407,8 +414,8 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}
 			}
-			else{				
-				
+			else{
+
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
@@ -417,12 +424,12 @@ public class PathExpansionActor extends AbstractActor {
 					new_test.getPathKeys().add(test.getResult().getKey());
 					new_test.getPathObjects().add(test.getResult());
 				}
-								
+
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
-				
+
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
-				
+
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					for(Action action : action_list){
 						ArrayList<String> keys = new ArrayList<String>(new_test.getPathKeys());
@@ -430,19 +437,19 @@ public class PathExpansionActor extends AbstractActor {
 						if(action.getName().equals("mouseover") && path_objects.size()> 1){
 							continue;
 						}
-						
+
 						keys.add(action.getKey());
 						path_objects.add(action);
-						
+
 						ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
-						//check for element action sequence. 
+						//check for element action sequence.
 						//if one exists with one of the actions in the action_list
 						// 	 then load the existing path and process it for path expansion action path
 						/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
 						/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 							continue;
 						}*/
-						
+
 						pathList.add(action_path);
 					}
 				}
@@ -452,28 +459,28 @@ public class PathExpansionActor extends AbstractActor {
 		return pathList;
 	}
 
-	
+
 	/**
 	 * Produces all possible element, action combinations that can be produced from the given path
-	 * 
+	 *
 	 * @throws MalformedURLException
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
-	 * 
+	 *
 	 * @pre page_state != null
 	 */
 	public ArrayList<ExploratoryPath> expandPath(PageState page_state)  {
 		assert page_state != null;
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
-		
-		List<ElementState> elements = page_state.getElements();		
+
+		List<ElementState> elements = page_state.getElements();
 		//get List of page states for page
 
 		List<String> path_keys = new ArrayList<>();
 		path_keys.add(page_state.getKey());
 		List<PathObject> path_objects = new ArrayList<>();
 		path_objects.add(page_state);
-		
+
 		//iterate over all elements
 		for(ElementState page_element : elements){
 			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
@@ -485,16 +492,16 @@ public class PathExpansionActor extends AbstractActor {
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page : element_page_states){
-				if(page_state.getScrollXOffset() > page.getScrollXOffset() 
+				if(page_state.getScrollXOffset() > page.getScrollXOffset()
 						|| page_state.getScrollYOffset() > page.getScrollYOffset()){
 					higher_order_page_state_found = true;
 				}
 			}
-			
+
 			if(higher_order_page_state_found){
 				continue;
 			}
-						
+
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -505,8 +512,8 @@ public class PathExpansionActor extends AbstractActor {
 			}
 			*/
 			//END OF PREDICTION CODE
-			
-			
+
+
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
 			if(page_element.getXpath().contains("form")){
 				continue;
@@ -526,17 +533,17 @@ public class PathExpansionActor extends AbstractActor {
 							path_keys.add(path_obj.getKey());
 							path_objects.add(path_obj);
 						}
-						
+
 						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 							for(Action action : action_list){
 								ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(path_keys), new ArrayList<PathObject>(path_objects));
 								action_path.getPathKeys().add(action.getKey());
 								action_path.getPathObjects().add(action);
-								//check for element action sequence. 
+								//check for element action sequence.
 								//if one exists with one of the actions in the action_list
 								// 	 then skip this action path
-								
-								
+
+
 								/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 									log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
 									continue;
@@ -547,22 +554,22 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}
 			}
-			else{				
+			else{
 				List<String> keys = new ArrayList<>(path_keys);
 				List<PathObject> path = new ArrayList<>(path_objects);
-								
+
 				path.add(page_element);
 				keys.add(page_element.getKey());
-				
+
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
-				
+
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					for(Action action : action_list){
 						ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(keys), new ArrayList<PathObject>(path));
 						action_path.getPathKeys().add(action.getKey());
 						action_path.getPathObjects().add(action);
-						
-						//check for element action sequence. 
+
+						//check for element action sequence.
 						//if one exists with one of the actions in the action_list
 						// 	 then load the existing path and process it for path expansion action path
 						/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
@@ -576,23 +583,23 @@ public class PathExpansionActor extends AbstractActor {
 		}
 		return pathList;
 	}
-	
+
 	/**
 	 * Checks if a given {@link ElementState} exists in a {@link PageState} within the {@link Test} path
 	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
-	 * 
+	 *
 	 * @param test {@link Test}
 	 * @param elem {@link ElementState}
-	 * 
+	 *
 	 * @return
-	 * 
+	 *
 	 * @pre test != null
 	 * @pre elem != null
 	 */
 	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, ElementState elem, String page_url) {
 		assert test != null;
 		assert elem != null;
-		
+
 		if(test.getPathKeys().size() == 1){
 			return false;
 		}
@@ -609,7 +616,7 @@ public class PathExpansionActor extends AbstractActor {
 						return true;
 					}
 				}
-			}	
+			}
 		}
 
 		return false;

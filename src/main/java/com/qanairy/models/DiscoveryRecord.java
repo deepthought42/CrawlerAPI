@@ -8,21 +8,24 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
+import com.qanairy.models.enums.DiscoveryStatus;
+
 /**
  * Record detailing a "Discovery" ran by an account.
  */
 @NodeEntity
 public class DiscoveryRecord implements Persistable {
-	
+
 	@GeneratedValue
     @Id
 	private Long id;
-	
+
 	private String key;
 	private Date started_at;
 	private String browser_name;
 	private String domain_url;
 	private Date last_path_ran_at;
+	private DiscoveryStatus status;
 	private int total_path_count;
 	private int examined_path_count;
 	private int test_cnt;
@@ -30,14 +33,16 @@ public class DiscoveryRecord implements Persistable {
 	private List<String> expanded_page_state;
 
 	public DiscoveryRecord(){}
-	
-	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url, Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt){
+
+	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url,
+							int test_cnt, int total_cnt, int examined_cnt,
+							DiscoveryStatus status){
 		assert started_timestamp != null;
 		assert browser_name != null;
 		assert domain_url != null;
 		assert test_cnt > -1;
 		assert total_cnt > 0;
-		
+
 		setExpandedPageStates(new ArrayList<String>());
 		setExpandedUrls(new ArrayList<String>());
 		setStartTime(started_timestamp);
@@ -47,29 +52,30 @@ public class DiscoveryRecord implements Persistable {
 		setTotalPathCount(total_cnt);
 		setExaminedPathCount(examined_cnt);
 		setTestCount(test_cnt);
+		setStatus(status);
 		setKey(generateKey());
 	}
 
 	public String getKey() {
 		return this.key;
 	}
-	
+
 	public void setKey(String key) {
 		this.key = key;
 	}
-	
+
 	public Date getStartTime() {
 		return started_at;
 	}
-	
+
 	public void setStartTime(Date started_at) {
 		this.started_at = started_at;
 	}
-	
+
 	public String getBrowserName() {
 		return browser_name;
 	}
-	
+
 	public void setBrowserName(String browser_name) {
 		this.browser_name = browser_name;
 	}
@@ -109,11 +115,11 @@ public class DiscoveryRecord implements Persistable {
 	public int getTestCount() {
 		return this.test_cnt;
 	}
-	
+
 	public void setTestCount(int cnt){
 		this.test_cnt = cnt;
 	}
-	
+
 	public String generateKey() {
 		return getDomainUrl()+":"+getStartTime();
 	}
@@ -125,10 +131,18 @@ public class DiscoveryRecord implements Persistable {
 	public void setExpandedPageStates(List<String> expanded_page_state) {
 		this.expanded_page_state = expanded_page_state;
 	}
-	
+
 	public void addExpandedPageState(String expanded_page_state_key) {
 		this.expanded_page_state.add(expanded_page_state_key);
 	}
+
+	public DiscoveryStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(DiscoveryStatus status) {
+		this.status = status;
+  }
 
 	public List<String> getExpandedUrls() {
 		return expanded_urls;

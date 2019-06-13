@@ -157,6 +157,10 @@ public class PageStateService {
 		return page_state_repo.findByScreenshotChecksumsContains(screenshot_checksum);		
 	}
 	
+	public PageState findByAnimationImageChecksum(String screenshot_checksum){
+		return page_state_repo.findByAnimationImageChecksum(screenshot_checksum);		
+	}
+	
 	public List<ElementState> getElementStates(String page_key){
 		return page_state_repo.getElementStates(page_key);
 	}

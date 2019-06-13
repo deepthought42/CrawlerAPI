@@ -31,4 +31,7 @@ public interface PageStateRepository extends Neo4jRepository<PageState, Long> {
 
 	@Query("MATCH (p:PageState{key:{page_key}})-[h:HAS]->(s:Screenshot) RETURN s")
 	public List<Screenshot> getScreenshots(@Param("page_key") String page_key);
+
+	@Query("MATCH a=(p:PageState)-[h:HAS]->(s:Screenshot) WHERE {screenshot_checksum} IN p.image_checksums RETURN a")
+	public PageState findByAnimationImageChecksum(String screenshot_checksum);
 }

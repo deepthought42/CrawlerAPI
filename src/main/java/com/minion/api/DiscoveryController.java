@@ -31,8 +31,9 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.DiscoveryStatus;
-import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.services.AccountService;
+import com.qanairy.services.DiscoveryRecordService;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.workmanagement.WorkAllowanceStatus;
 import com.segment.analytics.Analytics;
@@ -62,6 +63,9 @@ public class DiscoveryController {
     @Autowired
     private DomainService domain_service;
 
+    @Autowired
+    private DiscoveryRecordService discovery_service;
+    
     @Autowired
     private ActorSystem actor_system;
 
@@ -228,7 +232,7 @@ public class DiscoveryController {
 
     	DiscoveryRecord last_discovery_record = null;
 		Date started_date = new Date(0L);
-		for(DiscoveryRecord record : domain_repo.getDiscoveryRecords(url)){
+		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
 			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
 				started_date = record.getStartTime();
 				last_discovery_record = record;
@@ -236,7 +240,8 @@ public class DiscoveryController {
 		}
 
 		last_discovery_record.setStatus(DiscoveryStatus.STOPPED);
-		//WorkAllowanceStatus.haltWork(acct.getUsername());
+		discovery_service.save(last_discovery_record);
+		WorkAllowanceStatus.haltWork(acct.getUsername());
 	}
 
 }

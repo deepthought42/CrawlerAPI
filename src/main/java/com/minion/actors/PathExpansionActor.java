@@ -41,7 +41,8 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryStatus;
-import com.qanairy.models.repository.AccountRepository;
+import com.qanairy.models.message.PageStateMessage;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -111,7 +112,8 @@ public class PathExpansionActor extends AbstractActor {
 				String browser_name = message.getOptions().get("browser").toString();
 
 				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
-				DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
+				log.warn("looking up discovery record");
+				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
 
 				if(discovery_record.getStatus().equals(DiscoveryStatus.STOPPED)){
 					log.info("Discovery is flagged as 'STOPPED' so expansion is being ignored");
@@ -126,9 +128,7 @@ public class PathExpansionActor extends AbstractActor {
 		    	}
 		    	*/
 
-				log.warn("looking up discovery record");
-				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
-
+				
 				if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
 
 					//get page states

@@ -328,6 +328,24 @@ public class Browser {
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	
+	/**
+	 * 
+	 * @param screenshot
+	 * @param elem
+	 * @return
+	 * @throws IOException
+	 */
+		
+	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+		//calculate element position within screen
+		Point point = getLocationInViewport(elem, x_offset, y_offset);
+		
+		int point_x = point.getX();
+		int point_y = point.getY();
+		
+		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
+	}
+	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
 		return null;
 	}
@@ -562,6 +580,19 @@ public class Browser {
 		Point location = element.getLocation();
 		int y_coord = calculateYCoordinate(y_offset, location);
 		int x_coord = calculateXCoordinate(x_offset, location);
+       
+		return new Point(x_coord, y_coord);
+	}
+	
+	/**
+	 * Retrieve coordinates of {@link WebElement} in the current viewport
+	 * 
+	 * @param element {@link WebElement}
+	 * @return {@link Point} coordinates
+	 */
+	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
+		int y_coord = element.getYLocation() - y_offset;
+		int x_coord = element.getXLocation() - x_offset;
        
 		return new Point(x_coord, y_coord);
 	}

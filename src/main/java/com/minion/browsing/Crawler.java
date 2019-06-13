@@ -157,7 +157,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				//browser.waitForPageToLoad();
+				browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof Animation){
 				BrowserUtils.getAnimation(browser, host_channel);

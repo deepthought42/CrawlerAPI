@@ -167,7 +167,7 @@ public class BrowserService {
 
 					all_elements = new ArrayList<>(web_elements);
 					log.warn("total elements without seen elements filtered  :: " + all_elements.size());
-					web_elements = BrowserService.filterElementStatesFromList(web_elements, new ArrayList<ElementState>(seen_element_state.values()) );
+					//web_elements = BrowserService.filterElementStatesFromList(web_elements, new ArrayList<ElementState>(seen_element_state.values()) );
 
 					int iter_idx=0;
 					int idx = 0;
@@ -203,9 +203,9 @@ public class BrowserService {
 								element_hash.put(element.getXpath(), element);
 							}
 
-							web_elements = BrowserService.filterElementStatesFromList(web_elements, page_state.getElements());
+							//web_elements = BrowserService.filterElementStatesFromList(web_elements, page_state.getElements());
 
-							log.warn("run : " + idx + ";    seen states :: " + seen_element_state.size() + "    :    " + url);
+							//log.warn("run : " + idx + ";    seen states :: " + seen_element_state.size() + "    :    " + url);
 							log.warn("run : " + idx + ";    elements left after filtered list :: " + web_elements.size() + "    :    " + url);
 
 							iter_idx++;
@@ -319,7 +319,10 @@ public class BrowserService {
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url_without_params);
-
+		if(page_state_record2 == null){
+			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
+		}
+		
 		if(page_state_record2 != null){
 			log.warn("existing page with screenshot found   :    " + url_without_params);
 			viewport_screenshot.flush();
@@ -475,7 +478,10 @@ public class BrowserService {
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url_without_params);
-
+		if(page_state_record2 == null){
+			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
+		}
+		
 		if(page_state_record2 != null){
 			log.warn("existing page with screenshot found   :    " + url_without_params);
 			viewport_screenshot.flush();

@@ -55,6 +55,9 @@ public class PageStateService {
 				
 		for(Screenshot screenshot : page_state.getScreenshots()){
 			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
+			if(page_state_record == null){
+				findByAnimationImageChecksum(screenshot.getChecksum());
+			}
 			if(page_state_record != null){
 				break;
 			}

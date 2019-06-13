@@ -167,64 +167,14 @@ public class BrowserService {
 					web_elements = BrowserService.filterNonChildElements(web_elements);
 					web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
 
+					web_elements = web_elements.subList(last_elem_idx, web_elements.size());
 					for(WebElement elem: web_elements){
 						ElementState element_state = buildElementState(browser, elem);
 						element_xpaths.put(element_state.getXpath(), element_state);
 						log.warn("added element and xpath to map");
+						last_elem_idx++;
 					}
-					//all_elements = new ArrayList<>(web_elements);
-					//log.warn("total elements without seen elements filtered  :: " + all_elements.size());
-					//web_elements = BrowserService.filterElementStatesFromList(web_elements, new ArrayList<ElementState>(seen_element_state.values()) );
-
-					/*
-					int iter_idx=0;
-					int idx = 0;
-					while(all_elements.size() > element_hash.keySet().size()){
-						try{
-							log.warn("run : " + idx + ";    init browser scroll offsets  ::   "+browser.getXScrollOffset()+" : "+browser.getYScrollOffset());
-							log.warn("run : " + idx + ";    BrowserService ...identifying page state iteration ...."+idx+" elements remaining ...."+web_elements.size() + "    :    " + url);
-							idx++;
-							if(iter_idx > 1){
-								web_elements = web_elements.subList(1, web_elements.size());
-								iter_idx=0;
-							}
-							if(web_elements.isEmpty()){
-								break;
-							}
-							if(!isElementVisibleInPane(browser, web_elements.get(0)) || iter_idx > 0){
-								log.warn("run : " + idx + ";    element is not visible in pane :: " + web_elements.get(0).getLocation()  + "    :    " + url);
-								browser.scrollToElement(web_elements.get(0));
-							}
-							log.warn("run : " + idx + ";    browser scroll offsets  ::   "+browser.getXScrollOffset()+" : "+browser.getYScrollOffset());
-
-							PageState page_state = buildPage(browser, all_elements);
-							page_states.add(page_state);
-
-							log.warn("Page state element count ::  " + page_state.getElements().size() + "   :   "+ url);
-							
-							Animation animation = BrowserUtils.getAnimation(browser, host);
-							log.warn("setting animated image urls :: " + animation.getImageUrls().size());
-							page_state.setAnimatedImageUrls(animation.getImageUrls());
-			
-							log.warn("run : " + idx + ";    elements left to go :: " + web_elements.size() + "    :    " + url);
-							for(ElementState element : page_state.getElements()){
-								element_hash.put(element.getXpath(), element);
-							}
-
-							//web_elements = BrowserService.filterElementStatesFromList(web_elements, page_state.getElements());
-
-							//log.warn("run : " + idx + ";    seen states :: " + seen_element_state.size() + "    :    " + url);
-							log.warn("run : " + idx + ";    elements left after filtered list :: " + web_elements.size() + "    :    " + url);
-
-							iter_idx++;
-						}
-						catch(RasterFormatException e){
-							log.warn("element is not within raster :: "+e.getMessage());
-						}
-					}
-					*/
 				}
-	
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				e.printStackTrace();
@@ -255,9 +205,9 @@ public class BrowserService {
 				}
 			}
 		}while(error_occurred);
-		log.warn("returning page states : "+page_states.size()+ "   :    "+url);
+		log.warn("returning elements list : "+element_xpaths.size()+ "   :    "+url);
 
-		elements = new ArrayList<>(all_elements);
+		elements = new ArrayList<>(element_xpaths.values());
 		
 		elements_built_successfully = true;
 		int iter_idx=0;
@@ -271,27 +221,15 @@ public class BrowserService {
 				browser.navigateTo(url);
 				log.warn("retrieving transition before building page states");
 				BrowserUtils.getPageTransition(url, browser, host);
-
-				/*
-				log.warn("run : " + idx + ";    init browser scroll offsets  ::   "+browser.getXScrollOffset()+" : "+browser.getYScrollOffset());
-				log.warn("run : " + idx + ";    BrowserService ...identifying page state iteration ...."+idx+" elements remaining ...."+elements.size() + "    :    " + url);
-				idx++;
-				if(iter_idx > 1){
-					elements = elements.subList(1, elements.size());
-					iter_idx=0;
-				}
-	
-				if(elements.isEmpty()){
-					break;
-				}
-				*/
-	
+				
+				log.warn("checking if element is visible in page");
 				if(!isElementVisibleInPane(browser, all_elements.get(0)) || iter_idx > 0){
 					log.warn("run : " + idx + ";    scrolling to element at :: " + all_elements.get(0).getXLocation()  + " : "+ all_elements.get(0).getYLocation() + "  :   " + all_elements.get(0).getWidth()  + " : "+ all_elements.get(0).getHeight()+ "    :    " + url);
 					browser.scrollTo(all_elements.get(0).getXLocation(), all_elements.get(0).getYLocation());
 				}
 	
-				PageState page_state = buildPage(browser, all_elements);
+				log.warn("building page state with elements :: " + elements.size());
+				PageState page_state = buildPage(browser, elements);
 				page_states.add(page_state);
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);

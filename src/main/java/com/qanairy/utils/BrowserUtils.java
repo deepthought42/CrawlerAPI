@@ -194,11 +194,11 @@ public class BrowserUtils {
 		}
 		else if(animated_flag){
 			log.warn("Animation :: " + animated_flag);
-			return new Animation(image_urls, continuous_animation_flag);
+			return new Animation(image_urls, continuous_animation_flag, new ArrayList<>(animated_state_checksum_hash.keySet()));
 		}
 		else if(continuous_animation_flag){
 			log.warn("continuous animation  :   " +continuous_animation_flag);
-			return new Animation(image_urls, continuous_animation_flag);
+			return new Animation(image_urls, continuous_animation_flag, new ArrayList<>(animated_state_checksum_hash.keySet()));
 		}
 		
 		return null;
@@ -250,6 +250,6 @@ public class BrowserUtils {
 			}
 		}
 				
-		return new Animation(image_urls, true);
+		return new Animation(image_urls, true, image_checksums);
 	}
 }

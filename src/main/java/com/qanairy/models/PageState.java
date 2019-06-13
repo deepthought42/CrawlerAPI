@@ -59,7 +59,8 @@ public class PageState implements Persistable, PathObject {
 	private String type;
 	private List<String> screenshot_checksums;
 	private List<String> animated_image_urls;
-
+	private List<String> animated_image_checksums;
+	
 	@Relationship(type = "HAS")
 	private List<Screenshot> screenshots;
 		
@@ -567,6 +568,14 @@ public class PageState implements Persistable, PathObject {
 	
 	public void setAnimatedImageUrls(List<String> animated_image_urls) {
 		this.animated_image_urls = animated_image_urls;
+	}
+
+	public List<String> getAnimatedImageChecksums() {
+		return animated_image_checksums;
+	}
+	
+	public void setAnimatedImageChecksums(List<String> animated_image_checksums) {
+		this.animated_image_checksums = animated_image_checksums;
 	}
 	
 	public List<Screenshot> getScreenshots() {

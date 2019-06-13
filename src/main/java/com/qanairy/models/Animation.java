@@ -17,6 +17,7 @@ public class Animation implements Transition, Persistable {
 	private String key;
 	private boolean is_continuous;
 	private List<String> image_urls;
+	private List<String> image_checksums;
 	
 	public List<String> getImageUrls() {
 		return image_urls;
@@ -32,11 +33,12 @@ public class Animation implements Transition, Persistable {
 	 * 
 	 * @pre image_urls != null
 	 */
-	public Animation(List<String> image_urls, boolean is_continuous) {
+	public Animation(List<String> image_urls, boolean is_continuous, List<String> image_checksums) {
 		assert image_urls != null;
 		setType("Animation");
 		setImageUrls(image_urls);
 		setIsContinuous(is_continuous);
+		setImageChecksums(image_checksums);
 		setKey(generateKey());
 	}
 
@@ -80,6 +82,14 @@ public class Animation implements Transition, Persistable {
 
 	public void setIsContinuous(boolean is_continuous) {
 		this.is_continuous = is_continuous;
+	}
+
+	public List<String> getImageChecksums() {
+		return image_checksums;
+	}
+
+	public void setImageChecksums(List<String> image_checksums) {
+		this.image_checksums = image_checksums;
 	}
 
 }

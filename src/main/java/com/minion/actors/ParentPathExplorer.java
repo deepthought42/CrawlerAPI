@@ -273,10 +273,7 @@ public class ParentPathExplorer extends AbstractActor {
 					discovery_service.incrementTestCount(message.getDiscovery().getKey());
 					
 					DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
-					//send email if this is the last test
-			  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
-				    	email_service.sendSimpleMessage(message.getAccountKey(), "Discovery has finished running", "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
-					}
+					
 					try{
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				  	}catch(Exception e){

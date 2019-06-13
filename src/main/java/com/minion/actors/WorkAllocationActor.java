@@ -10,8 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.DiscoveryStatus;
+import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.message.ExplorationPathMessage;
 
 import akka.actor.AbstractActor;
@@ -40,11 +43,14 @@ public class WorkAllocationActor extends AbstractActor  {
 
 	@Autowired
 	private ActorSystem actor_system;
-		
+
+	@Autowired
+	private DiscoveryRecordRepository discovery_repo;
+
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 	      MemberEvent.class, UnreachableMember.class);
 	}
 
@@ -58,11 +64,17 @@ public class WorkAllocationActor extends AbstractActor  {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, acct_message -> {
+					DiscoveryRecord discovery_record = discovery_repo.findByKey(acct_message.getOptions().get("discovery_key").toString());
+
+					if(discovery_record != null && discovery_record.getStatus().equals(DiscoveryStatus.STOPPED)){
+						return;
+					}
+
 					if(acct_message.getData() instanceof ExploratoryPath ||
 							acct_message.getData() instanceof URL){
 						String browser_name = acct_message.getOptions().get("browser").toString();
-						Message<?> msg = acct_message.clone();	
-						
+						Message<?> msg = acct_message.clone();
+
 						if(acct_message.getData() instanceof ExploratoryPath){
 							ActorRef exploratory_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
@@ -73,10 +85,10 @@ public class WorkAllocationActor extends AbstractActor  {
 							final ActorRef url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 							//final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
-							url_browser_actor.tell(msg, getSelf() );
+							url_browser_actor.tell(acct_message, getSelf() );
 						}
 					}
-					else if(acct_message.getData() instanceof Test){					
+					else if(acct_message.getData() instanceof Test){
 						final ActorRef testing_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("testingActor"), "testing_actor"+UUID.randomUUID());
 						testing_actor.tell(acct_message, getSelf() );
@@ -96,7 +108,7 @@ public class WorkAllocationActor extends AbstractActor  {
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.info("Member is Removed: {}", mRemoved.member());
-				})	
+				})
 				.matchAny(o -> {
 					log.info("received unknown message");
 				})

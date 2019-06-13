@@ -467,7 +467,8 @@ public class BrowserService {
 
 			log.warn("setting animated image urls :: " + animation.getImageUrls().size());
 			page_state.setAnimatedImageUrls(animation.getImageUrls());
-
+			page_state.setAnimatedImageChecksums(animation.getImageChecksums());
+			
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
 			page_state.addScreenshot(screenshot);
 

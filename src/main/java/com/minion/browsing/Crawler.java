@@ -143,7 +143,7 @@ public class Crawler {
 					Timing.pauseThread(1000);
 				}
 				*/
-
+				browser.waitForPageToLoad();
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
 				browser.setYScrollOffset(p.getY());
@@ -263,6 +263,7 @@ public class Crawler {
 
 				performAction(action, last_element, browser.getDriver());
 				Timing.pauseThread(1000);
+				browser.waitForPageToLoad();
 				//BrowserUtils.getElementAnimation(browser, last_element, host_channel);
 
 				Point p = browser.getViewportScrollOffset();
@@ -439,6 +440,7 @@ public class Crawler {
 						//TODO: Replace the following with animation detection
 						//Timing.pauseThread(1000);
 					}
+					browser.waitForPageToLoad();
 					Point p = browser.getViewportScrollOffset();
 					browser.setXScrollOffset(p.getX());
 					browser.setYScrollOffset(p.getY());
@@ -638,6 +640,7 @@ public class Crawler {
 
 				performAction(action, last_element, browser.getDriver());
 				Timing.pauseThread(1000);
+				browser.waitForPageToLoad();
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());

@@ -8,6 +8,7 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -256,7 +257,6 @@ public class BrowserService {
 		}while(error_occurred);
 		log.warn("returning page states : "+page_states.size()+ "   :    "+url);
 
-		all_elements = new ArrayList<ElementState>(element_xpaths.values());
 		elements = new ArrayList<>(all_elements);
 		
 		elements_built_successfully = true;
@@ -264,6 +264,9 @@ public class BrowserService {
 		int idx = 0;
 		while(element_xpaths.keySet().size() > 0){
 			try{
+				all_elements = new ArrayList<ElementState>(element_xpaths.values());
+				Collections.sort(all_elements);
+				
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
 				log.warn("retrieving transition before building page states");
@@ -283,9 +286,9 @@ public class BrowserService {
 				}
 				*/
 	
-				if(!isElementVisibleInPane(browser, elements.get(0)) || iter_idx > 0){
-					log.warn("run : " + idx + ";    scrolling to element at :: " + elements.get(0).getXLocation()  + " : "+ elements.get(0).getYLocation() + "  :   " + elements.get(0).getWidth()  + " : "+ elements.get(0).getHeight()+ "    :    " + url);
-					browser.scrollTo(elements.get(0).getXLocation(), elements.get(0).getYLocation());
+				if(!isElementVisibleInPane(browser, all_elements.get(0)) || iter_idx > 0){
+					log.warn("run : " + idx + ";    scrolling to element at :: " + all_elements.get(0).getXLocation()  + " : "+ all_elements.get(0).getYLocation() + "  :   " + all_elements.get(0).getWidth()  + " : "+ all_elements.get(0).getHeight()+ "    :    " + url);
+					browser.scrollTo(all_elements.get(0).getXLocation(), all_elements.get(0).getYLocation());
 				}
 	
 				PageState page_state = buildPage(browser, all_elements);

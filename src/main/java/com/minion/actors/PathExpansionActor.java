@@ -111,7 +111,6 @@ public class PathExpansionActor extends AbstractActor {
 				String discovery_key = message.getOptions().get("discovery_key").toString();
 				String browser_name = message.getOptions().get("browser").toString();
 
-				ArrayList<ExploratoryPath> pathExpansions = new ArrayList<ExploratoryPath>();
 				log.warn("looking up discovery record");
 				DiscoveryRecord discovery_record = discovery_service.findByKey(discovery_key);
 

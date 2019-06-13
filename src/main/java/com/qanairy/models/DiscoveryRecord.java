@@ -35,7 +35,7 @@ public class DiscoveryRecord implements Persistable {
 	public DiscoveryRecord(){}
 
 	public DiscoveryRecord(Date started_timestamp, String browser_name, String domain_url,
-							Date last_path_ran, int test_cnt, int total_cnt, int examined_cnt,
+							int test_cnt, int total_cnt, int examined_cnt,
 							DiscoveryStatus status){
 		assert started_timestamp != null;
 		assert browser_name != null;

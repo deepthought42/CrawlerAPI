@@ -125,16 +125,7 @@ public class DiscoveryController {
     	*/
 
     	Domain domain = domain_service.findByHost(url);
-
-		DiscoveryRecord last_discovery_record = null;
-		Date started_date = new Date(0L);
-		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
-			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
-				started_date = record.getStartTime();
-				last_discovery_record = record;
-			}
-		}
-
+    	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
 
     	Date now = new Date();
     	long diffInMinutes = 10000;

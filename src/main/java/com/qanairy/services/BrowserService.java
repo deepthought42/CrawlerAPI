@@ -156,7 +156,7 @@ public class BrowserService {
 				log.warn("retrieving transition before building page states");
 				BrowserUtils.getPageTransition(url, browser, host);
 
-				log.warn("elements all built successfully :: "+elements_built_successfully);
+				log.warn("elements all built successfully :: " + elements_built_successfully);
 				if(!elements_built_successfully){
 					//get current viewport screenshot
 					List<WebElement> web_elements = browser.getDriver().findElements(By.xpath("//body//*"));
@@ -167,7 +167,10 @@ public class BrowserService {
 					web_elements = BrowserService.filterNonChildElements(web_elements);
 					web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
 
-					web_elements = web_elements.subList(last_elem_idx, web_elements.size());
+					if(last_elem_idx > 0){
+						web_elements = web_elements.subList(last_elem_idx, web_elements.size());
+					}
+					
 					for(WebElement elem: web_elements){
 						ElementState element_state = buildElementState(browser, elem);
 						element_xpaths.put(element_state.getXpath(), element_state);
@@ -219,7 +222,7 @@ public class BrowserService {
 				
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
-				log.warn("retrieving transition before building page states");
+				log.warn("retrieving element xpath before building page states");
 				BrowserUtils.getPageTransition(url, browser, host);
 				
 				log.warn("checking if element is visible in page");
@@ -230,10 +233,14 @@ public class BrowserService {
 	
 				log.warn("building page state with elements :: " + elements.size());
 				PageState page_state = buildPage(browser, elements);
+				log.warn("done building page state ");
 				page_states.add(page_state);
+				log.warn("page states ::   " + page_states.size());
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
 				}
+				
+				log.warn("added elements to hash ");
 	
 				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, page_state.getElements());
 				iter_idx++;

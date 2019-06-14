@@ -41,6 +41,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
@@ -92,6 +93,7 @@ public class BrowserService {
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
+	@Deprecated
 	public boolean checkIfLandable(String browser, PageState page_state){
 		boolean isLandable = false;
 		boolean page_visited_successfully = false;
@@ -133,6 +135,27 @@ public class BrowserService {
 		
 		log.warn("is page state landable  ?? :: "+isLandable);
 		return isLandable;
+	}
+	
+	/**
+	 * 
+	 * @param browser_name
+	 * @param page_state
+	 * @return
+	 * @throws IOException 
+	 * @throws GridException 
+	 */
+	public boolean checkIfLandable(String browser, PageState result, List<PathObject> path_objects){
+		String last_url = "";
+		//find last page in path
+		for(int idx = path_objects.size()-1; idx>=0; idx--){
+			if(path_objects.get(idx) instanceof PageState){
+				last_url = ((PageState)path_objects.get(idx)).getUrl();
+				break;
+			}
+		}
+		
+		return !last_url.equals(result.getUrl());
 	}
 	
 	public List<PageState> buildPageStates(String url, String browser_name, String host){

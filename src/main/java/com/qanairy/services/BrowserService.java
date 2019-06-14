@@ -310,7 +310,7 @@ public class BrowserService {
 			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), all_elements, viewport_screenshot);
 			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 			
-			PageState page_state = new PageState( page_url.toString(),
+			PageState page_state = new PageState( url_without_params,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(), 
@@ -469,7 +469,7 @@ public class BrowserService {
 			List<ElementState> visible_elements = getVisibleElements(browser, null, page_url.toString(), viewport_screenshot);
 			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 			
-			PageState page_state = new PageState( page_url.toString(),
+			PageState page_state = new PageState( url_without_params,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(), 

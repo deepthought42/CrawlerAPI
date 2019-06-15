@@ -161,7 +161,7 @@ public class PathExpansionActor extends AbstractActor {
 							log.warn("checking if landability needs to be tested");
 							if(time_diff.compareTo(minimum_diff) > 0){
 								//have page checked for landability
-								boolean isLandable = browser_service.checkIfLandable(browser_name, result_page);
+								boolean isLandable = browser_service.checkIfLandable(browser_name, result_page, test.getPathObjects() );
 								result_page.setLastLandabilityCheck(LocalDateTime.now());
 								result_page.setLandable(isLandable);
 								result_page = page_state_service.save(result_page);

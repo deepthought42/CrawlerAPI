@@ -43,6 +43,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
@@ -94,47 +95,17 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws GridException
 	 */
-	public boolean checkIfLandable(String browser, PageState page_state){
-		boolean isLandable = false;
-		boolean page_visited_successfully = false;
-		int cnt  = 0;
-		do{
-			page_visited_successfully = false;
-			Browser landable_browser = null;
-			try{
-				landable_browser = BrowserConnectionFactory.getConnection(browser, BrowserEnvironment.DISCOVERY);
-				landable_browser.navigateTo(page_state.getUrl());
+	public boolean checkIfLandable(String browser, PageState result, List<PathObject> path_objects){
+		String last_url = "";
+		//find last page in path
+		for(int idx = path_objects.size()-1; idx>=0; idx--){
+			if(path_objects.get(idx) instanceof PageState){
+				last_url = ((PageState)path_objects.get(idx)).getUrl();
+				break;
+			}
+		}
 
-				PageState landable_page_state = buildPage(landable_browser);
-				log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				log.warn("page state key, checksum    : " + page_state.getKey()+"   ,   "+page_state.getScreenshotChecksums() +" :: "+page_state.getUrl());
-				log.warn("page state key, checksum    : " + landable_page_state.getKey()+"   ,   "+landable_page_state.getScreenshotChecksums()+" :: "+page_state.getUrl());
-				log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				if(page_state.equals(landable_page_state)){
-					isLandable = true;
-				}
-				else{
-					isLandable = false;
-				}
-
-				page_visited_successfully = true;
-			}
-			catch(GridException e){
-				log.warn(e.getMessage());
-			}
-			catch(Exception e){
-				log.info("ERROR CHECKING LANDABILITY OF PAGE AT ::: "+ e.getMessage());
-			}
-			finally {
-				if(landable_browser != null){
-					landable_browser.close();
-				}
-			}
-			cnt++;
-		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
-
-		log.warn("is page state landable  ?? :: "+isLandable);
-		return isLandable;
+		return !last_url.equals(result.getUrl());
 	}
 
 	public List<PageState> buildPageStates(String url, String browser_name, String host) throws MalformedURLException, IOException, Exception{
@@ -160,7 +131,7 @@ public class BrowserService {
 				if(!elements_built_successfully){
 					//get current viewport screenshot
 					List<WebElement> web_elements = browser.getDriver().findElements(By.xpath("//body//*"));
-					
+
 					web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
 					web_elements = BrowserService.filterStructureTags(web_elements);
 					web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
@@ -170,7 +141,7 @@ public class BrowserService {
 					if(last_elem_idx > 0){
 						web_elements = web_elements.subList(last_elem_idx, web_elements.size());
 					}
-					
+
 					for(WebElement elem: web_elements){
 						ElementState element_state = buildElementState(browser, elem);
 						element_xpaths.put(element_state.getXpath(), element_state);
@@ -211,7 +182,7 @@ public class BrowserService {
 		log.warn("returning elements list : "+element_xpaths.size()+ "   :    "+url);
 
 		elements = new ArrayList<>(element_xpaths.values());
-		
+
 		elements_built_successfully = true;
 		int iter_idx=0;
 		int idx = 0;
@@ -219,18 +190,18 @@ public class BrowserService {
 			try{
 				all_elements = new ArrayList<ElementState>(element_xpaths.values());
 				Collections.sort(all_elements);
-				
+
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
 				log.warn("retrieving element xpath before building page states");
 				BrowserUtils.getPageTransition(url, browser, host);
-				
+
 				log.warn("checking if element is visible in page");
 				if(!isElementVisibleInPane(browser, all_elements.get(0)) || iter_idx > 0){
 					log.warn("run : " + idx + ";    scrolling to element at :: " + all_elements.get(0).getXLocation()  + " : "+ all_elements.get(0).getYLocation() + "  :   " + all_elements.get(0).getWidth()  + " : "+ all_elements.get(0).getHeight()+ "    :    " + url);
 					browser.scrollTo(all_elements.get(0).getXLocation(), all_elements.get(0).getYLocation());
 				}
-	
+
 				log.warn("building page state with elements :: " + elements.size());
 				PageState page_state = buildPage(browser, elements);
 				log.warn("done building page state ");
@@ -239,22 +210,22 @@ public class BrowserService {
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
 				}
-				
+
 				log.warn("added elements to hash ");
-	
+
 				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, page_state.getElements());
 				iter_idx++;
 				log.warn("element xpaths  :    " + element_xpaths.size());
 			}catch(Exception e){}
 		}
-		
+
 		//extract all element screenshots
 		for(PageState page_state : page_states){
 			for(ElementState element_state : page_state.getElements()){
 				retrieveAndUploadBrowserScreenshot(browser, element_state, ImageIO.read(new URL(page_state.getScreenshotUrl())), host);
 			}
 		}
-		
+
 		error_occurred = false;
 
 		return page_states;
@@ -293,7 +264,7 @@ public class BrowserService {
 		if(page_state_record2 == null){
 			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
 		}
-		
+
 		if(page_state_record2 != null){
 			log.warn("existing page with screenshot found   :    " + url_without_params);
 			viewport_screenshot.flush();
@@ -311,11 +282,8 @@ public class BrowserService {
 					visible_elements.add(element);
 				}
 			}
-			
-			//List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), all_elements, viewport_screenshot);
-			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 
-			PageState page_state = new PageState( page_url.toString(),
+			PageState page_state = new PageState( url_without_params,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(),
@@ -345,7 +313,7 @@ public class BrowserService {
 		}
 	}
 
-	
+
 	private static Map<String, ElementState> filterElementStatesFromList(Map<String, ElementState> elements,
 			List<ElementState> values) {
 		HashMap<String, ElementState> elements_hash = new HashMap<>(elements);
@@ -454,7 +422,7 @@ public class BrowserService {
 		if(page_state_record2 == null){
 			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
 		}
-		
+
 		if(page_state_record2 != null){
 			log.warn("existing page with screenshot found   :    " + url_without_params);
 			viewport_screenshot.flush();
@@ -470,7 +438,7 @@ public class BrowserService {
 			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), viewport_screenshot);
 			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 
-			PageState page_state = new PageState( page_url.toString(),
+			PageState page_state = new PageState( url_without_params,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(),
@@ -1203,7 +1171,7 @@ public class BrowserService {
 		}
 		return screenshot_url;
 	}
-	
+
 	/**
 	 *
 	 * @param driver

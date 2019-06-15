@@ -304,7 +304,7 @@ public class PageState implements Persistable, PathObject {
 	 */
 	@Override
 	public String toString() {
-		return this.getUrl().toString();
+		return this.getUrl();
 	}
 
 	/**
@@ -316,7 +316,7 @@ public class PageState implements Persistable, PathObject {
 
 		PageState page = null;
 		try {
-			page = new PageState(getUrl().toString(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
+			page = new PageState(getUrl(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
 			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
 			page.setAnimatedImageChecksums(this.getAnimatedImageChecksums());
 

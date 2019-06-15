@@ -41,6 +41,7 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Screenshot;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
@@ -92,47 +93,17 @@ public class BrowserService {
 	 * @throws IOException 
 	 * @throws GridException 
 	 */
-	public boolean checkIfLandable(String browser, PageState page_state){
-		boolean isLandable = false;
-		boolean page_visited_successfully = false;
-		int cnt  = 0;
-		do{
-			page_visited_successfully = false;
-			Browser landable_browser = null;
-			try{
-				landable_browser = BrowserConnectionFactory.getConnection(browser, BrowserEnvironment.DISCOVERY);
-				landable_browser.navigateTo(page_state.getUrl());
-				
-				PageState landable_page_state = buildPage(landable_browser);
-				log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				log.warn("page state key, checksum    : " + page_state.getKey()+"   ,   "+page_state.getScreenshotChecksums() +" :: "+page_state.getUrl());
-				log.warn("page state key, checksum    : " + landable_page_state.getKey()+"   ,   "+landable_page_state.getScreenshotChecksums()+" :: "+page_state.getUrl());
-				log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				if(page_state.equals(landable_page_state)){
-					isLandable = true;
-				}
-				else{
-					isLandable = false;
-				}
-
-				page_visited_successfully = true;
+	public boolean checkIfLandable(String browser, PageState result, List<PathObject> path_objects){
+		String last_url = "";
+		//find last page in path
+		for(int idx = path_objects.size()-1; idx>=0; idx--){
+			if(path_objects.get(idx) instanceof PageState){
+				last_url = ((PageState)path_objects.get(idx)).getUrl();
+				break;
 			}
-			catch(GridException e){
-				log.warn(e.getMessage());
-			}
-			catch(Exception e){
-				log.info("ERROR CHECKING LANDABILITY OF PAGE AT ::: "+ e.getMessage());
-			}
-			finally {
-				if(landable_browser != null){
-					landable_browser.close();
-				}
-			}
-			cnt++;
-		}while(!page_visited_successfully && cnt < Integer.MAX_VALUE);
+		}
 		
-		log.warn("is page state landable  ?? :: "+isLandable);
-		return isLandable;
+		return !last_url.equals(result.getUrl());
 	}
 	
 	public List<PageState> buildPageStates(String url, String browser_name, String host){
@@ -287,7 +258,7 @@ public class BrowserService {
 			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), all_elements, viewport_screenshot);
 			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 			
-			PageState page_state = new PageState( page_url.toString(),
+			PageState page_state = new PageState( url_without_params,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(), 
@@ -446,7 +417,7 @@ public class BrowserService {
 			List<ElementState> visible_elements = getVisibleElements(browser, null, page_url.toString(), viewport_screenshot);
 			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 			
-			PageState page_state = new PageState( page_url.toString(),
+			PageState page_state = new PageState( url_without_params,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(), 

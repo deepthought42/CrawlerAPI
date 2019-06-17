@@ -64,7 +64,7 @@ public class TestCreatorService {
 	  	List<String> path_keys = new ArrayList<String>();
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	if(transition != null &&
-	  			((transition instanceof Redirect && ((Redirect)transition).getUrls().size() > 0)
+	  			((transition instanceof Redirect && ((Redirect)transition).getUrls().size() > 1)
 	  				|| transition instanceof Animation && ((Animation)transition).getImageUrls().size() > 1 && ((Animation)transition).getIsContinuous())){
 	  		path_keys.add(transition.getKey());
 	  		path_objects.add(transition);

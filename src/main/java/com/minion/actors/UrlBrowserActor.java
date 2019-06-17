@@ -156,7 +156,7 @@ public class UrlBrowserActor extends AbstractActor {
 
 								List<String> path_keys = new ArrayList<String>();
 							  	List<PathObject> path_objects = new ArrayList<PathObject>();
-							  	if(redirect != null){
+							  	if(redirect != null && redirect.getUrls().size() > 1){
 							  		path_keys.add(redirect.getKey());
 							  		path_objects.add(redirect);
 							  	}

@@ -676,11 +676,8 @@ public class BrowserService {
 		int height = dimension.getHeight();
 		int width = dimension.getWidth();
 
-		if(x > x_offset && y > y_offset && (x+width) < (browser.getViewportSize().getWidth()+x_offset)
-				&& (y+height) < (browser.getViewportSize().getHeight()+y_offset)){
-			return true;
-		}
-		return false;
+		return x > x_offset && y > y_offset && (x+width) < (browser.getViewportSize().getWidth()+x_offset)
+				&& (y+height) < (browser.getViewportSize().getHeight()+y_offset);
 	}
 
 	public static boolean isElementVisibleInPane(Browser browser, ElementState elem){
@@ -693,11 +690,8 @@ public class BrowserService {
 		int height = elem.getHeight();
 		int width = elem.getWidth();
 
-		if(x >= x_offset && y >= y_offset && (x+width) <= (browser.getViewportSize().getWidth()+x_offset)
-				&& (y+height) <= (browser.getViewportSize().getHeight()+y_offset)){
-			return true;
-		}
-		return false;
+		return x >= x_offset && y >= y_offset && (x+width) <= (browser.getViewportSize().getWidth()+x_offset)
+				&& (y+height) <= (browser.getViewportSize().getHeight()+y_offset);
 	}
 
 	public static boolean isElementVisibleInPane(int x_offset, int y_offset, WebElement elem, Dimension viewport_size){
@@ -710,11 +704,8 @@ public class BrowserService {
 		int height = dimension.getHeight();
 		int width = dimension.getWidth();
 
-		if(x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset)
-				&& (y+height) <= (viewport_size.getHeight()+y_offset)){
-			return true;
-		}
-		return false;
+		return x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset)
+				&& (y+height) <= (viewport_size.getHeight()+y_offset);
 	}
 
 	/**

@@ -233,6 +233,7 @@ public class Browser {
 	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
+		
 		//options.setHeadless(true);
 
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
@@ -325,6 +326,40 @@ public class Browser {
 		int point_y = point.getY();
 		
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
+	}
+	
+	/**
+	 * 
+	 * @param screenshot
+	 * @param elem
+	 * @return
+	 * @throws IOException
+	 */
+		
+	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+		//calculate element position within screen
+		Point point = getLocationInViewport(elem, x_offset, y_offset);
+		
+		int point_x = point.getX();
+		int point_y = point.getY();
+		
+		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
+	}
+	
+	/**
+	 * 
+	 * @param screenshot
+	 * @param elem
+	 * @return
+	 * @throws IOException
+	 */
+		
+	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot) throws IOException{
+		//calculate element position within screen		
+		int point_x = elem.getXLocation();
+		int point_y = elem.getYLocation();
+		
+		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
@@ -457,8 +492,6 @@ public class Browser {
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
 		Timing.pauseThread(1000);
-		//WebDriverWait wait = new WebDriverWait(driver, 10);
-		//wait.until(ExpectedConditions.visibilityOf(elem));
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -466,7 +499,9 @@ public class Browser {
     }
 	
 	public void scrollTo(int x_offset, int y_offset) 
-    { 
+    {
+		log.warn("current screen offset  ::   " +getXScrollOffset() + " , "+getYScrollOffset());
+		log.warn("scrolling to    ("+x_offset + " : "+y_offset+")");
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
 		Timing.pauseThread(1000);
@@ -474,6 +509,9 @@ public class Browser {
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
+		
+		log.warn("after offset :: "+getXScrollOffset() + "  :  "+getYScrollOffset());
+		
     }
 	
 	
@@ -561,6 +599,20 @@ public class Browser {
 		Point location = element.getLocation();
 		int y_coord = calculateYCoordinate(y_offset, location);
 		int x_coord = calculateXCoordinate(x_offset, location);
+       
+		return new Point(x_coord, y_coord);
+	}
+	
+	/**
+	 * Retrieve coordinates of {@link WebElement} in the current viewport
+	 * 
+	 * @param element {@link WebElement}
+	 * @return {@link Point} coordinates
+	 */
+	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
+		log.warn("element location  before math   ::   "+element.getXLocation() + " , "+element.getYLocation());
+		int y_coord = element.getYLocation() - y_offset;
+		int x_coord = element.getXLocation() - x_offset;
        
 		return new Point(x_coord, y_coord);
 	}

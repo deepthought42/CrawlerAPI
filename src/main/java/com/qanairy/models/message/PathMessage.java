@@ -48,5 +48,9 @@ public class PathMessage {
 
 	public void setOptions(Map<String, Object> options) {
 		this.options = options;
-	}	
+	}
+	
+	public PathMessage clone(){
+		return new PathMessage(keys, path_objects, discovery, account_key, options);
+	}
 }

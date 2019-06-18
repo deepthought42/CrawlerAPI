@@ -6,22 +6,15 @@ import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
 
-import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +28,8 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.qanairy.api.exceptions.PagesAreNotMatchingException;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -50,8 +40,6 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
-import com.qanairy.services.ElementStateService;
-import com.qanairy.services.EmailService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -71,16 +59,10 @@ public class ParentPathExplorer extends AbstractActor {
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	
 	@Autowired
-	private EmailService email_service;
-	
-	@Autowired
 	private ActorSystem actor_system;
 	
 	@Autowired
 	private DiscoveryRecordService discovery_service;
-	
-	@Autowired
-	private ElementStateService element_service;
 	
 	@Autowired
 	private BrowserService browser_service;

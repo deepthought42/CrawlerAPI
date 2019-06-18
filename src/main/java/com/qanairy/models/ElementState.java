@@ -24,7 +24,7 @@ import com.qanairy.models.rules.Rule;
  *  maintained by ElementState though. 
  */
 @NodeEntity
-public class ElementState implements Persistable, PathObject {
+public class ElementState implements Persistable, PathObject, Comparable<ElementState> {
 	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementState.class);
 
@@ -42,6 +42,7 @@ public class ElementState implements Persistable, PathObject {
 	private int y_location;
 	private int width;
 	private int height;
+	private String inner_html;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -70,7 +71,8 @@ public class ElementState implements Persistable, PathObject {
 	 * @pre !screenshot_url.isEmpty()
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
-			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height){
+			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
+			String inner_html){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -89,6 +91,7 @@ public class ElementState implements Persistable, PathObject {
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
+		setInnerHtml(inner_html);
 		setKey(generateKey());
 	}
 	
@@ -106,7 +109,9 @@ public class ElementState implements Persistable, PathObject {
 	 * @pre !screenshot_url.isEmpty()
 	 *  
 	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, String screenshot_url, String checksum, int x_location, int y_location, int width, int height){
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
+						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
+						String inner_html){
 		assert name != null;
 		assert xpath != null;
 		assert checksum != null;
@@ -124,6 +129,7 @@ public class ElementState implements Persistable, PathObject {
 		setYLocation(y_location);
 		setWidth(width);
 		setHeight(height);
+		setInnerHtml(inner_html);
 		setKey(generateKey());
 	}
 	/**
@@ -304,7 +310,10 @@ public class ElementState implements Persistable, PathObject {
 		
 		key += this.getName();
 		key += this.getText();
-
+		key += this.getXLocation();
+		key += this.getYLocation();
+		key += this.getInnerHtml();
+		
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 	
@@ -378,5 +387,20 @@ public class ElementState implements Persistable, PathObject {
 
 	public void setHeight(int height) {
 		this.height = height;
+	}
+
+	@Override
+	public int compareTo(ElementState o) {
+		 if(this.getYLocation() == o.getYLocation())
+             return 0;
+         return this.getYLocation() < o.getYLocation() ? -1 : 1;
+	}
+
+	public String getInnerHtml() {
+		return inner_html;
+	}
+
+	public void setInnerHtml(String inner_html) {
+		this.inner_html = inner_html;
 	}
 }

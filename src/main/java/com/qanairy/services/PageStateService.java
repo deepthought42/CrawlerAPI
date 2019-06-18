@@ -55,6 +55,9 @@ public class PageStateService {
 				
 		for(Screenshot screenshot : page_state.getScreenshots()){
 			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
+			if(page_state_record == null){
+				findByAnimationImageChecksum(screenshot.getChecksum());
+			}
 			if(page_state_record != null){
 				break;
 			}
@@ -63,7 +66,8 @@ public class PageStateService {
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 			page_state_record.setElements(page_state.getElements());
-	
+			page_state_record.setAnimatedImageUrls(page_state.getAnimatedImageUrls());
+			page_state_record.setAnimatedImageChecksums(page_state.getAnimatedImageChecksums());
 			Set<Form> forms = new HashSet<Form>();
 			for(Form form : page_state.getForms()){
 				forms.add(form_service.save(form));
@@ -154,6 +158,10 @@ public class PageStateService {
 	
 	public PageState findByScreenshotChecksum(String screenshot_checksum){
 		return page_state_repo.findByScreenshotChecksumsContains(screenshot_checksum);		
+	}
+	
+	public PageState findByAnimationImageChecksum(String screenshot_checksum){
+		return page_state_repo.findByAnimationImageChecksum(screenshot_checksum);		
 	}
 	
 	public List<ElementState> getElementStates(String page_key){

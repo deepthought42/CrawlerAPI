@@ -59,7 +59,8 @@ public class PageState implements Persistable, PathObject {
 	private String type;
 	private List<String> screenshot_checksums;
 	private List<String> animated_image_urls;
-
+	private List<String> animated_image_checksums;
+	
 	@Relationship(type = "HAS")
 	private List<Screenshot> screenshots;
 		
@@ -107,6 +108,7 @@ public class PageState implements Persistable, PathObject {
 		setScrollYOffset(scroll_y_offset);
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
+		setAnimatedImageChecksums(new ArrayList<>());
 		setKey(generateKey());
 	}
 
@@ -142,6 +144,7 @@ public class PageState implements Persistable, PathObject {
 		setViewportHeight(viewport_height);
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
+		setAnimatedImageChecksums(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
@@ -184,6 +187,7 @@ public class PageState implements Persistable, PathObject {
 		setForms(new HashSet<Form>());
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
+		setAnimatedImageChecksums(new ArrayList<>());
 		setKey(generateKey());
 	}
 	
@@ -314,6 +318,8 @@ public class PageState implements Persistable, PathObject {
 		try {
 			page = new PageState(getUrl(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
 			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
+			page.setAnimatedImageChecksums(this.getAnimatedImageChecksums());
+
 		} catch (NoSuchAlgorithmException | IOException e) {
 			log.info("Error cloning page : " + page.getKey() + ";  "+e.getMessage());
 		}
@@ -567,6 +573,14 @@ public class PageState implements Persistable, PathObject {
 	
 	public void setAnimatedImageUrls(List<String> animated_image_urls) {
 		this.animated_image_urls = animated_image_urls;
+	}
+
+	public List<String> getAnimatedImageChecksums() {
+		return animated_image_checksums;
+	}
+	
+	public void setAnimatedImageChecksums(List<String> animated_image_checksums) {
+		this.animated_image_checksums = animated_image_checksums;
 	}
 	
 	public List<Screenshot> getScreenshots() {

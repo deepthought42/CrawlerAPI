@@ -24,9 +24,9 @@ import org.slf4j.Logger;
 import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
-import com.qanairy.models.Animation;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -102,7 +102,13 @@ public class Crawler {
 			expected_page = ((PageState)ordered_path_objects.get(1));
 		}
 		else if(ordered_path_objects.get(0) instanceof PageState){
-			expected_page = ((PageState)ordered_path_objects.get(0));
+			//find first page
+			for(PathObject obj : ordered_path_objects){
+				if(obj instanceof PageState){
+					expected_page = ((PageState)obj);
+					break;
+				}
+			}
 		}
 
 		browser.navigateTo(expected_page.getUrl());
@@ -159,8 +165,10 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				browser.waitForPageToLoad();
 			}
-			else if(current_obj instanceof Animation){
-				BrowserUtils.getAnimation(browser, host_channel);
+			else if(current_obj instanceof PageLoadAnimation){
+				log.warn("Animation type   :  "+((PageLoadAnimation)current_obj));
+				log.warn("crawling loading animation");
+				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -228,9 +236,15 @@ public class Crawler {
 			Redirect redirect = (Redirect)ordered_path_objects.get(0);
 			init_url = redirect.getStartUrl();
 		}
-		else if(ordered_path_objects.get(0) instanceof PageState){
-			expected_page = ((PageState)ordered_path_objects.get(0));
-			init_url = expected_page.getUrl();
+		else {
+			//find first page
+			for(PathObject obj : ordered_path_objects){
+				if(obj instanceof PageState){
+					expected_page = ((PageState)obj);
+					init_url = expected_page.getUrl();	
+					break;
+				}
+			}
 		}
 
 		//log.warn("navigating to url :: " + init_url);
@@ -239,6 +253,7 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
 			if(current_obj instanceof PageState){
+				log.warn("current object type :: " + current_obj.getClass().getName() + "   ;;   "+current_obj.getType());
 				expected_page = (PageState)current_obj;
 
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
@@ -264,7 +279,6 @@ public class Crawler {
 				performAction(action, last_element, browser.getDriver());
 				Timing.pauseThread(1000);
 				browser.waitForPageToLoad();
-				//BrowserUtils.getElementAnimation(browser, last_element, host_channel);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -280,6 +294,12 @@ public class Crawler {
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				//browser.waitForPageToLoad();
+			}
+			else if(current_obj instanceof PageLoadAnimation){
+				log.warn("Animation type   :  "+((PageLoadAnimation)current_obj));
+				
+				log.warn("crawling loading animation");
+				BrowserUtils.getLoadingAnimation(browser, host_channel, init_url);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -381,8 +401,10 @@ public class Crawler {
 
 				log.warn("seting last url to redirect url :: " + last_url);
 			}
-			else if(current_obj instanceof Animation){
-				BrowserUtils.getAnimation(browser, host_channel);
+			else if(current_obj instanceof PageLoadAnimation){
+				log.warn("Animation type   :  "+((PageLoadAnimation)current_obj));
+				log.warn("crawling loading animation");
+				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;

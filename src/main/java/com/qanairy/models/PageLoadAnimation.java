@@ -6,10 +6,8 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.enums.AnimationType;
-
 @NodeEntity
-public class Animation implements Transition, Persistable {
+public class PageLoadAnimation implements Transition, Persistable {
 
 	@GeneratedValue
     @Id
@@ -19,9 +17,9 @@ public class Animation implements Transition, Persistable {
 	private String key;
 	private List<String> image_urls;
 	private List<String> image_checksums;
-	private AnimationType animation_type;
+	private String page_url;
 	
-	public Animation(){}
+	public PageLoadAnimation(){}
 
 	/**
 	 * 
@@ -29,12 +27,12 @@ public class Animation implements Transition, Persistable {
 	 * 
 	 * @pre image_urls != null
 	 */
-	public Animation(List<String> image_urls, List<String> image_checksums, AnimationType type) {
+	public PageLoadAnimation(List<String> image_urls, List<String> image_checksums, String page_url) {
 		assert image_urls != null;
 		setType("Animation");
 		setImageUrls(image_urls);
 		setImageChecksums(image_checksums);
-		setAnimationType(type);
+		setPageUrl(page_url);
 		setKey(generateKey());
 	}
 
@@ -59,17 +57,12 @@ public class Animation implements Transition, Persistable {
 
 	@Override
 	public void setType(String type) {
-		this.type = "Animation";
+		this.type = "LoadingAnimation";
 	}
 
 	@Override
 	public String generateKey() {
-		String key = "";
-		for(String url : image_urls){
-			key += url;
-		}
-		
-		return getType()+""+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		return getType()+getPageUrl();
 	}
 
 	public List<String> getImageChecksums() {
@@ -80,19 +73,19 @@ public class Animation implements Transition, Persistable {
 		this.image_checksums = image_checksums;
 	}
 
-	public AnimationType getAnimationType() {
-		return animation_type;
-	}
-
-	public void setAnimationType(AnimationType animation_type) {
-		this.animation_type = animation_type;
-	}
-
 	public List<String> getImageUrls() {
 		return image_urls;
 	}
 
 	public void setImageUrls(List<String> image_urls) {
 		this.image_urls = image_urls;
+	}
+
+	public String getPageUrl() {
+		return page_url;
+	}
+
+	public void setPageUrl(String page_url) {
+		this.page_url = page_url;
 	}
 }

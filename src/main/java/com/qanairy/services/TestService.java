@@ -22,6 +22,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
@@ -58,6 +59,9 @@ public class TestService {
 	
 	@Autowired
 	private AnimationService animation_service;
+	
+	@Autowired
+	private PageLoadAnimationService page_load_animation_service;
 	
 	@Autowired
 	private Crawler crawler;
@@ -138,6 +142,9 @@ public class TestService {
 				}
 				else if(path_obj instanceof Animation){
 					path_objects.add(animation_service.save((Animation)path_obj));
+				}
+				else if(path_obj instanceof PageLoadAnimation){
+					path_objects.add(page_load_animation_service.save((PageLoadAnimation)path_obj));
 				}
 			}
 			test.setPathObjects(path_objects);

@@ -73,37 +73,46 @@ public class AnimationDetectionActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PathMessage.class, msg -> {
-					Browser browser = BrowserConnectionFactory.getConnection(msg.getDiscovery().getBrowserName(), BrowserEnvironment.DISCOVERY);
-					PageState page_state = null;
-					int page_idx = 0;
-					//get index of last page state
-					for(PathObject path_object : msg.getPathObjects()){
-						if(path_object instanceof PageState){
-							page_state = (PageState)path_object;
-							break;
+					boolean err = false;
+					do{
+						err = false;
+						try{
+							Browser browser = BrowserConnectionFactory.getConnection(msg.getDiscovery().getBrowserName(), BrowserEnvironment.DISCOVERY);
+							PageState page_state = null;
+							int page_idx = 0;
+							//get index of last page state
+							for(PathObject path_object : msg.getPathObjects()){
+								if(path_object instanceof PageState){
+									page_state = (PageState)path_object;
+									break;
+								}
+								page_idx++;
+							}
+		
+							System.err.println("STARTING ANIMATION DETECTION BY CRAWLING PATH");
+							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
+							
+							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
+							if(animation.getImageUrls().size() > 1){
+								page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
+								page_state = page_state_service.save(page_state);
+							}
+							
+							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+							ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+		
+							PathMessage path_message = msg.clone();
+							path_message.getKeys().set(page_idx, page_state.getKey());
+							path_message.getPathObjects().set(page_idx, page_state);
+							
+							form_discoverer.tell(path_message, getSelf() );
+							path_expansion_actor.tell(path_message, getSelf() );
+						}catch(Exception e){
+							err = true;
 						}
-						page_idx++;
-					}
-
-					crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
-					
-					Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
-					
-					page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
-					page_state = page_state_service.save(page_state);
-
-					
-					final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-					ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-
-					PathMessage path_message = msg.clone();
-					path_message.getKeys().set(page_idx, page_state.getKey());
-					path_message.getPathObjects().set(page_idx, page_state);
-					
-					form_discoverer.tell(path_message, getSelf() );
-					path_expansion_actor.tell(path_message, getSelf() );		
+					}while(err);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

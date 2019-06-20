@@ -17,9 +17,10 @@ import org.slf4j.LoggerFactory;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Animation;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
-import com.qanairy.models.Transition;
+import com.qanairy.models.enums.AnimationType;
 import com.qanairy.services.ScreenshotUploadService;
 
 
@@ -65,7 +66,6 @@ public class BrowserUtils {
 		        	BufferedImage img = browser.getViewportScreenshot();
 					images.add(img);
 				}catch(Exception e){}
-				log.warn("redirect transition detected");
 				start_ms = System.currentTimeMillis();
 				transition_urls.add(new_key);
 				last_key = new_key;
@@ -73,7 +73,6 @@ public class BrowserUtils {
 			//transition is detected if keys are different
 		}while((System.currentTimeMillis() - start_ms) < 1000);
 
-		log.warn("uploading screenshots " );
 		for(BufferedImage img : images){
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
@@ -85,128 +84,11 @@ public class BrowserUtils {
 			}
 		}
 
-		log.warn("creating redirect object");
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);
 
 		return redirect;
-	}
-
-	public static Transition getTransition(String initial_url, Browser browser, String host) throws GridException, IOException{
-		List<String> transition_urls = new ArrayList<String>();
-		List<String> image_checksums = new ArrayList<String>();
-		List<String> image_urls = new ArrayList<String>();
-
-		boolean url_transition_detected = false;
-		boolean animated_transition_detected = false;
-		boolean animated_flag = false;
-		boolean continuous_animation_flag = false;
-
-		long start_ms = System.currentTimeMillis();
-		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
-
-		URL init_url = new URL(initial_url);
-		String last_key = init_url.getHost()+init_url.getPath();
-		if(last_key.charAt(last_key.length()-1) == '/'){
-			last_key = last_key.substring(0, last_key.length()-1);
-		}
-
-		String last_checksum = null;
-		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
-		List<Future<String>> url_futures = new ArrayList<>();
-		int cycles_detected = 0;
-
-		do{
-			//check new url
-			String new_key = browser.getDriver().getCurrentUrl();
-			if(new_key.charAt(0) != 'h'){
-				new_key = 'h'+new_key;
-			}
-			URL new_url = new URL("http://"+new_key);
-			new_key = new_url.getHost()+new_url.getPath();
-			if(new_key.charAt(new_key.length()-1) == '/'){
-				new_key = new_key.substring(0, new_key.length()-1);
-			}
-
-			//check for animation
-			//
-			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
-
-			//calculate screenshot checksum
-			String new_checksum = PageState.getFileChecksum(screenshot);
-
-			animated_transition_detected = !new_checksum.equals(last_checksum);
-	        url_transition_detected = !new_key.equals(last_key);
-
-			log.warn("transition new checksum :: " + new_checksum);
-			log.warn("has transition key been seen before :: " + animated_state_checksum_hash.containsKey(new_checksum));
-			if( animated_state_checksum_hash.containsKey(new_checksum) && cycles_detected >= 10 ){
-				if(animated_state_checksum_hash.keySet().size() > 1 && animated_transition_detected){
-					animated_flag = true;
-					continuous_animation_flag = false;
-				}
-				else{
-					continuous_animation_flag = true;
-					animated_flag = false;
-				}
-				break;
-			}
-			else if( animated_state_checksum_hash.containsKey(new_checksum) && cycles_detected < 10 ){
-				cycles_detected++;
-			}
-			else if( animated_transition_detected ){
-				start_ms = System.currentTimeMillis();
-				image_checksums.add(new_checksum);
-				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
-				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
-			}
-			else if( url_transition_detected ){
-				log.warn("redirect transition detected");
-				start_ms = System.currentTimeMillis();
-				transition_urls.add(new_key);
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
-
-				last_key = new_key;
-			}
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 30000);
-
-		for(Future<String> future: url_futures){
-			try {
-				String url = future.get();
-				log.warn("Getting future response ::  "+url);
-				image_urls.add(url);
-			} catch (InterruptedException e) {
-				log.debug(e.getMessage());
-			} catch (ExecutionException e) {
-				log.debug(e.getMessage());
-			}
-		}
-
-		log.warn("url transition detected  :: " + url_transition_detected);
-		log.warn("transition urls ::   "  + transition_urls.size());
-		log.warn("animation detected :: " + animated_transition_detected);
-
-		if(transition_urls.size() > 1){
-			log.warn("Redirect being returned");
-			Redirect redirect = new Redirect(initial_url, transition_urls);
-			redirect.setImageChecksums(image_checksums);
-			redirect.setImageUrls(image_urls);
-			return redirect;
-		}
-		else if(animated_flag){
-			log.warn("Animation :: " + animated_flag);
-			return new Animation(image_urls, continuous_animation_flag, new ArrayList<>(animated_state_checksum_hash.keySet()));
-		}
-		else if(continuous_animation_flag){
-			log.warn("continuous animation  :   " +continuous_animation_flag);
-			return new Animation(image_urls, continuous_animation_flag, new ArrayList<>(animated_state_checksum_hash.keySet()));
-		}
-
-		return null;
 	}
 
 	public static Animation getAnimation(Browser browser, String host) throws IOException {
@@ -229,8 +111,6 @@ public class BrowserUtils {
 
 			transition_detected = !new_checksum.equals(last_checksum);
 
-			log.warn("new checksum :: " + new_checksum);
-			log.warn("has key been seen before :: " + animated_state_checksum_hash.containsKey(new_checksum));
 			if( animated_state_checksum_hash.containsKey(new_checksum)){
 				break;
 			}
@@ -243,7 +123,7 @@ public class BrowserUtils {
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 1000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -255,6 +135,64 @@ public class BrowserUtils {
 			}
 		}
 
-		return new Animation(image_urls, true, image_checksums);
+		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
+	}
+	
+	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String initial_url) throws IOException {
+		URL new_url = new URL(initial_url);
+
+		String new_host = new_url.getHost();
+		if(!new_host.startsWith("www.")){
+			new_host = "www."+new_host;
+		}
+		String new_key = new_host+new_url.getPath();
+		if(new_key.charAt(new_key.length()-1) == '/'){
+			initial_url = initial_url.substring(0, initial_url.length()-1);
+		}
+		
+		List<String> image_checksums = new ArrayList<String>();
+		List<String> image_urls = new ArrayList<String>();
+		boolean transition_detected = false;
+		long start_ms = System.currentTimeMillis();
+		
+		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
+		String last_checksum = null;
+		String new_checksum = null;
+		List<Future<String>> url_futures = new ArrayList<>();
+		do{
+			//get element screenshot
+			BufferedImage screenshot = browser.getViewportScreenshot();
+
+			//calculate screenshot checksum
+			new_checksum = PageState.getFileChecksum(screenshot);
+
+			transition_detected = !new_checksum.equals(last_checksum);
+
+			if( transition_detected ){
+				start_ms = System.currentTimeMillis();
+				image_checksums.add(new_checksum);
+				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
+				last_checksum = new_checksum;
+				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+			}
+
+			//transition is detected if keys are different
+		}while((System.currentTimeMillis() - start_ms) < 2000);
+
+		for(Future<String> future: url_futures){
+			try {
+				image_urls.add(future.get());
+			} catch (InterruptedException e) {
+				log.debug(e.getMessage());
+			} catch (ExecutionException e) {
+				log.debug(e.getMessage());
+			}
+		}
+
+		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
+			return new PageLoadAnimation(image_urls, image_checksums, initial_url);			
+		}
+		
+		return null;
 	}
 }

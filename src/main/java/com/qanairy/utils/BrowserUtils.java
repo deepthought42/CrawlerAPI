@@ -177,7 +177,7 @@ public class BrowserUtils {
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000);
+		}while((System.currentTimeMillis() - start_ms) < 1000);
 
 		for(Future<String> future: url_futures){
 			try {

@@ -108,13 +108,9 @@ public class ParentPathExplorer extends AbstractActor {
 			  		int last_elem_idx = getIndexOfLastElementState(message.getKeys());
 			  		List<String> final_path_keys = message.getKeys();
 			  		List<PathObject> final_path_objects = message.getPathObjects();
-			  		
-			  		System.err.println("last idx :: "+ last_elem_idx);
-					System.err.println("path length :: " + message.getPathObjects().size());
-					List<String> path_keys = message.getKeys();//.subList(0, last_elem_idx+1);
+			  		List<String> path_keys = message.getKeys();//.subList(0, last_elem_idx+1);
 					List<PathObject> path_objects = message.getPathObjects();//.subList(0, last_elem_idx+1);
-					System.err.println("path objects length :: " + path_objects.size());
-			  		Browser browser = null;
+					Browser browser = null;
 					
 					log.warn("generating parent xpaths");
 			  		long start = System.currentTimeMillis();
@@ -142,11 +138,6 @@ public class ParentPathExplorer extends AbstractActor {
 					ordered_path_objects = reduced_path_obj;
 					
 					path_objects = ordered_path_objects;
-					
-					for(PathObject obj : path_objects){
-						log.warn("PATH OBJECT 2 : "+obj.getType());
-					}
-					
 					
 					//get array of all elements preceding last page element
 					List<String> beginning_path_keys = path_keys.subList(0, last_elem_idx);
@@ -176,13 +167,9 @@ public class ParentPathExplorer extends AbstractActor {
 							log.warn("crawling beginning of path :: "+beginning_path_keys);
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, message.getDiscovery().getDomainUrl());
 							
-							log.warn("getting last web element xpath");
 							//extract parent element
 							String element_xpath = last_element.getXpath();
-							log.warn("getting element by xpath");
 							WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
-							
-							log.warn("Getting parent element");
 							WebElement parent_web_element = browser_service.getParentElement(current_element);
 							
 							log.warn("Builing element state");
@@ -195,8 +182,7 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							catch(RasterFormatException e){
 								break;
-							}
-							
+							}							
 							
 							log.warn("crawling partial path");
 							//finish crawling using array of elements following last page element

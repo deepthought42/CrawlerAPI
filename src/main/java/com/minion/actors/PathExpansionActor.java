@@ -129,7 +129,7 @@ public class PathExpansionActor extends AbstractActor {
 
 				
 				if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
-
+					log.warn("Page state has not been expanded yet.");
 					//get page states
 					List<PageState> page_states = new ArrayList<PageState>();
 					for(PathObject path_obj : test.getPathObjects()){
@@ -138,18 +138,21 @@ public class PathExpansionActor extends AbstractActor {
 							page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
 							page_states.add(page_state);
 						}
-						else if(path_obj.getKey().contains("mouseover")){
+						/*else if(path_obj.getKey().contains("mouseover")){
+							log.warn("mouseover action detected in path! Aborting expansion.");
 							return;
 						}
+						*/
 					}
+					
 					log.warn("checking if path has cycle");
 					final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
 					if(	(!ExploratoryPath.hasCycle(page_states, test.getResult(), test.getPathObjects().size() == 1)
 							&& !test.getSpansMultipleDomains()) || test.getPathKeys().size() == 1){
-						// if path is a single page
-						//		then send path to urlBrowserActor
+						log.warn("Cycle not found. Path size to be expanded :: "+test.getPathKeys().size());
+						
 						if(test.getPathKeys().size() > 1){
 							log.warn("test has more than one path key");
 							PageState result_page = test.getResult();
@@ -173,7 +176,7 @@ public class PathExpansionActor extends AbstractActor {
 									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 							  	}catch(Exception e){}
 
-								log.warn("sedning url to work allocator");
+								log.warn("sending url to work allocator");
 								Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());
 								work_allocator.tell(url_msg, getSelf() );
 							}
@@ -183,10 +186,10 @@ public class PathExpansionActor extends AbstractActor {
 								discovery_record = discovery_repo.findByKey(discovery_key);
 								discovery_record.addExpandedPageState(test.getResult().getKey());
 								discovery_record = discovery_service.save(discovery_record);
+								
 								log.warn("discovery record :: "+discovery_record);
 								for(ExploratoryPath expanded : path_expansions){
 									Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-
 									work_allocator.tell(expanded_path_msg, getSelf() );
 								}
 							}
@@ -196,9 +199,9 @@ public class PathExpansionActor extends AbstractActor {
 							discovery_record = discovery_repo.findByKey(discovery_key);
 							discovery_record.addExpandedPageState(test.getResult().getKey());
 							discovery_record = discovery_service.save(discovery_record);
+							log.warn("sending path expansions to work allocator :: "+path_expansions.size());
 							for(ExploratoryPath expanded : path_expansions){
 								Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-
 								work_allocator.tell(expanded_path_msg, getSelf() );
 							}
 						}
@@ -213,7 +216,7 @@ public class PathExpansionActor extends AbstractActor {
 						try{
 							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 					  	}catch(Exception e){
-
+					  		
 						}
 					}
 				}
@@ -264,12 +267,14 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 
+			/*
 			log.warn("path object count when checking for mouseover  ::   " + message.getPathObjects().size() );
 			for(PathObject path_obj : message.getPathObjects()){
 				if(path_obj.getKey().contains("mouseover")){
 					return;
 				}
 			}
+			*/
 
 			//get sublist of path from beginning to page state index
 			List<ExploratoryPath> exploratory_paths = expandPath(message);
@@ -417,7 +422,14 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
-
+				/*
+				log.warn("path object count when checking for mouseover  ::   " + test.getPathObjects().size() );
+				for(PathObject path_obj : test.getPathObjects()){
+					if(path_obj.getKey().contains("mouseover")){
+						return new ArrayList<>();
+					}
+				}
+				*/
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
@@ -436,9 +448,6 @@ public class PathExpansionActor extends AbstractActor {
 					for(Action action : action_list){
 						ArrayList<String> keys = new ArrayList<String>(new_test.getPathKeys());
 						ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_test.getPathObjects());
-						if(action.getName().equals("mouseover") && path_objects.size()> 1){
-							continue;
-						}
 
 						keys.add(action.getKey());
 						path_objects.add(action);
@@ -485,6 +494,7 @@ public class PathExpansionActor extends AbstractActor {
 		}
 		
 		if(last_page == null){
+			log.warn("expansion --  last page is null");
 			return null;
 		}
 		//iterate over all elements
@@ -571,10 +581,17 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
-
+				/*
+				for(PathObject obj : path.getPathObjects()){
+					if(obj instanceof Action && ((Action)obj).getName().equals("mouseover")){
+						return new ArrayList<>();
+					}
+				}
+				*/
+				
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
-				PathMessage new_path = new PathMessage(path.getKeys(), path.getPathObjects(), path.getDiscovery(), path.getAccountKey(), path.getOptions());
+				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscovery(), path.getAccountKey(), path.getOptions());
 
 				if(!is_landing_page_test){
 					new_path.getKeys().add(last_page.getKey());
@@ -590,10 +607,6 @@ public class PathExpansionActor extends AbstractActor {
 					for(Action action : action_list){
 						ArrayList<String> keys = new ArrayList<String>(new_path.getKeys());
 						ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_path.getPathObjects());
-						if(action.getName().equals("mouseover") && path_objects.size()> 1){
-							log.warn("skpping because already has mouseover event");
-							continue;
-						}
 
 						keys.add(action.getKey());
 						path_objects.add(action);
@@ -640,7 +653,7 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		for(ElementState page_element : elements){
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
+			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("/svg/") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
 				continue;
 			}
 			expanded_elements.put(page_element.getKey(), page_element);

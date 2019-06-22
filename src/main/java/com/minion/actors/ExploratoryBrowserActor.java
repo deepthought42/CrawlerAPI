@@ -139,6 +139,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									}
 								}
 								
+								DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+
+								
 								boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
 								
 								if(!ExploratoryPath.hasCycle(page_states, result_page, exploratory_path.getPathObjects().size() == 1)
@@ -150,7 +153,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 									candidate_identified = true;
 							  		//crawl test and get result
 							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-									DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+									//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
 
 									TestCandidateMessage msg = new TestCandidateMessage(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
 									ActorRef parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -160,7 +163,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							//}
 							
 							if(!candidate_identified){
-								DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+								//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
 								//send email if this is the last test
 						  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
 							    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");

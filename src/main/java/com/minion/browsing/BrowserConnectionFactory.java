@@ -8,10 +8,10 @@ import com.qanairy.models.enums.BrowserEnvironment;
 public class BrowserConnectionFactory {
 
 	//GOOGLE CLOUD CLUSTER
-	private static final String[] CHROME_DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444"};
-	private static final String[] FIREFOX_DISCOVERY_HUB_IP_ADDRESS = {"35.239.245.6:4444", "173.255.118.118:4444"};
+	//private static final String[] CHROME_DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444"};
+	//private static final String[] FIREFOX_DISCOVERY_HUB_IP_ADDRESS = {"35.239.245.6:4444", "173.255.118.118:4444"};
 
-	//private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444", "35.239.245.6:4444", "173.255.118.118:4444"};
+    private static final String[] DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "35.239.245.6:4444", "173.255.118.118:4444"};
 	private static final String TEST_HUB_IP_ADDRESS = "34.73.96.186:4444";
 
 	// PRODUCTION HUB ADDRESS
@@ -28,13 +28,13 @@ public class BrowserConnectionFactory {
 		}
 		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "chrome".equalsIgnoreCase(browser)){
 			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(2);
-			hub_url = new URL( "http://"+CHROME_DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
+			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
 		}
 		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "firefox".equalsIgnoreCase(browser)){
 			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(2);
-			hub_url = new URL( "http://"+FIREFOX_DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
+			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
 		}
 
 		return new Browser(browser, hub_url);

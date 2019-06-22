@@ -104,63 +104,48 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						if(exploratory_path.getPathObjects() != null){
 							PageState result_page = null;
 		
-							//iterate over all possible actions and send them for expansion if crawler returns a page that differs from the last page
-							//It is assumed that a change in state, regardless of how miniscule is of interest and therefore valuable. 						
-							//for(Action action : exploratory_path.getPossibleActions()){
-								//ExploratoryPath path = ExploratoryPath.clone(exploratory_path);
-								//Action action_record = action_service.findByKey(action.getKey());
-								
-								//if(!exploratory_path.getPathKeys().contains("action")){
-									
-								/*
-									if(action_record != null){
-										action = action_record;
-									}
-									
-									path.addPathObject(action);
-									path.addToPathKeys(action.getKey());
-									*/
-								//}
-								String page_url = acct_msg.getOptions().get("host").toString();
+							String page_url = acct_msg.getOptions().get("host").toString();
 
-								result_page = crawler.performPathExploratoryCrawl(browser_name, exploratory_path, page_url);
-								page_state_service.save(result_page);
-								
-								//have page checked for landability
-								//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
+							result_page = crawler.performPathExploratoryCrawl(browser_name, exploratory_path, page_url);
+							page_state_service.save(result_page);
 							
-								//get page states 
-								List<PageState> page_states = new ArrayList<PageState>();
-								for(PathObject path_obj : exploratory_path.getPathObjects()){
-									if(path_obj instanceof PageState){
-										PageState page_state = (PageState)path_obj;
-										page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
-										page_states.add(page_state);										
-									}
+							//have page checked for landability
+							//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
+						
+							//get page states 
+							List<PageState> page_states = new ArrayList<PageState>();
+							for(PathObject path_obj : exploratory_path.getPathObjects()){
+								if(path_obj instanceof PageState){
+									PageState page_state = (PageState)path_obj;
+									page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
+									page_states.add(page_state);										
 								}
-								
-								boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
-								
-								if(!ExploratoryPath.hasCycle(page_states, result_page, exploratory_path.getPathObjects().size() == 1)
-										&& !isResultAnimatedState){
-									//check if result is an animated image from previous page
-									
-									log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-									log.warn("sending test candidate to parent path explorer");
-									candidate_identified = true;
-							  		//crawl test and get result
-							  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
-									DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+							}
+							
+							DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
 
-									TestCandidateMessage msg = new TestCandidateMessage(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
-									ActorRef parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											.props("parentPathExplorer"), "parent_path_explorer"+UUID.randomUUID());
-									parent_path_explorer.tell(msg, getSelf());
-								}
-							//}
+							
+							boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
+							
+							if(!ExploratoryPath.hasCycle(page_states, result_page, exploratory_path.getPathObjects().size() == 1)
+									&& !isResultAnimatedState){
+								//check if result is an animated image from previous page
+								
+								log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+								log.warn("sending test candidate to parent path explorer");
+								candidate_identified = true;
+						  		//crawl test and get result
+						  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
+								//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+
+								TestCandidateMessage msg = new TestCandidateMessage(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
+								ActorRef parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										.props("parentPathExplorer"), "parent_path_explorer"+UUID.randomUUID());
+								parent_path_explorer.tell(msg, getSelf());
+							}
 							
 							if(!candidate_identified){
-								DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+								//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
 								//send email if this is the last test
 						  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
 							    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");

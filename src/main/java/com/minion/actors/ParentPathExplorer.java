@@ -252,9 +252,9 @@ public class ParentPathExplorer extends AbstractActor {
 			  			path_expansion.tell(test_msg, getSelf());
 			  		}
 			  		
-					discovery_service.incrementTestCount(message.getDiscovery().getKey());
+			  		DiscoveryRecord discovery_record = discovery_service.incrementTestCount(message.getDiscovery().getKey());
 					
-					DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
+					//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
 					
 					try{
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);

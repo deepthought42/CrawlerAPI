@@ -50,6 +50,7 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.FilterUtils;
 
 /**
  *
@@ -182,7 +183,7 @@ public class BrowserService {
 		log.warn("returning elements list : "+element_xpaths.size()+ "   :    "+url);
 
 		elements = new ArrayList<>(element_xpaths.values());
-
+		elements = FilterUtils.filterElementsWithNegativePositions(elements);
 		elements_built_successfully = true;
 		int iter_idx=0;
 		int idx = 0;
@@ -202,6 +203,7 @@ public class BrowserService {
 				
 				log.warn("checking if element is visible in page");
 				if(!isElementVisibleInPane(browser, all_elements.get(0)) || iter_idx > 0){
+					element_hash.put(all_elements.get(0).getXpath(), all_elements.get(0));
 					log.warn("run : " + idx + ";    scrolling to element at :: " + all_elements.get(0).getXLocation()  + " : "+ all_elements.get(0).getYLocation() + "  :   " + all_elements.get(0).getWidth()  + " : "+ all_elements.get(0).getHeight()+ "    :    " + url);
 					browser.scrollTo(all_elements.get(0).getXLocation(), all_elements.get(0).getYLocation());
 				}
@@ -219,8 +221,8 @@ public class BrowserService {
 				log.warn("elements hash size :: " + element_hash.size());
 
 				log.warn("added elements to hash : "+page_state.getElements().size());
-
-				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, page_state.getElements());
+				
+				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, new ArrayList<>(element_hash.values()));
 				iter_idx++;
 				log.warn("element xpaths  :    " + element_xpaths.size());
 			}catch(Exception e){
@@ -339,7 +341,7 @@ public class BrowserService {
 	private static Map<String, ElementState> filterElementStatesFromList(Map<String, ElementState> elements,
 			List<ElementState> values) {
 		HashMap<String, ElementState> elements_hash = new HashMap<>(elements);
-		log.warn("ELEMENTS HASH KEYS ::      " + elements_hash.keySet() );
+		log.warn("ELEMENTS HASH KEYS ::      " + elements_hash.keySet().size() );
 		for(ElementState element : values){
 			elements_hash.remove(element.getXpath());
 		}
@@ -619,34 +621,23 @@ public class BrowserService {
 		ElementState page_element_record = null;
 		ElementState page_element = null;
 		//log.warn("Checking if element visible in viewport");
-		/*
-		img = Browser.getElementScreenshot(elem, page_screenshot, browser.getXScrollOffset(), browser.getYScrollOffset());
-		checksum = PageState.getFileChecksum(img);
-		page_element_record = page_element_service.findByScreenshotChecksum(checksum);
+
+		Map<String, String> css_props = Browser.loadCssProperties(elem);
+		Set<Attribute> attributes = browser.extractAttributes(elem);
+		page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, elem.getLocation().getX(), elem.getLocation().getY(), elem.getSize().getWidth(), elem.getSize().getHeight(), elem.getAttribute("innerHTML") );
+		page_element_record = page_element_service.findByKey(page_element.getKey()) ;
 
 		if(page_element_record != null){
 			page_element = page_element_record;
 		}
 		else{
-		*/
-			Map<String, String> css_props = Browser.loadCssProperties(elem);
-			Set<Attribute> attributes = browser.extractAttributes(elem);
-			page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, elem.getLocation().getX(), elem.getLocation().getY(), elem.getSize().getWidth(), elem.getSize().getHeight(), elem.getAttribute("innerHTML") );
-			page_element_record = page_element_service.findByKey(page_element.getKey()) ;
+			//screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");
 
-			if(page_element_record != null){
-				page_element = page_element_record;
-			}
-			else{
-				//screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");
-
-				//TODO: refactor xpath to generation to be faster. Generating xpath can take over 1.6s
-				String element_xpath = generateXpath(elem, "", xpath_map, browser.getDriver(), attributes);
-				page_element.setXpath(element_xpath);
-				page_element = page_element_service.save(page_element);
-			}
-		//}
-		//img.flush();
+			//TODO: refactor xpath to generation to be faster. Generating xpath can take over 1.6s
+			String element_xpath = generateXpath(elem, "", xpath_map, browser.getDriver(), attributes);
+			page_element.setXpath(element_xpath);
+			page_element = page_element_service.save(page_element);
+		}
 
 		return page_element;
 	}

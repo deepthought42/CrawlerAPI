@@ -240,13 +240,14 @@ public class ParentPathExplorer extends AbstractActor {
 			  		
 					discovery_service.incrementTestCount(message.getDiscovery().getKey());
 					
-					DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
+					/*DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
 					
 					try{
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				  	}catch(Exception e){
 				  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
 					}
+					*/
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

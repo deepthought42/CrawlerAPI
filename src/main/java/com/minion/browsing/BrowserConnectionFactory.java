@@ -28,12 +28,12 @@ public class BrowserConnectionFactory {
 		}
 		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "chrome".equalsIgnoreCase(browser)){
 			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(2);
+			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
 			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
 		}
 		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "firefox".equalsIgnoreCase(browser)){
 			Random randomGenerator = new Random();
-			int randomInt = randomGenerator.nextInt(2);
+			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
 			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
 		}
 

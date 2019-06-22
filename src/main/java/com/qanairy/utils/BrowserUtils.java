@@ -123,7 +123,7 @@ public class BrowserUtils {
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 1000);
+		}while((System.currentTimeMillis() - start_ms) < 10000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -177,7 +177,7 @@ public class BrowserUtils {
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 1000);
+		}while((System.currentTimeMillis() - start_ms) < 3000);
 
 		for(Future<String> future: url_futures){
 			try {

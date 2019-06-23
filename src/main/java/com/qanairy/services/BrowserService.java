@@ -50,6 +50,7 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.FilterUtils;
 
 /**
  *
@@ -128,7 +129,7 @@ public class BrowserService {
 				browser.navigateTo(url);
 				BrowserUtils.getPageTransition(url, browser, host);
 				BrowserUtils.getLoadingAnimation(browser, host, url);
-				
+
 				log.warn("last element idx  ::   " + last_elem_idx + ";   temp idx  ::  "+temp_last_idx +";    rep count    ::   "+rep_cnt);
 				log.warn("elements all built successfully :: " + elements_built_successfully);
 				if(!elements_built_successfully){
@@ -137,18 +138,18 @@ public class BrowserService {
 
 					log.warn("filtering elements  after removing non children   ::  "+web_elements.size());
 					web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
-					
+
 					log.warn("filtering elements after removing non displayed ::  "+web_elements.size());
 					web_elements = BrowserService.filterStructureTags(web_elements);
-					
+
 					log.warn("filtering elements after removing structure tags ::  "+web_elements.size());
 					web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
-					
+
 					log.warn("filtering elements after removing no height/width ::   "+web_elements.size());
 					web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
-					
+
 					log.warn("filtering elements  after removing elements with negative positions ::  "+web_elements.size());
-					
+
 					log.warn("building elements :: " + web_elements.size());
 					for(WebElement elem: web_elements){
 						ElementState element_state = buildElementState(browser, elem);
@@ -187,10 +188,9 @@ public class BrowserService {
 		}while(error_occurred);
 		log.warn("returning elements list : "+element_xpaths.size()+ "   :    "+url);
 
-		// BUILD ALL PAGE STATES 
+		// BUILD ALL PAGE STATES
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		elements = new ArrayList<>(element_xpaths.values());
-
 		elements_built_successfully = true;
 		int iter_idx=0;
 		int idx = 0;
@@ -210,19 +210,20 @@ public class BrowserService {
 					BrowserUtils.getLoadingAnimation(browser, host, url);
 				}
 				err = false;
-				
+
 				log.warn("checking if element is visible in page");
 				if(!isElementVisibleInPane(browser, all_elements.get(0)) || iter_idx > 0){
+					element_hash.put(all_elements.get(0).getXpath(), all_elements.get(0));
 					log.warn("run : " + idx + ";    scrolling to element at :: " + all_elements.get(0).getXLocation()  + " : "+ all_elements.get(0).getYLocation() + "  :   " + all_elements.get(0).getWidth()  + " : "+ all_elements.get(0).getHeight()+ "    :    " + url);
 					browser.scrollTo(all_elements.get(0).getXLocation(), all_elements.get(0).getYLocation());
 				}
 
 				log.warn("building page state with elements :: " + elements.size() + "   :    " +element_xpaths.keySet().size());
-				PageState page_state = buildPage(browser, elements);
-				
+				PageState page_state = buildPage(browser, all_elements);
+
 				log.warn("done building page state ");
 				page_states.add(page_state);
-				
+
 				log.warn("page states ::   " + page_states.size());
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
@@ -231,7 +232,7 @@ public class BrowserService {
 
 				log.warn("added elements to hash : "+page_state.getElements().size());
 
-				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, page_state.getElements());
+				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, new ArrayList<>(element_hash.values()));
 				iter_idx++;
 				log.warn("element xpaths  :    " + element_xpaths.size());
 			}catch(Exception e){
@@ -250,7 +251,7 @@ public class BrowserService {
 				element_xpaths.put(element_state.getKey(), element_state);
 				BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getScreenshotUrl()));
 				String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, element_state, page_screenshot, host, page_state);
-				
+
 				element_state.setScreenshot(screenshot_url);
 				element_state.setScreenshotChecksum(PageState.getFileChecksum(page_screenshot));
 			}
@@ -290,7 +291,7 @@ public class BrowserService {
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
-		
+
 		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url_without_params);
 		if(page_state_record2 == null){
 			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
@@ -348,7 +349,7 @@ public class BrowserService {
 	private static Map<String, ElementState> filterElementStatesFromList(Map<String, ElementState> elements,
 			List<ElementState> values) {
 		HashMap<String, ElementState> elements_hash = new HashMap<>(elements);
-		log.warn("ELEMENTS HASH KEYS ::      " + elements_hash.keySet() );
+		log.warn("ELEMENTS HASH KEYS ::      " + elements_hash.keySet().size() );
 		for(ElementState element : values){
 			elements_hash.remove(element.getXpath());
 		}
@@ -410,7 +411,7 @@ public class BrowserService {
 	 */
 	public static List<WebElement> filterStructureTags(List<WebElement> web_elements) {
 		List<WebElement> elements = new ArrayList<>();
-		
+
 		for(WebElement element : web_elements){
 			String tag_name = element.getTagName();
 			if(tag_name.equals("html") || tag_name.equals("body")
@@ -423,7 +424,7 @@ public class BrowserService {
 		}
 		return elements;
 	}
-	
+
 	/**
 	 *
 	 * @return

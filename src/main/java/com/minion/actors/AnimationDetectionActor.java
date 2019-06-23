@@ -42,27 +42,27 @@ import com.qanairy.utils.BrowserUtils;
 public class AnimationDetectionActor extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), AnimationDetectionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	
+
 	@Autowired
 	private PageStateService page_state_service;
-	
+
 	@Autowired
 	private Crawler crawler;
-	
+
 	@Autowired
 	private ActorSystem actor_system;
-	
+
 	public static Props props() {
 	  return Props.create(AnimationDetectionActor.class);
 	}
-	
+
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
-	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(), 
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 	      MemberEvent.class, UnreachableMember.class);
 	}
-	
+
 	//re-subscribe when restart
 	@Override
 	public void postStop() {
@@ -88,25 +88,25 @@ public class AnimationDetectionActor extends AbstractActor{
 								}
 								page_idx++;
 							}
-		
+
 							System.err.println("STARTING ANIMATION DETECTION BY CRAWLING PATH");
 							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
-							
+
 							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
 							if(animation.getImageUrls().size() > 1){
 								page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
 								page_state = page_state_service.save(page_state);
 							}
-							
+
 							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 							ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-		
+
 							PathMessage path_message = msg.clone();
 							path_message.getKeys().set(page_idx, page_state.getKey());
 							path_message.getPathObjects().set(page_idx, page_state);
-							
+
 							form_discoverer.tell(path_message, getSelf() );
 							path_expansion_actor.tell(path_message, getSelf() );
 						}catch(Exception e){
@@ -122,9 +122,8 @@ public class AnimationDetectionActor extends AbstractActor{
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.info("Member is Removed: {}", mRemoved.member());
-				})	
+				})
 				.matchAny(o -> log.info("MemoryRegistry received unknown message of type : "+o.getClass().getName() + ";  toString : "+o.toString()))
-				.build();	
+				.build();
 		}
 }
-

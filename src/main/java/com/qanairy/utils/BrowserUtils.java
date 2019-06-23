@@ -95,66 +95,8 @@ public class BrowserUtils {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
-
 		long start_ms = System.currentTimeMillis();
-		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 
-		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
-		String last_checksum = null;
-		List<Future<String>> url_futures = new ArrayList<>();
-		do{
-			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
-
-			//calculate screenshot checksum
-			String new_checksum = PageState.getFileChecksum(screenshot);
-
-			transition_detected = !new_checksum.equals(last_checksum);
-
-			if( animated_state_checksum_hash.containsKey(new_checksum)){
-				break;
-			}
-			else if( transition_detected ){
-				start_ms = System.currentTimeMillis();
-				image_checksums.add(new_checksum);
-				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
-				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
-			}
-
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 10000);
-
-		for(Future<String> future: url_futures){
-			try {
-				image_urls.add(future.get());
-			} catch (InterruptedException e) {
-				log.debug(e.getMessage());
-			} catch (ExecutionException e) {
-				log.debug(e.getMessage());
-			}
-		}
-
-		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
-	}
-	
-	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String initial_url) throws IOException {
-		URL new_url = new URL(initial_url);
-
-		String new_host = new_url.getHost();
-		if(!new_host.startsWith("www.")){
-			new_host = "www."+new_host;
-		}
-		String new_key = new_host+new_url.getPath();
-		if(new_key.charAt(new_key.length()-1) == '/'){
-			initial_url = initial_url.substring(0, initial_url.length()-1);
-		}
-		
-		List<String> image_checksums = new ArrayList<String>();
-		List<String> image_urls = new ArrayList<String>();
-		boolean transition_detected = false;
-		long start_ms = System.currentTimeMillis();
-		
 		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
 		String new_checksum = null;
@@ -190,9 +132,9 @@ public class BrowserUtils {
 		}
 
 		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
-			return new PageLoadAnimation(image_urls, image_checksums, initial_url);			
+			return new PageLoadAnimation(image_urls, image_checksums, initial_url);
 		}
-		
+
 		return null;
 	}
 }

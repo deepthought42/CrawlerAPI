@@ -118,7 +118,7 @@ public class Browser {
 	 */
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
-
+		waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}
 

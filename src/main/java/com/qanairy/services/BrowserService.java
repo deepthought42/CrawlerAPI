@@ -183,7 +183,6 @@ public class BrowserService {
 		log.warn("returning elements list : "+element_xpaths.size()+ "   :    "+url);
 
 		elements = new ArrayList<>(element_xpaths.values());
-		elements = FilterUtils.filterElementsWithNegativePositions(elements);
 		elements_built_successfully = true;
 		int iter_idx=0;
 		int idx = 0;
@@ -209,7 +208,7 @@ public class BrowserService {
 				}
 
 				log.warn("building page state with elements :: " + elements.size() + "   :    " +element_xpaths.keySet().size());
-				PageState page_state = buildPage(browser, elements);
+				PageState page_state = buildPage(browser, all_elements);
 				
 				log.warn("done building page state ");
 				page_states.add(page_state);

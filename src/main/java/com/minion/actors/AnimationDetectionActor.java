@@ -90,6 +90,7 @@ public class AnimationDetectionActor extends AbstractActor{
 					Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
 					
 					page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
+					page_state.setAnimatedImageChecksums(animation.getImageChecksums());
 					page_state = page_state_service.save(page_state);
 
 					

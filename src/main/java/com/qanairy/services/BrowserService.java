@@ -208,7 +208,7 @@ public class BrowserService {
 				}
 
 				log.warn("building page state with elements :: " + elements.size() + "   :    " +element_xpaths.keySet().size());
-				PageState page_state = buildPage(browser, all_elements);
+				PageState page_state = buildPage(browser, elements);
 				
 				log.warn("done building page state ");
 				page_states.add(page_state);
@@ -456,7 +456,7 @@ public class BrowserService {
 			return page_state_record2;
 		}
 		else{
-			Animation animation = BrowserUtils.getAnimation(browser, page_url.getHost());
+			//Animation animation = BrowserUtils.getAnimation(browser, page_url.getHost());
 
 			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
 			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), viewport_screenshot);
@@ -474,10 +474,10 @@ public class BrowserService {
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), "viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 
-			log.warn("setting animated image urls :: " + animation.getImageUrls().size());
+			/*log.warn("setting animated image urls :: " + animation.getImageUrls().size());
 			page_state.setAnimatedImageUrls(animation.getImageUrls());
 			page_state.setAnimatedImageChecksums(animation.getImageChecksums());
-
+*/
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
 			page_state.addScreenshot(screenshot);
 

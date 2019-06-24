@@ -1,10 +1,11 @@
 package com.minion.browsing;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +25,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
-import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.TakesScreenshot;
@@ -33,6 +33,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.UnreachableBrowserException;
@@ -42,7 +44,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageElement;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 
 /**
@@ -50,26 +52,19 @@ import com.qanairy.models.PageState;
  */
 @Component
 public class Browser {
+	
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
-
 	private WebDriver driver = null;
-	//private static String[] invalid_xpath_attributes = {"ng-view", "ng-include", "ng-repeat","ontouchstart", "ng-click", "ng-class", "onload", "lang", "xml:lang", "xmlns", "xmlns:fb", "@xmlns:cc", "onsubmit", "webdriver",/*Wordpress generated field*/"data-blogger-escaped-onclick", "src", "alt", "scale", "title", "name","data-analytics","onmousedown", "data-rank", "data-domain", "data-url", "data-subreddit", "data-fullname", "data-type", "onclick", "data-outbound-expiration", "data-outbound-url", "rel", "onmouseover","height","width","onmouseout", "data-cid","data-imp-pixel", "value", "placeholder", "data-wow-duration", "data-wow-offset", "data-wow-delay", "required", "xlink:href"};	
-
-	//private static String[] valid_elements = {"div", "span", "ul", "li", "a", "img", "button", "input", "form", "i", "canvas", "h1", "h2", "h3", "h4", "h5", "h6", "datalist", "label", "nav", "option", "ol", "p", "select", "table", "tbody", "td", "textarea", "th", "thead", "tr", "video", "audio", "track"};
 	private String browser_name; 
-    //private static final String DISCOVERY_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-	//private static final String TEST_HUB_IP_ADDRESS= "xxx.xxx.xxx.xxx";
-    
-	// PRODUCTION HUB ADDRESS
-	private static final String HUB_IP_ADDRESS= "142.93.192.184:4444";
-	//private static final String HUB_IP_ADDRESS= "10.136.111.115:4444";
+	private int y_scroll_offset;
+	private int x_scroll_offset;
+	private Dimension viewport_size;
+	private static final String JS_GET_VIEWPORT_WIDTH = "var width = undefined; if (window.innerWidth) {width = window.innerWidth;} else if (document.documentElement && document.documentElement.clientWidth) {width = document.documentElement.clientWidth;} else { var b = document.getElementsByTagName('body')[0]; if (b.clientWidth) {width = b.clientWidth;}};return width;";
+	private static final String JS_GET_VIEWPORT_HEIGHT = "var height = undefined;  if (window.innerHeight) {height = window.innerHeight;}  else if (document.documentElement && document.documentElement.clientHeight) {height = document.documentElement.clientHeight;}  else { var b = document.getElementsByTagName('body')[0]; if (b.clientHeight) {height = b.clientHeight;}};return height;";
 
-
-	//STAGING HUB ADDRESS
-	//private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
 	
     public Browser(){}
-    
+
 	/**
 	 * 
 	 * @param url
@@ -84,44 +79,28 @@ public class Browser {
 	 * @pre url != null
 	 * @pre browser != null
 	 */
-	public Browser(String browser) throws MalformedURLException, NullPointerException {
+	public Browser(String browser, URL hub_node_url) throws MalformedURLException {
 		assert browser != null;
 		
-		int cnt = 0;
 		this.setBrowserName(browser);
-		while(driver == null && cnt < 500){
-			try{
-				if(browser.equals("chrome")){
-					this.driver = openWithChrome();
-				}
-				else if(browser.equals("firefox")){
-					this.driver = openWithFirefox();
-				}
-				else if(browser.equals("internet_explorer")){
-					this.driver = openWithInternetExplorer();
-				}
-				else if(browser.equals("safari")){
-					this.driver = openWithSafari();
-				}
-				else if(browser.equals("opera")){
-					this.driver = openWithOpera();
-				}
-
-				return;
-			}
-			catch(UnreachableBrowserException e){
-				log.error(e.getMessage());
-			}
-			catch(WebDriverException e){
-				log.error(e.getMessage());
-			}
-			catch(GridException e){
-				log.error(e.getMessage());
-			}
-
-			cnt++;
-			Timing.pauseThread(60000L);
+		if("chrome".equals(browser)){
+			this.driver = openWithChrome(hub_node_url);
 		}
+		else if("firefox".equals(browser)){
+			this.driver = openWithFirefox(hub_node_url);
+		}
+		else if("internet_explorer".equals(browser)){
+			this.driver = openWithInternetExplorer(hub_node_url);
+		}
+		else if("safari".equals(browser)){
+			this.driver = openWithSafari(hub_node_url);
+		}
+		else if("opera".equals(browser)){
+			this.driver = openWithOpera(hub_node_url);
+		}
+		setYScrollOffset(0);
+		setXScrollOffset(0);
+		setViewportSize(getViewportSize(driver));
 	}
 	
 	/**
@@ -131,18 +110,16 @@ public class Browser {
 		return this.driver;
 	}
 
-	public void navigateTo(String url){
+	/**
+	 * Navigates to a given url and waits for it the readyState to be complete
+	 * 
+	 * @param url
+	 * @throws MalformedURLException 
+	 */
+	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
-		try{
-			new WebDriverWait(getDriver(), 360).until(
-					webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-		}catch(GridException e){
-			log.error(e.getMessage());
-		}
-		catch(Exception e){
-			log.error(e.getMessage());
-		}	
-		Timing.pauseThread(15000L);
+		waitForPageToLoad();
+		log.debug("successfully navigated to "+url);
 	}
 
 	/**
@@ -157,7 +134,12 @@ public class Browser {
 		assert src != null;
 		Pattern p = Pattern.compile("<canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"([0-9]*)\" height=\"([0-9]*)\"></canvas>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-
+		Pattern link_pattern = Pattern.compile("<link (.*)></link>",
+	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+		Pattern script_pattern = Pattern.compile("<script (.*)></script>",
+	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+		src = script_pattern.matcher(src).replaceAll("");
+		src = link_pattern.matcher(src).replaceAll("");
 		return p.matcher(src).replaceAll("");
 	}
 	
@@ -168,22 +150,9 @@ public class Browser {
 		try{
 			driver.quit();
 		}
-		catch(NullPointerException e){
-			//log.error("Error closing driver. Driver is NULL");
-		}
-		catch(UnreachableBrowserException e){
-			log.error(e.getMessage());
-		}
-		catch(NoSuchSessionException e){
-			log.error(e.getMessage());			
-		}
-		catch(GridException e){
-			log.error("Grid exception occurred when closing browser", e.getMessage());
-		}
 		catch(Exception e){
-			log.error("Unknown exception occurred when closing browser", e.getMessage());
+			log.info("Unknown exception occurred when closing browser" + e.getMessage());
 		}
-		
 	}
 	
 	/**
@@ -193,15 +162,13 @@ public class Browser {
 	 * @return firefox web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithFirefox() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
-		
-	    DesiredCapabilities cap = DesiredCapabilities.firefox();
-	    //cap.setBrowserName("firefox");
-		cap.setJavascriptEnabled(true);
+	public static WebDriver openWithFirefox(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
+		FirefoxOptions options = new FirefoxOptions();
+		//options.setHeadless(true);
+	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
+		//driver.manage().window().maximize();
 
-	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
-	    //driver.manage().window().setSize(new Dimension(1920, 975));
+	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -215,13 +182,12 @@ public class Browser {
 	 * @return Opera web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithOpera() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithOpera(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 	    DesiredCapabilities cap = DesiredCapabilities.opera();
 	    cap.setBrowserName("opera");
 		cap.setJavascriptEnabled(true);
 
-	    RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, cap);
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -234,11 +200,10 @@ public class Browser {
 	 * @param url
 	 * @return safari web driver
 	 */
-	public static WebDriver openWithSafari() throws MalformedURLException, UnreachableBrowserException, GridException{
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithSafari(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 	    DesiredCapabilities cap = DesiredCapabilities.safari();
 
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), cap);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, cap);
 	    driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 
 		return driver;
@@ -250,11 +215,10 @@ public class Browser {
 	 * @param url
 	 * @return internet explorer web driver
 	 */
-	public static WebDriver openWithInternetExplorer() throws MalformedURLException, UnreachableBrowserException, GridException {
-		String node = "http://"+HUB_IP_ADDRESS+"/wd/hub";
+	public static WebDriver openWithInternetExplorer(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException {
 	    DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
 
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(node), capabilities);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, capabilities);
 		
 		return driver;
 	}
@@ -266,17 +230,12 @@ public class Browser {
 	 * @return Chrome web driver
 	 * @throws MalformedURLException 
 	 */
-	public static WebDriver openWithChrome() 
+	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
+		
 		//options.setHeadless(true);
-		DesiredCapabilities cap = DesiredCapabilities.chrome();
 
-	    options.addArguments("window-size=1920,1080");
-	    cap.setCapability(ChromeOptions.CAPABILITY, options);
-		
-		cap.setJavascriptEnabled(true);
-		
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
 
 		//cap.setCapability("screenshot", true);
@@ -290,10 +249,11 @@ public class Browser {
 		} else {
 			cap.setCapability("video", "False"); // NOTE: "False" is a case sensitive string, not boolean.
 		}*/
-		
 		log.info("Requesting chrome remote driver from hub");
-        String hub_node_url = "http://"+HUB_IP_ADDRESS+"/wd/hub";
-		RemoteWebDriver driver = new RemoteWebDriver(new URL(hub_node_url), cap);
+		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
+		//driver.manage().window().maximize();
+
+		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -331,8 +291,8 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static File getViewportScreenshot(WebDriver driver) throws IOException, GridException{
-		return ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+	public BufferedImage getViewportScreenshot() throws IOException, GridException{
+		return ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
 	}
 	
 	/**
@@ -341,10 +301,8 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public static BufferedImage getScaledViewportScreenshot1920x1080(WebDriver driver) throws IOException, GridException{
-		BufferedImage image = ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
-		//get closest aspect ratio
-		return Crawler.resize(image, 1080, 1920);
+	public BufferedImage getElementScreenshot(WebElement elem) throws IOException, GridException{
+		return ImageIO.read(elem.getScreenshotAs(OutputType.FILE));
 	}
 	
 	/**
@@ -354,44 +312,19 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point) throws IOException{
+		
+	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+		//calculate element position within screen
+		Point point = getLocationInViewport(elem, x_offset, y_offset);
+		Dimension dimension = elem.getSize();
+		
 		// Get width and height of the element
 		int elem_width = dimension.getWidth();
 		int elem_height = dimension.getHeight();
+		
 		int point_x = point.getX();
 		int point_y = point.getY();
 		
-		if( (elem_width + point_x) < page_screenshot.getWidth()){
-			elem_width = elem_width+5;
-		}
-		else{
-			elem_width = page_screenshot.getWidth() - point_x;
-		}
-		
-		if((elem_height + point_y) < page_screenshot.getHeight()){
-			elem_height = elem_height+5;
-		}
-		else{
-			elem_height = page_screenshot.getHeight() - point_y;
-		}
-		
-		if( (point_x - 5) >= 0){
-			elem_width += 5;
-			point_x -= 5;
-		}
-		else{
-			elem_width += point_x;
-			point_x = 0;
-		}
-		
-		if( (point_y - 5) >= 0){
-			//elem_height += 5;
-			point_y -= 5;
-		}
-		else{
-			//elem_height += point_y;
-			point_y = 0;
-		}
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	
@@ -402,47 +335,40 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(BufferedImage page_screenshot, Dimension dimension, Point point, WebDriver driver) throws IOException{
-		// Get width and height of the element
-		int elemWidth = dimension.getWidth();
-		int elemHeight = dimension.getHeight();
-
-		JavascriptExecutor executor = (JavascriptExecutor) driver;
-		Long viewport_offset = (Long) executor.executeScript("return window.pageYOffset;");
-		int y_coord = point.getY()-viewport_offset.intValue();
-		return page_screenshot.getSubimage(point.getX(), y_coord, elemWidth, elemHeight);
+		
+	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+		//calculate element position within screen
+		Point point = getLocationInViewport(elem, x_offset, y_offset);
+		
+		int point_x = point.getX();
+		int point_y = point.getY();
+		
+		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
 	}
 	
-	
 	/**
-	 * Checks if element is visible in a given screenshot
 	 * 
 	 * @param screenshot
 	 * @param elem
 	 * @return
 	 * @throws IOException
 	 */
-	private static boolean isElementVisibleInPane(BufferedImage screenshot, WebElement elem) throws IOException {
-		Dimension weD = elem.getSize();
-	    Point weP = elem.getLocation();
-	    //BufferedImage  fullImg = ImageIO.read(screenshot);
-
-	    int x = screenshot.getWidth();;
-	    int y = screenshot.getHeight();
-	    int x2 = weD.getWidth() + weP.getX();
-	    int y2 = weD.getHeight() + weP.getY();
-
-	    return x2 <= x && y2 <= y && weD.getWidth()>0 && weD.getHeight()>0;
+		
+	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot) throws IOException{
+		//calculate element position within screen		
+		int point_x = elem.getXLocation();
+		int point_y = elem.getYLocation();
+		
+		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
 		return null;
 	}
 	
-	
-	public static PageElement findLabelFor(Set<PageElement> elements, String for_id){
-		for(PageElement elem : elements){
-			//PageElement tag = (PageElement)elem;
+	public static ElementState findLabelFor(Set<ElementState> elements, String for_id){
+		for(ElementState elem : elements){
+			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
 					if(attr.getName().equals("for")){
@@ -466,10 +392,10 @@ public class Browser {
 	 * @param for_ids
 	 * @return
 	 */
-	public static Set<PageElement> findLabelsFor(Set<PageElement> elements, String[] for_ids){
-		Set<PageElement> labels = new HashSet<PageElement>();
-		for(PageElement elem : elements){
-			//PageElement tag = (PageElement)elem;
+	public static Set<ElementState> findLabelsFor(Set<ElementState> elements, String[] for_ids){
+		Set<ElementState> labels = new HashSet<ElementState>();
+		for(ElementState elem : elements){
+			//ElementState tag = (ElementState)elem;
 			if(elem.getName().equals("label") ){
 				for(Attribute attr : elem.getAttributes()){
 					if(attr.getName().equals("for")){
@@ -494,9 +420,26 @@ public class Browser {
 	 * @param page_element
 	 * @param driver
 	 */
-	public static void outlineElement(PageElement page_element, WebDriver driver) {
+	public static void outlineElement(ElementState page_element, WebDriver driver) {
 		WebElement element = driver.findElement(By.xpath(page_element.getXpath()));
 		((JavascriptExecutor)driver).executeScript("arguments[0].style.border='2px solid yellow'", element);
+	}
+	
+	/**
+	 * Finds page element by xpath
+	 * 
+	 * @param xpath
+	 * 
+	 * @return {@link WebElement} located at the provided xpath
+	 * 
+	 * @pre xpath != null
+	 * @pre !xpath.isEmpty()
+	 */
+	public WebElement findWebElementByXpath(String xpath){
+		assert xpath != null;
+		assert !xpath.isEmpty();
+		
+		return driver.findElement(By.xpath(xpath));
 	}
 	
 	/**
@@ -507,17 +450,13 @@ public class Browser {
 	 * @param element the element to for which css styles should be loaded.
 	 */
 	public static Map<String, String> loadCssProperties(WebElement element){
-		String[] cssList = {"backface-visibility", "visible", "display", "position", "color", "font-family", "width", "height", "left", "right", "top", "bottom", "transform"};
+		String[] cssList = {"visible", "display", "position", "color", "font-family", "font-size"};
 		Map<String, String> css_map = new HashMap<String, String>();
 		
 		for(String propertyName : cssList){
-			try{
-				String element_value = element.getCssValue(propertyName);
-				if(element_value != null && !element_value.isEmpty()){
-					css_map.put(propertyName, element_value);
-				}
-			}catch(Exception e){
-				
+			String element_value = element.getCssValue(propertyName);
+			if(element_value != null && !element_value.isEmpty()){
+				css_map.put(propertyName, element_value);
 			}
 		}
 		
@@ -530,5 +469,214 @@ public class Browser {
 
 	public void setBrowserName(String browser_name) {
 		this.browser_name = browser_name;
+	}
+	
+
+	public int getYScrollOffset() {
+		return y_scroll_offset;
+	}
+
+	public void setYScrollOffset(int y_scroll_offset) {
+		this.y_scroll_offset = y_scroll_offset;
+	}
+
+	public int getXScrollOffset() {
+		return x_scroll_offset;
+	}
+
+	public void setXScrollOffset(int x_scroll_offset) {
+		this.x_scroll_offset = x_scroll_offset;
+	}
+	
+	public void scrollToElement(WebElement elem) 
+    { 
+		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
+		Timing.pauseThread(1000);
+		
+		Point offsets = getViewportScrollOffset();
+		this.setXScrollOffset(offsets.getX());
+		this.setYScrollOffset(offsets.getY());
+    }
+	
+	public void scrollTo(int x_offset, int y_offset) 
+    {
+		log.warn("current screen offset  ::   " +getXScrollOffset() + " , "+getYScrollOffset());
+		log.warn("scrolling to    ("+x_offset + " : "+y_offset+")");
+		//only scroll to position if it isn't the same position
+		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
+		Timing.pauseThread(1000);
+		
+		Point offsets = getViewportScrollOffset();
+		this.setXScrollOffset(offsets.getX());
+		this.setYScrollOffset(offsets.getY());
+		
+		log.warn("after offset :: "+getXScrollOffset() + "  :  "+getYScrollOffset());
+		
+    }
+	
+	
+	/**
+	 * Extract all attributes from a given {@link WebElement}
+	 * 
+	 * @param element {@link WebElement} to have attributes loaded for
+	 * @param javascriptDriver - 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Set<Attribute> extractAttributes(WebElement element) {
+		List<String> attribute_strings = (ArrayList<String>)((JavascriptExecutor)driver).executeScript("var items = []; for (index = 0; index < arguments[0].attributes.length; ++index) { items.push(arguments[0].attributes[index].name + '::' + arguments[0].attributes[index].value) }; return items;", element);
+		return loadAttributes(attribute_strings);
+	}
+	
+
+	
+	/**
+	 * Loads attributes for this element into a list of {@link Attribute}s
+	 * 
+	 * @param attributeList
+	 */
+	private Set<Attribute> loadAttributes( List<String> attributeList){
+		Set<Attribute> attr_set = new HashSet<Attribute>();
+		
+		Map<String, Boolean> attributes_seen = new HashMap<String, Boolean>();
+		
+		for(int i = 0; i < attributeList.size(); i++){
+			String[] attributes = attributeList.get(i).split("::");
+			
+			if(attributes.length > 1){
+				String attribute_name = attributes[0].trim().replace("\'", "'");
+				String[] attributeVals = attributes[1].split(" ");
+
+				if(!attributes_seen.containsKey(attribute_name)){
+					attributes_seen.put(attribute_name, true);
+					Attribute attribute = new Attribute(attribute_name, Arrays.asList(attributeVals));
+					attr_set.add(attribute);	
+				}
+			}
+		}
+
+		return attr_set;
+	}
+
+	
+	/**
+	 * Retrieves the x and y scroll offset of the viewport as a {@link Point}
+	 * 
+	 * @param browser
+	 * 
+	 * @return {@link Point} containing offsets
+	 */
+	public Point getViewportScrollOffset(){		
+		Object objy = ((JavascriptExecutor)driver).executeScript("return window.pageYOffset;");
+		Object objx = ((JavascriptExecutor)driver).executeScript("return window.pageXOffset;");
+
+		int y_offset = 0;
+		int x_offset = 0;
+		if(objy instanceof Double){
+			y_offset = ((Double)objy).intValue(); 
+		}
+		else if(objy instanceof Long){
+			y_offset = ((Long)objy).intValue(); 
+		}
+		
+		if(objx instanceof Double){
+			x_offset = ((Double)objx).intValue(); 
+		}
+		else if(objx instanceof Long){
+			x_offset = ((Long)objx).intValue(); 
+		}
+		
+		return new Point(x_offset, y_offset);
+	}
+	
+	/**
+	 * Retrieve coordinates of {@link WebElement} in the current viewport
+	 * 
+	 * @param element {@link WebElement}
+	 * @return {@link Point} coordinates
+	 */
+	private static Point getLocationInViewport(WebElement element, int x_offset, int y_offset) {
+		Point location = element.getLocation();
+		int y_coord = calculateYCoordinate(y_offset, location);
+		int x_coord = calculateXCoordinate(x_offset, location);
+       
+		return new Point(x_coord, y_coord);
+	}
+	
+	/**
+	 * Retrieve coordinates of {@link WebElement} in the current viewport
+	 * 
+	 * @param element {@link WebElement}
+	 * @return {@link Point} coordinates
+	 */
+	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
+		log.warn("element location  before math   ::   "+element.getXLocation() + " , "+element.getYLocation());
+		int y_coord = element.getYLocation() - y_offset;
+		int x_coord = element.getXLocation() - x_offset;
+       
+		return new Point(x_coord, y_coord);
+	}
+	
+	public static int calculateYCoordinate(int y_offset, Point location){
+		return location.getY() - y_offset;
+	}
+	
+	public static int calculateXCoordinate(int x_offset, Point location){
+		return location.getX() - x_offset;
+	}
+
+	/**
+	 * Waits for the document ready state to be complete, then observes page transition if it exists
+	 */
+	public void waitForPageToLoad() throws MalformedURLException {
+		new WebDriverWait(driver, 30).until(
+				webDriver -> ((JavascriptExecutor) webDriver)
+					.executeScript("return document.readyState")
+					.equals("complete"));
+	}
+	
+	private static Dimension getViewportSize(WebDriver driver) {
+		int width = extractViewportWidth(driver);
+		int height = extractViewportHeight(driver);
+		return new Dimension(width, height);
+	}
+
+	private static int extractViewportWidth(WebDriver driver) {
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		int viewportWidth = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_WIDTH, new Object[0]).toString());
+		return viewportWidth;
+	}
+
+	private static int extractViewportHeight(WebDriver driver) {
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		int result = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_HEIGHT, new Object[0]).toString());
+		return result;
+	}
+
+	public Dimension getViewportSize() {
+		return viewport_size;
+	}
+
+	public void setViewportSize(Dimension viewport_size) {
+		this.viewport_size = viewport_size;
+	}
+
+	public void moveMouseOutOfFrame() {
+		Actions mouseMoveAction = new Actions(driver).moveByOffset(-1000, 0);
+		mouseMoveAction.build().perform();
+	}
+
+	/**
+	 * 
+	 * @param driver
+	 * @return
+	 */
+	public Alert isAlertPresent(){
+	    try { 
+	        return driver.switchTo().alert(); 
+	    }   // try 
+	    catch (NoAlertPresentException Ex) { 
+	        return null; 
+	    }   // catch 
 	}
 }

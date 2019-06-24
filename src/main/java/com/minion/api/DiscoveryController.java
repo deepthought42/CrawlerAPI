@@ -10,6 +10,7 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,18 +23,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import com.minion.WorkManagement.WorkAllowanceStatus;
 import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0Client;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DomainRepository;
+import com.qanairy.models.enums.DiscoveryStatus;
+import com.qanairy.services.AccountService;
+import com.qanairy.services.DiscoveryRecordService;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
+import com.qanairy.workmanagement.WorkAllowanceStatus;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
@@ -54,28 +56,29 @@ import akka.actor.ActorSystem;
 @RequestMapping("/discovery")
 public class DiscoveryController {
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
-    
+
     @Autowired
-    private AccountRepository account_repo;
-    
+    private AccountService account_service;
+
     @Autowired
-    private DomainRepository domain_repo;
+    private DomainService domain_service;
+
+    @Autowired
+    private DiscoveryRecordService discovery_service;
     
     @Autowired
     private ActorSystem actor_system;
-    
+
     @Autowired
     private SubscriptionService subscription_service;
-    
-	@RequestMapping(path="/status", method = RequestMethod.GET)
-    public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request, 
-    												@RequestParam(value="url", required=true) String url) 
-    														throws UnknownAccountException{
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
 
-    	Account acct = account_repo.findByUsername(username);
+	@RequestMapping(path="/status", method = RequestMethod.GET)
+    public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request,
+    												@RequestParam(value="url", required=true) String url)
+    														throws UnknownAccountException{
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
 
     	if(acct == null){
     		throw new UnknownAccountException();
@@ -84,64 +87,45 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
-    	DiscoveryRecord last_discovery_record = null;
-    	Date last_ran_date = new Date(0L);
-		for(DiscoveryRecord record : acct.getDiscoveryRecords()){
-			if(record.getStartTime().compareTo(last_ran_date) > 0 && record.getDomainUrl().equals(url)){
-				last_ran_date = record.getStartTime();
-				last_discovery_record = record;
-			}
-		}
-
-		return last_discovery_record;
+    	return domain_service.getMostRecentDiscoveryRecord(url);
     }
-	
+
     /**
-	 * 
+	 *
 	 * @param request
 	 * @param url
 	 * @return
 	 * @throws MalformedURLException
-	 * @throws UnknownAccountException 
-     * @throws PaymentDueException 
-     * @throws StripeException 
+	 * @throws UnknownAccountException
+     * @throws PaymentDueException
+     * @throws StripeException
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
-	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request, 
-											   	  		@RequestParam(value="url", required=true) String url) 
-										   	  				throws MalformedURLException, 
-										   	  						UnknownAccountException, 
-										   	  						DiscoveryLimitReachedException, 
+	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request,
+											   	  		@RequestParam(value="url", required=true) String url)
+										   	  				throws MalformedURLException,
+										   	  						UnknownAccountException,
+										   	  						DiscoveryLimitReachedException,
 										   	  						PaymentDueException, StripeException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
 
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
-		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
 
-    	Account acct = account_repo.findByUsername(username);
-    	
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	
-    	
+
+    	/*
     	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
     	}
-    	
-    	Domain domain = domain_repo.findByHost(url); 
+    	*/
 
-		DiscoveryRecord last_discovery_record = null;
-		Date started_date = new Date(0L);
-		for(DiscoveryRecord record : domain_repo.getDiscoveryRecords(url)){
-			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
-				started_date = record.getStartTime();
-				last_discovery_record = record;
-			}
-		}
-    	
+    	Domain domain = domain_service.findByHost(url);
+    	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
 
     	Date now = new Date();
     	long diffInMinutes = 10000;
@@ -150,17 +134,17 @@ public class DiscoveryController {
     	}
     	String domain_url = domain.getUrl();
     	String protocol = domain.getProtocol();
-        
+
 		if(diffInMinutes > 1440){
 			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, now, 0, 1, 0);
-        	
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, 0, 1, 0, DiscoveryStatus.RUNNING);
+
 			acct.addDiscoveryRecord(discovery_record);
-			acct = account_repo.save(acct);
-			
+			acct = account_service.save(acct);
+
 			domain.addDiscoveryRecord(discovery_record);
-			domain_repo.save(domain);
-                	
+			domain_service.save(domain);
+
 			WorkAllowanceStatus.register(acct.getUsername());
 			//ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
 			Map<String, Object> options = new HashMap<String, Object>();
@@ -171,10 +155,10 @@ public class DiscoveryController {
 
 			ActorRef workAllocationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-			
-		    //Fire discovery started event	
+
+		    //Fire discovery started event
 			Map<String, String> traits = new HashMap<String, String>();
-	        traits.put("email", username);    
+	        traits.put("user_id", id);
 	        traits.put("url", url);
 	    	traits.put("browser", domain.getDiscoveryBrowserName());
 	        traits.put("discovery_started", "true");
@@ -192,19 +176,19 @@ public class DiscoveryController {
 			} catch (Exception e) {
 				log.error(e.getMessage());
 			}
-			
+
 			return discovery_record;
 
 		}
         else{
         	//Throw error indicating discovery has been or is running
         	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
-        	//Fire discovery started event	
+        	//Fire discovery started event
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
 	    	discovery_started_props.put("url", url);
 	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
 	    	discovery_started_props.put("already_running", "true");
-	    	
+
 	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")
 	    		    .userId(acct.getUsername())
 	    		    .properties(discovery_started_props)
@@ -215,23 +199,21 @@ public class DiscoveryController {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param request
 	 * @param account_key key of account to stop work for
 	 * @return
 	 * @throws MalformedURLException
-	 * @throws UnknownAccountException 
+	 * @throws UnknownAccountException
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping("/stop")
-	public @ResponseBody void stopWorkForAccount(HttpServletRequest request) 
+	public @ResponseBody void stopDiscovery(HttpServletRequest request, @RequestParam(value="url", required=true) String url)
 			throws MalformedURLException, UnknownAccountException {
-		
-    	String auth_access_token = request.getHeader("Authorization").replace("Bearer ", "");
-    	Auth0Client auth = new Auth0Client();
-    	String username = auth.getUsername(auth_access_token);
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
 
-    	Account acct = account_repo.findByUsername(username);
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -239,7 +221,18 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
-		WorkAllowanceStatus.haltWork(acct.getUsername()); 
+    	DiscoveryRecord last_discovery_record = null;
+		Date started_date = new Date(0L);
+		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
+			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
+				started_date = record.getStartTime();
+				last_discovery_record = record;
+			}
+		}
+
+		last_discovery_record.setStatus(DiscoveryStatus.STOPPED);
+		discovery_service.save(last_discovery_record);
+		WorkAllowanceStatus.haltWork(acct.getUsername());
 	}
 
 }
@@ -247,7 +240,7 @@ public class DiscoveryController {
 @ResponseStatus(HttpStatus.SEE_OTHER)
 class ExistingDiscoveryFoundException extends RuntimeException {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 7200878662560716215L;
 
@@ -259,7 +252,7 @@ class ExistingDiscoveryFoundException extends RuntimeException {
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 class MissingDiscoveryPlanException extends RuntimeException {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 7200878662560716216L;
 
@@ -271,7 +264,7 @@ class MissingDiscoveryPlanException extends RuntimeException {
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 class DiscoveryLimitReachedException extends RuntimeException {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 7200878662560716216L;
 

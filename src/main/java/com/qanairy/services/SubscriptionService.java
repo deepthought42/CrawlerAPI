@@ -15,7 +15,6 @@ import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.StripeClient;
 
 import com.qanairy.models.enums.SubscriptionPlan;
-import com.qanairy.models.repository.AccountRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.Plan;
@@ -34,12 +33,10 @@ public class SubscriptionService {
 	private StripeClient stripe_client;
 	
 	@Autowired
-	private AccountRepository account_repo;
+	private AccountService account_service;
 	
-	
-	
-	public SubscriptionService(AccountRepository account_repo){
-		this.account_repo = account_repo;
+	public SubscriptionService(AccountService account_service){
+		this.account_service = account_service;
 	}
 
 	/**
@@ -62,7 +59,7 @@ public class SubscriptionService {
 	    		stripe_client.cancelSubscription(acct.getSubscriptionToken());
 	    		acct.setSubscriptionToken("");
 	    		acct.setSubscriptionType("FREE");
-	    		account_repo.save(acct);
+	    		account_service.save(acct);
 			}
 			else{
 				log.warn("User already has free plan");
@@ -70,9 +67,9 @@ public class SubscriptionService {
 		}
 		else if("PRO".equals(plan.toString())){
 			//STAGING
-    		plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
+    		//plan_tier = Plan.retrieve("plan_Dr1tjSakC3uGXq");
     		//PRODUCTION
-    		//Plan tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
+			plan_tier = Plan.retrieve("plan_DuOeI8iaT85x2h");
 
 			Customer customer = null;
 			if(acct.getCustomerToken() == null || acct.getCustomerToken().isEmpty()){
@@ -104,7 +101,7 @@ public class SubscriptionService {
 	    	
 	    	acct.setSubscriptionToken(subscription.getId());
     		acct.setSubscriptionType("PRO");
-	    	account_repo.save(acct);
+	    	account_service.save(acct);
 		}
 	}
 	
@@ -120,12 +117,12 @@ public class SubscriptionService {
 	public boolean hasExceededSubscriptionTestRunsLimit(Account acct, SubscriptionPlan plan) throws StripeException{
     	//check if user has exceeded freemium plan
     	Date date = new Date();
-    	int test_run_cnt = account_repo.getTestCountByMonth(acct.getUsername(), date.getMonth());
+    	int test_run_cnt = account_service.getTestCountByMonth(acct.getUsername(), date.getMonth());
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 100){
+    	if(plan.equals(SubscriptionPlan.FREE) && test_run_cnt > 400){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 5000){
+    	else if(plan.equals(SubscriptionPlan.PRO) && test_run_cnt > 2000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){
@@ -148,17 +145,19 @@ public class SubscriptionService {
 	public boolean hasExceededSubscriptionDiscoveredLimit(Account acct, SubscriptionPlan plan) throws StripeException{    	
     	//check if user has exceeded freemium plan
     	Date date = new Date();
-    	Set<DiscoveryRecord> discovery_records = account_repo.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
+    	Set<DiscoveryRecord> discovery_records = account_service.getDiscoveryRecordsByMonth(acct.getUsername(), date.getMonth());
     	int discovered_test_cnt = 0;
-
+    	
     	for(DiscoveryRecord record : discovery_records){
-    		discovered_test_cnt += record.getTestCount();
+    		if(record.getStartTime().getMonth() == date.getMonth()){
+    			discovered_test_cnt += record.getTestCount();
+    		}
     	}
     	
-    	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 50){
+    	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 250){
+    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 1000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){

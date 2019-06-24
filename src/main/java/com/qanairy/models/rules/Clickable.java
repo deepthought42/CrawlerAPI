@@ -4,7 +4,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.PageElement;
+import com.qanairy.models.ElementState;
 
 @NodeEntity
 public class Clickable extends Rule {
@@ -52,7 +52,7 @@ public class Clickable extends Rule {
 	}
 
 	@Override
-	public Boolean evaluate(PageElement val) {
+	public Boolean evaluate(ElementState val) {
 		assert false;
 		// TODO Auto-generated method stub
 		return null;

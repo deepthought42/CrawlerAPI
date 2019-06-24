@@ -67,7 +67,7 @@ public class ActionFactory {
 			builder.moveToElement(elem);
 		}
 
-		builder.perform();
+		builder.build().perform();
 	}
 	
 	

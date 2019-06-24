@@ -50,7 +50,7 @@ public class Test implements Persistable {
 	private Map<String, String> browser_passing_statuses = new HashMap<>();
 	
 	@Relationship(type = "HAS_TEST_RECORD")
-	private Set<TestRecord> records = new HashSet<>();
+	private List<TestRecord> records = new ArrayList<>();
 	
 	@Relationship(type = "HAS_GROUP")
 	private Set<Group> groups = new HashSet<>();
@@ -82,7 +82,7 @@ public class Test implements Persistable {
 		setPathKeys(path_keys);
 		setPathObjects(path_objects);
 		setResult(result);
-		setRecords(new HashSet<TestRecord>());
+		setRecords(new ArrayList<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(false);
 		setLastRunTimestamp(new Date());
@@ -103,7 +103,7 @@ public class Test implements Persistable {
 		setPathKeys(path_keys);
 		setPathObjects(path_objects);
 		setResult(result);
-		setRecords(new HashSet<TestRecord>());
+		setRecords(new ArrayList<TestRecord>());
 		setStatus(TestStatus.UNVERIFIED);
 		setSpansMultipleDomains(spansMultipleDomains);
 		setLastRunTimestamp(new Date());
@@ -122,16 +122,20 @@ public class Test implements Persistable {
 	 * @return
 	 */
 	public static TestStatus isTestPassing(PageState expected_page, PageState new_result_page, TestStatus last_test_passing_status){
-		if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.FAILING)) && expected_page.getKey().equals(new_result_page.getKey())){
+		assert expected_page != null;
+		assert new_result_page != null;
+		assert last_test_passing_status != null;
+		
+		if(last_test_passing_status.equals(TestStatus.FAILING) && expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.FAILING; 
 		}
-		else if((last_test_passing_status.equals(TestStatus.UNVERIFIED) || last_test_passing_status.equals(TestStatus.FAILING)) && !expected_page.getKey().equals(new_result_page.getKey())){
+		else if(last_test_passing_status.equals(TestStatus.FAILING) && !expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.UNVERIFIED;
 		}
-		else if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.PASSING)) && expected_page.getKey().equals(new_result_page.getKey())){
+		else if(last_test_passing_status.equals(TestStatus.PASSING) && expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.PASSING;
 		}
-		else if((!last_test_passing_status.equals(TestStatus.UNVERIFIED) && last_test_passing_status.equals(TestStatus.PASSING)) && expected_page.getKey().equals(new_result_page.getKey())){
+		else if(last_test_passing_status.equals(TestStatus.PASSING) && !expected_page.equals(new_result_page)){
 			last_test_passing_status = TestStatus.FAILING;
 		}
 		
@@ -190,11 +194,11 @@ public class Test implements Persistable {
 		this.records.add(record);
 	}
 	
-	public Set<TestRecord> getRecords(){
+	public List<TestRecord> getRecords(){
 		return this.records;
 	}
 	
-	public void setRecords(Set<TestRecord> records){
+	public void setRecords(List<TestRecord> records){
 		this.records = records;
 	}
 	
@@ -318,9 +322,11 @@ public class Test implements Persistable {
 	 */
 	public PageState firstPage() {
 		for(String key : this.getPathKeys()){
-			for(PathObject path_obj: this.getPathObjects()){
-				if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
-					return (PageState)path_obj;
+			if(key.contains("pagestate")){
+				for(PathObject path_obj: this.getPathObjects()){
+					if(path_obj.getKey().equals(key) && path_obj.getType().equals("PageState")){
+						return (PageState)path_obj;
+					}
 				}
 			}
 		}

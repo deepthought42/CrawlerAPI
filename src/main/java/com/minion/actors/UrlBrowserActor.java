@@ -3,6 +3,9 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -14,105 +17,166 @@ import org.springframework.stereotype.Component;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.AbstractActor;
+import akka.cluster.Cluster;
+import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
+import com.minion.api.MessageBroadcaster;
+import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
+import com.qanairy.models.Redirect;
+import com.qanairy.services.BrowserService;
+import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
+import com.qanairy.utils.BrowserUtils;
 
 /**
- * Manages a browser instance and sets a crawler upon the instance using a given path to traverse 
+ * Manages a browser instance and sets a crawler upon the instance using a given path to traverse
  *
  */
 @Component
 @Scope("prototype")
 public class UrlBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
-	
+	private Cluster cluster = Cluster.get(getContext().getSystem());
+
+	@Autowired
+	DiscoveryRecordRepository discovery_repo;
+
 	@Autowired
 	private ActorSystem actor_system;
-	
+
 	@Autowired
 	private TestCreatorService test_creator_service;
-	
+
+	@Autowired
+	private BrowserService browser_service;
+
 	@Autowired
 	private TestService test_service;
 
 	@Autowired
-	private DiscoveryRecordRepository discovery_record_repo;
-	
+	private DiscoveryRecordService discovery_service;
+
+	//subscribe to cluster changes
+	@Override
+	public void preStart() {
+	  cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
+	      MemberEvent.class, UnreachableMember.class);
+	}
+
+	//re-subscribe when restart
+	@Override
+    public void postStop() {
+	  cluster.unsubscribe(getSelf());
+    }
+
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 */
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(Message.class, message -> {
 					if(message.getData() instanceof URL){
-					  	System.err.println("URL DISCOVERY HAS STARTED");
 
-						boolean test_generated_successfully = false;
-						int attempts = 0;
+						String discovery_key = message.getOptions().get("discovery_key").toString();
+						String url = ((URL)message.getData()).toString();
+						DiscoveryRecord discovery = discovery_service.findByKey(discovery_key);
+						if(discovery.getExpandedUrls().contains(url)){
+							return;
+						}
+						discovery.getExpandedUrls().add(url);
+						discovery_service.save(discovery);
+						discovery_service.incrementTotalPathCount(discovery_key);
+
+						String host = ((URL)message.getData()).getHost();
+						String browser_name = message.getOptions().get("browser").toString();
+						log.warn("starting transition detection");
+						Redirect redirect = null;
+
 						do{
+							Browser browser = null;
 							try{
-								String browser = message.getOptions().get("browser").toString();
-								String discovery_key = message.getOptions().get("discovery_key").toString();
-								String host = message.getOptions().get("host").toString();
-								String url = ((URL)message.getData()).toString();
+								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+								log.warn("navigating to url :: "+url);
+								browser.navigateTo(url);
 								
-								Test test = test_creator_service.generate_landing_page_test(browser, discovery_key, host, url);
-								test = test_service.save(test, host);
-		
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								log.info("test result :: "+test.getResult());
-								log.info("message account key :: "+message.getAccountKey());
-								log.info("message options "+ message.getOptions());
-								log.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-								
-								Message<PageState> page_state_msg = new Message<PageState>(message.getAccountKey(), test.getResult(), message.getOptions());
-
-								DiscoveryRecord discovery_record = discovery_record_repo.findByKey(discovery_key);
-								if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){					
-									final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-									form_discoverer.tell(page_state_msg, getSelf() );
-									
-									Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
-									
-									final ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-											  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-									path_expansion_actor.tell(test_msg, getSelf() );
-									discovery_record.addExpandedPageState(test.getResult().getKey());
-									discovery_record_repo.save(discovery_record);
-									
-								}
-								
-								
-								test_generated_successfully = true;
-								attempts = 20;
+								log.warn("getting page transition");
+								redirect = BrowserUtils.getPageTransition(url, browser, host);
 								break;
-								
 							}
 							catch(Exception e){
 								e.printStackTrace();
-								log.error(e.getMessage());
 							}
-							Timing.pauseThread(30000L);
-						}while(!test_generated_successfully && attempts < 20);
-						
-					  	System.err.println("URL DISCOVERY HAS ENDED");
+							finally {
+								if(browser != null){
+									browser.close();
+								}
+							}
+							log.warn("Transition :: " + redirect);
+						}while(redirect == null);
+						log.warn("redirect detection complete");
+						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
+						log.warn("Done building page states ");
+						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect);
+						log.warn("finished creating landing page test");
+
+						test = test_service.save(test, host);
+						log.warn("path keys :: " + test.getPathKeys());
+						log.warn("path objects :: " + test.getPathObjects());
+
+						MessageBroadcaster.broadcastDiscoveredTest(test, host);
+
+						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
+
+						final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
+
+						for(PageState page_state : page_states){
+							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
+								log.warn("discovery path does not have expanded page state");
+								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+								System.err.println("page state  ::   " + page_state);
+								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+
+								List<String> path_keys = new ArrayList<String>();
+							  	List<PathObject> path_objects = new ArrayList<PathObject>();
+							  	if(redirect != null && redirect.getUrls().size() > 1){
+							  		path_keys.add(redirect.getKey());
+							  		path_objects.add(redirect);
+							  	}
+							  	path_keys.add(page_state.getKey());
+							  	path_objects.add(page_state);
+
+								PathMessage path_message = new PathMessage(path_keys, path_objects, discovery, message.getAccountKey(), message.getOptions());
+
+								//send message to animation detection actor
+								animation_actor.tell(path_message, getSelf() );
+							}
+						}
+
+						discovery_record.setLastPathRanAt(new Date());
+						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+						discovery_record.setTestCount(discovery_record.getTestCount()+1);
+						discovery_record = discovery_service.save(discovery_record);
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				   }
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
-		
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -122,7 +186,7 @@ public class UrlBrowserActor extends AbstractActor {
 				})
 				.match(MemberRemoved.class, mRemoved -> {
 					log.info("Member is Removed: {}", mRemoved.member());
-				})	
+				})
 				.matchAny(o -> {
 					log.info("received unknown message");
 				})

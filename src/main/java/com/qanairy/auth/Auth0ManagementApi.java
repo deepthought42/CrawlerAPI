@@ -17,21 +17,23 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 public class Auth0ManagementApi {
-	private static Logger log = LoggerFactory.getLogger(Auth0Client.class);
+	private static Logger log = LoggerFactory.getLogger(Auth0ManagementApi.class);
 
-	//private static String client_id = "d0YAPCQl5rk8YhsDI1U5GaEfqvMSC5Ea";
-	//private static String client_secret = "kbHd7I5avP_d5jhofdhAcTGMJKYdNnnzgevoCddRSryv2EgLmrXvSz4aEqZBvfMp";
-	//private static String base_url = "https://staging-qanairy.auth0.com/";
-	//private static String audience_url = base_url + "api/v2/";
-	//private static String api_token = "8hk4R5YJ4gO5xPZdjjMdy7YtUF8eA22F";
+	private static String client_id = "d0YAPCQl5rk8YhsDI1U5GaEfqvMSC5Ea";
+	private static String client_secret = "kbHd7I5avP_d5jhofdhAcTGMJKYdNnnzgevoCddRSryv2EgLmrXvSz4aEqZBvfMp";
+	private static String base_url = "https://staging-qanairy.auth0.com/";
+	private static String audience_url = base_url + "api/v2/";
+	private static String api_token = "wWn9rubrIFRQZI7buiYVsadVQi6ewtQH";
 	
 	//STAGING
+	/*
 	private static String client_id = "eAlhwgR8u68lHeX4M5R0VNqPycg7LEEo";
 	private static String client_secret = "vCo_aM0QgeQY6Ymwj2KsdeCLPahjyVVHQZYnmTfsgP8ScCLprV7n2GIHiuRKucNp";
 	private static String base_url = "https://staging-qanairy.auth0.com/";
 	private static String audience_url = base_url + "api/v2/";
 	private static String api_token = "jEhM2ZhIWwy49YiJsNE9g9YtLEEn3Vxw";
-
+*/
+	
 	private ManagementAPI mgmt_api;
 
 	public Auth0ManagementApi(String access_token){

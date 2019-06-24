@@ -247,7 +247,7 @@ public class ParentPathExplorer extends AbstractActor {
 				  	}catch(Exception e){
 				  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
 					}
-					*/
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

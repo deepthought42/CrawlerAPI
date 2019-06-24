@@ -93,7 +93,19 @@ public class IntegrationController {
     	
     	long time_in_sec = (end-start)/1000;
     	
+    	int passing_cnt = 0;
+    	int failing_cnt = 0;
+    	//count passing and failing tests
+    	for(TestRecord record : test_results){
+    		if(record.getStatus().equals(TestStatus.FAILING)){
+    			failing_cnt++;
+    		}
+    		else if(record.getStatus().equals(TestStatus.PASSING)){
+    			passing_cnt++;
+    		}
+    	}
+    	
     	//Generate junit xml doc 
-    	return JUnitXmlConversionUtil.convertToJUnitXml(test_results, time_in_sec, start_date);
+    	return JUnitXmlConversionUtil.convertToJUnitXml(test_results, failing_cnt, time_in_sec, start_date);
 	}
 }

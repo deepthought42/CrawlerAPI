@@ -8,14 +8,14 @@ import com.qanairy.models.enums.TestStatus;
 
 public class JUnitXmlConversionUtil {
 
-	public static String convertToJUnitXml(List<TestRecord> test_record_list, long time_in_sec, Date date){
+	public static String convertToJUnitXml(List<TestRecord> test_record_list, int failing_cnt, long time_in_sec, Date date){
 		StringBuffer str_buf = new StringBuffer();
 		
-		str_buf.append("<testsuites>\n");
-		str_buf.append("<testsuite errors='' skipped='' tests='" +test_record_list.size()+ "' failures='' time='" + time_in_sec + "' timestamp='" + date.toString() + "'>\n");
+		str_buf.append("<testsuites id='' name='' tests='" +test_record_list.size()+ "' failures='" + failing_cnt + "' time='" + time_in_sec + "'>\n");
+		str_buf.append("<testsuite id='' name='' skipped='' tests='" +test_record_list.size()+ "' failures='" + failing_cnt + "' time='" + time_in_sec + "' timestamp='" + date.toString() + "'>\n");
 		
 		for(TestRecord record : test_record_list){
-			str_buf.append("<testcase name='" + record.getTest().getName()+ "' time='" + record.getRunTime() + "'>\n");
+			str_buf.append("<testcase id='' name='" + record.getTest().getName()+ "' time='" + record.getRunTime() + "'>\n");
 			
 			if(record.getStatus().equals(TestStatus.FAILING)){
 				str_buf.append("<failure message='' type='WARNING' >\n");

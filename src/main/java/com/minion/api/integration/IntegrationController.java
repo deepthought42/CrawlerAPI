@@ -28,6 +28,7 @@ import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
+import com.qanairy.utils.JUnitXmlConversionUtil;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -67,23 +68,27 @@ public class IntegrationController {
 	 * @param api_key
 	 * 
 	 * @return
+	 * @throws InvalidApiKeyException 
 	 */
     @RequestMapping(method = RequestMethod.GET)
-	public XML runAllTests(@RequestBody String host,
-						   @RequestBody String api_key){
+	public String runAllTests(@RequestBody String host,
+						   @RequestBody String api_key) throws InvalidApiKeyException{
     	Account acct = account_repo.getAccountByApiKey(api_key);
     	Domain domain = account_repo.getAccountDomainByApiKeyAndHost(api_key, host);
 		if(acct == null){
     		throw new InvalidApiKeyException("Invalid API key");
     	}
     	
+		/* UNCOMMENT WHEN READY TO HANDLE SUBSCRIPTIONS
+		 
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
-    	
-    	List<TestRecord> test_results = test_service.runAllTests(acct, domain);  	
-
+    	*/
 		
-		return test_results;
+    	List<TestRecord> test_results = test_service.runAllTests(acct, domain);
+    	
+    	//Generate junit xml doc 
+    	return JUnitXmlConversionUtil.convertToJUnitXml(test_results);
 	}
 }

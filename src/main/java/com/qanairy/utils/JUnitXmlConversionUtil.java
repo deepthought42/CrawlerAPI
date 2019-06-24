@@ -16,9 +16,9 @@ public class JUnitXmlConversionUtil {
 		for(TestRecord record : test_record_list){
 			str_buf.append("<testcase name='" + record.getTest().getName()+ "' time='" + record.getRunTime() + "'>\n");
 			
-			if(record.getPassing().equals(TestStatus.FAILING)){
+			if(record.getStatus().equals(TestStatus.FAILING)){
 				str_buf.append("<failure message='' type='WARNING' >\n");
-				str_buf.append("ERROR MESSAGE HERE");
+				str_buf.append("ERROR MESSAGE HERE. (THE ABILITY TO TRACK ERROR MESSAGES IS NOT CURRENTLY SUPPORTED)");
 				str_buf.append("</failure>\n");
 			}
 			

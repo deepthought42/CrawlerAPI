@@ -1,7 +1,5 @@
 package com.qanairy.services;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,6 +23,7 @@ import com.qanairy.models.Account;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.Animation;
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
@@ -35,8 +34,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.PageStateRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.segment.analytics.Analytics;
@@ -48,10 +45,10 @@ public class TestService {
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
 	@Autowired
-  private AccountRepository account_repo;
+	private AccountRepository account_repo;
 
-  @Autowired
-  private DomainService domain_service;
+	@Autowired
+	private DomainService domain_service;
 
 	@Autowired
 	private TestRepository test_repo;
@@ -205,7 +202,7 @@ public class TestService {
 		return test;
 	}
 
-	 public List<TestRecord> runAllTests(Account acct, Domain domain) throws MalformedURLException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
+	 public List<TestRecord> runAllTests(Account acct, Domain domain) {
 		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("account", acct.getUsername());
@@ -216,7 +213,7 @@ public class TestService {
 		);
 
 		//Fire discovery started event
-    	Set<Test> tests = domain_repo.getVerifiedTests(domain.getUrl());
+    	Set<Test> tests = domain_service.getVerifiedTests(domain.getUrl());
 	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
 	   	run_test_batch_props.put("total tests", Integer.toString(tests.size()));
 	   	analytics.enqueue(TrackMessage.builder("Running tests")
@@ -228,9 +225,7 @@ public class TestService {
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 
     	for(Test test : tests){
-			Browser browser_dto = new Browser(domain.getDiscoveryBrowserName());
-			TestRecord record = test_service.runTest(test, browser_dto, test.getStatus());
-			browser_dto.close();
+			TestRecord record = test_service.runTest(test, domain.getDiscoveryBrowserName(), test.getStatus());
 
 			test_results.put(test.getKey(), record);
 			TestStatus is_passing = TestStatus.PASSING;
@@ -245,7 +240,7 @@ public class TestService {
     		record = test_record_repo.save(record);
     		test_records.add(record);
 
-	    	test.getBrowserStatuses().put(record.getBrowser(), record.getPassing().toString());
+	    	test.getBrowserStatuses().put(record.getBrowser(), record.getStatus().toString());
 
 	    	test.addRecord(record);
 			test.setStatus(is_passing);

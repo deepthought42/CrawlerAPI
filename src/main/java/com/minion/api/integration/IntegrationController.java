@@ -86,9 +86,14 @@ public class IntegrationController {
         }
     	*/
 		
+		Date start_date = new Date();
+		long start = System.currentTimeMillis();
     	List<TestRecord> test_results = test_service.runAllTests(acct, domain);
+    	long end = System.currentTimeMillis();
+    	
+    	long time_in_sec = (end-start)/1000;
     	
     	//Generate junit xml doc 
-    	return JUnitXmlConversionUtil.convertToJUnitXml(test_results);
+    	return JUnitXmlConversionUtil.convertToJUnitXml(test_results, time_in_sec, start_date);
 	}
 }

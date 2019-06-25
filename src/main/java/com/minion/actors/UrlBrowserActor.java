@@ -119,6 +119,7 @@ public class UrlBrowserActor extends AbstractActor {
 
 								log.warn("getting page transition");
 								redirect = BrowserUtils.getPageTransition(url, browser, host);
+								log.warn("starting loading animation detection");
 								animation = BrowserUtils.getLoadingAnimation(browser, host, url);
 
 								break;

@@ -442,6 +442,7 @@ public class BrowserService {
 			browser.moveMouseOutOfFrame();
 		}catch(Exception e){}
 
+		
 		String browser_url = browser.getDriver().getCurrentUrl();
 		URL page_url = new URL(browser_url);
 		int param_index = page_url.toString().indexOf("?");
@@ -449,7 +450,6 @@ public class BrowserService {
 		if(param_index >= 0){
 			url_without_params = url_without_params.substring(0, param_index);
 		}
-
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);

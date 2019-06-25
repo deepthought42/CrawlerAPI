@@ -20,7 +20,6 @@ import com.qanairy.models.Animation;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
-import com.qanairy.models.Transition;
 import com.qanairy.models.enums.AnimationType;
 import com.qanairy.services.ScreenshotUploadService;
 
@@ -43,6 +42,9 @@ public class BrowserUtils {
 		if(last_key.charAt(last_key.length()-1) == '/'){
 			last_key = last_key.substring(0, last_key.length()-1);
 		}
+		if(!last_key.startsWith("www.")){
+			last_key = "www."+last_key;
+		}
 		transition_urls.add(last_key);
 		do{
 			String domain = browser.getDriver().getCurrentUrl();
@@ -60,7 +62,7 @@ public class BrowserUtils {
 				new_key = new_key.substring(0, new_key.length()-1);
 			}
 
-	    transition_detected = !new_key.equals(last_key);
+			transition_detected = !new_key.equals(last_key);
 
 			if( transition_detected ){
 				try{
@@ -154,6 +156,8 @@ public class BrowserUtils {
 		String last_checksum = null;
 		String new_checksum = null;
 		List<Future<String>> url_futures = new ArrayList<>();
+		boolean cycle_detected = false;
+		log.warn("detecting loading animation");
 		do{
 			//get element screenshot
 			BufferedImage screenshot = browser.getViewportScreenshot();
@@ -164,6 +168,9 @@ public class BrowserUtils {
 			transition_detected = !new_checksum.equals(last_checksum);
 
 			if( transition_detected ){
+				if(animated_state_checksum_hash.containsKey(new_checksum)){
+					return null;
+				}
 				start_ms = System.currentTimeMillis();
 				image_checksums.add(new_checksum);
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
@@ -171,9 +178,10 @@ public class BrowserUtils {
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
 
+			log.warn("was transition detected ??   " + transition_detected);
 			//transition is detected if keys are different
 		}while((System.currentTimeMillis() - start_ms) < 5000);
-
+		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {
 				image_urls.add(future.get());
@@ -184,10 +192,13 @@ public class BrowserUtils {
 			}
 		}
 
+		
 		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
+			log.warn("returning loading animation");
 			return new PageLoadAnimation(image_urls, image_checksums, url);
 		}
 
+		log.warn("no loading animation detected. Returning null");
 		return null;
 	}
 }

@@ -1,6 +1,7 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -506,6 +507,20 @@ public class Crawler {
 				log.warn("setting up browser :: " + browser_name);
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
+				
+				String browser_url = browser.getDriver().getCurrentUrl();
+				URL page_url = new URL(browser_url);
+				int param_index = page_url.toString().indexOf("?");
+				String url_without_params = page_url.toString();
+				if(param_index >= 0){
+					url_without_params = url_without_params.substring(0, param_index);
+				}
+				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host, url_without_params);
+				if(loading_animation != null){
+					path.getPathKeys().add(loading_animation.getKey());
+					path.getPathObjects().add(loading_animation);
+				}
+				
 				result_page = browser_service.buildPage(browser);
 			}catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test ");

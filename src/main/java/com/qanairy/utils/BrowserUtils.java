@@ -2,6 +2,7 @@ package com.qanairy.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,30 +38,11 @@ public class BrowserUtils {
 		long start_ms = System.currentTimeMillis();
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 
-		URL init_url = new URL(initial_url);
-		String last_key = init_url.getHost()+init_url.getPath();
-		if(last_key.charAt(last_key.length()-1) == '/'){
-			last_key = last_key.substring(0, last_key.length()-1);
-		}
-		if(!last_key.startsWith("www.")){
-			last_key = "www."+last_key;
-		}
+		String last_key = sanitizeUrl(initial_url);
+		
 		transition_urls.add(last_key);
 		do{
-			String domain = browser.getDriver().getCurrentUrl();
-			if(domain.charAt(0) != 'h'){
-				domain= 'h'+domain;
-			}
-			URL new_url = new URL(domain);
-
-			String new_host = new_url.getHost();
-			if(!new_host.startsWith("www.")){
-				new_host = "www."+new_host;
-			}
-			String new_key = new_host+new_url.getPath();
-			if(new_key.charAt(new_key.length()-1) == '/'){
-				new_key = new_key.substring(0, new_key.length()-1);
-			}
+			String new_key = sanitizeUrl(browser.getDriver().getCurrentUrl());
 
 			transition_detected = !new_key.equals(last_key);
 
@@ -156,8 +138,8 @@ public class BrowserUtils {
 		String last_checksum = null;
 		String new_checksum = null;
 		List<Future<String>> url_futures = new ArrayList<>();
-		boolean cycle_detected = false;
 		log.warn("detecting loading animation");
+
 		do{
 			//get element screenshot
 			BufferedImage screenshot = browser.getViewportScreenshot();
@@ -191,7 +173,6 @@ public class BrowserUtils {
 				log.debug(e.getMessage());
 			}
 		}
-
 		
 		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
 			log.warn("returning loading animation");
@@ -200,5 +181,23 @@ public class BrowserUtils {
 
 		log.warn("no loading animation detected. Returning null");
 		return null;
+	}
+	
+	public static String sanitizeUrl(String currentUrl) throws MalformedURLException {
+		String domain = currentUrl;
+		if(domain.charAt(0) != 'h'){
+			domain= 'h'+domain;
+		}
+		URL new_url = new URL(domain);
+
+		String new_host = new_url.getHost();
+		if(!new_host.startsWith("www.")){
+			new_host = "www."+new_host;
+		}
+		String new_key = new_host+new_url.getPath();
+		if(new_key.charAt(new_key.length()-1) == '/'){
+			new_key = new_key.substring(0, new_key.length()-1);
+		}
+		return new_key;
 	}
 }

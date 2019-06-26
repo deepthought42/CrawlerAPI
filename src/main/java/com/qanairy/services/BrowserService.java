@@ -38,7 +38,6 @@ import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Action;
-import com.qanairy.models.Animation;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -50,7 +49,6 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.utils.BrowserUtils;
-import com.qanairy.utils.FilterUtils;
 
 /**
  *
@@ -414,10 +412,10 @@ public class BrowserService {
 
 		for(WebElement element : web_elements){
 			String tag_name = element.getTagName();
-			if(tag_name.equals("html") || tag_name.equals("body")
-					|| tag_name.equals("link") || tag_name.equals("script")
-					|| tag_name.equals("title") || tag_name.equals("meta")
-					|| tag_name.equals("head")){
+			if("html".equals(tag_name) || "body".equals(tag_name)
+					|| "link".equals(tag_name) || "script".equals(tag_name)
+					|| "title".equals(tag_name) || "meta".equals(tag_name)
+					|| "head".equals(tag_name)){
 				continue;
 			}
 			elements.add(element);
@@ -813,7 +811,7 @@ public class BrowserService {
 
 	    WebElement parent = element;
 	    int count = 0;
-	    while(!parent.getTagName().equals("html") && !parent.getTagName().equals("body") && parent != null && count < 4){
+	    while(!"html".equals(parent.getTagName()) && !"body".equals(parent.getTagName()) && parent != null && count < 4){
 	    	try{
 	    		parent = getParentElement(parent);
 	    		if(driver.findElements(By.xpath("//"+parent.getTagName() + xpath)).size() == 1){

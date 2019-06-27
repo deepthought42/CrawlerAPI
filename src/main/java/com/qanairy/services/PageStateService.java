@@ -1,5 +1,7 @@
 package com.qanairy.services;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +58,7 @@ public class PageStateService {
 		for(Screenshot screenshot : page_state.getScreenshots()){
 			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
 			if(page_state_record == null){
-				findByAnimationImageChecksum(screenshot.getChecksum());
+				page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
 			}
 			if(page_state_record != null){
 				break;
@@ -174,5 +176,16 @@ public class PageStateService {
 	
 	public Set<PageState> getElementPageStatesWithSameUrl(String url, String key){
 		return page_state_repo.getElementPageStatesWithSameUrl(url, key);
+	}
+
+	public PageState findByScreenshot(BufferedImage viewport_screenshot) throws IOException {
+		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+		PageState page_state_record = findByScreenshotChecksum(screenshot_checksum);
+		log.warn("PageState record value :: " + page_state_record);
+		if(page_state_record == null){
+			page_state_record = findByAnimationImageChecksum(screenshot_checksum);
+		}
+		
+		return page_state_record;
 	}
 }

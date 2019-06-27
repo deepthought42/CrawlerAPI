@@ -501,7 +501,7 @@ public class Crawler {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
-
+		List<ElementState> element_states = new ArrayList<>();
 		do{
 			try{
 				log.warn("setting up browser :: " + browser_name);
@@ -521,7 +521,7 @@ public class Crawler {
 					path.getPathObjects().add(loading_animation);
 				}
 				
-				result_page = browser_service.buildPage(browser);
+				result_page = browser_service.buildPage(browser, element_states, true);
 			}catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test ");
 				//e.printStackTrace();

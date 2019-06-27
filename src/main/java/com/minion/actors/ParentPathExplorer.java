@@ -41,6 +41,7 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -74,6 +75,9 @@ public class ParentPathExplorer extends AbstractActor {
 
 	@Autowired
 	private Crawler crawler;
+	
+	@Autowired
+	private PageStateService page_state_service;
 
 	private ActorRef path_expansion;
 
@@ -204,9 +208,13 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							
 							log.warn("building parent result page state");
+							
+							//REPLACE WITH SIMPLE CHECK FOR SCREENSHOT. POSSIBLY CREATE METHOD IN PAGESTATESERVICE TO RETRIEVE PAGE BY SCREENSHOT
+							page_state_service.findByScreenshot(browser.getViewportScreenshot());
 							//build result page
 							PageState parent_result = browser_service.buildPage(browser);
 
+							
 							log.warn("checking if parent result matches expected result");
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(parent_result.equals(message.getResultPage())){

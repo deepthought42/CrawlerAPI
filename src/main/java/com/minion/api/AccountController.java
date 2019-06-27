@@ -193,7 +193,7 @@ public class AccountController {
     }
 
 	@PreAuthorize("hasAuthority('update:accounts')")
-    @RequestMapping(value ="/{id}", method = RequestMethod.PUT)
+    @RequestMapping(value ="/{id}/refreshToken", method = RequestMethod.PUT)
     public Account updateApiToken(final @PathVariable long id) throws AccountNotFoundException {
         logger.info("update invoked");
         Optional<Account> optional_acct = account_service.findById(id);

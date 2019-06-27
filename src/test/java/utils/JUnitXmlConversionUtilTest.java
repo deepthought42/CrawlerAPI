@@ -1,5 +1,6 @@
 package utils;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public class JUnitXmlConversionUtilTest {
 	private TestRecord record;
 	
 	@Before
-	public void setup(){
+	public void setUp(){
 		MockitoAnnotations.initMocks(this);
 	}
 	
@@ -45,5 +46,6 @@ public class JUnitXmlConversionUtilTest {
 
 		String xml = JUnitXmlConversionUtil.convertToJUnitXml(records, 1, 250, new Date());
 		System.err.println("OUTPUT ::   "+xml);
+		//assertTrue(xml.equals("<testsuites id='' name='' tests='1' failures='1' time='250'>\n<testsuite id='' name='' skipped='' tests='1' failures='1' time='250' timestamp='Thu Jun 27 00:20:51 EDT 2019'><testcase id='' name='Practice test #1' time='10000'>\n<failure message='' type='WARNING' >\nERROR MESSAGE HERE. (THE ABILITY TO TRACK ERROR MESSAGES IS NOT CURRENTLY SUPPORTED)\n</failure>\n</testcase>\n</testsuite>\n</testsuites>"));
 	}
 }

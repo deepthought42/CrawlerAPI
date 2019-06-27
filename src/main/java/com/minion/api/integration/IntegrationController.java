@@ -1,12 +1,8 @@
 package com.minion.api.integration;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.json.XML;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,25 +10,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.minion.api.exception.InvalidApiKeyException;
-import com.minion.api.exception.PaymentDueException;
-import com.minion.browsing.Browser;
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
-import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
-import com.qanairy.models.repository.DomainRepository;
-import com.qanairy.models.repository.TestRecordRepository;
-import com.qanairy.models.repository.TestRepository;
-import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.JUnitXmlConversionUtil;
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.IdentifyMessage;
-import com.segment.analytics.messages.TrackMessage;
-
 
 /**
  * 
@@ -45,19 +29,7 @@ public class IntegrationController {
 	private AccountRepository account_repo;
 	
 	@Autowired
-	private DomainRepository domain_repo;
-	
-	@Autowired
-	private TestRecordRepository test_record_repo;
-	
-	@Autowired
-	private TestRepository test_repo;
-	
-	@Autowired
 	private TestService test_service;
-	
-	@Autowired
-	private SubscriptionService subscription_service;
 	
 	/**
 	 * Runs all tests for a given domain and account using an api key to locate the account
@@ -93,15 +65,11 @@ public class IntegrationController {
     	
     	long time_in_sec = (end-start)/1000;
     	
-    	int passing_cnt = 0;
     	int failing_cnt = 0;
     	//count passing and failing tests
     	for(TestRecord record : test_results){
     		if(record.getStatus().equals(TestStatus.FAILING)){
     			failing_cnt++;
-    		}
-    		else if(record.getStatus().equals(TestStatus.PASSING)){
-    			passing_cnt++;
     		}
     	}
     	

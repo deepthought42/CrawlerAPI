@@ -2,6 +2,7 @@ package com.qanairy.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,9 +18,10 @@ import org.slf4j.LoggerFactory;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Animation;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
-import com.qanairy.models.Transition;
+import com.qanairy.models.enums.AnimationType;
 import com.qanairy.services.ScreenshotUploadService;
 
 
@@ -36,29 +38,13 @@ public class BrowserUtils {
 		long start_ms = System.currentTimeMillis();
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 
-		URL init_url = new URL(initial_url);
-		String last_key = init_url.getHost()+init_url.getPath();
-		if(last_key.charAt(last_key.length()-1) == '/'){
-			last_key = last_key.substring(0, last_key.length()-1);
-		}
+		String last_key = sanitizeUrl(initial_url);
+		
 		transition_urls.add(last_key);
 		do{
-			String domain = browser.getDriver().getCurrentUrl();
-			if(domain.charAt(0) != 'h'){
-				domain= 'h'+domain;
-			}
-			URL new_url = new URL(domain);
+			String new_key = sanitizeUrl(browser.getDriver().getCurrentUrl());
 
-			String new_host = new_url.getHost();
-			if(!new_host.startsWith("www.")){
-				new_host = "www."+new_host;
-			}
-			String new_key = new_host+new_url.getPath();
-			if(new_key.charAt(new_key.length()-1) == '/'){
-				new_key = new_key.substring(0, new_key.length()-1);
-			}
-
-	    transition_detected = !new_key.equals(last_key);
+			transition_detected = !new_key.equals(last_key);
 
 			if( transition_detected ){
 				try{
@@ -127,7 +113,7 @@ public class BrowserUtils {
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 2000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -139,6 +125,79 @@ public class BrowserUtils {
 			}
 		}
 
-		return new Animation(image_urls, true, image_checksums);
+		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
+	}	
+	
+	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String url) throws IOException {
+		List<String> image_checksums = new ArrayList<String>();
+		List<String> image_urls = new ArrayList<String>();
+		boolean transition_detected = false;
+		long start_ms = System.currentTimeMillis();
+
+		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
+		String last_checksum = null;
+		String new_checksum = null;
+		List<Future<String>> url_futures = new ArrayList<>();
+		log.warn("detecting loading animation");
+
+		do{
+			//get element screenshot
+			BufferedImage screenshot = browser.getViewportScreenshot();
+
+			//calculate screenshot checksum
+			new_checksum = PageState.getFileChecksum(screenshot);
+
+			transition_detected = !new_checksum.equals(last_checksum);
+
+			if( transition_detected ){
+				if(animated_state_checksum_hash.containsKey(new_checksum)){
+					return null;
+				}
+				start_ms = System.currentTimeMillis();
+				image_checksums.add(new_checksum);
+				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
+				last_checksum = new_checksum;
+				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+			}
+
+			log.warn("was transition detected ??   " + transition_detected);
+			//transition is detected if keys are different
+		}while((System.currentTimeMillis() - start_ms) < 3000);
+		log.warn("done detecting loading animation");
+		for(Future<String> future: url_futures){
+			try {
+				image_urls.add(future.get());
+			} catch (InterruptedException e) {
+				log.debug(e.getMessage());
+			} catch (ExecutionException e) {
+				log.debug(e.getMessage());
+			}
+		}
+		
+		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
+			log.warn("returning loading animation");
+			return new PageLoadAnimation(image_urls, image_checksums, url);
+		}
+
+		log.warn("no loading animation detected. Returning null");
+		return null;
+	}
+	
+	public static String sanitizeUrl(String currentUrl) throws MalformedURLException {
+		String domain = currentUrl;
+		if(domain.charAt(0) != 'h'){
+			domain= 'h'+domain;
+		}
+		URL new_url = new URL(domain);
+
+		String new_host = new_url.getHost();
+		if(!new_host.startsWith("www.")){
+			new_host = "www."+new_host;
+		}
+		String new_key = new_host+new_url.getPath();
+		if(new_key.charAt(new_key.length()-1) == '/'){
+			new_key = new_key.substring(0, new_key.length()-1);
+		}
+		return new_key;
 	}
 }

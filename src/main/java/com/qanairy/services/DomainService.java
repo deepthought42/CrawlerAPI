@@ -12,6 +12,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
@@ -105,5 +106,9 @@ public class DomainService {
 	
 	public Set<TestRecord> getTestRecords(String url) {
 		return domain_repo.getTestRecords(url);
+	}
+
+	public Set<PageLoadAnimation> getAnimations(String host) {
+		return domain_repo.getAnimations(host);
 	}
 }

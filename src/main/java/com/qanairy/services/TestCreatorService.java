@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Group;
-import com.qanairy.models.Animation;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -55,7 +55,7 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition)
+	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, PageLoadAnimation animation)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		page_state.setLandable(true);
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
@@ -63,12 +63,17 @@ public class TestCreatorService {
 
 	  	List<String> path_keys = new ArrayList<String>();
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
-	  	if(transition != null &&
-	  			((transition instanceof Redirect && ((Redirect)transition).getUrls().size() > 1)
-	  				|| transition instanceof Animation && ((Animation)transition).getImageUrls().size() > 1 && ((Animation)transition).getIsContinuous())){
+	  	if(transition != null 
+	  			&& ((transition instanceof Redirect && ((Redirect)transition).getUrls().size() > 1))){
 	  		path_keys.add(transition.getKey());
 	  		path_objects.add(transition);
 	  	}
+	  	
+	  	if(animation != null){
+	  		path_keys.add(animation.getKey());
+	  		path_objects.add(animation);
+	  	}
+
 	  	path_keys.add(page_state.getKey());
 	  	path_objects.add(page_state);
 
@@ -92,7 +97,7 @@ public class TestCreatorService {
 
 		return test;
 	}
-
+	
 	/**
 	 * Generates a landing page test based on a given URL
 	 *

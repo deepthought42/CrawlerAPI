@@ -10,6 +10,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -73,5 +74,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH b=(t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
 	public Set<TestRecord> getTestRecords(@Param("domain_host") String host);
+	
+	@Query("MATCH (p:PageLoadAnimation) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p")
+	public Set<PageLoadAnimation> getAnimations(@Param("domain_host") String host);
 
 }

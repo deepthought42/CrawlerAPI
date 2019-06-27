@@ -108,8 +108,8 @@ public class ParentPathExplorer extends AbstractActor {
 				.match(TestCandidateMessage.class, message-> {
 					//get index of last page element in path
 			  		int last_elem_idx = getIndexOfLastElementState(message.getKeys());
-			  		List<String> final_path_keys = message.getKeys();
-			  		List<PathObject> final_path_objects = message.getPathObjects();
+			  		List<String> final_path_keys = new ArrayList<String>(message.getKeys());
+			  		List<PathObject> final_path_objects = new ArrayList<PathObject>(message.getPathObjects());
 			  		List<String> path_keys = message.getKeys();//.subList(0, last_elem_idx+1);
 					List<PathObject> path_objects = message.getPathObjects();//.subList(0, last_elem_idx+1);
 					Browser browser = null;

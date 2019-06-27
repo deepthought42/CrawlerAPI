@@ -162,7 +162,7 @@ public class BrowserUtils {
 
 			log.warn("was transition detected ??   " + transition_detected);
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 5000);
+		}while((System.currentTimeMillis() - start_ms) < 3000);
 		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {

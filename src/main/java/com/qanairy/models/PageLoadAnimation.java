@@ -29,7 +29,7 @@ public class PageLoadAnimation implements Transition, Persistable {
 	 */
 	public PageLoadAnimation(List<String> image_urls, List<String> image_checksums, String page_url) {
 		assert image_urls != null;
-		setType("Animation");
+		setType("PageLoadAnimation");
 		setImageUrls(image_urls);
 		setImageChecksums(image_checksums);
 		setPageUrl(page_url);
@@ -57,7 +57,7 @@ public class PageLoadAnimation implements Transition, Persistable {
 
 	@Override
 	public void setType(String type) {
-		this.type = "LoadingAnimation";
+		this.type = "PageLoadAnimation";
 	}
 
 	@Override

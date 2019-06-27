@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,5 +73,9 @@ public class AccountService {
 	
 	public List<TestRecord> getTestRecords(String username) {
 		return account_repo.getTestRecords(username);
+	}
+
+	public Optional<Account> findById(long id) {
+		return account_repo.findById(id);
 	}
 }

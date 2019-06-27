@@ -196,11 +196,11 @@ public class AccountController {
     @RequestMapping(value ="/{id}", method = RequestMethod.PUT)
     public Account updateApiToken(final @PathVariable long id) throws AccountNotFoundException {
         logger.info("update invoked");
-        Optional<Account> optional_acct = account_repo.findById(id);
+        Optional<Account> optional_acct = account_service.findById(id);
         if(optional_acct.isPresent()){
         	Account account = optional_acct.get();
         	account.setApiToken(UUID.randomUUID().toString());
-        	return account_repo.save(account);
+        	return account_service.save(account);
         }
         else{
         	throw new AccountNotFoundException();

@@ -3,6 +3,7 @@ package utils;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
@@ -40,9 +41,9 @@ public class JUnitXmlConversionUtilTest {
 		when(record.getTest()).thenReturn(test);
 		when(record.getRunTime()).thenReturn(10000L);
 		when(test.getName()).thenReturn("Practice test #1");
-		when(record.getPassing()).thenReturn(TestStatus.FAILING);
+		when(record.getStatus()).thenReturn(TestStatus.FAILING);
 
-		String xml = JUnitXmlConversionUtil.convertToJUnitXml(records);
+		String xml = JUnitXmlConversionUtil.convertToJUnitXml(records, 1, 250, new Date());
 		System.err.println("OUTPUT ::   "+xml);
 	}
 }

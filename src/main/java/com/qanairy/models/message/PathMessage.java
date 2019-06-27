@@ -1,5 +1,6 @@
 package com.qanairy.models.message;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +52,6 @@ public class PathMessage {
 	}
 	
 	public PathMessage clone(){
-		return new PathMessage(keys, path_objects, discovery, account_key, options);
+		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), discovery, account_key, options);
 	}
 }

@@ -33,6 +33,7 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
@@ -107,6 +108,7 @@ public class UrlBrowserActor extends AbstractActor {
 						String browser_name = message.getOptions().get("browser").toString();
 						log.warn("starting transition detection");
 						Redirect redirect = null;
+						PageLoadAnimation animation = null;
 
 						do{
 							Browser browser = null;
@@ -114,9 +116,12 @@ public class UrlBrowserActor extends AbstractActor {
 								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 								log.warn("navigating to url :: "+url);
 								browser.navigateTo(url);
-								
+
 								log.warn("getting page transition");
 								redirect = BrowserUtils.getPageTransition(url, browser, host);
+								log.warn("starting loading animation detection");
+								animation = BrowserUtils.getLoadingAnimation(browser, host, url);
+
 								break;
 							}
 							catch(Exception e){
@@ -128,12 +133,14 @@ public class UrlBrowserActor extends AbstractActor {
 								}
 							}
 							log.warn("Transition :: " + redirect);
+							log.warn("Animation returned   :: " + animation);
 						}while(redirect == null);
-						log.warn("redirect detection complete");
+						
+						log.warn("loading animation detection complete");
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
 
 						log.warn("Done building page states ");
-						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect);
+						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation);
 						log.warn("finished creating landing page test");
 
 						test = test_service.save(test, host);
@@ -160,10 +167,16 @@ public class UrlBrowserActor extends AbstractActor {
 							  		path_keys.add(redirect.getKey());
 							  		path_objects.add(redirect);
 							  	}
+							  	
+							  	if(animation != null){
+							  		path_keys.add(animation.getKey());
+							  		path_objects.add(animation);
+							  	}
+							  	
 							  	path_keys.add(page_state.getKey());
 							  	path_objects.add(page_state);
 
-								PathMessage path_message = new PathMessage(path_keys, path_objects, discovery, message.getAccountKey(), message.getOptions());
+								PathMessage path_message = new PathMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), discovery, message.getAccountKey(), message.getOptions());
 
 								//send message to animation detection actor
 								animation_actor.tell(path_message, getSelf() );

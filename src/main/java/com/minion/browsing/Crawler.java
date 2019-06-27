@@ -1,6 +1,7 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +25,9 @@ import org.slf4j.Logger;
 import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
-import com.qanairy.models.Animation;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
+import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -102,7 +103,13 @@ public class Crawler {
 			expected_page = ((PageState)ordered_path_objects.get(1));
 		}
 		else if(ordered_path_objects.get(0) instanceof PageState){
-			expected_page = ((PageState)ordered_path_objects.get(0));
+			//find first page
+			for(PathObject obj : ordered_path_objects){
+				if(obj instanceof PageState){
+					expected_page = ((PageState)obj);
+					break;
+				}
+			}
 		}
 
 		browser.navigateTo(expected_page.getUrl());
@@ -159,8 +166,9 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				browser.waitForPageToLoad();
 			}
-			else if(current_obj instanceof Animation){
-				BrowserUtils.getAnimation(browser, host_channel);
+			else if(current_obj instanceof PageLoadAnimation){
+				log.warn("crawling loading animation");
+				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -171,8 +179,6 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		log.warn("browser service :: "+browser_service );
-		log.warn("Browser ::  " + browser);
 		return browser_service.buildPage(browser);
 	}
 
@@ -228,9 +234,15 @@ public class Crawler {
 			Redirect redirect = (Redirect)ordered_path_objects.get(0);
 			init_url = redirect.getStartUrl();
 		}
-		else if(ordered_path_objects.get(0) instanceof PageState){
-			expected_page = ((PageState)ordered_path_objects.get(0));
-			init_url = expected_page.getUrl();
+		else {
+			//find first page
+			for(PathObject obj : ordered_path_objects){
+				if(obj instanceof PageState){
+					expected_page = ((PageState)obj);
+					init_url = expected_page.getUrl();	
+					break;
+				}
+			}
 		}
 
 		//log.warn("navigating to url :: " + init_url);
@@ -239,6 +251,7 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
 			if(current_obj instanceof PageState){
+				log.warn("current object type :: " + current_obj.getClass().getName() + "   ;;   "+current_obj.getType());
 				expected_page = (PageState)current_obj;
 
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
@@ -264,7 +277,6 @@ public class Crawler {
 				performAction(action, last_element, browser.getDriver());
 				Timing.pauseThread(1000);
 				browser.waitForPageToLoad();
-				//BrowserUtils.getElementAnimation(browser, last_element, host_channel);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -280,6 +292,9 @@ public class Crawler {
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				//browser.waitForPageToLoad();
+			}
+			else if(current_obj instanceof PageLoadAnimation){
+				BrowserUtils.getLoadingAnimation(browser, host_channel, init_url);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -365,7 +380,6 @@ public class Crawler {
 					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 				}
-				log.warn("last url for expected page state ::   "  + last_url);
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -381,8 +395,8 @@ public class Crawler {
 
 				log.warn("seting last url to redirect url :: " + last_url);
 			}
-			else if(current_obj instanceof Animation){
-				BrowserUtils.getAnimation(browser, host_channel);
+			else if(current_obj instanceof PageLoadAnimation){
+				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -398,8 +412,6 @@ public class Crawler {
 					action = action_record;
 				}
 
-				log.warn("last element :: " + last_element);
-				log.warn("action being performed  ::  " + action);
 				performAction(action, last_element, browser.getDriver());
 				//check for page alert presence
 				Alert alert = browser.isAlertPresent();
@@ -469,17 +481,8 @@ public class Crawler {
 	 */
 	public static void performAction(Action action, ElementState elem, WebDriver driver){
 		ActionFactory actionFactory = new ActionFactory(driver);
-		log.warn("looking up element with xpath :: " + elem.getXpath());
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		try{
-			log.warn("action name to perform :: " + action.getName());
-			log.warn("action value to input :: " + action.getValue());
-			actionFactory.execAction(element, action.getValue(), action.getName());
-		}catch(WebDriverException e){
-			if(!e.getMessage().contains("out of bounds of viewport")){
-				throw e;
-			}
-		}
+		actionFactory.execAction(element, action.getValue(), action.getName());
 	}
 
 	public static void scrollDown(WebDriver driver, int distance)
@@ -503,18 +506,31 @@ public class Crawler {
 			try{
 				log.warn("setting up browser :: " + browser_name);
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				log.warn("exploratory crawl with keys   ::   "+path.getPathKeys());
 				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
+				
+				String browser_url = browser.getDriver().getCurrentUrl();
+				URL page_url = new URL(browser_url);
+				int param_index = page_url.toString().indexOf("?");
+				String url_without_params = page_url.toString();
+				if(param_index >= 0){
+					url_without_params = url_without_params.substring(0, param_index);
+				}
+				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host, url_without_params);
+				if(loading_animation != null){
+					path.getPathKeys().add(loading_animation.getKey());
+					path.getPathObjects().add(loading_animation);
+				}
+				
 				result_page = browser_service.buildPage(browser);
 			}catch(NullPointerException e){
-				log.info("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
-				e.printStackTrace();
+				log.info("Error happened while exploratory actor attempted to crawl test ");
+				//e.printStackTrace();
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
-				log.warn("Unable to locage element while performing path crawl   ::    "+ e.getMessage());
-				e.printStackTrace();
+				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
+				//e.printStackTrace();
 			}
 			catch (WebDriverException e) {
 				log.warn("web driver exception occurred : " + e.getMessage());
@@ -523,10 +539,10 @@ public class Crawler {
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			} catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			finally{
 				if(browser != null){
@@ -560,8 +576,8 @@ public class Crawler {
 				log.info("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
-				log.error("Unable to locage element while performing path crawl   ::    "+ e.getMessage());
-				e.printStackTrace();
+				log.error("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
+				//e.printStackTrace();
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
@@ -571,7 +587,7 @@ public class Crawler {
 				log.info("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
 				log.info("Exception occurred in performPathCrawl actor. \n"+e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			finally{
 				if(browser != null){

@@ -14,7 +14,6 @@ import com.qanairy.models.TestRecord;
 
 
 public interface AccountRepository extends Neo4jRepository<Account, Long> {
-	//Account findByKey(@Param("key") String key);
 	Account findByUsername(@Param("username") String username);
 
 	@Query("MATCH (account:Account{user_id:{user_id}}) RETURN account")
@@ -41,4 +40,9 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 	@Query("MATCH (account:Account{username:{username}})-[:HAS_DOMAIN]->(d:Domain) MATCH (d)-[:HAS_TEST]->(t) MATCH (t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
 	public List<TestRecord> getTestRecords(@Param("username") String username);
 
+	@Query("MATCH (account:Account{api_key:{api_key}}) RETURN account")
+	public Account getAccountByApiKey(@Param("api_key") String api_key);
+
+	@Query("MATCH (account:Account{api_key:{api_key}})-[:HAS_DOMAIN]->(domain:Domain{host:{host}) RETURN domain")
+	public Domain getAccountDomainByApiKeyAndHost(@Param("api_key") String api_key, @Param("host") String host);
 }

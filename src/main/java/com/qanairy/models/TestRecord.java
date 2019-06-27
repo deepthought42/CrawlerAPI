@@ -37,6 +37,9 @@ public class TestRecord implements Persistable {
 	@Relationship(type = "HAS_RESULT", direction = Relationship.OUTGOING)
 	private PageState result;
 	
+	@Relationship(type = "HAS_TEST_RECORD", direction = Relationship.INCOMING)
+	private Test test;
+	
 	//Empty constructor for spring
 	public TestRecord(){}
 	
@@ -116,5 +119,9 @@ public class TestRecord implements Persistable {
 	@Override
 	public String generateKey() {
 		return "testrecord::"+getRanAt().hashCode()+getResult().getKey();
+	}
+
+	public Test getTest() {
+		return this.test;
 	}
 }

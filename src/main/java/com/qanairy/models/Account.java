@@ -19,7 +19,7 @@ public class Account {
 	@GeneratedValue
     @Id
 	private Long id;
-	
+
 	private String user_id;
 	private String username;
 	private String customer_token;
@@ -27,24 +27,25 @@ public class Account {
 	private String subscription_type;
 	private String last_domain_url;
 	private List<String> onboarded_steps;
-	
+	private String api_token;
+
 	@Relationship(type = "HAS_DOMAIN")
 	private Set<Domain> domains = new HashSet<>();
 
 	@Relationship(type = "HAS_DISCOVERY_RECORD")
 	private Set<DiscoveryRecord> discovery_records = new HashSet<>();
-	
+
 	@Relationship(type = "HAS_TEST_RECORD")
 	private Set<TestRecord> test_records = new HashSet<>();
-	
+
 	public Account(){}
 
 	/**
-	 * 
+	 *
 	 * @param username
 	 * @param customer_token
 	 * @param subscription_token
-	 * 
+	 *
 	 * @pre users != null
 	 */
 	public Account(String user_id, String username, String customer_token, String subscription_token){
@@ -54,11 +55,11 @@ public class Account {
 		setSubscriptionToken(subscription_token);
 		setOnboardedSteps(new ArrayList<String>());
 	}
-	
+
 	public long getId(){
 		return this.id;
 	}
-	
+
 	public String getUsername() {
 		return username;
 	}
@@ -74,7 +75,7 @@ public class Account {
 	public void setCustomerToken(String customer_token) {
 		this.customer_token = customer_token;
 	}
-	
+
 	public String getSubscriptionToken() {
 		return subscription_token;
 	}
@@ -86,7 +87,7 @@ public class Account {
 	public void setLastDomain(String domain_url) {
 		this.last_domain_url = domain_url;
 	}
-	
+
 	public String getLastDomain(){
 		return this.last_domain_url;
 	}
@@ -103,25 +104,25 @@ public class Account {
 			this.onboarded_steps = onboarded_steps;
 		}
 	}
-	
+
 	public void addOnboardingStep(String step_name) {
 		if(!this.onboarded_steps.contains(step_name)){
 			this.onboarded_steps.add(step_name);
 		}
 	}
-	
+
 	public Set<Domain> getDomains(){
 		return this.domains;
 	}
-	
+
 	public void setDomains(Set<Domain> domains){
 		this.domains = domains;
 	}
-	
+
 	public void addDomain(Domain domain) {
 		this.domains.add(domain);
 	}
-	
+
 	public void removeDomain(Domain domain) {
 		int idx = -1;
 		boolean domain_found = false;
@@ -132,12 +133,12 @@ public class Account {
 			}
 			idx++;
 		}
-		
+
 		if(domain_found){
 			this.domains.remove(idx);
 		}
 	}
-	
+
 	public Set<DiscoveryRecord> getDiscoveryRecords() {
 		return discovery_records;
 	}
@@ -145,7 +146,7 @@ public class Account {
 	public void setDiscoveryRecords(Set<DiscoveryRecord> discovery_records) {
 		this.discovery_records = discovery_records;
 	}
-	
+
 	public void addDiscoveryRecord(DiscoveryRecord record){
 		this.discovery_records.add(record);
 	}
@@ -170,11 +171,19 @@ public class Account {
 		this.subscription_type = subscription_type;
 	}
 
-	public String getUserId() {
-		return user_id;
+	public String getApiToken() {
+		return api_token;
 	}
 
-	public void setUserId(String user_id) {
-		this.user_id = user_id;
+	public void setApiToken(String api_token) {
+		this.api_token = api_token;
+  }
+
+  public String getUserId() {
+    return user_id;
+  }
+
+  public void setUserId(String user_id) {
+    this.user_id = user_id;
 	}
 }

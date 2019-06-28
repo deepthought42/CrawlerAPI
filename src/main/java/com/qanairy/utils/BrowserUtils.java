@@ -89,7 +89,7 @@ public class BrowserUtils {
 
 		//Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
-		List<Future<String>> url_futures = new ArrayList<>();
+		//List<Future<String>> url_futures = new ArrayList<>();
 		do{
 			//get element screenshot
 			BufferedImage screenshot = browser.getViewportScreenshot();
@@ -112,12 +112,13 @@ public class BrowserUtils {
 				screenshot_checksums.put(new_checksum, Boolean.TRUE);
 				//animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
-				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+				//url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
 
 			//transition is detected if keys are different
 		}while((System.currentTimeMillis() - start_ms) < 2000);
 
+		/*
 		for(Future<String> future: url_futures){
 			try {
 				image_urls.add(future.get());
@@ -127,7 +128,8 @@ public class BrowserUtils {
 				log.debug(e.getMessage());
 			}
 		}
-
+		*/
+		
 		return new Animation(image_urls, new ArrayList<>(screenshot_checksums.keySet()), AnimationType.CONTINUOUS);
 	}	
 	

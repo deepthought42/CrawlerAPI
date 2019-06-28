@@ -134,18 +134,6 @@ public class BrowserService {
 					//get current viewport screenshot
 					List<WebElement> web_elements = browser.getDriver().findElements(By.xpath("//body//*[not(*)]"));
 
-					log.warn("filtering elements  after removing non children   ::  "+web_elements.size());
-					web_elements = BrowserService.fitlerNonDisplayedElements(web_elements);
-
-					log.warn("filtering elements after removing non displayed ::  "+web_elements.size());
-					web_elements = BrowserService.filterStructureTags(web_elements);
-
-					log.warn("filtering elements after removing structure tags ::  "+web_elements.size());
-					web_elements = BrowserService.filterNoWidthOrHeight(web_elements);
-
-					log.warn("filtering elements after removing no height/width ::   "+web_elements.size());
-					web_elements = BrowserService.filterElementsWithNegativePositions(web_elements);
-
 					log.warn("filtering elements  after removing elements with negative positions ::  "+web_elements.size());
 
 					log.warn("building elements :: " + web_elements.size());
@@ -271,6 +259,15 @@ public class BrowserService {
 	 */
 	public PageState buildPage(Browser browser, List<ElementState> all_elements) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
+		
+		log.warn("filtering elements after removing non displayed ::  "+all_elements.size());
+		all_elements = BrowserService.filterStructureTags(all_elements, true);
+
+		log.warn("filtering elements after removing structure tags ::  "+all_elements.size());
+		all_elements = BrowserService.filterNoWidthOrHeight(all_elements, true);
+
+		log.warn("filtering elements after removing no height/width ::   "+all_elements.size());
+		all_elements = BrowserService.filterElementsWithNegativePositions(all_elements, true);
 
 		log.warn("building page");
 		try{
@@ -355,6 +352,53 @@ public class BrowserService {
 		return elements_hash;
 	}
 
+	public static List<ElementState> filterElementsWithNegativePositions(List<ElementState> web_elements, boolean is_element_state) {
+		List<ElementState> elements = new ArrayList<>();
+
+		for(ElementState element : web_elements){
+			if(element.getXLocation() >= 0 && element.getYLocation() >= 0){
+				elements.add(element);
+			}
+		}
+
+		return elements;
+	}
+
+	public static List<ElementState> filterNotVisibleInViewport(int x_offset, int y_offset, List<ElementState> web_elements, Dimension viewport_size, boolean is_element_state) {
+		List<ElementState> elements = new ArrayList<>();
+
+		for(ElementState element : web_elements){
+			if(isElementVisibleInPane( x_offset, y_offset, element, viewport_size)){
+				elements.add(element);
+			}
+		}
+
+		return elements;
+	}
+
+	/**
+	 * Filters out html, body, script and link tags
+	 *
+	 * @param web_elements
+	 * @return
+	 */
+	public static List<ElementState> filterStructureTags(List<ElementState> web_elements, boolean is_element_state) {
+		List<ElementState> elements = new ArrayList<>();
+
+		for(ElementState element : web_elements){
+			String tag_name = element.getName();
+			if("html".equals(tag_name) || "body".equals(tag_name)
+					|| "link".equals(tag_name) || "script".equals(tag_name)
+					|| "title".equals(tag_name) || "meta".equals(tag_name)
+					|| "head".equals(tag_name)){
+				continue;
+			}
+			elements.add(element);
+		}
+		return elements;
+	}
+	
+	
 	public static List<WebElement> fitlerNonDisplayedElements(List<WebElement> web_elements) {
 		List<WebElement> filtered_elems = new ArrayList<WebElement>();
 		for(WebElement elem : web_elements){
@@ -664,6 +708,17 @@ public class BrowserService {
 		return elements;
 	}
 
+	public static List<ElementState> filterNoWidthOrHeight(List<ElementState> web_elements, boolean is_element_state) {
+		List<ElementState> elements = new ArrayList<>(web_elements.size());
+		for(ElementState element : web_elements){
+			if(element.getHeight() > 1 && element.getWidth() > 1){
+				elements.add(element);
+			}
+		}
+
+		return elements;
+	}
+	
 	public static boolean isElementVisibleInPane(Browser browser, WebElement elem){
 		int y_offset = browser.getYScrollOffset();
 		int x_offset = browser.getXScrollOffset();
@@ -708,6 +763,18 @@ public class BrowserService {
 				&& (y+height) <= (viewport_size.getHeight()+y_offset);
 	}
 
+	public static boolean isElementVisibleInPane(int x_offset, int y_offset, ElementState elem, Dimension viewport_size){
+
+		int x = elem.getXLocation();
+		int y = elem.getYLocation();
+
+		int height = elem.getHeight();
+		int width = elem.getWidth();
+
+		return x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset)
+				&& (y+height) <= (viewport_size.getHeight()+y_offset);
+	}
+	
 	/**
 	 * Get immediate child elements for a given element
 	 *

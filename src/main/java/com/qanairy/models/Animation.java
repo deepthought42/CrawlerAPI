@@ -17,7 +17,6 @@ public class Animation implements Transition, Persistable {
 	
 	private String type;
 	private String key;
-	private List<String> image_urls;
 	private List<String> image_checksums;
 	private AnimationType animation_type;
 	
@@ -29,10 +28,8 @@ public class Animation implements Transition, Persistable {
 	 * 
 	 * @pre image_urls != null
 	 */
-	public Animation(List<String> image_urls, List<String> image_checksums, AnimationType type) {
-		assert image_urls != null;
+	public Animation(List<String> image_checksums, AnimationType type) {
 		setType("Animation");
-		setImageUrls(image_urls);
 		setImageChecksums(image_checksums);
 		setAnimationType(type);
 		setKey(generateKey());
@@ -86,13 +83,5 @@ public class Animation implements Transition, Persistable {
 
 	public void setAnimationType(AnimationType animation_type) {
 		this.animation_type = animation_type;
-	}
-
-	public List<String> getImageUrls() {
-		return image_urls;
-	}
-
-	public void setImageUrls(List<String> image_urls) {
-		this.image_urls = image_urls;
 	}
 }

@@ -129,8 +129,8 @@ public class BrowserUtils {
 			}
 		}
 		*/
-		
-		return new Animation(image_urls, new ArrayList<>(screenshot_checksums.keySet()), AnimationType.CONTINUOUS);
+
+		return new Animation(new ArrayList<>(screenshot_checksums.keySet()), AnimationType.CONTINUOUS);
 	}	
 	
 	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String url) throws IOException {

@@ -92,13 +92,13 @@ public class AnimationDetectionActor extends AbstractActor{
 								}
 								page_idx++;
 							}
-
+							
 							System.err.println("STARTING ANIMATION DETECTION BY CRAWLING PATH");
 							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
 
 							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl(), screenshot_checksums);
-							if(animation.getImageUrls().size() > 1){
-								page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
+							if(animation.getImageChecksums().size() > 1){
+								page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
 								page_state = page_state_service.save(page_state);
 							}
 

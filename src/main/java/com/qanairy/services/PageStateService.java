@@ -68,7 +68,7 @@ public class PageStateService {
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 			page_state_record.setElements(page_state.getElements());
-			page_state_record.setAnimatedImageUrls(page_state.getAnimatedImageUrls());
+			//page_state_record.setAnimatedImageUrls(page_state.getAnimatedImageUrls());
 			page_state_record.setAnimatedImageChecksums(page_state.getAnimatedImageChecksums());
 			Set<Form> forms = new HashSet<Form>();
 			for(Form form : page_state.getForms()){

@@ -822,19 +822,25 @@ public class BrowserService {
 	    }
 	    else
 	    {
-	        returnString = "concat(";
+	        //returnString = "concat(";
 	        while (quotePos != -1)
 	        {
-	            String subString = searchString.substring(0, quotePos);
-	            returnString += "'" + subString + "', ";
-
+	        	
+	            String substring = searchString.substring(0, quotePos);
+	            if(substring.length() == 0){
+	        		continue;
+	        	}
+	            returnString += "'" + substring + "', ";
+	            String tail_string = searchString.substring(quotePos + 1, searchString.length());
+	            if(tail_string.length() == 0){
+	            	continue;
+	            }
                 //must be a double quote
                 returnString += "'\"', ";
-                searchString = searchString.substring(quotePos + 1,
-	                             searchString.length());
+                searchString = tail_string;
 	            quotePos = searchString.indexOf("\"");
 	        }
-	        returnString += "'" + searchString + "')";
+	        returnString += "'" + searchString;
 	    }
 
 	    return returnString;
@@ -850,18 +856,21 @@ public class BrowserService {
 	 * @return an xpath that identifies this element uniquely
 	 */
 	public String generateXpath(WebElement element, String xpath, Map<String, Integer> xpathHash, WebDriver driver, Set<Attribute> attributes){
-		ArrayList<String> attributeChecks = new ArrayList<String>();
-
+		List<String> attributeChecks = new ArrayList<>();
+		List<String> valid_attributes = Arrays.asList(valid_xpath_attributes);
 		xpath += "//"+element.getTagName();
 		for(Attribute attr : attributes){
-			if(Arrays.asList(valid_xpath_attributes).contains(attr.getName())){
-
+			if(valid_attributes.contains(attr.getName())){
 				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
+				String trimmed_values = attribute_values.trim();
+
 				if(attribute_values.contains("\"")){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(attribute_values.trim())+ "\")");
+					attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(trimmed_values)+ "\")");
 				}
 				else{
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(attribute_values.trim()) + "\")");
+					if(trimmed_values.length() > 0){
+						attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(trimmed_values) + "\")");
+					}
 				}
 			}
 		}

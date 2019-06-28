@@ -390,7 +390,7 @@ public class BrowserService {
 			if("html".equals(tag_name) || "body".equals(tag_name)
 					|| "link".equals(tag_name) || "script".equals(tag_name)
 					|| "title".equals(tag_name) || "meta".equals(tag_name)
-					|| "head".equals(tag_name)){
+					|| "head".equals(tag_name) || "iframe".equals(tag_name)){
 				continue;
 			}
 			elements.add(element);
@@ -668,7 +668,6 @@ public class BrowserService {
 	 */
 	public ElementState buildElementState(Browser browser, WebElement elem) throws IOException{
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-
 		String checksum = "";
 		ElementState page_element_record = null;
 		ElementState page_element = null;
@@ -827,7 +826,7 @@ public class BrowserService {
 	        {
 	        	
 	            String substring = searchString.substring(0, quotePos);
-	            if(substring.length() == 0){
+	            if(quotePos <= 0 || searchString.length() == 0){
 	        		continue;
 	        	}
 	            returnString += "'" + substring + "', ";
@@ -838,7 +837,7 @@ public class BrowserService {
                 //must be a double quote
                 returnString += "'\"', ";
                 searchString = tail_string;
-	            //quotePos = searchString.indexOf("\"");
+	            quotePos = searchString.indexOf("\"");
 	        }
 	        returnString += "'" + searchString;
 	    }
@@ -864,13 +863,8 @@ public class BrowserService {
 				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
 				String trimmed_values = attribute_values.trim();
 
-				if(attribute_values.contains("\"")){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" +generateConcatForXPath(trimmed_values)+ "\")");
-				}
-				else{
-					if(trimmed_values.length() > 0){
-						attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(trimmed_values) + "\")");
-					}
+				if(trimmed_values.length() > 0){
+					attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(trimmed_values) + "\")");
 				}
 			}
 		}

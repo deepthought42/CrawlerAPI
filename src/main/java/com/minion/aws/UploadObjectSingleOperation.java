@@ -9,6 +9,7 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -78,6 +79,7 @@ public class UploadObjectSingleOperation {
         return filepath;
     }
 	
+	@Async
 	public static String saveImageToS3(BufferedImage image, String domain, String page_key) {
 		AWSCredentials credentials = new BasicAWSCredentials("AKIAIG3B5DLG76I5IWNQ","mGHy6H3SYudZ5EZoMKa18Dy+vC2kmMMbIycScudS");
 		String filepath = null;

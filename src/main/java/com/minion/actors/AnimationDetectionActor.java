@@ -2,6 +2,8 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +76,8 @@ public class AnimationDetectionActor extends AbstractActor{
 		return receiveBuilder()
 				.match(PathMessage.class, msg -> {
 					boolean err = false;
+					Map<String, Boolean> screenshot_checksums = new HashMap<String, Boolean>();
+
 					do{
 						err = false;
 						try{
@@ -92,7 +96,7 @@ public class AnimationDetectionActor extends AbstractActor{
 							System.err.println("STARTING ANIMATION DETECTION BY CRAWLING PATH");
 							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
 
-							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
+							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl(), screenshot_checksums);
 							if(animation.getImageUrls().size() > 1){
 								page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
 								page_state = page_state_service.save(page_state);

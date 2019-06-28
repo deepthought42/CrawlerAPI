@@ -201,18 +201,19 @@ public class ParentPathExplorer extends AbstractActor {
 							if(param_index >= 0){
 								url_without_params = url_without_params.substring(0, param_index);
 							}
-							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl(), url_without_params);
+							
+							/*PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl(), url_without_params);
 							if(loading_animation != null){
 								beginning_path_keys.add(loading_animation.getKey());
 								beginning_path_objects.add(loading_animation);
 							}
-							
+							*/
 							log.warn("building parent result page state");
 							
 							//REPLACE WITH SIMPLE CHECK FOR SCREENSHOT. POSSIBLY CREATE METHOD IN PAGESTATESERVICE TO RETRIEVE PAGE BY SCREENSHOT
-							page_state_service.findByScreenshot(browser.getViewportScreenshot());
+							PageState parent_result = page_state_service.findByScreenshot(browser.getViewportScreenshot());
 							//build result page
-							PageState parent_result = browser_service.buildPage(browser);
+							//PageState parent_result = browser_service.buildPage(browser);
 
 							
 							log.warn("checking if parent result matches expected result");

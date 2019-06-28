@@ -79,15 +79,15 @@ public class BrowserUtils {
 		return redirect;
 	}
 
-	public static Animation getAnimation(Browser browser, String host) throws IOException {
-		List<String> image_checksums = new ArrayList<String>();
+	public static Animation getAnimation(Browser browser, String host, Map<String, Boolean> screenshot_checksums) throws IOException {
+		//List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
 
 		long start_ms = System.currentTimeMillis();
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 
-		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
+		//Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
 		List<Future<String>> url_futures = new ArrayList<>();
 		do{
@@ -96,18 +96,21 @@ public class BrowserUtils {
 
 			//calculate screenshot checksum
 			String new_checksum = PageState.getFileChecksum(screenshot);
-
+			
 			transition_detected = !new_checksum.equals(last_checksum);
 
 			log.warn("new checksum :: " + new_checksum);
-			log.warn("has key been seen before :: " + animated_state_checksum_hash.containsKey(new_checksum));
-			if( animated_state_checksum_hash.containsKey(new_checksum)){
+			log.warn("has key been seen before :: " + screenshot_checksums.containsKey(new_checksum));
+			log.warn("does key exist in previous iterations :: " + screenshot_checksums.containsKey(new_checksum));
+
+			if( screenshot_checksums.containsKey(new_checksum)){
 				break;
 			}
 			else if( transition_detected ){
 				start_ms = System.currentTimeMillis();
-				image_checksums.add(new_checksum);
-				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
+				//image_checksums.add(new_checksum);
+				screenshot_checksums.put(new_checksum, Boolean.TRUE);
+				//animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
@@ -125,7 +128,7 @@ public class BrowserUtils {
 			}
 		}
 
-		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
+		return new Animation(image_urls, new ArrayList<>(screenshot_checksums.keySet()), AnimationType.CONTINUOUS);
 	}	
 	
 	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String url) throws IOException {
@@ -133,7 +136,8 @@ public class BrowserUtils {
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
 		long start_ms = System.currentTimeMillis();
-
+		long total_time = 0;
+		long real_start_time = System.currentTimeMillis();
 		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
 		String new_checksum = null;
@@ -150,7 +154,9 @@ public class BrowserUtils {
 			transition_detected = !new_checksum.equals(last_checksum);
 
 			if( transition_detected ){
+				log.warn("transition detected");
 				if(animated_state_checksum_hash.containsKey(new_checksum)){
+					log.warn("cycle detected");
 					return null;
 				}
 				start_ms = System.currentTimeMillis();
@@ -159,10 +165,13 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-
-			log.warn("was transition detected ??   " + transition_detected);
+			else{
+				log.warn("transition NOT detected");
+			}
+			
+			total_time = (System.currentTimeMillis() - real_start_time);
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 3000);
+		}while((System.currentTimeMillis() - start_ms) < 3000 && total_time < 20000);
 		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {
@@ -174,7 +183,7 @@ public class BrowserUtils {
 			}
 		}
 		
-		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
+		if(new_checksum.equals(last_checksum) && image_checksums.size()>1 && total_time < 20000){
 			log.warn("returning loading animation");
 			return new PageLoadAnimation(image_urls, image_checksums, url);
 		}

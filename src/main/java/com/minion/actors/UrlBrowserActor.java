@@ -109,8 +109,7 @@ public class UrlBrowserActor extends AbstractActor {
 						log.warn("starting transition detection");
 						Redirect redirect = null;
 						PageLoadAnimation animation = null;
-
-						do{
+						while(redirect == null){
 							Browser browser = null;
 							try{
 								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
@@ -134,7 +133,7 @@ public class UrlBrowserActor extends AbstractActor {
 							}
 							log.warn("Transition :: " + redirect);
 							log.warn("Animation returned   :: " + animation);
-						}while(redirect == null);
+						}
 						
 						log.warn("loading animation detection complete");
 						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);

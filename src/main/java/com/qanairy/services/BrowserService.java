@@ -838,7 +838,7 @@ public class BrowserService {
                 //must be a double quote
                 returnString += "'\"', ";
                 searchString = tail_string;
-	            quotePos = searchString.indexOf("\"");
+	            //quotePos = searchString.indexOf("\"");
 	        }
 	        returnString += "'" + searchString;
 	    }

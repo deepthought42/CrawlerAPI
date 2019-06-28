@@ -31,7 +31,6 @@ public class AnimationService {
 		if(record == null){
 			log.warn("animation key   :: "+animation.getKey());
 			log.warn("animation type  :: " + animation.getType());
-			log.warn("animation urls  ::  " + animation.getImageUrls());
 			log.warn("animation repo :: " + animation_repo);
 			record = animation_repo.save(animation);
 		}

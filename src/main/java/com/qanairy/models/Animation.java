@@ -62,7 +62,7 @@ public class Animation implements Transition, Persistable {
 	@Override
 	public String generateKey() {
 		String key = "";
-		for(String url : image_urls){
+		for(String url : image_checksums){
 			key += url;
 		}
 		

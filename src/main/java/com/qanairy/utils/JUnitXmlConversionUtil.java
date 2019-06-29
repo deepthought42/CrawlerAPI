@@ -15,7 +15,7 @@ public class JUnitXmlConversionUtil {
 		str_buf.append("<testsuite id='' name='' skipped='' tests='" +test_record_list.size()+ "' failures='" + failing_cnt + "' time='" + time_in_sec + "' timestamp='" + date.toString() + "'>\n");
 		
 		for(TestRecord record : test_record_list){
-			str_buf.append("<testcase id='' name='" + record.getTest().getName()+ "' time='" + record.getRunTime() + "'>\n");
+			str_buf.append("<testcase id='' name='" + record.getKey()+ "' time='" + record.getRunTime() + "'>\n");
 			
 			if(record.getStatus().equals(TestStatus.FAILING)){
 				str_buf.append("<failure message='' type='WARNING' >\n");

@@ -7,7 +7,9 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +50,7 @@ import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.utils.PathUtils;
 
 /**
  * Actor that handles {@link Path}s and {@link Test}s to expand said paths.
@@ -336,10 +339,8 @@ public class PathExpansionActor extends AbstractActor {
 			return null;
 		}
 
-		//get List of page states for page
-
-		//iterate over all elements
-		for(ElementState page_element : result_page.getElements()){
+		//iterate over all eligible elements
+		for(ElementState page_element : getElementStatesForExpansion(test)){
 			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
 				continue;
 			}
@@ -422,14 +423,6 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 			else{
-				/*
-				log.warn("path object count when checking for mouseover  ::   " + test.getPathObjects().size() );
-				for(PathObject path_obj : test.getPathObjects()){
-					if(path_obj.getKey().contains("mouseover")){
-						return new ArrayList<>();
-					}
-				}
-				*/
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
 				Test new_test = Test.clone(test);
@@ -470,7 +463,6 @@ public class PathExpansionActor extends AbstractActor {
 		return pathList;
 	}
 
-	
 	/**
 	 * Produces all possible element, action combinations that can be produced from the given path
 	 *
@@ -835,5 +827,46 @@ public class PathExpansionActor extends AbstractActor {
 		}
 
 		return false;
+	}
+	
+	
+
+	/**
+	 * Checks if result has same url as last page in path of {@link Test}. If the urls match, 
+	 * then a difference between the lists is acquired and only the complementary set is returned. 
+	 * If the urls don't match then the entire set of {@link ElementState} for the result page is returned.
+	 * 
+	 * @param test {@link Test} to be expanded
+	 * 
+	 * @return {@link Collection} of element states
+	 * 
+	 * @pre test != null
+	 */
+	private Collection<ElementState> getElementStatesForExpansion(Test test) {
+		assert(test != null);
+		
+		Set<ElementState> elements = new HashSet<>();
+		//get last page
+		PageState result_page = test.getResult();
+		if(result_page == null){
+			return elements;
+		}
+		
+		PageState last_page_state = PathUtils.getLastPageState(test.getPathObjects());
+		
+		if(test.getResult().getUrl().equals(last_page_state.getUrl())){
+			Map<String, ElementState> element_xpath_map = new HashMap<>();
+			//build hash of element xpaths in last page state
+			for(ElementState element : last_page_state.getElements()){
+				element_xpath_map.put(element.getXpath(), element);
+			}
+			
+			for(ElementState result : test.getResult().getElements()){
+				element_xpath_map.remove(result.getKey());
+			}
+			return element_xpath_map.values();
+		}
+		
+		return test.getResult().getElements();
 	}
 }

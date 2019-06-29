@@ -36,6 +36,7 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.PathUtils;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -509,16 +510,16 @@ public class Crawler {
 				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 				
 				String browser_url = browser.getDriver().getCurrentUrl();
-				URL page_url = new URL(browser_url);
-				int param_index = page_url.toString().indexOf("?");
-				String url_without_params = page_url.toString();
-				if(param_index >= 0){
-					url_without_params = url_without_params.substring(0, param_index);
-				}
-				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host, url_without_params);
-				if(loading_animation != null){
-					path.getPathKeys().add(loading_animation.getKey());
-					path.getPathObjects().add(loading_animation);
+				browser_url = BrowserUtils.sanitizeUrl(browser_url);
+				//get last page state
+				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
+				
+				if(!browser_url.equals(last_page_state.getUrl())){
+					PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host, browser_url);
+					if(loading_animation != null){
+						path.getPathKeys().add(loading_animation.getKey());
+						path.getPathObjects().add(loading_animation);
+					}
 				}
 				
 				result_page = browser_service.buildPage(browser);

@@ -113,7 +113,7 @@ public class BrowserUtils {
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000);
+		}while((System.currentTimeMillis() - start_ms) < 10000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -162,7 +162,7 @@ public class BrowserUtils {
 
 			log.warn("was transition detected ??   " + transition_detected);
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 3000);
+		}while((System.currentTimeMillis() - start_ms) < 2000);
 		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {
@@ -185,6 +185,11 @@ public class BrowserUtils {
 	
 	public static String sanitizeUrl(String currentUrl) throws MalformedURLException {
 		String domain = currentUrl;
+		int param_index = domain.toString().indexOf("?");
+		if(param_index >= 0){
+			domain = domain.substring(0, param_index);
+		}
+		
 		if(domain.charAt(0) != 'h'){
 			domain= 'h'+domain;
 		}

@@ -1,5 +1,7 @@
 package com.qanairy.services;
 
+import static org.hamcrest.CoreMatchers.is;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
@@ -107,7 +109,7 @@ public class BrowserService {
 		return !last_url.equals(result.getUrl());
 	}
 
-	public List<PageState> buildPageStates(String url, String browser_name, String host) throws MalformedURLException, IOException, Exception{
+	public List<PageState> buildPageStates(String url, String browser_name, String host, boolean has_redirect, boolean has_loading_animation) throws MalformedURLException, IOException, Exception{
 		List<PageState> page_states = new ArrayList<>();
 		boolean error_occurred = false;
 		Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
@@ -128,11 +130,16 @@ public class BrowserService {
 				if(is_browser_closed){
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
+					is_browser_closed = false;
 				}
 				
-				BrowserUtils.getPageTransition(url, browser, host);
-				BrowserUtils.getLoadingAnimation(browser, host, url);
-
+				if(has_redirect){
+					BrowserUtils.getPageTransition(url, browser, host);
+				}
+				if(has_loading_animation){
+					BrowserUtils.getLoadingAnimation(browser, host, url);
+				}
+					
 				log.warn("last element idx  ::   " + last_elem_idx + ";   temp idx  ::  "+temp_last_idx +";    rep count    ::   "+rep_cnt);
 				log.warn("elements all built successfully :: " + elements_built_successfully);
 				if(!elements_built_successfully){
@@ -156,6 +163,7 @@ public class BrowserService {
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				e.printStackTrace();
 				error_occurred = true;
+				is_browser_closed = true;
 				if(browser != null){
 					browser.close();
 				}
@@ -163,6 +171,7 @@ public class BrowserService {
 				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
 				e.printStackTrace();
 				error_occurred = true;
+				is_browser_closed = true;
 				if(browser != null){
 					browser.close();
 				}
@@ -179,6 +188,7 @@ public class BrowserService {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				error_occurred = true;
+				is_browser_closed = true;
 				//e.printStackTrace();
 			} catch(Exception e){
 				if(browser != null){
@@ -187,6 +197,7 @@ public class BrowserService {
 				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
 				e.printStackTrace();
 				error_occurred = true;
+				is_browser_closed = true;
 			}
 			finally{
 				
@@ -689,21 +700,15 @@ public class BrowserService {
 		Map<String, String> css_props = Browser.loadCssProperties(elem);
 		Set<Attribute> attributes = browser.extractAttributes(elem);
 		page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, elem.getLocation().getX(), elem.getLocation().getY(), elem.getSize().getWidth(), elem.getSize().getHeight(), elem.getAttribute("innerHTML") );
-		page_element_record = page_element_service.findByKey(page_element.getKey()) ;
+		
+		//screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");
 
-		if(page_element_record != null){
-			page_element = page_element_record;
-		}
-		else{
-			//screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, "element_screenshot");
-
-			//TODO: refactor xpath to generation to be faster. Generating xpath can take over 1.6s
-			String element_xpath = generateXpath(elem, "", xpath_map, browser.getDriver(), attributes);
-			page_element.setXpath(element_xpath);
-			long start_time = System.currentTimeMillis();
-			page_element = page_element_service.save(page_element);
-			log.warn("total time to save element state :: " + (System.currentTimeMillis() - start_time));
-		}
+		//TODO: refactor xpath to generation to be faster. Generating xpath can take over 1.6s
+		String element_xpath = generateXpath(elem, "", xpath_map, browser.getDriver(), attributes);
+		page_element.setXpath(element_xpath);
+		long start_time = System.currentTimeMillis();
+		page_element_service.save(page_element);
+		log.warn("total time to save element state :: " + (System.currentTimeMillis() - start_time));
 
 		return page_element;
 	}
@@ -804,7 +809,6 @@ public class BrowserService {
 	}
 
 	public static boolean isElementVisibleInPane(int x_offset, int y_offset, WebElement elem, Dimension viewport_size){
-
 		Point location = elem.getLocation();
 		int x = location.getX();
 		int y = location.getY();

@@ -137,7 +137,7 @@ public class UrlBrowserActor extends AbstractActor {
 						}while(redirect == null);
 						
 						log.warn("loading animation detection complete");
-						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host);
+						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host, redirect.getUrls().size()>1, animation != null);
 
 						log.warn("Done building page states ");
 						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation);

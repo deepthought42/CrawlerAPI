@@ -12,12 +12,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Animation;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
@@ -204,5 +207,19 @@ public class BrowserUtils {
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
 		return new_key;
+	}
+
+	public static List<ElementState> updateElementLocations(Browser browser, List<ElementState> all_elements) {
+		List<ElementState> updated_elements = new ArrayList<>(all_elements.size());
+		//we need to verify that this element wasn't transitioned
+		for(ElementState element : all_elements){
+			WebElement web_elem = browser.findWebElementByXpath(element.getXpath());
+			Point location = web_elem.getLocation();
+			element.setXLocation(location.getX());
+			element.setYLocation(location.getY());
+			updated_elements.add(element);
+		}
+		
+		return updated_elements;
 	}
 }

@@ -301,19 +301,17 @@ public class BrowserService {
 		log.warn("filtering elements after removing no height/width ::   "+all_elements.size());
 		all_elements = BrowserService.filterElementsWithNegativePositions(all_elements, true);
 
+		all_elements = BrowserUtils.updateElementLocations(browser, all_elements);
+		
 		log.warn("building page");
 		try{
 			browser.moveMouseOutOfFrame();
 		}catch(Exception e){}
 
 		String browser_url = browser.getDriver().getCurrentUrl();
+		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
+		
 		URL page_url = new URL(browser_url);
-
-		int param_index = page_url.toString().indexOf("?");
-		String url_without_params = page_url.toString();
-		if(param_index >= 0){
-			url_without_params = url_without_params.substring(0, param_index);
-		}
 
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);

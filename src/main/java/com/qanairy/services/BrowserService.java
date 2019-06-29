@@ -292,15 +292,6 @@ public class BrowserService {
 	public PageState buildPage(Browser browser, List<ElementState> all_elements) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		log.warn("filtering elements after removing non displayed ::  "+all_elements.size());
-		all_elements = BrowserService.filterStructureTags(all_elements, true);
-
-		log.warn("filtering elements after removing structure tags ::  "+all_elements.size());
-		all_elements = BrowserService.filterNoWidthOrHeight(all_elements, true);
-
-		log.warn("filtering elements after removing no height/width ::   "+all_elements.size());
-		all_elements = BrowserService.filterElementsWithNegativePositions(all_elements, true);
-
 		all_elements = BrowserUtils.updateElementLocations(browser, all_elements);
 		
 		log.warn("building page");

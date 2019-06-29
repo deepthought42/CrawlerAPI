@@ -120,11 +120,16 @@ public class BrowserService {
 		int last_elem_idx = 0;
 		List<ElementState> all_elements = null;
 		Browser browser = null;
+		int element_idx = 0;
+		boolean is_browser_closed = true;
 		do{
 			try{
 				error_occurred = false;
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				browser.navigateTo(url);
+				if(is_browser_closed){
+					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					browser.navigateTo(url);
+				}
+				
 				BrowserUtils.getPageTransition(url, browser, host);
 				BrowserUtils.getLoadingAnimation(browser, host, url);
 
@@ -137,19 +142,30 @@ public class BrowserService {
 					log.warn("filtering elements  after removing elements with negative positions ::  "+web_elements.size());
 
 					log.warn("building elements :: " + web_elements.size());
+					web_elements = web_elements.subList(element_idx, web_elements.size());
 					for(WebElement elem: web_elements){
 						ElementState element_state = buildElementState(browser, elem);
-						element_xpaths.put(element_state.getXpath(), element_state);
+						if(element_state != null){
+							element_xpaths.put(element_state.getXpath(), element_state);
+						}
+						
+						element_idx++;
 					}
 				}
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				e.printStackTrace();
 				error_occurred = true;
+				if(browser != null){
+					browser.close();
+				}
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
 				e.printStackTrace();
 				error_occurred = true;
+				if(browser != null){
+					browser.close();
+				}
 			}
 			catch (NoSuchElementException e){
 				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
@@ -157,19 +173,23 @@ public class BrowserService {
 				error_occurred = true;
 			}
 			catch (WebDriverException e) {
+				if(browser != null){
+					browser.close();
+				}
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				error_occurred = true;
 				//e.printStackTrace();
 			} catch(Exception e){
+				if(browser != null){
+					browser.close();
+				}
 				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
 				e.printStackTrace();
 				error_occurred = true;
 			}
 			finally{
-				if(browser != null){
-					browser.close();
-				}
+				
 			}
 		}while(error_occurred);
 		log.warn("returning elements list : "+element_xpaths.size()+ "   :    "+url);
@@ -459,7 +479,7 @@ public class BrowserService {
 			if("html".equals(tag_name) || "body".equals(tag_name)
 					|| "link".equals(tag_name) || "script".equals(tag_name)
 					|| "title".equals(tag_name) || "meta".equals(tag_name)
-					|| "head".equals(tag_name)){
+					|| "head".equals(tag_name) || "iframe".equals(tag_name)){
 				continue;
 			}
 			elements.add(element);
@@ -575,32 +595,9 @@ public class BrowserService {
 
 		for(WebElement elem : web_elements){
 			ElementState element_state = buildElementState(browser, elem, page_screenshot);
-			elementList.add(element_state);
-		}
-
-		return elementList;
-	}
-
-	/**
-	 * Retreives all elements on a given page that are visible. In this instance we take
-	 *  visible to mean that it is not currently set to {@css display: none} and that it
-	 *  is visible within the confines of the screen. If an element is not hidden but is also
-	 *  outside of the bounds of the screen it is assumed hidden
-	 *
-	 * @param driver
-	 * @return list of webelements that are currently visible on the page
-	 * @throws IOException
-	 * @throws GridException
-	 */
-	public List<ElementState> getVisibleElements(Browser browser, String xpath, String host, List<WebElement> web_elements, BufferedImage page_screenshot)
-															 throws WebDriverException, GridException, IOException{
-		List<WebElement> filtered_web_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), web_elements, browser.getViewportSize());
-
-		List<ElementState> elementList = new ArrayList<ElementState>(filtered_web_elements.size());
-
-		for(WebElement elem : filtered_web_elements){
-			ElementState element_state = buildElementState(browser, elem, page_screenshot);
-			elementList.add(element_state);
+			if(element_state != null){
+				elementList.add(element_state);
+			}
 		}
 
 		return elementList;
@@ -618,6 +615,8 @@ public class BrowserService {
 	public ElementState buildElementState(Browser browser, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 
+		String element_tag_name = elem.getTagName();
+		
 		BufferedImage img = null;
 		String checksum = "";
 		String screenshot = null;
@@ -635,7 +634,7 @@ public class BrowserService {
 			Map<String, String> css_props = Browser.loadCssProperties(elem);
 			Set<Attribute> attributes = browser.extractAttributes(elem);
 
-			page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, elem.getLocation().getX(), elem.getLocation().getY(), elem.getSize().getWidth(), elem.getSize().getHeight(), elem.getAttribute("innerHTML") );
+			page_element = new ElementState(elem.getText(), null, element_tag_name, attributes, css_props, null, checksum, elem.getLocation().getX(), elem.getLocation().getY(), elem.getSize().getWidth(), elem.getSize().getHeight(), elem.getAttribute("innerHTML") );
 			page_element_record = page_element_service.findByKey(page_element.getKey()) ;
 
 			if(page_element_record != null){
@@ -672,6 +671,21 @@ public class BrowserService {
 		ElementState page_element_record = null;
 		ElementState page_element = null;
 
+		String element_tag_name = elem.getTagName();
+		Point location = elem.getLocation();
+
+		boolean negative_position = doesElementHaveNegativePosition(location);
+		boolean is_structure_tag = isStructureTag(element_tag_name);
+		boolean is_visible_in_viewport = isVisibleInViewport(browser.getXScrollOffset(), 
+															 browser.getYScrollOffset(), 
+															 elem, 
+															 browser.getViewportSize());
+		boolean has_width_and_height = hasWidthAndHeight(elem.getSize());
+		
+		if(negative_position || is_structure_tag || !is_visible_in_viewport || !has_width_and_height){
+			return null;
+		}
+		
 		Map<String, String> css_props = Browser.loadCssProperties(elem);
 		Set<Attribute> attributes = browser.extractAttributes(elem);
 		page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, elem.getLocation().getX(), elem.getLocation().getY(), elem.getSize().getWidth(), elem.getSize().getHeight(), elem.getAttribute("innerHTML") );
@@ -694,6 +708,47 @@ public class BrowserService {
 		return page_element;
 	}
 
+	public static boolean doesElementHaveNegativePosition(Point location) {
+		if(location.getX() < 0 || location.getY() < 0){
+			return true;
+		}
+	
+		return false;
+	}
+
+	public static boolean isVisibleInViewport(int x_offset, int y_offset, WebElement element, Dimension viewport_size) {
+		if(isElementVisibleInPane( x_offset, y_offset, element, viewport_size)){
+			return true;
+		}
+
+		return false;
+	}
+
+	public static boolean hasWidthAndHeight(Dimension dimension) {
+		if(dimension.getHeight() > 1 && dimension.getWidth() > 1){
+			return true;
+		}
+	
+		return false;
+	}
+	
+	/**
+	 * Filters out html, body, script and link tags
+	 *
+	 * @param web_elements
+	 * @return
+	 */
+	public static boolean isStructureTag(String tag_name) {
+		log.warn("Tag name during structure check   ::    " + tag_name);
+		if("html".equals(tag_name) || "body".equals(tag_name)
+				|| "link".equals(tag_name) || "script".equals(tag_name)
+				|| "title".equals(tag_name) || "meta".equals(tag_name)
+				|| "head".equals(tag_name) || "iframe".equals(tag_name)){
+			return true;
+		}
+
+		return false;
+	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {
 		List<WebElement> elements = new ArrayList<WebElement>(web_elements.size());

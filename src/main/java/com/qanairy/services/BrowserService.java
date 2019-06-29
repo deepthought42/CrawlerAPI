@@ -1,7 +1,5 @@
 package com.qanairy.services;
 
-import static org.hamcrest.CoreMatchers.is;
-
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
@@ -221,10 +219,13 @@ public class BrowserService {
 				if(err){
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
-					log.warn("building redirect before building page states");
-					BrowserUtils.getPageTransition(url, browser, host);
-					log.warn("checking animation before building page states");
-					BrowserUtils.getLoadingAnimation(browser, host, url);
+
+					if(has_redirect){
+						BrowserUtils.getPageTransition(url, browser, host);
+					}
+					if(has_loading_animation){
+						BrowserUtils.getLoadingAnimation(browser, host, url);
+					}
 				}
 				err = false;
 
@@ -679,7 +680,6 @@ public class BrowserService {
 	public ElementState buildElementState(Browser browser, WebElement elem) throws IOException{
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		String checksum = "";
-		ElementState page_element_record = null;
 		ElementState page_element = null;
 
 		String element_tag_name = elem.getTagName();
@@ -687,13 +687,9 @@ public class BrowserService {
 
 		boolean negative_position = doesElementHaveNegativePosition(location);
 		boolean is_structure_tag = isStructureTag(element_tag_name);
-		boolean is_visible_in_viewport = isVisibleInViewport(browser.getXScrollOffset(), 
-															 browser.getYScrollOffset(), 
-															 elem, 
-															 browser.getViewportSize());
 		boolean has_width_and_height = hasWidthAndHeight(elem.getSize());
 		
-		if(negative_position || is_structure_tag || !is_visible_in_viewport || !has_width_and_height){
+		if(negative_position || is_structure_tag || !has_width_and_height){
 			return null;
 		}
 		
@@ -718,14 +714,6 @@ public class BrowserService {
 			return true;
 		}
 	
-		return false;
-	}
-
-	public static boolean isVisibleInViewport(int x_offset, int y_offset, WebElement element, Dimension viewport_size) {
-		if(isElementVisibleInPane( x_offset, y_offset, element, viewport_size)){
-			return true;
-		}
-
 		return false;
 	}
 

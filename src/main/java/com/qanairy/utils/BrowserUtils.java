@@ -206,20 +206,33 @@ public class BrowserUtils {
 		if(new_key.charAt(new_key.length()-1) == '/'){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
+		new_key = new_url.getProtocol()+"://"+new_key;
+		
 		return new_key;
 	}
 
-	public static List<ElementState> updateElementLocations(Browser browser, List<ElementState> all_elements) {
-		List<ElementState> updated_elements = new ArrayList<>(all_elements.size());
-		//we need to verify that this element wasn't transitioned
-		for(ElementState element : all_elements){
-			WebElement web_elem = browser.findWebElementByXpath(element.getXpath());
-			Point location = web_elem.getLocation();
+	public static ElementState updateElementLocations(Browser browser, ElementState element) {
+		
+		WebElement web_elem = browser.findWebElementByXpath(element.getXpath());
+		Point location = web_elem.getLocation();
+		if(location.getX() != element.getXLocation() || location.getY() != element.getYLocation()){
+			log.warn("updating element state from ::  ( " + element.getXLocation() + " , "+element.getYLocation()+" ) " + " to    ::  ( " + location.getX() + " , "+location.getY()+")");
 			element.setXLocation(location.getX());
 			element.setYLocation(location.getY());
-			updated_elements.add(element);
 		}
 		
-		return updated_elements;
+		return element;
+	}
+
+	public static boolean doesHostChange(List<String> urls) throws MalformedURLException {
+		for(String url : urls){
+			String last_host_and_path = "";
+			URL url_obj = new URL(url);
+			String host_and_path = url_obj.getHost()+url_obj.getPath();
+			if(!last_host_and_path.equals(host_and_path)){
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -49,6 +49,15 @@ public class BrowserTest {
 		Assert.assertTrue("<html><head></head></html>".equals(clean_src));
 	}
 	
+	@Test
+	public void verifyEscapeQuotes(){
+		String src_example = "PDF: Pearson\'s Watson-Glaser II Critical Thinking Appraisal and CPP\'s CPI 260 assessment";
+		BrowserService service = new BrowserService();
+		String clean_src = BrowserService.escapeQuotes(src_example);// cleanSrc(src_example);
+		System.err.println("clean src: " +clean_src);
+		Assert.assertTrue("PDF: Pearson's Watson-Glaser II Critical Thinking Appraisal and CPP's CPI 260 assessment".equals(clean_src));
+	}
+
 	//@Test
 	public void verifyGenerateConcatForXpath(){
 		String src_example = "This is a embedded \"path\"";

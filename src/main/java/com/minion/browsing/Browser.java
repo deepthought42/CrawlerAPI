@@ -508,7 +508,7 @@ public class Browser {
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
-		
+
 		log.warn("after offset :: "+getXScrollOffset() + "  :  "+getYScrollOffset());
 		
     }

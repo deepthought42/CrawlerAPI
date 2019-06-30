@@ -67,7 +67,7 @@ public class BrowserService {
 	@Autowired
 	private ElementRuleExtractor extractor;
 
-	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "src", "alt", "href"};
+	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "src", "href"};
 
 	/**
 	 * retrieves a new browser connection
@@ -292,8 +292,6 @@ public class BrowserService {
 	public PageState buildPage(Browser browser, List<ElementState> all_elements) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		all_elements = BrowserUtils.updateElementLocations(browser, all_elements);
-		
 		log.warn("building page");
 		try{
 			browser.moveMouseOutOfFrame();
@@ -301,6 +299,7 @@ public class BrowserService {
 
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
+		
 		
 		URL page_url = new URL(browser_url);
 
@@ -321,11 +320,15 @@ public class BrowserService {
 			return page_state_record2;
 		}
 		else{
+
 			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum + "    :    " + url_without_params);
 			//extract visible elements from list of elementstates provided
 			List<ElementState> visible_elements = new ArrayList<>();
 			for(ElementState element : all_elements){
 				if(isElementVisibleInPane(browser, element)){
+					try{
+						element = BrowserUtils.updateElementLocations(browser, element);
+					}catch(Exception e){}
 					visible_elements.add(element);
 				}
 			}
@@ -881,8 +884,9 @@ public class BrowserService {
 	    return returnString;
 	}
 
-	private static String escapeQuotes(String string) {
-		return string.replace("\'", "'");
+	public static String escapeQuotes(String string) {
+		String escaped = string.replace("\"", "\\\"");
+		return escaped.replace("\'", "'");
 	}
 
 	/**
@@ -917,7 +921,7 @@ public class BrowserService {
 
 	    WebElement parent = element;
 	    int count = 0;
-	    while(!"html".equals(parent.getTagName()) && !"body".equals(parent.getTagName()) && parent != null && count < 4){
+	    while(!"html".equals(parent.getTagName()) && !"body".equals(parent.getTagName()) && parent != null && count < 5){
 	    	try{
 	    		parent = getParentElement(parent);
 	    		if(driver.findElements(By.xpath("//"+parent.getTagName() + xpath)).size() == 1){

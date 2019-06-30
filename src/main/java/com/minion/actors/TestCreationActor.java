@@ -298,7 +298,7 @@ public class TestCreationActor extends AbstractActor  {
 	private PageState navigateToAndCreatePageState(String url, Browser browser)
 									throws GridException, NoSuchAlgorithmException, IOException, WebDriverException, InterruptedException, ExecutionException {
 		browser.navigateTo(url);
-
+		browser.waitForPageToLoad();
 		//construct a new page
 		return browser_service.buildPage(browser);
 	}

@@ -116,7 +116,6 @@ public class Crawler {
 		}
 
 		browser.navigateTo(expected_page.getUrl());
-		//browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){

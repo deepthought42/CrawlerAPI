@@ -611,9 +611,12 @@ public class BrowserService {
 		int idx= visible_element_map.size();
 		for(WebElement elem : web_elements){
 			boolean is_in_pane = BrowserService.isElementVisibleInPane(browser, elem);
+			boolean has_negative_position = BrowserService.doesElementHaveNegativePosition(elem.getLocation());
+			boolean has_positive_width_and_height = BrowserService.hasWidthAndHeight(elem.getSize());
+			boolean is_structure_tag = BrowserService.isStructureTag(elem.getTagName());
 			
 			ElementState element_state = null;
-			if(is_in_pane ){
+			if(is_in_pane && !has_negative_position && has_positive_width_and_height && !is_structure_tag){
 				element_state = buildElementState(browser, elem);
 				
 				BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser.getXScrollOffset(), browser.getYScrollOffset());

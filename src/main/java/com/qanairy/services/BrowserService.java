@@ -750,19 +750,11 @@ public class BrowserService {
 	}
 
 	public static boolean doesElementHaveNegativePosition(Point location) {
-		if(location.getX() < 0 || location.getY() < 0){
-			return true;
-		}
-	
-		return false;
+		return location.getX() < 0 || location.getY() < 0;
 	}
 
 	public static boolean hasWidthAndHeight(Dimension dimension) {
-		if(dimension.getHeight() > 1 && dimension.getWidth() > 1){
-			return true;
-		}
-	
-		return false;
+		return dimension.getHeight() > 1 && dimension.getWidth() > 1;
 	}
 	
 	/**
@@ -772,14 +764,10 @@ public class BrowserService {
 	 * @return
 	 */
 	public static boolean isStructureTag(String tag_name) {
-		if("html".equals(tag_name) || "body".equals(tag_name)
+		return "html".equals(tag_name) || "body".equals(tag_name)
 				|| "link".equals(tag_name) || "script".equals(tag_name)
 				|| "title".equals(tag_name) || "meta".equals(tag_name)
-				|| "head".equals(tag_name) || "iframe".equals(tag_name)){
-			return true;
-		}
-
-		return false;
+				|| "head".equals(tag_name) || "iframe".equals(tag_name);
 	}
 
 	public static List<WebElement> filterNoWidthOrHeight(List<WebElement> web_elements) {

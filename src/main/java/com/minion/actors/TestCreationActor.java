@@ -105,7 +105,6 @@ public class TestCreationActor extends AbstractActor  {
 				    	Domain domain = null;
 				    	Map<Integer, ElementState> visible_element_map = new HashMap<>();
 				    	List<ElementState> visible_elements = new ArrayList<>();
-				    	boolean needs_browser_restart = true;
 				    	
 				    	do{
 				    		List<String> path_keys = new ArrayList<String>();

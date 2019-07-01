@@ -82,7 +82,6 @@ public class TestingActor extends AbstractActor {
 						
 						if(test.getPathKeys() != null){
 							int cnt = 0;
-							int last_idx = 0;
 							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
 									browser = BrowserConnectionFactory.getConnection((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);

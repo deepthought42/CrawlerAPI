@@ -188,7 +188,7 @@ public class BrowserUtils {
 	
 	public static String sanitizeUrl(String currentUrl) throws MalformedURLException {
 		String domain = currentUrl;
-		int param_index = domain.toString().indexOf("?");
+		int param_index = domain.indexOf("?");
 		if(param_index >= 0){
 			domain = domain.substring(0, param_index);
 		}

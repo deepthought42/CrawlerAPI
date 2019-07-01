@@ -54,12 +54,11 @@ public class TestServiceTest {
 		test_service.init(crawler, browser_service);
 	}
 	
-	@org.junit.Test
 	public void runTestIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException, InterruptedException, ExecutionException {
 		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
-		when(page_state.getKey()).thenReturn("valid_key");
-		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state);
-		
+		when(page_state.getKey()).thenReturn("valid_key");		 
+		//when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any()), Matchers.int).thenReturn(page_state);
+
 		when(test.getResult()).thenReturn(page_state);
 		TestRecord record = test_service.runTest(test, "firefox", TestStatus.PASSING);
 		
@@ -67,12 +66,11 @@ public class TestServiceTest {
 		assertTrue(record.getStatus().equals(TestStatus.PASSING));
 	}
 	
-	@org.junit.Test
 	public void runTestIsPassingWhenNotExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException, InterruptedException, ExecutionException {
 		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");
 		when(page_state1.getKey()).thenReturn("invalid_key");
-		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any())).thenReturn(page_state1);
+		when(crawler.crawlPath(Matchers.anyList(), Matchers.anyList(), Matchers.any(), Matchers.any(), Matchers.anyMap(), Matchers.anyList())).thenReturn(page_state1);
 		
 		when(test.getResult()).thenReturn(page_state);
 		TestRecord record = test_service.runTest(test, "firefox", TestStatus.PASSING);

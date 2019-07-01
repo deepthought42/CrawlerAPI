@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 
@@ -67,7 +69,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
+	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel, Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -141,17 +143,9 @@ public class Crawler {
 				}
 
 				performAction(action, last_element, browser.getDriver());
-				Timing.pauseThread(1000);
-
-				/*
-				if(!browser.getDriver().getCurrentUrl().equals(expected_page.getUrl())){
-					browser.waitForPageToLoad();
-				}
-				else{
-					Timing.pauseThread(1000);
-				}
-				*/
 				browser.waitForPageToLoad();
+				Timing.pauseThread(2000);
+
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
 				browser.setYScrollOffset(p.getY());
@@ -180,7 +174,9 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		return browser_service.buildPage(browser);
+		List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, known_visible_elements);
+
+		return browser_service.buildPage(browser, visible_elements);
 	}
 
 	/**
@@ -240,13 +236,13 @@ public class Crawler {
 			for(PathObject obj : ordered_path_objects){
 				if(obj instanceof PageState){
 					expected_page = ((PageState)obj);
-					init_url = expected_page.getUrl();	
+					init_url = expected_page.getUrl();
 					break;
 				}
 			}
 		}
 
-		//log.warn("navigating to url :: " + init_url);
+		log.warn("navigating to url :: " + init_url);
 		browser.navigateTo(init_url);
 
 		for(PathObject current_obj: ordered_path_objects){
@@ -276,8 +272,8 @@ public class Crawler {
 				}
 
 				performAction(action, last_element, browser.getDriver());
-				Timing.pauseThread(1000);
 				browser.waitForPageToLoad();
+				Timing.pauseThread(2000);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -448,12 +444,10 @@ public class Crawler {
 							current_idx++;
 						}
 					}
-					else {
-						log.warn("PAUSING AFTER ACTION PERFORMED   !!!!!!!!!");
-						//TODO: Replace the following with animation detection
-						Timing.pauseThread(1000);
-					}
+
 					browser.waitForPageToLoad();
+					Timing.pauseThread(2000);
+
 					Point p = browser.getViewportScrollOffset();
 					browser.setXScrollOffset(p.getX());
 					browser.setYScrollOffset(p.getY());
@@ -502,7 +496,9 @@ public class Crawler {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
-
+		Map<Integer, ElementState> visible_element_map = new HashMap<>();
+		List<ElementState> known_visible_elements = new ArrayList<>();
+		
 		do{
 			try{
 				log.warn("setting up browser :: " + browser_name);
@@ -522,7 +518,9 @@ public class Crawler {
 					}
 				}
 				
-				result_page = browser_service.buildPage(browser);
+				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, known_visible_elements);
+
+				result_page = browser_service.buildPage(browser, visible_elements);
 			}catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test ");
 				//e.printStackTrace();
@@ -534,8 +532,8 @@ public class Crawler {
 				//e.printStackTrace();
 			}
 			catch (WebDriverException e) {
-				log.warn("web driver exception occurred : " + e.getMessage());
-				//e.printStackTrace();
+				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
+				e.printStackTrace();
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {
@@ -543,7 +541,7 @@ public class Crawler {
 				//e.printStackTrace();
 			} catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			finally{
 				if(browser != null){
@@ -551,7 +549,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < Integer.MAX_VALUE);
+		}while(result_page == null && tries < 10000);
 		return result_page;
 	}
 
@@ -566,11 +564,13 @@ public class Crawler {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
-
+		Map<Integer, ElementState> visible_element_map = new HashMap<>();
+		List<ElementState> visible_elements = new ArrayList<>();
+		
 		do{
 			try{
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				result_page = crawlPath(path_keys, path_objects, browser, host);
+				result_page = crawlPath(path_keys, path_objects, browser, host, visible_element_map, visible_elements);
 			}catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
 			} catch (GridException e) {
@@ -656,8 +656,8 @@ public class Crawler {
 				}
 
 				performAction(action, last_element, browser.getDriver());
-				Timing.pauseThread(1000);
 				browser.waitForPageToLoad();
+				Timing.pauseThread(2000);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());

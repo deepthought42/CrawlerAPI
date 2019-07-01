@@ -491,7 +491,7 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		Timing.pauseThread(1000);
+		Timing.pauseThread(2000);
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -504,7 +504,7 @@ public class Browser {
 		log.warn("scrolling to    ("+x_offset + " : "+y_offset+")");
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		Timing.pauseThread(1000);
+		Timing.pauseThread(2000);
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());

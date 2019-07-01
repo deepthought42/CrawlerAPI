@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -102,7 +103,10 @@ public class TestCreationActor extends AbstractActor  {
 				    	int attempts = 0;
 				    	Test test = null;
 				    	Domain domain = null;
-
+				    	Map<Integer, ElementState> visible_element_map = new HashMap<>();
+				    	List<ElementState> visible_elements = new ArrayList<>();
+				    	boolean needs_browser_restart = true;
+				    	
 				    	do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -114,7 +118,8 @@ public class TestCreationActor extends AbstractActor  {
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
 
-				    			PageState result_page = browser_service.buildPage(browser);
+				    			List<ElementState> elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, visible_elements);
+				    			PageState result_page = browser_service.buildPage(browser, elements);
 						    	test = new Test(path_keys, path_objects, result_page, name);
 
 						    	Test test_record = test_repo.findByKey(test.getKey());

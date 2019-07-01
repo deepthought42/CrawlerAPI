@@ -92,10 +92,11 @@ public class AnimationDetectionActor extends AbstractActor{
 							System.err.println("STARTING ANIMATION DETECTION BY CRAWLING PATH");
 							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
 
+							System.err.println("Getting animation");
 							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
 							if(animation.getImageUrls().size() > 1){
 								page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
-								page_state = page_state_service.save(page_state);
+								page_state_service.save(page_state);
 							}
 
 							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -110,6 +111,8 @@ public class AnimationDetectionActor extends AbstractActor{
 							form_discoverer.tell(path_message, getSelf() );
 							path_expansion_actor.tell(path_message, getSelf() );
 						}catch(Exception e){
+							log.warning("exception occurred during Animation Detection.....  "+e.getMessage());
+							e.printStackTrace();
 							err = true;
 						}
 					}while(err);

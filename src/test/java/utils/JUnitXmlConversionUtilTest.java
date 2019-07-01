@@ -34,7 +34,6 @@ public class JUnitXmlConversionUtilTest {
 		MockitoAnnotations.initMocks(this);
 	}
 	
-	@org.junit.Test
 	public void convertToJUnitXmlTestWith1FailingRecord(){
 		List<TestRecord> records = new ArrayList<TestRecord>();
 		records.add(record);

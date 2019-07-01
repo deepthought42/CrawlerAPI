@@ -1,7 +1,9 @@
 package com.minion.actors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -140,16 +142,21 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		
 							  		cnt = 0;
 							  		PageState result_page = null;
+							  		Map<Integer, ElementState> visible_element_map = new HashMap<>();
+							  		List<ElementState> visible_elements = new ArrayList<>();
+							  		
 							  		do{
-								  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  			try{
-							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString());
+									  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
+							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString(), visible_element_map, visible_elements);
 							  				break;
 							  			}catch(Exception e){
 							  				log.warning("Exception occurred while crawling FORM path -- "+e.getMessage());
 							  			}
 							  			finally{
-									  		browser.close();
+							  				if(browser != null){
+							  					browser.close();
+							  				}
 							  			}
 						  			}while(cnt < Integer.MAX_VALUE && result_page == null);
 							  		

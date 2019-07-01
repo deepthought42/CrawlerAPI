@@ -1,6 +1,11 @@
 package com.minion.actors;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +15,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -69,16 +75,18 @@ public class TestingActor extends AbstractActor {
 						Test test = (Test)message.getData();
 		
 						final long pathCrawlStartTime = System.currentTimeMillis();
-		
 					  	Browser browser = null;
-					  	
 						PageState resulting_page = null;
+						Map<Integer, ElementState> visible_element_map = new HashMap<>();
+						List<ElementState> visible_elements = new ArrayList<>();
+						
 						if(test.getPathKeys() != null){
 							int cnt = 0;
+							int last_idx = 0;
 							while(browser == null && cnt < Integer.MAX_VALUE){
 								try{
 									browser = BrowserConnectionFactory.getConnection((String)message.getOptions().get("browser"), BrowserEnvironment.TEST);
-									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString());
+									resulting_page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, message.getOptions().get("host").toString(), visible_element_map, visible_elements);
 								}catch(NullPointerException e){
 									log.error(e.getMessage());
 								}

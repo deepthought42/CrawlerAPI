@@ -144,7 +144,7 @@ public class Crawler {
 
 				performAction(action, last_element, browser.getDriver());
 				browser.waitForPageToLoad();
-				Timing.pauseThread(2000);
+				Timing.pauseThread(1000);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -273,7 +273,7 @@ public class Crawler {
 
 				performAction(action, last_element, browser.getDriver());
 				browser.waitForPageToLoad();
-				Timing.pauseThread(2000);
+				Timing.pauseThread(1000);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -446,7 +446,7 @@ public class Crawler {
 					}
 
 					browser.waitForPageToLoad();
-					Timing.pauseThread(2000);
+					Timing.pauseThread(1000);
 
 					Point p = browser.getViewportScrollOffset();
 					browser.setXScrollOffset(p.getX());
@@ -549,7 +549,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 10000);
+		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
 	}
 
@@ -657,7 +657,7 @@ public class Crawler {
 
 				performAction(action, last_element, browser.getDriver());
 				browser.waitForPageToLoad();
-				Timing.pauseThread(2000);
+				Timing.pauseThread(1000);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());

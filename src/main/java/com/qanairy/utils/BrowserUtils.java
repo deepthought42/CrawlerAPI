@@ -86,7 +86,7 @@ public class BrowserUtils {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
-
+		
 		long start_ms = System.currentTimeMillis();
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 
@@ -127,7 +127,7 @@ public class BrowserUtils {
 				log.debug(e.getMessage());
 			}
 		}
-
+		
 		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
 	}	
 	
@@ -136,7 +136,8 @@ public class BrowserUtils {
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
 		long start_ms = System.currentTimeMillis();
-
+		long total_time = System.currentTimeMillis();
+		
 		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
 		String new_checksum = null;
@@ -165,7 +166,7 @@ public class BrowserUtils {
 
 			log.warn("was transition detected ??   " + transition_detected);
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 5000);
+		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 5000);
 		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {

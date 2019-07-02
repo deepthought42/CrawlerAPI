@@ -225,22 +225,16 @@ public class Crawler {
 		//check if page is the same as expected.
 		PageState expected_page  = null;
 		String init_url = null;
-		if(ordered_path_objects.get(0) instanceof Redirect){
-			expected_page = ((PageState)ordered_path_objects.get(1));
-			Redirect redirect = (Redirect)ordered_path_objects.get(0);
-			init_url = redirect.getStartUrl();
-		}
-		else {
-			//find first page
-			for(PathObject obj : ordered_path_objects){
-				if(obj instanceof PageState){
-					expected_page = ((PageState)obj);
-					init_url = expected_page.getUrl();
-					break;
-				}
+		
+		//find first page
+		for(PathObject obj : ordered_path_objects){
+			if(obj instanceof PageState){
+				expected_page = ((PageState)obj);
+				init_url = expected_page.getUrl();
+				break;
 			}
 		}
-
+	
 		log.warn("navigating to url :: " + init_url);
 		browser.navigateTo(init_url);
 

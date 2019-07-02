@@ -136,7 +136,7 @@ public class BrowserService {
 					BrowserUtils.getLoadingAnimation(browser, host, url);
 				}
 					
-				log.warn("last element idx  ::   " + visible_element_map.size() + ";    rep count    ::   "+visible_elements);
+				log.warn("last element idx  ::   " + visible_element_map.size() + ";    rep count    ::   "+visible_elements.size());
 				log.warn("elements all built successfully :: " + elements_built_successfully);
 				if(!elements_built_successfully){
 					getVisibleElements(browser, visible_element_map, visible_elements);
@@ -306,9 +306,6 @@ public class BrowserService {
 			List<ElementState> visible_elements = new ArrayList<>();
 			for(ElementState element : all_elements){
 				if(isElementVisibleInPane(browser, element)){
-					try{
-						element = BrowserUtils.updateElementLocations(browser, element);
-					}catch(Exception e){}
 					visible_elements.add(element);
 				}
 			}
@@ -581,7 +578,7 @@ public class BrowserService {
 			boolean is_in_pane = BrowserService.isElementVisibleInPane(browser, elem);
 			boolean is_struct_tag = BrowserService.isStructureTag(elem.getTagName());
 			boolean has_area = BrowserService.hasWidthAndHeight(elem.getSize());
-			if(is_in_pane && !is_struct_tag && has_area){
+			if(elem.isDisplayed() && is_in_pane && !is_struct_tag && has_area){
 				ElementState element_state = buildElementState(browser, elem, page_screenshot);
 				if(element_state != null){
 					elementList.add(element_state);
@@ -615,7 +612,7 @@ public class BrowserService {
 			boolean is_structure_tag = BrowserService.isStructureTag(elem.getTagName());
 			
 			ElementState element_state = null;
-			if(is_in_pane && has_positive_width_and_height && !is_structure_tag){
+			if(elem.isDisplayed() && is_in_pane && has_positive_width_and_height && !is_structure_tag){
 				element_state = buildElementState(browser, elem);
 				
 				BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser.getXScrollOffset(), browser.getYScrollOffset());
@@ -731,7 +728,7 @@ public class BrowserService {
 		boolean is_structure_tag = isStructureTag(element_tag_name);
 		boolean has_width_and_height = hasWidthAndHeight(elem.getSize());
 		
-		if(negative_position || is_structure_tag || !has_width_and_height){
+		if(!elem.isDisplayed() || negative_position || is_structure_tag || !has_width_and_height){
 			return null;
 		}
 		

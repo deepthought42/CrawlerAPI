@@ -36,10 +36,7 @@ import com.qanairy.services.BrowserService;
  */
 @SpringBootTest
 public class BrowserTest {
-	
-	@Autowired
-	private BrowserService browser_service;
-	
+
 	@Test
 	public void verifyCleanSrc(){
 		String src_example = "<html><head></head><canvas id=\"fxdriver-screenshot-canvas\" style=\"display: none;\" width=\"1252\" height=\"1596\"></canvas></html>";
@@ -49,6 +46,14 @@ public class BrowserTest {
 		Assert.assertTrue("<html><head></head></html>".equals(clean_src));
 	}
 	
+	@Test
+	public void verifyEscapeQuotes(){
+		String src_example = "PDF: Pearson\'s Watson-Glaser II Critical Thinking Appraisal and CPP\'s CPI 260 assessment";
+		String clean_src = BrowserService.escapeQuotes(src_example);// cleanSrc(src_example);
+		System.err.println("clean src: " +clean_src);
+		assertTrue("PDF: Pearson's Watson-Glaser II Critical Thinking Appraisal and CPP's CPI 260 assessment".equals(clean_src));
+	}
+
 	//@Test
 	public void verifyGenerateConcatForXpath(){
 		String src_example = "This is a embedded \"path\"";

@@ -41,6 +41,7 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 
@@ -63,6 +64,9 @@ public class ParentPathExplorer extends AbstractActor {
 	@Autowired
 	private ActorSystem actor_system;
 
+	@Autowired
+	private PageStateService page_state_service;
+	
 	@Autowired
 	private DiscoveryRecordService discovery_service;
 
@@ -204,12 +208,18 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							
 							log.warn("building parent result page state");
+							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
+							
 							//build result page
-							PageState parent_result = browser_service.buildPage(browser);
+								//PageState parent_result = browser_service.buildPage(browser);
+							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
+							if(result == null){
+								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
+							}
 
 							log.warn("checking if parent result matches expected result");
 							//if result matches expected page then build new path using parent element state and break from loop
-							if(parent_result.equals(message.getResultPage())){
+							if(result != null && result.equals(message.getResultPage())){
 								log.warn("parent result matches expected result page");
 								final_path_keys = new ArrayList<>(beginning_path_keys);
 								final_path_keys.add(parent_element.getKey());

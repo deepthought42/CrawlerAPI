@@ -12,12 +12,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.openqa.grid.common.exception.GridException;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.qanairy.models.Animation;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Redirect;
@@ -83,7 +86,7 @@ public class BrowserUtils {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
-
+		
 		long start_ms = System.currentTimeMillis();
 		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
 
@@ -113,7 +116,7 @@ public class BrowserUtils {
 			}
 
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000);
+		}while((System.currentTimeMillis() - start_ms) < 10000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -124,7 +127,7 @@ public class BrowserUtils {
 				log.debug(e.getMessage());
 			}
 		}
-
+		
 		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
 	}	
 	
@@ -133,7 +136,8 @@ public class BrowserUtils {
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
 		long start_ms = System.currentTimeMillis();
-
+		long total_time = System.currentTimeMillis();
+		
 		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
 		String new_checksum = null;
@@ -162,7 +166,7 @@ public class BrowserUtils {
 
 			log.warn("was transition detected ??   " + transition_detected);
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 3000);
+		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 5000);
 		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {
@@ -185,6 +189,11 @@ public class BrowserUtils {
 	
 	public static String sanitizeUrl(String currentUrl) throws MalformedURLException {
 		String domain = currentUrl;
+		int param_index = domain.indexOf("?");
+		if(param_index >= 0){
+			domain = domain.substring(0, param_index);
+		}
+		
 		if(domain.charAt(0) != 'h'){
 			domain= 'h'+domain;
 		}
@@ -198,6 +207,33 @@ public class BrowserUtils {
 		if(new_key.charAt(new_key.length()-1) == '/'){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
+		new_key = new_url.getProtocol()+"://"+new_key;
+		
 		return new_key;
+	}
+
+	public static ElementState updateElementLocations(Browser browser, ElementState element) {
+		
+		WebElement web_elem = browser.findWebElementByXpath(element.getXpath());
+		Point location = web_elem.getLocation();
+		if(location.getX() != element.getXLocation() || location.getY() != element.getYLocation()){
+			log.warn("updating element state from ::  ( " + element.getXLocation() + " , "+element.getYLocation()+" ) " + " to    ::  ( " + location.getX() + " , "+location.getY()+")");
+			element.setXLocation(location.getX());
+			element.setYLocation(location.getY());
+		}
+		
+		return element;
+	}
+
+	public static boolean doesHostChange(List<String> urls) throws MalformedURLException {
+		for(String url : urls){
+			String last_host_and_path = "";
+			URL url_obj = new URL(url);
+			String host_and_path = url_obj.getHost()+url_obj.getPath();
+			if(!last_host_and_path.equals(host_and_path)){
+				return true;
+			}
+		}
+		return false;
 	}
 }

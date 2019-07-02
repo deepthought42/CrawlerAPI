@@ -106,10 +106,13 @@ public class TestService {
 		 int cnt = 0;
 		 boolean pages_dont_match = false;
 		 Browser browser = null;
+		 Map<Integer, ElementState> visible_element_map = new HashMap<>();
+		 List<ElementState> visible_elements = new ArrayList<>();
+		 
 		 do{
 			 try {
 				browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);
-				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null);
+				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
 				 pages_dont_match = true;

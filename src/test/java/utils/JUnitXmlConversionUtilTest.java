@@ -34,12 +34,10 @@ public class JUnitXmlConversionUtilTest {
 		MockitoAnnotations.initMocks(this);
 	}
 	
-	@org.junit.Test
 	public void convertToJUnitXmlTestWith1FailingRecord(){
 		List<TestRecord> records = new ArrayList<TestRecord>();
 		records.add(record);
 		
-		when(record.getTest()).thenReturn(test);
 		when(record.getRunTime()).thenReturn(10000L);
 		when(test.getName()).thenReturn("Practice test #1");
 		when(record.getStatus()).thenReturn(TestStatus.FAILING);

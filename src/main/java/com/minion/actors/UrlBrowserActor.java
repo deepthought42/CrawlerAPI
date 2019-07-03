@@ -152,9 +152,6 @@ public class UrlBrowserActor extends AbstractActor {
 
 						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
 
-						final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
-
 						for(PageState page_state : page_states){
 							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 								log.warn("discovery path does not have expanded page state");

@@ -92,12 +92,13 @@ public class BrowserUtils {
 		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
 		String last_checksum = null;
 		List<Future<String>> url_futures = new ArrayList<>();
+		String new_checksum = "";
 		do{
 			//get element screenshot
 			BufferedImage screenshot = browser.getViewportScreenshot();
 
 			//calculate screenshot checksum
-			String new_checksum = PageState.getFileChecksum(screenshot);
+			new_checksum = PageState.getFileChecksum(screenshot);
 
 			transition_detected = !new_checksum.equals(last_checksum);
 
@@ -128,11 +129,11 @@ public class BrowserUtils {
 			}
 		}
 		
-		if(!has_cycle && image_checksums.size()>1){
+		if(!has_cycle && !transition_detected && image_checksums.size() > 1){
 			log.warn("returning loading animation");
 			return new Animation(image_urls, image_checksums, url, AnimationType.LOADING);
 		}
-		else if(has_cycle){
+		else if(transition_detected && has_cycle ){
 			return new Animation(image_urls, image_checksums, url, AnimationType.CONTINUOUS);
 		}
 		return null;

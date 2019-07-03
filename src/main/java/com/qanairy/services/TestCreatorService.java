@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Group;
-import com.qanairy.models.PageLoadAnimation;
+import com.qanairy.models.Animation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -55,7 +55,7 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, PageLoadAnimation animation)
+	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, Animation animation)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		page_state.setLandable(true);
 		page_state.setLastLandabilityCheck(LocalDateTime.now());

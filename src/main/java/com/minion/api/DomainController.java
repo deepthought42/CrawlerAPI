@@ -37,10 +37,10 @@ import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -288,7 +288,7 @@ public class DomainController {
 		Set<ElementState> page_elem = domain_service.getElementStates(host);
 		Set<Action> actions = domain_service.getActions(host);
 		Set<Redirect> redirects = redirect_service.getRedirects(host);
-		Set<PageLoadAnimation> animations = domain_service.getAnimations(host);
+		Set<Animation> animations = domain_service.getAnimations(host);
 		Set<PathObject> path_objects = new HashSet<PathObject>();
 		//merge(page_state, page_elem, actions);
 

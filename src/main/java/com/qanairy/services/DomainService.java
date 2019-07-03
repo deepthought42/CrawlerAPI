@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
@@ -108,7 +108,7 @@ public class DomainService {
 		return domain_repo.getTestRecords(url);
 	}
 
-	public Set<PageLoadAnimation> getAnimations(String host) {
+	public Set<Animation> getAnimations(String host) {
 		return domain_repo.getAnimations(host);
 	}
 }

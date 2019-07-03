@@ -1,7 +1,6 @@
 package com.minion.browsing;
 
 import java.io.IOException;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,13 +26,14 @@ import org.slf4j.Logger;
 import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
+import com.qanairy.models.enums.AnimationType;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
@@ -160,9 +160,9 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				browser.waitForPageToLoad();
 			}
-			else if(current_obj instanceof PageLoadAnimation){
+			else if(current_obj instanceof Animation && ((Animation)current_obj).getAnimationType().equals(AnimationType.LOADING)){
 				log.warn("crawling loading animation");
-				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
+				BrowserUtils.getAnimation(browser, host_channel, expected_page.getUrl());
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -283,8 +283,8 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				//browser.waitForPageToLoad();
 			}
-			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, init_url);
+			else if(current_obj instanceof Animation && ((Animation)current_obj).getAnimationType().equals(AnimationType.LOADING)){
+				BrowserUtils.getAnimation(browser, host_channel, init_url);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -385,8 +385,8 @@ public class Crawler {
 
 				log.warn("seting last url to redirect url :: " + last_url);
 			}
-			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
+			else if(current_obj instanceof Animation && ((Animation)current_obj).getAnimationType().equals(AnimationType.LOADING)){
+				BrowserUtils.getAnimation(browser, host_channel, expected_page.getUrl());
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -504,7 +504,7 @@ public class Crawler {
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
 				
 				if(!browser_url.equals(last_page_state.getUrl())){
-					PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host, browser_url);
+					Animation loading_animation = BrowserUtils.getAnimation(browser, host, browser_url);
 					if(loading_animation != null){
 						path.getPathKeys().add(loading_animation.getKey());
 						path.getPathObjects().add(loading_animation);

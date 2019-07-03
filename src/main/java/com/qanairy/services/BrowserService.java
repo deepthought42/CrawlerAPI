@@ -39,12 +39,14 @@ import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.minion.util.Timing;
 import com.qanairy.models.Action;
+import com.qanairy.models.Animation;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Screenshot;
+import com.qanairy.models.enums.AnimationType;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
@@ -133,14 +135,11 @@ public class BrowserService {
 					BrowserUtils.getPageTransition(url, browser, host);
 				}
 				if(has_loading_animation){
-					BrowserUtils.getLoadingAnimation(browser, host, url);
+					BrowserUtils.getAnimation(browser, host, url);
 				}
-					
+				
 				log.warn("last element idx  ::   " + visible_element_map.size() + ";    rep count    ::   "+visible_elements.size());
-				log.warn("elements all built successfully :: " + elements_built_successfully);
-				if(!elements_built_successfully){
-					getVisibleElements(browser, visible_element_map, visible_elements);
-				}
+				getVisibleElements(browser, visible_element_map, visible_elements);
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				e.printStackTrace();
@@ -162,7 +161,7 @@ public class BrowserService {
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				error_occurred = true;
 				is_browser_closed = true;
-				//e.printStackTrace();
+				e.printStackTrace();
 			} catch(Exception e){
 				
 				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
@@ -183,8 +182,7 @@ public class BrowserService {
 		}
 		// BUILD ALL PAGE STATES
 		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		//elements = new ArrayList<>(element_xpaths.values());
-		elements_built_successfully = true;
+
 		int iter_idx=0;
 		int idx = 0;
 		boolean err = true;
@@ -202,7 +200,7 @@ public class BrowserService {
 						BrowserUtils.getPageTransition(url, browser, host);
 					}
 					if(has_loading_animation){
-						BrowserUtils.getLoadingAnimation(browser, host, url);
+						BrowserUtils.getAnimation(browser, host, url);
 					}
 				}
 				err = false;
@@ -214,12 +212,18 @@ public class BrowserService {
 					browser.scrollTo(visible_elements.get(0).getXLocation(), visible_elements.get(0).getYLocation());
 				}
 				else{
-					Timing.pauseThread(2000);
+					browser.waitForPageToLoad();
+					Timing.pauseThread(1000);
 				}
 
 				log.warn("building page state with elements :: " + visible_elements.size() + "   :    " +element_xpaths.keySet().size());
 				PageState page_state = buildPage(browser, visible_elements);
 
+			  	//check for continuous animation
+			  	Animation continuous_animation = BrowserUtils.getAnimation(browser, host, url);
+			  	if(continuous_animation != null && continuous_animation.getAnimationType().equals(AnimationType.CONTINUOUS)){
+			  		page_state.getAnimatedImageChecksums().addAll(continuous_animation.getImageChecksums());
+			  	}
 				log.warn("done building page state ");
 				page_states.add(page_state);
 

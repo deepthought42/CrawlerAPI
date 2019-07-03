@@ -31,7 +31,6 @@ import com.minion.structs.Message;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -194,19 +193,16 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlPartialPath(end_path_keys, end_path_objects, browser, message.getDiscovery().getDomainUrl(), parent_element);
 
-							String browser_url = browser.getDriver().getCurrentUrl();
-							URL page_url = new URL(browser_url);
-							int param_index = page_url.toString().indexOf("?");
-							String url_without_params = page_url.toString();
-							if(param_index >= 0){
-								url_without_params = url_without_params.substring(0, param_index);
-							}
-							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl(), url_without_params);
+							//String browser_url = browser.getDriver().getCurrentUrl();
+							//browser_url = BrowserUtils.sanitizeUrl(browser_url);
+							
+							//URL page_url = new URL(browser_url);
+							/*PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl(), url_without_params);
 							if(loading_animation != null){
 								beginning_path_keys.add(loading_animation.getKey());
 								beginning_path_objects.add(loading_animation);
 							}
-							
+							*/
 							log.warn("building parent result page state");
 							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
 							
@@ -246,11 +242,6 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 						}
 					}while((results_match || error_occurred) && !last_element.getName().equals("body"));
-
-					log.warn("final path objects ::    " + final_path_objects);
-			  		for(PathObject obj : final_path_objects){
-						log.warn("PATH OBJECT AFTER PARENT ::  "+obj.getType());
-			  		}
 
 			  		long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));

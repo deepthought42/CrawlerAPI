@@ -19,7 +19,8 @@ public class Animation implements Transition, Persistable {
 	private String key;
 	private List<String> image_urls;
 	private List<String> image_checksums;
-	private AnimationType animation_type;
+	private String page_url;
+	private String animation_type;
 	
 	public Animation(){}
 
@@ -29,12 +30,13 @@ public class Animation implements Transition, Persistable {
 	 * 
 	 * @pre image_urls != null
 	 */
-	public Animation(List<String> image_urls, List<String> image_checksums, AnimationType type) {
+	public Animation(List<String> image_urls, List<String> image_checksums, String page_url, AnimationType animation_type) {
 		assert image_urls != null;
-		setType("Animation");
+		setType("PageLoadAnimation");
 		setImageUrls(image_urls);
 		setImageChecksums(image_checksums);
-		setAnimationType(type);
+		setPageUrl(page_url);
+		setAnimationType(animation_type);
 		setKey(generateKey());
 	}
 
@@ -59,17 +61,17 @@ public class Animation implements Transition, Persistable {
 
 	@Override
 	public void setType(String type) {
-		this.type = "Animation";
+		this.type = "PageLoadAnimation";
 	}
 
 	@Override
 	public String generateKey() {
 		String key = "";
-		for(String url : image_urls){
-			key += url;
+		for(String checksum : image_checksums){
+			key += checksum;
 		}
 		
-		return getType()+""+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
+		return getType()+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 
 	public List<String> getImageChecksums() {
@@ -80,19 +82,27 @@ public class Animation implements Transition, Persistable {
 		this.image_checksums = image_checksums;
 	}
 
-	public AnimationType getAnimationType() {
-		return animation_type;
-	}
-
-	public void setAnimationType(AnimationType animation_type) {
-		this.animation_type = animation_type;
-	}
-
 	public List<String> getImageUrls() {
 		return image_urls;
 	}
 
 	public void setImageUrls(List<String> image_urls) {
 		this.image_urls = image_urls;
+	}
+
+	public String getPageUrl() {
+		return page_url;
+	}
+
+	public void setPageUrl(String page_url) {
+		this.page_url = page_url;
+	}
+
+	public AnimationType getAnimationType() {
+		return AnimationType.valueOf(animation_type);
+	}
+
+	public void setAnimationType(AnimationType animation_type) {
+		this.animation_type = animation_type.toString();
 	}
 }

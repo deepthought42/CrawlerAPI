@@ -34,11 +34,9 @@ import org.springframework.stereotype.Component;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
-import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.minion.util.Timing;
-import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -48,7 +46,6 @@ import com.qanairy.models.Screenshot;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
-import com.qanairy.models.rules.Rule;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -1026,8 +1023,9 @@ public class BrowserService {
 		String host = new URL(page.getUrl()).getHost();
 		for(WebElement form_elem : form_elements){
 			browser.scrollToElement(form_elem);
-			List<String> form_xpath_list = new ArrayList<String>();
-
+			//List<String> form_xpath_list = new ArrayList<String>();
+			Map<String, ElementState> form_xpath_map = new HashMap<>();
+			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, page_screenshot, host);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML") );
 			form_tag.setScreenshot(screenshot_url);
@@ -1053,7 +1051,8 @@ public class BrowserService {
 
 				if(input_tag == null || input_tag.getScreenshot()== null || input_tag.getScreenshot().isEmpty()){
 
-					Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
+					browser.scrollToElement(input_elem);
+					//Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
 					BufferedImage viewport = browser.getViewportScreenshot();
 
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
@@ -1070,41 +1069,11 @@ public class BrowserService {
 					}
 					img.flush();
 					input_tag.setScreenshot(screenshot);
-				}
-
-				boolean alreadySeen = false;
-				for(String xpath : form_xpath_list){
-					if(xpath.equals(input_tag.getXpath())){
-						alreadySeen = true;
-					}
-				}
-
-				if(alreadySeen){
-					//log.info("page element already seen before extracting form elements");
-					continue;
+					input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
 				}
 
 				List<ElementState> group_inputs = constructGrouping(input_elem, browser);
 
-				//Set<ElementState> labels = findLabelsForInputs(form_elem, group_inputs, browser.getDriver());
-				/*for(FormField input_field : group_inputs){
-					try{
-						ElementState label = findLabelForInput(form_elem, input_field, browser.getDriver());
-						input_field.setFieldLabel(label);
-					}
-					catch(NullPointerException e){
-						log.info("Error occurred while finding label for form input field");
-					}
-				}
-				*/
-				log.info("GROUP INPUTS    :::   "+group_inputs.size());
-				for(ElementState page_elem : group_inputs){
-					for(Rule rule : extractor.extractInputRules(page_elem)){
-						log.info(" RULE     :::   "+ rule);
-						log.info("INPUT ELEMENT "+page_elem);
-						page_elem.addRule(rule);
-					}
-				}
 				//combo_input.getElements().addAll(labels);
 				form.addFormFields(group_inputs);
 			}

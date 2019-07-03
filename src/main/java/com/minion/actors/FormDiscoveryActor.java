@@ -113,10 +113,8 @@ public class FormDiscoveryActor extends AbstractActor{
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
 									
-									log.info("Total RULES   :::   "+rules.size());
-									for(Rule rule : rules){
-										field.addRule(rule);
-									}
+									log.info("Total RULES   :::   "+rules.size());	
+									field.getRules().addAll(rules);
 								}
 							  							  	
 							    DeepthoughtApi.predict(form);

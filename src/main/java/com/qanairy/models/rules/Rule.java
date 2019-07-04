@@ -1,9 +1,5 @@
 package com.qanairy.models.rules;
 
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-
 import com.minion.browsing.form.FormField;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Persistable;

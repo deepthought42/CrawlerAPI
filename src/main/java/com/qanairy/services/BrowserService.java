@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
+import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.minion.util.Timing;
@@ -65,6 +66,9 @@ public class BrowserService {
 	@Autowired
 	private ElementRuleExtractor extractor;
 
+	@Autowired
+	private Crawler crawler;
+	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "src", "href"};
 
 	/**
@@ -105,6 +109,147 @@ public class BrowserService {
 		return !last_url.equals(result.getUrl());
 	}
 
+	public List<PageState> buildPageStates(String url, String browser_name, String host, List<PathObject> path_objects, List<String> path_keys) throws MalformedURLException, IOException, Exception{
+		List<PageState> page_states = new ArrayList<>();
+		boolean error_occurred = false;
+		Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
+		Map<String, ElementState> element_xpaths = new HashMap<>();
+		boolean elements_built_successfully = false;
+
+		Browser browser = null;
+		boolean is_browser_closed = true;
+		Map<Integer, ElementState> visible_element_map = new HashMap<>();
+		List<ElementState> visible_elements = new ArrayList<>();
+		
+		do{
+			try{
+				error_occurred = false;
+				if(is_browser_closed){
+					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					browser.navigateTo(url);
+					is_browser_closed = false;
+					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
+				}
+					
+				log.warn("last element idx  ::   " + visible_element_map.size() + ";    rep count    ::   "+visible_elements.size());
+				log.warn("elements all built successfully :: " + elements_built_successfully);
+				if(!elements_built_successfully){
+					getVisibleElements(browser, visible_element_map, visible_elements);
+				}
+			}catch(NullPointerException e){
+				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
+				e.printStackTrace();
+				error_occurred = true;
+				is_browser_closed = true;
+			} catch (GridException e) {
+				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
+				e.printStackTrace();
+				error_occurred = true;
+				is_browser_closed = true;
+			}
+			catch (NoSuchElementException e){
+				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
+				e.printStackTrace();
+				error_occurred = true;
+			}
+			catch (WebDriverException e) {
+				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
+				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				error_occurred = true;
+				is_browser_closed = true;
+				//e.printStackTrace();
+			} catch(Exception e){
+				
+				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
+				e.printStackTrace();
+				error_occurred = true;
+				is_browser_closed = true;
+			}
+			finally{
+				if(browser != null && is_browser_closed){
+					browser.close();
+				}
+			}
+		}while(error_occurred);
+		log.warn("returning elements list : "+visible_elements.size()+ "   :    "+url);
+
+		for(ElementState elem : visible_elements){
+			element_xpaths.put(elem.getXpath(), elem);
+		}
+		// BUILD ALL PAGE STATES
+		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		//elements = new ArrayList<>(element_xpaths.values());
+		elements_built_successfully = true;
+		int iter_idx=0;
+		int idx = 0;
+		boolean err = true;
+		while(element_xpaths.keySet().size() > 0){
+			log.warn("ELEMENT XPATHS :: " + element_xpaths.size());
+			try{
+				visible_elements = new ArrayList<ElementState>(element_xpaths.values());
+				Collections.sort(visible_elements);
+				log.warn("All elements :: " + visible_elements.size());
+				if(err){
+					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					browser.navigateTo(url);
+					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
+				}
+				err = false;
+
+				log.warn("checking if element is visible in page");
+				if(!isElementVisibleInPane(browser, visible_elements.get(0)) || iter_idx > 0){
+					element_hash.put(visible_elements.get(0).getXpath(), visible_elements.get(0));
+					log.warn("run : " + idx + ";    scrolling to element at :: " + visible_elements.get(0).getXLocation()  + " : "+ visible_elements.get(0).getYLocation() + "  :   " + visible_elements.get(0).getWidth()  + " : "+ visible_elements.get(0).getHeight()+ "    :    " + url);
+					browser.scrollTo(visible_elements.get(0).getXLocation(), visible_elements.get(0).getYLocation());
+				}
+				else{
+					Timing.pauseThread(2000);
+				}
+
+				log.warn("building page state with elements :: " + visible_elements.size() + "   :    " +element_xpaths.keySet().size());
+				PageState page_state = buildPage(browser, visible_elements);
+
+				log.warn("done building page state ");
+				page_states.add(page_state);
+
+				log.warn("page states ::   " + page_states.size());
+				for(ElementState element : page_state.getElements()){
+					element_hash.put(element.getXpath(), element);
+				}
+				log.warn("elements hash size :: " + element_hash.size());
+
+				log.warn("added elements to hash : "+page_state.getElements().size());
+
+				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, new ArrayList<>(element_hash.values()));
+				iter_idx++;
+				log.warn("element xpaths  :    " + element_xpaths.size());
+			}catch(Exception e){
+				err=true;
+				e.printStackTrace();
+			}
+		}
+
+		element_xpaths = new HashMap<String, ElementState>();
+		//extract all element screenshots
+		for(PageState page_state : page_states){
+			for(ElementState element_state : page_state.getElements()){
+				if(element_xpaths.containsKey(element_state.getKey())){
+					continue;
+				}
+				BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getScreenshotUrl()));
+				String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, element_state, page_screenshot, host, page_state);
+
+				element_state.setScreenshot(screenshot_url);
+				element_state.setScreenshotChecksum(PageState.getFileChecksum(page_screenshot));
+				element_xpaths.put(element_state.getKey(), element_state);
+			}
+		}
+
+		error_occurred = false;
+		return page_states;
+	}
+	
+	@Deprecated
 	public List<PageState> buildPageStates(String url, String browser_name, String host, boolean has_redirect, boolean has_loading_animation) throws MalformedURLException, IOException, Exception{
 		List<PageState> page_states = new ArrayList<>();
 		boolean error_occurred = false;

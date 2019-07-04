@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.NullValueInNestedPathException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -110,8 +111,14 @@ public class UrlBrowserActor extends AbstractActor {
 						Redirect redirect = null;
 						PageLoadAnimation animation = null;
 
+						List<String> path_keys = null;
+						List<PathObject> path_objects = null;
+						
 						do{
+							path_keys = new ArrayList<>();
+							path_objects = new ArrayList<>();
 							Browser browser = null;
+							
 							try{
 								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 								log.warn("navigating to url :: "+url);
@@ -119,9 +126,16 @@ public class UrlBrowserActor extends AbstractActor {
 
 								log.warn("getting page transition");
 								redirect = BrowserUtils.getPageTransition(url, browser, host);
+							  	if(redirect != null && (redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls()))){
+									path_keys.add(redirect.getKey());
+									path_objects.add(redirect);
+								}
 								log.warn("starting loading animation detection");
 								animation = BrowserUtils.getLoadingAnimation(browser, host, url);
-
+								if(animation != null){
+									path_keys.add(animation.getKey());
+									path_objects.add(animation);
+								}
 								break;
 							}
 							catch(Exception e){
@@ -137,7 +151,7 @@ public class UrlBrowserActor extends AbstractActor {
 						}while(redirect == null);
 						
 						log.warn("loading animation detection complete");
-						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host, redirect.getUrls().size()>1, animation != null);
+						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host, path_objects, path_keys);
 
 						log.warn("Done building page states ");
 						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation);
@@ -161,22 +175,14 @@ public class UrlBrowserActor extends AbstractActor {
 								System.err.println("page state  ::   " + page_state);
 								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 
-								List<String> path_keys = new ArrayList<String>();
-							  	List<PathObject> path_objects = new ArrayList<PathObject>();
-							  	if(redirect != null && (redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls()))){
-							  		path_keys.add(redirect.getKey());
-							  		path_objects.add(redirect);
-							  	}
+								List<String> new_path_keys = new ArrayList<String>(path_keys);
+							  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
 							  	
-							  	if(animation != null){
-							  		path_keys.add(animation.getKey());
-							  		path_objects.add(animation);
-							  	}
 							  	
-							  	path_keys.add(page_state.getKey());
-							  	path_objects.add(page_state);
+							  	new_path_keys.add(page_state.getKey());
+							  	new_path_objects.add(page_state);
 
-								PathMessage path_message = new PathMessage(new ArrayList<>(path_keys), new ArrayList<>(path_objects), discovery, message.getAccountKey(), message.getOptions());
+								PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), discovery, message.getAccountKey(), message.getOptions());
 
 								//send message to animation detection actor
 								animation_actor.tell(path_message, getSelf() );

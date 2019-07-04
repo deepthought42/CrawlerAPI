@@ -1,7 +1,6 @@
 package com.minion.browsing;
 
 import java.io.IOException;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;

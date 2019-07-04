@@ -3,6 +3,8 @@ package com.qanairy.services;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +15,8 @@ import com.qanairy.models.rules.Rule;
 
 @Service
 public class ElementStateService {
-	
+	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
+
 	@Autowired
 	private AttributeService attribute_service;
 	
@@ -27,9 +30,9 @@ public class ElementStateService {
 		if(element == null){
 			return null;
 		}
-		ElementState element_record = findByScreenshotChecksum(element.getScreenshotChecksum());
-		if(element_record == null){
-			element_record = element_repo.findByKey(element.getKey());
+		//ElementState element_record = findByScreenshotChecksum(element.getScreenshotChecksum());
+		//if(element_record == null){
+			ElementState element_record = element_repo.findByKey(element.getKey());
 			if(element_record == null){
 				//iterate over attributes
 				Set<Attribute> new_attributes = new HashSet<Attribute>();
@@ -40,6 +43,7 @@ public class ElementStateService {
 				
 				Set<Rule> rule_records = new HashSet<>();
 				for(Rule rule : element.getRules()){
+					log.warn("saving element rule");
 					rule_records.add(rule_service.save(rule));
 				}
 				element.setRules(rule_records);
@@ -47,12 +51,20 @@ public class ElementStateService {
 				element_record = element_repo.save(element);
 			}
 			else{
+				Set<Rule> rule_records = new HashSet<>();
+				for(Rule rule : element.getRules()){
+					log.warn("saving rule on existing element");
+					rule_records.add(rule_service.save(rule));
+				}
+				element_record.setRules(rule_records);
+			
 				element_record.setScreenshot(element.getScreenshot());
 				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 				element_record.setXpath(element.getXpath());
 				element_repo.save(element_record);
 			}
-		}
+		//}
+		log.warn("returning element found from screenshot checksum");
 		return element_record;
 	}
 	

@@ -8,6 +8,6 @@ import com.qanairy.models.rules.RequirementRule;
 /**
  * 
  */
-public interface RequirementRuleRepository extends Neo4jRepository<RequirementRule, Long> {
+public interface RequiredRuleRepository extends Neo4jRepository<RequirementRule, Long> {
 	public RequirementRule findByKey(@Param("key") String key);
 }

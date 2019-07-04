@@ -683,9 +683,9 @@ public class PathExpansionActor extends AbstractActor {
 			//check if page element is an input
 			else if(page_element.getName().equals("input")){
 				List<Rule> rules = extractor.extractInputRules(page_element);
-				for(Rule rule : rules){
-					page_element.addRule(rule);
-				}
+				
+				page_element.getRules().addAll(rules);
+			
 				for(Rule rule : page_element.getRules()){
 					List<List<PathObject>> tests = GeneralFormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)

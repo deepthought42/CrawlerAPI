@@ -50,7 +50,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	@Relationship(type = "HAS_ATTRIBUTE")
 	private Set<Attribute> attributes = new HashSet<>();
 	
-	@Relationship(type = "HAS_RULE")
+	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
 			
 	public ElementState(){}

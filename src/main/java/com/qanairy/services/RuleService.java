@@ -74,8 +74,6 @@ public class RuleService {
 				rule_record = alphabetic_restriction_rule_repo.save((AlphabeticRestrictionRule)rule);
 			}
 		}
-		else if(rule.getType().equals(RuleType.CLICKABLE)){
-		}
 		else if(rule.getType().equals(RuleType.DISABLED)){
 			rule_record = disabled_rule_repo.findByKey(rule.getKey());
 			if(rule_record == null){

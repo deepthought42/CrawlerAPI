@@ -1169,7 +1169,6 @@ public class BrowserService {
 		for(WebElement form_elem : form_elements){
 			browser.scrollToElement(form_elem);
 			//List<String> form_xpath_list = new ArrayList<String>();
-			Map<String, ElementState> form_xpath_map = new HashMap<>();
 			
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, page_screenshot, host);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML") );

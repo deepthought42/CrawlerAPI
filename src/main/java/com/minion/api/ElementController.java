@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.minion.api.exception.RuleValueRequiredException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
@@ -46,20 +47,17 @@ public class ElementController {
      * @param id element id
      * @return {@link Element element}
      */
-    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
-    //@PreAuthorize("hasAuthority('create:rules')")
+    @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
+    //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements/{id}/rules", method = RequestMethod.POST)
     public ElementState addRule(
     		HttpServletRequest request,
 			@PathVariable(value="id", required=true) long id,
 			@RequestParam(value="type", required=true) String type,
-			@RequestParam(value="value", required=false) String value) {
-        log.warn("finding element with id :: " +id);
-        
+			@RequestParam(value="value", required=false) String value) throws RuleValueRequiredException 
+    {  
         ElementState element = element_service.findById(id);
-        log.warn("FOUND ELEMENT :: " + element);
         element.addRule(rule_service.findByType(type, value));
-        log.warn("added Rule :: " + element.getRules());
         return element_service.save(element);
     }
 }

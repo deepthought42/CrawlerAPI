@@ -25,6 +25,7 @@ import com.qanairy.models.rules.RequirementRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.models.rules.SpecialCharacterRestriction;
+import com.minion.api.exception.*;
 
 @Service
 public class RuleService {
@@ -124,7 +125,7 @@ public class RuleService {
 		return rule_record;
 	}
 
-	public Rule findByType(String rule_type, String value) {
+	public Rule findByType(String rule_type, String value) throws RuleValueRequiredException {
 		Rule rule_record = null;
 		log.warn("looking up rule by type :: " + rule_type);
 		if(rule_type.equals(RuleType.REQUIRED.toString())){
@@ -164,6 +165,9 @@ public class RuleService {
 			}
 		}
 		else if(rule_type.equals(RuleType.MIN_VALUE.toString())){
+			if(value == null){
+				throw new RuleValueRequiredException(RuleType.MIN_VALUE);
+			}
 			NumericRule rule = new NumericRule(RuleType.MIN_VALUE, value);
 			rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			if(rule_record == null){
@@ -171,6 +175,9 @@ public class RuleService {
 			}
 		}
 		else if(rule_type.equals(RuleType.MAX_VALUE.toString())){
+			if(value == null){
+				throw new RuleValueRequiredException(RuleType.MAX_VALUE);
+			}
 			NumericRule rule = new NumericRule(RuleType.MAX_VALUE, value);
 			rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			if(rule_record == null){
@@ -179,14 +186,20 @@ public class RuleService {
 		}
 		//minlength only works for certain frameworks such as angularjs that support it as a custom html5 attribute
 		else if(rule_type.equals(RuleType.MIN_LENGTH.toString())){
+			if(value == null){
+				throw new RuleValueRequiredException(RuleType.MIN_LENGTH);
+			}
 			NumericRule rule = new NumericRule(RuleType.MIN_LENGTH, value);
 			rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			if(rule_record == null){
 				rule_record = numeric_rule_repo.save(rule);
 			}
 		}
-		else if(rule_type.equals(RuleType.MAX_VALUE.toString())){
-			NumericRule rule = new NumericRule(RuleType.MAX_VALUE, value);
+		else if(rule_type.equals(RuleType.MAX_LENGTH.toString())){
+			if(value == null){
+				throw new RuleValueRequiredException(RuleType.MAX_LENGTH);
+			}
+			NumericRule rule = new NumericRule(RuleType.MAX_LENGTH, value);
 			rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			if(rule_record == null){
 				rule_record = numeric_rule_repo.save(rule);
@@ -200,6 +213,9 @@ public class RuleService {
 			}
 		}
 		else if(rule_type.equals(RuleType.PATTERN.toString())){
+			if(value == null){
+				throw new RuleValueRequiredException();
+			}
 			String regex_str = value;
 			PatternRule rule = new PatternRule(regex_str);
 			rule_record = pattern_rule_repo.findByKey(rule.getKey());

@@ -25,7 +25,7 @@ import com.qanairy.models.rules.RequirementRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.models.rules.SpecialCharacterRestriction;
-import com.minion.api.exception.*;
+import com.minion.api.exception.RuleValueRequiredException;
 
 @Service
 public class RuleService {

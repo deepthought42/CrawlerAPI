@@ -5,8 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.minion.browsing.form.ElementRuleExtractor;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.repository.AlphabeticRestrictionRuleRepository;
 import com.qanairy.models.repository.DisabledRuleRepository;
 import com.qanairy.models.repository.EmailPatternRuleRepository;
@@ -70,24 +68,21 @@ public class RuleService {
 	public Rule findByType(String rule_type, String value) {
 		Rule rule = null;
 		Rule rule_record = null;
-		if(rule_type.equalsIgnoreCase(RuleType.REQUIRED.toString())){
+		if(rule_type.equals(RuleType.REQUIRED.toString())){
 			rule = new RequirementRule();
 			rule_record = required_rule_repo.findByKey(rule.getKey());
 		}
-		else if(rule_type.equalsIgnoreCase("disabled")){
+		else if(rule_type.equals(RuleType.DISABLED.toString())){
 			rule = new DisabledRule();
 			rule_record = disabled_rule_repo.findByKey(rule.getKey());
 		}
 		else if(rule_type.equals(RuleType.ALPHABETIC_RESTRICTION.toString())){
-			AlphabeticRestrictionRule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
-			rule_record = alphabetic_restriction_repo.findByKey(alphabetic_restriction_rule.getKey());
+			rule = new AlphabeticRestrictionRule();
+			rule_record = alphabetic_restriction_repo.findByKey(rule.getKey());
 		}
 		else if(rule_type.equals(RuleType.SPECIAL_CHARACTER_RESTRICTION.toString())){
-			
-			Rule special_character_rule = new SpecialCharacterRestriction();
-			Rule rule_record2 = special_character_restirction_repo.findByKey(rule.getKey());
-
-			continue;
+			rule = new SpecialCharacterRestriction();
+			rule_record = special_character_restirction_repo.findByKey(rule.getKey());
 		}
 		else if(rule_type.equals(RuleType.READ_ONLY.toString())){
 			rule = new ReadOnlyRule();
@@ -112,7 +107,6 @@ public class RuleService {
 		}
 		else if(rule_type.equals(RuleType.EMAIL_PATTERN.toString())){
 			rule = new EmailPatternRule();					
-			EmailPatternRule email_rule = new EmailPatternRule();
 			rule_record = email_pattern_rule_repo.findByKey(rule.getKey());
 		}
 		else if(rule_type.equals(RuleType.PATTERN.toString())){

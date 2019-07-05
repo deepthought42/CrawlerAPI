@@ -44,7 +44,7 @@ public class ElementController {
      * @param key account key
      * @return {@link Action account}
      */
-    @PreAuthorize("hasAuthority('add:rule')")
+    @PreAuthorize("hasAuthority('create:rules')")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @RequestMapping(path="/{element_key}/rule/{rule_type", method = RequestMethod.PUT)
     public void addRule(HttpServletRequest request,

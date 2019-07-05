@@ -214,7 +214,7 @@ public class RuleService {
 		}
 		else if(rule_type.equals(RuleType.PATTERN.toString())){
 			if(value == null){
-				throw new RuleValueRequiredException();
+				throw new RuleValueRequiredException(RuleType.PATTERN);
 			}
 			String regex_str = value;
 			PatternRule rule = new PatternRule(regex_str);

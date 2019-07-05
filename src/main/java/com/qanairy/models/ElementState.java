@@ -1,5 +1,6 @@
 package com.qanairy.models;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -92,6 +93,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
 	
@@ -130,6 +132,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
 	/**
@@ -205,6 +208,10 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public void setCssValues(Map<String, String> cssValues) {
 		this.cssValues = cssValues;
+	}
+	
+	public long getId(){
+		return this.id;
 	}
 	
 	public String getKey() {

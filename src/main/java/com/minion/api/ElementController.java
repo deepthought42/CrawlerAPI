@@ -7,27 +7,29 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.RuleService;
 
+import io.swagger.annotations.ApiOperation;
+
 
 /**
  *	API for interacting with {@link User} data
  */
 @RestController
-@RequestMapping("/elements")
 public class ElementController {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	private ElementStateService element_service;
@@ -39,23 +41,26 @@ public class ElementController {
     protected WebSecurityConfig appConfig;
     
     /**
-     * Retrieves {@link Action account} with a given key
+     * Adds {@link Rule} to {@link Element element} with a given id
      * 
-     * @param key account key
-     * @return {@link Action account}
+     * @param id element id
+     * @return {@link Element element}
      */
-    @PreAuthorize("hasAuthority('create:rules')")
-    @ResponseStatus(value = HttpStatus.NO_CONTENT)
-    @RequestMapping(path="/{element_key}/rule/{rule_type", method = RequestMethod.PUT)
-    public void addRule(HttpServletRequest request,
-			@PathVariable(value="element_key", required=true) String element_key,
-			@PathVariable(value="rule_type", required=true) String rule_type,
+    //@ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
+    //@PreAuthorize("hasAuthority('create:rules')")
+    @RequestMapping(path="/elements/{id}/rules", method = RequestMethod.POST)
+    public ElementState addRule(
+    		HttpServletRequest request,
+			@PathVariable(value="id", required=true) long id,
+			@RequestParam(value="type", required=true) String type,
 			@RequestParam(value="value", required=false) String value) {
-        logger.info("finding all actions");
+        log.warn("finding element with id :: " +id);
         
-        ElementState element = element_service.findByKey(element_key);
-        element.addRule(rule_service.findByType(rule_type, value));
-        element_service.save(element);
+        ElementState element = element_service.findById(id);
+        log.warn("FOUND ELEMENT :: " + element);
+        element.addRule(rule_service.findByType(type, value));
+        log.warn("added Rule :: " + element.getRules());
+        return element_service.save(element);
     }
 }
 

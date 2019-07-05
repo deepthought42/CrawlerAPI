@@ -27,31 +27,35 @@ public class ElementStateService {
 		if(element == null){
 			return null;
 		}
-		ElementState element_record = findByScreenshotChecksum(element.getScreenshotChecksum());
+		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
-			element_record = element_repo.findByKey(element.getKey());
-			if(element_record == null){
-				//iterate over attributes
-				Set<Attribute> new_attributes = new HashSet<Attribute>();
-				for(Attribute attribute : element.getAttributes()){
-					new_attributes.add(attribute_service.save(attribute));
-				}
-				element.setAttributes(new_attributes);
-				
-				Set<Rule> rule_records = new HashSet<>();
-				for(Rule rule : element.getRules()){
-					rule_records.add(rule_service.save(rule));
-				}
-				element.setRules(rule_records);
-				
-				element_record = element_repo.save(element);
+			//iterate over attributes
+			Set<Attribute> new_attributes = new HashSet<Attribute>();
+			for(Attribute attribute : element.getAttributes()){
+				new_attributes.add(attribute_service.save(attribute));
 			}
-			else{
-				element_record.setScreenshot(element.getScreenshot());
-				element_record.setScreenshotChecksum(element.getScreenshotChecksum());
-				element_record.setXpath(element.getXpath());
-				element_repo.save(element_record);
+			element.setAttributes(new_attributes);
+			
+			Set<Rule> rule_records = new HashSet<>();
+			for(Rule rule : element.getRules()){
+				rule_records.add(rule_service.save(rule));
 			}
+			element.setRules(rule_records);
+			
+			element_record = element_repo.save(element);
+		}
+		else{
+			element_record.setScreenshot(element.getScreenshot());
+			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
+			element_record.setXpath(element.getXpath());
+			
+			Set<Rule> rule_records = new HashSet<>();
+			for(Rule rule : element.getRules()){
+				rule_records.add(rule_service.save(rule));
+			}
+			element_record.setRules(rule_records);
+			
+			element_record = element_repo.save(element_record);
 		}
 		return element_record;
 	}
@@ -71,5 +75,9 @@ public class ElementStateService {
 	
 	public ElementState findByScreenshotChecksum(String screenshotChecksum) {
 		return element_repo.findByScreenshotChecksum(screenshotChecksum);
+	}
+
+	public ElementState findById(long id) {
+		return element_repo.findById(id).get();
 	}
 }

@@ -112,8 +112,8 @@ public class ElementRuleExtractor {
 				rule = new NumericRule(RuleType.MIN_LENGTH, attr.getVals().get(0));
 				rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			}
-			else if(attr.getName().equalsIgnoreCase("maxlength")){
-				rule = new NumericRule(RuleType.MAX_LENGTH, attr.getVals().get(0));
+			else if(attr.getName().equalsIgnoreCase("maxvalue")){
+				rule = new NumericRule(RuleType.MAX_VALUE, attr.getVals().get(0));
 				rule_record = numeric_rule_repo.findByKey(rule.getKey());
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().get(0).equalsIgnoreCase("email")){

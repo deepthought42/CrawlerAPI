@@ -34,7 +34,7 @@ public class ElementRuleExtractor {
 	public List<Rule> extractInputRules(ElementState elem){
 		Map<String, Boolean> input_rules = new HashMap<String, Boolean>();
 		List<Rule> rules = new ArrayList<Rule>();
-		
+
 		for(Attribute attr : elem.getAttributes()){
 			log.warn("Attribute during rule extraction :: " + attr.getName());
 			log.warn("Attribute during rule extraction :: " + attr.getName().equalsIgnoreCase("type"));
@@ -52,7 +52,7 @@ public class ElementRuleExtractor {
 				log.warn("adding number rule");
 				AlphabeticRestrictionRule alphabetic_restriction_rule = new AlphabeticRestrictionRule();
 				rules.add(rule_service.save(alphabetic_restriction_rule));
-				
+
 				Rule special_character_rule = new SpecialCharacterRestriction();
 				rules.add(rule_service.save(special_character_rule));
 				continue;
@@ -74,8 +74,8 @@ public class ElementRuleExtractor {
 				rule = new NumericRule(RuleType.MAX_LENGTH, attr.getVals().get(0));
 			}
 			else if(attr.getName().equalsIgnoreCase("type") && attr.getVals().contains("email")){
-				rule = new EmailPatternRule();					
-			
+				rule = new EmailPatternRule();
+
 				log.info("email rule :: "+rule);
 				EmailPatternRule email_rule = new EmailPatternRule();
 				log.info("email pattern rule :: "+email_rule);
@@ -84,25 +84,25 @@ public class ElementRuleExtractor {
 				String regex_str = attr.getVals().get(0);
 				rule = new PatternRule(regex_str);
 			}
-			
+
 			if(rule != null){
 				log.info("RULE :: "+rule);
 				log.info("rule repo key :: "+rule.getKey());
 				log.info("RULE RECORD :: "+rule_record);
 				log.info("INPUT RULES ::  "+ input_rules.keySet().size());
 				log.info("RULE TYPE   ::  "+rule.getType().toString());
-			
+
 				rules.add(rule_service.save(rule));
 			}
 		}
-		
+
 		return rules;
 	}
 
 	public List<Rule> extractMouseRules(ElementState page_element) {
 		List<Rule> rules = new ArrayList<Rule>();
 
-		//iterate over possible mouse actions. 
+		//iterate over possible mouse actions.
 		//if an element action interaction causes change
 			//then add the appropriate rule to the list
 		Rule clickable = new Clickable();

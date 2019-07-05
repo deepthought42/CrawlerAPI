@@ -34,7 +34,7 @@ public class RuleService {
 	private AlphabeticRestrictionRuleRepository alphabetic_restriction_rule_repo;
 
 	@Autowired
-	private RequirementRuleRepository required_rule_repo;
+	private RequiredRuleRepository required_rule_repo;
 
 	@Autowired
 	private DisabledRuleRepository disabled_rule_repo;
@@ -43,7 +43,10 @@ public class RuleService {
 	private AlphabeticRestrictionRuleRepository alphabetic_restriction_repo;
 
 	@Autowired
-	private SpecialCharacterRestrictionRuleRepository special_character_restirction_repo;
+	private SpecialCharacterRestrictionRuleRepository special_character_restriction_repo;
+
+	@Autowired
+	private NumericRestrictionRuleRepository numeric_restriction_rule_repo;
 
 	@Autowired
 	private ReadOnlyRuleRepository read_only_rule_repo;
@@ -112,9 +115,9 @@ public class RuleService {
 			}
 		}
 		else if(rule.getType().equals(RuleType.SPECIAL_CHARACTER_RESTRICTION)){
-			rule_record = special_character_restriction_rule_repo.findByKey(rule.getKey());
+			rule_record = special_character_restriction_repo.findByKey(rule.getKey());
 			if(rule_record == null){
-				rule_record = special_character_restriction_rule_repo.save((SpecialCharacterRestriction)rule);
+				rule_record = special_character_restriction_repo.save((SpecialCharacterRestriction)rule);
 			}
 		}
 
@@ -148,9 +151,9 @@ public class RuleService {
 		}
 		else if(rule_type.equals(RuleType.SPECIAL_CHARACTER_RESTRICTION.toString())){
 			SpecialCharacterRestriction rule = new SpecialCharacterRestriction();
-			rule_record = special_character_restirction_repo.findByKey(rule.getKey());
+			rule_record = special_character_restriction_repo.findByKey(rule.getKey());
 			if(rule_record == null){
-				rule_record = special_character_restirction_repo.save(rule);
+				rule_record = special_character_restriction_repo.save(rule);
 			}
 		}
 		else if(rule_type.equals(RuleType.READ_ONLY.toString())){

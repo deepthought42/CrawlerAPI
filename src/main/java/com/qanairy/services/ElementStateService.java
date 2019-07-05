@@ -15,7 +15,6 @@ import com.qanairy.models.rules.Rule;
 
 @Service
 public class ElementStateService {
-	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
 
 	@Autowired
 	private AttributeService attribute_service;

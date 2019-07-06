@@ -310,7 +310,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		assert browser != null;
 		assert keys != null;
 
@@ -466,7 +466,7 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(Action action, ElementState elem, WebDriver driver){
+	public static void performAction(Action action, ElementState elem, WebDriver driver) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
@@ -490,13 +490,15 @@ public class Crawler {
 		Browser browser = null;
 		Map<Integer, ElementState> visible_element_map = new HashMap<>();
 		List<ElementState> known_visible_elements = new ArrayList<>();
-		
+		boolean no_such_element_exception = false;
 		do{
 			try{
 				log.warn("setting up browser :: " + browser_name);
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
-				
+				if(!no_such_element_exception){
+					no_such_element_exception = false;
+					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
+				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
@@ -522,6 +524,7 @@ public class Crawler {
 			catch (NoSuchElementException e){
 				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
 				//e.printStackTrace();
+				no_such_element_exception = true;
 			}
 			catch (WebDriverException e) {
 				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
@@ -536,7 +539,7 @@ public class Crawler {
 				e.printStackTrace();
 			}
 			finally{
-				if(browser != null){
+				if(browser != null && !no_such_element_exception){
 					browser.close();
 				}
 			}

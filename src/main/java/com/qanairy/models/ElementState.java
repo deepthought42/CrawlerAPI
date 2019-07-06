@@ -341,7 +341,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	}
 
 
-	public PathObject clone() {
+	public ElementState clone() {
 		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
 		page_elem.setCssValues(this.getCssValues());
@@ -353,6 +353,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setXpath(this.getXpath());
 		page_elem.setYLocation(this.getYLocation());
 		page_elem.setXLocation(this.getXLocation());
+		page_elem.setWidth(this.getWidth());
+		page_elem.setHeight(this.getHeight());
 		
 		return page_elem;
 	}

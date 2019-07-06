@@ -44,6 +44,7 @@ import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -110,40 +111,17 @@ public class ParentPathExplorer extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(TestCandidateMessage.class, message-> {
+			  		long start = System.currentTimeMillis();
+
 					//get index of last page element in path
-			  		int last_elem_idx = getIndexOfLastElementState(message.getKeys());
+			  		int last_elem_idx = PathUtils.getIndexOfLastElementState(message.getKeys());
+			  		
 			  		List<String> final_path_keys = new ArrayList<String>(message.getKeys());
 			  		List<PathObject> final_path_objects = new ArrayList<PathObject>(message.getPathObjects());
-			  		List<String> path_keys = message.getKeys();//.subList(0, last_elem_idx+1);
-					List<PathObject> path_objects = message.getPathObjects();//.subList(0, last_elem_idx+1);
-					Browser browser = null;
+			  		Browser browser = null;
 
-					log.warn("generating parent xpaths");
-			  		long start = System.currentTimeMillis();
-			  		//get parent web element
-					log.warn("keys vs objects sizes     :::::::::::::    "  + path_keys.size() + "   :   "+path_objects.size());
-					List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-					//Ensure Order path objects
-					for(String path_obj_key : path_keys){
-						for(PathObject obj : path_objects){
-							if(obj.getKey().equals(path_obj_key)){
-								ordered_path_objects.add(obj);
-							}
-						}
-					}
-
-					PathObject last_path_obj = null;
-					List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
-					//scrub path objects for duplicates
-					for(PathObject obj : ordered_path_objects){
-						if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
-							last_path_obj = obj;
-							reduced_path_obj.add(obj);
-						}
-					}
-					ordered_path_objects = reduced_path_obj;
-
-					path_objects = ordered_path_objects;
+			  		List<String> path_keys = new ArrayList<>(message.getKeys());
+					List<PathObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
 
 					//get array of all elements preceding last page element
 					List<String> beginning_path_keys = path_keys.subList(0, last_elem_idx);
@@ -160,6 +138,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 					//get last page element
 					ElementState last_element = (ElementState)path_objects.get(last_elem_idx);
+			  		PageState last_page = PathUtils.getLastPageState(path_objects);
 
 					boolean results_match = false;
 					boolean error_occurred = false;
@@ -178,10 +157,16 @@ public class ParentPathExplorer extends AbstractActor {
 							WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
 							WebElement parent_web_element = browser_service.getParentElement(current_element);
 
+							//if parent element does not have width then continue
+							if(!BrowserService.hasWidthAndHeight(parent_web_element.getSize())
+										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element)){
+								break;
+							}
+							//if parent element is not visible in pane then break
 							log.warn("Builing element state");
 							ElementState parent_element = null;
 							try{
-								parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(message.getResultPage().getScreenshotUrl())));
+								parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
 								if(parent_element == null){
 									break;
 								}
@@ -335,15 +320,5 @@ public class ParentPathExplorer extends AbstractActor {
 				}
 			}
 		}
-	}
-
-	private int getIndexOfLastElementState(List<String> path_keys){
-		for(int element_idx=path_keys.size()-1; element_idx > 0; element_idx--){
-			if(path_keys.get(element_idx).contains("elementstate")){
-				return element_idx;
-			}
-		}
-
-		return -1;
 	}
 }

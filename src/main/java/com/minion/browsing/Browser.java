@@ -340,10 +340,7 @@ public class Browser {
 		//calculate element position within screen
 		Point point = getLocationInViewport(elem, x_offset, y_offset);
 		
-		int point_x = point.getX();
-		int point_y = point.getY();
-		
-		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
+		return page_screenshot.getSubimage(point.getX(), point.getY(), elem.getWidth(), elem.getHeight());
 	}
 	
 	/**
@@ -500,8 +497,6 @@ public class Browser {
 	
 	public void scrollTo(int x_offset, int y_offset) 
     {
-		log.warn("current screen offset  ::   " +getXScrollOffset() + " , "+getYScrollOffset());
-		log.warn("scrolling to    ("+x_offset + " : "+y_offset+")");
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
 		Timing.pauseThread(2000);
@@ -509,9 +504,6 @@ public class Browser {
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
-
-		log.warn("after offset :: "+getXScrollOffset() + "  :  "+getYScrollOffset());
-		
     }
 	
 	
@@ -610,10 +602,11 @@ public class Browser {
 	 * @return {@link Point} coordinates
 	 */
 	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
-		log.warn("element location  before math   ::   "+element.getXLocation() + " , "+element.getYLocation());
+		log.warn("element location before math   ::   "+element.getXLocation() + " , "+element.getYLocation());
 		int y_coord = element.getYLocation() - y_offset;
 		int x_coord = element.getXLocation() - x_offset;
-       
+		log.warn("element location AFTER math   ::   "+x_coord + " , "+y_coord);
+
 		return new Point(x_coord, y_coord);
 	}
 	

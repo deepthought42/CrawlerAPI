@@ -1,5 +1,7 @@
 package services;
 
+import static org.testng.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,12 +13,18 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.junit.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.WebElement;
 
 import com.minion.api.DomainController;
+import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.enums.BrowserEnvironment;
 
 public class BrowserServiceTest {
 	

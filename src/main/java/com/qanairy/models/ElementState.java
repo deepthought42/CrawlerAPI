@@ -132,6 +132,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setInnerHtml(inner_html);
 		setKey(generateKey());
 	}
+	
 	/**
 	 * Print Attributes for this element in a prettyish format
 	 */
@@ -312,6 +313,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		key += this.getText();
 		key += this.getXLocation();
 		key += this.getYLocation();
+		key += this.getWidth();
+		key += this.getHeight();
 		key += this.getInnerHtml();
 		
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);

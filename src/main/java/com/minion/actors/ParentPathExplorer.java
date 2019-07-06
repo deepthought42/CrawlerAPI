@@ -15,6 +15,7 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,8 +159,9 @@ public class ParentPathExplorer extends AbstractActor {
 							WebElement parent_web_element = browser_service.getParentElement(current_element);
 
 							//if parent element does not have width then continue
-							if(!BrowserService.hasWidthAndHeight(parent_web_element.getSize())
-										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element)){
+							Dimension element_size = parent_web_element.getSize();
+							if(!BrowserService.hasWidthAndHeight(element_size)
+										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element.getLocation(), element_size)){
 								break;
 							}
 							//if parent element is not visible in pane then break

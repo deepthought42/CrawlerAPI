@@ -512,7 +512,8 @@ public class Crawler {
 					}
 				}
 				
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, known_visible_elements);
+				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), 
+																						 visible_element_map, known_visible_elements);
 
 				result_page = browser_service.buildPage(browser, visible_elements);
 			}catch(NullPointerException e){
@@ -528,7 +529,7 @@ public class Crawler {
 			}
 			catch (WebDriverException e) {
 				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {

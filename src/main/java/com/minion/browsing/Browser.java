@@ -662,8 +662,12 @@ public class Browser {
 	}
 
 	public void moveMouseOutOfFrame() {
-		Actions mouseMoveAction = new Actions(driver).moveByOffset(-1000, 0);
-		mouseMoveAction.build().perform();
+		try{
+			Actions mouseMoveAction = new Actions(driver).moveByOffset(-5000, 0);
+			mouseMoveAction.build().perform();
+		}catch(Exception e){
+			log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
+		}
 	}
 
 	/**

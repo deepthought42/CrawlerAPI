@@ -30,7 +30,7 @@ public class UploadObjectSingleOperation {
 
 	private static String bucketName     = "qanairy";
 	
-	public static String saveImageToS3(BufferedImage image, String domain, String page_key, String image_type) {
+	public static String saveImageToS3(BufferedImage image, String domain, String page_key, String image_type) throws IOException{
 		assert page_key != null;
 		assert !page_key.isEmpty();
 	
@@ -71,9 +71,7 @@ public class UploadObjectSingleOperation {
                     "communicate with S3, " +
                     "such as not being able to access the network.");
             log.error("Error Message: " + ace.getMessage());
-        } catch (IOException e) {
-			e.printStackTrace();
-		}
+        } 
         
         return filepath;
     }

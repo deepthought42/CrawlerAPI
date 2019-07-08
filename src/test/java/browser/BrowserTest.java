@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +18,6 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.minion.browsing.Browser;

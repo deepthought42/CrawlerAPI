@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import javax.imageio.ImageIO;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -111,7 +113,7 @@ public class TestCreationActor extends AbstractActor  {
 
 				    		try{
 				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
-				    			
+			    				
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
@@ -278,7 +280,7 @@ public class TestCreationActor extends AbstractActor  {
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
 		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"));
-		elem.setInnerHtml(element.getAttribute("innerHTML"));
+		elem.setScreenshotChecksum(PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 
 		elem = page_element_service.save(elem);
 		return elem;

@@ -43,6 +43,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private int width;
 	private int height;
 	private String inner_html;
+	private String css_selector;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -92,6 +93,87 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+		setCssSelector(css_selector);
+		setKey(generateKey());
+	}
+	
+	/**
+	 * 
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * 
+	 * @pre xpath != null
+	 * @pre name != null
+	 * @pre screenshot_url != null
+	 * @pre !screenshot_url.isEmpty()
+	 *  
+	 */
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
+						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
+						String inner_html, String css_selector){
+		assert name != null;
+		assert xpath != null;
+		assert checksum != null;
+		assert !checksum.isEmpty();
+		
+		setType("ElementState");
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setScreenshot(screenshot_url);
+		setText(text);
+		setCssValues(css_map);
+		setScreenshotChecksum(checksum);
+		setXLocation(x_location);
+		setYLocation(y_location);
+		setWidth(width);
+		setHeight(height);
+		setInnerHtml(inner_html);
+		setCssSelector(css_selector);
+		setKey(generateKey());
+	}
+	
+	/**
+	 * 
+	 * @param text
+	 * @param xpath
+	 * @param name
+	 * @param attributes
+	 * @param css_map
+	 * 
+	 * @pre attributes != null
+	 * @pre css_map != null
+	 * @pre xpath != null
+	 * @pre name != null
+	 * @pre screenshot_url != null
+	 * @pre !screenshot_url.isEmpty()
+	 */
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
+			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
+			String inner_html, String css_selector){
+		assert attributes != null;
+		assert css_map != null;
+		assert xpath != null;
+		assert name != null;
+		assert screenshot_url != null;
+		assert !screenshot_url.isEmpty();
+		
+		setType("ElementState");
+		setName(name);
+		setXpath(xpath);
+		setAttributes(attributes);
+		setScreenshot(screenshot_url);
+		setText(text);
+		setCssValues(css_map);
+		setXLocation(x_location);
+		setYLocation(y_location);
+		setWidth(width);
+		setHeight(height);
+		setInnerHtml(inner_html);
+		setCssSelector(css_selector);
 		setKey(generateKey());
 	}
 	
@@ -407,5 +489,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public void setInnerHtml(String inner_html) {
 		this.inner_html = inner_html;
+	}
+
+	public String getCssSelector() {
+		return css_selector;
+	}
+
+	public void setCssSelector(String css_selector) {
+		this.css_selector = css_selector;
 	}
 }

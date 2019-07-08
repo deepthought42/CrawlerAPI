@@ -172,7 +172,9 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, known_visible_elements);
+		List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+		log.warn("ELEMENTS visible during crawlPath :: " + xpath_list.size());
+		List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
 
 		return browser_service.buildPage(browser, visible_elements);
 	}
@@ -489,7 +491,6 @@ public class Crawler {
 		int tries = 0;
 		Browser browser = null;
 		Map<Integer, ElementState> visible_element_map = new HashMap<>();
-		List<ElementState> known_visible_elements = new ArrayList<>();
 		boolean no_such_element_exception = false;
 		do{
 			try{
@@ -512,8 +513,9 @@ public class Crawler {
 					}
 				}
 				
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), 
-																						 visible_element_map, known_visible_elements);
+    			List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+    			log.warn("element xpaths found while performing exploratory crawl   ::  " +xpath_list.size());
+				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
 
 				result_page = browser_service.buildPage(browser, visible_elements);
 			}catch(NullPointerException e){
@@ -525,7 +527,7 @@ public class Crawler {
 			catch (NoSuchElementException e){
 				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
 				//e.printStackTrace();
-				no_such_element_exception = true;
+				//no_such_element_exception = true;
 			}
 			catch (WebDriverException e) {
 				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());

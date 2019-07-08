@@ -104,20 +104,19 @@ public class TestCreationActor extends AbstractActor  {
 				    	Test test = null;
 				    	Domain domain = null;
 				    	Map<Integer, ElementState> visible_element_map = new HashMap<>();
-				    	List<ElementState> visible_elements = new ArrayList<>();
-				    	
-				    	do{
+		    			do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
 					    	Browser browser = null;
 
 				    		try{
 				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
+				    			
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
-
-				    			List<ElementState> elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, visible_elements);
+				    			Map<String, Set<Attribute>> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+				    			List<ElementState> elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
 				    			PageState result_page = browser_service.buildPage(browser, elements);
 						    	test = new Test(path_keys, path_objects, result_page, name);
 

@@ -311,11 +311,10 @@ public class Browser {
 	 * @param elem
 	 * @return
 	 * @throws IOException
-	 */
-		
-	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+	 */	
+	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, Browser browser) throws IOException{
 		//calculate element position within screen
-		Point point = getLocationInViewport(elem, x_offset, y_offset);
+		Point point = getLocationInViewport(elem, browser.x_scroll_offset, browser.y_scroll_offset);
 		Dimension dimension = elem.getSize();
 		
 		// Get width and height of the element
@@ -325,6 +324,8 @@ public class Browser {
 		int point_x = point.getX();
 		int point_y = point.getY();
 		
+		log.warn("element screenshot ::    "+point_x+" , "+point_y+"    :     "+elem_width+" , "+elem_height );
+		log.warn("browser dimension  ::    "+browser.x_scroll_offset+" , "+browser.y_scroll_offset+"     :    "+page_screenshot.getWidth() + " , "+ page_screenshot.getHeight());
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	
@@ -611,11 +612,17 @@ public class Browser {
 	}
 	
 	public static int calculateYCoordinate(int y_offset, Point location){
-		return location.getY() - y_offset;
+		if((location.getY() - y_offset) > 0){
+			return location.getY() - y_offset;
+		}
+		return y_offset;
 	}
 	
 	public static int calculateXCoordinate(int x_offset, Point location){
-		return location.getX() - x_offset;
+		if((location.getX() - x_offset) > 0){
+			return location.getX() - x_offset;
+		}
+		return x_offset;
 	}
 
 	/**

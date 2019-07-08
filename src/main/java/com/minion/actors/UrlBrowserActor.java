@@ -157,8 +157,6 @@ public class UrlBrowserActor extends AbstractActor {
 						log.warn("finished creating landing page test");
 
 						test = test_service.save(test, host);
-						log.warn("path keys :: " + test.getPathKeys());
-						log.warn("path objects :: " + test.getPathObjects());
 
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
 
@@ -176,7 +174,6 @@ public class UrlBrowserActor extends AbstractActor {
 
 								List<String> new_path_keys = new ArrayList<String>(path_keys);
 							  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
-							  	
 							  	
 							  	new_path_keys.add(page_state.getKey());
 							  	new_path_objects.add(page_state);

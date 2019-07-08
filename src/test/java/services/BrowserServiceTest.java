@@ -1,7 +1,5 @@
 package services;
 
-import static org.testng.Assert.assertTrue;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -13,18 +11,13 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.junit.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Point;
-import org.openqa.selenium.WebElement;
 
 import com.minion.api.DomainController;
-import com.minion.browsing.Browser;
-import com.minion.browsing.BrowserConnectionFactory;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.services.BrowserService;
 
 public class BrowserServiceTest {
 	
@@ -43,5 +36,20 @@ public class BrowserServiceTest {
 		String checksum = PageState.getFileChecksum(ImageIO.read(new URL("https://s3-us-west-2.amazonaws.com/qanairy/www.terran.us/30550bada37e6c456380737c7dc19abfa22671c20effa861ed57665cf9960e5a/element_screenshot.png")));
 	
 		System.err.println("Checksum :: " + checksum);
+	}
+	
+	@Test
+	public void verifyXpathGenerationWithJsoup(){
+		String html = "<html><body><div><a class='test-class'>link1</a><a class='test-class'>link2</a></div><div id='test-id1'></div><div><span></span></div></body></html>";
+		
+		List<String> visible_elements = BrowserService.getVisibleElementsUsingJSoup(html);
+		for(String xpath : visible_elements){
+			System.err.println(xpath);
+		}
+		assert(visible_elements.size() == 4);
+		assert(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[1]"));
+		assert(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[2]"));
+		assert(visible_elements.contains("//div[contains(@id,\"test-id1\")]"));
+		assert(visible_elements.contains("//div//span"));
 	}
 }

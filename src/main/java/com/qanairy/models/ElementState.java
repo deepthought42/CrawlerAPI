@@ -93,7 +93,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
-		setCssSelector(css_selector);
+		setCssSelector("");
+		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
 	
@@ -132,8 +133,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
-		setCssSelector("");
-    setRules(new HashSet<>());
+		setCssSelector(css_selector);
+		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
 	
@@ -214,7 +215,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
-    setCssSelector("");
+		setCssSelector("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
 	}

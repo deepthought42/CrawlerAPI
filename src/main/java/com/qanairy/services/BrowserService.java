@@ -1128,7 +1128,7 @@ public class BrowserService {
 		Element last_element = element;
 		Element parent = null;
 	    int count = 0;
-	    while(!"html".equals(last_element.tagName()) && !"body".equals(last_element.tagName()) && last_element != null && count < 10){
+	    while(!"html".equals(last_element.tagName()) && !"body".equals(last_element.tagName()) && count < 5){
 	    	try{
 	    		parent = last_element.parent();
 	    		

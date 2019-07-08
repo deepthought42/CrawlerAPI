@@ -258,7 +258,7 @@ public class BrowserService {
 			//log.warn("checking if has child elements :: " + web_elements.get(idx).childNodeSize());
 			int child_node_cnt = element.children().size();					
 			if(child_node_cnt == 0 && !doesElementBelongToScriptTag(element) && !isStructureTag(element.tagName())){
-				elements.add(generateXpathUsingJsoup(element, "", html_doc, element.attributes(), xpath_cnt_map));
+				elements.add(generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map));
 			}
 		}
 
@@ -653,8 +653,8 @@ public class BrowserService {
 			start_idx = visible_element_map.keySet().size()-1;
 		}
 		
-		xpaths = xpaths.subList(start_idx, xpaths.size());
-		for(String xpath : xpaths){
+		List<String> xpath_sublist = xpaths.subList(start_idx, xpaths.size());
+		for(String xpath : xpath_sublist){
 			WebElement element = browser.findWebElementByXpath(xpath);
 			if(isElementVisibleInPane(browser, element.getLocation(), element.getSize())){
 				ElementState element_state = buildElementState(browser, element, browser.getViewportScreenshot(), xpath);
@@ -1098,11 +1098,11 @@ public class BrowserService {
 	 *
 	 * @return an xpath that identifies this element uniquely
 	 */
-	public static String generateXpathUsingJsoup(Element element, String xpath, Document doc, Attributes attributes, Map<String, Integer> xpath_cnt){
+	public static String generateXpathUsingJsoup(Element element, Document doc, Attributes attributes, Map<String, Integer> xpath_cnt){
 		List<String> attributeChecks = new ArrayList<>();
 		List<String> valid_attributes = Arrays.asList(valid_xpath_attributes);
 		Element element_copy = element.clone();
-		xpath += "//"+element.tagName();
+		String xpath = "//"+element.tagName();
 		for(org.jsoup.nodes.Attribute attr : attributes.asList()){
 			if(valid_attributes.contains(attr.getKey())){
 				String attribute_values = attr.getValue();

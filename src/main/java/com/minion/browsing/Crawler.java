@@ -324,31 +324,11 @@ public class Crawler {
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<PathObject> path_objects = new ArrayList<PathObject>(path_object_list);
 
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-		//Ensure Order path objects
-		for(String path_obj_key : path_keys){
-			for(PathObject obj : path_objects){
-				if(obj.getKey().equals(path_obj_key)){
-					ordered_path_objects.add(obj);
-				}
-			}
-		}
-
-		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
-		//scrub path objects for duplicates
-		for(PathObject obj : ordered_path_objects){
-			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
-				last_path_obj = obj;
-				reduced_path_obj.add(obj);
-			}
-		}
-		ordered_path_objects = reduced_path_obj;
-		path_objects = new ArrayList<PathObject>(ordered_path_objects);
+		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 
 		PageState expected_page = null;
 
-		for(PathObject obj : path_objects){
+		for(PathObject obj : ordered_path_objects){
 			if(obj instanceof PageState){
 				expected_page = ((PageState)obj);
 				break;
@@ -356,8 +336,6 @@ public class Crawler {
 		}
 
 		browser.navigateTo(expected_page.getUrl());
-		//TODO: check for continuously animated elements
-
 
 		String last_url = null;
 		int current_idx = 0;
@@ -410,14 +388,14 @@ public class Crawler {
 					log.warn("Alert was encountered!!!");
 					PageAlert page_alert = new PageAlert(expected_page, "dismiss", alert.getText());
 					path_keys.add(page_alert.getKey());
-					path_objects.add(page_alert);
+					ordered_path_objects.add(page_alert);
 					current_idx++;
 				}
 				else{
-					if((current_idx < path_objects.size()-1
-							&& !path_objects.get(current_idx+1).getKey().contains("redirect")
-							&& !path_objects.get(current_idx+1).getKey().contains("elementstate"))
-							|| current_idx == path_objects.size()-1){
+					if((current_idx < ordered_path_objects.size()-1
+							&& !ordered_path_objects.get(current_idx+1).getKey().contains("redirect")
+							&& !ordered_path_objects.get(current_idx+1).getKey().contains("elementstate"))
+							|| current_idx == ordered_path_objects.size()-1){
 						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
 						if(redirect.getUrls().size() > 2){
@@ -427,13 +405,13 @@ public class Crawler {
 							log.warn("adding redirect object to path");
 							log.warn("#########################################################################");
 							//create and transition for page state
-							if(current_idx == path_objects.size()-1){
+							if(current_idx == ordered_path_objects.size()-1){
 								path_keys.add(redirect.getKey());
-								path_objects.add(redirect);
+								ordered_path_objects.add(redirect);
 							}
-							else if(current_idx < path_objects.size()-1){
+							else if(current_idx < ordered_path_objects.size()-1){
 								path_keys.add(current_idx+1, redirect.getKey());
-								path_objects.add(current_idx+1, redirect);
+								ordered_path_objects.add(current_idx+1, redirect);
 							}
 							current_idx++;
 						}
@@ -458,7 +436,7 @@ public class Crawler {
 
 		if(path.getPathKeys().size() != path_keys.size()){
 			path.setPathKeys(path_keys);
-			path.setPathObjects(path_objects);
+			path.setPathObjects(ordered_path_objects);
 		}
 	}
 

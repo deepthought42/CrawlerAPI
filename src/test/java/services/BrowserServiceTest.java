@@ -1,5 +1,7 @@
 package services;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -46,10 +48,10 @@ public class BrowserServiceTest {
 		for(String xpath : visible_elements){
 			System.err.println(xpath);
 		}
-		assert(visible_elements.size() == 4);
-		assert(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[1]"));
-		assert(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[2]"));
-		assert(visible_elements.contains("//div[contains(@id,\"test-id1\")]"));
-		assert(visible_elements.contains("//div//span"));
+		assertTrue(visible_elements.size() == 4);
+		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[1]"));
+		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[2]"));
+		assertTrue(visible_elements.contains("//div[contains(@id,\"test-id1\")]"));
+		assertTrue(visible_elements.contains("//div//span"));
 	}
 }

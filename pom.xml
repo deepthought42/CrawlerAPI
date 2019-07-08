@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  	<version>0.1.30</version>
+  	<version>0.1.31</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 
@@ -186,6 +186,13 @@
 		    <groupId>com.mashape.unirest</groupId>
 		    <artifactId>unirest-java</artifactId>
 		    <version>1.4.9</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/us.codecraft/xsoup -->
+		<dependency>
+		    <groupId>us.codecraft</groupId>
+		    <artifactId>xsoup</artifactId>
+		    <version>0.3.1</version>
 		</dependency>
 
 		<dependency>

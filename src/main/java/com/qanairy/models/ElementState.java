@@ -132,7 +132,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
-		setCssSelector(css_selector);
+		setCssSelector("");
+    setRules(new HashSet<>());
 		setKey(generateKey());
 	}
 	
@@ -174,6 +175,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setHeight(height);
 		setInnerHtml(inner_html);
 		setCssSelector(css_selector);
+		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
 	
@@ -212,6 +214,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+    setCssSelector("");
+		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
 	
@@ -288,6 +292,10 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public void setCssValues(Map<String, String> cssValues) {
 		this.cssValues = cssValues;
+	}
+	
+	public long getId(){
+		return this.id;
 	}
 	
 	public String getKey() {

@@ -489,7 +489,7 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		Timing.pauseThread(2000);
+		//Timing.pauseThread(2000);
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -500,7 +500,7 @@ public class Browser {
     {
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		Timing.pauseThread(2000);
+		//Timing.pauseThread(1000);
 		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -612,14 +612,14 @@ public class Browser {
 	}
 	
 	public static int calculateYCoordinate(int y_offset, Point location){
-		if((location.getY() - y_offset) > 0){
+		if((location.getY() - y_offset) >= 0){
 			return location.getY() - y_offset;
 		}
 		return y_offset;
 	}
 	
 	public static int calculateXCoordinate(int x_offset, Point location){
-		if((location.getX() - x_offset) > 0){
+		if((location.getX() - x_offset) >= 0){
 			return location.getX() - x_offset;
 		}
 		return x_offset;

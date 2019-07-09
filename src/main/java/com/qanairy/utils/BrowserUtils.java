@@ -104,10 +104,11 @@ public class BrowserUtils {
 
 			log.warn("new checksum :: " + new_checksum);
 			log.warn("has key been seen before :: " + animated_state_checksum_hash.containsKey(new_checksum));
-			if( animated_state_checksum_hash.containsKey(new_checksum)){
-				break;
-			}
-			else if( transition_detected ){
+			
+			if( transition_detected ){
+				if( animated_state_checksum_hash.containsKey(new_checksum)){
+					break;
+				}
 				start_ms = System.currentTimeMillis();
 				image_checksums.add(new_checksum);
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
@@ -166,7 +167,7 @@ public class BrowserUtils {
 
 			log.warn("was transition detected ??   " + transition_detected);
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 5000);
+		}while((System.currentTimeMillis() - start_ms) < 3000 && (System.currentTimeMillis() - total_time) < 10000);
 		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {
@@ -178,7 +179,7 @@ public class BrowserUtils {
 			}
 		}
 		
-		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
+		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>1){
 			log.warn("returning loading animation");
 			return new PageLoadAnimation(image_urls, image_checksums, url);
 		}
@@ -187,8 +188,8 @@ public class BrowserUtils {
 		return null;
 	}
 	
-	public static String sanitizeUrl(String currentUrl) throws MalformedURLException {
-		String domain = currentUrl;
+	public static String sanitizeUrl(String url) throws MalformedURLException {
+		String domain = url;
 		int param_index = domain.indexOf("?");
 		if(param_index >= 0){
 			domain = domain.substring(0, param_index);
@@ -199,9 +200,13 @@ public class BrowserUtils {
 		}
 		URL new_url = new URL(domain);
 
+		//check if host is subdomain
 		String new_host = new_url.getHost();
-		if(!new_host.startsWith("www.")){
-			new_host = "www."+new_host;
+		
+		if(new_host.split(".").length > 2){	
+			if(!new_host.startsWith("www.")){
+				new_host = "www."+new_host;
+			}
 		}
 		String new_key = new_host+new_url.getPath();
 		if(new_key.charAt(new_key.length()-1) == '/'){

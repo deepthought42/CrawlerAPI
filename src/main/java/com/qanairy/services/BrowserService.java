@@ -41,6 +41,7 @@ import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
+import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -136,7 +137,6 @@ public class BrowserService {
 					browser.navigateTo(url);
 					is_browser_closed = false;
 					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
-					browser.scrollTo(0, 0);
 				}
 					
 				if(!elements_built_successfully){
@@ -146,18 +146,15 @@ public class BrowserService {
 				}
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
-				e.printStackTrace();
 				error_occurred = true;
 				is_browser_closed = true;
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
-				e.printStackTrace();
 				error_occurred = true;
 				is_browser_closed = true;
 			}
 			catch (NoSuchElementException e){
 				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
-				e.printStackTrace();
 				error_occurred = true;
 			}
 			catch (WebDriverException e) {
@@ -165,11 +162,8 @@ public class BrowserService {
 				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				error_occurred = true;
 				is_browser_closed = true;
-				//e.printStackTrace();
 			} catch(Exception e){
-				
 				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
-				e.printStackTrace();
 				error_occurred = true;
 				is_browser_closed = true;
 			}
@@ -203,6 +197,7 @@ public class BrowserService {
 					browser.navigateTo(url);
 					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
 					browser.scrollTo(0, 0);
+					Timing.pauseThread(2000);
 				}
 				err = false;
 

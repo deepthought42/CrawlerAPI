@@ -543,6 +543,7 @@ public class PageState implements Persistable, PathObject {
 		for(String screenshot_checksum : getScreenshotChecksums()){
 			if(checksum.equals(screenshot_checksum)){
 				exists = true;
+				break;
 			}
 		}
 		if(!exists){

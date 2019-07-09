@@ -136,6 +136,7 @@ public class BrowserService {
 					browser.navigateTo(url);
 					is_browser_closed = false;
 					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
+					browser.scrollTo(0, 0);
 				}
 					
 				if(!elements_built_successfully){
@@ -205,7 +206,7 @@ public class BrowserService {
 				err = false;
 
 				//log.warn("checking if element is visible in page");
-				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) || iter_idx > 0){
+				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) || iter_idx > 1){
 					element_hash.put(remaining_elements.get(0).getXpath(), remaining_elements.get(0));
 					browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
 				}
@@ -251,7 +252,7 @@ public class BrowserService {
 		for(Element element: web_elements){
 			//log.warn("checking if has child elements :: " + web_elements.get(idx).childNodeSize());
 			int child_node_cnt = element.children().size();					
-			if(child_node_cnt == 0 && !doesElementBelongToScriptTag(element) && !isStructureTag(element.tagName())){
+			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !isStructureTag(element.tagName())){
 				elements.add(generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map));
 			}
 		}
@@ -336,7 +337,7 @@ public class BrowserService {
 					browser.getViewportSize().height,
 					browser.getBrowserName());
 
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), browser.getBrowserName()+"-viewport");
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
@@ -549,7 +550,7 @@ public class BrowserService {
 					browser.getViewportSize().height,
 					browser.getBrowserName());
 
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), page_state.getKey(), browser.getBrowserName()+"-viewport");
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 
 			/*log.warn("setting animated image urls :: " + animation.getImageUrls().size());
@@ -699,7 +700,7 @@ public class BrowserService {
 		boolean is_structure_tag = isStructureTag(element_tag_name);
 		boolean has_width_and_height = hasWidthAndHeight(element_size);
 		
-		if(!elem.isDisplayed() || is_visible_in_pane || is_structure_tag || !has_width_and_height){
+		if(!elem.isDisplayed() || !is_visible_in_pane || is_structure_tag || !has_width_and_height){
 			return null;
 		}
 		
@@ -763,7 +764,7 @@ public class BrowserService {
 		boolean is_structure_tag = isStructureTag(element_tag_name);
 		boolean has_width_and_height = hasWidthAndHeight(element_size);
 		
-		if(!elem.isDisplayed() || is_visible_in_pane || is_structure_tag || !has_width_and_height){
+		if(!elem.isDisplayed() || !is_visible_in_pane || is_structure_tag || !has_width_and_height){
 			return null;
 		}
 		
@@ -818,7 +819,6 @@ public class BrowserService {
 
 		String checksum = "";
 		ElementState page_element = null;
-
 		String element_tag_name = elem.getTagName();
 		Point location = elem.getLocation();
 		Dimension element_size = elem.getSize();
@@ -831,7 +831,6 @@ public class BrowserService {
 			return null;
 		}
 		
-		log.warn("building css properties for   ::   " +xpath);
 		Map<String, String> css_props = Browser.loadCssProperties(elem);
 		Set<Attribute> attributes = browser.extractAttributes(elem);
 		page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, 
@@ -870,7 +869,8 @@ public class BrowserService {
 				|| "link".equals(tag_name) || "script".equals(tag_name)
 				|| "title".equals(tag_name) || "meta".equals(tag_name)
 				|| "head".equals(tag_name) || "iframe".equals(tag_name) || "noscript".equals(tag_name)
-				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name);
+				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name)
+				|| "br".equals(tag_name) || "style".equals(tag_name);
 	}
 
 	/**

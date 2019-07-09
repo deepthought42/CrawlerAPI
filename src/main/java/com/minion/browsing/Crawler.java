@@ -575,15 +575,7 @@ public class Crawler {
 		assert browser != null;
 		assert path_keys != null;
 
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-		//Ensure Order path objects
-		for(String path_obj_key : path_keys){
-			for(PathObject obj : path_objects){
-				if(obj.getKey().equals(path_obj_key)){
-					ordered_path_objects.add(obj);
-				}
-			}
-		}
+		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		PathObject last_path_obj = null;
 		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
 		//scrub path objects for duplicates
@@ -606,11 +598,8 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				}
+				log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;

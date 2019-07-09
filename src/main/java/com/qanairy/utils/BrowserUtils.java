@@ -203,7 +203,8 @@ public class BrowserUtils {
 		//check if host is subdomain
 		String new_host = new_url.getHost();
 		
-		if(new_host.split(".").length > 2){	
+		int count = new_host.split("\\.").length;
+		if(count <= 2){	
 			if(!new_host.startsWith("www.")){
 				new_host = "www."+new_host;
 			}

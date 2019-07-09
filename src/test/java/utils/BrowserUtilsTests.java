@@ -35,7 +35,7 @@ public class BrowserUtilsTests {
 	}
 	
 	@Test
-	public void verifySanitizeUrlWithSubdomain(){
+	public void verifySanitizeUrlWithSubdomain() throws MalformedURLException{
 		String url = "http://test4.masschallenge.com";
 		String sanitized_url = BrowserUtils.sanitizeUrl(url);
 		

@@ -202,6 +202,7 @@ public class BrowserService {
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
 					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
+					browser.scrollTo(0, 0);
 				}
 				err = false;
 

@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -140,7 +139,8 @@ public class ParentPathExplorer extends AbstractActor {
 					//get last page element
 					ElementState last_element = (ElementState)path_objects.get(last_elem_idx);
 			  		PageState last_page = PathUtils.getLastPageState(path_objects);
-
+			  		PageState first_page = PathUtils.getFirstPage(path_objects);
+			  		
 					boolean results_match = false;
 					boolean error_occurred = false;
 					//do while result matches expected result
@@ -152,8 +152,8 @@ public class ParentPathExplorer extends AbstractActor {
 							//crawl path using array of preceding elements\
 							log.warn("Crawling path :: " +path_objects);
 							log.warn("crawling beginning of path :: "+beginning_path_keys);
-							log.warn("navigating to url :: " + message.getDiscovery().getDomainUrl());
-							browser.navigateTo(message.getDiscovery().getDomainUrl());
+							log.warn("navigating to url :: " +first_page.getUrl());
+							browser.navigateTo(first_page.getUrl());
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, message.getDiscovery().getDomainUrl());
 
 							//extract parent element
@@ -215,12 +215,10 @@ public class ParentPathExplorer extends AbstractActor {
 							if(result != null && result.equals(message.getResultPage())){
 								log.warn("parent result matches expected result page");
 								final_path_keys = new ArrayList<>(beginning_path_keys);
-								final_path_keys.add(parent_element.getKey());
-								final_path_keys.addAll(end_path_keys);
+								final_path_keys.addAll(parent_end_path_keys);
 
 								final_path_objects = new ArrayList<>(beginning_path_objects);
-								final_path_objects.add(parent_element);
-								final_path_objects.addAll(end_path_objects);
+								final_path_objects.addAll(parent_end_path_objects);
 								results_match = true;
 							}
 							else{
@@ -230,6 +228,7 @@ public class ParentPathExplorer extends AbstractActor {
 							log.warn("Setting last element to parent element");
 							last_element = parent_element;
 						}catch(Exception e){
+							log.warn("Exception occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
 							//e.printStackTrace();
 						}

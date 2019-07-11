@@ -389,11 +389,6 @@ public class Crawler {
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
-				log.warn("############################################################################");
-				log.warn("browser url :: " + browser_url);
-				log.warn("Last page state url :: " + last_page_state.getUrl());
-				log.warn("do urls match  :: " + browser_url.equals(last_page_state.getUrl()));
-				log.warn("############################################################################");
 				if(!browser_url.equals(last_page_state.getUrl())){
 					PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 					if(loading_animation != null){

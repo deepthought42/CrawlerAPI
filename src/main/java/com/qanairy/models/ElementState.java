@@ -86,6 +86,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setXpath(xpath);
 		setAttributes(attributes);
 		setScreenshot(screenshot_url);
+		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
 		setCssValues(css_map);
 		setXLocation(x_location);

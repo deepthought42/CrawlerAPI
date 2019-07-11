@@ -80,13 +80,7 @@ public class Crawler {
 
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected.
-		PageState expected_page  = null;
-		if(ordered_path_objects.get(0) instanceof Redirect){
-			expected_page = ((PageState)ordered_path_objects.get(1));
-		}
-		else if(ordered_path_objects.get(0) instanceof PageState){
-			expected_page = PathUtils.getFirstPage(ordered_path_objects);
-		}
+		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
 
 		browser.navigateTo(expected_page.getUrl());
 
@@ -261,13 +255,7 @@ public class Crawler {
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		ordered_path_objects = PathUtils.reducePathObjects(path_keys, ordered_path_objects);
 		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
-		PageState expected_page  = null;
-		if(ordered_path_objects.get(0) instanceof Redirect){
-			expected_page = ((PageState)ordered_path_objects.get(1));
-		}
-		else if(ordered_path_objects.get(0) instanceof PageState){
-			expected_page = PathUtils.getFirstPage(ordered_path_objects);
-		}
+		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
 
 		String last_url = null;
 		int current_idx = 0;
@@ -304,7 +292,7 @@ public class Crawler {
 				Action action = (Action)current_obj;
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
-					action = action_repo.save(action);
+					action_repo.save(action);
 				}
 				else{
 					action = action_record;
@@ -329,12 +317,6 @@ public class Crawler {
 						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
 						if(redirect.getUrls().size() > 2){
-							log.warn("transition with states found :: " + redirect.getUrls().size());
-							//browser.waitForPageToLoad();
-							log.warn("#########################################################################");
-							log.warn("adding redirect object to path");
-							log.warn("#########################################################################");
-							//create and transition for page state
 							if(current_idx == ordered_path_objects.size()-1){
 								path_keys.add(redirect.getKey());
 								path_objects_explored.add(redirect);

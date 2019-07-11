@@ -189,7 +189,7 @@ public class Crawler {
 				Action action = (Action)current_obj;
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
-					action = action_repo.save(action);
+					action_repo.save(action);
 				}
 				else{
 					action = action_record;
@@ -210,7 +210,6 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel);
@@ -246,16 +245,12 @@ public class Crawler {
 
 		ElementState last_element = null;
 		PathObject last_obj = null;
-		//boolean screenshot_matches = false;
-		//check if page is the same as expected.
+		PageState expected_page = null;
 
 		List<String> path_keys = new ArrayList<String>(keys);
-		List<PathObject> path_objects = new ArrayList<PathObject>(path_object_list);
-
-		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 		ordered_path_objects = PathUtils.reducePathObjects(path_keys, ordered_path_objects);
 		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
-		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
 
 		String last_url = null;
 		int current_idx = 0;
@@ -385,6 +380,9 @@ public class Crawler {
 				if(!no_such_element_exception){
 					no_such_element_exception = false;
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
+					browser.navigateTo(expected_page.getUrl());
+
 					crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();

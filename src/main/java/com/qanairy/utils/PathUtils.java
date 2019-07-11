@@ -66,4 +66,29 @@ public class PathUtils {
 
 		return reduced_path_obj;
 	}
+
+	public static List<PathObject> reducePathObjects(List<String> path_keys, List<PathObject> ordered_path_objects) {
+		//scrub path objects for duplicates
+		List<PathObject> reduced_path_objs = new ArrayList<>();
+		PathObject last_path_obj = null;
+		for(PathObject obj : ordered_path_objects){
+			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
+				last_path_obj = obj;
+				reduced_path_objs.add(obj);
+			}
+		}
+				
+		return reduced_path_objs;
+	}
+
+	public static PageState getFirstPage(List<PathObject> ordered_path_objects) {
+		//find first page
+		for(PathObject obj : ordered_path_objects){
+			if(obj instanceof PageState){
+				return ((PageState)obj);
+			}
+		}
+		
+		return null;
+	}
 }

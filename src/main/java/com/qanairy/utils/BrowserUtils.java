@@ -54,7 +54,6 @@ public class BrowserUtils {
 		        	BufferedImage img = browser.getViewportScreenshot();
 					images.add(img);
 				}catch(Exception e){}
-				log.warn("redirect transition detected");
 				start_ms = System.currentTimeMillis();
 				transition_urls.add(new_key);
 				last_key = new_key;
@@ -62,7 +61,6 @@ public class BrowserUtils {
 			//transition is detected if keys are different
 		}while((System.currentTimeMillis() - start_ms) < 2000);
 
-		log.warn("uploading screenshots " );
 		for(BufferedImage img : images){
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
@@ -74,7 +72,6 @@ public class BrowserUtils {
 			}
 		}
 
-		log.warn("creating redirect object");
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);
@@ -102,9 +99,6 @@ public class BrowserUtils {
 
 			transition_detected = !new_checksum.equals(last_checksum);
 
-			log.warn("new checksum :: " + new_checksum);
-			log.warn("has key been seen before :: " + animated_state_checksum_hash.containsKey(new_checksum));
-			
 			if( transition_detected ){
 				if( animated_state_checksum_hash.containsKey(new_checksum)){
 					break;
@@ -132,7 +126,7 @@ public class BrowserUtils {
 		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
 	}	
 	
-	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String url) throws IOException {
+	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host) throws IOException {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
@@ -143,7 +137,6 @@ public class BrowserUtils {
 		String last_checksum = null;
 		String new_checksum = null;
 		List<Future<String>> url_futures = new ArrayList<>();
-		log.warn("detecting loading animation");
 
 		do{
 			//get element screenshot
@@ -165,10 +158,9 @@ public class BrowserUtils {
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
 
-			log.warn("was transition detected ??   " + transition_detected);
 			//transition is detected if keys are different
 		}while((System.currentTimeMillis() - start_ms) < 3000 && (System.currentTimeMillis() - total_time) < 10000);
-		log.warn("done detecting loading animation");
+
 		for(Future<String> future: url_futures){
 			try {
 				image_urls.add(future.get());
@@ -180,11 +172,9 @@ public class BrowserUtils {
 		}
 		
 		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>1){
-			log.warn("returning loading animation");
-			return new PageLoadAnimation(image_urls, image_checksums, url);
+			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
 		}
 
-		log.warn("no loading animation detected. Returning null");
 		return null;
 	}
 	
@@ -213,9 +203,7 @@ public class BrowserUtils {
 		if(new_key.charAt(new_key.length()-1) == '/'){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
-		new_key = new_url.getProtocol()+"://"+new_key;
-		
-		return new_key;
+		return new_url.getProtocol()+"://"+new_key;
 	}
 
 	public static ElementState updateElementLocations(Browser browser, ElementState element) {

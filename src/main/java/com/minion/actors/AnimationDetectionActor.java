@@ -89,6 +89,8 @@ public class AnimationDetectionActor extends AbstractActor{
 								page_idx++;
 							}
 
+							log.warning("navigating to url :: " + msg.getDiscovery().getDomainUrl());
+							browser.navigateTo(msg.getDiscovery().getDomainUrl());
 							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
 
 							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());

@@ -126,7 +126,6 @@ public class BrowserService {
 		boolean is_browser_closed = true;
 		Map<Integer, ElementState> visible_element_map = new HashMap<>();
 		List<ElementState> visible_elements = new ArrayList<>();
-		//List<String> element_xpath_list = new ArrayList<>();
 		List<String> element_xpath_list = new ArrayList<>();
 		
 		do{
@@ -136,7 +135,9 @@ public class BrowserService {
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
 					is_browser_closed = false;
-					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
+					log.warn("navigating to url for building page states  :: " + url);
+					browser.navigateTo(url);
+					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 				}
 					
 				if(!elements_built_successfully){
@@ -195,7 +196,7 @@ public class BrowserService {
 				if(err){
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
-					crawler.crawlPartialPath(path_keys, path_objects, browser, host, null);
+					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 				}
 				err = false;
 
@@ -711,7 +712,7 @@ public class BrowserService {
 	 */
 	public List<ElementState> getVisibleElements(Browser browser, BufferedImage page_screenshot, Map<Integer, ElementState> visible_element_map, List<String> xpaths)
 															 throws WebDriverException, GridException, IOException{
-		List<ElementState> visible_elements = new ArrayList<>();
+		List<ElementState> visible_elements = new ArrayList<>(visible_element_map.values());
 		
 		boolean err = false;
 		do{

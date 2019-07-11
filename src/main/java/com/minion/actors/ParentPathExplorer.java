@@ -149,8 +149,11 @@ public class ParentPathExplorer extends AbstractActor {
 							error_occurred = false;
 
 							browser = BrowserConnectionFactory.getConnection(message.getDiscovery().getBrowserName(), BrowserEnvironment.DISCOVERY);
-							//crawl path using array of preceding elements
+							//crawl path using array of preceding elements\
+							log.warn("Crawling path :: " +path_objects);
 							log.warn("crawling beginning of path :: "+beginning_path_keys);
+							log.warn("navigating to url :: " + message.getDiscovery().getDomainUrl());
+							browser.navigateTo(message.getDiscovery().getDomainUrl());
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, message.getDiscovery().getDomainUrl());
 
 							//extract parent element
@@ -173,17 +176,25 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 
 							log.warn("crawling partial path");
+							List<String> parent_end_path_keys = new ArrayList<>(end_path_keys);
+							parent_end_path_keys.add(parent_element.getKey());
+							parent_end_path_keys.addAll(end_path_keys);
+							
+							List<PathObject> parent_end_path_objects = new ArrayList<>(end_path_objects);
+							parent_end_path_objects.add(parent_element);
+							parent_end_path_objects.addAll(end_path_objects);
 							//finish crawling using array of elements following last page element
-							crawler.crawlPartialPath(end_path_keys, end_path_objects, browser, message.getDiscovery().getDomainUrl(), parent_element);
+							crawler.crawlPathWithoutBuildingResult(end_path_keys, end_path_objects, browser, message.getDiscovery().getDomainUrl());
 
 							String browser_url = browser.getDriver().getCurrentUrl();
-							URL page_url = new URL(browser_url);
-							int param_index = page_url.toString().indexOf("?");
-							String url_without_params = page_url.toString();
-							if(param_index >= 0){
-								url_without_params = url_without_params.substring(0, param_index);
-							}
-							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl(), url_without_params);
+							String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
+							log.warn("############################################################################");
+							log.warn("browser url :: " + browser_url);
+							log.warn("Last page state url :: " + last_page.getUrl());
+							log.warn("do urls match  :: " + url_without_params.equals(last_page.getUrl()));
+							log.warn("############################################################################");
+							
+							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl());
 							if(loading_animation != null){
 								beginning_path_keys.add(loading_animation.getKey());
 								beginning_path_objects.add(loading_animation);

@@ -113,7 +113,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							for(PathObject path_obj : exploratory_path.getPathObjects()){
 								if(path_obj instanceof PageState){
 									PageState page_state = (PageState)path_obj;
-									//page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
+									page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
 									page_states.add(page_state);
 								}
 							}

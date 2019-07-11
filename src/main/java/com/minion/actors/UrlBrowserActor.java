@@ -130,7 +130,7 @@ public class UrlBrowserActor extends AbstractActor {
 									path_objects.add(redirect);
 								}
 								log.warn("starting loading animation detection");
-								animation = BrowserUtils.getLoadingAnimation(browser, host, url);
+								animation = BrowserUtils.getLoadingAnimation(browser, host);
 								if(animation != null){
 									path_keys.add(animation.getKey());
 									path_objects.add(animation);

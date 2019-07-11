@@ -270,15 +270,6 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 
-			/*
-			log.warn("path object count when checking for mouseover  ::   " + message.getPathObjects().size() );
-			for(PathObject path_obj : message.getPathObjects()){
-				if(path_obj.getKey().contains("mouseover")){
-					return;
-				}
-			}
-			*/
-
 			//get sublist of path from beginning to page state index
 			List<ExploratoryPath> exploratory_paths = expandPath(message);
 

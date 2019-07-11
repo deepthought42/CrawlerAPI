@@ -324,8 +324,6 @@ public class Browser {
 		int point_x = point.getX();
 		int point_y = point.getY();
 		
-		log.warn("element screenshot ::    "+point_x+" , "+point_y+"    :     "+elem_width+" , "+elem_height );
-		log.warn("browser dimension  ::    "+browser.x_scroll_offset+" , "+browser.y_scroll_offset+"     :    "+page_screenshot.getWidth() + " , "+ page_screenshot.getHeight());
 		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
 	}
 	

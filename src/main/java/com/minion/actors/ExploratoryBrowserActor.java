@@ -107,29 +107,24 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							String page_url = acct_msg.getOptions().get("host").toString();
 
 							result_page = crawler.performPathExploratoryCrawl(browser_name, exploratory_path, page_url);
-							page_state_service.save(result_page);
-
-							//have page checked for landability
-							//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 
 							//get page states
 							List<PageState> page_states = new ArrayList<PageState>();
 							for(PathObject path_obj : exploratory_path.getPathObjects()){
 								if(path_obj instanceof PageState){
 									PageState page_state = (PageState)path_obj;
-									page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
+									//page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
 									page_states.add(page_state);
 								}
 							}
 
 							DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
-
-
 							boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
-
+							
 							if(!ExploratoryPath.hasCycle(page_states, result_page, exploratory_path.getPathObjects().size() == 1)
 									&& !isResultAnimatedState){
 								//check if result is an animated image from previous page
+								page_state_service.save(result_page);
 
 								log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 								log.warn("sending test candidate to parent path explorer");

@@ -73,7 +73,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html){
+			String inner_html, String screenshot_checksum){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -94,88 +94,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setHeight(height);
 		setInnerHtml(inner_html);
 		setCssSelector("");
-		setRules(new HashSet<>());
-		setKey(generateKey());
-	}
-	
-	/**
-	 * 
-	 * @param text
-	 * @param xpath
-	 * @param name
-	 * @param attributes
-	 * @param css_map
-	 * 
-	 * @pre xpath != null
-	 * @pre name != null
-	 * @pre screenshot_url != null
-	 * @pre !screenshot_url.isEmpty()
-	 *  
-	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
-						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
-						String inner_html, String css_selector){
-		assert name != null;
-		assert xpath != null;
-		assert checksum != null;
-		assert !checksum.isEmpty();
-		
-		setType("ElementState");
-		setName(name);
-		setXpath(xpath);
-		setAttributes(attributes);
-		setScreenshot(screenshot_url);
-		setText(text);
-		setCssValues(css_map);
-		setScreenshotChecksum(checksum);
-		setXLocation(x_location);
-		setYLocation(y_location);
-		setWidth(width);
-		setHeight(height);
-		setInnerHtml(inner_html);
-		setCssSelector(css_selector);
-		setRules(new HashSet<>());
-		setKey(generateKey());
-	}
-	
-	/**
-	 * 
-	 * @param text
-	 * @param xpath
-	 * @param name
-	 * @param attributes
-	 * @param css_map
-	 * 
-	 * @pre attributes != null
-	 * @pre css_map != null
-	 * @pre xpath != null
-	 * @pre name != null
-	 * @pre screenshot_url != null
-	 * @pre !screenshot_url.isEmpty()
-	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
-			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html, String css_selector){
-		assert attributes != null;
-		assert css_map != null;
-		assert xpath != null;
-		assert name != null;
-		assert screenshot_url != null;
-		assert !screenshot_url.isEmpty();
-		
-		setType("ElementState");
-		setName(name);
-		setXpath(xpath);
-		setAttributes(attributes);
-		setScreenshot(screenshot_url);
-		setText(text);
-		setCssValues(css_map);
-		setXLocation(x_location);
-		setYLocation(y_location);
-		setWidth(width);
-		setHeight(height);
-		setInnerHtml(inner_html);
-		setCssSelector(css_selector);
 		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
@@ -294,11 +212,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public void setCssValues(Map<String, String> cssValues) {
 		this.cssValues = cssValues;
 	}
-	
-	public long getId(){
-		return this.id;
-	}
-	
+
 	public String getKey() {
 		return this.key;
 	}
@@ -442,6 +356,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
 		page_elem.setScreenshot(this.getScreenshot());
+		page_elem.setScreenshotChecksum(this.getScreenshotChecksum());
 		page_elem.setText(this.getText());
 		page_elem.setType(this.getType());
 		page_elem.setXpath(this.getXpath());

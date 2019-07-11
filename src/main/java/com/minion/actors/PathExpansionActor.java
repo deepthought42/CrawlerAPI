@@ -341,10 +341,6 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all eligible elements
 		for(ElementState page_element : getElementStatesForExpansion(test)){
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
-				continue;
-			}
-
 			expanded_elements.put(page_element.getKey(), page_element);
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(result_page.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
@@ -491,10 +487,6 @@ public class PathExpansionActor extends AbstractActor {
 		}
 		//iterate over all elements
 		for(ElementState page_element : last_page.getElements()){
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("svg") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
-				continue;
-			}
-
 			expanded_elements.put(page_element.getKey(), page_element);
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
@@ -645,9 +637,6 @@ public class PathExpansionActor extends AbstractActor {
 
 		//iterate over all elements
 		for(ElementState page_element : elements){
-			if(page_element == null || expanded_elements.containsKey(page_element.getKey()) || page_element.getXpath().contains("/svg/") || page_element.getXpath().contains("/g/") || page_element.getXpath().contains("javascript:void(0)")){
-				continue;
-			}
 			expanded_elements.put(page_element.getKey(), page_element);
 
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(page_state.getUrl(), page_element.getKey());

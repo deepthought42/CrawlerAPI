@@ -43,10 +43,10 @@ public class PathUtils {
 	}
 
 	public static List<PathObject> orderPathObjects(List<String> path_keys, List<PathObject> path_objects) {
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-
+		List<PathObject> ordered_path_objects = new ArrayList<>();
+		List<String> temp_path_keys = new ArrayList<>(path_keys);
 		//Ensure Order path objects
-		for(String path_obj_key : path_keys){
+		for(String path_obj_key : temp_path_keys){
 			for(PathObject obj : path_objects){
 				if(obj.getKey().equals(path_obj_key)){
 					ordered_path_objects.add(obj);
@@ -55,7 +55,7 @@ public class PathUtils {
 		}
 
 		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
+		List<PathObject> reduced_path_obj = new ArrayList<>();
 		//scrub path objects for duplicates
 		for(PathObject obj : ordered_path_objects){
 			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){

@@ -134,7 +134,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 					if((last_elem_idx+1) < path_keys.size()){
 						end_path_keys = path_keys.subList(last_elem_idx+1, path_keys.size());
-						end_path_objects = path_objects.subList(last_elem_idx+1, path_keys.size());
+						end_path_objects.addAll(path_objects.subList(last_elem_idx+1, path_keys.size()));
 					}
 
 					//get last page element
@@ -167,13 +167,8 @@ public class ParentPathExplorer extends AbstractActor {
 							//if parent element is not visible in pane then break
 							log.warn("Builing element state");
 							ElementState parent_element = null;
-							try{
-								parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
-								if(parent_element == null){
-									break;
-								}
-							}
-							catch(RasterFormatException e){
+							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
+							if(parent_element == null){
 								break;
 							}
 
@@ -225,7 +220,7 @@ public class ParentPathExplorer extends AbstractActor {
 							last_element = parent_element;
 						}catch(Exception e){
 							error_occurred = true;
-							e.printStackTrace();
+							//e.printStackTrace();
 						}
 						finally{
 							if(browser != null){

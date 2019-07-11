@@ -1,5 +1,6 @@
 package com.minion.browsing;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -322,7 +323,7 @@ public class Crawler {
 		List<PathObject> path_objects = new ArrayList<PathObject>(path_object_list);
 
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
-
+		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
 		PageState expected_page = null;
 
 		for(PathObject obj : ordered_path_objects){
@@ -356,7 +357,7 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
 
-				log.warn("seting last url to redirect url :: " + last_url);
+				log.warn("setting last url to redirect url :: " + last_url);
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
@@ -402,18 +403,14 @@ public class Crawler {
 							//create and transition for page state
 							if(current_idx == ordered_path_objects.size()-1){
 								path_keys.add(redirect.getKey());
-								ordered_path_objects.add(redirect);
+								path_objects_explored.add(redirect);
 							}
 							else if(current_idx < ordered_path_objects.size()-1){
 								path_keys.add(current_idx+1, redirect.getKey());
-								ordered_path_objects.add(current_idx+1, redirect);
+								path_objects_explored.add(current_idx+1, redirect);
 							}
 							current_idx++;
 						}
-					}
-					else{
-						browser.waitForPageToLoad();
-						//Timing.pauseThread(3000);
 					}
 
 					Point p = browser.getViewportScrollOffset();
@@ -432,7 +429,7 @@ public class Crawler {
 
 		if(path.getPathKeys().size() != path_keys.size()){
 			path.setPathKeys(path_keys);
-			path.setPathObjects(ordered_path_objects);
+			path.setPathObjects(path_objects_explored);
 		}
 	}
 
@@ -487,11 +484,14 @@ public class Crawler {
 					}
 				}
 				
-    			List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+				//verify that screenshot does not match previous page
+				List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
     			log.warn("element xpaths found while performing exploratory crawl   ::  " +xpath_list.size());
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
-
-				result_page = browser_service.buildPage(browser, visible_elements);
+    			
+    			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
+			
+				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
+				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test ");
 				//e.printStackTrace();
@@ -578,7 +578,7 @@ public class Crawler {
 
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
+		List<PathObject> reduced_path_obj = new ArrayList<>();
 		//scrub path objects for duplicates
 		for(PathObject obj : ordered_path_objects){
 			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){

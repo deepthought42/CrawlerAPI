@@ -60,7 +60,7 @@ public class BrowserUtils {
 				last_key = new_key;
 			}
 			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 1000);
+		}while((System.currentTimeMillis() - start_ms) < 2000);
 
 		log.warn("uploading screenshots " );
 		for(BufferedImage img : images){

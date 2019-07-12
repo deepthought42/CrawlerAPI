@@ -171,6 +171,7 @@ public class Crawler {
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		ordered_path_objects = PathUtils.reducePathObjects(path_keys, ordered_path_objects);
 		
+		log.warn("crawling partial path :: " + ordered_path_objects);
 		for(PathObject current_obj: ordered_path_objects){
 			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
 			if(current_obj instanceof PageState){
@@ -196,7 +197,6 @@ public class Crawler {
 				}
 
 				performAction(action, last_element, browser.getDriver());
-
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
 				browser.setYScrollOffset(p.getY());

@@ -133,7 +133,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 					if((last_elem_idx+1) < path_keys.size()){
 						end_path_keys = path_keys.subList(last_elem_idx+1, path_keys.size());
-						end_path_objects.addAll(path_objects.subList(last_elem_idx+1, path_keys.size()));
+						end_path_objects.addAll(path_objects.subList(last_elem_idx+1, path_objects.size()));
 					}
 
 					//get last page element
@@ -176,18 +176,15 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 
 							log.warn("crawling partial path");
-							List<String> parent_end_path_keys = new ArrayList<>(end_path_keys);
+							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
 							
-							List<PathObject> parent_end_path_objects = new ArrayList<>(end_path_objects);
+							List<PathObject> parent_end_path_objects = new ArrayList<>();
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 							//finish crawling using array of elements following last page element
 							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, message.getDiscovery().getDomainUrl());
-
-							String browser_url = browser.getDriver().getCurrentUrl();
-							String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl());
 							if(loading_animation != null){
@@ -220,10 +217,13 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							log.warn("Setting last element to parent element");
 							last_element = parent_element;
+						}catch(NullPointerException e){
+							log.warn("NullPointerException occurred in ParentPathExplorer :: "+e.getMessage());
+							error_occurred = true;
+							e.printStackTrace();
 						}catch(Exception e){
 							log.warn("Exception occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
-							//e.printStackTrace();
 						}
 						finally{
 							if(browser != null){

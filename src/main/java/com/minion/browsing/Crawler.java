@@ -389,20 +389,16 @@ public class Crawler {
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
+				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 				if(!browser_url.equals(last_page_state.getUrl())){
-					PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 					if(loading_animation != null){
 						path.getPathKeys().add(loading_animation.getKey());
 						path.getPathObjects().add(loading_animation);
 					}
 				}
-				
-				Timing.pauseThread(2000);
-				
+								
 				//verify that screenshot does not match previous page
 				List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
-    			log.warn("element xpaths found while performing exploratory crawl   ::  " +xpath_list.size());
-    			
     			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
 			
 				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());

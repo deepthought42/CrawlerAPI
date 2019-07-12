@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  	<version>0.1.30</version>
+  	<version>0.1.31</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 
@@ -286,15 +286,13 @@
 		    <version>5.1.0</version>
 		    <scope>test</scope>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/me.ramswaroop.jbot/jbot -->
 		<dependency>
-		  <groupId>com.hubspot.slack</groupId>
-		  <artifactId>slack-base</artifactId>
-		  <version>1.1</version>
+		    <groupId>me.ramswaroop.jbot</groupId>
+		    <artifactId>jbot</artifactId>
+		    <version>4.1.0</version>
 		</dependency>
-		<dependency>
-		  <groupId>com.hubspot.slack</groupId>
-		  <artifactId>slack-java-client</artifactId>
-		  <version>1.1</version>
-		</dependency>
+
 	</dependencies>
 </project>

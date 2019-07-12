@@ -1,28 +1,36 @@
 package com.qanairy.integrations;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
 
-import com.hubspot.algebra.Result;
-import com.hubspot.slack.client.SlackClient;
-import com.hubspot.slack.client.methods.params.chat.ChatPostMessageParams;
-import com.hubspot.slack.client.models.response.SlackError;
-import com.hubspot.slack.client.models.response.chat.ChatPostMessageResponse;
+import me.ramswaroop.jbot.core.slack.Bot;
+import me.ramswaroop.jbot.core.slack.models.Event;
+import me.ramswaroop.jbot.core.slack.models.Message;
+
 
 @Component
-public class SlackBot {
+public class SlackBot extends Bot {
     
-	@Autowired
-	private SlackClient client;
-	
-	 public static ChatPostMessageResponse messageChannel(String channelToPostIn, SlackClient slackClient) {
-		    Result<ChatPostMessageResponse, SlackError> postResult = slackClient.postMessage(
-		        ChatPostMessageParams.builder()
-		            .setText("Hello me! Here's a slack message!")
-		            .setChannelId(channelToPostIn)
-		            .build()
-		    ).join();
+	private static Logger log = LoggerFactory.getLogger(SlackBot.class);
 
-		    return postResult.unwrapOrElseThrow(); // release failure here as a RTE
-		  }
+    @Value("${slackBotToken}")
+    private String slackToken;
+
+    @Override
+    public String getSlackToken() {
+        return slackToken;
+    }
+
+    @Override
+    public Bot getSlackBot() {
+        return this;
+    }
+    
+   
+    public void sendMessage(WebSocketSession session, Event event, String message) {
+        reply(session, event, new Message(message));
+    }
 }

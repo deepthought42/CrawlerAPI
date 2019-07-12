@@ -142,7 +142,7 @@ public class BrowserService {
 					
 				if(!elements_built_successfully){
 					element_xpath_list = getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
-					visible_elements = getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, element_xpath_list);
+					visible_elements = getVisibleElements(browser, visible_element_map, element_xpath_list);
 					log.warn("element xpaths returned during buildPageStates  :: " + visible_elements.size());
 				}
 			}catch(NullPointerException e){
@@ -710,7 +710,7 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws GridException
 	 */
-	public List<ElementState> getVisibleElements(Browser browser, BufferedImage page_screenshot, Map<Integer, ElementState> visible_element_map, List<String> xpaths)
+	public List<ElementState> getVisibleElements(Browser browser, Map<Integer, ElementState> visible_element_map, List<String> xpaths)
 															 throws WebDriverException, GridException, IOException{
 		List<ElementState> visible_elements = new ArrayList<>(visible_element_map.values());
 		
@@ -729,7 +729,7 @@ public class BrowserService {
 				for(String xpath : xpath_sublist){
 					WebElement element = browser.findWebElementByXpath(xpath);
 					if(element.isDisplayed() && hasWidthAndHeight(element.getSize())){
-						ElementState element_state = buildElementState(browser, element, page_screenshot, xpath);
+						ElementState element_state = buildElementState(browser, element, xpath);
 						if(element_state != null){
 							visible_elements.add(element_state);
 							visible_element_map.put(visible_map_size, element_state);
@@ -877,11 +877,10 @@ public class BrowserService {
 		Dimension element_size = elem.getSize();
 
 		//boolean negative_position = doesElementHaveNegativePosition(location);
-		boolean is_visible_in_pane = isElementVisibleInPane(browser, elem.getLocation(), elem.getSize());
 		boolean is_structure_tag = isStructureTag(element_tag_name);
 		boolean has_width_and_height = hasWidthAndHeight(element_size);
 		
-		if(!elem.isDisplayed() || !is_visible_in_pane || is_structure_tag || !has_width_and_height){
+		if(!elem.isDisplayed() || is_structure_tag || !has_width_and_height){
 			return null;
 		}
 		

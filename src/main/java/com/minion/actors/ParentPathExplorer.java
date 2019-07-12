@@ -184,16 +184,11 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 							//finish crawling using array of elements following last page element
-							crawler.crawlPathWithoutBuildingResult(end_path_keys, end_path_objects, browser, message.getDiscovery().getDomainUrl());
+							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, message.getDiscovery().getDomainUrl());
 
 							String browser_url = browser.getDriver().getCurrentUrl();
 							String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-							log.warn("############################################################################");
-							log.warn("browser url :: " + browser_url);
-							log.warn("Last page state url :: " + last_page.getUrl());
-							log.warn("do urls match  :: " + url_without_params.equals(last_page.getUrl()));
-							log.warn("############################################################################");
-							
+
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl());
 							if(loading_animation != null){
 								beginning_path_keys.add(loading_animation.getKey());
@@ -203,8 +198,6 @@ public class ParentPathExplorer extends AbstractActor {
 							log.warn("building parent result page state");
 							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
 							
-							//build result page
-								//PageState parent_result = browser_service.buildPage(browser);
 							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 							if(result == null){
 								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
@@ -241,7 +234,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 					log.warn("final path objects ::    " + final_path_objects);
 			  		for(PathObject obj : final_path_objects){
-						log.warn("PATH OBJECT AFTER PARENT ::  "+obj.getType());
+						log.warn("PATH OBJECT AFTER PARENT ::  "+obj);
 			  		}
 
 			  		long end = System.currentTimeMillis();

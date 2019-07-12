@@ -142,7 +142,7 @@ public class Crawler {
 
 		List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
 		log.warn("ELEMENTS visible during crawlPath :: " + xpath_list.size());
-		List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
+		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
 
 		return browser_service.buildPage(browser, visible_elements);
 	}

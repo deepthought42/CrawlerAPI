@@ -265,7 +265,7 @@ public class PageState implements Persistable, PathObject {
 		PageState that = (PageState) o;
 		//boolean pages_match = false;
 		boolean keys_match = this.getKey().equals(that.getKey());
-		boolean checksums_match = this.getScreenshotChecksums().equals(that.getScreenshotChecksums());
+		boolean checksums_match = this.getScreenshotUrl().equals(that.getScreenshotUrl());
 		/*
 		if(!pages_match){
 			pages_match = this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));

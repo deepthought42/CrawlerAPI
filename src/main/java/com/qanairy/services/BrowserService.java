@@ -138,7 +138,7 @@ public class BrowserService {
 					log.warn("navigating to url for building page states  :: " + url);
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
-					Timing.pauseThread(2000);
+					BrowserUtils.getLoadingAnimation(browser, host);
 				}
 					
 				if(!elements_built_successfully){
@@ -198,7 +198,7 @@ public class BrowserService {
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
-					Timing.pauseThread(2000);
+					BrowserUtils.getLoadingAnimation(browser, host);
 				}
 				err = false;
 
@@ -1179,10 +1179,10 @@ public class BrowserService {
 		for(Attribute attr : attributes){
 			if(valid_attributes.contains(attr.getName())){
 				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
-				String trimmed_values = attribute_values.trim();
+				String trimmed_values = cleanAttributeValues(attribute_values.trim());
 
-				if(trimmed_values.length() > 0){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" + cleanAttributeValues(trimmed_values) + "\")");
+				if(trimmed_values.length() > 0 && !trimmed_values.contains("javascript") && !trimmed_values.contains("void()")){
+					attributeChecks.add("contains(@" + attr.getName() + ",\"" + trimmed_values.split(" ")[0] + "\")");
 				}
 			}
 		}

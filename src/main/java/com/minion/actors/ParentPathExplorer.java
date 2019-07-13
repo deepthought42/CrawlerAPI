@@ -188,8 +188,8 @@ public class ParentPathExplorer extends AbstractActor {
 
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl());
 							if(loading_animation != null){
-								beginning_path_keys.add(loading_animation.getKey());
-								beginning_path_objects.add(loading_animation);
+								parent_end_path_keys.add(loading_animation.getKey());
+								parent_end_path_objects.add(loading_animation);
 							}
 							
 							log.warn("building parent result page state");

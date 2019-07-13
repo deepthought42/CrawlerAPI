@@ -21,7 +21,13 @@ public class AlphabeticRestrictionRule extends Rule{
 	private String key;
 	private String value;
 	private RuleType type;
-	
+
+	public AlphabeticRestrictionRule() {
+		this.value = "[a-zA-Z]*";
+		setType(RuleType.ALPHABETIC_RESTRICTION);
+		setKey(super.generateKey());
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -31,14 +37,7 @@ public class AlphabeticRestrictionRule extends Rule{
 
         Matcher matcher = pattern.matcher(elem.getText());
 		return !matcher.matches();
-	}
-
-	public AlphabeticRestrictionRule() {
-		this.value = "[a-zA-Z]*";
-		setType(RuleType.ALPHABETIC_RESTRICTION);
-		setKey(super.generateKey());
-	}
-	
+	}	
 
 	@Override
 	public void setKey(String key) {

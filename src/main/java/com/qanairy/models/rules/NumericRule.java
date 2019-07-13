@@ -22,6 +22,8 @@ public class NumericRule extends Rule{
 	private RuleType type;
 	private String value;
 	
+	public NumericRule(){}
+	
 	/**
 	 * @param type
 	 * @param value the length of the value allowed written as a {@linkplain String}. (eg. "3" -> length 3)

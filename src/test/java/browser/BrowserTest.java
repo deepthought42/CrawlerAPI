@@ -45,11 +45,16 @@ public class BrowserTest {
 	}
 	
 	@Test
-	public void verifyEscapeQuotes(){
+	public void verifyCleanAttributeValuesString(){
 		String src_example = "PDF: Pearson\'s Watson-Glaser II Critical Thinking Appraisal and CPP\'s CPI 260 assessment";
-		String clean_src = BrowserService.escapeQuotes(src_example);// cleanSrc(src_example);
+		String clean_src = BrowserService.cleanAttributeValues(src_example);
 		System.err.println("clean src: " +clean_src);
 		assertTrue("PDF: Pearson's Watson-Glaser II Critical Thinking Appraisal and CPP's CPI 260 assessment".equals(clean_src));
+		
+		src_example = "section[contains(@class,\"dashboard-content-wrapper \t     col-lg-10 col-lg-offset-1 \t\t    col-xs-12 col-xs-offset-0    bordered-box\")]";
+		clean_src = BrowserService.cleanAttributeValues(src_example);
+		System.err.println("clean src: " +clean_src);
+		assertTrue("section[contains(@class,\\\"dashboard-content-wrapper col-lg-10 col-lg-offset-1 col-xs-12 col-xs-offset-0 bordered-box\\\")]".equals(clean_src));
 	}
 
 	//@Test

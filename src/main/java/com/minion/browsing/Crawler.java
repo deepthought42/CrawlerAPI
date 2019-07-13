@@ -74,7 +74,6 @@ public class Crawler {
 
 		PathObject last_obj = null;
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
-		ordered_path_objects = PathUtils.reducePathObjects(path_keys, ordered_path_objects);
 
 		ElementState last_element = null;
 
@@ -169,7 +168,6 @@ public class Crawler {
 		PageState expected_page = null;
 		
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
-		ordered_path_objects = PathUtils.reducePathObjects(path_keys, ordered_path_objects);
 		
 		log.warn("crawling partial path :: " + ordered_path_objects);
 		for(PathObject current_obj: ordered_path_objects){
@@ -180,7 +178,6 @@ public class Crawler {
 
 				log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				Timing.pauseThread(1000);
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -249,7 +246,7 @@ public class Crawler {
 
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
-		ordered_path_objects = PathUtils.reducePathObjects(path_keys, ordered_path_objects);
+
 		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
 
 		String last_url = null;

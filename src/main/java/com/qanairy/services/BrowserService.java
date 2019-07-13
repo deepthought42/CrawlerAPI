@@ -41,7 +41,6 @@ import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
-import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -200,12 +199,12 @@ public class BrowserService {
 				}
 				err = false;
 
-				//log.warn("checking if element is visible in page");
+				log.warn("checking if element is visible in page");
 				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) || iter_idx > 1){
+					log.warn("ELEMENT IS NOT VISIBLE IN PANE");
 					element_hash.put(remaining_elements.get(0).getXpath(), remaining_elements.get(0));
 					browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
 				}
-				Timing.pauseThread(2000);
 
 				log.warn("building page state with elements :: " + remaining_elements.size() + "   :    " +element_xpaths.keySet().size());
 				PageState page_state = buildPage(browser, remaining_elements);
@@ -289,6 +288,8 @@ public class BrowserService {
 	public PageState buildPage(Browser browser, List<ElementState> all_elements) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
+		log.warn("------------------------------------------------------------------------------------------------");
+		log.warn("------------------------------------------------------------------------------------------------");
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 		
@@ -330,7 +331,8 @@ public class BrowserService {
 					visible_elements.add(new_element_state);
 				}
 			}
-
+			log.warn("extracted all elements visible in pane :: " + visible_elements.size());
+			
 			PageState page_state = new PageState( url_without_params,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
@@ -340,6 +342,7 @@ public class BrowserService {
 					browser.getViewportSize().height,
 					browser.getBrowserName());
 
+			log.warn("page state built during (buildPageStates) :: "+page_state);
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 
@@ -348,12 +351,13 @@ public class BrowserService {
 
 			log.warn("initialized page state      :    " + url_without_params);
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
+			log.warn("page state record retrieved from noe4j  : " + page_state_record);
 			if(page_state_record != null){
 				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url_without_params);
 				page_state = page_state_record;
 				page_state.addScreenshotChecksum(screenshot_checksum);
-				page_state = page_state_service.save(page_state);
 			}
+			log.warn("saving page state");
 			page_state = page_state_service.save(page_state);
 
 			log.warn("saved page state       :    " + url_without_params);
@@ -1152,8 +1156,10 @@ public class BrowserService {
 	    return returnString;
 	}
 
-	public static String escapeQuotes(String string) {
-		String escaped = string.replace("\"", "\\\"");
+	public static String cleanAttributeValues(String attribute_values_string) {
+		String escaped = attribute_values_string.replaceAll("[\\t\\n\\r]+"," ");
+		escaped = escaped.trim().replaceAll("\\s+", " ");
+		escaped = escaped.replace("\"", "\\\"");
 		return escaped.replace("\'", "'");
 	}
 
@@ -1172,7 +1178,7 @@ public class BrowserService {
 				String trimmed_values = attribute_values.trim();
 
 				if(trimmed_values.length() > 0){
-					attributeChecks.add("contains(@" + attr.getName() + ",\"" + escapeQuotes(trimmed_values) + "\")");
+					attributeChecks.add("contains(@" + attr.getName() + ",\"" + cleanAttributeValues(trimmed_values) + "\")");
 				}
 			}
 		}
@@ -1222,10 +1228,10 @@ public class BrowserService {
 		for(org.jsoup.nodes.Attribute attr : attributes.asList()){
 			if(valid_attributes.contains(attr.getKey())){
 				String attribute_values = attr.getValue();
-				String trimmed_values = attribute_values.trim();
+				String trimmed_values = cleanAttributeValues(attribute_values.trim());
 
 				if(trimmed_values.length() > 0 && !trimmed_values.contains("javascript") && !trimmed_values.contains("void()")){
-					attributeChecks.add("contains(@" + attr.getKey() + ",\"" + escapeQuotes(trimmed_values) + "\")");
+					attributeChecks.add("contains(@" + attr.getKey() + ",\"" + trimmed_values.split(" ")[0] + "\")");
 				}
 			}
 		}

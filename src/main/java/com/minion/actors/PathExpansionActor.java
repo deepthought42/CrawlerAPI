@@ -373,42 +373,6 @@ public class PathExpansionActor extends AbstractActor {
 				continue;
 			}
 			//check if page element is an input
-			else if(page_element.getName().equals("input")){
-				List<Rule> rules = extractor.extractInputRules(page_element);
-				for(Rule rule : rules){
-					page_element.addRule(rule);
-				}
-				for(Rule rule : page_element.getRules()){
-					List<List<PathObject>> tests = GeneralFormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
-					//paths.addAll(generateMouseRulePaths(page_element, rule)
-					for(List<PathObject> path_obj_list: tests){
-						//iterate over all actions
-						List<PathObject> path_objects = new ArrayList<PathObject>(test.getPathObjects());
-
-						List<String> path_keys = new ArrayList<String>(test.getPathKeys());
-						for(PathObject path_obj : path_obj_list){
-							path_keys.add(path_obj.getKey());
-							path_objects.add(path_obj);
-						}
-						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							for(Action action : action_list){
-								ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(path_keys), new ArrayList<PathObject>(path_objects));
-								//check for element action sequence.
-								//if one exists with one of the actions in the action_list
-								// 	 then skip this action path
-								action_path.getPathKeys().add(action.getKey());
-								action_path.getPathObjects().add(action);
-
-								/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-									log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
-									continue;
-								}*/
-								pathList.add(action_path);
-							}
-						}
-					}
-				}
-			}
 			else{
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
@@ -421,7 +385,10 @@ public class PathExpansionActor extends AbstractActor {
 
 				new_test.getPathObjects().add(page_element);
 				new_test.getPathKeys().add(page_element.getKey());
-
+			
+				//List<Rule> rules = extractor.extractInputRules(page_element);	
+				//page_element.getRules().addAll(rules);
+			
 				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
@@ -519,42 +486,6 @@ public class PathExpansionActor extends AbstractActor {
 				continue;
 			}
 			//check if page element is an input
-			else if(page_element.getName().equals("input")){
-				List<Rule> rules = extractor.extractInputRules(page_element);
-				for(Rule rule : rules){
-					page_element.addRule(rule);
-				}
-				for(Rule rule : page_element.getRules()){
-					List<List<PathObject>> tests = GeneralFormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
-					//paths.addAll(generateMouseRulePaths(page_element, rule)
-					for(List<PathObject> path_obj_list: tests){
-						//iterate over all actions
-						List<PathObject> path_objects = new ArrayList<PathObject>(path.getPathObjects());
-
-						List<String> path_keys = new ArrayList<String>(path.getKeys());
-						for(PathObject path_obj : path_obj_list){
-							path_keys.add(path_obj.getKey());
-							path_objects.add(path_obj);
-						}
-						for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
-							for(Action action : action_list){
-								ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(path_keys), new ArrayList<PathObject>(path_objects));
-								//check for element action sequence.
-								//if one exists with one of the actions in the action_list
-								// 	 then skip this action path
-								action_path.getPathKeys().add(action.getKey());
-								action_path.getPathObjects().add(action);
-
-								/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-									log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
-									continue;
-								}*/
-								pathList.add(action_path);
-							}
-						}
-					}
-				}
-			}
 			else{
 				/*
 				for(PathObject obj : path.getPathObjects()){
@@ -563,7 +494,9 @@ public class PathExpansionActor extends AbstractActor {
 					}
 				}
 				*/
-				
+				//List<Rule> rules = extractor.extractInputRules(page_element);	
+				//page_element.getRules().addAll(rules);
+			
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
 				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscovery(), path.getAccountKey(), path.getOptions());
@@ -661,11 +594,9 @@ public class PathExpansionActor extends AbstractActor {
 				continue;
 			}
 			//check if page element is an input
-			else if(page_element.getName().equals("input")){
-				List<Rule> rules = extractor.extractInputRules(page_element);
+			//else if(page_element.getName().equals("input")){
 				
-				page_element.getRules().addAll(rules);
-			
+				/*
 				for(Rule rule : page_element.getRules()){
 					List<List<PathObject>> tests = GeneralFormTestDiscoveryActor.generateInputRuleTests(page_element, rule);
 					//paths.addAll(generateMouseRulePaths(page_element, rule)
@@ -684,18 +615,14 @@ public class PathExpansionActor extends AbstractActor {
 								//check for element action sequence.
 								//if one exists with one of the actions in the action_list
 								// 	 then skip this action path
-
-
-								/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-									log.info("EXISTING ELEMENT ACTION SEQUENCE FOUND");
-									continue;
-								}*/
+d
 								pathList.add(action_path);
 							}
 						}
 					}
 				}
-			}
+*/
+			//}
 			else{
 				List<String> keys = new ArrayList<>(path_keys);
 				List<PathObject> path = new ArrayList<>(path_objects);
@@ -703,8 +630,9 @@ public class PathExpansionActor extends AbstractActor {
 				path.add(page_element);
 				keys.add(page_element.getKey());
 
-				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
-
+				//List<Rule> rules = extractor.extractInputRules(page_element);	
+				//page_element.getRules().addAll(rules);
+			
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					for(Action action : action_list){
 						ExploratoryPath action_path = new ExploratoryPath(new ArrayList<String>(keys), new ArrayList<PathObject>(path));

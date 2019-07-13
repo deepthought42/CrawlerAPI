@@ -108,8 +108,6 @@ public class Crawler {
 				}
 
 				performAction(action, last_element, browser.getDriver());
-				browser.waitForPageToLoad();
-				//Timing.pauseThread(1000);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());

@@ -41,6 +41,7 @@ import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
+import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -137,6 +138,7 @@ public class BrowserService {
 					log.warn("navigating to url for building page states  :: " + url);
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
+					Timing.pauseThread(2000);
 				}
 					
 				if(!elements_built_successfully){
@@ -196,6 +198,7 @@ public class BrowserService {
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
+					Timing.pauseThread(2000);
 				}
 				err = false;
 

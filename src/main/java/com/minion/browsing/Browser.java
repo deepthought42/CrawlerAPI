@@ -41,12 +41,10 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.utils.BrowserUtils;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 

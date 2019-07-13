@@ -207,6 +207,7 @@ public class BrowserService {
 					log.warn("ELEMENT IS NOT VISIBLE IN PANE");
 					element_hash.put(remaining_elements.get(0).getXpath(), remaining_elements.get(0));
 					browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
+					BrowserUtils.getLoadingAnimation(browser, url);
 				}
 
 				log.warn("building page state with elements :: " + remaining_elements.size() + "   :    " +element_xpaths.keySet().size());
@@ -1369,7 +1370,8 @@ public class BrowserService {
 		String host = new URL(page.getUrl()).getHost();
 		for(WebElement form_elem : form_elements){
 			browser.scrollToElement(form_elem);
-			
+			BrowserUtils.getLoadingAnimation(browser, page.getUrl());
+
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, page_screenshot, host);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
 

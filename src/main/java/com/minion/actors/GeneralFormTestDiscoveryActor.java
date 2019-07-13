@@ -31,6 +31,7 @@ import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.TestService;
+import com.qanairy.utils.BrowserUtils;
 import com.minion.structs.Message;
 
 import akka.actor.AbstractActor;
@@ -105,6 +106,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 							  	for(Form form : forms){
 							  		browser.scrollTo(form.getFormTag().getXLocation(), form.getFormTag().getYLocation());
+									BrowserUtils.getLoadingAnimation(browser, page.getUrl());
 
 							  		path_object_lists.addAll(generateAllFormTestPaths(test, form));
 							  	}

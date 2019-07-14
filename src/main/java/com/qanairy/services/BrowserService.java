@@ -192,13 +192,6 @@ public class BrowserService {
 		boolean err = true;
 		
 		while(element_xpaths.size() > 0){
-			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-			log.warn("ELEMENT XPATHS :: " + element_xpaths.size());
-			for(String xpath : element_xpaths.keySet()){
-				log.warn("XPATH :: " +xpath);
-			}
-			
 			try{
 				List<ElementState> remaining_elements = new ArrayList<ElementState>(element_xpaths.values());
 				Collections.sort(remaining_elements);

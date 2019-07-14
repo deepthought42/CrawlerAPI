@@ -108,7 +108,7 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-		}while((System.currentTimeMillis() - start_ms) < 5000);
+		}while((System.currentTimeMillis() - start_ms) < 10000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -154,7 +154,57 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 20000);
+
+		for(Future<String> future: url_futures){
+			try {
+				image_urls.add(future.get());
+			} catch (InterruptedException e) {
+				log.debug(e.getMessage());
+			} catch (ExecutionException e) {
+				log.debug(e.getMessage());
+			}
+		}
+		
+		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
+			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
+		}
+
+		return null;
+	}
+	
+	public static PageLoadAnimation detectShortAnimation(Browser browser, String host) throws IOException {
+		List<String> image_checksums = new ArrayList<String>();
+		List<String> image_urls = new ArrayList<String>();
+		boolean transition_detected = false;
+		long start_ms = System.currentTimeMillis();
+		long total_time = System.currentTimeMillis();
+		
+		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
+		String last_checksum = null;
+		String new_checksum = null;
+		List<Future<String>> url_futures = new ArrayList<>();
+
+		do{
+			//get element screenshot
+			BufferedImage screenshot = browser.getViewportScreenshot();
+
+			//calculate screenshot checksum
+			new_checksum = PageState.getFileChecksum(screenshot);
+
+			transition_detected = !new_checksum.equals(last_checksum);
+
+			if( transition_detected ){
+				if(animated_state_checksum_hash.containsKey(new_checksum)){
+					return null;
+				}
+				start_ms = System.currentTimeMillis();
+				image_checksums.add(new_checksum);
+				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
+				last_checksum = new_checksum;
+				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+			}
+		}while((System.currentTimeMillis() - start_ms) < 500);
 
 		for(Future<String> future: url_futures){
 			try {

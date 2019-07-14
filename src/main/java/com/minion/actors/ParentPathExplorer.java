@@ -307,15 +307,16 @@ public class ParentPathExplorer extends AbstractActor {
 	 * Adds Group labeled "form" to test if the test has any elements in it that have form in the xpath
 	 *
 	 * @param test {@linkplain Test} that you want to label
+	 * @throws MalformedURLException 
 	 */
-	private void addFormGroupsToPath(Test test) {
+	private void addFormGroupsToPath(Test test) throws MalformedURLException {
 		//check if test has any form elements
 		for(PathObject path_obj: test.getPathObjects()){
 			if(path_obj.getClass().equals(ElementState.class)){
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_service.save(test, test.firstPage().getUrl());
+					test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
 					break;
 				}
 			}

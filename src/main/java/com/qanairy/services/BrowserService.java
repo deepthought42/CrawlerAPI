@@ -216,7 +216,7 @@ public class BrowserService {
 					//if element is larger than screen then continue
 
 					browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
-					BrowserUtils.getLoadingAnimation(browser, url);
+					BrowserUtils.detectShortAnimation(browser, url);
 					iter_idx=0;
 				}
 
@@ -270,6 +270,14 @@ public class BrowserService {
 	private boolean isElementLargerThanViewport(Browser browser, ElementState elementState) {
 		int height = elementState.getHeight();
 		int width = elementState.getWidth();
+
+		return width >= browser.getViewportSize().getWidth()
+				 || height >= browser.getViewportSize().getHeight();
+	}
+	
+	private boolean isElementLargerThanViewport(Browser browser, WebElement elementState) {
+		int height = elementState.getSize().getHeight();
+		int width = elementState.getSize().getWidth();
 
 		return width >= browser.getViewportSize().getWidth()
 				 || height >= browser.getViewportSize().getHeight();
@@ -764,7 +772,7 @@ public class BrowserService {
 				List<String> xpath_sublist = xpaths.subList(start_idx, xpaths.size());
 				for(String xpath : xpath_sublist){
 					WebElement element = browser.findWebElementByXpath(xpath);
-					if(element.isDisplayed() && hasWidthAndHeight(element.getSize())){
+					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && ! isElementLargerThanViewport(browser, element)){
 						ElementState element_state = buildElementState(browser, element, xpath);
 						
 						visible_element_map.put(visible_element_map.size()+1, element_state);
@@ -1405,7 +1413,7 @@ public class BrowserService {
 		String host = new URL(page.getUrl()).getHost();
 		for(WebElement form_elem : form_elements){
 			browser.scrollToElement(form_elem);
-			BrowserUtils.getLoadingAnimation(browser, page.getUrl());
+			BrowserUtils.detectShortAnimation(browser, page.getUrl());
 
 			String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, page_screenshot, host);
 			ElementState form_tag = new ElementState(form_elem.getText(), uniqifyXpath(form_elem, xpath_map, "//form", browser.getDriver()), "form", browser.extractAttributes(form_elem), Browser.loadCssProperties(form_elem), screenshot_url, form_elem.getLocation().getX(), form_elem.getLocation().getY(), form_elem.getSize().getWidth(), form_elem.getSize().getHeight(), form_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );

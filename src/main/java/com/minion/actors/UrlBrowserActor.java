@@ -123,14 +123,13 @@ public class UrlBrowserActor extends AbstractActor {
 								log.warn("navigating to url :: "+url);
 								browser.navigateTo(url);
 
-								log.warn("getting page transition");
 								redirect = BrowserUtils.getPageTransition(url, browser, host);
 							  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
 									path_keys.add(redirect.getKey());
 									path_objects.add(redirect);
 								}
-								log.warn("starting loading animation detection");
-								animation = BrowserUtils.getLoadingAnimation(browser, host);
+
+							  	animation = BrowserUtils.getLoadingAnimation(browser, host);
 								if(animation != null){
 									path_keys.add(animation.getKey());
 									path_objects.add(animation);

@@ -58,8 +58,7 @@ public class BrowserUtils {
 				transition_urls.add(new_key);
 				last_key = new_key;
 			}
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000);
+		}while((System.currentTimeMillis() - start_ms) < 1500);
 
 		for(BufferedImage img : images){
 			try{
@@ -109,9 +108,7 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 5000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -157,9 +154,7 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 3000 && (System.currentTimeMillis() - total_time) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 10000);
 
 		for(Future<String> future: url_futures){
 			try {

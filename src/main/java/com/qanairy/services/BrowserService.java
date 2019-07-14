@@ -8,6 +8,7 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,7 +42,6 @@ import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
-import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -143,6 +143,7 @@ public class BrowserService {
 					
 				if(!elements_built_successfully){
 					element_xpath_list = getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+					log.warn("elements returned by JSOUP xpath build ::   " + element_xpath_list.size());
 					visible_elements = getVisibleElements(browser, visible_element_map, element_xpath_list);
 					log.warn("element xpaths returned during buildPageStates  :: " + visible_elements.size());
 				}
@@ -179,7 +180,9 @@ public class BrowserService {
 		log.warn("####  returning elements list : "+visible_elements.size()+ "   :    "+url);
 
 		for(ElementState elem : visible_elements){
-			element_xpaths.put(elem.getXpath(), elem);
+			if(!isElementLargerThanViewport(browser, elem)){
+				element_xpaths.put(elem.getXpath(), elem);
+			}
 		}
 
 		// BUILD ALL PAGE STATES
@@ -188,8 +191,14 @@ public class BrowserService {
 		int iter_idx=0;
 		boolean err = true;
 		
-		while(element_xpaths.keySet().size() > 0){
+		while(element_xpaths.size() > 0){
+			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+			log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 			log.warn("ELEMENT XPATHS :: " + element_xpaths.size());
+			for(String xpath : element_xpaths.keySet()){
+				log.warn("XPATH :: " +xpath);
+			}
+			
 			try{
 				List<ElementState> remaining_elements = new ArrayList<ElementState>(element_xpaths.values());
 				Collections.sort(remaining_elements);
@@ -202,24 +211,30 @@ public class BrowserService {
 				}
 				err = false;
 
-				log.warn("checking if element is visible in page");
-				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) || iter_idx > 1){
-					log.warn("ELEMENT IS NOT VISIBLE IN PANE");
+				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) && iter_idx > 1){
 					element_hash.put(remaining_elements.get(0).getXpath(), remaining_elements.get(0));
+					//if element is larger than screen then continue
+
 					browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
 					BrowserUtils.getLoadingAnimation(browser, url);
+					iter_idx=0;
 				}
 
-				log.warn("building page state with elements :: " + remaining_elements.size() + "   :    " +element_xpaths.keySet().size());
-				PageState page_state = buildPage(browser, remaining_elements);
-				page_states.add(page_state);
-
+				log.warn("building page state with elements :: " + remaining_elements.size() + "   :    " +element_xpaths.size());
+				PageState page_state = buildPage(browser, visible_elements);
+				
 				log.warn("page states ::   " + page_states.size());
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
 				}
+				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, element_hash.keySet());
+
+				if(remaining_elements.size() != element_xpaths.size()){
+					if(page_state.getElements().size() > 0){
+						page_states.add(page_state);
+					}		
+				}
 				
-				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, new ArrayList<>(element_hash.values()));
 				iter_idx++;
 				log.warn("element xpaths  :    " + element_xpaths.size());
 			}
@@ -252,33 +267,48 @@ public class BrowserService {
 		return page_states;
 	}
 
+	private boolean isElementLargerThanViewport(Browser browser, ElementState elementState) {
+		int height = elementState.getHeight();
+		int width = elementState.getWidth();
+
+		return width >= browser.getViewportSize().getWidth()
+				 || height >= browser.getViewportSize().getHeight();
+	}
+
 	public static List<String> getVisibleElementsUsingJSoup(String pageSource) {
 		Map<String, Integer> xpath_cnt_map = new HashMap<>();
 		List<String> elements = new ArrayList<>();
 		Document html_doc = Jsoup.parse(pageSource);
 		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
 		for(Element element: web_elements){
-			//log.warn("checking if has child elements :: " + web_elements.get(idx).childNodeSize());
-			int child_node_cnt = element.children().size();					
+			int child_node_cnt = element.children().size();			
 			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
-			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(xpath) && !doesElementBelongToFormTag(xpath)){
+			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element)){
 				elements.add(xpath);
 			}
 		}
 
-		log.warn("ELEMENTS BEING RETURNED BY JSOUP  ::  " + elements.size());
 		return elements;
 	}
 
-	private static boolean doesElementBelongToScriptTag(String xpath) {
-		return xpath.contains("noscript")
-				|| xpath.contains("g") || xpath.contains("path") || xpath.contains("svg") || xpath.contains("polygon");
+	/**
+	 * Checks all parent elements up until and excluding the body tag for any script tags.
+	 * 
+	 * @param element {@Element element
+	 * 
+	 * @return true if a parent element within the dom is a structure tag
+	 */
+	private static boolean doesElementBelongToScriptTag(Element element) {		
+		Element new_elem = element;
+		while(new_elem != null && !new_elem.tagName().equals("body")){
+			if(isStructureTag(new_elem.tagName())){
+				return true;
+			}
+			new_elem = new_elem.parent();
+		}
+		return false;
 	}
-
-	private static boolean doesElementBelongToFormTag(String xpath) {
-		return xpath.contains("form");
-	}
-
+	
 	/**
 	 *
 	 * @return
@@ -449,15 +479,15 @@ public class BrowserService {
 			viewport_screenshot.flush();
 			return page_state;
 		}
-	}
 
+	}
 	private static Map<String, ElementState> filterElementStatesFromList(Map<String, ElementState> elements,
-			List<ElementState> values) {
+			Collection<String> values) {
 		HashMap<String, ElementState> elements_hash = new HashMap<>(elements);
-		log.warn("ELEMENTS HASH KEYS ::      " + elements_hash.keySet().size() );
-		for(ElementState element : values){
-			if(element != null){
-				elements_hash.remove(element.getXpath());
+
+		for(String xpath : values){
+			if(xpath != null){
+				elements_hash.remove(xpath);
 			}
 		}
 
@@ -719,18 +749,16 @@ public class BrowserService {
 	 * @throws GridException
 	 */
 	public List<ElementState> getVisibleElements(Browser browser, Map<Integer, ElementState> visible_element_map, List<String> xpaths)
-															 throws WebDriverException, GridException, IOException{
-		List<ElementState> visible_elements = new ArrayList<>(visible_element_map.values());
-		
+															 throws WebDriverException, GridException, IOException{		
 		boolean err = false;
 		do{
 			err = false;
 			try{
-				int start_idx = 0;
 				int visible_map_size = visible_element_map.size();
 		
-				if(visible_map_size > 0){
-					start_idx = visible_element_map.keySet().size()-1;
+				int start_idx = 0;
+				if(visible_map_size > 1){
+					start_idx = visible_map_size-1;
 				}
 				
 				List<String> xpath_sublist = xpaths.subList(start_idx, xpaths.size());
@@ -738,20 +766,29 @@ public class BrowserService {
 					WebElement element = browser.findWebElementByXpath(xpath);
 					if(element.isDisplayed() && hasWidthAndHeight(element.getSize())){
 						ElementState element_state = buildElementState(browser, element, xpath);
-						if(element_state != null){
-							visible_elements.add(element_state);
-							visible_element_map.put(visible_map_size, element_state);
-							visible_map_size++;
-						}
+						
+						visible_element_map.put(visible_element_map.size()+1, element_state);
+					}
+					else{
+						visible_element_map.put(visible_element_map.size()+1, null);
 					}
 				}
 			}catch(WebDriverException e){
+				log.warn("Exception occurred while getting visible elements ::   " + e.getMessage());
+				e.printStackTrace();
 				err = true;
 				if(!e.getMessage().contains("no_such_element")){
 					throw e;
 				}
 			}
 		}while(err);
+		
+		List<ElementState> visible_elements = new ArrayList<>();
+		for(ElementState element : visible_element_map.values()){
+			if(element != null){
+				visible_elements.add(element);
+			}
+		}
 		
 		return visible_elements;
 	}
@@ -960,11 +997,9 @@ public class BrowserService {
 		page_element = new ElementState(elem.getText(), null, elem.getTagName(), attributes, css_props, null, checksum, 
 										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
 		
-		long xpath_start = System.currentTimeMillis();
 		page_element.setXpath(xpath);
-		long xpath_end = System.currentTimeMillis();
 		page_element_service.save(page_element);
-		log.warn("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+(xpath_end-xpath_start));
+		log.warn("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
 
 		return page_element;
 	}
@@ -994,7 +1029,7 @@ public class BrowserService {
 				|| "title".equals(tag_name) || "meta".equals(tag_name)
 				|| "head".equals(tag_name) || "iframe".equals(tag_name) || "noscript".equals(tag_name)
 				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name)
-				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name);
+				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name) || "use".equals(tag_name);
 	}
 
 	/**
@@ -1046,13 +1081,13 @@ public class BrowserService {
 		int height = size.getHeight();
 		int width = size.getWidth();
 
-		return x > x_offset && y > y_offset && (x+width) < (browser.getViewportSize().getWidth()+x_offset)
-				&& (y+height) < (browser.getViewportSize().getHeight()+y_offset);
+		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) < (browser.getViewportSize().getWidth())
+				&& ((y-y_offset)+height) < (browser.getViewportSize().getHeight());
 	}
 
 	public static boolean isElementVisibleInPane(Browser browser, ElementState elem){
-		int y_offset = browser.getYScrollOffset();
 		int x_offset = browser.getXScrollOffset();
+		int y_offset = browser.getYScrollOffset();
 
 		int x = elem.getXLocation();
 		int y = elem.getYLocation();
@@ -1060,8 +1095,8 @@ public class BrowserService {
 		int height = elem.getHeight();
 		int width = elem.getWidth();
 
-		return x >= x_offset && y >= y_offset && (x+width) <= (browser.getViewportSize().getWidth()+x_offset)
-				&& (y+height) <= (browser.getViewportSize().getHeight()+y_offset);
+		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) < (browser.getViewportSize().getWidth())
+				&& ((y-y_offset)+height) < (browser.getViewportSize().getHeight());
 	}
 
 	public static boolean isElementVisibleInPane(int x_offset, int y_offset, WebElement elem, Dimension viewport_size){
@@ -1073,8 +1108,8 @@ public class BrowserService {
 		int height = dimension.getHeight();
 		int width = dimension.getWidth();
 
-		return x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset)
-				&& (y+height) <= (viewport_size.getHeight()+y_offset);
+		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) <= (viewport_size.getWidth())
+				&& ((y-y_offset)+height) <= (viewport_size.getHeight());
 	}
 
 	public static boolean isElementVisibleInPane(int x_offset, int y_offset, ElementState elem, Dimension viewport_size){
@@ -1085,8 +1120,8 @@ public class BrowserService {
 		int height = elem.getHeight();
 		int width = elem.getWidth();
 
-		return x >= x_offset && y >= y_offset && (x+width) <= (viewport_size.getWidth()+x_offset)
-				&& (y+height) <= (viewport_size.getHeight()+y_offset);
+		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) <= (viewport_size.getWidth())
+				&& ((y-y_offset)+height) <= (viewport_size.getHeight());
 	}
 	
 	/**
@@ -1254,7 +1289,7 @@ public class BrowserService {
 		Element last_element = element;
 		Element parent = null;
 	    int count = 0;
-	    while(!"html".equals(last_element.tagName()) && !"body".equals(last_element.tagName()) && count < 10){
+	    while(!"html".equals(last_element.tagName()) && !"body".equals(last_element.tagName()) && count < 3){
 	    	try{
 	    		parent = last_element.parent();
 	    		

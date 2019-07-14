@@ -597,10 +597,8 @@ public class Browser {
 	 * @return {@link Point} coordinates
 	 */
 	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
-		log.warn("element location before math   ::   "+element.getXLocation() + " , "+element.getYLocation());
 		int y_coord = element.getYLocation() - y_offset;
 		int x_coord = element.getXLocation() - x_offset;
-		log.warn("element location AFTER math   ::   "+x_coord + " , "+y_coord);
 
 		return new Point(x_coord, y_coord);
 	}

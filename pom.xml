@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  	<version>0.1.31</version>
+  	<version>0.1.32</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 
@@ -293,12 +293,12 @@
 		    <version>5.1.0</version>
 		    <scope>test</scope>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/me.ramswaroop.jbot/jbot -->
+
+		<!-- https://mvnrepository.com/artifact/com.github.seratch/jslack -->
 		<dependency>
-		    <groupId>me.ramswaroop.jbot</groupId>
-		    <artifactId>jbot</artifactId>
-		    <version>4.1.0</version>
+		    <groupId>com.github.seratch</groupId>
+		    <artifactId>jslack</artifactId>
+		    <version>0.1.5</version>
 		</dependency>
 
 	</dependencies>

@@ -54,15 +54,12 @@ public class BrowserUtils {
 		        	BufferedImage img = browser.getViewportScreenshot();
 					images.add(img);
 				}catch(Exception e){}
-				log.warn("redirect transition detected");
 				start_ms = System.currentTimeMillis();
 				transition_urls.add(new_key);
 				last_key = new_key;
 			}
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 1000);
+		}while((System.currentTimeMillis() - start_ms) < 1500);
 
-		log.warn("uploading screenshots " );
 		for(BufferedImage img : images){
 			try{
 				String new_checksum = PageState.getFileChecksum(img);
@@ -74,7 +71,6 @@ public class BrowserUtils {
 			}
 		}
 
-		log.warn("creating redirect object");
 		Redirect redirect = new Redirect(initial_url, transition_urls);
 		redirect.setImageChecksums(image_checksums);
 		redirect.setImageUrls(image_urls);
@@ -102,20 +98,16 @@ public class BrowserUtils {
 
 			transition_detected = !new_checksum.equals(last_checksum);
 
-			log.warn("new checksum :: " + new_checksum);
-			log.warn("has key been seen before :: " + animated_state_checksum_hash.containsKey(new_checksum));
-			if( animated_state_checksum_hash.containsKey(new_checksum)){
-				break;
-			}
-			else if( transition_detected ){
+			if( transition_detected ){
+				if( animated_state_checksum_hash.containsKey(new_checksum)){
+					break;
+				}
 				start_ms = System.currentTimeMillis();
 				image_checksums.add(new_checksum);
 				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-
-			//transition is detected if keys are different
 		}while((System.currentTimeMillis() - start_ms) < 10000);
 
 		for(Future<String> future: url_futures){
@@ -131,7 +123,7 @@ public class BrowserUtils {
 		return new Animation(image_urls, image_checksums, AnimationType.CONTINUOUS);
 	}	
 	
-	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host, String url) throws IOException {
+	public static PageLoadAnimation getLoadingAnimation(Browser browser, String host) throws IOException {
 		List<String> image_checksums = new ArrayList<String>();
 		List<String> image_urls = new ArrayList<String>();
 		boolean transition_detected = false;
@@ -142,7 +134,6 @@ public class BrowserUtils {
 		String last_checksum = null;
 		String new_checksum = null;
 		List<Future<String>> url_futures = new ArrayList<>();
-		log.warn("detecting loading animation");
 
 		do{
 			//get element screenshot
@@ -163,11 +154,8 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
+		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 20000);
 
-			log.warn("was transition detected ??   " + transition_detected);
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 2000 && (System.currentTimeMillis() - total_time) < 5000);
-		log.warn("done detecting loading animation");
 		for(Future<String> future: url_futures){
 			try {
 				image_urls.add(future.get());
@@ -178,17 +166,65 @@ public class BrowserUtils {
 			}
 		}
 		
-		if(new_checksum.equals(last_checksum) && image_checksums.size()>1){
-			log.warn("returning loading animation");
-			return new PageLoadAnimation(image_urls, image_checksums, url);
+		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
+			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
 		}
 
-		log.warn("no loading animation detected. Returning null");
 		return null;
 	}
 	
-	public static String sanitizeUrl(String currentUrl) throws MalformedURLException {
-		String domain = currentUrl;
+	public static PageLoadAnimation detectShortAnimation(Browser browser, String host) throws IOException {
+		List<String> image_checksums = new ArrayList<String>();
+		List<String> image_urls = new ArrayList<String>();
+		boolean transition_detected = false;
+		long start_ms = System.currentTimeMillis();
+		long total_time = System.currentTimeMillis();
+		
+		Map<String, Boolean> animated_state_checksum_hash = new HashMap<String, Boolean>();
+		String last_checksum = null;
+		String new_checksum = null;
+		List<Future<String>> url_futures = new ArrayList<>();
+
+		do{
+			//get element screenshot
+			BufferedImage screenshot = browser.getViewportScreenshot();
+
+			//calculate screenshot checksum
+			new_checksum = PageState.getFileChecksum(screenshot);
+
+			transition_detected = !new_checksum.equals(last_checksum);
+
+			if( transition_detected ){
+				if(animated_state_checksum_hash.containsKey(new_checksum)){
+					return null;
+				}
+				start_ms = System.currentTimeMillis();
+				image_checksums.add(new_checksum);
+				animated_state_checksum_hash.put(new_checksum, Boolean.TRUE);
+				last_checksum = new_checksum;
+				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
+			}
+		}while((System.currentTimeMillis() - start_ms) < 500);
+
+		for(Future<String> future: url_futures){
+			try {
+				image_urls.add(future.get());
+			} catch (InterruptedException e) {
+				log.debug(e.getMessage());
+			} catch (ExecutionException e) {
+				log.debug(e.getMessage());
+			}
+		}
+		
+		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
+			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
+		}
+
+		return null;
+	}
+	
+	public static String sanitizeUrl(String url) throws MalformedURLException {
+		String domain = url;
 		int param_index = domain.indexOf("?");
 		if(param_index >= 0){
 			domain = domain.substring(0, param_index);
@@ -199,17 +235,18 @@ public class BrowserUtils {
 		}
 		URL new_url = new URL(domain);
 
+		//check if host is subdomain
 		String new_host = new_url.getHost();
-		if(!new_host.startsWith("www.")){
+		
+		int count = new_host.split("\\.").length;
+		if(count <= 2 && !new_host.startsWith("www.")){
 			new_host = "www."+new_host;
 		}
 		String new_key = new_host+new_url.getPath();
 		if(new_key.charAt(new_key.length()-1) == '/'){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
-		new_key = new_url.getProtocol()+"://"+new_key;
-		
-		return new_key;
+		return new_url.getProtocol()+"://"+new_key;
 	}
 
 	public static ElementState updateElementLocations(Browser browser, ElementState element) {

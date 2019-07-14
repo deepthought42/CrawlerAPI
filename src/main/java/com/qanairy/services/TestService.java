@@ -4,6 +4,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +57,9 @@ public class TestService {
 
 	@Autowired
 	private ActionService action_service;
+
+	@Autowired
+	private GroupService group_service;
 
 	@Autowired
 	private PageStateService page_state_service;
@@ -175,6 +179,11 @@ public class TestService {
 				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
 			}
 
+			Set<Group> groups = new HashSet<>();
+			for(Group group : test.getGroups()){
+				groups.add(group_service.save(group));
+			}
+			test.setGroups(groups);
 	  		test = test_repo.save(test);
 			domain_service.addTest(host_url, test);
 
@@ -203,8 +212,13 @@ public class TestService {
 			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
 			record.setPathObjects(path_objects);
 			record.setResult(page_state_service.findByKey(test.getResult().getKey()));
-			record.setGroups(test.getGroups());
 
+			Set<Group> groups = new HashSet<>();
+			for(Group group : test.getGroups()){
+				groups.add(group_service.save(group));
+			}
+			record.setGroups(groups);
+			
 			test = test_repo.save(record);
 
 		}

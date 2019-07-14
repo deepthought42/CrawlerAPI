@@ -265,7 +265,7 @@ public class PageState implements Persistable, PathObject {
 		PageState that = (PageState) o;
 		//boolean pages_match = false;
 		boolean keys_match = this.getKey().equals(that.getKey());
-		boolean checksums_match = this.getScreenshotChecksums().equals(that.getScreenshotChecksums());
+		//boolean checksums_match = this.getScreenshotUrl().equals(that.getScreenshotUrl());
 		/*
 		if(!pages_match){
 			pages_match = this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));
@@ -296,7 +296,7 @@ public class PageState implements Persistable, PathObject {
 		*/
 		//boolean sources_match = this.getSrc().equals(that.getSrc());
 
-		return keys_match || checksums_match;
+		return keys_match;
 	}
 
 	/**
@@ -321,7 +321,7 @@ public class PageState implements Persistable, PathObject {
 			page.setAnimatedImageChecksums(this.getAnimatedImageChecksums());
 
 		} catch (NoSuchAlgorithmException | IOException e) {
-			log.info("Error cloning page : " + page.getKey() + ";  "+e.getMessage());
+			log.info("Error cloning page : " + this.getKey() + ";  "+e.getMessage());
 		}
 		return page;
 	}
@@ -543,6 +543,7 @@ public class PageState implements Persistable, PathObject {
 		for(String screenshot_checksum : getScreenshotChecksums()){
 			if(checksum.equals(screenshot_checksum)){
 				exists = true;
+				break;
 			}
 		}
 		if(!exists){

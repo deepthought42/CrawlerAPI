@@ -106,7 +106,7 @@ public class FormDiscoveryActor extends AbstractActor{
 
 						  	for(Form form : forms){
 						  		System.err.println("Total input fields for form :: "+form.getFormFields().size());
-							  	for(ElementState field: form.getFormFields()){
+							  	for(ElementState field : form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
 									

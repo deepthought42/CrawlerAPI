@@ -26,11 +26,11 @@ import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Animation;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.PathUtils;
 
 /**
  * Handles the saving of records into orientDB
@@ -78,25 +78,17 @@ public class AnimationDetectionActor extends AbstractActor{
 						err = false;
 						try{
 							Browser browser = BrowserConnectionFactory.getConnection(msg.getDiscovery().getBrowserName(), BrowserEnvironment.DISCOVERY);
-							PageState page_state = null;
-							int page_idx = 0;
-							//get index of last page state
-							for(PathObject path_object : msg.getPathObjects()){
-								if(path_object instanceof PageState){
-									page_state = (PageState)path_object;
-									break;
-								}
-								page_idx++;
-							}
-
-							System.err.println("STARTING ANIMATION DETECTION BY CRAWLING PATH");
+							PageState first_page_state = PathUtils.getFirstPage(msg.getPathObjects());
+							
+							log.warning("navigating to url :: " + msg.getDiscovery().getDomainUrl());
+							browser.navigateTo(first_page_state.getUrl());
 							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
 
-							System.err.println("Getting animation");
 							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
 							if(animation.getImageUrls().size() > 1){
-								page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
-								page_state_service.save(page_state);
+								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
+								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
+								page_state_service.save(first_page_state);
 							}
 
 							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -105,14 +97,11 @@ public class AnimationDetectionActor extends AbstractActor{
 									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 
 							PathMessage path_message = msg.clone();
-							path_message.getKeys().set(page_idx, page_state.getKey());
-							path_message.getPathObjects().set(page_idx, page_state);
 
 							form_discoverer.tell(path_message, getSelf() );
 							path_expansion_actor.tell(path_message, getSelf() );
 						}catch(Exception e){
 							log.warning("exception occurred during Animation Detection.....  "+e.getMessage());
-							e.printStackTrace();
 							err = true;
 						}
 					}while(err);

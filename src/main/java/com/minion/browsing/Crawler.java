@@ -68,51 +68,18 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel, Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
+	public PageState crawlPath(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
 		assert browser != null;
 		assert path_keys != null;
 
 		PathObject last_obj = null;
-		List<PathObject> updated_path_objects = new ArrayList<PathObject>();
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-		//Ensure Order path objects
-		for(String path_obj_key : path_keys){
-			for(PathObject obj : path_objects){
-				if(obj.getKey().equals(path_obj_key)){
-					ordered_path_objects.add(obj);
-				}
-			}
-		}
-
-		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
-		//scrub path objects for duplicates
-		for(PathObject obj : ordered_path_objects){
-			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
-				last_path_obj = obj;
-				reduced_path_obj.add(obj);
-			}
-		}
-		ordered_path_objects = reduced_path_obj;
-		updated_path_objects.addAll(ordered_path_objects);
+		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 
 		ElementState last_element = null;
 
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected.
-		PageState expected_page  = null;
-		if(ordered_path_objects.get(0) instanceof Redirect){
-			expected_page = ((PageState)ordered_path_objects.get(1));
-		}
-		else if(ordered_path_objects.get(0) instanceof PageState){
-			//find first page
-			for(PathObject obj : ordered_path_objects){
-				if(obj instanceof PageState){
-					expected_page = ((PageState)obj);
-					break;
-				}
-			}
-		}
+		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
 
 		browser.navigateTo(expected_page.getUrl());
 
@@ -124,6 +91,7 @@ public class Crawler {
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
 			}
 			else if(current_obj instanceof ElementState){
@@ -141,8 +109,6 @@ public class Crawler {
 				}
 
 				performAction(action, last_element, browser.getDriver());
-				browser.waitForPageToLoad();
-				Timing.pauseThread(1000);
 
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -161,7 +127,7 @@ public class Crawler {
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				log.warn("crawling loading animation");
-				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
+				BrowserUtils.getLoadingAnimation(browser, host_channel);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -172,7 +138,9 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, known_visible_elements);
+		List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+		log.warn("ELEMENTS visible during crawlPath :: " + xpath_list.size());
+		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
 
 		return browser_service.buildPage(browser, visible_elements);
 	}
@@ -190,64 +158,26 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<? extends PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		assert browser != null;
 		assert path_keys != null;
 
-		PathObject last_obj = null;
-		List<PathObject> updated_path_objects = new ArrayList<PathObject>();
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-		//Ensure Order path objects
-		for(String path_obj_key : path_keys){
-			for(PathObject obj : path_objects){
-				if(obj.getKey().equals(path_obj_key)){
-					ordered_path_objects.add(obj);
-				}
-			}
-		}
-		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
-		//scrub path objects for duplicates
-		for(PathObject obj : ordered_path_objects){
-			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
-				last_path_obj = obj;
-				reduced_path_obj.add(obj);
-			}
-		}
-		ordered_path_objects = reduced_path_obj;
-		updated_path_objects.addAll(ordered_path_objects);
-
 		ElementState last_element = null;
-
-		//log.warn("getting expected page value");
-		//boolean screenshot_matches = false;
-		//check if page is the same as expected.
-		PageState expected_page  = null;
-		String init_url = null;
+		PathObject last_obj = null;
+		PageState expected_page = null;
 		
-		//find first page
-		for(PathObject obj : ordered_path_objects){
-			if(obj instanceof PageState){
-				expected_page = ((PageState)obj);
-				init_url = expected_page.getUrl();
-				break;
-			}
-		}
-	
-		log.warn("navigating to url :: " + init_url);
-		browser.navigateTo(init_url);
-
+		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		
+		log.warn("crawling partial path :: " + ordered_path_objects);
 		for(PathObject current_obj: ordered_path_objects){
 			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
 			if(current_obj instanceof PageState){
 				log.warn("current object type :: " + current_obj.getClass().getName() + "   ;;   "+current_obj.getType());
 				expected_page = (PageState)current_obj;
 
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				}
+				log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -257,16 +187,13 @@ public class Crawler {
 				Action action = (Action)current_obj;
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
-					action = action_repo.save(action);
+					action_repo.save(action);
 				}
 				else{
 					action = action_record;
 				}
 
 				performAction(action, last_element, browser.getDriver());
-				browser.waitForPageToLoad();
-				Timing.pauseThread(1000);
-
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
 				browser.setYScrollOffset(p.getY());
@@ -280,10 +207,9 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, init_url);
+				BrowserUtils.getLoadingAnimation(browser, host_channel);
 			}
 			else if(current_obj instanceof PageAlert){
 				log.debug("Current path node is a PageAlert");
@@ -310,52 +236,18 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		assert browser != null;
 		assert keys != null;
 
 		ElementState last_element = null;
 		PathObject last_obj = null;
-		//boolean screenshot_matches = false;
-		//check if page is the same as expected.
-
-		List<String> path_keys = new ArrayList<String>(keys);
-		List<PathObject> path_objects = new ArrayList<PathObject>(path_object_list);
-
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-		//Ensure Order path objects
-		for(String path_obj_key : path_keys){
-			for(PathObject obj : path_objects){
-				if(obj.getKey().equals(path_obj_key)){
-					ordered_path_objects.add(obj);
-				}
-			}
-		}
-
-		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
-		//scrub path objects for duplicates
-		for(PathObject obj : ordered_path_objects){
-			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
-				last_path_obj = obj;
-				reduced_path_obj.add(obj);
-			}
-		}
-		ordered_path_objects = reduced_path_obj;
-		path_objects = new ArrayList<PathObject>(ordered_path_objects);
-
 		PageState expected_page = null;
 
-		for(PathObject obj : path_objects){
-			if(obj instanceof PageState){
-				expected_page = ((PageState)obj);
-				break;
-			}
-		}
+		List<String> path_keys = new ArrayList<String>(keys);
+		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 
-		browser.navigateTo(expected_page.getUrl());
-		//TODO: check for continuously animated elements
-
+		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
 
 		String last_url = null;
 		int current_idx = 0;
@@ -364,11 +256,9 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				}
+				log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -382,10 +272,10 @@ public class Crawler {
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
 
-				log.warn("seting last url to redirect url :: " + last_url);
+				log.warn("setting last url to redirect url :: " + last_url);
 			}
 			else if(current_obj instanceof PageLoadAnimation){
-				BrowserUtils.getLoadingAnimation(browser, host_channel, expected_page.getUrl());
+				BrowserUtils.getLoadingAnimation(browser, host_channel);
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -395,50 +285,42 @@ public class Crawler {
 				Action action = (Action)current_obj;
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
-					action = action_repo.save(action);
+					action_repo.save(action);
 				}
 				else{
 					action = action_record;
 				}
 
 				performAction(action, last_element, browser.getDriver());
+
 				//check for page alert presence
 				Alert alert = browser.isAlertPresent();
 				if(alert != null){
 					log.warn("Alert was encountered!!!");
 					PageAlert page_alert = new PageAlert(expected_page, "dismiss", alert.getText());
 					path_keys.add(page_alert.getKey());
-					path_objects.add(page_alert);
+					ordered_path_objects.add(page_alert);
 					current_idx++;
 				}
 				else{
-					if((current_idx < path_objects.size()-1
-							&& !path_objects.get(current_idx+1).getKey().contains("redirect")
-							&& !path_objects.get(current_idx+1).getKey().contains("elementstate"))
-							|| current_idx == path_objects.size()-1){
+					if((current_idx < ordered_path_objects.size()-1
+							&& !ordered_path_objects.get(current_idx+1).getKey().contains("redirect")
+							&& !ordered_path_objects.get(current_idx+1).getKey().contains("elementstate"))
+							|| (current_idx == ordered_path_objects.size()-1 && !last_url.equals(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl())))){
 						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
 						if(redirect.getUrls().size() > 2){
-							log.warn("transition with states found :: " + redirect.getUrls().size());
-							//browser.waitForPageToLoad();
-							log.warn("#########################################################################");
-							log.warn("adding redirect object to path");
-							log.warn("#########################################################################");
-							//create and transition for page state
-							if(current_idx == path_objects.size()-1){
+							if(current_idx == ordered_path_objects.size()-1){
 								path_keys.add(redirect.getKey());
-								path_objects.add(redirect);
+								path_objects_explored.add(redirect);
 							}
-							else if(current_idx < path_objects.size()-1){
+							else if(current_idx < ordered_path_objects.size()-1){
 								path_keys.add(current_idx+1, redirect.getKey());
-								path_objects.add(current_idx+1, redirect);
+								path_objects_explored.add(current_idx+1, redirect);
 							}
 							current_idx++;
 						}
 					}
-
-					browser.waitForPageToLoad();
-					Timing.pauseThread(1000);
 
 					Point p = browser.getViewportScrollOffset();
 					browser.setXScrollOffset(p.getX());
@@ -456,7 +338,7 @@ public class Crawler {
 
 		if(path.getPathKeys().size() != path_keys.size()){
 			path.setPathKeys(path_keys);
-			path.setPathObjects(path_objects);
+			path.setPathObjects(path_objects_explored);
 		}
 	}
 
@@ -466,7 +348,7 @@ public class Crawler {
 	 *
 	 * @return whether action was able to be performed on element or not
 	 */
-	public static void performAction(Action action, ElementState elem, WebDriver driver){
+	public static void performAction(Action action, ElementState elem, WebDriver driver) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
 		actionFactory.execAction(element, action.getValue(), action.getName());
@@ -489,30 +371,36 @@ public class Crawler {
 		int tries = 0;
 		Browser browser = null;
 		Map<Integer, ElementState> visible_element_map = new HashMap<>();
-		List<ElementState> known_visible_elements = new ArrayList<>();
-		
+		boolean no_such_element_exception = false;
 		do{
 			try{
 				log.warn("setting up browser :: " + browser_name);
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
-				
+				if(!no_such_element_exception){
+					no_such_element_exception = false;
+					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
+					browser.navigateTo(expected_page.getUrl());
+
+					crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
+				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
-				
+				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 				if(!browser_url.equals(last_page_state.getUrl())){
-					PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host, browser_url);
 					if(loading_animation != null){
 						path.getPathKeys().add(loading_animation.getKey());
 						path.getPathObjects().add(loading_animation);
 					}
 				}
-				
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, known_visible_elements);
-
-				result_page = browser_service.buildPage(browser, visible_elements);
+								
+				//verify that screenshot does not match previous page
+				List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+    			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
+			
+				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
+				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test ");
 				//e.printStackTrace();
@@ -522,10 +410,11 @@ public class Crawler {
 			catch (NoSuchElementException e){
 				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
 				//e.printStackTrace();
+				//no_such_element_exception = true;
 			}
 			catch (WebDriverException e) {
 				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				e.printStackTrace();
+				//e.printStackTrace();
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {
@@ -536,7 +425,7 @@ public class Crawler {
 				e.printStackTrace();
 			}
 			finally{
-				if(browser != null){
+				if(browser != null && !no_such_element_exception){
 					browser.close();
 				}
 			}
@@ -590,89 +479,5 @@ public class Crawler {
 			tries++;
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
-	}
-
-	public void crawlPartialPath(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host, ElementState last_element) throws GridException, IOException {
-		assert browser != null;
-		assert path_keys != null;
-
-		List<PathObject> ordered_path_objects = new ArrayList<PathObject>();
-		//Ensure Order path objects
-		for(String path_obj_key : path_keys){
-			for(PathObject obj : path_objects){
-				if(obj.getKey().equals(path_obj_key)){
-					ordered_path_objects.add(obj);
-				}
-			}
-		}
-		PathObject last_path_obj = null;
-		List<PathObject> reduced_path_obj = new ArrayList<PathObject>();
-		//scrub path objects for duplicates
-		for(PathObject obj : ordered_path_objects){
-			if(last_path_obj == null || !obj.getKey().equals(last_path_obj.getKey())){
-				last_path_obj = obj;
-				reduced_path_obj.add(obj);
-			}
-		}
-		ordered_path_objects = reduced_path_obj;
-
-		log.warn("getting expected page value");
-		//boolean screenshot_matches = false;
-		//check if page is the same as expected.
-		PageState expected_page  = null;
-
-		PathObject last_obj = null;
-		for(PathObject current_obj: ordered_path_objects){
-			log.warn("crawl current OBJ  ----   "+current_obj.getType());
-			if(current_obj instanceof PageState){
-				expected_page = (PageState)current_obj;
-
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				}
-			}
-			else if(current_obj instanceof ElementState){
-				last_element = (ElementState) current_obj;
-			}
-			//String is action in this context
-			else if(current_obj instanceof Action){
-				Action action = (Action)current_obj;
-				Action action_record = action_repo.findByKey(action.getKey());
-				if(action_record==null){
-					action = action_repo.save(action);
-				}
-				else{
-					action = action_record;
-				}
-
-				performAction(action, last_element, browser.getDriver());
-				browser.waitForPageToLoad();
-				Timing.pauseThread(1000);
-
-				Point p = browser.getViewportScrollOffset();
-				browser.setXScrollOffset(p.getX());
-				browser.setYScrollOffset(p.getY());
-			}
-			else if(current_obj instanceof Redirect){
-				Redirect redirect = (Redirect)current_obj;
-
-				//if redirect is preceded by a page state or nothing then initiate navigation
-				if(last_obj == null || last_obj instanceof PageState){
-					browser.navigateTo(redirect.getStartUrl());
-				}
-				//if redirect follows an action then watch page transition
-				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host);
-				//browser.waitForPageToLoad();
-			}
-			else if(current_obj instanceof PageAlert){
-				log.debug("Current path node is a PageAlert");
-				PageAlert alert = (PageAlert)current_obj;
-				alert.performChoice(browser.getDriver());
-			}
-
-			last_obj = current_obj;
-		}
 	}
 }

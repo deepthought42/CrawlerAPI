@@ -105,6 +105,10 @@ public class Action implements Persistable, PathObject{
 		this.type = type;
 	}
 	
+	public Long getId() {
+		return id;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

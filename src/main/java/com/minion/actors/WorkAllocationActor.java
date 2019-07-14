@@ -72,7 +72,6 @@ public class WorkAllocationActor extends AbstractActor  {
 
 					if(acct_message.getData() instanceof ExploratoryPath ||
 							acct_message.getData() instanceof URL){
-						String browser_name = acct_message.getOptions().get("browser").toString();
 						Message<?> msg = acct_message.clone();
 
 						if(acct_message.getData() instanceof ExploratoryPath){

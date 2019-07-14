@@ -11,7 +11,7 @@ import com.minion.aws.UploadObjectSingleOperation;
 @Service
 public class ScreenshotUploadService {
 
-	public static Future<String> uploadPageStateScreenshot(BufferedImage image, String host, String checksum){
+	public static Future<String> uploadPageStateScreenshot(BufferedImage image, String host, String checksum) {
 		return CompletableFuture.supplyAsync(() -> UploadObjectSingleOperation.saveImageToS3(image, host, checksum));
 	}
 }

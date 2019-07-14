@@ -23,7 +23,6 @@ public class DeepthoughtApi {
 	private static Logger log = LoggerFactory.getLogger(DeepthoughtApi.class);
 
 	public static void predict(Form form) throws UnsupportedOperationException, IOException{
-
 		ObjectMapper mapper = new ObjectMapper();
 
         //Object to JSON in String

@@ -1,5 +1,7 @@
 package services;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,14 +13,34 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.junit.Test;
+import org.openqa.selenium.Dimension;
 
 import com.minion.api.DomainController;
+import com.minion.browsing.Browser;
 import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.services.BrowserService;
 
 public class BrowserServiceTest {
+	
+	@Test
+	public void isElementVisibleInPanel(){
+		Browser browser = new Browser();
+		browser.setXScrollOffset(0);
+		browser.setYScrollOffset(0);
+		browser.setViewportSize(new Dimension(1224, 844));
+		
+		ElementState element = new ElementState();
+		element.setXLocation(1132);
+		element.setYLocation(0);
+		element.setWidth(80);
+		element.setHeight(56);
+		
+		boolean is_visible = BrowserService.isElementVisibleInPane(browser, element);
+		assertTrue(is_visible);
+	}
 	
 	public void verifySetMergeWorks() throws IOException{
 		Set<PageState> page_state = new HashSet<PageState>();
@@ -27,7 +49,6 @@ public class BrowserServiceTest {
 		Set<Action> actions = new HashSet<Action>();
 		actions.add(new Action("Test"));
 		
-		
 		Set<PathObject> path_objects = DomainController.merge(page_state, actions);
 	}
 	
@@ -35,5 +56,20 @@ public class BrowserServiceTest {
 		String checksum = PageState.getFileChecksum(ImageIO.read(new URL("https://s3-us-west-2.amazonaws.com/qanairy/www.terran.us/30550bada37e6c456380737c7dc19abfa22671c20effa861ed57665cf9960e5a/element_screenshot.png")));
 	
 		System.err.println("Checksum :: " + checksum);
+	}
+	
+	@Test
+	public void verifyXpathGenerationWithJsoup(){
+		String html = "<html><body><div><a class='test-class'>link1</a><a class='test-class'>link2</a></div><div id='test-id1'></div><div><span></span></div></body></html>";
+		
+		List<String> visible_elements = BrowserService.getVisibleElementsUsingJSoup(html);
+		for(String xpath : visible_elements){
+			System.err.println(xpath);
+		}
+		assertTrue(visible_elements.size() == 4);
+		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[1]"));
+		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[2]"));
+		assertTrue(visible_elements.contains("//div[contains(@id,\"test-id1\")]"));
+		assertTrue(visible_elements.contains("//div//span"));
 	}
 }

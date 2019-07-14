@@ -123,14 +123,13 @@ public class UrlBrowserActor extends AbstractActor {
 								log.warn("navigating to url :: "+url);
 								browser.navigateTo(url);
 
-								log.warn("getting page transition");
 								redirect = BrowserUtils.getPageTransition(url, browser, host);
-							  	if(redirect != null && (redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls()))){
+							  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
 									path_keys.add(redirect.getKey());
 									path_objects.add(redirect);
 								}
-								log.warn("starting loading animation detection");
-								animation = BrowserUtils.getLoadingAnimation(browser, host, url);
+
+							  	animation = BrowserUtils.getLoadingAnimation(browser, host);
 								if(animation != null){
 									path_keys.add(animation.getKey());
 									path_objects.add(animation);
@@ -157,8 +156,6 @@ public class UrlBrowserActor extends AbstractActor {
 						log.warn("finished creating landing page test");
 
 						test = test_service.save(test, host);
-						log.warn("path keys :: " + test.getPathKeys());
-						log.warn("path objects :: " + test.getPathObjects());
 
 						MessageBroadcaster.broadcastDiscoveredTest(test, host);
 
@@ -176,7 +173,6 @@ public class UrlBrowserActor extends AbstractActor {
 
 								List<String> new_path_keys = new ArrayList<String>(path_keys);
 							  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
-							  	
 							  	
 							  	new_path_keys.add(page_state.getKey());
 							  	new_path_objects.add(page_state);

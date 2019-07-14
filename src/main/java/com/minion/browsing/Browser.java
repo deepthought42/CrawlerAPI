@@ -41,7 +41,6 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -311,11 +310,10 @@ public class Browser {
 	 * @param elem
 	 * @return
 	 * @throws IOException
-	 */
-		
-	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+	 */	
+	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, Browser browser) throws IOException{
 		//calculate element position within screen
-		Point point = getLocationInViewport(elem, x_offset, y_offset);
+		Point point = getLocationInViewport(elem, browser.x_scroll_offset, browser.y_scroll_offset);
 		Dimension dimension = elem.getSize();
 		
 		// Get width and height of the element
@@ -340,10 +338,7 @@ public class Browser {
 		//calculate element position within screen
 		Point point = getLocationInViewport(elem, x_offset, y_offset);
 		
-		int point_x = point.getX();
-		int point_y = point.getY();
-		
-		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
+		return page_screenshot.getSubimage(point.getX(), point.getY(), elem.getWidth(), elem.getHeight());
 	}
 	
 	/**
@@ -491,8 +486,7 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		Timing.pauseThread(2000);
-		
+
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
@@ -500,18 +494,11 @@ public class Browser {
 	
 	public void scrollTo(int x_offset, int y_offset) 
     {
-		log.warn("current screen offset  ::   " +getXScrollOffset() + " , "+getYScrollOffset());
-		log.warn("scrolling to    ("+x_offset + " : "+y_offset+")");
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
-		Timing.pauseThread(2000);
-		
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
-
-		log.warn("after offset :: "+getXScrollOffset() + "  :  "+getYScrollOffset());
-		
     }
 	
 	
@@ -610,19 +597,24 @@ public class Browser {
 	 * @return {@link Point} coordinates
 	 */
 	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
-		log.warn("element location  before math   ::   "+element.getXLocation() + " , "+element.getYLocation());
 		int y_coord = element.getYLocation() - y_offset;
 		int x_coord = element.getXLocation() - x_offset;
-       
+
 		return new Point(x_coord, y_coord);
 	}
 	
 	public static int calculateYCoordinate(int y_offset, Point location){
-		return location.getY() - y_offset;
+		if((location.getY() - y_offset) >= 0){
+			return location.getY() - y_offset;
+		}
+		return y_offset;
 	}
 	
 	public static int calculateXCoordinate(int x_offset, Point location){
-		return location.getX() - x_offset;
+		if((location.getX() - x_offset) >= 0){
+			return location.getX() - x_offset;
+		}
+		return x_offset;
 	}
 
 	/**
@@ -662,8 +654,12 @@ public class Browser {
 	}
 
 	public void moveMouseOutOfFrame() {
-		Actions mouseMoveAction = new Actions(driver).moveByOffset(-1000, 0);
-		mouseMoveAction.build().perform();
+		try{
+			Actions mouseMoveAction = new Actions(driver).moveByOffset(-5000, 0);
+			mouseMoveAction.build().perform();
+		}catch(Exception e){
+			log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
+		}
 	}
 
 	/**

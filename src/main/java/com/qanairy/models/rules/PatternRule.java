@@ -23,6 +23,14 @@ public class PatternRule extends Rule {
 	private String value;
 	private RuleType type;
 	
+	public PatternRule(){}
+	
+	public PatternRule(String pattern){
+		this.value = pattern;
+		setType(RuleType.PATTERN);
+		setKey(super.generateKey());
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -37,13 +45,6 @@ public class PatternRule extends Rule {
 		}
 		return null;
 	}
-	
-	public PatternRule(String pattern){
-		this.value = pattern;
-		setType(RuleType.PATTERN);
-		setKey(super.generateKey());
-	}
-
 
 	@Override
 	public void setKey(String key) {

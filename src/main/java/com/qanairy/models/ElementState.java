@@ -43,6 +43,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private int width;
 	private int height;
 	private String inner_html;
+	private String css_selector;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -72,7 +73,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
 			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
-			String inner_html){
+			String inner_html, String screenshot_checksum){
 		assert attributes != null;
 		assert css_map != null;
 		assert xpath != null;
@@ -85,6 +86,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setXpath(xpath);
 		setAttributes(attributes);
 		setScreenshot(screenshot_url);
+		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
 		setCssValues(css_map);
 		setXLocation(x_location);
@@ -92,6 +94,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+		setCssSelector("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
@@ -131,9 +134,11 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setWidth(width);
 		setHeight(height);
 		setInnerHtml(inner_html);
+		setCssSelector("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
+	
 	/**
 	 * Print Attributes for this element in a prettyish format
 	 */
@@ -208,11 +213,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public void setCssValues(Map<String, String> cssValues) {
 		this.cssValues = cssValues;
 	}
-	
-	public long getId(){
-		return this.id;
-	}
-	
+
 	public String getKey() {
 		return this.key;
 	}
@@ -318,6 +319,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		key += this.getText();
 		key += this.getXLocation();
 		key += this.getYLocation();
+		key += this.getWidth();
+		key += this.getHeight();
 		key += this.getInnerHtml();
 		
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
@@ -347,18 +350,21 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	}
 
 
-	public PathObject clone() {
+	public ElementState clone() {
 		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
 		page_elem.setCssValues(this.getCssValues());
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
 		page_elem.setScreenshot(this.getScreenshot());
+		page_elem.setScreenshotChecksum(this.getScreenshotChecksum());
 		page_elem.setText(this.getText());
 		page_elem.setType(this.getType());
 		page_elem.setXpath(this.getXpath());
 		page_elem.setYLocation(this.getYLocation());
 		page_elem.setXLocation(this.getXLocation());
+		page_elem.setWidth(this.getWidth());
+		page_elem.setHeight(this.getHeight());
 		
 		return page_elem;
 	}
@@ -408,5 +414,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public void setInnerHtml(String inner_html) {
 		this.inner_html = inner_html;
+	}
+
+	public String getCssSelector() {
+		return css_selector;
+	}
+
+	public void setCssSelector(String css_selector) {
+		this.css_selector = css_selector;
 	}
 }

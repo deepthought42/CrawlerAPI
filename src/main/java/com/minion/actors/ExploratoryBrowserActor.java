@@ -107,10 +107,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							String page_url = acct_msg.getOptions().get("host").toString();
 
 							result_page = crawler.performPathExploratoryCrawl(browser_name, exploratory_path, page_url);
-							page_state_service.save(result_page);
-
-							//have page checked for landability
-							//Domain domain = domain_repo.findByHost(acct_msg.getOptions().get("host").toString());
 
 							//get page states
 							List<PageState> page_states = new ArrayList<PageState>();
@@ -123,13 +119,12 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							}
 
 							DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
-
-
 							boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
-
+							
 							if(!ExploratoryPath.hasCycle(page_states, result_page, exploratory_path.getPathObjects().size() == 1)
 									&& !isResultAnimatedState){
 								//check if result is an animated image from previous page
+								page_state_service.save(result_page);
 
 								log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 								log.warn("sending test candidate to parent path explorer");
@@ -227,24 +222,5 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		}while((System.currentTimeMillis() - start_ms) < 5000);
 
 		return transition_keys;
-	}
-
-	/**
-	 * Adds Group labeled "form" to test if the test has any elements in it that have form in the xpath
-	 *
-	 * @param test {@linkplain Test} that you want to label
-	 */
-	private void addFormGroupsToPath(Test test) {
-		//check if test has any form elements
-		for(PathObject path_obj: test.getPathObjects()){
-			if(path_obj.getClass().equals(ElementState.class)){
-				ElementState elem = (ElementState)path_obj;
-				if(elem.getXpath().contains("form")){
-					test.addGroup(new Group("form"));
-					test_service.save(test, test.firstPage().getUrl());
-					break;
-				}
-			}
-		}
 	}
 }

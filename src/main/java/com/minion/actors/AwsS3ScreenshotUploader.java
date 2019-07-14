@@ -1,11 +1,16 @@
 package com.minion.actors;
 
+import java.net.URL;
+
+import javax.imageio.ImageIO;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.PageState;
 import com.qanairy.models.message.ElementScreenshotUpload;
 import com.qanairy.services.ElementStateService;
 
@@ -54,6 +59,7 @@ public class AwsS3ScreenshotUploader extends AbstractActor{
 					String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(screenshot_upload.getScreenshot(), screenshot_upload.getPageUrl().getHost(), screenshot_upload.getPageElemKey(), screenshot_upload.getBrowserName());					
 					ElementState page_elem_record = page_element_service.findByKey(screenshot_upload.getPageElemKey());
 					page_elem_record.setScreenshot(viewport_screenshot_url);
+					page_elem_record.setScreenshotChecksum(PageState.getFileChecksum(ImageIO.read(new URL(viewport_screenshot_url))));
 					page_element_service.save(page_elem_record);
 					
 					//tell requester what response is

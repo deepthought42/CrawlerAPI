@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import javax.imageio.ImageIO;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -104,20 +106,19 @@ public class TestCreationActor extends AbstractActor  {
 				    	Test test = null;
 				    	Domain domain = null;
 				    	Map<Integer, ElementState> visible_element_map = new HashMap<>();
-				    	List<ElementState> visible_elements = new ArrayList<>();
-				    	
-				    	do{
+		    			do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
 					    	Browser browser = null;
 
 				    		try{
 				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
+			    				
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
-
-				    			List<ElementState> elements = browser_service.getVisibleElements(browser, browser.getViewportScreenshot(), visible_element_map, visible_elements);
+				    			List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
+				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
 				    			PageState result_page = browser_service.buildPage(browser, elements);
 						    	test = new Test(path_keys, path_objects, result_page, name);
 
@@ -278,8 +279,7 @@ public class TestCreationActor extends AbstractActor  {
 		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element);
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
-		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"));
-		elem.setInnerHtml(element.getAttribute("innerHTML"));
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 
 		elem = page_element_service.save(elem);
 		return elem;

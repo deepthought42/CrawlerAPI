@@ -198,4 +198,8 @@ public class Form {
 	public void setMemoryId(Long memory_id) {
 		this.memory_id = memory_id;
 	}
+	
+	public Long getId() {
+		return id;
+	}
 }

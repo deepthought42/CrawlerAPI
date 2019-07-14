@@ -204,7 +204,7 @@ public class BrowserService {
 				}
 				err = false;
 
-				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) && iter_idx > 1){
+				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) || iter_idx > 1){
 					element_hash.put(remaining_elements.get(0).getXpath(), remaining_elements.get(0));
 					//if element is larger than screen then continue
 

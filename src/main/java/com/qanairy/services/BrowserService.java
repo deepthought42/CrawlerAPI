@@ -229,10 +229,8 @@ public class BrowserService {
 				}
 				element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, element_hash.keySet());
 
-				if(remaining_elements.size() != element_xpaths.size()){
-					if(page_state.getElements().size() > 0){
-						page_states.add(page_state);
-					}		
+				if(remaining_elements.size() != element_xpaths.size() && page_state.getElements().size() > 0){
+					page_states.add(page_state);
 				}
 				
 				iter_idx++;

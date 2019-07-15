@@ -195,7 +195,6 @@ public class BrowserUtils {
 			transition_detected = !new_checksum.equals(last_checksum);
 
 			if( transition_detected ){
-				log.warn("detecting short animation");
 				if(animated_state_checksum_hash.containsKey(new_checksum)){
 					return null;
 				}

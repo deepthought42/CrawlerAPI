@@ -186,7 +186,6 @@ public class BrowserService {
 		}
 
 		// BUILD ALL PAGE STATES
-		log.warn("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		elements_built_successfully = true;
 		int iter_idx=0;
 		boolean err = true;
@@ -195,7 +194,6 @@ public class BrowserService {
 			try{
 				List<ElementState> remaining_elements = new ArrayList<ElementState>(element_xpaths.values());
 				Collections.sort(remaining_elements);
-
 				if(err){
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
@@ -205,18 +203,16 @@ public class BrowserService {
 				err = false;
 
 				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) || iter_idx > 1){
+					log.warn("element is not visible in pane :: "+remaining_elements.get(0).getXpath());
 					element_hash.put(remaining_elements.get(0).getXpath(), remaining_elements.get(0));
-					//if element is larger than screen then continue
 
 					browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
 					BrowserUtils.detectShortAnimation(browser, url);
 					iter_idx=0;
 				}
 
-				log.warn("building page state with elements :: " + remaining_elements.size() + "   :    " +element_xpaths.size());
 				PageState page_state = buildPage(browser, visible_elements);
 				
-				log.warn("page states ::   " + page_states.size());
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
 				}
@@ -225,9 +221,8 @@ public class BrowserService {
 				if(remaining_elements.size() != element_xpaths.size() && page_state.getElements().size() > 0){
 					page_states.add(page_state);
 				}
-				
+
 				iter_idx++;
-				log.warn("element xpaths  :    " + element_xpaths.size());
 			}
 			catch(NullPointerException e){
 				err=true;
@@ -238,11 +233,13 @@ public class BrowserService {
 				e.printStackTrace();
 			}
 			catch(Exception e){
+				log.warn("Exception occurred while building page states :: " + e.getMessage());
 				err=true;
 				//e.printStackTrace();
 			}
 		}
 
+		log.warn("buiding screenshots for all elements");
 		element_xpaths = new HashMap<String, ElementState>();
 		//extract all element screenshots
 		for(PageState page_state : page_states){
@@ -253,7 +250,7 @@ public class BrowserService {
 				element_xpaths.put(built_element.getKey(), built_element);
 			}
 		}
-
+		log.warn("done building element screenshots");
 		error_occurred = false;
 		return page_states;
 	}

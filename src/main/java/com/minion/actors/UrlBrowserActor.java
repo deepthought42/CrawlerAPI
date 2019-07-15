@@ -101,8 +101,11 @@ public class UrlBrowserActor extends AbstractActor {
 							return;
 						}
 						discovery.getExpandedUrls().add(url);
+						discovery.setTotalPathCount(discovery.getTestCount()+1);
 						discovery_service.save(discovery);
-						discovery_service.incrementTotalPathCount(discovery_key);
+						
+						//broadcast discovery
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery);
 
 						String host = ((URL)message.getData()).getHost();
 						String browser_name = message.getOptions().get("browser").toString();

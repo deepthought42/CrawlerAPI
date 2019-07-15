@@ -137,7 +137,7 @@ public class DiscoveryController {
 
 		if(diffInMinutes > 1440){
 			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, 0, 1, 0, DiscoveryStatus.RUNNING);
+			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, 0, 0, 0, DiscoveryStatus.RUNNING);
 
 			acct.addDiscoveryRecord(discovery_record);
 			acct = account_service.save(acct);

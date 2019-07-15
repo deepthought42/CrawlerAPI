@@ -14,9 +14,9 @@ import okhttp3.Response;
 
 
 @Component
-public class SlackBot {
+public class SlackService {
     
-	private static Logger log = LoggerFactory.getLogger(SlackBot.class);
+	private static Logger log = LoggerFactory.getLogger(SlackService.class);
 
     @Value("${slackBotToken}")
     private String slackToken;
@@ -26,16 +26,16 @@ public class SlackBot {
         return slackToken;
     }
     
-    public void sendMessage(String channel_id, String message) throws IOException {
+    public void sendMessage(String hook_url, String message) throws IOException {
+    	
     	// https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
-    	String url = System.getenv("SLACK_WEBHOOK_URL");
 
     	Payload payload = Payload.builder()
     	  .text(message)
     	  .build();
 
     	Slack slack = Slack.getInstance();
-    	Response response = slack.send(url, payload);
+    	Response response = slack.send(hook_url, payload);
     	// response.code, response.message, response.body
     }
 }

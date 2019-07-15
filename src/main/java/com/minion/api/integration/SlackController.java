@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.seratch.jslack.common.http.SlackHttpClient;
 import com.minion.api.exception.InvalidApiKeyException;
 import com.qanairy.integrations.SlackBot;
+import com.qanairy.integrations.SlackService;
 import com.qanairy.models.Account;
 import com.qanairy.models.repository.AccountRepository;
 
@@ -44,21 +46,16 @@ public class SlackController {
     		throw new InvalidApiKeyException("Invalid API key");
     	}
     	
-		SlackBot bot = new SlackBot();
-		bot.getSlackBot();
+		SlackHttpClient client = new SlackHttpClient();
+		client.postForm(url, formBody)
 		/* UNCOMMENT WHEN READY TO HANDLE SUBSCRIPTIONS
 		 
     	if(subscription_service.hasExceededSubscriptionTestRunsLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
     	*/
-		
-		Date start_date = new Date();
-		long start = System.currentTimeMillis();
-    	long end = System.currentTimeMillis();
-    	
-    	long time_in_sec = (end-start)/1000;
-    	
-    	
+		SlackService service = new SlackService();
+		//send welcome to qanairy meesage
+		service.sendMessage(hook_url, "Welcome to Qanairy");
 	}
 }

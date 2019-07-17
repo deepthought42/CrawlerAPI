@@ -17,6 +17,7 @@ import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.DomainAction;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DomainActionMessage;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DiscoveryRecordService;
@@ -107,6 +108,18 @@ public class DiscoveryActor extends AbstractActor{
 						return;
 					}
 
+				})
+				.match(PathMessage.class, message -> {
+					final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+					ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+
+					PathMessage path_message = msg.clone();
+
+					form_discoverer.tell(path_message, getSelf() );
+					path_expansion_actor.tell(path_message, getSelf() );
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

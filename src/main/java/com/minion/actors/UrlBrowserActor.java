@@ -181,7 +181,7 @@ public class UrlBrowserActor extends AbstractActor {
 							  	new_path_keys.add(page_state.getKey());
 							  	new_path_objects.add(page_state);
 
-								PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), discovery, message.getAccountKey(), message.getOptions());
+								PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), discovery, message.getOptions());
 
 								//send message to animation detection actor
 								animation_actor.tell(path_message, getSelf() );
@@ -253,9 +253,6 @@ public class UrlBrowserActor extends AbstractActor {
 
 					test_service.save(test, host);
 
-					//Tell discovery actor about test
-					message.getDiscoveryActor()
-					
 					MessageBroadcaster.broadcastDiscoveredTest(test, host);
 
 					DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
@@ -276,8 +273,8 @@ public class UrlBrowserActor extends AbstractActor {
 						  	new_path_keys.add(page_state.getKey());
 						  	new_path_objects.add(page_state);
 
-							PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), discovery, message.getAccountKey(), message.getOptions());
-
+							PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor());
+							
 							//send message to animation detection actor
 							animation_actor.tell(path_message, getSelf() );
 						}

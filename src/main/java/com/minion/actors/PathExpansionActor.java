@@ -499,7 +499,7 @@ public class PathExpansionActor extends AbstractActor {
 			
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
-				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscovery(), path.getAccountKey(), path.getOptions());
+				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscovery(), path.getOptions());
 
 				if(!is_landing_page_test){
 					new_path.getKeys().add(last_page.getKey());

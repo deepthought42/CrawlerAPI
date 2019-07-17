@@ -72,7 +72,7 @@ public class AnimationDetectionActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, msg -> {
+			.match(PathMessage.class, msg -> {
 					boolean err = false;
 					do{
 						err = false;
@@ -91,15 +91,10 @@ public class AnimationDetectionActor extends AbstractActor{
 								page_state_service.save(first_page_state);
 							}
 
-							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-							ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-
-							PathMessage path_message = msg.clone();
-
-							form_discoverer.tell(path_message, getSelf() );
-							path_expansion_actor.tell(path_message, getSelf() );
+							
+							//Tell discovery actor about test
+							msg.getDiscoveryActor().tell(msg.clone(), getSelf());
+							
 						}catch(Exception e){
 							log.warning("exception occurred during Animation Detection.....  "+e.getMessage());
 							err = true;

@@ -2,17 +2,16 @@ package com.qanairy.models.message;
 
 import java.net.URL;
 
-import com.minion.actors.DiscoveryActor;
 import com.qanairy.services.BrowserType;
 
-import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
 
 public class UrlMessage {
 	private URL url;
-	private AbstractActor discovery_actor;
+	private ActorRef discovery_actor;
 	private BrowserType browser;
 	
-	public UrlMessage(DiscoveryActor discovery_actor, URL url, BrowserType browser){
+	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser){
 		setDiscoveryActor(discovery_actor);
 		setUrl(url);
 		setBrowser(browser);
@@ -26,11 +25,11 @@ public class UrlMessage {
 		this.url = url;
 	}
 
-	public AbstractActor getDiscoveryActor() {
+	public ActorRef getDiscoveryActor() {
 		return discovery_actor;
 	}
 
-	public void setDiscoveryActor(DiscoveryActor discovery_actor) {
+	public void setDiscoveryActor(ActorRef discovery_actor) {
 		this.discovery_actor = discovery_actor;
 	}
 

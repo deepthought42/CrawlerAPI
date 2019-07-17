@@ -1678,7 +1678,7 @@ public class BrowserService {
 				}
 			}
 			count++;
-		}while(err && count < 10);
+		}while(err && count < 50);
 		
 		return screenshot_url;
 	}

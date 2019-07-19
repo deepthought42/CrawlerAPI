@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.PathStatus;
+import com.qanairy.models.enums.BrowserType;
 
 import akka.actor.ActorRef;
 
@@ -14,12 +15,14 @@ public class PathMessage {
 	private List<PathObject> path_objects;
 	private ActorRef discovery_actor;	
 	private PathStatus status;
+	private BrowserType browser;
 	
-	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status){
+	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser){
 		setKeys(keys);
 		setPathObjects(path_objects);
 		setDiscoveryActor(discovery_actor);
 		setStatus(status);
+		setBrowser(browser);
 	}
 
 	public List<String> getKeys() {
@@ -39,7 +42,7 @@ public class PathMessage {
 	}
 	
 	public PathMessage clone(){
-		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus());
+		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser());
 	}
 
 	public ActorRef getDiscoveryActor() {
@@ -56,5 +59,13 @@ public class PathMessage {
 
 	private void setStatus(PathStatus status) {
 		this.status = status;
+	}
+
+	public BrowserType getBrowser() {
+		return browser;
+	}
+
+	public void setBrowser(BrowserType browser) {
+		this.browser = browser;
 	}
 }

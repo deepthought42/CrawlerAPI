@@ -137,7 +137,9 @@ public class DiscoveryActor extends AbstractActor{
 						path_expansion_actor.tell(path_message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
-						
+						final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
+						exploratory_browser_actor.tell(message, getSelf() );
 					}
 					
 					discovery_record.setLastPathRanAt(new Date());

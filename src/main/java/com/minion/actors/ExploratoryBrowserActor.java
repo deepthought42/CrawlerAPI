@@ -21,11 +21,9 @@ import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ExploratoryPath;
-import com.qanairy.models.Group;
-import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.Test;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.EmailService;
@@ -62,9 +60,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 	@Autowired
 	private PageStateService page_state_service;
-
-	@Autowired
-	private TestService test_service;
 
 	@Autowired
 	private Crawler crawler;
@@ -157,6 +152,69 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						//PLACE CALL TO LEARNING SYSTEM HERE
 						//Brain.learn(test, test.getIsUseful());
 					}
+
+					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
+
+				})
+				.match(PathMessage.class, message-> {
+					String browser_name = message.getBrowser().toString();
+					boolean candidate_identified = false;
+
+					if(message.getPathObjects() != null){
+						PageState result_page = null;
+
+						String page_url = acct_msg.getOptions().get("host").toString();
+
+						result_page = crawler.performPathExploratoryCrawl(browser_name, message, page_url);
+
+						//get page states
+						List<PageState> page_states = new ArrayList<PageState>();
+						for(PathObject path_obj : message.getPathObjects()){
+							if(path_obj instanceof PageState){
+								PageState page_state = (PageState)path_obj;
+								page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
+								page_states.add(page_state);
+							}
+						}
+
+						DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+						boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
+						
+						if(!ExploratoryPath.hasCycle(page_states, result_page, exploratory_path.getPathObjects().size() == 1)
+								&& !isResultAnimatedState){
+							//check if result is an animated image from previous page
+							page_state_service.save(result_page);
+
+							log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+							log.warn("sending test candidate to parent path explorer");
+							candidate_identified = true;
+					  		//crawl test and get result
+					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
+							//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+
+							TestCandidateMessage msg = new TestCandidateMessage(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), discovery_record, acct_msg.getAccountKey(), result_page, acct_msg.getOptions());
+							ActorRef parent_path_explorer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									.props("parentPathExplorer"), "parent_path_explorer"+UUID.randomUUID());
+							parent_path_explorer.tell(msg, getSelf());
+						}
+
+						if(!candidate_identified){
+							//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(acct_msg.getOptions().get("discovery_key").toString(), 1);
+							//send email if this is the last test
+					  		if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
+						    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests", "The test has finished running");
+							}
+							try{
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+						  	}catch(Exception e){
+						  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
+							}
+						}
+					}
+
+
+					//PLACE CALL TO LEARNING SYSTEM HERE
+					//Brain.learn(test, test.getIsUseful());
 
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 

@@ -72,14 +72,14 @@ public class AnimationDetectionActor extends AbstractActor{
 					do{
 						err = false;
 						try{
-							Browser browser = BrowserConnectionFactory.getConnection(msg.getDiscovery().getBrowserName(), BrowserEnvironment.DISCOVERY);
+							Browser browser = BrowserConnectionFactory.getConnection(msg.getBrowser(), BrowserEnvironment.DISCOVERY);
 							PageState first_page_state = PathUtils.getFirstPage(msg.getPathObjects());
 							
-							log.warning("navigating to url :: " + msg.getDiscovery().getDomainUrl());
+							log.warning("navigating to url :: " + first_page_state.getUrl());
 							browser.navigateTo(first_page_state.getUrl());
-							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
+							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, first_page_state.getUrl());
 
-							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
+							Animation animation = BrowserUtils.getAnimation(browser, first_page_state.getUrl());
 							if(animation.getImageUrls().size() > 1){
 								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
 								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());

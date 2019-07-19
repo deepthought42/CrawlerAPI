@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
@@ -25,6 +26,7 @@ import com.qanairy.services.AccountService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.TestService;
+import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -137,18 +139,26 @@ public class DiscoveryActor extends AbstractActor{
 						path_expansion_actor.tell(path_message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
+						//get last page state
+						PageState page_state = PathUtils.getLastPageState(message.getPathObjects());
+						
+						discovery_service.incrementTotalPathCount(discovery_record.getKey());
+						if(discovery_record.getExpandedPageStates().contains(page_state.getKey())){
+							return;
+						}
+						else{
+							discovery_record.setLastPathRanAt(new Date());
+							discovery_record.addExpandedPageState(page_state.getKey());
+							discovery_record = discovery_service.save(discovery_record);
+						}
+						
+						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+						
 						final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
 						exploratory_browser_actor.tell(message, getSelf() );
 					}
-					
-					discovery_record.setLastPathRanAt(new Date());
-					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-					discovery_record = discovery_service.save(discovery_record);
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-					
-					
-					
 				})
 				.match(Test.class, test -> {
 					discovery_service.incrementTestCount(discovery_record.getKey());

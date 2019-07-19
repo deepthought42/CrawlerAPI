@@ -224,75 +224,17 @@ public class PathExpansionActor extends AbstractActor {
 				}
 			}
 		})
-		.match(PageStateMessage.class, message -> {
-			log.warn("page state message encountered : "+message.getPageState());
-			List<ExploratoryPath> exploratory_paths = expandPath(message.getPageState());
-
-
-			DiscoveryRecord discovery_record = discovery_service.increaseTotalPathCount(message.getDiscovery().getKey(), exploratory_paths.size());
-			if(discovery_record.getExpandedPageStates().contains(message.getPageState().getKey())){
-				return;
-			}
-			discovery_record.addExpandedPageState(message.getPageState().getKey());
-			discovery_record = discovery_service.save(discovery_record);
-
-			log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-
-			try{
-				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-		  	}catch(Exception e){
-
-			}
-
-			final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-
-			for(ExploratoryPath expanded : exploratory_paths){
-				Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-
-				work_allocator.tell(expanded_path_msg, getSelf() );
-			}
-
-		})
 		.match(PathMessage.class, message -> {
 			log.warn("expanding path  ::  "+message.getPathObjects().size());
-	  		//get last page state
-			PageState page_state = null;
-			for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
-				if(message.getPathObjects().get(idx) instanceof PageState){
-					page_state = (PageState)message.getPathObjects().get(idx);
-					break;
-				}
-			}
 
 			//get sublist of path from beginning to page state index
 			List<ExploratoryPath> exploratory_paths = expandPath(message);
-
 			log.warn("total path expansions found :: "+exploratory_paths.size());
-			DiscoveryRecord discovery_record = discovery_service.increaseTotalPathCount(message.getDiscovery().getKey(), exploratory_paths.size());
-			if(discovery_record.getExpandedPageStates().contains(page_state.getKey())){
-				return;
-			}
-			discovery_record.addExpandedPageState(page_state.getKey());
-			discovery_record = discovery_service.save(discovery_record);
-
-			log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-
-			try{
-				MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-		  	}catch(Exception e){
-
-			}
-
-			final ActorRef work_allocator = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 
 			for(ExploratoryPath expanded : exploratory_paths){
-				Message<ExploratoryPath> expanded_path_msg = new Message<ExploratoryPath>(message.getAccountKey(), expanded, message.getOptions());
-
-				work_allocator.tell(expanded_path_msg, getSelf() );
+				PathMessage path = new PathMessage(expanded.getPathKeys(), expanded.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXPANDED, message.getBrowser());
+				message.getDiscoveryActor().tell(path, getSelf());
 			}
-
 		})
 		.match(MemberUp.class, mUp -> {
 			log.info("Member is Up: {}", mUp.member());

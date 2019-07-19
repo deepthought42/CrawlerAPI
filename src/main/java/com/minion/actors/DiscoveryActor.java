@@ -12,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.DomainAction;
+import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DomainActionMessage;
 import com.qanairy.models.message.PathMessage;
@@ -22,6 +24,7 @@ import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -37,6 +40,10 @@ public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
+	private static DiscoveryRecord discovery_record;
+	
+	private static ActorRef domain_actor;
+	
 	@Autowired
 	private ActorSystem actor_system;
 	
@@ -101,25 +108,53 @@ public class DiscoveryActor extends AbstractActor{
 					}
 				})
 				.match(UrlMessage.class, message -> {
+					discovery_service.incrementTotalPathCount(discovery_record.getKey());
 					//broadcast discovery
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery);
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
-					if(discovery.getExpandedUrls().contains(url)){
-						return;
+					if(!discovery_record.getExpandedUrls().contains(message.getUrl().toString())){
+						discovery_record.addExpandedPageState(message.getUrl().toString());
+						
+						//send message to urlBrowserActor
+						final ActorRef url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
+						//final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
+						url_browser_actor.tell(message, getSelf() );
+						
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 					}
-
 				})
 				.match(PathMessage.class, message -> {
-					final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-					ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+					if(message.getStatus().equals(PathStatus.READY)){
+						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 
-					PathMessage path_message = msg.clone();
+						PathMessage path_message = message.clone();
 
-					form_discoverer.tell(path_message, getSelf() );
-					path_expansion_actor.tell(path_message, getSelf() );
+						form_discoverer.tell(path_message, getSelf() );
+						path_expansion_actor.tell(path_message, getSelf() );
+					}
+					else if(message.getStatus().equals(PathStatus.EXPANDED)){
+						
+					}
 					
+					discovery_record.setLastPathRanAt(new Date());
+					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+					discovery_record = discovery_service.save(discovery_record);
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					
+					
+					
+				})
+				.match(Test.class, test -> {
+					discovery_service.incrementTestCount(discovery_record.getKey());
+					//broadcast discovery
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
+					//send message to Domain Actor
+					domain_actor.tell(test, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

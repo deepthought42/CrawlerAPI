@@ -1,16 +1,11 @@
 package com.minion.actors;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;

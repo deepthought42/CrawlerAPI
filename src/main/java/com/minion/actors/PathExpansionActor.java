@@ -32,7 +32,6 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.ActionOrderOfOperations;
-import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.structs.Message;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
@@ -43,10 +42,10 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryStatus;
+import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PageStateMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.PageStateService;
@@ -76,9 +75,6 @@ public class PathExpansionActor extends AbstractActor {
 
 	@Autowired
 	private BrowserService browser_service;
-
-	@Autowired
-	private ElementRuleExtractor extractor;
 
 	private Map<String, ElementState> expanded_elements;
 
@@ -130,7 +126,6 @@ public class PathExpansionActor extends AbstractActor {
 		    	}
 		    	*/
 
-				
 				if(!discovery_record.getExpandedPageStates().contains(test.getResult().getKey())){
 					log.warn("Page state has not been expanded yet.");
 					//get page states
@@ -499,7 +494,7 @@ public class PathExpansionActor extends AbstractActor {
 			
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
-				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscovery(), path.getOptions());
+				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED);
 
 				if(!is_landing_page_test){
 					new_path.getKeys().add(last_page.getKey());

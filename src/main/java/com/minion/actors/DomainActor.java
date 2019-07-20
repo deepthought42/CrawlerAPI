@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
-import com.minion.structs.Message;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DomainAction;
 import com.qanairy.models.message.DiscoveryActionMessage;
@@ -89,7 +88,6 @@ public class DomainActor extends AbstractActor{
 					test_service.save(test, host);
 
 					MessageBroadcaster.broadcastDiscoveredTest(test, host);
-
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

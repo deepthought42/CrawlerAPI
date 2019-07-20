@@ -170,9 +170,7 @@ public class PathExpansionActor extends AbstractActor {
 
 							log.warn("is result page landable  ::    "+result_page.isLandable());
 							if(result_page.isLandable()){
-								try{
-									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-							  	}catch(Exception e){}
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 								log.warn("sending url to work allocator");
 								Message<URL> url_msg = new Message<URL>(message.getAccountKey(), new URL(result_page.getUrl()), message.getOptions());

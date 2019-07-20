@@ -600,10 +600,12 @@ public class Crawler {
 			
 				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
-			}catch(NullPointerException e){
+			}
+			catch(NullPointerException e){
 				log.info("Error happened while exploratory actor attempted to crawl test ");
 				//e.printStackTrace();
-			} catch (GridException e) {
+			} 
+			catch (GridException e) {
 				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
@@ -616,10 +618,12 @@ public class Crawler {
 				//e.printStackTrace();
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
-			} catch (NoSuchAlgorithmException e) {
+			} 
+			catch (NoSuchAlgorithmException e) {
 				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 				//e.printStackTrace();
-			} catch(Exception e) {
+			} 
+			catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
 				e.printStackTrace();
 			}

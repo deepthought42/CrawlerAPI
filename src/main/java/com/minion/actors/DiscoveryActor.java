@@ -25,6 +25,7 @@ import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.EmailService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
@@ -57,6 +58,9 @@ public class DiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private DiscoveryRecordService discovery_service;
+	
+	@Autowired
+	private EmailService email_service;
 	
 	//subscribe to cluster changes
 	@Override
@@ -159,9 +163,21 @@ public class DiscoveryActor extends AbstractActor{
 								  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
 						exploratory_browser_actor.tell(message, getSelf() );
 					}
+					else if(message.getStatus().equals(PathStatus.EXPANDED)){
+						DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(discovery_record.getKey(), 1);
+						
+						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
+					    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "The test has finished running", "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
+						}
+						try{
+							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					  	}catch(Exception e){
+					  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
+						}
+					}
 				})
 				.match(Test.class, test -> {
-					discovery_service.incrementTestCount(discovery_record.getKey());
+			  		DiscoveryRecord discovery_record = discovery_service.incrementTestCount(discovery_record.getKey());
 					//broadcast discovery
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 

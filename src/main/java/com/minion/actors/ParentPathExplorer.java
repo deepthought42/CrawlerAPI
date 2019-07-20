@@ -1,7 +1,5 @@
 package com.minion.actors;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
@@ -23,12 +20,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
-import com.minion.structs.Message;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageLoadAnimation;
@@ -40,15 +34,12 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -63,13 +54,7 @@ public class ParentPathExplorer extends AbstractActor {
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
-	private ActorSystem actor_system;
-
-	@Autowired
 	private PageStateService page_state_service;
-	
-	@Autowired
-	private DiscoveryRecordService discovery_service;
 
 	@Autowired
 	private BrowserService browser_service;
@@ -80,16 +65,11 @@ public class ParentPathExplorer extends AbstractActor {
 	@Autowired
 	private Crawler crawler;
 
-	private ActorRef path_expansion;
-
 	@Override
 	public void preStart() {
 		//subscribe to cluster changes
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 	      MemberEvent.class, UnreachableMember.class);
-
-		path_expansion = actor_system.actorOf(SpringExtProvider.get(actor_system)
-			  .props("pathExpansionActor"), "path_expansion_actor"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -140,6 +120,7 @@ public class ParentPathExplorer extends AbstractActor {
 					ElementState last_element = (ElementState)path_objects.get(last_elem_idx);
 			  		PageState last_page = PathUtils.getLastPageState(path_objects);
 			  		PageState first_page = PathUtils.getFirstPage(path_objects);
+			  		String host = new URL(last_page.getUrl()).getHost();
 			  		
 					boolean results_match = false;
 					boolean error_occurred = false;
@@ -148,13 +129,13 @@ public class ParentPathExplorer extends AbstractActor {
 						try{
 							error_occurred = false;
 
-							browser = BrowserConnectionFactory.getConnection(message.getDiscovery().getBrowserName(), BrowserEnvironment.DISCOVERY);
+							browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 							//crawl path using array of preceding elements\
 							log.warn("Crawling path :: " +path_objects);
 							log.warn("crawling beginning of path :: "+beginning_path_keys);
 							log.warn("navigating to url :: " +first_page.getUrl());
 							browser.navigateTo(first_page.getUrl());
-							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, message.getDiscovery().getDomainUrl());
+							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host);
 
 							//extract parent element
 							String element_xpath = last_element.getXpath();
@@ -184,9 +165,9 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 							//finish crawling using array of elements following last page element
-							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, message.getDiscovery().getDomainUrl());
+							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host);
 
-							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, message.getDiscovery().getDomainUrl());
+							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){
 								parent_end_path_keys.add(loading_animation.getKey());
 								parent_end_path_objects.add(loading_animation);
@@ -240,24 +221,11 @@ public class ParentPathExplorer extends AbstractActor {
 			  		long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
 
-			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getDiscovery().getDomainUrl(), message.getDiscovery().getBrowserName());
-
-			  		Message<Test> test_msg = new Message<Test>(message.getAccountKey(), test, message.getOptions());
+			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), host, message.getBrowser().toString());
 
 			  		if(!test.getSpansMultipleDomains()){
-			  			path_expansion.tell(test_msg, getSelf());
+			  			message.getDiscoveryActor().tell(test, getSelf());
 			  		}
-
-			  		DiscoveryRecord discovery_record = discovery_service.incrementTestCount(message.getDiscovery().getKey());
-
-					//DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(message.getDiscovery().getKey(), 1);
-
-					try{
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-				  	}catch(Exception e){
-				  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
-					}
-					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

@@ -2,8 +2,11 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.net.URL;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -27,10 +30,13 @@ import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.utils.PathUtils;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.TrackMessage;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -61,11 +67,22 @@ public class DiscoveryActor extends AbstractActor{
 	@Autowired
 	private EmailService email_service;
 	
+	private ActorRef url_browser_actor = null;
+	private ActorRef form_discoverer = null;
+	private ActorRef path_expansion_actor = null;	
+			
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
+		url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
+		form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+		path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+
 	}
 
 	//re-subscribe when restart
@@ -103,13 +120,29 @@ public class DiscoveryActor extends AbstractActor{
 						//start a discovery
 						log.info("Sending URL to UrlBrowserActor");
 						
-						final ActorRef url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
-						//final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
-						url_browser_actor.tell(message, getSelf() );
+						UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()) , message.getBrowser());
+						url_browser_actor.tell(url_message, getSelf() );
+						
+						//Fire discovery started event
+				    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+
+						Map<String, String> traits = new HashMap<String, String>();
+				        traits.put("user_id", message.getAccount().getUserId());
+				        traits.put("url", message.getDomain().getUrl());
+				    	traits.put("browser", message.getBrowser().toString());
+				        traits.put("discovery_started", "true");
+				    	traits.put("discovery_key", discovery_record.getKey());
+				        analytics.enqueue(TrackMessage.builder("Started Discovery")
+				    		    .userId(message.getAccount().getUsername())
+				    		    .properties(traits)
+				    		);
+
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
 						//stop all discovery processes
+						actor_system.stop(url_browser_actor);
+						actor_system.stop(path_expansion_actor);
+						actor_system.stop(form_discoverer);
 					}
 				})
 				.match(UrlMessage.class, message -> {
@@ -131,11 +164,7 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(PathMessage.class, message -> {
 					if(message.getStatus().equals(PathStatus.READY)){
-						final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-						ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-
+						
 						PathMessage path_message = message.clone();
 
 						form_discoverer.tell(path_message, getSelf() );

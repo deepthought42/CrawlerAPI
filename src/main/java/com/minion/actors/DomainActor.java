@@ -49,7 +49,7 @@ public class DomainActor extends AbstractActor{
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
 		discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
+				  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart

@@ -1,5 +1,6 @@
 package com.minion.actors;
 
+import java.net.URL;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.FormService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.utils.PathUtils;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
@@ -76,20 +78,21 @@ public class FormDiscoveryActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PathMessage.class, message -> {
-					
 				  	System.err.println("FORM DISCOVERY HAS STARTED");
 					
 					//get first page in path
-		
+				  	PageState last_page = PathUtils.getFirstPage(message.getPathObjects());
+				  	String host = new URL(last_page.getUrl()).getHost();
 				  	Browser browser = null;
 				  	boolean forms_created = false;
 				  	int count = 0;
+				  	
 				  	do{
 				  		
 				  		try{
 				  			System.err.println("Getting browser for form extraction");
-					  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
-					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, message.getDiscovery().getDomainUrl());
+					  		browser = BrowserConnectionFactory.getConnection(message.getBrowser().toString(), BrowserEnvironment.DISCOVERY);
+					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
 					  		
 							PageState page_state = null;
 							for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
@@ -126,7 +129,7 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	page_state_service.save(page_state);
 							  								
 						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
-							  	MessageBroadcaster.broadcastDiscoveredForm(form, message.getOptions().get("host").toString());
+							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);
 						  	}
 						  	System.err.println("FORM DISCOVERY HAS ENDED");
 						  	forms_created = true;

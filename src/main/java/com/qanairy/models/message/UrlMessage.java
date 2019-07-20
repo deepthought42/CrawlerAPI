@@ -1,9 +1,7 @@
 package com.qanairy.models.message;
 
 import java.net.URL;
-
-import com.qanairy.services.BrowserType;
-
+import com.qanairy.models.enums.BrowserType;
 import akka.actor.ActorRef;
 
 public class UrlMessage {

@@ -1,10 +1,12 @@
 package com.qanairy.services;
 
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 
@@ -61,5 +63,9 @@ public class DiscoveryRecordService {
 		discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+path_cnt);
   		discovery_record.setLastPathRanAt(new Date());
   		return discovery_repo.save(discovery_record);
+	}
+
+	public List<Account> getAccounts(String key) {
+		return discovery_repo.getAllAccounts(key);
 	}
 }

@@ -2,8 +2,8 @@ package com.qanairy.models.message;
 
 import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.services.BrowserType;
 
 /**
  * 

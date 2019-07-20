@@ -26,6 +26,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.UrlMessage;
@@ -35,7 +36,6 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.BrowserType;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.utils.BrowserUtils;
 

@@ -3,6 +3,7 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.util.Date;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -11,22 +12,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.minion.api.MessageBroadcaster;
+import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
-import com.qanairy.models.enums.DomainAction;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
-import com.qanairy.models.message.DomainActionMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
-import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -43,9 +42,9 @@ public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
-	private static DiscoveryRecord discovery_record;
+	private static DiscoveryRecord discovery_record = null;
 	
-	private static ActorRef domain_actor;
+	private ActorRef domain_actor;
 	
 	@Autowired
 	private ActorSystem actor_system;
@@ -89,7 +88,7 @@ public class DiscoveryActor extends AbstractActor{
 		return receiveBuilder()
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
-						DiscoveryRecord discovery = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
+						discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
 
 						message.getAccount().addDiscoveryRecord(discovery_record);
 						account_service.save(message.getAccount());
@@ -98,8 +97,8 @@ public class DiscoveryActor extends AbstractActor{
 						domain_service.save(message.getDomain());
 
 						//create new discovery
-						discovery.getExpandedUrls().add(message.getDomain().getUrl());
-						discovery_service.save(discovery);
+						discovery_record.getExpandedUrls().add(message.getDomain().getUrl());
+						discovery_record = discovery_service.save(discovery_record);
 						
 						//start a discovery
 						log.info("Sending URL to UrlBrowserActor");
@@ -107,7 +106,7 @@ public class DiscoveryActor extends AbstractActor{
 						final ActorRef url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 						//final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
-						url_browser_actor.tell(acct_message, getSelf() );
+						url_browser_actor.tell(message, getSelf() );
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
 						//stop all discovery processes
@@ -163,21 +162,22 @@ public class DiscoveryActor extends AbstractActor{
 								  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
 						exploratory_browser_actor.tell(message, getSelf() );
 					}
-					else if(message.getStatus().equals(PathStatus.EXPANDED)){
-						DiscoveryRecord discovery_record = discovery_service.increaseExaminedPathCount(discovery_record.getKey(), 1);
+					else if(message.getStatus().equals(PathStatus.EXAMINED)){
+						discovery_record = discovery_service.increaseExaminedPathCount(discovery_record.getKey(), 1);
 						
 						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
-					    	email_service.sendSimpleMessage(acct_msg.getAccountKey(), "The test has finished running", "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
+							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
+							
+							for(Account account: accounts){
+								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
+							}
 						}
-						try{
-							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-					  	}catch(Exception e){
-					  		log.error("Error sending discovery status from Exploratory Actor :: "+e.getMessage());
-						}
+						
+						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 					}
 				})
 				.match(Test.class, test -> {
-			  		DiscoveryRecord discovery_record = discovery_service.incrementTestCount(discovery_record.getKey());
+			  		discovery_record = discovery_service.incrementTestCount(discovery_record.getKey());
 					//broadcast discovery
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 

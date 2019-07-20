@@ -1,6 +1,9 @@
 package com.minion.actors;
 
+import static com.qanairy.config.SpringExtension.SpringExtProvider;
+
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +20,8 @@ import com.qanairy.models.message.DomainActionMessage;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -34,11 +39,18 @@ public class DomainActor extends AbstractActor{
 	@Autowired
 	private TestService test_service;
 	
+	@Autowired
+	private ActorSystem actor_system;
+	
+	private ActorRef discovery_actor = null;
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
+		discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -71,6 +83,7 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(DiscoveryActionMessage.class, message-> {
 					//pass message along to discovery actor
+					discovery_actor.tell(message, getSelf());
 				})
 				.match(Test.class, test -> {
 					test_service.save(test, host);

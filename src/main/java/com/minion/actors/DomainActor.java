@@ -12,10 +12,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
+import com.qanairy.models.Domain;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DomainAction;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DomainActionMessage;
+import com.qanairy.services.DomainService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -34,6 +36,9 @@ public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private String host = null;
+	
+	@Autowired
+	private DomainService domain_service;
 	
 	@Autowired
 	private TestService test_service;
@@ -85,8 +90,11 @@ public class DomainActor extends AbstractActor{
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(Test.class, test -> {
-					test_service.save(test, host);
-
+					Test test_record = test_service.save(test, host);
+					Domain domain = domain_service.findByHost(host);
+					domain.addTest(test_record);
+					domain_service.save(domain);
+					
 					MessageBroadcaster.broadcastDiscoveredTest(test, host);
 				})
 				.match(MemberUp.class, mUp -> {

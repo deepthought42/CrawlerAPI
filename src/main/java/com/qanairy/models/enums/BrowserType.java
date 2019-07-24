@@ -7,7 +7,7 @@ public enum BrowserType {
 	
 	private String shortName;
 
-	BrowserType (String shortName) {
+	BrowserType(String shortName) {
         this.shortName = shortName;
     }
 
@@ -17,7 +17,7 @@ public enum BrowserType {
     }
 
     @JsonCreator
-    public static BrowserType create (String value) {
+    public static BrowserType create(String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }

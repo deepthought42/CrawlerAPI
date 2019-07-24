@@ -54,7 +54,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	@Autowired
 	private Crawler crawler;
 
-	private static ActorRef parent_path_explorer = null;
+	private ActorRef parent_path_explorer = null;
 	
 	//subscribe to cluster changes
 	@Override

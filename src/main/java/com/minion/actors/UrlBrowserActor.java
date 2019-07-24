@@ -155,7 +155,7 @@ public class UrlBrowserActor extends AbstractActor {
 					  	new_path_keys.add(page_state.getKey());
 					  	new_path_objects.add(page_state);
 
-						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.valueOf(browser_name));
+						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name));
 						
 						//send message to animation detection actor
 						animation_actor.tell(path_message, getSelf() );

@@ -17,7 +17,7 @@ public enum DiscoveryStatus {
     }
 
     @JsonCreator
-    public static DiscoveryStatus create (String value) {
+    public static DiscoveryStatus creat(String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }

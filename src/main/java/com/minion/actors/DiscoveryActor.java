@@ -13,6 +13,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
@@ -36,7 +38,6 @@ import com.segment.analytics.messages.TrackMessage;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -44,6 +45,8 @@ import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
+@Component
+@Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
@@ -69,7 +72,7 @@ public class DiscoveryActor extends AbstractActor{
 	
 	private ActorRef url_browser_actor = null;
 	private ActorRef form_discoverer = null;
-	private ActorRef path_expansion_actor = null;	
+	private ActorRef path_expansion_actor = null;
 			
 	//subscribe to cluster changes
 	@Override
@@ -82,7 +85,6 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 		path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-
 	}
 
 	//re-subscribe when restart
@@ -139,6 +141,9 @@ public class DiscoveryActor extends AbstractActor{
 
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
+						discovery_record.setStatus(DiscoveryStatus.STOPPED);
+						discovery_service.save(discovery_record);
+						
 						//stop all discovery processes
 						actor_system.stop(url_browser_actor);
 						actor_system.stop(path_expansion_actor);

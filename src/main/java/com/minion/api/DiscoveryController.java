@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import com.minion.api.exception.PaymentDueException;
-import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
@@ -32,21 +30,13 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
-import com.qanairy.workmanagement.WorkAllowanceStatus;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
-import akka.pattern.Patterns;
-import scala.concurrent.Future;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
-import akka.util.Timeout;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
@@ -67,9 +57,6 @@ public class DiscoveryController {
 
     @Autowired
     private DomainService domain_service;
-
-    @Autowired
-    private DiscoveryRecordService discovery_service;
     
     @Autowired
     private ActorSystem actor_system;
@@ -107,7 +94,7 @@ public class DiscoveryController {
 	 */
     @PreAuthorize("hasAuthority('start:discovery')")
 	@RequestMapping(path="/start", method = RequestMethod.GET)
-	public void startDiscovery(HttpServletRequest request,
+	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request,
 											   	  		@RequestParam(value="url", required=true) String url)
 										   	  				throws MalformedURLException,
 										   	  						UnknownAccountException,
@@ -127,7 +114,6 @@ public class DiscoveryController {
     	}
     	*/
 
-    	Domain domain = domain_service.findByHost(url);
     	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
 
     	Date now = new Date();
@@ -135,8 +121,10 @@ public class DiscoveryController {
     	if(last_discovery_record != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
-    	String domain_url = domain.getUrl();
-    	String protocol = domain.getProtocol();
+    	//String domain_url = domain.getUrl();
+    	//String protocol = domain.getProtocol();
+
+    	Domain domain = domain_service.findByHost(url);
 
 		if(diffInMinutes > 1440){
 			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
@@ -159,14 +147,14 @@ public class DiscoveryController {
 			ActorRef workAllocationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
 			*/
-			
+
 			if(!domain_actors.containsKey(domain.getUrl())){
 				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 						  .props("domainActor"), "domain_actor"+UUID.randomUUID());
 				domain_actors.put(domain.getUrl(), domain_actor);
 			}
 		    
-			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.valueOf(domain.getDiscoveryBrowserName()));
+			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
 			domain_actors.get(domain.getUrl()).tell(discovery_action_msg, null);
 			/*
 			Timeout timeout = new Timeout(Duration.create(60, "seconds"));
@@ -199,6 +187,8 @@ public class DiscoveryController {
 
         	throw new ExistingDiscoveryFoundException();
         }
+		
+		return last_discovery_record;
 	}
 
 	/**
@@ -224,6 +214,7 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
+    	/*
     	DiscoveryRecord last_discovery_record = null;
 		Date started_date = new Date(0L);
 		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
@@ -236,6 +227,18 @@ public class DiscoveryController {
 		last_discovery_record.setStatus(DiscoveryStatus.STOPPED);
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
+		*/
+    	Domain domain = domain_service.findByHost(url);
+
+    	if(!domain_actors.containsKey(domain.getUrl())){
+			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("domainActor"), "domain_actor"+UUID.randomUUID());
+			domain_actors.put(domain.getUrl(), domain_actor);
+		}
+    	
+		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+		domain_actors.get(url).tell(discovery_action_msg, null);
+		
 	}
 
 }

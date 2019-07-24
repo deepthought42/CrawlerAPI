@@ -52,9 +52,7 @@ public class DiscoveryActor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	private static DiscoveryRecord discovery_record = null;
-	
-	private ActorRef domain_actor;
-	
+		
 	@Autowired
 	private ActorSystem actor_system;
 	
@@ -70,6 +68,7 @@ public class DiscoveryActor extends AbstractActor{
 	@Autowired
 	private EmailService email_service;
 	
+	private ActorRef domain_actor;
 	private ActorRef url_browser_actor = null;
 	private ActorRef form_discoverer = null;
 	private ActorRef path_expansion_actor = null;
@@ -107,6 +106,7 @@ public class DiscoveryActor extends AbstractActor{
 		return receiveBuilder()
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
+						domain_actor = getSender();
 						discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
 
 						message.getAccount().addDiscoveryRecord(discovery_record);

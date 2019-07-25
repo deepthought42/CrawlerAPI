@@ -3,6 +3,7 @@ package com.qanairy.models;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -121,7 +122,7 @@ public class DiscoveryRecord implements Persistable {
 	}
 
 	public String generateKey() {
-		return getDomainUrl()+":"+getStartTime();
+		return getDomainUrl()+":"+UUID.randomUUID().toString();
 	}
 
 	public List<String> getExpandedPageStates() {

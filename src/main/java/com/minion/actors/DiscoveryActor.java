@@ -119,16 +119,16 @@ public class DiscoveryActor extends AbstractActor{
 						}
 						
 						discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
-
+						//create new discovery
+						discovery_record.getExpandedUrls().add(message.getDomain().getUrl());
+						discovery_service.save(discovery_record);
+						
 						message.getAccount().addDiscoveryRecord(discovery_record);
 						account_service.save(message.getAccount());
 
 						message.getDomain().addDiscoveryRecord(discovery_record);
 						domain_service.save(message.getDomain());
 
-						//create new discovery
-						discovery_record.getExpandedUrls().add(message.getDomain().getUrl());
-						discovery_service.save(discovery_record);
 						
 						//start a discovery
 						log.info("Sending URL to UrlBrowserActor");
@@ -179,19 +179,18 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(UrlMessage.class, message -> {
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
-					discovery_service.save(discovery_record);
 					//broadcast discovery
 					if(!discovery_record.getExpandedUrls().contains(message.getUrl().toString())){						
 						//send message to urlBrowserActor
 						url_browser_actor.tell(message, getSelf() );
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+					discovery_service.save(discovery_record);
 				})
 				.match(PathMessage.class, message -> {
 					log.warn("DISCOVERY ACTOR RECIEVED PATH MESSAGE WITH STATUS ::  " +message.getStatus());
 					log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 					if(message.getStatus().equals(PathStatus.READY)){
-						
 						PathMessage path_message = message.clone();
 
 						form_discoverer.tell(path_message, getSelf() );
@@ -212,17 +211,17 @@ public class DiscoveryActor extends AbstractActor{
 						if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 							discovery_record.addExpandedPageState(page_state.getKey());
 						}
-						discovery_service.save(discovery_record);
 						
 						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						
 						Random rand = new Random();
 						exploratory_browser_actors.get(rand.nextInt(exploratory_browser_actors.size())).tell(message, getSelf() );
+
+						discovery_service.save(discovery_record);
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-						discovery_service.save(discovery_record);
 						
 						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
 							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
@@ -233,15 +232,17 @@ public class DiscoveryActor extends AbstractActor{
 						}
 						
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+						discovery_service.save(discovery_record);
 					}
 				})
 				.match(Test.class, test -> {
-					discovery_record.setTestCount(discovery_record.getTestCount());
+					discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					//broadcast discovery
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					//send message to Domain Actor
 					domain_actor.tell(test, getSelf());
+					discovery_service.save(discovery_record);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

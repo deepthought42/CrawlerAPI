@@ -41,7 +41,7 @@ public class DiscoveryRecord implements Persistable {
 		assert browser_name != null;
 		assert domain_url != null;
 		assert test_cnt > -1;
-		assert total_cnt > 0;
+		assert total_cnt > -1;
 
 		setExpandedPageStates(new ArrayList<String>());
 		setExpandedUrls(new ArrayList<String>());

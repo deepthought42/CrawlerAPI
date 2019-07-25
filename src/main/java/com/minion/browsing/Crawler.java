@@ -124,7 +124,7 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				browser.waitForPageToLoad();
+				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				log.warn("crawling loading animation");
@@ -175,10 +175,13 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				log.warn("current object type :: " + current_obj.getClass().getName() + "   ;;   "+current_obj.getType());
 				expected_page = (PageState)current_obj;
-
-				log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
-				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+				
+					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
+				}
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -258,9 +261,13 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
-				log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
-				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+				
+					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
+				}
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -379,9 +386,14 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
-				log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
-				browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
-				BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
+				
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+				
+					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
+				}
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;

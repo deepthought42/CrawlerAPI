@@ -3,11 +3,13 @@ package com.minion.actors;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -48,10 +50,10 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Component
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
+	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
-	private static DiscoveryRecord discovery_record = null;
+	private DiscoveryRecord discovery_record = null;
 		
 	@Autowired
 	private ActorSystem actor_system;
@@ -72,18 +74,13 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef url_browser_actor = null;
 	private ActorRef form_discoverer = null;
 	private ActorRef path_expansion_actor = null;
-			
+	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
+	
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
-		url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
-		form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-		path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -107,6 +104,20 @@ public class DiscoveryActor extends AbstractActor{
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
 						domain_actor = getSender();
+						//create actors for discovery
+						url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
+						form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+						path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+						
+						//create multiple exploration actors for parallel execution
+						for(int i=0; i< 4; i++){
+							exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
+						}
+						
 						discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
 
 						message.getAccount().addDiscoveryRecord(discovery_record);
@@ -117,7 +128,7 @@ public class DiscoveryActor extends AbstractActor{
 
 						//create new discovery
 						discovery_record.getExpandedUrls().add(message.getDomain().getUrl());
-						discovery_record = discovery_service.save(discovery_record);
+						discovery_service.save(discovery_record);
 						
 						//start a discovery
 						log.info("Sending URL to UrlBrowserActor");
@@ -141,33 +152,44 @@ public class DiscoveryActor extends AbstractActor{
 
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
+						//look up discovery record if it's null
+						if(discovery_record == null){
+							discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl());
+						}
+						
 						discovery_record.setStatus(DiscoveryStatus.STOPPED);
 						discovery_service.save(discovery_record);
 						
 						//stop all discovery processes
-						actor_system.stop(url_browser_actor);
-						actor_system.stop(path_expansion_actor);
-						actor_system.stop(form_discoverer);
+						if(url_browser_actor != null){
+							actor_system.stop(url_browser_actor);
+						}
+						if(path_expansion_actor != null){
+							actor_system.stop(path_expansion_actor);
+						}
+						if(form_discoverer != null){
+							actor_system.stop(form_discoverer);
+						}
+						if(!exploratory_browser_actors.isEmpty()){	
+							for(ActorRef actor : exploratory_browser_actors){
+								actor_system.stop(actor);
+							}
+						}
 					}
 				})
 				.match(UrlMessage.class, message -> {
-					discovery_service.incrementTotalPathCount(discovery_record.getKey());
+					discovery_record.setTestCount(discovery_record.getTestCount()+1);
+					discovery_service.save(discovery_record);
 					//broadcast discovery
-					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-
-					if(!discovery_record.getExpandedUrls().contains(message.getUrl().toString())){
-						discovery_record.addExpandedPageState(message.getUrl().toString());
-						
+					if(!discovery_record.getExpandedUrls().contains(message.getUrl().toString())){						
 						//send message to urlBrowserActor
-						final ActorRef url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
-						//final ActorRef url_browser_actor = this.getContext().actorOf(Props.create(UrlBrowserActor.class), "UrlBrowserActor"+UUID.randomUUID());
 						url_browser_actor.tell(message, getSelf() );
-						
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 					}
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 				})
 				.match(PathMessage.class, message -> {
+					log.warn("DISCOVERY ACTOR RECIEVED PATH MESSAGE WITH STATUS ::  " +message.getStatus());
+					log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 					if(message.getStatus().equals(PathStatus.READY)){
 						
 						PathMessage path_message = message.clone();
@@ -176,28 +198,31 @@ public class DiscoveryActor extends AbstractActor{
 						path_expansion_actor.tell(path_message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
+						log.warn("DISCOVERY ACTOR IS HANDLING EXPANDED PATH !!!!");
 						//get last page state
 						PageState page_state = PathUtils.getLastPageState(message.getPathObjects());
 						
-						discovery_service.incrementTotalPathCount(discovery_record.getKey());
-						if(discovery_record.getExpandedPageStates().contains(page_state.getKey())){
-							return;
-						}
-						else{
-							discovery_record.setLastPathRanAt(new Date());
+						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+						
+						log.warn("discovery record DOES NOT already contain expanded page state. NEW TOTAL PATH COUNT IS :: "+discovery_record.getTotalPathCount());
+						
+						discovery_record.setLastPathRanAt(new Date());
+						
+						//check if key already exists before adding to prevent dupliates
+						if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
 							discovery_record.addExpandedPageState(page_state.getKey());
-							discovery_record = discovery_service.save(discovery_record);
 						}
+						discovery_service.save(discovery_record);
 						
 						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						
-						final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-						exploratory_browser_actor.tell(message, getSelf() );
+						Random rand = new Random();
+						exploratory_browser_actors.get(rand.nextInt(exploratory_browser_actors.size())).tell(message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
-						discovery_record = discovery_service.increaseExaminedPathCount(discovery_record.getKey(), 1);
+						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+						discovery_service.save(discovery_record);
 						
 						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
 							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
@@ -211,7 +236,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 				})
 				.match(Test.class, test -> {
-			  		discovery_record = discovery_service.incrementTestCount(discovery_record.getKey());
+					discovery_record.setTestCount(discovery_record.getTestCount());
 					//broadcast discovery
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 

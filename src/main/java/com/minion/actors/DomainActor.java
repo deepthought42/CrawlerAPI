@@ -33,7 +33,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Component
 @Scope("prototype")
 public class DomainActor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(ExploratoryBrowserActor.class.getName());
+	private static Logger log = LoggerFactory.getLogger(DomainActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private String host = null;
 	
@@ -77,7 +77,9 @@ public class DomainActor extends AbstractActor{
 		return receiveBuilder()
 				.match(DomainActionMessage.class, message-> {
 					host = message.getDomain().getHost();
-					
+					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+					log.warn("DOMAIN ACTION MESSAGE WITH HOST :: " + host);
+					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					if(message.getAction().equals(DomainAction.CREATE)){
 						
 					}
@@ -86,10 +88,16 @@ public class DomainActor extends AbstractActor{
 					}
 				})
 				.match(DiscoveryActionMessage.class, message-> {
+					host = message.getDomain().getUrl();
+					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + host + " WITH ACTION   :: " + message.getAction());
+					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+					
 					//pass message along to discovery actor
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(Test.class, test -> {
+					log.warn("domain actor about to save test :: " + host);
 					Test test_record = test_service.save(test, host);
 					Domain domain = domain_service.findByHost(host);
 					domain.addTest(test_record);

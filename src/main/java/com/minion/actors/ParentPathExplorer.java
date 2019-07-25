@@ -156,7 +156,6 @@ public class ParentPathExplorer extends AbstractActor {
 								break;
 							}
 
-							log.warn("crawling partial path");
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
@@ -220,12 +219,9 @@ public class ParentPathExplorer extends AbstractActor {
 
 			  		long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
-
+			  		log.warn("test host :: " + host);
 			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), host, message.getBrowser().toString());
-
-			  		if(!test.getSpansMultipleDomains()){
-			  			message.getDiscoveryActor().tell(test, getSelf());
-			  		}
+		  			message.getDiscoveryActor().tell(test, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -267,6 +263,8 @@ public class ParentPathExplorer extends AbstractActor {
 
 		boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
 		test.setSpansMultipleDomains(leaves_domain);
+		
+		log.warn("creating test with host :: " + host);
 		return test_service.save(test, host);
 	}
 

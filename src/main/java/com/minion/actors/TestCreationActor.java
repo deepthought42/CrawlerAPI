@@ -136,6 +136,7 @@ public class TestCreationActor extends AbstractActor  {
 							    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
 
 						    		test = test_repo.save(test);
+						    		log.warn("test creation domain url :: " + domain.getUrl());
 						    		domain_service.addTest(domain.getUrl(), test);
 
 							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
@@ -302,7 +303,7 @@ public class TestCreationActor extends AbstractActor  {
 	private PageState navigateToAndCreatePageState(String url, Browser browser)
 									throws GridException, NoSuchAlgorithmException, IOException, WebDriverException, InterruptedException, ExecutionException {
 		browser.navigateTo(url);
-		browser.waitForPageToLoad();
+		//browser.waitForPageToLoad();
 		//construct a new page
 		return browser_service.buildPage(browser);
 	}

@@ -86,7 +86,6 @@ public class AnimationDetectionActor extends AbstractActor{
 								page_state_service.save(first_page_state);
 							}
 
-							
 							//Tell discovery actor about test
 							msg.getDiscoveryActor().tell(msg.clone(), getSelf());
 							

@@ -23,10 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
-import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
@@ -314,21 +312,13 @@ public class Crawler {
 					current_idx++;
 				}
 				else{
-					if((current_idx < ordered_path_objects.size()-1
-							&& !ordered_path_objects.get(current_idx+1).getKey().contains("redirect")
-							&& !ordered_path_objects.get(current_idx+1).getKey().contains("elementstate"))
-							|| (current_idx == ordered_path_objects.size()-1 && !last_url.equals(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl())))){
+					if(current_idx == ordered_path_objects.size()-1){
 						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
 						if(redirect.getUrls().size() > 2){
-							if(current_idx == ordered_path_objects.size()-1){
-								path_keys.add(redirect.getKey());
-								path_objects_explored.add(redirect);
-							}
-							else if(current_idx < ordered_path_objects.size()-1){
-								path_keys.add(current_idx+1, redirect.getKey());
-								path_objects_explored.add(current_idx+1, redirect);
-							}
+							path_keys.add(redirect.getKey());
+							path_objects_explored.add(redirect);
+
 							current_idx++;
 						}
 					}
@@ -542,23 +532,19 @@ public class Crawler {
 				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}catch(NullPointerException e){
-				log.info("Error happened while exploratory actor attempted to crawl test ");
-				//e.printStackTrace();
+				log.warn("Error happened while exploratory actor attempted to crawl test ");
 			} catch (GridException e) {
-				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
 				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-				//e.printStackTrace();
-				//no_such_element_exception = true;
 			}
 			catch (WebDriverException e) {
-				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				//e.printStackTrace();
+				log.debug("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {
-				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 				//e.printStackTrace();
 			} catch(Exception e) {
 				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
@@ -620,25 +606,21 @@ public class Crawler {
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}
 			catch(NullPointerException e){
-				log.info("Error happened while exploratory actor attempted to crawl test ");
-				//e.printStackTrace();
+				log.error("Error happened while exploratory actor attempted to crawl test ");
 			} 
 			catch (GridException e) {
-				log.warn("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
 				log.warn("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-				//e.printStackTrace();
-				//no_such_element_exception = true;
 			}
 			catch (WebDriverException e) {
-				log.warn("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
-				//e.printStackTrace();
+				log.debug("(Exploratory Crawl) web driver exception occurred : " + e.getMessage());
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				//log.warn("WebDriver exception encountered while trying to perform crawl of exploratory path"+e.getMessage());
 			} 
 			catch (NoSuchAlgorithmException e) {
-				log.warn("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 				//e.printStackTrace();
 			} 
 			catch(Exception e) {
@@ -674,23 +656,19 @@ public class Crawler {
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				result_page = crawlPath(path_keys, path_objects, browser, host, visible_element_map, visible_elements);
 			}catch(NullPointerException e){
-				log.info("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
+				log.error("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
 			} catch (GridException e) {
-				log.info("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
 				log.error("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-				//e.printStackTrace();
 			}
 			catch (WebDriverException e) {
-				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.warn("WebDriver exception encountered while performing path crawl"+e.getMessage());
-				//e.printStackTrace();
+				log.debug("WebDriver exception encountered while performing path crawl"+e.getMessage());
 			} catch (NoSuchAlgorithmException e) {
-				log.info("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
 			} catch(Exception e){
 				log.info("Exception occurred in performPathCrawl actor. \n"+e.getMessage());
-				//e.printStackTrace();
 			}
 			finally{
 				if(browser != null){

@@ -121,33 +121,11 @@ public class DiscoveryController {
     	if(last_discovery_record != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
-    	//String domain_url = domain.getUrl();
-    	//String protocol = domain.getProtocol();
 
     	Domain domain = domain_service.findByHost(url);
 
 		if(diffInMinutes > 1440){
 			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-/*
-			acct.addDiscoveryRecord(discovery_record);
-			acct = account_service.save(acct);
-
-			domain.addDiscoveryRecord(discovery_record);
-			domain_service.save(domain);
-		
-			WorkAllowanceStatus.register(acct.getUsername());
-			*/
-			//ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-			/*Map<String, Object> options = new HashMap<String, Object>();
-			options.put("browser", domain.getDiscoveryBrowserName());
-	        options.put("discovery_key", discovery_record.getKey());
-	        options.put("host", domain.getUrl());
-			Message<URL> message = new Message<URL>(acct.getUsername(), new URL(protocol+"://"+domain_url), options);
-
-			ActorRef workAllocationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-			*/
-
 			if(!domain_actors.containsKey(domain.getUrl())){
 				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 						  .props("domainActor"), "domain_actor"+UUID.randomUUID());
@@ -156,18 +134,6 @@ public class DiscoveryController {
 		    
 			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
 			domain_actors.get(domain.getUrl()).tell(discovery_action_msg, null);
-			/*
-			Timeout timeout = new Timeout(Duration.create(60, "seconds"));
-			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
-
-			try {
-				Await.result(future, timeout.duration());
-			} catch (Exception e) {
-				log.error(e.getMessage());
-			}
-			return discovery_record;
-	
-			*/
 		}
         else{
         	//Throw error indicating discovery has been or is running

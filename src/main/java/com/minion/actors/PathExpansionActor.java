@@ -135,8 +135,6 @@ public class PathExpansionActor extends AbstractActor {
 				continue;
 			}
 
-			
-
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -153,9 +151,7 @@ public class PathExpansionActor extends AbstractActor {
 			if(page_element.getXpath().contains("form")){
 				continue;
 			}
-			//check if page element is an input
 			else{
-				
 				//List<Rule> rules = extractor.extractInputRules(page_element);	
 				//page_element.getRules().addAll(rules);
 			
@@ -193,89 +189,6 @@ public class PathExpansionActor extends AbstractActor {
 		}
 		return pathList;
 	}
-
-	/**
-	 * Checks if a given {@link ElementState} exists in a {@link PageState} within the {@link Test} path
-	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
-	 *
-	 * @param test {@link Test}
-	 * @param elem {@link ElementState}
-	 *
-	 * @return
-	 *
-	 * @pre test != null
-	 * @pre elem != null
-	 */
-	public boolean doesElementExistInMultiplePageStatesWithinPath(PathMessage path, ElementState elem, String page_url) {
-		assert path != null;
-		assert elem != null;
-
-		if(path.getKeys().size() == 1){
-			return false;
-		}
-		
-		log.warn("checking if element exists in multiple page states via path");
-		Map<String, Integer> elem_cnt = new HashMap<>();
-		for(int path_idx = path.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
-			PathObject obj = path.getPathObjects().get(path_idx);
-			if(obj instanceof PageState){
-				PageState page_state = ((PageState) obj);
-				for(ElementState page_elem : page_state.getElements()){
-					if(!elem_cnt.containsKey(page_elem.getXpath())){
-						elem_cnt.put(page_elem.getXpath(), 1);
-					}
-					else{
-						elem_cnt.put(page_elem.getXpath(), elem_cnt.get(page_elem.getXpath())+1);
-					}
-					//log.warn("checking element xpath :: " + page_elem.getXpath() + "   :    "+elem_cnt.get(page_elem.getXpath()));
-					
-				}
-			}
-		}
-
-		log.warn("element count :: " + elem_cnt.get(elem.getXpath()));
-		return elem_cnt.get(elem.getXpath()) > 1;
-	}
-	
-	/**
-	 * Checks if a given {@link ElementState} exists in a {@link PageState} within the {@link Test} path
-	 *  such that the {@link PageState} preceeds the page state that immediately precedes the element in the test path
-	 *
-	 * @param test {@link Test}
-	 * @param elem {@link ElementState}
-	 *
-	 * @return
-	 *
-	 * @pre test != null
-	 * @pre elem != null
-	 */
-	public boolean doesElementExistInMultiplePageStatesWithinTest(Test test, ElementState elem, String page_url) {
-		assert test != null;
-		assert elem != null;
-
-		if(test.getPathKeys().size() == 1){
-			return false;
-		}
-		
-		log.warn("checking if element exists in multiple page states via test");
-		for(int path_idx = test.getPathObjects().size()-1; path_idx >= 0; path_idx-- ){
-			PathObject obj = test.getPathObjects().get(path_idx);
-			if(obj instanceof PageState){
-				PageState page_state = ((PageState) obj);
-				log.debug("page state has # of elements  ::  "+page_state.getElements().size());
-				for(ElementState page_elem : page_state.getElements()){
-					if(elem.getXpath().equals(page_elem.getXpath()) && page_url.equals(page_state.getUrl())){
-						return true;
-					}
-					else if(elem.equals(page_elem)){
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
-	}
 	
 	/**
 	 * Checks if result has same url as last page in path of {@link Test}. If the urls match, 
@@ -296,11 +209,18 @@ public class PathExpansionActor extends AbstractActor {
 		//get last page
 		PageState last_page_state = PathUtils.getLastPageState(path_objects);
 		PageState second_to_last_page = PathUtils.getSecondToLastPageState(path_objects);
+		
+		log.warn("####################################################################################################");
+
 		if(last_page_state == null){
+			log.warn("LAST PAGE STATE IS NULL DURING EXPANSION!!!!!!!!!!!!!!");
 			return elements;
 		}
 		
-		
+		log.warn("last page url      ::  " + last_page_state.getUrl());
+		log.warn("second to last url ::  " + second_to_last_page.getUrl());
+		log.warn("Do urls match????    :: " + last_page_state.getUrl().equals(second_to_last_page.getUrl()));
+		log.warn("####################################################################################################");
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state

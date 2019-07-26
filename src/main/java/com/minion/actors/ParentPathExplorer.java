@@ -93,16 +93,30 @@ public class ParentPathExplorer extends AbstractActor {
 				.match(TestCandidateMessage.class, message-> {
 			  		long start = System.currentTimeMillis();
 
-					//get index of last page element in path
-			  		int last_elem_idx = PathUtils.getIndexOfLastElementState(message.getKeys());
-			  		
 			  		List<String> final_path_keys = new ArrayList<String>(message.getKeys());
 			  		List<PathObject> final_path_objects = new ArrayList<PathObject>(message.getPathObjects());
 			  		Browser browser = null;
 
 			  		List<String> path_keys = new ArrayList<>(message.getKeys());
 					List<PathObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
+					//get index of last page element in path
+			  		int last_elem_idx = PathUtils.getIndexOfLastElementState(path_keys);
+			  		
+					log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+					log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+			  		log.warn("path keys :: " + path_keys.size());
+			  		for(String key : path_keys){
+			  			log.warn("key :: " + key);
+			  		}
+			  		log.warn("path objects  :: " + path_objects.size());
+			  		for(PathObject obj : message.getPathObjects()){
+			  			log.warn(obj.getType() + "  :   "+obj);
+			  		}
+			  		log.warn("last element index  :: " + last_elem_idx);
+			  		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+					log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 
+					
 					//get array of all elements preceding last page element
 					List<String> beginning_path_keys = path_keys.subList(0, last_elem_idx);
 					List<PathObject> beginning_path_objects = path_objects.subList(0, last_elem_idx);

@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageAlert;
 import com.qanairy.models.PageLoadAnimation;
@@ -139,9 +140,11 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
-		log.warn("ELEMENTS visible during crawlPath :: " + xpath_list.size());
-		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
+		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
+		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+
+		log.warn("ELEMENTS visible during crawlPath :: " + element_list.size());
+		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 
 		return browser_service.buildPage(browser, visible_elements);
 	}
@@ -240,7 +243,6 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	@Deprecated
 	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
 		assert browser != null;
 		assert keys != null;
@@ -532,8 +534,10 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
-    			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
+				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
+				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+
+				List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 			
 				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
@@ -607,8 +611,10 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
-    			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
+				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
+				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+
+    			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 			
 				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);

@@ -199,7 +199,8 @@ public class PathExpansionActor extends AbstractActor {
 	 * 
 	 * @return {@link Collection} of element states
 	 * 
-	 * @pre test != null
+	 * @pre path_objects != null
+	 * @pre !path_objects.isEmpty()
 	 */
 	private Collection<ElementState> getElementStatesForExpansion(List<PathObject> path_objects) {
 		assert(path_objects != null);
@@ -212,7 +213,7 @@ public class PathExpansionActor extends AbstractActor {
 		
 		log.warn("####################################################################################################");
 
-		if(last_page_state == null){
+		if(last_page_state == null || second_to_last_page == null){
 			log.warn("LAST PAGE STATE IS NULL DURING EXPANSION!!!!!!!!!!!!!!");
 			return elements;
 		}

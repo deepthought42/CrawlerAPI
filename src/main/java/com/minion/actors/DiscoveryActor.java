@@ -198,10 +198,11 @@ public class DiscoveryActor extends AbstractActor{
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
-						//if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
-						discovery_record.addExpandedPageState(page_state.getKey());
+						if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
+							discovery_record.addExpandedPageState(page_state.getKey());
+						}
+						
 						exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
-						//}
 						
 						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
 						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
@@ -242,7 +243,7 @@ public class DiscoveryActor extends AbstractActor{
 			    	*/
 					
 					boolean isLandable = BrowserService.checkIfLandable(browser.toString(), test.getResult(), test.getPathObjects() );
-					if(isLandable){
+					if(isLandable && !discovery_record.getExpandedPageStates().contains(test.getResult().getUrl())){
 						UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser);
 						url_browser_actor.tell(url_message, getSelf() );
 					}

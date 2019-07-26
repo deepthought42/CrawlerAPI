@@ -213,9 +213,13 @@ public class PathExpansionActor extends AbstractActor {
 		
 		log.warn("####################################################################################################");
 
-		if(last_page_state == null || second_to_last_page == null){
+		if(last_page_state == null){
 			log.warn("LAST PAGE STATE IS NULL DURING EXPANSION!!!!!!!!!!!!!!");
 			return elements;
+		}
+		
+		if( second_to_last_page == null){
+			return last_page_state.getElements();
 		}
 		
 		log.warn("last page url      ::  " + last_page_state.getUrl());

@@ -464,7 +464,7 @@ public class Crawler {
 		}
 
 		if(path.getKeys().size() != path_keys.size()){
-			return new PathMessage(keys, path_objects_explored, path.getDiscoveryActor(), path.getStatus(), path.getBrowser());
+			return new PathMessage(path_keys, path_objects_explored, path.getDiscoveryActor(), path.getStatus(), path.getBrowser());
 		}
 		
 		return path;

@@ -233,12 +233,11 @@ public class BrowserService {
 			}
 			catch(WebDriverException e){
 				err=true;
-				e.printStackTrace();
+				log.debug("WebDriverException occurred while buildin page states");
 			}
 			catch(Exception e){
 				log.warn("Exception occurred while building page states :: " + e.getMessage());
 				err=true;
-				//e.printStackTrace();
 			}
 		}
 
@@ -413,7 +412,6 @@ public class BrowserService {
 					browser.getViewportSize().height,
 					browser.getBrowserName());
 
-			log.warn("page state built during (buildPageStates) :: "+page_state);
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 
@@ -422,7 +420,6 @@ public class BrowserService {
 
 			log.warn("initialized page state      :    " + url_without_params);
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
-			log.warn("page state record retrieved from noe4j  : " + page_state_record);
 			if(page_state_record != null){
 				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url_without_params);
 				page_state = page_state_record;
@@ -813,7 +810,6 @@ public class BrowserService {
 				}
 			}catch(WebDriverException e){
 				log.warn("Exception occurred while getting visible elements ::   " + e.getMessage());
-				e.printStackTrace();
 				err = true;
 				if(!e.getMessage().contains("no_such_element")){
 					throw e;
@@ -1545,7 +1541,7 @@ public class BrowserService {
 			}
 
 		}catch(InvalidSelectorException e){
-			log.warn(e.getMessage());
+			log.error(e.getMessage());
 		}
 
 		return xpath;
@@ -1685,7 +1681,7 @@ public class BrowserService {
 				}
 			}catch(InvalidSelectorException e){
 				parent = null;
-				log.info("Invalid selector exception occurred " + e.getMessage());
+				log.error("Invalid selector exception occurred " + e.getMessage());
 				break;
 			}
 

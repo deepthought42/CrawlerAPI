@@ -109,9 +109,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								&& !isResultAnimatedState){
 							//check if result is an animated image from previous page
 							page_state_service.save(result_page);
-
-							log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-							log.warn("sending test candidate to parent path explorer");
 							candidate_identified = true;
 					  		//crawl test and get result
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
@@ -121,7 +118,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						}
 
 						if(!candidate_identified){
-							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser());
+								PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 						}
@@ -149,7 +146,24 @@ public class ExploratoryBrowserActor extends AbstractActor {
 				.build();
 	}
 
+	/**
+	 * Checks if given {@PageState result} page has a image url that matches any animated image urls in the 
+	 * 	list of PageStates provided
+	 * 
+	 * @param page_states
+	 * @param result_page
+	 * 
+	 * @return
+	 * 
+	 * @pre page_states != null
+	 * @pre !page_states	.isEmpty()
+	 * @pre result_page != null
+	 */
 	private boolean isResultAnimatedState(List<PageState> page_states, PageState result_page) {
+		assert page_states != null;
+		assert !page_states.isEmpty();
+		assert result_page != null;
+		
 		for(PageState page_state : page_states){
 			if(!page_state.getAnimatedImageUrls().isEmpty()){
 				for(String image_url : page_state.getAnimatedImageUrls()){
@@ -162,38 +176,5 @@ public class ExploratoryBrowserActor extends AbstractActor {
 		}
 
 		return false;
-	}
-
-	public static List<String> getPageTransition(Browser browser) throws MalformedURLException{
-		List<String> transition_keys = new ArrayList<String>();
-		boolean transition_detected = false;
-
-		long start_ms = System.currentTimeMillis();
-		//while (time passed is less than 30 seconds AND transition has occurred) or transition_detected && loop not detected
-		String last_key = null;
-		do{
-			URL url = new URL(browser.getDriver().getCurrentUrl());
-			String url_string = url.getProtocol()+"://"+url.getHost()+"/"+url.getPath();
-			log.warn("current url retrieved");
-
-			int element_count = browser.getDriver().findElements(By.xpath("//*")).size();
-			String new_key = url_string+":"+element_count;
-			log.warn("page key generated :: " + new_key);
-
-			transition_detected = (last_key != null && !new_key.equals(last_key));
-			log.warn("Is a transition occurring  :   " + transition_detected);
-
-			log.warn("transition keys size :: " + transition_keys.size());
-			last_key = new_key;
-
-			if(transition_detected){
-				log.warn("setting transition start time to now");
-				start_ms = System.currentTimeMillis();
-				transition_keys.add(new_key);
-			}
-			//transition is detected if keys are different
-		}while((System.currentTimeMillis() - start_ms) < 5000);
-
-		return transition_keys;
 	}
 }

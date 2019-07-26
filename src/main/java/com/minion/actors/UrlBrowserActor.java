@@ -118,7 +118,7 @@ public class UrlBrowserActor extends AbstractActor {
 							break;
 						}
 						catch(Exception e){
-							e.printStackTrace();
+							log.warn(e.getMessage());
 						}
 						finally {
 							if(browser != null){

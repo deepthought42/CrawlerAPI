@@ -290,8 +290,7 @@ public class ParentPathExplorer extends AbstractActor {
 		boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
 		test.setSpansMultipleDomains(leaves_domain);
 		
-		log.warn("creating test with host :: " + host);
-		return test_service.save(test, host);
+		return test;
 	}
 
 

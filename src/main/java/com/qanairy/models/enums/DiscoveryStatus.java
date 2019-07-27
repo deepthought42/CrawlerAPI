@@ -3,7 +3,7 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum DiscoveryStatus {
-	RUNNING("running"), STOPPED("stopped");
+	RUNNING("running"), STOPPED("stopped"), COMPLETE("complete");
 	
 	private String shortName;
 

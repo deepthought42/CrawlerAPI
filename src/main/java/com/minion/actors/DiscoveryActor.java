@@ -117,7 +117,7 @@ public class DiscoveryActor extends AbstractActor{
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						
 						//create multiple exploration actors for parallel execution
-						for(int i=0; i< 10; i++){
+						for(int i=0; i < 3; i++){
 							exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 						}
@@ -188,15 +188,12 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
-						//PageState page_state = PathUtils.getLastPageState(message.getPathObjects());
-						
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
 						String path_key = String.join(":::", message.getKeys());
 						if(!discovery_record.getExpandedPathKeys().contains(path_key)){
 							discovery_record.getExpandedPathKeys().add(path_key);
-
 							discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 							
 							log.warn("discovery record DOES NOT already contain expanded page state. NEW TOTAL PATH COUNT IS :: "+discovery_record.getTotalPathCount());
@@ -204,7 +201,6 @@ public class DiscoveryActor extends AbstractActor{
 							exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
 
 							log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						}
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
@@ -212,14 +208,14 @@ public class DiscoveryActor extends AbstractActor{
 						
 						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
 							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
-							
+							discovery_record.setStatus(DiscoveryStatus.COMPLETE);
 							for(Account account: accounts){
 								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
 							}
 						}
-						
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 					}
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
 					discovery_service.save(discovery_record);
 
 				})
@@ -258,7 +254,8 @@ public class DiscoveryActor extends AbstractActor{
 							path_expansion_actor.tell(path, getSelf());
 						}
 					}
-					
+					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
+
 					discovery_service.save(discovery_record);
 				})
 				.match(MemberUp.class, mUp -> {

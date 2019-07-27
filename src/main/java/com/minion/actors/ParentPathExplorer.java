@@ -101,23 +101,9 @@ public class ParentPathExplorer extends AbstractActor {
 
 			  		List<String> path_keys = new ArrayList<>(message.getKeys());
 					List<PathObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
+					
 					//get index of last page element in path
 			  		int last_elem_idx = PathUtils.getIndexOfLastElementState(path_keys);
-			  		
-					log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-					log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-			  		log.warn("path keys :: " + path_keys.size());
-			  		for(String key : path_keys){
-			  			log.warn("key :: " + key);
-			  		}
-			  		log.warn("path objects  :: " + path_objects.size());
-			  		for(PathObject obj : message.getPathObjects()){
-			  			log.warn(obj.getType() + "  :   "+obj);
-			  		}
-			  		log.warn("last element index  :: " + last_elem_idx);
-			  		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-					log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-
 					
 					//get array of all elements preceding last page element
 					List<String> beginning_path_keys = path_keys.subList(0, last_elem_idx);
@@ -147,9 +133,6 @@ public class ParentPathExplorer extends AbstractActor {
 
 							browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 							//crawl path using array of preceding elements\
-							log.warn("Crawling path :: " +path_objects);
-							log.warn("crawling beginning of path :: "+beginning_path_keys);
-							log.warn("navigating to url :: " +first_page.getUrl());
 							browser.navigateTo(first_page.getUrl());
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host);
 
@@ -165,14 +148,12 @@ public class ParentPathExplorer extends AbstractActor {
 								break;
 							}
 							//if parent element is not visible in pane then break
-							log.warn("Building element state");
 							ElementState parent_element = null;
 							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
 							if(parent_element == null){
 								break;
 							}
 
-							log.warn("Adding parent element to end path keys :: "+parent_element);
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
@@ -181,18 +162,15 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 							
-							log.warn("crawling without building result");
 							//finish crawling using array of elements following last page element
 							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host);
 
-							log.warn("Parent path explorer detecting loading animation");
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){
 								parent_end_path_keys.add(loading_animation.getKey());
 								parent_end_path_objects.add(loading_animation);
 							}
 							
-							log.warn("building parent result page state");
 							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
 							
 							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
@@ -200,10 +178,8 @@ public class ParentPathExplorer extends AbstractActor {
 								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
 							}
 
-							log.warn("checking if parent result matches expected result");
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){
-								log.warn("parent result matches expected result page");
 								final_path_keys = new ArrayList<>(beginning_path_keys);
 								final_path_keys.addAll(parent_end_path_keys);
 
@@ -215,7 +191,6 @@ public class ParentPathExplorer extends AbstractActor {
 								results_match = false;
 								break;
 							}
-							log.warn("Setting last element to parent element");
 							last_element = parent_element;
 						}
 						catch(NullPointerException e){
@@ -238,14 +213,8 @@ public class ParentPathExplorer extends AbstractActor {
 						}
 					}while((results_match || error_occurred) && !last_element.getName().equals("body"));
 
-					log.warn("final path objects ::    " + final_path_objects);
-			  		for(PathObject obj : final_path_objects){
-						log.warn("PATH OBJECT AFTER PARENT ::  "+obj);
-			  		}
-
 			  		long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
-			  		log.warn("test host :: " + host);
 			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString());
 		  			message.getDiscoveryActor().tell(test, getSelf());
 				})

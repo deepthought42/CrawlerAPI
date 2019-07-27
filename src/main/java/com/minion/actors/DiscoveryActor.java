@@ -209,6 +209,8 @@ public class DiscoveryActor extends AbstractActor{
 						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
 							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
 							discovery_record.setStatus(DiscoveryStatus.COMPLETE);
+							discovery_service.save(discovery_record);
+							
 							for(Account account: accounts){
 								email_service.sendSimpleMessage(account.getUsername(), "The discovery has finished running for "+discovery_record.getDomainUrl(), "Discovery on "+discovery_record.getDomainUrl()+" has finished. Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
 							}

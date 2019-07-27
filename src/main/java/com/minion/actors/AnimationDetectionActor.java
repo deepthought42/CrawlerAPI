@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -43,9 +42,6 @@ public class AnimationDetectionActor extends AbstractActor{
 
 	@Autowired
 	private Crawler crawler;
-
-	@Autowired
-	private ActorSystem actor_system;
 
 	public static Props props() {
 	  return Props.create(AnimationDetectionActor.class);

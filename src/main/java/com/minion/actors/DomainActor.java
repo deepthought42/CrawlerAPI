@@ -14,9 +14,7 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Test;
-import com.qanairy.models.enums.DomainAction;
 import com.qanairy.models.message.DiscoveryActionMessage;
-import com.qanairy.models.message.DomainActionMessage;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.TestService;
 
@@ -75,18 +73,6 @@ public class DomainActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(DomainActionMessage.class, message-> {
-					host = message.getDomain().getHost();
-					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("DOMAIN ACTION MESSAGE WITH HOST :: " + host);
-					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					if(message.getAction().equals(DomainAction.CREATE)){
-						
-					}
-					else if(message.getAction().equals(DomainAction.DELETE)){
-						
-					}
-				})
 				.match(DiscoveryActionMessage.class, message-> {
 					host = message.getDomain().getUrl();
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");

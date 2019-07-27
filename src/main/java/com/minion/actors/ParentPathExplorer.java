@@ -246,7 +246,7 @@ public class ParentPathExplorer extends AbstractActor {
 			  		long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
 			  		log.warn("test host :: " + host);
-			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), host, message.getBrowser().toString());
+			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString());
 		  			message.getDiscoveryActor().tell(test, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
@@ -271,7 +271,7 @@ public class ParentPathExplorer extends AbstractActor {
 	 * @throws JsonProcessingException
 	 * @throws MalformedURLException
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String host, String browser_name) throws JsonProcessingException, MalformedURLException {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name) throws JsonProcessingException, MalformedURLException {
 		log.warn("Creating test........");
 		Test test = new Test(path_keys, path_objects, result_page, null);
 

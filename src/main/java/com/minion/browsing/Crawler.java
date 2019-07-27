@@ -571,6 +571,7 @@ public class Crawler {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
+		PathMessage new_path = path.clone();
 		Map<Integer, ElementState> visible_element_map = new HashMap<>();
 		boolean no_such_element_exception = false;
 		do{
@@ -582,17 +583,17 @@ public class Crawler {
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 					browser.navigateTo(expected_page.getUrl());
 
-					path = crawlPathExplorer(path.getKeys(), path.getPathObjects(), browser, host, path);
+					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
-				PageState last_page_state = PathUtils.getLastPageState(path.getPathObjects());
+				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
 				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 				if(!browser_url.equals(last_page_state.getUrl())){
 					if(loading_animation != null){
-						path.getKeys().add(loading_animation.getKey());
-						path.getPathObjects().add(loading_animation);
+						new_path.getKeys().add(loading_animation.getKey());
+						new_path.getPathObjects().add(loading_animation);
 					}
 				}
 								

@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
@@ -106,77 +106,11 @@ public class DiscoveryActor extends AbstractActor{
 		return receiveBuilder()
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
-						browser = message.getBrowser();
-						domain_actor = getSender();
-						//create actors for discovery
-						url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
-						form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-						path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-						
-						//create multiple exploration actors for parallel execution
-						for(int i=0; i < 3; i++){
-							exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
-						}
-						
-						discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
-						//create new discovery
-						discovery_service.save(discovery_record);
-
-						message.getAccount().addDiscoveryRecord(discovery_record);
-						account_service.save(message.getAccount());
-
-						message.getDomain().addDiscoveryRecord(discovery_record);
-						domain_service.save(message.getDomain());
-
-						//start a discovery
-						log.info("Sending URL to UrlBrowserActor");
-						
-						UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser());
-						url_browser_actor.tell(url_message, getSelf() );
-						
-						//Fire discovery started event
-				    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
-						Map<String, String> traits = new HashMap<String, String>();
-				        traits.put("user_id", message.getAccount().getUserId());
-				        traits.put("url", message.getDomain().getUrl());
-				    	traits.put("browser", message.getBrowser().toString());
-				        traits.put("discovery_started", "true");
-				    	traits.put("discovery_key", discovery_record.getKey());
-				        analytics.enqueue(TrackMessage.builder("Started Discovery")
-				    		    .userId(message.getAccount().getUsername())
-				    		    .properties(traits)
-			    		);
-
+						startDiscovery(message);
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
 						//look up discovery record if it's null
-						if(discovery_record == null){
-							discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl());
-						}
-						
-						discovery_record.setStatus(DiscoveryStatus.STOPPED);
-						discovery_service.save(discovery_record);
-						
-						//stop all discovery processes
-						if(url_browser_actor != null){
-							actor_system.stop(url_browser_actor);
-						}
-						if(path_expansion_actor != null){
-							actor_system.stop(path_expansion_actor);
-						}
-						if(form_discoverer != null){
-							actor_system.stop(form_discoverer);
-						}
-						if(!exploratory_browser_actors.isEmpty()){	
-							for(ActorRef actor : exploratory_browser_actors){
-								actor_system.stop(actor);
-							}
-						}
+						stopDiscovery(message);
 					}
 				})
 				.match(PathMessage.class, message -> {
@@ -273,5 +207,78 @@ public class DiscoveryActor extends AbstractActor{
 					log.info("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
+	}
+
+	private void startDiscovery(DiscoveryActionMessage message) throws MalformedURLException {
+		browser = message.getBrowser();
+		domain_actor = getSender();
+		//create actors for discovery
+		url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
+		form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+		path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+		
+		//create multiple exploration actors for parallel execution
+		for(int i=0; i < 3; i++){
+			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
+		}
+		
+		discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
+		//create new discovery
+		discovery_service.save(discovery_record);
+
+		message.getAccount().addDiscoveryRecord(discovery_record);
+		account_service.save(message.getAccount());
+
+		message.getDomain().addDiscoveryRecord(discovery_record);
+		domain_service.save(message.getDomain());
+
+		//start a discovery
+		log.info("Sending URL to UrlBrowserActor");
+		
+		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser());
+		url_browser_actor.tell(url_message, getSelf() );
+		
+		//Fire discovery started event
+    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+
+		Map<String, String> traits = new HashMap<String, String>();
+        traits.put("user_id", message.getAccount().getUserId());
+        traits.put("url", message.getDomain().getUrl());
+    	traits.put("browser", message.getBrowser().toString());
+        traits.put("discovery_started", "true");
+    	traits.put("discovery_key", discovery_record.getKey());
+        analytics.enqueue(TrackMessage.builder("Started Discovery")
+    		    .userId(message.getAccount().getUsername())
+    		    .properties(traits)
+		);
+	}
+
+	private void stopDiscovery(DiscoveryActionMessage message) {
+		if(discovery_record == null){
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl());
+		}
+		
+		discovery_record.setStatus(DiscoveryStatus.STOPPED);
+		discovery_service.save(discovery_record);
+		
+		//stop all discovery processes
+		if(url_browser_actor != null){
+			actor_system.stop(url_browser_actor);
+		}
+		if(path_expansion_actor != null){
+			actor_system.stop(path_expansion_actor);
+		}
+		if(form_discoverer != null){
+			actor_system.stop(form_discoverer);
+		}
+		if(!exploratory_browser_actors.isEmpty()){	
+			for(ActorRef actor : exploratory_browser_actors){
+				actor_system.stop(actor);
+			}
+		}
 	}
 }

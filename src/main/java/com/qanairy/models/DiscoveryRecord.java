@@ -31,7 +31,7 @@ public class DiscoveryRecord implements Persistable {
 	private int examined_path_count;
 	private int test_cnt;
 	private List<String> expanded_urls;
-	private List<String> expanded_page_state;
+	private List<String> expanded_path_keys;
 
 	public DiscoveryRecord(){}
 
@@ -44,7 +44,7 @@ public class DiscoveryRecord implements Persistable {
 		assert test_cnt > -1;
 		assert total_cnt > -1;
 
-		setExpandedPageStates(new ArrayList<String>());
+		setExpandedPathKeys(new ArrayList<String>());
 		setExpandedUrls(new ArrayList<String>());
 		setStartTime(started_timestamp);
 		setBrowserName(browser_name);
@@ -125,16 +125,19 @@ public class DiscoveryRecord implements Persistable {
 		return getDomainUrl()+":"+UUID.randomUUID().toString();
 	}
 
-	public List<String> getExpandedPageStates() {
-		return expanded_page_state;
+	public List<String> getExpandedPathKeys() {
+		return expanded_path_keys;
 	}
 
-	public void setExpandedPageStates(List<String> expanded_page_state) {
-		this.expanded_page_state = expanded_page_state;
+	public void setExpandedPathKeys(List<String> expanded_path_keys) {
+		this.expanded_path_keys = expanded_path_keys;
 	}
 
-	public void addExpandedPageState(String expanded_page_state_key) {
-		this.expanded_page_state.add(expanded_page_state_key);
+	public boolean addExpandedPathKey(String expanded_path_key) {
+		if(!this.expanded_path_keys.contains(expanded_path_key)){
+			return this.expanded_path_keys.add(expanded_path_key);
+		}
+		return false;
 	}
 
 	public DiscoveryStatus getStatus() {

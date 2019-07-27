@@ -68,7 +68,7 @@ public class BrowserService {
 	private PageStateService page_state_service;
 
 	@Autowired
-	private ElementStateService page_element_service;
+	private ElementStateService element_state_service;
 
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -127,7 +127,6 @@ public class BrowserService {
 		boolean is_browser_closed = true;
 		Map<Integer, ElementState> visible_element_map = new HashMap<>();
 		List<ElementState> visible_elements = new ArrayList<>();
-		List<String> element_xpath_list = new ArrayList<>();
 		
 		do{
 			try{
@@ -148,7 +147,7 @@ public class BrowserService {
 
 					log.warn("elements returned by JSOUP xpath build ::   " + element_list.size());
 					visible_elements = getVisibleElements(browser, visible_element_map, element_list);
-					log.warn("elements returned during buildPageStates  :: " + visible_elements.size());
+						log.warn("elements returned during buildPageStates  :: " + visible_elements.size());
 				}
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
@@ -782,9 +781,13 @@ public class BrowserService {
 	 * @return list of webelements that are currently visible on the page
 	 * @throws IOException
 	 * @throws GridException
+	 * 
+	 * @pre visible_element_map != null
 	 */
 	public List<ElementState> getVisibleElements(Browser browser, Map<Integer, ElementState> visible_element_map, List<ElementState> elements)
 															 throws WebDriverException, GridException, IOException{		
+		assert visible_element_map != null;
+		
 		boolean err = false;
 		do{
 			err = false;
@@ -801,7 +804,6 @@ public class BrowserService {
 					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
 					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && ! isElementLargerThanViewport(browser, element)){
 						ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes());
-						
 						visible_element_map.put(visible_element_map.size()+1, new_element_state);
 					}
 					else{
@@ -906,7 +908,7 @@ public class BrowserService {
 		//log.warn("Checking if element visible in viewport");
 		BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser);
 		String checksum = PageState.getFileChecksum(img);
-		page_element_record = page_element_service.findByScreenshotChecksum(checksum);
+		page_element_record = element_state_service.findByScreenshotChecksum(checksum);
 
 		if(page_element_record != null){
 			page_element = page_element_record;
@@ -932,7 +934,7 @@ public class BrowserService {
 			page_element.setScreenshot(screenshot);
 			page_element.setScreenshotChecksum(checksum);
 			page_element.setXpath(element_xpath);
-			page_element_service.save(page_element);
+			//element_state_service.save(page_element);
 		}
 		img.flush();
 
@@ -970,7 +972,7 @@ public class BrowserService {
 		//log.warn("Checking if element visible in viewport");
 		BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser);
 		checksum = PageState.getFileChecksum(img);
-		page_element_record = page_element_service.findByScreenshotChecksum(checksum);
+		page_element_record = element_state_service.findByScreenshotChecksum(checksum);
 
 		if(page_element_record != null){
 			page_element = page_element_record;
@@ -993,7 +995,7 @@ public class BrowserService {
 			page_element.setScreenshot(screenshot);
 			page_element.setScreenshotChecksum(checksum);
 			page_element.setXpath(xpath);
-			page_element_service.save(page_element);
+			//element_state_service.save(page_element);
 		}
 		img.flush();
 
@@ -1081,7 +1083,7 @@ public class BrowserService {
 		//log.warn("Checking if element visible in viewport");
 		BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser);
 		checksum = PageState.getFileChecksum(img);
-		page_element_record = page_element_service.findByScreenshotChecksum(checksum);
+		page_element_record = element_state_service.findByScreenshotChecksum(checksum);
 
 		if(page_element_record != null){
 			page_element = page_element_record;
@@ -1104,7 +1106,6 @@ public class BrowserService {
 			page_element.setScreenshot(screenshot);
 			page_element.setScreenshotChecksum(checksum);
 			page_element.setXpath(xpath);
-			page_element_service.save(page_element);
 		}
 		img.flush();
 
@@ -1144,7 +1145,7 @@ public class BrowserService {
 										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
 		
 		page_element.setXpath(xpath);
-		page_element_service.save(page_element);
+		//element_state_service.save(page_element);
 		log.warn("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
 
 		return page_element;
@@ -1702,7 +1703,7 @@ public class BrowserService {
 
 					ElementState elem = new ElementState(child.getText(), generateXpath(child, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), child.getTagName(), attributes, Browser.loadCssProperties(child), screenshot_url, child.getLocation().getX(), child.getLocation().getY(), child.getSize().getWidth(), child.getSize().getHeight(), child.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 
-					elem = page_element_service.save(elem);
+					//elem = element_state_service.save(elem);
 
 					//FormField input_field = new FormField(elem);
 
@@ -1717,14 +1718,16 @@ public class BrowserService {
 					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, page_elem);
 
 					ElementState input_tag = new ElementState(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), browser.getDriver(), attributes), page_elem.getTagName(), attributes, Browser.loadCssProperties(page_elem), screenshot_url, page_elem.getLocation().getX(), page_elem.getLocation().getY(), page_elem.getSize().getWidth(), page_elem.getSize().getHeight(), page_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
-					ElementState elem_record = page_element_service.findByKey(input_tag.getKey());
+					
+					/*
+					ElementState elem_record = element_state_service.findByKey(input_tag.getKey());
 					if(elem_record != null){
 						input_tag=elem_record;
 					}
 					else{
-						input_tag = page_element_service.save(input_tag);
+						input_tag = element_state_service.save(input_tag);
 					}
-
+					*/
 					child_inputs.add(input_tag);
 				}
 			}
@@ -1768,10 +1771,12 @@ public class BrowserService {
 		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, submit_element);
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url, submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight(), submit_element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
 
-		ElementState elem_record = page_element_service.findByKey(elem.getKey());
+		/*
+		ElementState elem_record = element_state_service.findByKey(elem.getKey());
 		if(elem_record != null){
 			elem = elem_record;
 		}
+		*/
 		return elem;
 	}
 

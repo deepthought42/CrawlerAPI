@@ -2,20 +2,17 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import org.openqa.selenium.By;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageState;
@@ -88,7 +85,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 					if(message.getPathObjects() != null){
 						PageState result_page = null;
-						boolean candidate_identified = false;
 
 						String host = new URL(PathUtils.getFirstPage(message.getPathObjects()).getUrl()).getHost();
 						result_page = crawler.performPathExploratoryCrawl(browser_name, message, host);
@@ -109,15 +105,13 @@ public class ExploratoryBrowserActor extends AbstractActor {
 								&& !isResultAnimatedState){
 							//check if result is an animated image from previous page
 							page_state_service.save(result_page);
-							candidate_identified = true;
 					  		//crawl test and get result
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 
 							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser());
 							parent_path_explorer.tell(msg, getSelf());
 						}
-
-						if(!candidate_identified){
+						else {
 								PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());

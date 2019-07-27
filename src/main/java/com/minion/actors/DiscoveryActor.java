@@ -117,16 +117,15 @@ public class DiscoveryActor extends AbstractActor{
 								  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 						
 						//create multiple exploration actors for parallel execution
-						for(int i=0; i< 2; i++){
+						for(int i=0; i< 10; i++){
 							exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 									  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 						}
 						
 						discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
 						//create new discovery
-						//discovery_record.getExpandedUrls().add(message.getDomain().getUrl());
 						discovery_service.save(discovery_record);
-						
+
 						message.getAccount().addDiscoveryRecord(discovery_record);
 						account_service.save(message.getAccount());
 
@@ -151,7 +150,7 @@ public class DiscoveryActor extends AbstractActor{
 				        analytics.enqueue(TrackMessage.builder("Started Discovery")
 				    		    .userId(message.getAccount().getUsername())
 				    		    .properties(traits)
-				    		);
+			    		);
 
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
@@ -189,23 +188,24 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
-						PageState page_state = PathUtils.getLastPageState(message.getPathObjects());
-						
-						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-						
-						log.warn("discovery record DOES NOT already contain expanded page state. NEW TOTAL PATH COUNT IS :: "+discovery_record.getTotalPathCount());
+						//PageState page_state = PathUtils.getLastPageState(message.getPathObjects());
 						
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
-						if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
-							discovery_record.addExpandedPageState(page_state.getKey());
+						String path_key = String.join(":::", message.getKeys());
+						if(!discovery_record.getExpandedPathKeys().contains(path_key)){
+							discovery_record.getExpandedPathKeys().add(path_key);
+
+							discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+							
+							log.warn("discovery record DOES NOT already contain expanded page state. NEW TOTAL PATH COUNT IS :: "+discovery_record.getTotalPathCount());
+							
+							exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
+
+							log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+							MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 						}
-						
-						exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
-						
-						log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
@@ -224,13 +224,8 @@ public class DiscoveryActor extends AbstractActor{
 
 				})
 				.match(Test.class, test -> { 
-					log.warn("discovery actor received TEST (count before increment) :: "+discovery_record.getTestCount());
-					log.warn("discovery actor received TEST (examined count before increment) :: "+discovery_record.getExaminedPathCount());
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-
-					log.warn("discovery actor received TEST (count after increment) :: "+discovery_record.getTestCount());
-					log.warn("discovery actor received TEST (examined after increment) :: "+discovery_record.getExaminedPathCount());
 					
 					//send message to Domain Actor
 					domain_actor.tell(test, getSelf());
@@ -243,24 +238,28 @@ public class DiscoveryActor extends AbstractActor{
 			    	*/
 					
 					boolean isLandable = BrowserService.checkIfLandable(browser.toString(), test.getResult(), test.getPathObjects() );
-					if(isLandable && !discovery_record.getExpandedPageStates().contains(test.getResult().getUrl())){
-						UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser);
-						url_browser_actor.tell(url_message, getSelf() );
+					String path_key = String.join(":::", test.getPathKeys());
+					
+					if(!discovery_record.getExpandedPathKeys().contains(path_key)){
+						if(isLandable){
+							UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser);
+							url_browser_actor.tell(url_message, getSelf() );
+						}
+						else{
+							List<String> final_key_list = new ArrayList<>(test.getPathKeys());
+				  			final_key_list.add(test.getResult().getKey());
+				  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
+				  			final_object_list.add(test.getResult());
+				  			//run reducer on key list
+				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
+				  			
+				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser);
+					  		//send path message with examined status to discovery actor
+							path_expansion_actor.tell(path, getSelf());
+						}
 					}
-					else{
-						List<String> final_key_list = new ArrayList<>(test.getPathKeys());
-			  			final_key_list.add(test.getResult().getKey());
-			  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
-			  			final_object_list.add(test.getResult());
-			  			//run reducer on key list
-			  			final_key_list = PathUtils.reducePathKeys(final_key_list);
-			  			
-			  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser);
-				  		//send path message with examined status to discovery actor
-						path_expansion_actor.tell(path, getSelf());
-					}
+					
 					discovery_service.save(discovery_record);
-
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

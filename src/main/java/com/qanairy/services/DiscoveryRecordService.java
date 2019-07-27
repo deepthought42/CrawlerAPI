@@ -43,7 +43,7 @@ public class DiscoveryRecordService {
 		}
 		else{
 			discovery_record.setExaminedPathCount(discovery.getExaminedPathCount());
-			discovery_record.setExpandedPageStates(discovery.getExpandedPageStates());
+			discovery_record.setExpandedPathKeys(discovery.getExpandedPathKeys());
 			discovery_record.setLastPathRanAt(discovery.getLastPathRanAt());
 			discovery_record.setTestCount(discovery.getTestCount());
 			discovery_record.setTotalPathCount(discovery.getTotalPathCount());

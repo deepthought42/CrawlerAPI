@@ -10,8 +10,10 @@ import java.util.NoSuchElementException;
 
 import javax.imageio.ImageIO;
 
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,13 +165,14 @@ public class ParentPathExplorer extends AbstractActor {
 								break;
 							}
 							//if parent element is not visible in pane then break
-							log.warn("Builing element state");
+							log.warn("Building element state");
 							ElementState parent_element = null;
 							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
 							if(parent_element == null){
 								break;
 							}
 
+							log.warn("Adding parent element to end path keys :: "+parent_element);
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
@@ -177,9 +180,12 @@ public class ParentPathExplorer extends AbstractActor {
 							List<PathObject> parent_end_path_objects = new ArrayList<>();
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
+							
+							log.warn("crawling without building result");
 							//finish crawling using array of elements following last page element
 							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host);
 
+							log.warn("Parent path explorer detecting loading animation");
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){
 								parent_end_path_keys.add(loading_animation.getKey());
@@ -211,12 +217,18 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							log.warn("Setting last element to parent element");
 							last_element = parent_element;
-						}catch(NullPointerException e){
+						}
+						catch(NullPointerException e){
 							log.warn("NullPointerException occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
 							e.printStackTrace();
-						}catch(Exception e){
-							log.warn("Exception occurred in ParentPathExplorer :: "+e.getMessage());
+						}
+						catch(WebDriverException e){
+							log.debug("Exception occurred in ParentPathExplorer :: "+e.getMessage());
+							error_occurred = true;
+						}
+						catch(GridException e){
+							log.debug("Exception occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
 						}
 						finally{

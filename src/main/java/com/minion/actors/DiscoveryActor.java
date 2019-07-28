@@ -21,6 +21,8 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Form;
+import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
@@ -129,9 +131,7 @@ public class DiscoveryActor extends AbstractActor{
 						if(!discovery_record.getExpandedPathKeys().contains(path_key)){
 							discovery_record.getExpandedPathKeys().add(path_key);
 							discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-							
-							log.warn("discovery record DOES NOT already contain expanded page state. NEW TOTAL PATH COUNT IS :: "+discovery_record.getTotalPathCount());
-							
+														
 							exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
 
 							log.info("existing total path count :: "+discovery_record.getTotalPathCount());
@@ -169,12 +169,13 @@ public class DiscoveryActor extends AbstractActor{
 			    	}
 			    	*/
 					
+					
 					boolean isLandable = BrowserService.checkIfLandable(browser.toString(), test.getResult(), test.getPathObjects() );
 					String path_key = String.join(":::", test.getPathKeys());
 					
 					if(!discovery_record.getExpandedPathKeys().contains(path_key)){
 						if(isLandable){
-							UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser);
+							UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor);
 							url_browser_actor.tell(url_message, getSelf() );
 						}
 						else{
@@ -185,7 +186,7 @@ public class DiscoveryActor extends AbstractActor{
 				  			//run reducer on key list
 				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
 				  			
-				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser);
+				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor);
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
 						}
@@ -193,6 +194,10 @@ public class DiscoveryActor extends AbstractActor{
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					discovery_service.save(discovery_record);
+				})
+				.match(PageState.class, page_state -> { 
+					//send message to Domain Actor
+					domain_actor.tell(page_state, getSelf());										
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -221,7 +226,7 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 		
 		//create multiple exploration actors for parallel execution
-		for(int i=0; i < 10; i++){
+		for(int i=0; i < 5; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 		}
@@ -239,7 +244,7 @@ public class DiscoveryActor extends AbstractActor{
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
 		
-		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser());
+		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor);
 		url_browser_actor.tell(url_message, getSelf() );
 		
 		//Fire discovery started event

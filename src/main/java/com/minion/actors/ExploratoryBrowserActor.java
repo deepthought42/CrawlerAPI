@@ -104,15 +104,15 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						if(!ExploratoryPath.hasCycle(page_states, result_page, message.getPathObjects().size() == 1)
 								&& !isResultAnimatedState){
 							//check if result is an animated image from previous page
-							page_state_service.save(result_page);
+							//page_state_service.save(result_page);
 					  		//crawl test and get result
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 
-							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser());
+							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor());
 							parent_path_explorer.tell(msg, getSelf());
 						}
 						else {
-								PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser());
+								PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 						}

@@ -137,7 +137,8 @@ public class UrlBrowserActor extends AbstractActor {
 					
 					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation);
 					message.getDiscoveryActor().tell(test, getSelf());
-					
+					message.getDomainActor().tell(test, getSelf());
+
 					log.warn("finished creating landing page test");
 
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -155,7 +156,7 @@ public class UrlBrowserActor extends AbstractActor {
 					  	new_path_keys.add(page_state.getKey());
 					  	new_path_objects.add(page_state);
 
-						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name));
+						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor());
 						
 						//send message to animation detection actor
 						animation_actor.tell(path_message, getSelf() );

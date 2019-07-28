@@ -217,6 +217,7 @@ public class ParentPathExplorer extends AbstractActor {
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
 			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString());
 		  			message.getDiscoveryActor().tell(test, getSelf());
+		  			message.getDomainActor().tell(test, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -245,20 +246,17 @@ public class ParentPathExplorer extends AbstractActor {
 		Test test = new Test(path_keys, path_objects, result_page, null);
 
 		Test test_db = test_service.findByKey(test.getKey());
-		if(test_db != null){
-			test = test_db;
+		if(test_db == null){
+			test.setRunTime(crawl_time);
+			test.setLastRunTimestamp(new Date());
+			addFormGroupsToPath(test);
+	
+			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
+			test.addRecord(test_record);
+	
+			boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
+			test.setSpansMultipleDomains(leaves_domain);
 		}
-
-		test.setRunTime(crawl_time);
-		test.setLastRunTimestamp(new Date());
-		addFormGroupsToPath(test);
-
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
-		test.addRecord(test_record);
-
-		boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
-		test.setSpansMultipleDomains(leaves_domain);
-		
 		return test;
 	}
 

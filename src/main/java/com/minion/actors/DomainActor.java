@@ -13,6 +13,9 @@ import org.springframework.stereotype.Component;
 
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
+import com.qanairy.models.Form;
+import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.services.DomainService;
@@ -83,13 +86,26 @@ public class DomainActor extends AbstractActor{
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(Test.class, test -> {
-					log.warn("domain actor about to save test :: " + host);
-					Test test_record = test_service.save(test, host);
+					test_service.save(test, host);
+					
 					Domain domain = domain_service.findByHost(host);
-					domain.addTest(test_record);
+					for(PathObject obj : test.getPathObjects()){
+						if(obj.getKey().contains("pagestate")){
+							domain.addPageState((PageState)obj);
+						}
+					}
+					
+					domain.addPageState(test.getResult());
+					domain_service.save(domain);
+									})
+				.match(PageState.class, page_state -> {
+					Domain domain = domain_service.findByHost(host);
+					domain.addPageState(page_state);
 					domain_service.save(domain);
 					
-					MessageBroadcaster.broadcastDiscoveredTest(test, host);
+					for(Form form : page_state.getForms()){
+						MessageBroadcaster.broadcastDiscoveredForm(form, host);
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

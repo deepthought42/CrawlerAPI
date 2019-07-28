@@ -126,8 +126,9 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	
 							    form = form_service.save(form);
 							  	page_state.addForm(form);
-							  	page_state_service.save(page_state);
-							  								
+							  	//page_state_service.save(page_state);
+							  						
+							  	message.getDiscoveryActor().tell(form, getSelf());
 						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);
 						  	}
@@ -145,7 +146,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 1000);
+					}while(!forms_created && count < 10000);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

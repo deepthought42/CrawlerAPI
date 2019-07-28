@@ -16,15 +16,17 @@ public class TestCandidateMessage {
 	private List<String> keys;
 	private List<PathObject> path_objects;
 	private ActorRef discovery_actor;
+	private ActorRef domain_actor;
 	private PageState result_page;
 	private BrowserType browser;
 	
-	public TestCandidateMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PageState result_page, BrowserType browser){
+	public TestCandidateMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PageState result_page, BrowserType browser, ActorRef domain_actor){
 		setDiscoveryActor(discovery_actor);
 		setBrowser(browser);
 		this.keys = keys;
 		this.path_objects = path_objects;
 		this.result_page = result_page;
+		setDomainActor(domain_actor);
 	}
 
 	public List<String> getKeys() {
@@ -53,5 +55,13 @@ public class TestCandidateMessage {
 
 	public void setBrowser(BrowserType browser) {
 		this.browser = browser;
+	}
+
+	public ActorRef getDomainActor() {
+		return domain_actor;
+	}
+
+	public void setDomainActor(ActorRef domain_actor) {
+		this.domain_actor = domain_actor;
 	}
 }

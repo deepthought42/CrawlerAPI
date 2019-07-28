@@ -504,7 +504,6 @@ public class BrowserService {
 				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url);
 				page_state = page_state_record;
 				page_state.addScreenshotChecksum(screenshot_checksum);
-				page_state = page_state_service.save(page_state);
 			}
 			page_state = page_state_service.save(page_state);
 

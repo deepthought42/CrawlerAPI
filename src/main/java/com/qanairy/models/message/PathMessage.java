@@ -14,15 +14,17 @@ public class PathMessage {
 	private List<String> keys;
 	private List<PathObject> path_objects;
 	private ActorRef discovery_actor;	
+	private ActorRef domain_actor;
 	private PathStatus status;
 	private BrowserType browser;
 	
-	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser){
+	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser, ActorRef domain_actor){
 		setKeys(keys);
 		setPathObjects(path_objects);
 		setDiscoveryActor(discovery_actor);
 		setStatus(status);
 		setBrowser(browser);
+		setDomainActor(domain_actor);
 	}
 
 	public List<String> getKeys() {
@@ -42,7 +44,7 @@ public class PathMessage {
 	}
 	
 	public PathMessage clone(){
-		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser());
+		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor());
 	}
 
 	public ActorRef getDiscoveryActor() {
@@ -67,5 +69,13 @@ public class PathMessage {
 
 	public void setBrowser(BrowserType browser) {
 		this.browser = browser;
+	}
+
+	public ActorRef getDomainActor() {
+		return domain_actor;
+	}
+
+	public void setDomainActor(ActorRef domain_actor) {
+		this.domain_actor = domain_actor;
 	}
 }

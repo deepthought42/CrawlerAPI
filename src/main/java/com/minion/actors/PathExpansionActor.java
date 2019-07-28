@@ -80,7 +80,7 @@ public class PathExpansionActor extends AbstractActor {
 				log.warn("total path expansions found :: "+exploratory_paths.size());
 		
 				for(ExploratoryPath expanded : exploratory_paths){
-					PathMessage path = new PathMessage(expanded.getPathKeys(), expanded.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXPANDED, message.getBrowser());
+					PathMessage path = new PathMessage(expanded.getPathKeys(), expanded.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXPANDED, message.getBrowser(), message.getDomainActor());
 					message.getDiscoveryActor().tell(path, getSelf());
 				}
 			})
@@ -157,7 +157,7 @@ public class PathExpansionActor extends AbstractActor {
 			
 				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
-				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser());
+				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor());
 
 				new_path.getPathObjects().add(page_element);
 				new_path.getKeys().add(page_element.getKey());

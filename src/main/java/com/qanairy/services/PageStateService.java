@@ -55,12 +55,10 @@ public class PageStateService {
 				
 		for(Screenshot screenshot : page_state.getScreenshots()){
 			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
-			if(page_state_record == null){
-				findByAnimationImageChecksum(screenshot.getChecksum());
-			}
 			if(page_state_record != null){
 				break;
 			}
+			page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
 		}
 		if(page_state_record != null){
 			page_state_record.setLandable(page_state.isLandable());
@@ -78,6 +76,7 @@ public class PageStateService {
 			page_state_record = page_state_repo.save(page_state_record);
 			page_state_record.setElements(getElementStates(page_state.getKey()));
 			page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
+			page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
 		}
 		else {
 			page_state_record = findByKey(page_state.getKey());

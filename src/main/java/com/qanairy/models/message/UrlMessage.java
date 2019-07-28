@@ -7,12 +7,14 @@ import akka.actor.ActorRef;
 public class UrlMessage {
 	private URL url;
 	private ActorRef discovery_actor;
+	private ActorRef domain_actor;
 	private BrowserType browser;
 	
-	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser){
+	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor){
 		setDiscoveryActor(discovery_actor);
 		setUrl(url);
 		setBrowser(browser);
+		setDomainActor(domain_actor);
 	}
 
 	public URL getUrl() {
@@ -37,5 +39,13 @@ public class UrlMessage {
 
 	private void setBrowser(BrowserType browser) {
 		this.browser = browser;
+	}
+
+	public ActorRef getDomainActor() {
+		return domain_actor;
+	}
+
+	public void setDomainActor(ActorRef domain_actor) {
+		this.domain_actor = domain_actor;
 	}
 }

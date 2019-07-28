@@ -61,7 +61,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Component
 @Scope("prototype")
 public class TestCreationActor extends AbstractActor  {
-	private static Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
+	private static Logger log = LoggerFactory.getLogger(TestCreationActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired

@@ -1,17 +1,11 @@
 package com.minion.actors;
 
-import static com.qanairy.config.SpringExtension.SpringExtProvider;
-
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import akka.actor.Props;
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -49,9 +43,6 @@ public class AnimationDetectionActor extends AbstractActor{
 	@Autowired
 	private Crawler crawler;
 
-	@Autowired
-	private ActorSystem actor_system;
-
 	public static Props props() {
 	  return Props.create(AnimationDetectionActor.class);
 	}
@@ -72,34 +63,28 @@ public class AnimationDetectionActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, msg -> {
+			.match(PathMessage.class, msg -> {
 					boolean err = false;
 					do{
 						err = false;
 						try{
-							Browser browser = BrowserConnectionFactory.getConnection(msg.getDiscovery().getBrowserName(), BrowserEnvironment.DISCOVERY);
+							Browser browser = BrowserConnectionFactory.getConnection(msg.getBrowser(), BrowserEnvironment.DISCOVERY);
 							PageState first_page_state = PathUtils.getFirstPage(msg.getPathObjects());
 							
-							log.warning("navigating to url :: " + msg.getDiscovery().getDomainUrl());
+							log.warning("navigating to url :: " + first_page_state.getUrl());
 							browser.navigateTo(first_page_state.getUrl());
-							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, msg.getDiscovery().getDomainUrl());
+							crawler.crawlPathWithoutBuildingResult(msg.getKeys(), msg.getPathObjects(), browser, first_page_state.getUrl());
 
-							Animation animation = BrowserUtils.getAnimation(browser, msg.getDiscovery().getDomainUrl());
+							Animation animation = BrowserUtils.getAnimation(browser, first_page_state.getUrl());
 							if(animation.getImageUrls().size() > 1){
 								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
 								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
-								page_state_service.save(first_page_state);
+								//page_state_service.save(first_page_state);
 							}
 
-							final ActorRef form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-							ActorRef path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-
-							PathMessage path_message = msg.clone();
-
-							form_discoverer.tell(path_message, getSelf() );
-							path_expansion_actor.tell(path_message, getSelf() );
+							//Tell discovery actor about test
+							msg.getDiscoveryActor().tell(msg.clone(), getSelf());
+							
 						}catch(Exception e){
 							log.warning("exception occurred during Animation Detection.....  "+e.getMessage());
 							err = true;

@@ -59,7 +59,7 @@ public class TestCreatorService {
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		page_state.setLandable(true);
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
-		page_state = page_state_service.save(page_state);
+		//page_state = page_state_service.save(page_state);
 
 	  	List<String> path_keys = new ArrayList<String>();
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -74,53 +74,6 @@ public class TestCreatorService {
 	  		path_objects.add(animation);
 	  	}
 
-	  	path_keys.add(page_state.getKey());
-	  	path_objects.add(page_state);
-
-	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name);
-
-		String url = page_state.getUrl();
-		if(!url.contains("http")){
-			url = "http://"+url;
-		}
-		String url_path = new URL(url).getPath();
-		url_path = url_path.replace("/", " ").trim();
-		if(url_path.isEmpty()){
-			url_path = "home";
-		}
-		test.setName(url_path + " page loaded");
-
-		//add group "smoke" to test
-		Group group = new Group("smoke");
-		group = group_service.save(group);
-		test.addGroup(group);
-
-		return test;
-	}
-	
-	/**
-	 * Generates a landing page test based on a given URL
-	 *
-	 * @param browser
-	 * @param msg
-	 *
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 * @throws WebDriverException
-	 * @throws GridException
-	 *
-	 * @pre browser != null
-	 * @pre msg != null
-	 */
-	public Test createLandingPageTest(PageState page_state, String browser_name)
-			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
-		page_state.setLandable(true);
-		page_state.setLastLandabilityCheck(LocalDateTime.now());
-		page_state = page_state_service.save(page_state);
-
-	  	List<String> path_keys = new ArrayList<String>();
-	  	List<PathObject> path_objects = new ArrayList<PathObject>();
 	  	path_keys.add(page_state.getKey());
 	  	path_objects.add(page_state);
 

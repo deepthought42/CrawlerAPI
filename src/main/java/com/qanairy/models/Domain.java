@@ -25,10 +25,13 @@ public class Domain implements Persistable{
 	private String protocol;
 	private String logo_url;
 	private String discovery_browser;
-	
+
 	@Relationship(type = "HAS_TEST")
 	private Set<Test> tests = new HashSet<>();
-	
+
+	@Relationship(type = "HAS")
+	private Set<PageState> page_states = new HashSet<>();
+
 	@Relationship(type = "HAS_TEST_USER")
 	private Set<TestUser> test_users = new HashSet<>();
 	
@@ -181,5 +184,20 @@ public class Domain implements Persistable{
 	
 	public long getId(){
 		return this.id;
+	}
+
+	public Set<PageState> getPageStates() {
+		return this.page_states;
+	}
+	
+	public boolean addPageState(PageState page_state){
+		//check if page state exists
+		for(PageState state : this.getPageStates()){
+			if(state.getKey().equals(page_state.getKey())){
+				return false;
+			}
+		}
+		
+		return this.getPageStates().add(page_state);
 	}
 }

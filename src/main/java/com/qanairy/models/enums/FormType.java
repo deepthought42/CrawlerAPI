@@ -8,7 +8,7 @@ public enum FormType {
 	
 	private String shortName;
 
-    FormType (String shortName) {
+    FormType(String shortName) {
         this.shortName = shortName;
     }
 
@@ -18,7 +18,7 @@ public enum FormType {
     }
 
     @JsonCreator
-    public static FormType create (String value) {
+    public static FormType create(String value) {
         if(value == null) {
             throw new IllegalArgumentException();
         }

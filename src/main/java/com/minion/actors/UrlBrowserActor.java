@@ -2,9 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,23 +22,21 @@ import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
 
-import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
-import com.minion.structs.Message;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
+import com.qanairy.models.message.UrlMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.TestCreatorService;
-import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 
 /**
@@ -65,12 +61,6 @@ public class UrlBrowserActor extends AbstractActor {
 	@Autowired
 	private BrowserService browser_service;
 
-	@Autowired
-	private TestService test_service;
-
-	@Autowired
-	private DiscoveryRecordService discovery_service;
-
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -91,108 +81,88 @@ public class UrlBrowserActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(Message.class, message -> {
-					if(message.getData() instanceof URL){
+				.match(UrlMessage.class, message -> {
+					//String discovery_key = message.getOptions().get("discovery_key").toString();
+					String url = message.getUrl().toString();
+					
+					String host = message.getUrl().getHost();
+					String browser_name = message.getBrowser().toString();
+					log.warn("starting transition detection");
+					Redirect redirect = null;
+					PageLoadAnimation animation = null;
 
-						String discovery_key = message.getOptions().get("discovery_key").toString();
-						String url = ((URL)message.getData()).toString();
-						DiscoveryRecord discovery = discovery_service.findByKey(discovery_key);
-						if(discovery.getExpandedUrls().contains(url)){
-							return;
+					List<String> path_keys = null;
+					List<PathObject> path_objects = null;
+					
+					do{
+						path_keys = new ArrayList<>();
+						path_objects = new ArrayList<>();
+						Browser browser = null;
+						
+						try{
+							browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+							log.warn("navigating to url :: "+url);
+							browser.navigateTo(url);
+
+							redirect = BrowserUtils.getPageTransition(url, browser, host);
+						  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
+								path_keys.add(redirect.getKey());
+								path_objects.add(redirect);
+							}
+
+						  	animation = BrowserUtils.getLoadingAnimation(browser, host);
+							if(animation != null){
+								path_keys.add(animation.getKey());
+								path_objects.add(animation);
+							}
+							break;
 						}
-						discovery.getExpandedUrls().add(url);
-						discovery_service.save(discovery);
-						discovery_service.incrementTotalPathCount(discovery_key);
-
-						//broadcast discovery
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery);
-
-						String host = ((URL)message.getData()).getHost();
-						String browser_name = message.getOptions().get("browser").toString();
-						log.warn("starting transition detection");
-						Redirect redirect = null;
-						PageLoadAnimation animation = null;
-
-						List<String> path_keys = null;
-						List<PathObject> path_objects = null;
-						
-						do{
-							path_keys = new ArrayList<>();
-							path_objects = new ArrayList<>();
-							Browser browser = null;
-							
-							try{
-								browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-								log.warn("navigating to url :: "+url);
-								browser.navigateTo(url);
-
-								redirect = BrowserUtils.getPageTransition(url, browser, host);
-							  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
-									path_keys.add(redirect.getKey());
-									path_objects.add(redirect);
-								}
-
-							  	animation = BrowserUtils.getLoadingAnimation(browser, host);
-								if(animation != null){
-									path_keys.add(animation.getKey());
-									path_objects.add(animation);
-								}
-								break;
-							}
-							catch(Exception e){
-								e.printStackTrace();
-							}
-							finally {
-								if(browser != null){
-									browser.close();
-								}
-							}
-							log.warn("Transition :: " + redirect);
-							log.warn("Animation returned   :: " + animation);
-						}while(redirect == null);
-						
-						log.warn("loading animation detection complete");
-						List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host, path_objects, path_keys);
-
-						log.warn("Done building page states ");
-						Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation);
-						log.warn("finished creating landing page test");
-
-						test = test_service.save(test, host);
-
-						MessageBroadcaster.broadcastDiscoveredTest(test, host);
-
-						DiscoveryRecord discovery_record = discovery_service.findByKey( discovery_key);
-
-						final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-								  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
-
-						for(PageState page_state : page_states){
-							if(!discovery_record.getExpandedPageStates().contains(page_state.getKey())){
-								log.warn("discovery path does not have expanded page state");
-								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-								System.err.println("page state  ::   " + page_state);
-								System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-
-								List<String> new_path_keys = new ArrayList<String>(path_keys);
-							  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
-							  	
-							  	new_path_keys.add(page_state.getKey());
-							  	new_path_objects.add(page_state);
-
-								PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), discovery, message.getAccountKey(), message.getOptions());
-
-								//send message to animation detection actor
-								animation_actor.tell(path_message, getSelf() );
+						catch(Exception e){
+							log.warn(e.getMessage());
+						}
+						finally {
+							if(browser != null){
+								browser.close();
 							}
 						}
+						log.warn("Transition :: " + redirect);
+						log.warn("Animation returned   :: " + animation);
+					}while(redirect == null);
+					
+					log.warn("loading animation detection complete");
+					List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host, path_objects, path_keys);
 
-						discovery_record.setLastPathRanAt(new Date());
-						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
-						discovery_record.setTestCount(discovery_record.getTestCount()+1);
-						discovery_record = discovery_service.save(discovery_record);
-						MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
-				   }
+					log.warn("Done building page states ");
+					//send test to discovery actor
+					
+					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation);
+					message.getDiscoveryActor().tell(test, getSelf());
+					message.getDomainActor().tell(test, getSelf());
+
+					log.warn("finished creating landing page test");
+
+					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
+
+					for(PageState page_state : page_states){
+						log.warn("discovery path does not have expanded page state");
+						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+						System.err.println("page state  ::   " + page_state);
+						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+
+						List<String> new_path_keys = new ArrayList<String>(path_keys);
+					  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
+					  	
+					  	new_path_keys.add(page_state.getKey());
+					  	new_path_objects.add(page_state);
+
+						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor());
+						
+						//send message to animation detection actor
+						animation_actor.tell(path_message, getSelf() );
+					}
+
+					
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 				})
 				.match(MemberUp.class, mUp -> {

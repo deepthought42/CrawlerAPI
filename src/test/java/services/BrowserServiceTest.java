@@ -62,7 +62,7 @@ public class BrowserServiceTest {
 	public void verifyXpathGenerationWithJsoup(){
 		String html = "<html><body><div><a class='test-class'>link1</a><a class='test-class'>link2</a></div><div id='test-id1'></div><div><span></span></div></body></html>";
 		
-		List<String> visible_elements = BrowserService.getVisibleElementsUsingJSoup(html);
+		List<String> visible_elements = BrowserService.getXpathsUsingJSoup(html);
 		for(String xpath : visible_elements){
 			System.err.println(xpath);
 		}

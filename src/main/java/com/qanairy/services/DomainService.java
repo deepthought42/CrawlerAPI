@@ -22,7 +22,7 @@ import com.qanairy.models.repository.DomainRepository;
 
 @Service
 public class DomainService {
-	private static Logger log = LoggerFactory.getLogger(BrowserService.class);
+	private static Logger log = LoggerFactory.getLogger(DomainService.class);
 
 	@Autowired
 	private DomainRepository domain_repo;

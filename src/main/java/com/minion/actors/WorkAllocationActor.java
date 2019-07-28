@@ -15,7 +15,6 @@ import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
-import com.qanairy.models.message.ExplorationPathMessage;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -93,11 +92,6 @@ public class WorkAllocationActor extends AbstractActor  {
 						testing_actor.tell(acct_message, getSelf() );
 					}
 					getSender().tell("Status: ok", getSelf());
-				})
-				.match(ExplorationPathMessage.class, message -> {
-					final ActorRef exploratory_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-							  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID());
-					exploratory_browser_actor.tell(message, getSelf() );
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

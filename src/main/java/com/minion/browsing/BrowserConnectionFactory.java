@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Random;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 
 public class BrowserConnectionFactory {
 
@@ -20,7 +21,7 @@ public class BrowserConnectionFactory {
 	//STAGING HUB ADDRESS
 	//private static final String HUB_IP_ADDRESS="159.89.226.116:4444";
 
-
+	@Deprecated
 	public static Browser getConnection(String browser, BrowserEnvironment environment) throws MalformedURLException{
 		URL hub_url = null;
 		if(environment.equals(BrowserEnvironment.TEST)){
@@ -40,4 +41,23 @@ public class BrowserConnectionFactory {
 		return new Browser(browser, hub_url);
 	}
 
+	
+	public static Browser getConnection(BrowserType browser, BrowserEnvironment environment) throws MalformedURLException{
+		URL hub_url = null;
+		if(environment.equals(BrowserEnvironment.TEST)){
+			hub_url = new URL( "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub" );
+		}
+		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "chrome".equalsIgnoreCase(browser.toString())){
+			Random randomGenerator = new Random();
+			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
+		}
+		else if(environment.equals(BrowserEnvironment.DISCOVERY) && "firefox".equalsIgnoreCase(browser.toString())){
+			Random randomGenerator = new Random();
+			int randomInt = randomGenerator.nextInt(DISCOVERY_HUB_IP_ADDRESS.length);
+			hub_url = new URL( "http://"+DISCOVERY_HUB_IP_ADDRESS[randomInt]+"/wd/hub");
+		}
+
+		return new Browser(browser.toString(), hub_url);
+	}
 }

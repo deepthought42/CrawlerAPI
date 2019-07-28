@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,26 +23,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import com.minion.api.exception.PaymentDueException;
-import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
-import com.qanairy.models.enums.DiscoveryStatus;
+import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.DiscoveryAction;
+import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
-import com.qanairy.workmanagement.WorkAllowanceStatus;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
-import akka.pattern.Patterns;
-import scala.concurrent.Future;
-import scala.concurrent.Await;
-import scala.concurrent.duration.Duration;
-import akka.util.Timeout;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 
@@ -57,14 +50,13 @@ import akka.actor.ActorSystem;
 public class DiscoveryController {
 	private static Logger log = LoggerFactory.getLogger(DiscoveryController.class);
 
+	private static Map<String, ActorRef> domain_actors = new HashMap<>();
+	
     @Autowired
     private AccountService account_service;
 
     @Autowired
     private DomainService domain_service;
-
-    @Autowired
-    private DiscoveryRecordService discovery_service;
     
     @Autowired
     private ActorSystem actor_system;
@@ -112,8 +104,6 @@ public class DiscoveryController {
     	String id = principal.getName().replace("auth0|", "");
     	Account acct = account_service.findByUserId(id);
 
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
@@ -124,7 +114,6 @@ public class DiscoveryController {
     	}
     	*/
 
-    	Domain domain = domain_service.findByHost(url);
     	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
 
     	Date now = new Date();
@@ -132,53 +121,19 @@ public class DiscoveryController {
     	if(last_discovery_record != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
-    	String domain_url = domain.getUrl();
-    	String protocol = domain.getProtocol();
+
+    	Domain domain = domain_service.findByHost(url);
 
 		if(diffInMinutes > 1440){
 			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-			DiscoveryRecord discovery_record = new DiscoveryRecord(now, domain.getDiscoveryBrowserName(), domain_url, 0, 1, 0, DiscoveryStatus.RUNNING);
-
-			acct.addDiscoveryRecord(discovery_record);
-			acct = account_service.save(acct);
-
-			domain.addDiscoveryRecord(discovery_record);
-			domain_service.save(domain);
-
-			WorkAllowanceStatus.register(acct.getUsername());
-			//ActorSystem actor_system = ActorSystem.create("MinionActorSystem");
-			Map<String, Object> options = new HashMap<String, Object>();
-			options.put("browser", domain.getDiscoveryBrowserName());
-	        options.put("discovery_key", discovery_record.getKey());
-	        options.put("host", domain.getUrl());
-			Message<URL> message = new Message<URL>(acct.getUsername(), new URL(protocol+"://"+domain_url), options);
-
-			ActorRef workAllocationActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("workAllocationActor"), "work_allocation_actor"+UUID.randomUUID());
-
-		    //Fire discovery started event
-			Map<String, String> traits = new HashMap<String, String>();
-	        traits.put("user_id", id);
-	        traits.put("url", url);
-	    	traits.put("browser", domain.getDiscoveryBrowserName());
-	        traits.put("discovery_started", "true");
-	    	traits.put("discovery_key", discovery_record.getKey());
-	        analytics.enqueue(TrackMessage.builder("Started Discovery")
-	    		    .userId(acct.getUsername())
-	    		    .properties(traits)
-	    		);
-
-			Timeout timeout = new Timeout(Duration.create(60, "seconds"));
-			Future<Object> future = Patterns.ask(workAllocationActor, message, timeout);
-
-			try {
-				Await.result(future, timeout.duration());
-			} catch (Exception e) {
-				log.error(e.getMessage());
+			if(!domain_actors.containsKey(domain.getUrl())){
+				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+						  .props("domainActor"), "domain_actor"+UUID.randomUUID());
+				domain_actors.put(domain.getUrl(), domain_actor);
 			}
-
-			return discovery_record;
-
+		    
+			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+			domain_actors.get(domain.getUrl()).tell(discovery_action_msg, null);
 		}
         else{
         	//Throw error indicating discovery has been or is running
@@ -189,6 +144,8 @@ public class DiscoveryController {
 	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
 	    	discovery_started_props.put("already_running", "true");
 
+	    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+
 	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")
 	    		    .userId(acct.getUsername())
 	    		    .properties(discovery_started_props)
@@ -196,6 +153,8 @@ public class DiscoveryController {
 
         	throw new ExistingDiscoveryFoundException();
         }
+		
+		return last_discovery_record;
 	}
 
 	/**
@@ -221,6 +180,7 @@ public class DiscoveryController {
     		throw new MissingSubscriptionException();
     	}
 
+    	/*
     	DiscoveryRecord last_discovery_record = null;
 		Date started_date = new Date(0L);
 		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
@@ -233,6 +193,18 @@ public class DiscoveryController {
 		last_discovery_record.setStatus(DiscoveryStatus.STOPPED);
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
+		*/
+    	Domain domain = domain_service.findByHost(url);
+
+    	if(!domain_actors.containsKey(domain.getUrl())){
+			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("domainActor"), "domain_actor"+UUID.randomUUID());
+			domain_actors.put(domain.getUrl(), domain_actor);
+		}
+    	
+		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+		domain_actors.get(url).tell(discovery_action_msg, null);
+		
 	}
 
 }

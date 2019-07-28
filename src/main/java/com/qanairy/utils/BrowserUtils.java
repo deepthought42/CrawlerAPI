@@ -97,7 +97,7 @@ public class BrowserUtils {
 			String new_checksum = PageState.getFileChecksum(screenshot);
 
 			transition_detected = !new_checksum.equals(last_checksum);
-
+			log.warn("animation new checksum :: " +new_checksum);
 			if( transition_detected ){
 				if( animated_state_checksum_hash.containsKey(new_checksum)){
 					break;
@@ -108,7 +108,7 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-		}while((System.currentTimeMillis() - start_ms) < 10000);
+		}while((System.currentTimeMillis() - start_ms) < 2000);
 
 		for(Future<String> future: url_futures){
 			try {
@@ -204,7 +204,7 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-		}while((System.currentTimeMillis() - start_ms) < 500);
+		}while((System.currentTimeMillis() - start_ms) < 500 && System.currentTimeMillis()-total_time < 3000);
 
 		for(Future<String> future: url_futures){
 			try {

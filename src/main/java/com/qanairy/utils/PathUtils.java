@@ -17,23 +17,20 @@ public class PathUtils {
 	 * 
 	 * @pre pathObjects != null
 	 */
-	public static PageState getLastPageState(List<PathObject> pathObjects) {
-		assert(pathObjects != null);
-		
-		PageState last_page_state = null;
-		
-		for(int idx = pathObjects.size()-1; idx >=0; idx--){
-			if(pathObjects.get(idx) instanceof PageState){
-				last_page_state = (PageState)pathObjects.get(idx);
-				break;
+	public static PageState getLastPageState(List<PathObject> path_objects) {
+		assert(path_objects != null);
+				
+		for(int idx = path_objects.size()-1; idx >=0; idx--){
+			if(path_objects.get(idx) instanceof PageState){
+				return (PageState)path_objects.get(idx);
 			}
 		}
 		
-		return last_page_state;
+		return null;
 	}
 	
 	public static int getIndexOfLastElementState(List<String> path_keys){
-		for(int element_idx=path_keys.size()-1; element_idx > 0; element_idx--){
+		for(int element_idx=path_keys.size()-1; element_idx >= 0; element_idx--){
 			if(path_keys.get(element_idx).contains("elementstate")){
 				return element_idx;
 			}
@@ -90,5 +87,38 @@ public class PathUtils {
 		}
 		
 		return null;
+	}
+
+	public static PageState getSecondToLastPageState(List<PathObject> path_objects) {
+		assert(path_objects != null);
+		
+		PageState page_state = null;
+		int page_states_seen = 0;
+		
+		for(int idx = path_objects.size()-1; idx >=0; idx--){
+			if(path_objects.get(idx) instanceof PageState){
+				page_states_seen++;
+				if(page_states_seen >= 2){
+					page_state = (PageState)path_objects.get(idx);
+					break;
+				}
+			}
+		}
+		
+		return page_state;
+	}
+
+	public static List<String> reducePathKeys(List<String> final_key_list) {
+		//scrub path objects for duplicates
+		List<String> reduced_path_keys = new ArrayList<>();
+		String last_path_key = null;
+		for(String key : final_key_list){
+			if(last_path_key == null || !key.equals(last_path_key)){
+				last_path_key = key;
+				reduced_path_keys.add(key);
+			}
+		}
+				
+		return reduced_path_keys;
 	}
 }

@@ -2,56 +2,80 @@ package com.qanairy.models.message;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.enums.PathStatus;
+import com.qanairy.models.enums.BrowserType;
+
+import akka.actor.ActorRef;
 
 public class PathMessage {
 
-	private String account_key;
-	private Map<String, Object> options;
 	private List<String> keys;
 	private List<PathObject> path_objects;
-	private DiscoveryRecord discovery;
+	private ActorRef discovery_actor;	
+	private ActorRef domain_actor;
+	private PathStatus status;
+	private BrowserType browser;
 	
-	public PathMessage(List<String> keys, List<PathObject> path_objects, DiscoveryRecord discovery, String account_key, Map<String, Object> options){
-		this.discovery = discovery;
-		this.keys = keys;
-		this.path_objects = path_objects;
-		this.setAccountKey(account_key);
-		this.setOptions(options);
+	public PathMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PathStatus status, BrowserType browser, ActorRef domain_actor){
+		setKeys(keys);
+		setPathObjects(path_objects);
+		setDiscoveryActor(discovery_actor);
+		setStatus(status);
+		setBrowser(browser);
+		setDomainActor(domain_actor);
 	}
 
 	public List<String> getKeys() {
 		return keys;
 	}
+	
+	private void setKeys(List<String> keys) {
+		this.keys = keys;
+	}
 
 	public List<PathObject> getPathObjects() {
 		return path_objects;
 	}
-
-	public DiscoveryRecord getDiscovery() {
-		return discovery;
-	}
-
-	public String getAccountKey() {
-		return account_key;
-	}
-
-	public void setAccountKey(String account_key) {
-		this.account_key = account_key;
-	}
-
-	public Map<String, Object> getOptions() {
-		return options;
-	}
-
-	public void setOptions(Map<String, Object> options) {
-		this.options = options;
+	
+	private void setPathObjects(List<PathObject> path_objects) {
+		this.path_objects = path_objects;
 	}
 	
 	public PathMessage clone(){
-		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), discovery, account_key, options);
+		return new PathMessage(new ArrayList<>(keys), new ArrayList<>(path_objects), getDiscoveryActor(), getStatus(), getBrowser(), getDomainActor());
+	}
+
+	public ActorRef getDiscoveryActor() {
+		return discovery_actor;
+	}
+
+	private void setDiscoveryActor(ActorRef discovery_actor) {
+		this.discovery_actor = discovery_actor;
+	}
+
+	public PathStatus getStatus() {
+		return status;
+	}
+
+	private void setStatus(PathStatus status) {
+		this.status = status;
+	}
+
+	public BrowserType getBrowser() {
+		return browser;
+	}
+
+	public void setBrowser(BrowserType browser) {
+		this.browser = browser;
+	}
+
+	public ActorRef getDomainActor() {
+		return domain_actor;
+	}
+
+	public void setDomainActor(ActorRef domain_actor) {
+		this.domain_actor = domain_actor;
 	}
 }

@@ -61,7 +61,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Component
 @Scope("prototype")
 public class TestCreationActor extends AbstractActor  {
-	private static Logger log = LoggerFactory.getLogger(WorkAllocationActor.class);
+	private static Logger log = LoggerFactory.getLogger(TestCreationActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
@@ -117,8 +117,10 @@ public class TestCreationActor extends AbstractActor  {
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
-				    			List<String> xpath_list = BrowserService.getVisibleElementsUsingJSoup(browser.getDriver().getPageSource());
-				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, xpath_list);
+				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
+								List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+
+				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 				    			PageState result_page = browser_service.buildPage(browser, elements);
 						    	test = new Test(path_keys, path_objects, result_page, name);
 
@@ -136,6 +138,7 @@ public class TestCreationActor extends AbstractActor  {
 							    	test.getBrowserStatuses().put(browser_name, TestStatus.PASSING.toString());
 
 						    		test = test_repo.save(test);
+						    		log.warn("test creation domain url :: " + domain.getUrl());
 						    		domain_service.addTest(domain.getUrl(), test);
 
 							    	if(test_json.get("key") != null && !test_json.get("key").toString().equals("null") && test_json.get("key").toString().length() > 0 ){
@@ -302,7 +305,7 @@ public class TestCreationActor extends AbstractActor  {
 	private PageState navigateToAndCreatePageState(String url, Browser browser)
 									throws GridException, NoSuchAlgorithmException, IOException, WebDriverException, InterruptedException, ExecutionException {
 		browser.navigateTo(url);
-		browser.waitForPageToLoad();
+		//browser.waitForPageToLoad();
 		//construct a new page
 		return browser_service.buildPage(browser);
 	}

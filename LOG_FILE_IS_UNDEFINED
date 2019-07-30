@@ -1,0 +1,48 @@
+2019-06-09 00:03:18.501  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:03:18.511  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:03:18.517  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:03:18.968  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:03:18.971  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:17:20.228  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:17:20.241  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:17:20.242  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:17:20.918  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:17:20.924  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:18:04.994  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:18:05.008  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:18:05.011  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:18:05.643  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:18:05.658  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:36:57.229  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:36:57.236  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:36:57.237  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:36:57.758  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:36:57.764  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:50:29.536  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:50:29.543  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:50:29.544  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 00:50:30.147  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 00:50:30.156  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 01:04:00.267  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 01:04:00.273  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 01:04:00.274  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
+2019-06-09 01:04:00.716  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-06-09 01:04:00.722  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-07-28 23:19:20.160  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   266   :    3
+2019-07-28 23:19:20.187  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-28 23:31:45.004  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   156   :    69
+2019-07-28 23:31:45.010  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-28 23:59:00.816  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   85   :    59
+2019-07-28 23:59:00.822  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:44:47.188  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:44:47.208  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:44:47.214  WARN   --- [main] com.minion.browsing.Crawler              : x bounds :  0 : 280
+2019-07-29 22:44:47.214  WARN   --- [main] com.minion.browsing.Crawler              : y bounds  :  0 : 0
+2019-07-29 22:44:47.214  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   108   :    56
+2019-07-29 22:44:47.221  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:47:07.496  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:47:07.520  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:47:07.521  WARN   --- [main] com.minion.browsing.Crawler              : x bounds :  0 : 280
+2019-07-29 22:47:07.521  WARN   --- [main] com.minion.browsing.Crawler              : y bounds  :  0 : 0
+2019-07-29 22:47:07.551  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   195   :    68
+2019-07-29 22:47:07.552  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

@@ -28,3 +28,21 @@
 2019-06-09 01:04:00.274  INFO   --- [main] com.qanairy.models.ExploratoryPath       : Checking if exploratory path has a cycle
 2019-06-09 01:04:00.716  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
 2019-06-09 01:04:00.722  INFO   --- [main] com.minion.browsing.Browser              : Unknown exception occurred when closing browsernull
+2019-07-28 23:19:20.160  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   266   :    3
+2019-07-28 23:19:20.187  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-28 23:31:45.004  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   156   :    69
+2019-07-28 23:31:45.010  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-28 23:59:00.816  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   85   :    59
+2019-07-28 23:59:00.822  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:44:47.188  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:44:47.208  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:44:47.214  WARN   --- [main] com.minion.browsing.Crawler              : x bounds :  0 : 280
+2019-07-29 22:44:47.214  WARN   --- [main] com.minion.browsing.Crawler              : y bounds  :  0 : 0
+2019-07-29 22:44:47.214  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   108   :    56
+2019-07-29 22:44:47.221  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:47:07.496  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:47:07.520  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+2019-07-29 22:47:07.521  WARN   --- [main] com.minion.browsing.Crawler              : x bounds :  0 : 280
+2019-07-29 22:47:07.521  WARN   --- [main] com.minion.browsing.Crawler              : y bounds  :  0 : 0
+2019-07-29 22:47:07.551  WARN   --- [main] com.minion.browsing.Crawler              : setting click point to ::   195   :    68
+2019-07-29 22:47:07.552  WARN   --- [main] com.minion.browsing.Crawler              : $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

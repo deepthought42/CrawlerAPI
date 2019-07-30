@@ -176,41 +176,9 @@ public class TestService {
 			}
 			test.setPathObjects(path_objects);
 			test.setResult(page_state_service.save(test.getResult()));
-
-			String test_name = "";
-			int page_state_idx = 0;
-			int element_action_cnt = 0;
+			
 			if(test.getName() == null || test.getName().isEmpty()){
-				for(PathObject obj : test.getPathObjects()){
-					if(obj instanceof PageState && page_state_idx >= 1){
-						String path = (new URL(((PageState)obj).getUrl())).getPath();
-						if(path.equals("/") || path.isEmpty()){
-							path = "home";
-						}
-						test_name +=  path + " page ";
-						page_state_idx++;
-					}
-					else if(obj instanceof ElementState){
-						if(element_action_cnt > 0){
-							test_name += "> ";
-						}
-						String tag_name = ((ElementState)obj).getName();
-						if(tag_name.equals("a")){
-							tag_name = "link";
-						}
-						test_name += tag_name + " ";
-						element_action_cnt++;
-					}
-					else if(obj instanceof Action){
-						Action action = ((Action)obj);
-						test_name += action.getName() + " ";
-						if(action.getValue() != null ){
-							test_name += action.getValue() + " ";
-						}
-					}
-				}
-				
-				test.setName(test_name);
+				test.setName(generateTestName(test));
 			}
 
 			Set<Group> groups = new HashSet<>();
@@ -260,7 +228,52 @@ public class TestService {
 		return test;
 	}
 
-	 public List<TestRecord> runAllTests(Account acct, Domain domain) {
+	 private String generateTestName(Test test) throws MalformedURLException {
+		 String test_name = "";
+			int page_state_idx = 0;
+			int element_action_cnt = 0;
+			for(PathObject obj : test.getPathObjects()){
+				if(obj instanceof PageState && page_state_idx < 1){
+					String path = (new URL(((PageState)obj).getUrl())).getPath().trim();
+			
+					if(path.equals("/") || path.isEmpty()){
+						path = "home";
+					}
+					test_name +=  path + " page ";
+					page_state_idx++;
+				}
+				else if(obj instanceof ElementState){
+					if(element_action_cnt > 0){
+						test_name += "> ";
+					}
+					
+					ElementState element = (ElementState)obj;
+					String tag_name = element.getName();
+					
+					if(element.getAttribute("id") != null){
+						tag_name = element.getAttribute("id").getVals().get(0);
+					}
+					else{
+						if(tag_name.equals("a")){
+							tag_name = "link";
+						}
+					}
+					test_name += tag_name + " ";
+					element_action_cnt++;
+				}
+				else if(obj instanceof Action){
+					Action action = ((Action)obj);
+					test_name += action.getName() + " ";
+					if(action.getValue() != null ){
+						test_name += action.getValue() + " ";
+					}
+				}
+			}
+			
+			return test_name;
+	}
+
+	public List<TestRecord> runAllTests(Account acct, Domain domain) {
 		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
     	Map<String, String> traits = new HashMap<String, String>();
         traits.put("account", acct.getUsername());

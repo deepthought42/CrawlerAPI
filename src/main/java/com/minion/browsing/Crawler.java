@@ -322,12 +322,12 @@ public class Crawler {
 		int left_lower_x = 0;
 		int left_upper_x = child_element.getXLocation()-web_element.getLocation().getX();
 		int right_lower_x = (child_element.getXLocation() - web_element.getLocation().getX()) + child_element.getWidth();
-		int right_upper_x = web_element.getLocation().getX() - offset.getX() + web_element.getSize().getWidth();
+		int right_upper_x = web_element.getSize().getWidth();
 		
 		int top_lower_y = 0;
 		int top_upper_y = child_element.getYLocation() - web_element.getLocation().getY();
 		int bottom_lower_y = child_element.getYLocation() - web_element.getLocation().getY() + child_element.getHeight();
-		int bottom_upper_y = web_element.getLocation().getY() - offset.getY() + web_element.getSize().getHeight();
+		int bottom_upper_y = web_element.getSize().getHeight();
 		
 		int x_coord = 0;
 		int y_coord = 0;

@@ -7,11 +7,13 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -20,7 +22,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
+import com.qanairy.models.Action;
+import com.qanairy.models.Attribute;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.TestStatus;
@@ -77,5 +83,83 @@ public class TestServiceTest {
 		
 		assertNotNull(record);
 		assertTrue(record.getStatus().equals(TestStatus.FAILING));
+	}
+	
+	@org.junit.Test
+	public void generateTestNameTestWithLongPath() throws MalformedURLException{
+		
+		List<PathObject> objects = new ArrayList<>();
+		PageState page = new PageState();
+		page.setUrl("https://test.tester.com/services/test-service.html");
+		objects.add(page);
+		
+		ElementState element = new ElementState();
+		element.setName("a");
+		
+		Action action = new Action();
+		action.setName("click");
+		
+		objects.add(element);
+		objects.add(action);
+		
+		Test test = new Test();
+		test.setPathObjects(objects);
+		
+		String name = TestService.generateTestName(test);
+		System.err.println("TEST NAME :: "+name);
+		assertEquals("services test-service.html page link click", name);
+	}
+	
+	@org.junit.Test
+	public void generateTestNameWithNoPath() throws MalformedURLException{
+		
+		List<PathObject> objects = new ArrayList<>();
+		PageState page = new PageState();
+		page.setUrl("https://test.tester.com/");
+		objects.add(page);
+		
+		ElementState element = new ElementState();
+		element.setName("a");
+		
+		Action action = new Action();
+		action.setName("click");
+		
+		objects.add(element);
+		objects.add(action);
+		
+		Test test = new Test();
+		test.setPathObjects(objects);
+		
+		String name = TestService.generateTestName(test);
+		System.err.println("TEST NAME :: "+name);
+		assertEquals("home page link click", name);
+	}
+	
+	@org.junit.Test
+	public void generateTestNameWithElementThatHasIdAttribute() throws MalformedURLException{
+		
+		List<PathObject> objects = new ArrayList<>();
+		PageState page = new PageState();
+		page.setUrl("https://test.tester.com/");
+		objects.add(page);
+		
+		ElementState element = new ElementState();
+		List<String> attribute_vals = new ArrayList<>();
+		attribute_vals.add("id-attr-1");
+		element.addAttribute(new Attribute("id", attribute_vals));
+		element.setName("a");
+		
+		Action action = new Action();
+		action.setName("click");
+		
+		objects.add(element);
+		objects.add(action);
+		
+		Test test = new Test();
+		test.setPathObjects(objects);
+		
+		String name = TestService.generateTestName(test);
+		System.err.println("TEST NAME :: "+name);
+		assertEquals("home page id-attr-1 click", name);
 	}
 }

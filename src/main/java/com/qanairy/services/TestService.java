@@ -228,14 +228,15 @@ public class TestService {
 		return test;
 	}
 
-	 private String generateTestName(Test test) throws MalformedURLException {
+	 public static String generateTestName(Test test) throws MalformedURLException {
 		 String test_name = "";
 			int page_state_idx = 0;
 			int element_action_cnt = 0;
 			for(PathObject obj : test.getPathObjects()){
 				if(obj instanceof PageState && page_state_idx < 1){
 					String path = (new URL(((PageState)obj).getUrl())).getPath().trim();
-			
+					path = path.replace("/", " ");
+					path = path.trim();
 					if(path.equals("/") || path.isEmpty()){
 						path = "home";
 					}
@@ -270,7 +271,7 @@ public class TestService {
 				}
 			}
 			
-			return test_name;
+			return test_name.trim();
 	}
 
 	public List<TestRecord> runAllTests(Account acct, Domain domain) {

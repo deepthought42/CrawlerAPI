@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
@@ -313,61 +312,7 @@ public class Crawler {
 		}
 	}
 
-	/**
-	 * 
-	 * @param web_element
-	 * @return
-	 */
-	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
-		Point elem_location = web_element.getLocation();
-
-		log.warn("generating x boundaries");
-		int left_lower_x = 0;
-		int left_upper_x = child_element.getXLocation()- elem_location.getX();
-		int right_lower_x = (child_element.getXLocation() - elem_location.getX()) + child_element.getWidth();
-		int right_upper_x = web_element.getSize().getWidth();
-		
-		log.warn("generating y boundaries");
-		int top_lower_y = 0;
-		int top_upper_y = child_element.getYLocation() - elem_location.getY();
-		int bottom_lower_y = child_element.getYLocation() - elem_location.getY() + child_element.getHeight();
-		int bottom_upper_y = web_element.getSize().getHeight();
-		
-		int x_coord = 0;
-		int y_coord = 0;
-		
-		log.warn("calculating x_coord");
-		if(left_lower_x != left_upper_x){
-			x_coord = new Random().nextInt(left_upper_x);
-		}
-		else {
-			int before_adjustment = new Random().nextInt(right_upper_x - right_lower_x);
-			x_coord = right_lower_x + before_adjustment;
-		}
-		
-		log.warn("calculating y coord");
-		if(top_lower_y != top_upper_y){
-			log.warn("Generating random value for top upper y");
-			y_coord = new Random().nextInt(top_upper_y);
-		}
-		else {
-			log.warn("bottom lower y :: " + bottom_lower_y);
-			log.warn("bottom upper y :: " + bottom_upper_y);
-			log.warn("genearting random random value within bottom y range :: " + (bottom_upper_y - bottom_lower_y));
-			int before_adjustment = new Random().nextInt(bottom_upper_y - bottom_lower_y);
-			y_coord = bottom_lower_y + before_adjustment;
-		}
-
-		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");		
-		log.warn("x bounds :  "+left_lower_x + " : "+left_upper_x);
-		log.warn("y bounds  :  "+ top_lower_y + " : "+top_upper_y);
-		log.warn("setting click point to ::   "+x_coord + "   :    "+y_coord);
-		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-		//generate an x value using lower and upper bound
-		return new Point(x_coord, y_coord);
-	}
-
+	
 	/**
 	 * Crawls the path using the provided {@link Browser browser}
 	 *
@@ -835,30 +780,72 @@ public class Crawler {
 		return result_page;
 	}
 	
-	
-	private class Shape {
-		private Point location;
-		private Dimension dimension;
+	/**
+	 * 
+	 * @param web_element
+	 * @return
+	 */
+	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
+		Point elem_location = web_element.getLocation();
+
+		log.warn("generating x boundaries");
+		int left_lower_x = 0;
+		int left_upper_x = child_element.getXLocation()- elem_location.getX();
+		int right_lower_x = (child_element.getXLocation() - elem_location.getX()) + child_element.getWidth();
+		int right_upper_x = web_element.getSize().getWidth();
 		
-		public Shape(Point point, Dimension dimension){
-			setLocation(point);
-			setDimension(dimension);
+		log.warn("generating y boundaries");
+		int top_lower_y = 0;
+		int top_upper_y = child_element.getYLocation() - elem_location.getY();
+		int bottom_lower_y = child_element.getYLocation() - elem_location.getY() + child_element.getHeight();
+		int bottom_upper_y = web_element.getSize().getHeight();
+		
+		int x_coord = 0;
+		int y_coord = 0;
+		
+		log.warn("calculating x_coord");
+		if(left_lower_x != left_upper_x){
+			x_coord = new Random().nextInt(left_upper_x);
+		}
+		else {
+			int difference = right_upper_x - right_lower_x;
+			int x_offset = 0;
+			if(difference == 0){
+				x_offset = new Random().nextInt(right_upper_x);
+			}
+			else{
+				x_offset = new Random().nextInt();
+			}
+			x_coord = right_lower_x + x_offset;
+		}
+		
+		log.warn("calculating y coord");
+		if(top_lower_y != top_upper_y){
+			log.warn("Generating random value for top upper y");
+			y_coord = new Random().nextInt(top_upper_y);
+		}
+		else {
+			log.warn("bottom lower y :: " + bottom_lower_y);
+			log.warn("bottom upper y :: " + bottom_upper_y);
+			log.warn("genearting random random value within bottom y range :: " + (bottom_upper_y - bottom_lower_y));
+			int difference = bottom_upper_y - bottom_lower_y;
+			int y_offset = 0;
+			if(difference == 0){
+				y_offset = new Random().nextInt(bottom_upper_y);
+			}
+			else{
+				y_offset = new Random().nextInt(bottom_upper_y - bottom_lower_y);
+			}
+			y_coord = bottom_lower_y + y_offset;
 		}
 
-		public Point getLocation() {
-			return location;
-		}
-
-		public void setLocation(Point location) {
-			this.location = location;
-		}
-
-		public Dimension getDimension() {
-			return dimension;
-		}
-
-		public void setDimension(Dimension dimension) {
-			this.dimension = dimension;
-		}
+		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");		
+		log.warn("x bounds :  "+left_lower_x + " : "+left_upper_x);
+		log.warn("y bounds  :  "+ top_lower_y + " : "+top_upper_y);
+		log.warn("setting click point to ::   "+x_coord + "   :    "+y_coord);
+		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+		//generate an x value using lower and upper bound
+		return new Point(x_coord, y_coord);
 	}
 }

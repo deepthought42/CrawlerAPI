@@ -182,11 +182,19 @@ public class TestService {
 			if(test.getName() == null || test.getName().isEmpty()){
 				for(PathObject obj : test.getPathObjects()){
 					if(obj instanceof PageState && page_state_idx >= 1){
-						test_name += (new URL(((PageState)obj).getUrl())).getPath() + " page ";
+						String path = (new URL(((PageState)obj).getUrl())).getPath();
+						if(path.equals("/") || path.isEmpty()){
+							path = "home";
+						}
+						test_name +=  path + " page ";
 						page_state_idx++;
 					}
 					else if(obj instanceof ElementState){
-						test_name += ((ElementState)obj).getName() + " ";
+						String tag_name = ((ElementState)obj).getName();
+						if(tag_name.equals("a")){
+							tag_name = "link";
+						}
+						test_name += tag_name + " ";
 					}
 					else if(obj instanceof Action){
 						Action action = ((Action)obj);

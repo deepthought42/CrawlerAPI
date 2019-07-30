@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  	<version>0.1.32</version>
+  	<version>0.1.33</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 

@@ -27,6 +27,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.services.BrowserService;
 
 /**
@@ -57,15 +58,45 @@ public class BrowserTest {
 		assertTrue("section[contains(@class,\\\"dashboard-content-wrapper col-lg-10 col-lg-offset-1 col-xs-12 col-xs-offset-0 bordered-box\\\")]".equals(clean_src));
 	}
 
-	//@Test
-	public void verifyGenerateConcatForXpath(){
-		String src_example = "This is a embedded \"path\"";
-		BrowserService service = new BrowserService();
-		String clean_src = service.generateConcatForXPath(src_example);// cleanSrc(src_example);
-		//log.info("clean src: " +clean_src);
-		Assert.assertTrue("concat('This is a embedded ', '\"', 'path', '\"', '')".equals(clean_src));
+	@Test
+	public void verifyGenerateXpathUsingJsoup(){
+		try{
+			Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
+			browser.navigateTo("https://staging-marketing.qanairy.com");
+			List<String> xpaths = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
+			
+			for(String xpath : xpaths){
+				System.err.println("xpath :: "+xpath);
+			}
+			//log.info("clean src: " +clean_src);
+		//	Assert.assertTrue("concat('This is a embedded ', '\"', 'path', '\"', '')".equals(clean_src));
+		}
+		catch(Exception e){
+			
+		}
 	}
 	
+	
+	@Test
+	public void verifyGenerateParentXpath(){
+		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
+
+		try{
+			Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
+			browser.navigateTo("https://staging-marketing.qanairy.com");
+			WebElement element = browser.getDriver().findElement(By.xpath("//li//a[contains(@href,'features.html')]/../../.."));
+			Set<Attribute> attributes = browser.extractAttributes(element);
+
+			BrowserService browser_service = new BrowserService();
+			String xpath = browser_service.generateXpath(element, "", xpath_map, browser.getDriver(), attributes);
+			System.err.println("XPATH :: " + xpath);
+			//log.info("clean src: " +clean_src);
+		//	Assert.assertTrue("concat('This is a embedded ', '\"', 'path', '\"', '')".equals(clean_src));
+		}
+		catch(Exception e){
+			
+		}
+	}
 	
 	//@Test
 	public void verifyTestConstructor() throws NoSuchAlgorithmException{

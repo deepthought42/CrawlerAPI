@@ -7,11 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
@@ -223,6 +225,137 @@ public class Crawler {
 
 			last_obj = current_obj;
 		}
+	}
+
+	/**
+	 * Crawls the path using the provided {@link Browser browser}
+	 *
+	 * @param browser
+	 *
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws WebDriverException
+	 * @throws GridException
+	 *
+	 * @pre path != null
+	 * @pre path != null
+	 */
+	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, ElementState child_element) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+		assert browser != null;
+		assert path_keys != null;
+
+		ElementState last_element = null;
+		PathObject last_obj = null;
+		PageState expected_page = null;
+		
+		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		
+		log.warn("crawling partial path :: " + ordered_path_objects);
+		for(PathObject current_obj: ordered_path_objects){
+			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
+			if(current_obj instanceof PageState){
+				expected_page = (PageState)current_obj;
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+				
+					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
+				}
+			}
+			else if(current_obj instanceof ElementState){
+				last_element = (ElementState) current_obj;
+			}
+			//String is action in this context
+			else if(current_obj instanceof Action){
+				
+				//perform action outside bounds of child elements
+				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
+				//compile child element coordinates and sizes
+				
+				Point click_location = generateRandomLocationWithinElementButNotWithingChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
+				log.warn("Click location :: " + click_location.getX() + "  :   " + click_location.getY());
+				
+				Action action = (Action)current_obj;
+				Action action_record = action_repo.findByKey(action.getKey());
+				if(action_record==null){
+					action_repo.save(action);
+				}
+				else{
+					action = action_record;
+				}
+
+				performAction(action, last_element, browser.getDriver(), click_location);
+				Point p = browser.getViewportScrollOffset();
+				browser.setXScrollOffset(p.getX());
+				browser.setYScrollOffset(p.getY());
+			}
+			else if(current_obj instanceof Redirect){
+				Redirect redirect = (Redirect)current_obj;
+
+				//if redirect is preceded by a page state or nothing then initiate navigation
+				if(last_obj == null || last_obj instanceof PageState){
+					browser.navigateTo(redirect.getStartUrl());
+				}
+				//if redirect follows an action then watch page transition
+				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
+			}
+			else if(current_obj instanceof PageLoadAnimation){
+				BrowserUtils.getLoadingAnimation(browser, host_channel);
+			}
+			else if(current_obj instanceof PageAlert){
+				log.debug("Current path node is a PageAlert");
+				PageAlert alert = (PageAlert)current_obj;
+				alert.performChoice(browser.getDriver());
+			}
+
+			last_obj = current_obj;
+		}
+	}
+
+	/**
+	 * 
+	 * @param web_element
+	 * @return
+	 */
+	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
+		int left_lower_x = 0;
+		int left_upper_x = child_element.getXLocation()-web_element.getLocation().getX();
+		int right_lower_x = (child_element.getXLocation() - web_element.getLocation().getX()) + child_element.getWidth();
+		int right_upper_x = web_element.getLocation().getX() - offset.getX() + web_element.getSize().getWidth();
+		
+		int top_lower_y = 0;
+		int top_upper_y = child_element.getYLocation() - web_element.getLocation().getY();
+		int bottom_lower_y = child_element.getYLocation() - web_element.getLocation().getY() + child_element.getHeight();
+		int bottom_upper_y = offset.getY() + web_element.getLocation().getY() + web_element.getSize().getHeight();
+		
+		int x_coord = 0;
+		int y_coord = 0;
+		
+		if(left_lower_x != left_upper_x){
+			x_coord = new Random().nextInt(left_upper_x);
+		}
+		else {
+			int before_adjustment = new Random().nextInt(right_upper_x - right_lower_x);
+			x_coord = right_lower_x + before_adjustment;
+		}
+		
+		if(top_lower_y != top_upper_y){
+			y_coord = new Random().nextInt(top_upper_y);
+		}
+		else {
+			int before_adjustment = new Random().nextInt(bottom_upper_y - bottom_lower_y);
+			y_coord = bottom_lower_y + before_adjustment;
+		}
+
+		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");		
+		log.warn("x bounds :  "+left_lower_x + " : "+left_upper_x);
+		log.warn("y bounds  :  "+ top_lower_y + " : "+top_upper_y);
+		log.warn("setting click point to ::   "+x_coord + "   :    "+y_coord);
+		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+		//generate an x value using lower and upper bound
+		return new Point(x_coord, y_coord);
 	}
 
 	/**
@@ -481,6 +614,18 @@ public class Crawler {
 		actionFactory.execAction(element, action.getValue(), action.getName());
 	}
 
+	/**
+	 * Executes the given {@link ElementAction element action} pair such that
+	 * the action is executed against the element
+	 *
+	 * @return whether action was able to be performed on element or not
+	 */
+	public static void performAction(Action action, ElementState elem, WebDriver driver, Point location) throws NoSuchElementException{
+		ActionFactory actionFactory = new ActionFactory(driver);
+		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
+		actionFactory.execAction(element, action.getValue(), action.getName(), location);
+	}
+	
 	public static void scrollDown(WebDriver driver, int distance)
     {
         ((JavascriptExecutor)driver).executeScript("scroll(0,"+ distance +");");
@@ -678,5 +823,32 @@ public class Crawler {
 			tries++;
 		}while(result_page == null && tries < Integer.MAX_VALUE);
 		return result_page;
+	}
+	
+	
+	private class Shape {
+		private Point location;
+		private Dimension dimension;
+		
+		public Shape(Point point, Dimension dimension){
+			setLocation(point);
+			setDimension(dimension);
+		}
+
+		public Point getLocation() {
+			return location;
+		}
+
+		public void setLocation(Point location) {
+			this.location = location;
+		}
+
+		public Dimension getDimension() {
+			return dimension;
+		}
+
+		public void setDimension(Dimension dimension) {
+			this.dimension = dimension;
+		}
 	}
 }

@@ -147,6 +147,7 @@ public class ParentPathExplorer extends AbstractActor {
 										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element.getLocation(), element_size)){
 								break;
 							}
+							
 							//if parent element is not visible in pane then break
 							ElementState parent_element = null;
 							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
@@ -163,7 +164,7 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.addAll(end_path_objects);
 							
 							//finish crawling using array of elements following last page element
-							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host);
+							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){

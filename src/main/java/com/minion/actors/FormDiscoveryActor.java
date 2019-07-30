@@ -52,9 +52,6 @@ public class FormDiscoveryActor extends AbstractActor{
 	private ElementRuleExtractor rule_extractor;
 	
 	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
 	private FormService form_service;
 	
 	public static Props props() {
@@ -138,7 +135,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						} catch(Exception e){
 					  		log.warning(e.getMessage());
 					  		forms_created = false;
-					  		e.printStackTrace();
+					  		//e.printStackTrace();
 					  	}
 				  		finally{
 				  			if(browser != null){

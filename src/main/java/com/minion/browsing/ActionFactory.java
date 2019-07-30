@@ -2,6 +2,7 @@ package com.minion.browsing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -70,7 +71,49 @@ public class ActionFactory {
 		builder.build().perform();
 	}
 	
-	
+	/**
+	 * 
+	 * @param driver
+	 * @param elem
+	 * @param action
+	 */
+	public void execAction(WebElement elem, String input, String action, Point point) throws WebDriverException{
+		if("click".equals(action)){
+			builder.moveToElement(elem, point.getX(), point.getY()).click();
+		}
+		else if("clickAndHold".equals(action)){
+			builder.moveToElement(elem, point.getX(), point.getY()).clickAndHold();
+		}
+		//Context click clicks select/options box
+		else if("contextClick".equals(action)){
+			builder.moveToElement(elem, point.getX(), point.getY()).contextClick(elem);
+		}
+		else if("doubleClick".equals(action)){
+			builder.moveToElement(elem, point.getX(), point.getY()).doubleClick(elem);
+		}
+		/*else if("dragAndDrop".equals(action)){
+			//builder.dragAndDrop(source, target);
+		}
+		else if("keyDown".equals(action)){
+			//builder.keyDown();
+		}
+		else if("keyUp".equals(action)){
+			//builder.keyUp(theKey);
+		}
+		*/
+		else if("release".equals(action)){
+			builder.release(elem);
+		}
+		else if("sendKeys".equals(action)){
+			//builder.sendKeys(elem, Keys.chord(Keys.CONTROL, Keys.ALT, Keys.DELETE));
+			builder.sendKeys(elem, input);
+		}
+		else if("mouseover".equals(action)){
+			builder.moveToElement(elem);
+		}
+
+		builder.build().perform();
+	}
 	
 	/**
 	 * The list of actions possible

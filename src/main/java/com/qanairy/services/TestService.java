@@ -179,6 +179,7 @@ public class TestService {
 
 			String test_name = "";
 			int page_state_idx = 0;
+			int element_action_cnt = 0;
 			if(test.getName() == null || test.getName().isEmpty()){
 				for(PathObject obj : test.getPathObjects()){
 					if(obj instanceof PageState && page_state_idx >= 1){
@@ -190,11 +191,15 @@ public class TestService {
 						page_state_idx++;
 					}
 					else if(obj instanceof ElementState){
+						if(element_action_cnt > 0){
+							test_name += "> ";
+						}
 						String tag_name = ((ElementState)obj).getName();
 						if(tag_name.equals("a")){
 							tag_name = "link";
 						}
 						test_name += tag_name + " ";
+						element_action_cnt++;
 					}
 					else if(obj instanceof Action){
 						Action action = ((Action)obj);

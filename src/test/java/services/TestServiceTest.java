@@ -89,7 +89,7 @@ public class TestServiceTest {
 		
 		List<PathObject> objects = new ArrayList<>();
 		PageState page = new PageState();
-		page.setUrl("https://test.tester.com/services");
+		page.setUrl("https://test.tester.com/services/test-service.html");
 		objects.add(page);
 		
 		ElementState element = new ElementState();
@@ -105,6 +105,7 @@ public class TestServiceTest {
 		test.setPathObjects(objects);
 		
 		String name = TestService.generateTestName(test);
-		assertEquals("services page link click", name);
+		System.err.println("TEST NAME :: "+name);
+		assertEquals("services test-service.html page link click", name);
 	}
 }

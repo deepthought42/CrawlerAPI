@@ -319,19 +319,24 @@ public class Crawler {
 	 * @return
 	 */
 	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
+		Point elem_location = web_element.getLocation();
+
+		log.warn("generating x boundaries");
 		int left_lower_x = 0;
-		int left_upper_x = child_element.getXLocation()-web_element.getLocation().getX();
-		int right_lower_x = (child_element.getXLocation() - web_element.getLocation().getX()) + child_element.getWidth();
+		int left_upper_x = child_element.getXLocation()- elem_location.getX();
+		int right_lower_x = (child_element.getXLocation() - elem_location.getX()) + child_element.getWidth();
 		int right_upper_x = web_element.getSize().getWidth();
 		
+		log.warn("generating y boundaries");
 		int top_lower_y = 0;
-		int top_upper_y = child_element.getYLocation() - web_element.getLocation().getY();
-		int bottom_lower_y = child_element.getYLocation() - web_element.getLocation().getY() + child_element.getHeight();
+		int top_upper_y = child_element.getYLocation() - elem_location.getY();
+		int bottom_lower_y = child_element.getYLocation() - elem_location.getY() + child_element.getHeight();
 		int bottom_upper_y = web_element.getSize().getHeight();
 		
 		int x_coord = 0;
 		int y_coord = 0;
 		
+		log.warn("calculating x_coord");
 		if(left_lower_x != left_upper_x){
 			x_coord = new Random().nextInt(left_upper_x);
 		}
@@ -340,10 +345,15 @@ public class Crawler {
 			x_coord = right_lower_x + before_adjustment;
 		}
 		
+		log.warn("calculating y coord");
 		if(top_lower_y != top_upper_y){
+			log.warn("Generating random value for top upper y");
 			y_coord = new Random().nextInt(top_upper_y);
 		}
 		else {
+			log.warn("bottom lower y :: " + bottom_lower_y);
+			log.warn("bottom upper y :: " + bottom_upper_y);
+			log.warn("genearting random random value within bottom y range :: " + (bottom_upper_y - bottom_lower_y));
 			int before_adjustment = new Random().nextInt(bottom_upper_y - bottom_lower_y);
 			y_coord = bottom_lower_y + before_adjustment;
 		}

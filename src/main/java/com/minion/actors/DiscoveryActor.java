@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -226,7 +225,7 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 		
 		//create multiple exploration actors for parallel execution
-		for(int i=0; i < 20; i++){
+		for(int i=0; i < 5; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 		}

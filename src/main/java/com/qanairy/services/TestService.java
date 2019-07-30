@@ -1,5 +1,7 @@
 package com.qanairy.services;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -147,7 +149,7 @@ public class TestService {
 		 }
 	 }
 
-	 public Test save(Test test, String host_url){
+	 public Test save(Test test, String host_url) throws MalformedURLException{
 		Test record = test_repo.findByKey(test.getKey());
 
 		if(record == null){
@@ -175,8 +177,27 @@ public class TestService {
 			test.setPathObjects(path_objects);
 			test.setResult(page_state_service.save(test.getResult()));
 
+			String test_name = "";
+			int page_state_idx = 0;
 			if(test.getName() == null || test.getName().isEmpty()){
-				test.setName("Test #" + (domain_service.getTestCount(host_url)+1));
+				for(PathObject obj : test.getPathObjects()){
+					if(obj instanceof PageState && page_state_idx >= 1){
+						test_name += (new URL(((PageState)obj).getUrl())).getPath() + " page ";
+						page_state_idx++;
+					}
+					else if(obj instanceof ElementState){
+						test_name += ((ElementState)obj).getName() + " ";
+					}
+					else if(obj instanceof Action){
+						Action action = ((Action)obj);
+						test_name += action.getName() + " ";
+						if(action.getValue() != null ){
+							test_name += action.getValue() + " ";
+						}
+					}
+				}
+				
+				test.setName(test_name);
 			}
 
 			Set<Group> groups = new HashSet<>();

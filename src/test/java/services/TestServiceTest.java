@@ -60,6 +60,7 @@ public class TestServiceTest {
 		test_service.init(crawler, browser_service);
 	}
 	
+	/*
 	public void runTestIsPassingWhenExpectedResult() throws GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, IOException, InterruptedException, ExecutionException {
 		when(browser_service.getConnection(Matchers.anyString(), Matchers.any())).thenReturn(new Browser());
 		when(page_state.getKey()).thenReturn("valid_key");		 
@@ -84,6 +85,7 @@ public class TestServiceTest {
 		assertNotNull(record);
 		assertTrue(record.getStatus().equals(TestStatus.FAILING));
 	}
+	*/
 	
 	@org.junit.Test
 	public void generateTestNameTestWithLongPath() throws MalformedURLException{

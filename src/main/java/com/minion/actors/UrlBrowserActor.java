@@ -4,8 +4,10 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
+import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,7 +105,11 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-
+							//browser.moveMouseOutOfFrame();
+							int x = (new Random()).nextInt(200);
+							int y = (new Random()).nextInt(200);
+							browser.moveMouseToNonInteractive(new Point(x,y));
+							
 							redirect = BrowserUtils.getPageTransition(url, browser, host);
 						  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
 								path_keys.add(redirect.getKey());

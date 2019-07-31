@@ -154,7 +154,12 @@ public class ParentPathExplorer extends AbstractActor {
 							if(parent_element == null){
 								break;
 							}
-
+							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight()) 
+									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
+								//parent as same location and size as child, stop exploring parents
+								break;
+							}
+							
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);

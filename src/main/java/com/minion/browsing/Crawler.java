@@ -285,6 +285,7 @@ public class Crawler {
 				}
 
 				performAction(action, last_element, browser.getDriver(), click_location);
+				
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
 				browser.setYScrollOffset(p.getY());
@@ -681,7 +682,8 @@ public class Crawler {
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 					browser.navigateTo(expected_page.getUrl());
-
+					browser.moveMouseOutOfFrame();
+					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
 				String browser_url = browser.getDriver().getCurrentUrl();
@@ -804,7 +806,7 @@ public class Crawler {
 		int y_coord = 0;
 		
 		log.warn("calculating x_coord");
-		if(left_lower_x != left_upper_x){
+		if(left_lower_x != left_upper_x && left_upper_x > 0){
 			x_coord = new Random().nextInt(left_upper_x);
 		}
 		else {
@@ -814,13 +816,13 @@ public class Crawler {
 				x_offset = new Random().nextInt(right_upper_x);
 			}
 			else{
-				x_offset = new Random().nextInt();
+				x_offset = new Random().nextInt(difference);
 			}
 			x_coord = right_lower_x + x_offset;
 		}
 		
 		log.warn("calculating y coord");
-		if(top_lower_y != top_upper_y){
+		if(top_lower_y != top_upper_y && top_upper_y > 0){
 			log.warn("Generating random value for top upper y");
 			y_coord = new Random().nextInt(top_upper_y);
 		}

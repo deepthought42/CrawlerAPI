@@ -97,11 +97,11 @@ public class PathUtils {
 		
 		for(int idx = path_objects.size()-1; idx >=0; idx--){
 			if(path_objects.get(idx) instanceof PageState){
-				page_states_seen++;
-				if(page_states_seen >= 2){
+				if(page_states_seen >= 1){
 					page_state = (PageState)path_objects.get(idx);
 					break;
 				}
+				page_states_seen++;
 			}
 		}
 		

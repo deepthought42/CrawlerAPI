@@ -180,11 +180,9 @@ public class PathExpansionActor extends AbstractActor {
 						/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
 							continue;
 						}*/
-						log.warn("adding action path:: " );
 						pathList.add(action_path);
 					}
 				}
-				log.warn("action list  ::   "+pathList.size());
 			}
 		}
 		return pathList;
@@ -225,20 +223,25 @@ public class PathExpansionActor extends AbstractActor {
 		log.warn("last page url      ::  " + last_page_state.getUrl());
 		log.warn("second to last url ::  " + second_to_last_page.getUrl());
 		log.warn("Do urls match????    :: " + last_page_state.getUrl().equals(second_to_last_page.getUrl()));
-		log.warn("####################################################################################################");
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : second_to_last_page.getElements()){
 				element_xpath_map.put(element.getXpath(), element);
 			}
-			
+			log.warn("element xpath map size :: " + element_xpath_map.size());
+			log.warn("# elements for second to last page :: " + second_to_last_page.getElements().size());
+			log.warn("# elements for last page :: " + last_page_state.getElements().size());
 			for(ElementState element : last_page_state.getElements()){
-				element_xpath_map.remove(element.getKey());
+				element_xpath_map.remove(element.getXpath());
 			}
+			
+			log.warn("# of elements left in map after filtering  ::   " + element_xpath_map.size());
 			return element_xpath_map.values();
 		}
-		
+		log.warn("####################################################################################################");
+		log.warn("####################################################################################################");
+
 		return last_page_state.getElements();
 	}
 }

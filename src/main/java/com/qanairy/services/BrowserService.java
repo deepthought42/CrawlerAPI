@@ -280,7 +280,7 @@ public class BrowserService {
 		for(Element element: web_elements){
 			int child_node_cnt = element.children().size();			
 			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
-			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !doesElementBelongToIframeTag(element)){
+			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element)){
 				elements.add(xpath);
 			}
 		}
@@ -295,9 +295,10 @@ public class BrowserService {
 		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
 		for(Element element: web_elements){
 			int child_node_cnt = element.children().size();			
-			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
-			Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !doesElementBelongToIframeTag(element)){
+			
+			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element)){
+				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
+				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
 				ElementState element_state = new ElementState();
 				element_state.setXpath(xpath);
 				element_state.setAttributes(attributes);
@@ -319,24 +320,6 @@ public class BrowserService {
 		Element new_elem = element;
 		while(new_elem != null && !new_elem.tagName().equals("body")){
 			if(isStructureTag(new_elem.tagName())){
-				return true;
-			}
-			new_elem = new_elem.parent();
-		}
-		return false;
-	}
-	
-	/**
-	 * Checks all parent elements up until and excluding the body tag for any script tags.
-	 * 
-	 * @param element {@Element element
-	 * 
-	 * @return true if a parent element within the dom is a structure tag
-	 */
-	private static boolean doesElementBelongToIframeTag(Element element) {		
-		Element new_elem = element;
-		while(new_elem != null){
-			if("iframe".equalsIgnoreCase(new_elem.tagName())){
 				return true;
 			}
 			new_elem = new_elem.parent();
@@ -1173,7 +1156,7 @@ public class BrowserService {
 		return "html".equals(tag_name) || "body".equals(tag_name)
 				|| "link".equals(tag_name) || "script".equals(tag_name)
 				|| "title".equals(tag_name) || "meta".equals(tag_name)
-				|| "head".equals(tag_name) || "iframe".equals(tag_name) || "noscript".equals(tag_name)
+				|| "head".equals(tag_name) || "noscript".equals(tag_name)
 				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name)
 				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name) || "use".equals(tag_name);
 	}

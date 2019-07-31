@@ -90,7 +90,6 @@ public class Crawler {
 
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
@@ -127,11 +126,9 @@ public class Crawler {
 				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageLoadAnimation){
-				log.warn("crawling loading animation");
 				BrowserUtils.getLoadingAnimation(browser, host_channel);
 			}
 			else if(current_obj instanceof PageAlert){
-				log.debug("Current path node is a PageAlert");
 				PageAlert alert = (PageAlert)current_obj;
 				alert.performChoice(browser.getDriver());
 			}
@@ -141,8 +138,6 @@ public class Crawler {
 
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-
-		log.warn("ELEMENTS visible during crawlPath :: " + element_list.size());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 
 		return browser_service.buildPage(browser, visible_elements);
@@ -178,8 +173,6 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-				
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
@@ -256,8 +249,6 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-				
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
@@ -273,7 +264,6 @@ public class Crawler {
 				//compile child element coordinates and sizes
 				
 				Point click_location = generateRandomLocationWithinElementButNotWithingChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
-				log.warn("Click location :: " + click_location.getX() + "  :   " + click_location.getY());
 				
 				Action action = (Action)current_obj;
 				Action action_record = action_repo.findByKey(action.getKey());
@@ -350,9 +340,7 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-				
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
+						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){				
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
@@ -361,15 +349,12 @@ public class Crawler {
 				Redirect redirect = (Redirect)current_obj;
 				//if redirect is preceded by a page state or nothing then initiate navigation
 				if(last_obj == null || last_obj instanceof PageState){
-					log.warn("navigating to redirect start url  ::   "+redirect.getStartUrl());
 					browser.navigateTo(redirect.getStartUrl());
 				}
 
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
-
-				log.warn("setting last url to redirect url :: " + last_url);
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel);
@@ -401,7 +386,6 @@ public class Crawler {
 				}
 				else{
 					if(current_idx == ordered_path_objects.size()-1){
-						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
 						if(redirect.getUrls().size() > 2){
 							path_keys.add(redirect.getKey());
@@ -469,8 +453,6 @@ public class Crawler {
 				
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-				
-					log.warn("Scrolling to expected coord  :: " +expected_page.getScrollXOffset()+", "+expected_page.getScrollYOffset()+";     "+browser.getXScrollOffset()+","+browser.getYScrollOffset());
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
@@ -479,15 +461,12 @@ public class Crawler {
 				Redirect redirect = (Redirect)current_obj;
 				//if redirect is preceded by a page state or nothing then initiate navigation
 				if(last_obj == null || last_obj instanceof PageState){
-					log.warn("navigating to redirect start url  ::   "+redirect.getStartUrl());
 					browser.navigateTo(redirect.getStartUrl());
 				}
 
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
 				last_url = redirect.getUrls().get(redirect.getUrls().size()-1);
-
-				log.warn("setting last url to redirect url :: " + last_url);
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel);
@@ -522,7 +501,6 @@ public class Crawler {
 							&& !ordered_path_objects.get(current_idx+1).getKey().contains("redirect")
 							&& !ordered_path_objects.get(current_idx+1).getKey().contains("elementstate"))
 							|| (current_idx == ordered_path_objects.size()-1 && !last_url.equals(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl())))){
-						log.warn("starting to check for redirect after performing action ::  "+last_url);
 						Redirect redirect = BrowserUtils.getPageTransition(last_url, browser, host_channel);
 						if(redirect.getUrls().size() > 2){
 							if(current_idx == ordered_path_objects.size()-1){

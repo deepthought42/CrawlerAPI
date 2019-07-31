@@ -42,8 +42,6 @@ public class DomainService {
 	public Domain addTest(String host, Test test){
 		log.warn("domain host :: "+host);
 		Domain domain = domain_repo.findByHost(host);
-		log.warn("Domain :: " + domain);
-		log.warn("test ::  " + test);
 		domain.addTest(test);
 		return save(domain);
 	}

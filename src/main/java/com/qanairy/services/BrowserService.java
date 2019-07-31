@@ -135,7 +135,6 @@ public class BrowserService {
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
 					is_browser_closed = false;
-					log.warn("navigating to url for building page states  :: " + url);
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 					BrowserUtils.getLoadingAnimation(browser, host);
@@ -147,7 +146,7 @@ public class BrowserService {
 
 					log.warn("elements returned by JSOUP xpath build ::   " + element_list.size());
 					visible_elements = getVisibleElements(browser, visible_element_map, element_list);
-						log.warn("elements returned during buildPageStates  :: " + visible_elements.size());
+					log.warn("elements returned during buildPageStates  :: " + visible_elements.size());
 				}
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
@@ -164,7 +163,7 @@ public class BrowserService {
 			}
 			catch (WebDriverException e) {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.warn("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				error_occurred = true;
 				is_browser_closed = true;
 			} catch(Exception e){
@@ -205,7 +204,6 @@ public class BrowserService {
 				err = false;
 
 				if(!isElementVisibleInPane(browser, remaining_elements.get(0)) || iter_idx > 1){
-					log.warn("element is not visible in pane :: "+remaining_elements.get(0).getXpath());
 					element_hash.put(remaining_elements.get(0).getXpath(), remaining_elements.get(0));
 
 					browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
@@ -245,7 +243,6 @@ public class BrowserService {
 		//extract all element screenshots
 		for(PageState page_state : page_states){
 			for(ElementState element_state : page_state.getElements()){
-				log.warn("element size :: " +element_state.getWidth() + " , "+element_state.getHeight() + "  ;   For page state :: "+page_state.getKey());
 				BufferedImage page_screenshot = ImageIO.read(new URL(page_state.getScreenshotUrl()));
 				ElementState built_element = retrieveAndUploadBrowserScreenshot(browser, element_state, page_screenshot, host, page_state);
 				element_xpaths.put(built_element.getKey(), built_element);

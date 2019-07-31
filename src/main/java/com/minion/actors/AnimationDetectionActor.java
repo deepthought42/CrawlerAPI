@@ -22,7 +22,6 @@ import com.qanairy.models.Animation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.message.PathMessage;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
@@ -36,9 +35,6 @@ import com.qanairy.utils.PathUtils;
 public class AnimationDetectionActor extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), AnimationDetectionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private PageStateService page_state_service;
 
 	@Autowired
 	private Crawler crawler;
@@ -86,7 +82,7 @@ public class AnimationDetectionActor extends AbstractActor{
 							msg.getDiscoveryActor().tell(msg.clone(), getSelf());
 							
 						}catch(Exception e){
-							log.warning("exception occurred during Animation Detection.....  "+e.getMessage());
+							log.debug("exception occurred during Animation Detection.....  "+e.getMessage());
 							err = true;
 						}
 					}while(err);

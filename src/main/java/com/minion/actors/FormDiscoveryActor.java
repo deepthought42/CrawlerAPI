@@ -133,7 +133,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	forms_created = true;
 						  	return;
 						} catch(Exception e){
-					  		log.warning(e.getMessage());
+					  		log.debug(e.getMessage());
 					  		forms_created = false;
 					  		//e.printStackTrace();
 					  	}

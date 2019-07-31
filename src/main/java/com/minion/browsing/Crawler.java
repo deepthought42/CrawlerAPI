@@ -166,9 +166,7 @@ public class Crawler {
 		
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
-		log.warn("crawling partial path :: " + ordered_path_objects);
 		for(PathObject current_obj: ordered_path_objects){
-			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
@@ -242,9 +240,7 @@ public class Crawler {
 		
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
 		
-		log.warn("crawling partial path :: " + ordered_path_objects);
 		for(PathObject current_obj: ordered_path_objects){
-			//log.warn("crawl current OBJ  ----   "+current_obj.getType());
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
@@ -335,7 +331,6 @@ public class Crawler {
 		String last_url = null;
 		int current_idx = 0;
 		for(PathObject current_obj: ordered_path_objects){
-			//log.warn("current object type ::   " + current_obj.getType() + " ::  "+current_obj);
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
@@ -446,7 +441,6 @@ public class Crawler {
 		String last_url = null;
 		int current_idx = 0;
 		for(PathObject current_obj: ordered_path_objects){
-			//log.warn("current object type ::   " + current_obj.getType() + " ::  "+current_obj);
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
@@ -580,7 +574,6 @@ public class Crawler {
 		boolean no_such_element_exception = false;
 		do{
 			try{
-				log.warn("setting up browser :: " + browser_name);
 				if(!no_such_element_exception){
 					no_such_element_exception = false;
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
@@ -602,12 +595,9 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-
 				List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 			
-				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}catch(NullPointerException e){
 				log.warn("Error happened while exploratory actor attempted to crawl test ");
@@ -654,13 +644,12 @@ public class Crawler {
 		boolean no_such_element_exception = false;
 		do{
 			try{
-				log.warn("setting up browser :: " + browser_name);
 				if(!no_such_element_exception){
 					no_such_element_exception = false;
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 					browser.navigateTo(expected_page.getUrl());
-					browser.moveMouseOutOfFrame();
+					browser.moveMouseToNonInteractive(new Point(300,300));
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
@@ -682,7 +671,6 @@ public class Crawler {
 
     			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 			
-				log.warn("element xpaths after filtering all elements NOT in viewport :: " + visible_elements.size());
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}
 			catch(NullPointerException e){
@@ -764,17 +752,23 @@ public class Crawler {
 	 * 
 	 * @param web_element
 	 * @return
+	 * 
+	 * @pre web_element != null
+	 * @pre child_element != null
+	 * @pre offset != null
 	 */
 	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
+		assert web_element != null;
+		assert child_element != null;
+		assert offset != null;
+		
 		Point elem_location = web_element.getLocation();
 
-		log.warn("generating x boundaries");
 		int left_lower_x = 0;
 		int left_upper_x = child_element.getXLocation()- elem_location.getX();
 		int right_lower_x = (child_element.getXLocation() - elem_location.getX()) + child_element.getWidth();
 		int right_upper_x = web_element.getSize().getWidth();
 		
-		log.warn("generating y boundaries");
 		int top_lower_y = 0;
 		int top_upper_y = child_element.getYLocation() - elem_location.getY();
 		int bottom_lower_y = child_element.getYLocation() - elem_location.getY() + child_element.getHeight();
@@ -783,7 +777,6 @@ public class Crawler {
 		int x_coord = 0;
 		int y_coord = 0;
 		
-		log.warn("calculating x_coord");
 		if(left_lower_x != left_upper_x && left_upper_x > 0){
 			x_coord = new Random().nextInt(left_upper_x);
 		}
@@ -799,15 +792,10 @@ public class Crawler {
 			x_coord = right_lower_x + x_offset;
 		}
 		
-		log.warn("calculating y coord");
 		if(top_lower_y != top_upper_y && top_upper_y > 0){
-			log.warn("Generating random value for top upper y");
 			y_coord = new Random().nextInt(top_upper_y);
 		}
 		else {
-			log.warn("bottom lower y :: " + bottom_lower_y);
-			log.warn("bottom upper y :: " + bottom_upper_y);
-			log.warn("genearting random random value within bottom y range :: " + (bottom_upper_y - bottom_lower_y));
 			int difference = bottom_upper_y - bottom_lower_y;
 			int y_offset = 0;
 			if(difference == 0){
@@ -819,13 +807,6 @@ public class Crawler {
 			y_coord = bottom_lower_y + y_offset;
 		}
 
-		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");		
-		log.warn("x bounds :  "+left_lower_x + " : "+left_upper_x);
-		log.warn("y bounds  :  "+ top_lower_y + " : "+top_upper_y);
-		log.warn("setting click point to ::   "+x_coord + "   :    "+y_coord);
-		log.warn("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-		//generate an x value using lower and upper bound
 		return new Point(x_coord, y_coord);
 	}
 }

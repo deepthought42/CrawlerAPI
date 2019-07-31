@@ -128,12 +128,45 @@ public class DiscoveryActor extends AbstractActor{
 						//check if key already exists before adding to prevent duplicates
 						String path_key = String.join(":::", message.getKeys());
 						if(!discovery_record.getExpandedPathKeys().contains(path_key)){
-							discovery_record.getExpandedPathKeys().add(path_key);
-							discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-														
-							exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
-
-							log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+							
+							//check if last page-element-action trio already exist within another path within the expanded path keys list
+							int last_element_idx = 0;
+							for(int idx = message.getKeys().size()-1; idx >=0; idx--){
+								if(message.getKeys().get(idx).contains("elementstate")){
+									last_element_idx = idx;
+									break;
+								}
+							}
+							
+							String partial_key = "";
+							if(last_element_idx < message.getKeys().size()-1){
+								if(last_element_idx+2 <= message.getKeys().size()){
+									partial_key = String.join(":::", message.getKeys().subList(last_element_idx, last_element_idx+2));
+								}
+								else{
+									partial_key = String.join(":::", message.getKeys().subList(last_element_idx, message.getKeys().size()));
+								}
+							}
+							
+							log.warn("Searching for partial path key    ::::      "+partial_key);
+							boolean exists_in_other_expansion = false;
+							for(String expanded_path_key : discovery_record.getExpandedPathKeys()){
+								if(expanded_path_key.contains(partial_key)){
+									log.warn("PARTIAL KEY ALREADY EXPERIENCED");
+									exists_in_other_expansion = true;
+									break;
+								}
+							}
+							
+							if(!exists_in_other_expansion){
+								
+								discovery_record.getExpandedPathKeys().add(path_key);
+								discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+															
+								exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
+	
+								log.info("existing total path count :: "+discovery_record.getTotalPathCount());
+							}
 						}
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
@@ -170,26 +203,38 @@ public class DiscoveryActor extends AbstractActor{
 					
 					
 					boolean isLandable = BrowserService.checkIfLandable(browser.toString(), test.getResult(), test.getPathObjects() );
-					String path_key = String.join(":::", test.getPathKeys());
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+
 					
-					if(!discovery_record.getExpandedPathKeys().contains(path_key)){
-						if(isLandable){
-							UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor);
-							url_browser_actor.tell(url_message, getSelf() );
-						}
-						else{
-							List<String> final_key_list = new ArrayList<>(test.getPathKeys());
-				  			final_key_list.add(test.getResult().getKey());
-				  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
-				  			final_object_list.add(test.getResult());
-				  			//run reducer on key list
-				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
-				  			
-				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor);
-					  		//send path message with examined status to discovery actor
-							path_expansion_actor.tell(path, getSelf());
-						}
+					List<String> final_key_list = new ArrayList<>(test.getPathKeys());
+		  			final_key_list.add(test.getResult().getKey());
+		  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
+		  			final_object_list.add(test.getResult());
+		  			//run reducer on key list
+		  			final_key_list = PathUtils.reducePathKeys(final_key_list);
+					String path_key = String.join(":::", final_key_list);
+
+					log.warn("expanded path key :: " + path_key);
+					log.warn("does discovery record contain expanded path key :: " + discovery_record.getExpandedPathKeys().contains(path_key));
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("Test result is landable?    ::   "+isLandable);
+					log.warn("Result url   ::::   " + test.getResult().getUrl());
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					
+					
+					if(isLandable && !discovery_record.getExpandedPathKeys().contains(test.getResult().getKey())){
+						UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor);
+						url_browser_actor.tell(url_message, getSelf() );
 					}
+					else if(!discovery_record.getExpandedPathKeys().contains(path_key)){
+			  			
+			  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor);
+			  			
+				  		//send path message with examined status to discovery actor
+						path_expansion_actor.tell(path, getSelf());
+					}
+				
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					discovery_service.save(discovery_record);

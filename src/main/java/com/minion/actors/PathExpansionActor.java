@@ -204,19 +204,20 @@ public class PathExpansionActor extends AbstractActor {
 		assert(path_objects != null);
 		assert(!path_objects.isEmpty());
 		
-		Set<ElementState> elements = new HashSet<>();
 		//get last page
 		PageState last_page_state = PathUtils.getLastPageState(path_objects);
 		PageState second_to_last_page = PathUtils.getSecondToLastPageState(path_objects);
 		
 		log.warn("####################################################################################################");
+		log.warn("####################################################################################################");
 
 		if(last_page_state == null){
 			log.warn("LAST PAGE STATE IS NULL DURING EXPANSION!!!!!!!!!!!!!!");
-			return elements;
+			return new HashSet<>();
 		}
 		
 		if( second_to_last_page == null){
+			log.warn("second to last page state is null. Returning all elements for last page state");
 			return last_page_state.getElements();
 		}
 		
@@ -226,18 +227,24 @@ public class PathExpansionActor extends AbstractActor {
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
-			for(ElementState element : second_to_last_page.getElements()){
-				element_xpath_map.put(element.getKey(), element);
+			for(ElementState element : last_page_state.getElements()){
+				element_xpath_map.put(element.getXpath(), element);
 			}
 			
 			log.warn("element xpath map size :: " + element_xpath_map.size());
-			log.warn("# elements for second to last page :: " + second_to_last_page.getElements().size());
 			log.warn("# elements for last page :: " + last_page_state.getElements().size());
-			for(ElementState element : last_page_state.getElements()){
-				element_xpath_map.remove(element.getKey());
+			log.warn("# elements for second to last page :: " + second_to_last_page.getElements().size());
+			for(ElementState element : second_to_last_page.getElements()){
+				element_xpath_map.remove(element.getXpath());
 			}
 			
 			log.warn("# of elements left in map after filtering  ::   " + element_xpath_map.size());
+			for(String xpath : element_xpath_map.keySet()){
+				log.warn("xpath :: "+xpath);
+			}
+			log.warn("####################################################################################################");
+			log.warn("####################################################################################################");
+
 			return element_xpath_map.values();
 		}
 		log.warn("####################################################################################################");

@@ -144,9 +144,7 @@ public class BrowserService {
 					//element_xpath_list = getXpathsUsingJSoup(browser.getDriver().getPageSource());
 					List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 
-					log.warn("elements returned by JSOUP xpath build ::   " + element_list.size());
 					visible_elements = getVisibleElements(browser, visible_element_map, element_list);
-					log.warn("elements returned during buildPageStates  :: " + visible_elements.size());
 				}
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
@@ -238,7 +236,6 @@ public class BrowserService {
 			}
 		}
 
-		log.warn("buiding screenshots for all elements");
 		element_xpaths = new HashMap<String, ElementState>();
 		//extract all element screenshots
 		for(PageState page_state : page_states){
@@ -248,7 +245,6 @@ public class BrowserService {
 				element_xpaths.put(built_element.getKey(), built_element);
 			}
 		}
-		log.warn("done building element screenshots");
 		error_occurred = false;
 		return page_states;
 	}
@@ -337,8 +333,6 @@ public class BrowserService {
 	public PageState buildPage(Browser browser, List<ElementState> all_elements) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		log.warn("------------------------------------------------------------------------------------------------");
-		log.warn("------------------------------------------------------------------------------------------------");
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 		
@@ -348,7 +342,6 @@ public class BrowserService {
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 
-		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url_without_params);
 		if(page_state_record2 == null){
 			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
 		}
@@ -357,12 +350,9 @@ public class BrowserService {
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
 			page_state_record2.setScreenshots(page_state_service.getScreenshots(page_state_record2.getKey()));
-			log.warn("Page state screenshots :: " + page_state_record2.getScreenshots() + "    :    " + url_without_params);
 			return page_state_record2;
 		}
 		else{
-
-			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum + "    :    " + url_without_params);
 			//extract visible elements from list of elementstates provided
 			List<ElementState> visible_elements = new ArrayList<>();
 			for(ElementState element : all_elements){
@@ -380,7 +370,6 @@ public class BrowserService {
 					visible_elements.add(new_element_state);
 				}
 			}
-			log.warn("extracted all elements visible in pane :: " + visible_elements.size());
 			
 			PageState page_state = new PageState( url_without_params,
 					visible_elements,
@@ -397,17 +386,14 @@ public class BrowserService {
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
 			page_state.addScreenshot(screenshot);
 
-			log.warn("initialized page state      :    " + url_without_params);
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 			if(page_state_record != null){
-				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url_without_params);
 				page_state = page_state_record;
 				page_state.addScreenshotChecksum(screenshot_checksum);
 			}
-			log.warn("saving page state");
 			page_state = page_state_service.save(page_state);
 
-			log.warn("saved page state       :    " + url_without_params);
+			log.warn("saved page state       :    " + page_state.getKey());
 			viewport_screenshot.flush();
 			return page_state;
 		}
@@ -430,7 +416,6 @@ public class BrowserService {
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 
-		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url);
 		if(page_state_record2 == null){
 			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
 		}
@@ -439,12 +424,9 @@ public class BrowserService {
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
 			page_state_record2.setScreenshots(page_state_service.getScreenshots(page_state_record2.getKey()));
-			log.warn("Page state screenshots :: " + page_state_record2.getScreenshots() + "    :    " + url);
 			return page_state_record2;
 		}
 		else{
-
-			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum + "    :    " + url);
 			//extract visible elements from list of elementstates provided
 			List<ElementState> visible_elements = new ArrayList<>();
 			for(ElementState element : all_elements){
@@ -478,16 +460,14 @@ public class BrowserService {
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
 			page_state.addScreenshot(screenshot);
 
-			log.warn("initialized page state      :    " + url);
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 			if(page_state_record != null){
-				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url);
 				page_state = page_state_record;
 				page_state.addScreenshotChecksum(screenshot_checksum);
 			}
 			page_state = page_state_service.save(page_state);
 
-			log.warn("saved page state       :    " + url);
+			log.warn("saved page state       :    " + page_state.getKey());
 			viewport_screenshot.flush();
 			return page_state;
 		}
@@ -655,25 +635,19 @@ public class BrowserService {
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
-		log.warn("PageState record value :: " + page_state_record2 + "    :    " + url_without_params);
 		if(page_state_record2 == null){
 			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
 		}
 
 		if(page_state_record2 != null){
-			log.warn("existing page with screenshot found   :    " + url_without_params);
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
 			page_state_record2.setScreenshots(page_state_service.getScreenshots(page_state_record2.getKey()));
-			log.warn("Page state screenshots :: " + page_state_record2.getScreenshots() + "    :    " + url_without_params);
 			return page_state_record2;
 		}
 		else{
 			//Animation animation = BrowserUtils.getAnimation(browser, page_url.getHost());
-
-			log.warn("No record found with screenshot checksum ::  "+screenshot_checksum);
 			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), viewport_screenshot);
-			log.warn("Retrieved visible elements..."+visible_elements.size()+"   ....url  ::  "+page_url);
 
 			PageState page_state = new PageState( url_without_params,
 					visible_elements,
@@ -687,23 +661,16 @@ public class BrowserService {
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 
-			/*log.warn("setting animated image urls :: " + animation.getImageUrls().size());
-			page_state.setAnimatedImageUrls(animation.getImageUrls());
-			page_state.setAnimatedImageChecksums(animation.getImageChecksums());
-*/
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
 			page_state.addScreenshot(screenshot);
 
-			log.warn("initialized page state      :    " + url_without_params);
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
 			if(page_state_record != null){
-				log.warn("adding screenshot checksum to page state  ::  " + page_state_record.getScreenshotChecksums() + "    :    " + url_without_params);
 				page_state = page_state_record;
 				page_state.addScreenshotChecksum(screenshot_checksum);
 				page_state = page_state_service.save(page_state);
 			}
 
-			log.warn("saved page state       :    " + url_without_params);
 			viewport_screenshot.flush();
 			return page_state;
 		}
@@ -884,7 +851,6 @@ public class BrowserService {
 		String screenshot = null;
 		ElementState page_element_record = null;
 		ElementState page_element = null;
-		//log.warn("Checking if element visible in viewport");
 		BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser);
 		String checksum = PageState.getFileChecksum(img);
 		page_element_record = element_state_service.findByScreenshotChecksum(checksum);
@@ -948,7 +914,6 @@ public class BrowserService {
 		String screenshot = null;
 		ElementState page_element_record = null;
 		ElementState page_element = null;
-		//log.warn("Checking if element visible in viewport");
 		BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser);
 		checksum = PageState.getFileChecksum(img);
 		page_element_record = element_state_service.findByScreenshotChecksum(checksum);
@@ -1476,10 +1441,6 @@ public class BrowserService {
 			List<Element> elements = Xsoup.compile(xpath).evaluate(doc).getElements(); //driver.findElements(By.xpath(xpath));
 			if(elements.size() > 1){
 				int count = 0;
-				//log.warn(elem.html() + "  :\n\n   " +element.html());
-				//log.warn("element1 text matches" + elem.text());
-				//log.warn("element2 text matches" + element.text());
-				//log.warn("element is being handled " + (element.tagName().equals(elem.tagName())) + "    :    "+(element.html().equals(elem.html()) +  "   :   "+elem.text().equals(element.text())));
 				if(xpath_cnt.containsKey(xpath)){
 					count = xpath_cnt.get(xpath);
 				}

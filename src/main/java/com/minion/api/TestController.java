@@ -494,7 +494,7 @@ public class TestController {
 		Test test = test_repo.findByKey(key);
 		test.addGroup(group);
 
-		test = test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
+		test = test_service.save(test);
 		return group;
 	}
 

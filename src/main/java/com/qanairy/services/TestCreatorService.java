@@ -113,6 +113,9 @@ public class TestCreatorService {
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
 
+		boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
+		test.setSpansMultipleDomains(leaves_domain);
+		
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
 		test.addRecord(test_record);
 
@@ -132,7 +135,7 @@ public class TestCreatorService {
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
+					test_service.save(test);
 					break;
 				}
 			}

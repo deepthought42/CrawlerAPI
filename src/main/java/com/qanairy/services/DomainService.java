@@ -40,6 +40,10 @@ public class DomainService {
 	}
 	
 	public Domain addTest(String host, Test test){
+		assert host != null;
+		assert !host.isEmpty();
+		assert test != null;
+		
 		log.warn("domain host :: "+host);
 		Domain domain = domain_repo.findByHost(host);
 		domain.addTest(test);

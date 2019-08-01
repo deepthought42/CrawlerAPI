@@ -149,8 +149,9 @@ public class TestService {
 		 }
 	 }
 
-	 public Test save(Test test, String host_url) throws MalformedURLException{
-		Test record = test_repo.findByKey(test.getKey());
+	 public Test save(Test test) throws MalformedURLException{
+		 assert test != null;
+		 Test record = test_repo.findByKey(test.getKey());
 
 		if(record == null){
 			List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -187,30 +188,8 @@ public class TestService {
 			}
 			test.setGroups(groups);
 	  		test = test_repo.save(test);
-			domain_service.addTest(host_url, test);
-
-			try {
-				MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
-			} catch (JsonProcessingException e) {
-				log.error(e.getLocalizedMessage());
-			}
-
-			for(PathObject path_obj : test.getPathObjects()){
-				try {
-					MessageBroadcaster.broadcastPathObject(path_obj, host_url);
-				} catch (JsonProcessingException e) {
-					log.error(e.getLocalizedMessage());
-				}
-			}
 		}
 		else{
-			log.info("Test already exists  !!!!!!!");
-			try {
-				MessageBroadcaster.broadcastTest(test, host_url);
-			} catch (JsonProcessingException e) {
-				log.error(e.getLocalizedMessage());
-			}
-
 			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
 			record.setPathObjects(path_objects);
 			record.setResult(page_state_service.findByKey(test.getResult().getKey()));
@@ -221,8 +200,11 @@ public class TestService {
 			}
 			record.setGroups(groups);
 			
+			if(record.getName() != null && record.getName().contains("Test #")){
+				record.setName(generateTestName(record));
+			}
+			
 			test = test_repo.save(record);
-
 		}
 
 		return test;

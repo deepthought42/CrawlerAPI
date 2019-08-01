@@ -170,7 +170,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		new_test.setRunTime(crawl_time_in_ms);
 							  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 							  		
-							  		new_test = test_service.save(new_test, message.getOptions().get("host").toString());
+							  		new_test = test_service.save(new_test);
 							  		tests.add(new_test);
 							  		
 							  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());

@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -173,8 +174,11 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 
 								log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 								Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login");
+								boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
+								test.setSpansMultipleDomains(leaves_domain);
+								
 								test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L));
-								test = test_service.save(test, domain.getUrl());
+								test = test_service.save(test);
 								MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 							
 								for(String key : test.getPathKeys()){

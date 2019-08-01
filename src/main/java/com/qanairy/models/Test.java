@@ -373,7 +373,7 @@ public class Test implements Persistable {
 									   new ArrayList<PathObject>(test.getPathObjects()),
 									   test.getResult(),
 									   test.getName(), 
-									   false, 
+									   test.isRunning(), 
 									   test.getSpansMultipleDomains());
 		
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());

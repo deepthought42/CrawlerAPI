@@ -150,7 +150,7 @@ public class ParentPathExplorer extends AbstractActor {
 							
 							//if parent element is not visible in pane then break
 							ElementState parent_element = null;
-							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
+							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", browser.extractAttributes(parent_web_element));
 							if(parent_element == null){
 								break;
 							}
@@ -250,18 +250,17 @@ public class ParentPathExplorer extends AbstractActor {
 	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name) throws JsonProcessingException, MalformedURLException {
 		log.warn("Creating test........");
 		Test test = new Test(path_keys, path_objects, result_page, null);
-
+		
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db == null){
 			test.setRunTime(crawl_time);
 			test.setLastRunTimestamp(new Date());
 			addFormGroupsToPath(test);
-	
-			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
-			test.addRecord(test_record);
-	
 			boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
 			test.setSpansMultipleDomains(leaves_domain);
+			
+			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
+			test.addRecord(test_record);
 		}
 		return test;
 	}
@@ -280,7 +279,7 @@ public class ParentPathExplorer extends AbstractActor {
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
+					test_service.save(test);
 					break;
 				}
 			}

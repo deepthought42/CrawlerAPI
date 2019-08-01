@@ -139,8 +139,10 @@ public class Crawler {
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
-
-		return browser_service.buildPage(browser, visible_elements);
+		String browser_url = browser.getDriver().getCurrentUrl();
+		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
+		
+		return browser_service.buildPage(browser, visible_elements, url_without_params);
 	}
 
 	/**
@@ -570,7 +572,7 @@ public class Crawler {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
-		Map<Integer, ElementState> visible_element_map = new HashMap<>();
+		Map<String, ElementState> visible_element_map = new HashMap<>();
 		boolean no_such_element_exception = false;
 		do{
 			try{
@@ -596,7 +598,7 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
+				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}catch(NullPointerException e){
@@ -640,7 +642,7 @@ public class Crawler {
 		int tries = 0;
 		Browser browser = null;
 		PathMessage new_path = path.clone();
-		Map<Integer, ElementState> visible_element_map = new HashMap<>();
+		Map<String, ElementState> visible_element_map = new HashMap<>();
 		boolean no_such_element_exception = false;
 		do{
 			try{
@@ -669,7 +671,7 @@ public class Crawler {
 				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 
-    			List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
+    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 			}
@@ -692,7 +694,7 @@ public class Crawler {
 				//e.printStackTrace();
 			} 
 			catch(Exception e) {
-				log.warn("Exception occurred in performPathExploratoryCrawl actor. \n"+e.getMessage());
+				log.warn("Exception occurred in performPathExploratoryCrawl using PathMessage actor. \n"+e.getMessage());
 				e.printStackTrace();
 			}
 			finally{

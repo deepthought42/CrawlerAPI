@@ -130,21 +130,22 @@ public class DiscoveryActor extends AbstractActor{
 						if(!discovery_record.getExpandedPathKeys().contains(path_key)){
 							
 							//check if last page-element-action trio already exist within another path within the expanded path keys list
-							int last_element_idx = 0;
+							
+							int last_page_idx = 0;
 							for(int idx = message.getKeys().size()-1; idx >=0; idx--){
-								if(message.getKeys().get(idx).contains("elementstate")){
-									last_element_idx = idx;
+								if(message.getKeys().get(idx).contains("pagestate")){
+									last_page_idx = idx;
 									break;
 								}
 							}
 							
 							String partial_key = "";
-							if(last_element_idx < message.getKeys().size()-1){
-								if(last_element_idx+2 <= message.getKeys().size()){
-									partial_key = String.join(":::", message.getKeys().subList(last_element_idx, last_element_idx+2));
+							if(last_page_idx < message.getKeys().size()-1){
+								if(last_page_idx+3 <= message.getKeys().size()){
+									partial_key = String.join(":::", message.getKeys().subList(last_page_idx, last_page_idx+3));
 								}
 								else{
-									partial_key = String.join(":::", message.getKeys().subList(last_element_idx, message.getKeys().size()));
+									partial_key = String.join(":::", message.getKeys().subList(last_page_idx, message.getKeys().size()));
 								}
 							}
 							
@@ -222,8 +223,7 @@ public class DiscoveryActor extends AbstractActor{
 					log.warn("Result url   ::::   " + test.getResult().getUrl());
 					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 					
-					
-					if(isLandable && !discovery_record.getExpandedPathKeys().contains(test.getResult().getKey())){
+					if(isLandable && !discovery_record.getExpandedPathKeys().contains(test.getResult().getKey()) && !test.getSpansMultipleDomains()){
 						UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor);
 						url_browser_actor.tell(url_message, getSelf() );
 					}

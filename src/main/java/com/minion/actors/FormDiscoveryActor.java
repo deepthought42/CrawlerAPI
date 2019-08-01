@@ -49,6 +49,9 @@ public class FormDiscoveryActor extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
 	private ElementRuleExtractor rule_extractor;
 	
 	@Autowired
@@ -124,8 +127,8 @@ public class FormDiscoveryActor extends AbstractActor{
 							    form = form_service.save(form);
 							  	page_state.addForm(form);
 							  	//page_state_service.save(page_state);
-							  						
-							  	message.getDiscoveryActor().tell(form, getSelf());
+							  	message.getDomainActor().tell(page_state, getSelf());
+							  	//message.getDiscoveryActor().tell(page_state, getSelf());
 						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);
 						  	}

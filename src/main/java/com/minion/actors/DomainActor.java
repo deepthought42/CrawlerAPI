@@ -2,6 +2,10 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -11,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
@@ -19,6 +24,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -37,6 +43,10 @@ public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DomainActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private String host = null;
+	Map<String, PageState> page_state_map = new HashMap<>();
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -86,7 +96,7 @@ public class DomainActor extends AbstractActor{
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(Test.class, test -> {
-					test_service.save(test, host);
+					Test test_record = test_service.save(test);
 					
 					Domain domain = domain_service.findByHost(host);
 					for(PathObject obj : test.getPathObjects()){
@@ -95,14 +105,33 @@ public class DomainActor extends AbstractActor{
 						}
 					}
 					
+					domain.addTest(test_record);
 					domain.addPageState(test.getResult());
 					domain_service.save(domain);
-									})
+					
+					for(PathObject path_obj : test.getPathObjects()){
+						try {
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
+						} catch (JsonProcessingException e) {
+							log.error(e.getLocalizedMessage());
+						}
+					}
+					
+					try {
+						log.warn("TEST BEING BROADCASTED :: " + test);
+						log.warn("host url for broadcast :: " + domain.getUrl());
+						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
+					} catch (JsonProcessingException e) {
+						log.error(e.getLocalizedMessage());
+					}
+				})
 				.match(PageState.class, page_state -> {
+					page_state_service.save(page_state);
 					Domain domain = domain_service.findByHost(host);
 					domain.addPageState(page_state);
 					domain_service.save(domain);
 					
+					page_state_map.put(page_state.getKey(), page_state);
 					for(Form form : page_state.getForms()){
 						MessageBroadcaster.broadcastDiscoveredForm(form, host);
 					}

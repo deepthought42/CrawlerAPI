@@ -135,7 +135,7 @@ public class TestCreatorService {
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_service.save(test);
+					//test_service.save(test);
 					break;
 				}
 			}

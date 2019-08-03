@@ -594,6 +594,11 @@ public class PageState implements Persistable, PathObject {
 	
 	public void addScreenshot(Screenshot screenshot){
 		boolean exists = false;
+		
+		log.warn("Screenshots :: " + this.screenshots);
+		if(this.screenshots == null){
+			this.screenshots = new ArrayList<>();
+		}
 		for(Screenshot screenshot_record : this.screenshots){
 			if(screenshot_record.getKey().equals(screenshot.getKey())){
 				exists = true;

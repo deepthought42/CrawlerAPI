@@ -166,6 +166,8 @@ public class UrlBrowserActor extends AbstractActor {
 						animation_actor.tell(path_message, getSelf() );
 					}
 
+					PathMessage updated_path_msg = new PathMessage(path_keys, path_objects, message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor());
+					message.getDiscoveryActor().tell(updated_path_msg, getSelf());
 					
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 				})

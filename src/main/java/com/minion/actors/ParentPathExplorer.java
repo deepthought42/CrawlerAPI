@@ -256,12 +256,13 @@ public class ParentPathExplorer extends AbstractActor {
 			test.setRunTime(crawl_time);
 			test.setLastRunTimestamp(new Date());
 			addFormGroupsToPath(test);
-			boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
-			test.setSpansMultipleDomains(leaves_domain);
 			
 			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
 			test.addRecord(test_record);
 		}
+		boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
+		test.setSpansMultipleDomains(leaves_domain);
+
 		return test;
 	}
 
@@ -279,7 +280,7 @@ public class ParentPathExplorer extends AbstractActor {
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_service.save(test);
+					//test_service.save(test);
 					break;
 				}
 			}

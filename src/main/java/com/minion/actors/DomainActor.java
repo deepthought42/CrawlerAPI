@@ -2,9 +2,8 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.util.ArrayList;
+import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -30,6 +29,7 @@ import com.qanairy.services.TestService;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -42,8 +42,8 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DomainActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	private String host = null;
-	Map<String, PageState> page_state_map = new HashMap<>();
+	private Domain domain = null;
+	private Map<String, PageState> page_state_map = new HashMap<>();
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -58,14 +58,12 @@ public class DomainActor extends AbstractActor{
 	private ActorSystem actor_system;
 	
 	private ActorRef discovery_actor = null;
-	
+
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
-		discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -87,9 +85,13 @@ public class DomainActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(DiscoveryActionMessage.class, message-> {
-					host = message.getDomain().getUrl();
+					domain = message.getDomain();
+					if(discovery_actor == null){
+						discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
+					}
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + host + " WITH ACTION   :: " + message.getAction());
+					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getUrl() + " WITH ACTION   :: " + message.getAction());
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					
 					//pass message along to discovery actor
@@ -98,10 +100,18 @@ public class DomainActor extends AbstractActor{
 				.match(Test.class, test -> {
 					Test test_record = test_service.save(test);
 					
-					Domain domain = domain_service.findByHost(host);
+					log.warn("Domain :: " + domain);
+					
+					if(domain == null){
+						String host = new URL(test.firstPage().getUrl()).getHost();
+						log.warn("Host :: " + host);
+						domain = domain_service.findByHost(host);
+						log.warn("loaded domain :: " + domain);
+					}
+					
 					for(PathObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
-							domain.addPageState((PageState)obj);
+							domain.addPageState(page_state_service.save((PageState)obj));
 						}
 					}
 					
@@ -123,17 +133,6 @@ public class DomainActor extends AbstractActor{
 						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
-					}
-				})
-				.match(PageState.class, page_state -> {
-					page_state_service.save(page_state);
-					Domain domain = domain_service.findByHost(host);
-					domain.addPageState(page_state);
-					domain_service.save(domain);
-					
-					page_state_map.put(page_state.getKey(), page_state);
-					for(Form form : page_state.getForms()){
-						MessageBroadcaster.broadcastDiscoveredForm(form, host);
 					}
 				})
 				.match(MemberUp.class, mUp -> {

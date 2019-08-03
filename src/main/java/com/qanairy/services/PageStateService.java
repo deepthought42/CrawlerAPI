@@ -62,6 +62,9 @@ public class PageStateService {
 				break;
 			}
 			page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
+			if(page_state_record != null){
+				break;
+			}
 		}
 		if(page_state_record != null){
 			page_state_record.setLandable(page_state.isLandable());
@@ -91,12 +94,11 @@ public class PageStateService {
 			}
 			
 			for(Screenshot screenshot : screenshot_map.values()){
-				page_state_record.addScreenshot(screenshot);
+				page_state_record.addScreenshot(screenshot_service.save(screenshot));
 			}
 			
 			page_state_record = page_state_repo.save(page_state_record);
 			page_state_record.setElements(element_records);
-			
 			page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
 		}
 		else {
@@ -126,7 +128,7 @@ public class PageStateService {
 				}
 				
 				for(Screenshot screenshot : screenshot_map.values()){
-					page_state_record.addScreenshot(screenshot);
+					page_state_record.addScreenshot(screenshot_service.save(screenshot));
 				}
 				
 				page_state_record = page_state_repo.save(page_state_record);
@@ -166,7 +168,12 @@ public class PageStateService {
 					screenshot_map.put(screenshot.getKey(), screenshot);
 				}
 				
-				page_state.setScreenshots(new ArrayList<>(screenshot_map.values()));
+				List<Screenshot> screenshot_list = new ArrayList<Screenshot>();
+				for(Screenshot screenshot : screenshot_map.values()){
+					screenshot_list.add(screenshot_service.save(screenshot));	
+				}
+				
+				page_state.setScreenshots(screenshot_list);
 				page_state.setForms(form_records);
 				page_state_record = page_state_repo.save(page_state);
 			}
@@ -203,7 +210,12 @@ public class PageStateService {
 	}
 	
 	public List<Screenshot> getScreenshots(String page_key){
-		return page_state_repo.getScreenshots(page_key);
+		List<Screenshot> screenshots = page_state_repo.getScreenshots(page_key);
+		log.warn("Screenshots loaded from page states  :   "+screenshots);
+		if(screenshots == null){
+			return new ArrayList<Screenshot>();
+		}
+		return screenshots;
 	}
 	
 	public Set<PageState> getElementPageStatesWithSameUrl(String url, String key){

@@ -118,8 +118,10 @@ public class DiscoveryActor extends AbstractActor{
 					if(message.getStatus().equals(PathStatus.READY)){
 						PathMessage path_message = message.clone();
 
-						form_discoverer.tell(path_message, getSelf() );
-						path_expansion_actor.tell(path_message, getSelf() );
+						if(!discovery_record.getExpandedUrls().contains(PathUtils.getLastPageState(path_message.getPathObjects()).getUrl())){
+							form_discoverer.tell(path_message, getSelf() );
+							path_expansion_actor.tell(path_message, getSelf() );
+						}
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
@@ -130,7 +132,7 @@ public class DiscoveryActor extends AbstractActor{
 						if(!discovery_record.getExpandedPathKeys().contains(path_key)){
 							
 							//check if last page-element-action trio already exist within another path within the expanded path keys list
-							
+							/*
 							int last_page_idx = 0;
 							for(int idx = message.getKeys().size()-1; idx >=0; idx--){
 								if(message.getKeys().get(idx).contains("pagestate")){
@@ -149,7 +151,6 @@ public class DiscoveryActor extends AbstractActor{
 								}
 							}
 							
-							log.warn("Searching for partial path key    ::::      "+partial_key);
 							boolean exists_in_other_expansion = false;
 							for(String expanded_path_key : discovery_record.getExpandedPathKeys()){
 								if(expanded_path_key.contains(partial_key)){
@@ -160,14 +161,12 @@ public class DiscoveryActor extends AbstractActor{
 							}
 							
 							if(!exists_in_other_expansion){
-								
+							*/	
 								discovery_record.getExpandedPathKeys().add(path_key);
 								discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 															
 								exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
-	
-								log.info("existing total path count :: "+discovery_record.getTotalPathCount());
-							}
+							//}
 						}
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
@@ -223,25 +222,24 @@ public class DiscoveryActor extends AbstractActor{
 					log.warn("Result url   ::::   " + test.getResult().getUrl());
 					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 					
-					if(isLandable && !discovery_record.getExpandedPathKeys().contains(test.getResult().getKey()) && !test.getSpansMultipleDomains()){
-						UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor);
-						url_browser_actor.tell(url_message, getSelf() );
-					}
-					else if(!discovery_record.getExpandedPathKeys().contains(path_key)){
-			  			
-			  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor);
-			  			
-				  		//send path message with examined status to discovery actor
-						path_expansion_actor.tell(path, getSelf());
+					if(!test.getSpansMultipleDomains()){
+						if(isLandable && !discovery_record.getExpandedUrls().contains(test.getResult().getUrl()) ){
+							discovery_record.getExpandedUrls().add(test.getResult().getUrl());
+							UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor);
+							url_browser_actor.tell(url_message, getSelf() );
+						}
+						else if(!discovery_record.getExpandedPathKeys().contains(path_key)){
+				  			
+				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor);
+				  			
+					  		//send path message with examined status to discovery actor
+							path_expansion_actor.tell(path, getSelf());
+						}
 					}
 				
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					discovery_service.save(discovery_record);
-				})
-				.match(PageState.class, page_state -> { 
-					//send message to Domain Actor
-					domain_actor.tell(page_state, getSelf());										
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -270,7 +268,7 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
 		
 		//create multiple exploration actors for parallel execution
-		for(int i=0; i < 10; i++){
+		for(int i=0; i < 20; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 		}
@@ -287,7 +285,6 @@ public class DiscoveryActor extends AbstractActor{
 
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
-		
 		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor);
 		url_browser_actor.tell(url_message, getSelf() );
 		

@@ -141,7 +141,8 @@ public class DiscoveryController {
         	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
         	//Fire discovery started event
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
-	    	discovery_started_props.put("url", url);
+	    	discovery_started_props.put("protocol",  domain.getProtocol());
+	    	discovery_started_props.put("url", domain.getUrl());
 	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
 	    	discovery_started_props.put("already_running", "true");
 

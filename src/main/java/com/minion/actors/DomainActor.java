@@ -22,6 +22,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.DiscoveryActionMessage;
+import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
@@ -111,7 +112,7 @@ public class DomainActor extends AbstractActor{
 					
 					for(PathObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
-							domain.addPageState(page_state_service.save((PageState)obj));
+							domain.addPageState((PageState)obj);
 						}
 					}
 					
@@ -134,6 +135,11 @@ public class DomainActor extends AbstractActor{
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
+				})
+				.match(FormDiscoveryMessage.class, form_msg -> {
+					//forward message to discovery actor
+					form_msg.setDomainActor(getSelf());
+					discovery_actor.tell(form_msg, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

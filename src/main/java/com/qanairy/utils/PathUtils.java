@@ -92,20 +92,18 @@ public class PathUtils {
 	public static PageState getSecondToLastPageState(List<PathObject> path_objects) {
 		assert(path_objects != null);
 		
-		PageState page_state = null;
 		int page_states_seen = 0;
 		
 		for(int idx = path_objects.size()-1; idx >=0; idx--){
 			if(path_objects.get(idx) instanceof PageState){
 				if(page_states_seen >= 1){
-					page_state = (PageState)path_objects.get(idx);
-					break;
+					return (PageState)path_objects.get(idx);
 				}
 				page_states_seen++;
 			}
 		}
 		
-		return page_state;
+		return null;
 	}
 
 	public static List<String> reducePathKeys(List<String> final_key_list) {

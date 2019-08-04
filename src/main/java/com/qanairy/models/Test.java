@@ -71,29 +71,11 @@ public class Test implements Persistable {
  	 * @param result
 	 * @param domain
 	 * 
-	 * @pre path != null
+	 * @pre path_keys != null
+	 * @pre !path_keys.isEmpty()
+	 * @pre path_objects != null
+	 * @pre !path_objects.isEmpty()
 	 */
-	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name){
-		assert path_keys != null;
-		assert !path_keys.isEmpty();
-		assert path_objects != null;
-		assert !path_objects.isEmpty();
-		
-		setPathKeys(path_keys);
-		setPathObjects(path_objects);
-		setResult(result);
-		setRecords(new ArrayList<TestRecord>());
-		setStatus(TestStatus.UNVERIFIED);
-		setSpansMultipleDomains(false);
-		setLastRunTimestamp(new Date());
-		setName(name);
-		setBrowserStatuses(new HashMap<String, String>());
-		setIsRunning(false);
-		setArchived(false);
-		setKey(generateKey());
-		setRunTime(0L);
-	}
-
 	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains){
 		assert path_keys != null;
 		assert !path_keys.isEmpty();

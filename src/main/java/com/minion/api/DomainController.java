@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.minion.api.exception.PaymentDueException;
 import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.integrations.DeepthoughtApi;
@@ -47,14 +49,22 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.TestUser;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
+import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
+import com.qanairy.models.message.DiscoveryActionMessage;
+import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.RedirectService;
+import com.qanairy.utils.BrowserUtils;
+import com.segment.analytics.Analytics;
+import com.segment.analytics.messages.TrackMessage;
+import com.stripe.exception.StripeException;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -66,6 +76,7 @@ import akka.actor.ActorSystem;
 @RequestMapping("/domains")
 public class DomainController {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	private static Map<String, ActorRef> domain_actors = new HashMap<>();
 
 	@Autowired
 	private AccountService account_service;
@@ -115,16 +126,8 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	//check if domain should have a 'www.' or not. We do this for consistency of naming in the database
-    	int dot_idx = url.indexOf('.');
-    	int last_dot_idx = url.lastIndexOf('.');
-    	String formatted_url = url;
-    	if(dot_idx == last_dot_idx){
-    		formatted_url = "www."+url;
-    	}
-    	formatted_url = formatted_url.replace("http://", "");
-    	formatted_url = formatted_url.replace("https://", "");
-    	URL url_obj = new URL(protocol+"://"+formatted_url);
+    	String formatted_url = BrowserUtils.sanitizeUrl(url);
+    	URL url_obj = new URL(formatted_url);
 		
     	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
 		try{
@@ -470,7 +473,6 @@ public class DomainController {
      * @throws IOException 
      * @throws UnknownAccountException 
      */
-
 	@PreAuthorize("hasAuthority('create:domains')")
     @RequestMapping(path="{domain_id}/forms", method = RequestMethod.PUT)
     public @ResponseBody void updateForm(HttpServletRequest request,
@@ -516,25 +518,176 @@ public class DomainController {
 	        		
 	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
 	    		//start form test creation actor
-	    		Map<String, Object> options = new HashMap<String, Object>();
-				options.put("browser", domain.getDiscoveryBrowserName());
-		        options.put("host", domain.getUrl());
-		        Message<Form> form_msg = new Message<Form>(acct.getUsername(), form_record, options);
-	
-		        //look up discovery for domain and increment
-		        DiscoveryRecord record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
-		        record.setTotalPathCount(record.getTotalPathCount()+1);
-		        discovery_service.save(record);
+	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, BrowserType.create(domain.getDiscoveryBrowserName()), domain);
 		        
-		        log.info("Sending form message  :: "+form_msg.toString());
-	    		final ActorRef form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-	  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
-	    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
+		        //look up discovery for domain and increment
+		        domain_actors.get(domain.getUrl()).tell(form_discovery_msg, ActorRef.noSender());
 	    	}
 	    	else{
 	    		throw new DomainNotFoundException();
 	    	}
 		}
+	}
+	
+
+	@RequestMapping(path="{domain_id}/status", method = RequestMethod.GET)
+    public @ResponseBody DiscoveryRecord isDiscoveryRunning(HttpServletRequest request,
+    												@PathVariable(value="domain_id", required=true) long domain_id)
+    														throws UnknownAccountException{
+		Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+    	
+    	Optional<Domain> optional_domain = domain_service.findById(domain_id);
+		log.info("Does the domain exist :: "+optional_domain.isPresent());
+    	if(optional_domain.isPresent()){
+    		Domain domain = optional_domain.get();
+        	return domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
+    }
+
+    /**
+	 *
+	 * @param request
+	 * @param url
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws UnknownAccountException
+     * @throws PaymentDueException
+     * @throws StripeException
+	 */
+    @PreAuthorize("hasAuthority('start:discovery')")
+	@RequestMapping(path="{domain_id}/start", method = RequestMethod.GET)
+	public @ResponseBody DiscoveryRecord startDiscovery(HttpServletRequest request,
+														@PathVariable(value="domain_id", required=true) long domain_id)
+															throws MalformedURLException,
+										   	  						UnknownAccountException,
+										   	  						DiscoveryLimitReachedException,
+										   	  						PaymentDueException, StripeException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+
+    	/*
+    	if(subscription_service.hasExceededSubscriptionDiscoveredLimit(acct, subscription_service.getSubscriptionPlanName(acct))){
+    		throw new PaymentDueException("Your plan has 0 discovered tests left. Please upgrade to run a discovery");
+    	}
+    	*/
+
+    	Optional<Domain> optional_domain = domain_service.findById(domain_id);
+		log.info("Does the domain exist :: "+optional_domain.isPresent());
+    	if(optional_domain.isPresent()){
+    		Domain domain = optional_domain.get();
+    		DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
+    		Date now = new Date();
+        	long diffInMinutes = 10000;
+        	if(last_discovery_record != null){
+        		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
+        	}
+        	log.warn("domain retrieved from host :: " + domain + "   :   "+ domain.getUrl());
+        	
+    		if(diffInMinutes > 1440){
+    			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
+    			if(!domain_actors.containsKey(domain.getUrl())){
+    				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+    						  .props("domainActor"), "domain_actor"+UUID.randomUUID());
+    				domain_actors.put(domain.getUrl(), domain_actor);
+    			}
+    		    
+    			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+    			domain_actors.get(domain.getUrl()).tell(discovery_action_msg, null);
+    		}
+            else{
+            	//Throw error indicating discovery has been or is running
+            	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
+            	//Fire discovery started event
+    	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
+    	    	discovery_started_props.put("protocol",  domain.getProtocol());
+    	    	discovery_started_props.put("url", domain.getUrl());
+    	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
+    	    	discovery_started_props.put("already_running", "true");
+
+    	    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
+
+    	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")
+    	    		    .userId(acct.getUsername())
+    	    		    .properties(discovery_started_props)
+    	    		);
+
+            	throw new ExistingDiscoveryFoundException();
+            }
+    		
+    		return last_discovery_record;
+    	}
+    	else{
+    		throw new DomainNotFoundException();
+    	}
+    	
+    	
+	}
+
+	/**
+	 *
+	 * @param request
+	 * @param account_key key of account to stop work for
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws UnknownAccountException
+	 */
+    @PreAuthorize("hasAuthority('start:discovery')")
+	@RequestMapping("{domain_id}/stop")
+	public @ResponseBody void stopDiscovery(HttpServletRequest request, @RequestParam(value="url", required=true) String url)
+			throws MalformedURLException, UnknownAccountException {
+    	Principal principal = request.getUserPrincipal();
+    	String id = principal.getName().replace("auth0|", "");
+    	Account acct = account_service.findByUserId(id);
+
+    	if(acct == null){
+    		throw new UnknownAccountException();
+    	}
+    	else if(acct.getSubscriptionToken() == null){
+    		throw new MissingSubscriptionException();
+    	}
+
+    	/*
+    	DiscoveryRecord last_discovery_record = null;
+		Date started_date = new Date(0L);
+		for(DiscoveryRecord record : domain_service.getDiscoveryRecords(url)){
+			if(record.getStartTime().compareTo(started_date) > 0 && record.getDomainUrl().equals(url)){
+				started_date = record.getStartTime();
+				last_discovery_record = record;
+			}
+		}
+
+		last_discovery_record.setStatus(DiscoveryStatus.STOPPED);
+		discovery_service.save(last_discovery_record);
+		WorkAllowanceStatus.haltWork(acct.getUsername());
+		*/
+    	Domain domain = domain_service.findByHost(url);
+
+    	if(!domain_actors.containsKey(domain.getUrl())){
+			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("domainActor"), "domain_actor"+UUID.randomUUID());
+			domain_actors.put(domain.getUrl(), domain_actor);
+		}
+    	
+		DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.STOP, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
+		domain_actors.get(url).tell(discovery_action_msg, null);
+		
 	}
 }
 

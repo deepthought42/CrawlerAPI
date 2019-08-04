@@ -118,7 +118,7 @@ public class BrowserTest {
 			List<PathObject> path_objects = new ArrayList<PathObject>();
 			path_objects.add(page);
 			
-			com.qanairy.models.Test test = new com.qanairy.models.Test(path_keys, path_objects, page, "Testing Test 1");
+			com.qanairy.models.Test test = new com.qanairy.models.Test(path_keys, path_objects, page, "Testing Test 1", false, false);
 			
 			Assert.assertEquals(test.getPathKeys().size(), path_keys.size());
 			Assert.assertEquals(test.getPathObjects().size(), path_objects.size());

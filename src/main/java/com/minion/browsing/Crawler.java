@@ -1,6 +1,8 @@
 package com.minion.browsing;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,11 +67,14 @@ public class Crawler {
 	 * @throws GridException
 	 * @throws ExecutionException
 	 * @throws InterruptedException
+	 * @throws URISyntaxException 
 	 *
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PageState crawlPath(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
+	public PageState crawlPath(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, 
+								Map<Integer, ElementState> visible_element_map, List<ElementState> known_visible_elements) 
+										throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, InterruptedException, ExecutionException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -154,11 +159,13 @@ public class Crawler {
 	 * @throws NoSuchAlgorithmException
 	 * @throws WebDriverException
 	 * @throws GridException
+	 * @throws URISyntaxException 
 	 *
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public void crawlPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel) 
+			throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -228,11 +235,12 @@ public class Crawler {
 	 * @throws NoSuchAlgorithmException
 	 * @throws WebDriverException
 	 * @throws GridException
+	 * @throws URISyntaxException 
 	 *
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, ElementState child_element) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, ElementState child_element) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -264,6 +272,7 @@ public class Crawler {
 				Point click_location = generateRandomLocationWithinElementButNotWithingChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
 				
 				Action action = (Action)current_obj;
+				/*
 				Action action_record = action_repo.findByKey(action.getKey());
 				if(action_record==null){
 					action_repo.save(action);
@@ -271,7 +280,7 @@ public class Crawler {
 				else{
 					action = action_record;
 				}
-
+				 */
 				performAction(action, last_element, browser.getDriver(), click_location);
 				
 				Point p = browser.getViewportScrollOffset();
@@ -313,21 +322,20 @@ public class Crawler {
 	 * @throws NoSuchAlgorithmException
 	 * @throws WebDriverException
 	 * @throws GridException
+	 * @throws URISyntaxException 
 	 *
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public void crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, ExploratoryPath path) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
 		ElementState last_element = null;
 		PathObject last_obj = null;
 		PageState expected_page = null;
-
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
-
 		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
 
 		String last_url = null;
@@ -423,11 +431,13 @@ public class Crawler {
 	 * @throws NoSuchAlgorithmException
 	 * @throws WebDriverException
 	 * @throws GridException
+	 * @throws URISyntaxException 
 	 *
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public PathMessage crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, PathMessage path) throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException{
+	public PathMessage crawlPathExplorer(List<String> keys, List<PathObject> path_object_list, Browser browser, String host_channel, PathMessage path) 
+			throws IOException, GridException, NoSuchElementException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert keys != null;
 
@@ -580,6 +590,7 @@ public class Crawler {
 					no_such_element_exception = false;
 					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
+					log.warn("expected path url : "+expected_page.getUrl());
 					browser.navigateTo(expected_page.getUrl());
 
 					crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
@@ -601,9 +612,14 @@ public class Crawler {
 				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
-			}catch(NullPointerException e){
+			}
+			catch(MalformedURLException e){
+				log.warn(e.getMessage());
+			}
+			catch(NullPointerException e){
 				log.warn("Error happened while exploratory actor attempted to crawl test ");
-			} catch (GridException e) {
+			}
+			catch (GridException e) {
 				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}
 			catch (NoSuchElementException e){
@@ -674,6 +690,9 @@ public class Crawler {
     			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
+			}
+			catch(MalformedURLException e){
+				log.warn(e.getMessage());
 			}
 			catch(NullPointerException e){
 				log.error("Error happened while exploratory actor attempted to crawl test ");

@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Screenshot;
+import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
@@ -103,20 +105,14 @@ public class BrowserService {
 	 * @throws IOException
 	 * @throws GridException
 	 */
-	public static boolean checkIfLandable(String browser, PageState result, List<PathObject> path_objects){
-		String last_url = "";
+	public static boolean checkIfLandable(String browser, PageState page_state, Test test){
 		//find last page in path
-		for(int idx = path_objects.size()-1; idx>=0; idx--){
-			if(path_objects.get(idx) instanceof PageState){
-				last_url = ((PageState)path_objects.get(idx)).getUrl();
-				break;
-			}
-		}
-
-		return !last_url.equals(result.getUrl());
+		PageState last_page = test.findLastPage();
+		return !last_page.getUrl().equals(page_state.getUrl());
 	}
 
-	public List<PageState> buildPageStates(String url, String browser_name, String host, List<PathObject> path_objects, List<String> path_keys) throws MalformedURLException, IOException, Exception{
+	public List<PageState> buildPageStates(String url, String browser_name, String host, List<PathObject> path_objects, List<String> path_keys) 
+			throws MalformedURLException, IOException, Exception{
 		List<PageState> page_states = new ArrayList<>();
 		boolean error_occurred = false;
 		Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
@@ -528,6 +524,7 @@ public class BrowserService {
 	 * @throws GridException
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
+	 * @throws URISyntaxException 
 	 *
 	 * @pre browser != null
 	 * @post page_state != null
@@ -641,7 +638,8 @@ public class BrowserService {
 	public List<ElementState> getVisibleElements(Browser browser, Map<String, ElementState> visible_element_map, List<ElementState> elements)
 															 throws WebDriverException, GridException, IOException{		
 		assert visible_element_map != null;
-		
+		long start_time = System.currentTimeMillis();
+
 		boolean err = false;
 		do{
 			err = false;
@@ -673,6 +671,8 @@ public class BrowserService {
 			}
 		}while(err);
 		
+		log.warn("total time get all visible elements :: " + (System.currentTimeMillis() - start_time));
+
 		List<ElementState> visible_elements = new ArrayList<>();
 		for(ElementState element : visible_element_map.values()){
 			if(element != null){
@@ -885,7 +885,7 @@ public class BrowserService {
 										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
 		
 		//element_state_service.save(page_element);
-		log.warn("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
+		log.debug("total time to save element state :: " + (System.currentTimeMillis() - start_time) + "    :  xpath time ::    "+xpath);
 
 		return page_element;
 	}

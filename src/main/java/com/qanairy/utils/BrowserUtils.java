@@ -229,10 +229,7 @@ public class BrowserUtils {
 		if(param_index >= 0){
 			domain = domain.substring(0, param_index);
 		}
-		
-		if(domain.charAt(0) != 'h'){
-			domain= 'h'+domain;
-		}
+
 		URL new_url = new URL(domain);
 
 		//check if host is subdomain

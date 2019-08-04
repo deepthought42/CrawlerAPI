@@ -26,6 +26,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.Transition;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.utils.PathUtils;
 
 @Component
 public class TestCreatorService {
@@ -108,13 +109,12 @@ public class TestCreatorService {
 		assert path_keys != null;
 		assert path_objects != null;
 
-		Test test = new Test(path_keys, path_objects, result_page, null);
+		boolean leaves_domain = !PathUtils.getFirstPage(path_objects).getUrl().contains(new URL(result_page.getUrl()).getHost());
+
+		Test test = new Test(path_keys, path_objects, result_page, null, false, leaves_domain);
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);
-
-		boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
-		test.setSpansMultipleDomains(leaves_domain);
 		
 		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
 		test.addRecord(test_record);

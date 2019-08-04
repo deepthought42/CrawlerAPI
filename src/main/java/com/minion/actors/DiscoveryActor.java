@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
@@ -29,6 +28,7 @@ import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
+import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.services.AccountService;
@@ -74,9 +74,10 @@ public class DiscoveryActor extends AbstractActor{
 	private EmailService email_service;
 	
 	private ActorRef domain_actor;
-	private ActorRef url_browser_actor = null;
-	private ActorRef form_discoverer = null;
-	private ActorRef path_expansion_actor = null;
+	private ActorRef url_browser_actor;
+	private ActorRef form_discoverer;
+	private ActorRef form_test_discovery_actor;
+	private ActorRef path_expansion_actor;
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
 	private BrowserType browser;
 	
@@ -117,11 +118,12 @@ public class DiscoveryActor extends AbstractActor{
 				.match(PathMessage.class, message -> {
 					if(message.getStatus().equals(PathStatus.READY)){
 						PathMessage path_message = message.clone();
-
-						if(!discovery_record.getExpandedUrls().contains(PathUtils.getLastPageState(path_message.getPathObjects()).getUrl())){
+						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
+						
+						//if(!discovery_record.getExpandedUrls().contains(PathUtils.getLastPageState(path_message.getPathObjects()).getUrl())){
 							form_discoverer.tell(path_message, getSelf() );
 							path_expansion_actor.tell(path_message, getSelf() );
-						}
+						//}
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
@@ -170,9 +172,11 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
+						//increment examined count
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
-						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount()){
+						//check if discovery is considered complete, if so then update status and send email to all accounts
+						if(discovery_record.getExaminedPathCount() >= discovery_record.getTotalPathCount() && discovery_record.getTotalPathCount()> 2){
 							List<Account> accounts = discovery_service.getAccounts(discovery_record.getKey());
 							discovery_record.setStatus(DiscoveryStatus.COMPLETE);
 							discovery_service.save(discovery_record);
@@ -189,7 +193,6 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(Test.class, test -> { 
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
-					discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 					
 					//send message to Domain Actor
 					domain_actor.tell(test, getSelf());
@@ -202,44 +205,66 @@ public class DiscoveryActor extends AbstractActor{
 			    	*/
 					
 					
-					boolean isLandable = BrowserService.checkIfLandable(browser.toString(), test.getResult(), test.getPathObjects() );
-					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-
+					boolean isLandable = BrowserService.checkIfLandable(browser.toString(), test.getResult(), test );
 					
-					List<String> final_key_list = new ArrayList<>(test.getPathKeys());
-		  			final_key_list.add(test.getResult().getKey());
-		  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
-		  			final_object_list.add(test.getResult());
-		  			//run reducer on key list
-		  			final_key_list = PathUtils.reducePathKeys(final_key_list);
-					String path_key = String.join(":::", final_key_list);
+					String path_key = String.join(":::", test.getPathKeys());
 
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 					log.warn("expanded path key :: " + path_key);
 					log.warn("does discovery record contain expanded path key :: " + discovery_record.getExpandedPathKeys().contains(path_key));
-					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("does discovery record contain expanded page url already? :: " + discovery_record.getExpandedUrls().contains(path_key));
+					
+					log.warn("test spans multiple domains : :   " + test.getSpansMultipleDomains());
 					log.warn("Test result is landable?    ::   "+isLandable);
 					log.warn("Result url   ::::   " + test.getResult().getUrl());
-					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("expanded path key :: " + path_key);
+					log.warn("does discovery record contain expanded path key :: " + discovery_record.getExpandedPathKeys().contains(path_key));
+					log.warn("does discovery record contain expanded page url already? :: " + discovery_record.getExpandedUrls().contains(path_key));
 					
+					log.warn("test spans multiple domains : :   " + test.getSpansMultipleDomains());
+					log.warn("Test result is landable?    ::   "+isLandable);
+					log.warn("Result url   ::::   " + test.getResult().getUrl());
+					log.warn("test first page url :: " + test.findLastPage().getUrl());
+					log.warn("test length :: " + test.getPathObjects().size());
 					if(!test.getSpansMultipleDomains()){
-						if(isLandable && !discovery_record.getExpandedUrls().contains(test.getResult().getUrl()) ){
-							discovery_record.getExpandedUrls().add(test.getResult().getUrl());
+						if(isLandable ){
+							log.warn("SENDING LANDABLE RESULT TO URL BROWSER ACTOR :: "+test.getResult().getUrl());
 							UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor);
 							url_browser_actor.tell(url_message, getSelf() );
 						}
-						else if(!discovery_record.getExpandedPathKeys().contains(path_key)){
+						else {
+							List<String> final_key_list = new ArrayList<>(test.getPathKeys());
+				  			final_key_list.add(test.getResult().getKey());
+				  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
+				  			final_object_list.add(test.getResult());
+				  			//run reducer on key list
+				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
 				  			
+				  			log.warn("sending test to path expansion actor");
 				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor);
 				  			
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
 						}
 					}
-				
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					log.warn("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+					
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					discovery_service.save(discovery_record);
+				})
+				.match(FormDiscoveryMessage.class, form_msg -> {
+					//look up discovery for domain and increment
+			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+			        form_msg.setDiscoveryActor(getSelf());
+			        log.info("Sending form message  :: "+form_msg.toString());
+		    		
+		    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
+
+			        discovery_service.save(discovery_record);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -266,7 +291,9 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 		path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-		
+		form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
+	
 		//create multiple exploration actors for parallel execution
 		for(int i=0; i < 20; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)

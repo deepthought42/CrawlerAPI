@@ -3,6 +3,8 @@ package com.qanairy.services;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ import com.qanairy.models.rules.Rule;
 
 @Service
 public class ElementStateService {
+	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
 
 	@Autowired
 	private AttributeService attribute_service;
@@ -27,6 +30,7 @@ public class ElementStateService {
 		if(element == null){
 			return null;
 		}
+
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
 			//iterate over attributes
@@ -35,7 +39,7 @@ public class ElementStateService {
 				new_attributes.add(attribute_service.save(attribute));
 			}
 			element.setAttributes(new_attributes);
-
+			
 			Set<Rule> rule_records = new HashSet<>();
 			for(Rule rule : element.getRules()){
 				rule_records.add(rule_service.save(rule));

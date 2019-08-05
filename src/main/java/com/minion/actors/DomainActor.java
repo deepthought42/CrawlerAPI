@@ -113,7 +113,7 @@ public class DomainActor extends AbstractActor{
 					
 					log.warn("Domain :: " + domain);
 					log.warn("test result in domain actor   :   " + test.getResult());
-					domain.addPageState(test.getResult());
+					domain.addPageState(page_state_service.save(test.getResult()));
 					
 					for(PathObject path_obj : test.getPathObjects()){
 						try {

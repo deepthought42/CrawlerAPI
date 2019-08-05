@@ -369,9 +369,7 @@ public class BrowserService {
 			page_state.addScreenshotChecksum(screenshot_checksum);
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum, browser.getViewportSize().getWidth(), browser.getViewportSize().getHeight());			
 			page_state.addScreenshot(screenshot);
-			//page_state = page_state_service.save(page_state);
-
-			log.warn("saved page state       :    " + page_state.getKey());
+			
 			viewport_screenshot.flush();
 			return page_state;
 		}

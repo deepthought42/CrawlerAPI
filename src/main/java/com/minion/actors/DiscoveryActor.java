@@ -264,7 +264,7 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
 	
 		//create multiple exploration actors for parallel execution
-		for(int i=0; i < 10; i++){
+		for(int i=0; i < 5; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 		}

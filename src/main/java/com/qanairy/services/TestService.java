@@ -38,6 +38,7 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.utils.PathUtils;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -185,8 +186,9 @@ public class TestService {
 	  		return test_repo.save(test);
 		}
 		else{
-			//List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
-			//record.setPathObjects(path_objects);
+			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
+			path_objects = PathUtils.orderPathObjects(test.getPathKeys(), path_objects);
+			record.setPathObjects(path_objects);
 			
 			if(test.getResult() == null){
 				log.warn("Saving new result to test :: "+test.getResult());

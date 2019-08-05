@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -30,7 +29,6 @@ import com.qanairy.services.TestService;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.ClusterEvent.MemberEvent;
@@ -41,7 +39,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Component
 @Scope("prototype")
 public class DomainActor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(DomainActor.class.getName());
+	private static Logger log = LoggerFactory.getLogger(DomainActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
 	private Map<String, PageState> page_state_map = new HashMap<>();
@@ -99,10 +97,7 @@ public class DomainActor extends AbstractActor{
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(Test.class, test -> {
-					Test test_record = test_service.save(test);
-					
-					log.warn("Domain :: " + domain);
-					
+					test_service.save(test);
 					if(domain == null){
 						String host = new URL(test.firstPage().getUrl()).getHost();
 						log.warn("Host :: " + host);
@@ -116,9 +111,9 @@ public class DomainActor extends AbstractActor{
 						}
 					}
 					
-					domain.addTest(test_record);
+					log.warn("Domain :: " + domain);
+					log.warn("test result in domain actor   :   " + test.getResult());
 					domain.addPageState(test.getResult());
-					domain_service.save(domain);
 					
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
@@ -129,12 +124,14 @@ public class DomainActor extends AbstractActor{
 					}
 					
 					try {
-						log.warn("TEST BEING BROADCASTED :: " + test);
-						log.warn("host url for broadcast :: " + domain.getUrl());
 						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
+					log.warn("test result in domain actor :: " + test.getResult());
+					domain.addTest(test_service.save(test));
+					domain_service.save(domain);
+					
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
 					//forward message to discovery actor

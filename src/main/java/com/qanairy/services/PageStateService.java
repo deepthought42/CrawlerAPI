@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,30 +51,58 @@ public class PageStateService {
 	 * 
 	 * @pre page_state != null
 	 */
-	public PageState save(PageState page_state){
+	public PageState save(PageState page_state) {
 		assert page_state != null;
 		
 		PageState page_state_record = null;
-				
-		for(Screenshot screenshot : page_state.getScreenshots()){
-			page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
-			if(page_state_record != null){
-				break;
-			}
-			page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
+		log.warn("Page state checking screenshots before save :: " + page_state);
+		log.warn("Page state checking screenshots before save :: " + page_state.getScreenshots());
+		log.warn("Page state checking screenshots before save :: " + page_state.getScreenshotChecksums());
+		log.warn("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		for(String checksum : page_state.getScreenshotChecksums()){
+			page_state_record = page_state_repo.findByScreenshotChecksumsContains(checksum);
 			if(page_state_record != null){
 				break;
 			}
 		}
+		
+		if(page_state_record == null){
+			
+			for(Screenshot screenshot : page_state.getScreenshots()){
+				page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
+				if(page_state_record != null){
+					break;
+				}
+				page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
+				if(page_state_record != null){
+					break;
+				}
+			}
+		}
+		
 		if(page_state_record != null){
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 			
+			Map<String, ElementState> element_map = new HashMap<>();
 			List<ElementState> element_records = new ArrayList<>();
 			for(ElementState element : page_state.getElements()){
-				element_records.add(element_state_service.save(element));
+				boolean err = false;
+				int cnt = 0;
+				do{
+					err = false;
+					try{
+						if(element_map.containsKey(element.getKey())){
+							element_map.put(element.getKey(), element_state_service.save(element));
+							break;
+						}
+					}catch(ClientException e){
+						err = true;
+					}
+					cnt++;
+				}while(err && cnt < 5);
 			}
-			page_state_record.setElements(element_records);
+			page_state_record.setElements(new ArrayList<ElementState>(element_map.values()));
 			
 			page_state_record.setAnimatedImageUrls(page_state.getAnimatedImageUrls());
 			page_state_record.setAnimatedImageChecksums(page_state.getAnimatedImageChecksums());
@@ -111,8 +140,25 @@ public class PageStateService {
 				for(ElementState element : page_state.getElements()){
 					element_records.add(element_state_service.save(element));
 				}
+				for(ElementState element : page_state.getElements()){
+					boolean err = false;
+					int cnt = 0;
+					do{
+						err = false;
+						try{
+							element_records.add(element_state_service.save(element));
+						}catch(Exception e){
+							err = true;
+						}
+						cnt++;
+					}while(err && cnt < 5);
+					
+					if(err){
+						element_records.add(element);
+					}
+				}
 				page_state_record.setElements(element_records);
-				
+								
 				page_state_record.setForms(page_state.getForms());
 				for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 					page_state_record.addScreenshotChecksum(screenshot_checksum);
@@ -210,7 +256,6 @@ public class PageStateService {
 	
 	public List<Screenshot> getScreenshots(String page_key){
 		List<Screenshot> screenshots = page_state_repo.getScreenshots(page_key);
-		log.warn("Screenshots loaded from page states  :   "+screenshots);
 		if(screenshots == null){
 			return new ArrayList<Screenshot>();
 		}

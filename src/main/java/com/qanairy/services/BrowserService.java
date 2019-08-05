@@ -367,7 +367,7 @@ public class BrowserService {
 					browser.getBrowserName());
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 			page_state.addScreenshotChecksum(screenshot_checksum);
-			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);			
+			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum, browser.getViewportSize().getWidth(), browser.getViewportSize().getHeight());			
 			page_state.addScreenshot(screenshot);
 			//page_state = page_state_service.save(page_state);
 
@@ -566,7 +566,7 @@ public class BrowserService {
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			page_state.setScreenshotUrl(viewport_screenshot_url);
 
-			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum);
+			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum, browser.getViewportSize().getWidth(), browser.getViewportSize().getHeight());
 			page_state.addScreenshot(screenshot);
 
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());

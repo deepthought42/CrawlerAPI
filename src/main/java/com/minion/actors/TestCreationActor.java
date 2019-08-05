@@ -127,7 +127,7 @@ public class TestCreationActor extends AbstractActor  {
 								
 				    			PageState result_page = browser_service.buildPage(browser, elements, url_without_params);
 								boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
-				    			test = new Test(path_keys, path_objects, result_page, name, false, leaves_domain);
+				    			test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);
 								
 						    	Test test_record = test_repo.findByKey(test.getKey());

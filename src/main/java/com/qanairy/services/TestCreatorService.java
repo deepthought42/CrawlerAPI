@@ -111,7 +111,7 @@ public class TestCreatorService {
 
 		boolean leaves_domain = !PathUtils.getFirstPage(path_objects).getUrl().contains(new URL(result_page.getUrl()).getHost());
 
-		Test test = new Test(path_keys, path_objects, result_page, null, false, leaves_domain);
+		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
 		test.setRunTime(crawl_time);
 		test.setLastRunTimestamp(new Date());
 		addFormGroupsToPath(test);

@@ -1,5 +1,7 @@
 package com.qanairy.models;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -70,13 +72,48 @@ public class Test implements Persistable {
 	 * @param path {@link Path} that will be used to determine what the expected path should be
  	 * @param result
 	 * @param domain
+	 * @throws MalformedURLException 
 	 * 
 	 * @pre path_keys != null
 	 * @pre !path_keys.isEmpty()
 	 * @pre path_objects != null
 	 * @pre !path_objects.isEmpty()
 	 */
-	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains){
+	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, boolean is_running, boolean spansMultipleDomains) throws MalformedURLException{
+		assert path_keys != null;
+		assert !path_keys.isEmpty();
+		assert path_objects != null;
+		assert !path_objects.isEmpty();
+		
+		setPathKeys(path_keys);
+		setPathObjects(path_objects);
+		setResult(result);
+		setRecords(new ArrayList<TestRecord>());
+		setStatus(TestStatus.UNVERIFIED);
+		setSpansMultipleDomains(spansMultipleDomains);
+		setLastRunTimestamp(new Date());
+		setName(generateTestName());
+		setBrowserStatuses(new HashMap<String, String>());
+		setIsRunning(false);
+		setArchived(false);
+		setKey(generateKey());
+		setRunTime(0L);
+	}
+	
+	/**
+	 * Constructs a test object
+	 * 
+	 * @param path {@link Path} that will be used to determine what the expected path should be
+ 	 * @param result
+	 * @param domain
+	 * @throws MalformedURLException 
+	 * 
+	 * @pre path_keys != null
+	 * @pre !path_keys.isEmpty()
+	 * @pre path_objects != null
+	 * @pre !path_objects.isEmpty()
+	 */
+	public Test(List<String> path_keys, List<PathObject> path_objects, PageState result, String name, boolean is_running, boolean spansMultipleDomains) throws MalformedURLException{
 		assert path_keys != null;
 		assert !path_keys.isEmpty();
 		assert path_objects != null;
@@ -349,12 +386,12 @@ public class Test implements Persistable {
 	 * 
 	 * @param path
 	 * @return
+	 * @throws MalformedURLException 
 	 */
-	public static Test clone(Test test){
+	public static Test clone(Test test) throws MalformedURLException{
 		Test clone_test = new Test(new ArrayList<String>(test.getPathKeys()),
 									   new ArrayList<PathObject>(test.getPathObjects()),
-									   test.getResult(),
-									   test.getName(), 
+									   test.getResult(), 
 									   test.isRunning(), 
 									   test.getSpansMultipleDomains());
 		
@@ -373,5 +410,51 @@ public class Test implements Persistable {
 
 	public void setArchived(boolean is_archived) {
 		this.archived = is_archived;
+	}
+	
+	public String generateTestName() throws MalformedURLException {
+		 String test_name = "";
+			int page_state_idx = 0;
+			int element_action_cnt = 0;
+			for(PathObject obj : this.path_objects){
+				if(obj instanceof PageState && page_state_idx < 1){
+					String path = (new URL(((PageState)obj).getUrl())).getPath().trim();
+					path = path.replace("/", " ");
+					path = path.trim();
+					if(path.equals("/") || path.isEmpty()){
+						path = "home";
+					}
+					test_name +=  path + " page ";
+					page_state_idx++;
+				}
+				else if(obj instanceof ElementState){
+					if(element_action_cnt > 0){
+						test_name += "> ";
+					}
+					
+					ElementState element = (ElementState)obj;
+					String tag_name = element.getName();
+					
+					if(element.getAttribute("id") != null){
+						tag_name = element.getAttribute("id").getVals().get(0);
+					}
+					else{
+						if(tag_name.equals("a")){
+							tag_name = "link";
+						}
+					}
+					test_name += tag_name + " ";
+					element_action_cnt++;
+				}
+				else if(obj instanceof Action){
+					Action action = ((Action)obj);
+					test_name += action.getName() + " ";
+					if(action.getValue() != null ){
+						test_name += action.getValue() + " ";
+					}
+				}
+			}
+			
+			return test_name.trim();
 	}
 }

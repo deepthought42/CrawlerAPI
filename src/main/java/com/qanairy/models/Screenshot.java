@@ -18,14 +18,18 @@ public class Screenshot implements Persistable {
 	private String browser_name;
 	private String url;
 	private String checksum;
+	private int width;
+	private int height;
 	
 	public Screenshot(){}
 	
-	public Screenshot(String viewport, String browser_name, String checksum){
+	public Screenshot(String viewport, String browser_name, String checksum, int width, int height){
 		setScreenshotUrl(viewport);
 		setChecksum(checksum);
 		setBrowser(browser_name);
 		setKey(generateKey());
+		setWidth(width);
+		setHeight(height);
 	}
 
 	public String getScreenshotUrl() {
@@ -66,5 +70,21 @@ public class Screenshot implements Persistable {
 
 	public void setChecksum(String checksum) {
 		this.checksum = checksum;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
 	}
 }

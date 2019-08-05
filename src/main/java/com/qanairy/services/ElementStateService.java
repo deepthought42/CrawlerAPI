@@ -3,6 +3,7 @@ package com.qanairy.services;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +27,15 @@ public class ElementStateService {
 	@Autowired
 	private ElementStateRepository element_repo;
 
-	public ElementState save(ElementState element){
-		if(element == null){
-			return null;
-		}
+	/**
+	 * 
+	 * @param element
+	 * @return
+	 * 
+	 * @pre element != null
+	 */
+	public ElementState save(ElementState element) throws ClientException{
+		assert element != null;
 
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){

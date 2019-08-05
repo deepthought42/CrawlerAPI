@@ -250,7 +250,7 @@ public class ParentPathExplorer extends AbstractActor {
 	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name) throws JsonProcessingException, MalformedURLException {
 		log.warn("Creating test........");
 		boolean leaves_domain = !PathUtils.getFirstPage(path_objects).getUrl().contains(new URL(result_page.getUrl()).getHost());
-		Test test = new Test(path_keys, path_objects, result_page, null, false, leaves_domain);
+		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
 		
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db == null){

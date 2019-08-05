@@ -120,58 +120,27 @@ public class DiscoveryActor extends AbstractActor{
 						PathMessage path_message = message.clone();
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
-						//if(!discovery_record.getExpandedUrls().contains(PathUtils.getLastPageState(path_message.getPathObjects()).getUrl())){
-							form_discoverer.tell(path_message, getSelf() );
+						String path_key = String.join(":::", message.getKeys());
+						//if(!discovery_record.getExpandedPathKeys().contains(path_key)){				
 							path_expansion_actor.tell(path_message, getSelf() );
+							form_discoverer.tell(path_message, getSelf() );
 						//}
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
+						String path_key = String.join(":::", message.getKeys());
+						if(!discovery_record.getExpandedPathKeys().contains(path_key)){				
+							discovery_record.getExpandedPathKeys().add(path_key);
+						}
 						//get last page state
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
-						String path_key = String.join(":::", message.getKeys());
-						if(!discovery_record.getExpandedPathKeys().contains(path_key)){
-							
-							//check if last page-element-action trio already exist within another path within the expanded path keys list
-							/*
-							int last_page_idx = 0;
-							for(int idx = message.getKeys().size()-1; idx >=0; idx--){
-								if(message.getKeys().get(idx).contains("pagestate")){
-									last_page_idx = idx;
-									break;
-								}
-							}
-							
-							String partial_key = "";
-							if(last_page_idx < message.getKeys().size()-1){
-								if(last_page_idx+3 <= message.getKeys().size()){
-									partial_key = String.join(":::", message.getKeys().subList(last_page_idx, last_page_idx+3));
-								}
-								else{
-									partial_key = String.join(":::", message.getKeys().subList(last_page_idx, message.getKeys().size()));
-								}
-							}
-							
-							boolean exists_in_other_expansion = false;
-							for(String expanded_path_key : discovery_record.getExpandedPathKeys()){
-								if(expanded_path_key.contains(partial_key)){
-									log.warn("PARTIAL KEY ALREADY EXPERIENCED");
-									exists_in_other_expansion = true;
-									break;
-								}
-							}
-							
-							if(!exists_in_other_expansion){
-							*/	
-								discovery_record.getExpandedPathKeys().add(path_key);
-								discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
-															
-								exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
-							//}
-						}
+						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
+													
+						exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
+						
 						//increment examined count
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
@@ -295,7 +264,7 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
 	
 		//create multiple exploration actors for parallel execution
-		for(int i=0; i < 20; i++){
+		for(int i=0; i < 10; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 		}
@@ -309,7 +278,7 @@ public class DiscoveryActor extends AbstractActor{
 
 		message.getDomain().addDiscoveryRecord(discovery_record);
 		domain_service.save(message.getDomain());
-
+		
 		//start a discovery
 		log.info("Sending URL to UrlBrowserActor");
 		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor);

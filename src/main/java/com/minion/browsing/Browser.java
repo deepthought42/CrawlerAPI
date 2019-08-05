@@ -661,7 +661,7 @@ public class Browser {
 			Actions mouseMoveAction = new Actions(driver).moveByOffset(-(getViewportSize().getWidth()/3), -(getViewportSize().getHeight()/3) );
 			mouseMoveAction.build().perform();
 		}catch(Exception e){
-			log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
+			//log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
 		}
 	}
 
@@ -670,7 +670,7 @@ public class Browser {
 			Actions mouseMoveAction = new Actions(driver).moveByOffset(point.getX(), point.getY());
 			mouseMoveAction.build().perform();
 		}catch(Exception e){
-			log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
+			//log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
 		}
 	}
 	

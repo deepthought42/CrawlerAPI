@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,26 +80,17 @@ public class PageStateService {
 		}
 		
 		if(page_state_record != null){
+			log.warn("UPDATING EXISTING PAGE STATE");
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 			
 			Map<String, ElementState> element_map = new HashMap<>();
 			List<ElementState> element_records = new ArrayList<>();
 			for(ElementState element : page_state.getElements()){
-				boolean err = false;
-				int cnt = 0;
-				do{
-					err = false;
-					try{
-						if(element_map.containsKey(element.getKey())){
-							element_map.put(element.getKey(), element_state_service.save(element));
-							break;
-						}
-					}catch(ClientException e){
-						err = true;
-					}
-					cnt++;
-				}while(err && cnt < 5);
+				if(element_map.containsKey(element.getKey())){
+					element_map.put(element.getKey(), element_state_service.save(element));
+					break;
+				}
 			}
 			page_state_record.setElements(new ArrayList<ElementState>(element_map.values()));
 			
@@ -130,6 +120,7 @@ public class PageStateService {
 			page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
 		}
 		else {
+			log.warn("page state wasn't found in database. Saving new page state to neo4j");
 			page_state_record = findByKey(page_state.getKey());
 
 			if(page_state_record != null){
@@ -140,25 +131,8 @@ public class PageStateService {
 				for(ElementState element : page_state.getElements()){
 					element_records.add(element_state_service.save(element));
 				}
-				for(ElementState element : page_state.getElements()){
-					boolean err = false;
-					int cnt = 0;
-					do{
-						err = false;
-						try{
-							element_records.add(element_state_service.save(element));
-						}catch(Exception e){
-							err = true;
-						}
-						cnt++;
-					}while(err && cnt < 5);
-					
-					if(err){
-						element_records.add(element);
-					}
-				}
+
 				page_state_record.setElements(element_records);
-								
 				page_state_record.setForms(page_state.getForms());
 				for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 					page_state_record.addScreenshotChecksum(screenshot_checksum);
@@ -184,9 +158,14 @@ public class PageStateService {
 				//iterate over page elements
 				List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
 				for(ElementState element : page_state.getElements()){
+					element_records.add(element_state_service.save(element));
+				}
+				/*
+				for(ElementState element : page_state.getElements()){
 					ElementState element_record = element_state_service.save(element);
 					element_records.add(element_record);
 				}
+				*/
 				page_state.setElements(element_records);
 				
 				Set<Form> form_records = new HashSet<>();
@@ -195,13 +174,13 @@ public class PageStateService {
 					if(form_record == null){
 						List<ElementState> form_element_records = new ArrayList<>();
 						for(ElementState element : page_state.getElements()){
+							log.warn("saving form element to page state");
 							ElementState element_record = element_state_service.save(element);
 							
 							form_element_records.add(element_record);
 						}
 						
 						form.setFormFields(form_element_records);
-						
 						form_record = form_repo.save(form);
 					}
 					form_records.add(form_record);

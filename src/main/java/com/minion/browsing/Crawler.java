@@ -272,15 +272,7 @@ public class Crawler {
 				Point click_location = generateRandomLocationWithinElementButNotWithingChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
 				
 				Action action = (Action)current_obj;
-				/*
-				Action action_record = action_repo.findByKey(action.getKey());
-				if(action_record==null){
-					action_repo.save(action);
-				}
-				else{
-					action = action_record;
-				}
-				 */
+				
 				performAction(action, last_element, browser.getDriver(), click_location);
 				
 				Point p = browser.getViewportScrollOffset();
@@ -693,6 +685,9 @@ public class Crawler {
 			}
 			catch(MalformedURLException e){
 				log.warn(e.getMessage());
+				if(e.getMessage().contains("unknown protocol: tel")){
+					break;
+				}
 			}
 			catch(NullPointerException e){
 				log.error("Error happened while exploratory actor attempted to crawl test ");

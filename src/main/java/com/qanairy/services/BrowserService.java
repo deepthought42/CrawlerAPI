@@ -205,8 +205,8 @@ public class BrowserService {
 
 				String browser_url = browser.getDriver().getCurrentUrl();
 				String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-				
-				PageState page_state = buildPage(browser, visible_elements, url_without_params);
+				List<ElementState> all_visible_elements = getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), new HashMap<Integer, ElementState>(), visible_elements, true);
+				PageState page_state = buildPage(browser, all_visible_elements, url_without_params);
 				
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
@@ -373,7 +373,6 @@ public class BrowserService {
 			viewport_screenshot.flush();
 			return page_state;
 		}
-
 	}
 	
 	private static Map<String, ElementState> filterElementStatesFromList(Map<String, ElementState> elements,
@@ -652,7 +651,7 @@ public class BrowserService {
 				List<ElementState> element_sublist = elements.subList(start_idx, elements.size());
 				for(ElementState element_state : element_sublist){
 					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
-					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && ! isElementLargerThanViewport(browser, element)){
+					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && !isElementLargerThanViewport(browser, element)){
 						ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes());
 						visible_element_map.put(element_state.getXpath(), new_element_state);
 					}

@@ -58,12 +58,9 @@ public class ElementStateService {
 			element_record.setScreenshot(element.getScreenshot());
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 			element_record.setXpath(element.getXpath());
-
-			Set<Rule> rule_records = new HashSet<>();
 			for(Rule rule : element.getRules()){
-				rule_records.add(rule_service.save(rule));
+				element_record.addRule(rule_service.save(rule));
 			}
-			element_record.setRules(rule_records);
 
 			element_record = element_repo.save(element_record);
 		}

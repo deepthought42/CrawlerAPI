@@ -123,6 +123,7 @@ public class PathExpansionActor extends AbstractActor {
 			expanded_elements.put(page_element.getKey(), page_element);
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
+			log.warn("Element page states count :: "+element_page_states.size());
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page : element_page_states){
 				if(last_page.getScrollXOffset() > page.getScrollXOffset()

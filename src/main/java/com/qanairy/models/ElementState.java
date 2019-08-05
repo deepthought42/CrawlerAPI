@@ -235,7 +235,15 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	}
 
 	public void addRule(Rule rule) {
-		this.rules.add(rule);
+		boolean exists = false;
+		for(Rule existing_rule : this.rules){
+			if(existing_rule.getKey().equals(rule.getKey())){
+				exists = true;
+			}
+		}
+		if(!exists){
+			this.rules.add(rule);
+		}
 	}
 
 	public Set<Attribute> getAttributes() {
@@ -317,8 +325,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		
 		key += this.getName();
 		key += this.getText();
-		key += this.getXLocation();
-		key += this.getYLocation();
 		key += this.getWidth();
 		key += this.getHeight();
 		key += this.getInnerHtml();

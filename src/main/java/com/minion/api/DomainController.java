@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.minion.api.exception.PaymentDueException;
-import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
@@ -58,7 +57,6 @@ import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.RedirectService;
 import com.qanairy.utils.BrowserUtils;
@@ -86,9 +84,6 @@ public class DomainController {
 	
 	@Autowired
 	private DomainService domain_service;
-	
-	@Autowired
-	private DiscoveryRecordService discovery_service;
 	
 	@Autowired
 	private FormRepository form_repo;
@@ -126,7 +121,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	String formatted_url = BrowserUtils.sanitizeUrl(url);
+    	String formatted_url = BrowserUtils.sanitizeUrl(protocol+"://"+url);
     	URL url_obj = new URL(formatted_url);
 		
     	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);

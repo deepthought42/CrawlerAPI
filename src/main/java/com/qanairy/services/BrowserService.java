@@ -423,29 +423,6 @@ public class BrowserService {
 
 		return elements;
 	}
-
-	/**
-	 * Filters out html, body, script and link tags
-	 *
-	 * @param web_elements
-	 * @return
-	 */
-	public static List<ElementState> filterStructureTags(List<ElementState> web_elements, boolean is_element_state) {
-		List<ElementState> elements = new ArrayList<>();
-
-		for(ElementState element : web_elements){
-			String tag_name = element.getName();
-			if("html".equals(tag_name) || "body".equals(tag_name)
-					|| "link".equals(tag_name) || "script".equals(tag_name)
-					|| "title".equals(tag_name) || "meta".equals(tag_name)
-					|| "head".equals(tag_name) || "iframe".equals(tag_name)){
-				continue;
-			}
-			elements.add(element);
-		}
-		return elements;
-	}
-	
 	
 	public static List<WebElement> fitlerNonDisplayedElements(List<WebElement> web_elements) {
 		List<WebElement> filtered_elems = new ArrayList<WebElement>();
@@ -507,7 +484,7 @@ public class BrowserService {
 			if("html".equals(tag_name) || "body".equals(tag_name)
 					|| "link".equals(tag_name) || "script".equals(tag_name)
 					|| "title".equals(tag_name) || "meta".equals(tag_name)
-					|| "head".equals(tag_name) || "iframe".equals(tag_name)){
+					|| "head".equals(tag_name) ){
 				continue;
 			}
 			elements.add(element);
@@ -912,7 +889,8 @@ public class BrowserService {
 				|| "title".equals(tag_name) || "meta".equals(tag_name)
 				|| "head".equals(tag_name) || "noscript".equals(tag_name)
 				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name)
-				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name) || "use".equals(tag_name);
+				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name) || "use".equals(tag_name) 
+				|| "template".equals(tag_name) || "audio".equals("tag_name");
 	}
 
 	/**

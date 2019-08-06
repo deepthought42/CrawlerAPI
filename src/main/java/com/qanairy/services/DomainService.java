@@ -1,8 +1,15 @@
 package com.qanairy.services;
 
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +32,12 @@ public class DomainService {
 	private static Logger log = LoggerFactory.getLogger(DomainService.class);
 
 	@Autowired
+	private TestService test_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
 	private DomainRepository domain_repo;
 	
 	public Set<TestUser> getTestUsers(Domain domain) {
@@ -35,19 +48,25 @@ public class DomainService {
 		return domain_repo.findByHost(host);
 	}
 
-	public Domain save(Domain domain) {
+	public Domain save(Domain domain) throws MalformedURLException {
+		
+		
 		return domain_repo.save(domain);	
 	}
 	
-	public Domain addTest(String host, Test test){
+	public Domain addTest(String host, Test test) throws MalformedURLException{
+		assert host != null;
+		assert !host.isEmpty();
+		assert test != null;
+		
 		log.warn("domain host :: "+host);
+		log.warn("test result when adding test :: " + test);
 		Domain domain = domain_repo.findByHost(host);
-		log.warn("Domain :: " + domain);
-		log.warn("test ::  " + test);
 		domain.addTest(test);
-		return save(domain);
+		return domain_repo.save(domain);
+		//return save(domain);
 	}
-
+	
 	public int getTestCount(String host_url) {
 		return domain_repo.getTestCount(host_url);
 	}

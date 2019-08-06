@@ -2,6 +2,9 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -11,14 +14,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Domain;
-import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.DiscoveryActionMessage;
+import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -34,9 +39,13 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 @Component
 @Scope("prototype")
 public class DomainActor extends AbstractActor{
-	private static Logger log = LoggerFactory.getLogger(DomainActor.class.getName());
+	private static Logger log = LoggerFactory.getLogger(DomainActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-	private String host = null;
+	private Domain domain = null;
+	private Map<String, PageState> page_state_map = new HashMap<>();
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -48,14 +57,12 @@ public class DomainActor extends AbstractActor{
 	private ActorSystem actor_system;
 	
 	private ActorRef discovery_actor = null;
-	
+
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
 		cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
 				MemberEvent.class, UnreachableMember.class);
-		discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
 	}
 
 	//re-subscribe when restart
@@ -77,35 +84,59 @@ public class DomainActor extends AbstractActor{
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(DiscoveryActionMessage.class, message-> {
-					host = message.getDomain().getUrl();
+					domain = message.getDomain();
+					if(discovery_actor == null){
+						discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
+					}
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + host + " WITH ACTION   :: " + message.getAction());
+					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getUrl() + " WITH ACTION   :: " + message.getAction());
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					
 					//pass message along to discovery actor
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(Test.class, test -> {
-					test_service.save(test, host);
+					test_service.save(test);
+					if(domain == null){
+						String host = new URL(test.firstPage().getUrl()).getHost();
+						log.warn("Host :: " + host);
+						domain = domain_service.findByHost(host);
+						log.warn("loaded domain :: " + domain);
+					}
 					
-					Domain domain = domain_service.findByHost(host);
 					for(PathObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
 							domain.addPageState((PageState)obj);
 						}
 					}
 					
-					domain.addPageState(test.getResult());
-					domain_service.save(domain);
-									})
-				.match(PageState.class, page_state -> {
-					Domain domain = domain_service.findByHost(host);
-					domain.addPageState(page_state);
+					log.warn("Domain :: " + domain);
+					log.warn("test result in domain actor   :   " + test.getResult());
+					domain.addPageState(page_state_service.save(test.getResult()));
+					domain = domain_service.save(domain);
+					for(PathObject path_obj : test.getPathObjects()){
+						try {
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
+						} catch (JsonProcessingException e) {
+							log.error(e.getLocalizedMessage());
+						}
+					}
+					
+					try {
+						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
+					} catch (JsonProcessingException e) {
+						log.error(e.getLocalizedMessage());
+					}
+					log.warn("test result in domain actor :: " + test.getResult());
+					domain.addTest(test_service.save(test));
 					domain_service.save(domain);
 					
-					for(Form form : page_state.getForms()){
-						MessageBroadcaster.broadcastDiscoveredForm(form, host);
-					}
+				})
+				.match(FormDiscoveryMessage.class, form_msg -> {
+					//forward message to discovery actor
+					form_msg.setDomainActor(getSelf());
+					discovery_actor.tell(form_msg, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

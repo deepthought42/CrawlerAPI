@@ -129,12 +129,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  			}
 							  			else if(obj.getType().equals("Action")){
 							  				Action action = (Action)obj;
-							  				Action action_record = action_service.findByKey(obj.getKey());
-							  				if(action_record == null){
-							  					action_record = action_service.save(action);
-							  					MessageBroadcaster.broadcastPathObject(action_record, message.getOptions().get("host").toString());
-							  				}
-							  				test_path_objects.add(action_record);
+							  				test_path_objects.add(action);
 							  			}
 							  		}
 							  		
@@ -165,12 +160,12 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  		final long pathCrawlEndTime = System.currentTimeMillis();
 									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
 																		
-							  		Test new_test = new Test(path_keys, test_path_objects, result_page, null, false, test.getSpansMultipleDomains());
+							  		Test new_test = new Test(path_keys, test_path_objects, result_page, false, test.getSpansMultipleDomains());
 				
 							  		new_test.setRunTime(crawl_time_in_ms);
 							  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
 							  		
-							  		new_test = test_service.save(new_test, message.getOptions().get("host").toString());
+							  		new_test = test_service.save(new_test);
 							  		tests.add(new_test);
 							  		
 							  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());

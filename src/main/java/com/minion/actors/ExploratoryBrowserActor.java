@@ -94,7 +94,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						for(PathObject path_obj : message.getPathObjects()){
 							if(path_obj instanceof PageState){
 								PageState page_state = (PageState)path_obj;
-								page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
+								//page_state.setElements(page_state_service.getElementStates(page_state.getKey()));
 								page_states.add(page_state);
 							}
 						}
@@ -112,12 +112,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							parent_path_explorer.tell(msg, getSelf());
 						}
 						else {
-								PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor());
+							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 						}
 					}
-
 
 					//PLACE CALL TO LEARNING SYSTEM HERE
 					//Brain.learn(test, test.getIsUseful());

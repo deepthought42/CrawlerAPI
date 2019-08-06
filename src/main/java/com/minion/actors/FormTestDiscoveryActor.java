@@ -18,6 +18,7 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.FormType;
+import com.qanairy.models.message.FormDiscoveryMessage;
 import com.minion.structs.Message;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -60,25 +61,21 @@ public class FormTestDiscoveryActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(Message.class, message -> {
-					if(message.getData() instanceof Form){
-						Form form = ((Form)message.getData());
+				.match(FormDiscoveryMessage.class, message -> {
+					Form form = message.getForm();
 
-						if(form.getType().equals(FormType.LOGIN)){
-							log.info("LOGIN type recieved");
-							final ActorRef loginFormTestDiscoveryActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("loginFormTestDiscoveryActor"), "login_form_test_discovery_actor"+UUID.randomUUID());
-							loginFormTestDiscoveryActor.tell(message, getSelf() );
-						}
-						else{
-							log.info("Another different type recieved");
-							final ActorRef generalFormTestDiscoveryActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-									  .props("generalFormTestDiscoveryActor"), "general_form_test_discovery_actor"+UUID.randomUUID());
-							generalFormTestDiscoveryActor.tell(message, getSelf() );
-						}
+					if(form.getType().equals(FormType.LOGIN)){
+						log.info("LOGIN type recieved");
+						final ActorRef loginFormTestDiscoveryActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("loginFormTestDiscoveryActor"), "login_form_test_discovery_actor"+UUID.randomUUID());
+						loginFormTestDiscoveryActor.tell(message, getSelf() );
 					}
-					postStop();
-
+					else{
+						log.info("Another different type recieved");
+						final ActorRef generalFormTestDiscoveryActor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("generalFormTestDiscoveryActor"), "general_form_test_discovery_actor"+UUID.randomUUID());
+						generalFormTestDiscoveryActor.tell(message, getSelf() );
+					}
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

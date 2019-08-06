@@ -46,6 +46,7 @@ import com.qanairy.services.ActionService;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
+import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -121,9 +122,14 @@ public class TestCreationActor extends AbstractActor  {
 								List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 
 				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
-				    			PageState result_page = browser_service.buildPage(browser, elements);
-						    	test = new Test(path_keys, path_objects, result_page, name);
-
+				    			String browser_url = browser.getDriver().getCurrentUrl();
+								String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
+								
+				    			PageState result_page = browser_service.buildPage(browser, elements, url_without_params);
+								boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
+				    			test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
+								test.setSpansMultipleDomains(leaves_domain);
+								
 						    	Test test_record = test_repo.findByKey(test.getKey());
 						    	if(test_record == null){
 						    		TestRecord test_record_record = new TestRecord();

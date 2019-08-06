@@ -147,13 +147,19 @@ public class ParentPathExplorer extends AbstractActor {
 										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element.getLocation(), element_size)){
 								break;
 							}
+							
 							//if parent element is not visible in pane then break
 							ElementState parent_element = null;
-							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())));
+							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", browser.extractAttributes(parent_web_element));
 							if(parent_element == null){
 								break;
 							}
-
+							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight()) 
+									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
+								//parent as same location and size as child, stop exploring parents
+								break;
+							}
+							
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
@@ -163,7 +169,7 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.addAll(end_path_objects);
 							
 							//finish crawling using array of elements following last page element
-							crawler.crawlPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host);
+							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){
@@ -217,7 +223,7 @@ public class ParentPathExplorer extends AbstractActor {
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
 			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString());
 		  			message.getDiscoveryActor().tell(test, getSelf());
-		  			message.getDomainActor().tell(test, getSelf());
+		  			//message.getDomainActor().tell(test, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
@@ -243,20 +249,19 @@ public class ParentPathExplorer extends AbstractActor {
 	 */
 	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name) throws JsonProcessingException, MalformedURLException {
 		log.warn("Creating test........");
-		Test test = new Test(path_keys, path_objects, result_page, null);
-
+		boolean leaves_domain = !PathUtils.getFirstPage(path_objects).getUrl().contains(new URL(result_page.getUrl()).getHost());
+		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
+		
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db == null){
 			test.setRunTime(crawl_time);
 			test.setLastRunTimestamp(new Date());
 			addFormGroupsToPath(test);
-	
+			
 			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time);
 			test.addRecord(test_record);
-	
-			boolean leaves_domain = !test.firstPage().getUrl().contains(new URL(test.getResult().getUrl()).getHost());
-			test.setSpansMultipleDomains(leaves_domain);
 		}
+
 		return test;
 	}
 
@@ -274,7 +279,7 @@ public class ParentPathExplorer extends AbstractActor {
 				ElementState elem = (ElementState)path_obj;
 				if(elem.getXpath().contains("form")){
 					test.addGroup(new Group("form"));
-					test_service.save(test, new URL(test.firstPage().getUrl()).getHost());
+					//test_service.save(test);
 					break;
 				}
 			}

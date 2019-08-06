@@ -21,8 +21,8 @@ import com.minion.browsing.Crawler;
 import com.qanairy.models.Animation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
@@ -36,9 +36,6 @@ import com.qanairy.utils.PathUtils;
 public class AnimationDetectionActor extends AbstractActor{
 	private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), AnimationDetectionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private PageStateService page_state_service;
 
 	@Autowired
 	private Crawler crawler;
@@ -85,8 +82,11 @@ public class AnimationDetectionActor extends AbstractActor{
 							//Tell discovery actor about test
 							msg.getDiscoveryActor().tell(msg.clone(), getSelf());
 							
+							PathMessage updated_path_msg = new PathMessage(msg.getKeys(), msg.getPathObjects(), msg.getDiscoveryActor(), PathStatus.EXAMINED, msg.getBrowser(), msg.getDomainActor());
+							msg.getDiscoveryActor().tell(updated_path_msg, getSelf());
+							
 						}catch(Exception e){
-							log.warning("exception occurred during Animation Detection.....  "+e.getMessage());
+							log.debug("exception occurred during Animation Detection.....  "+e.getMessage());
 							err = true;
 						}
 					}while(err);

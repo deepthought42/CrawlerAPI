@@ -190,6 +190,10 @@ public class Domain implements Persistable{
 		return this.page_states;
 	}
 	
+	public void setPageStates(Set<PageState> page_states){
+		this.page_states = page_states;
+	}
+	
 	public boolean addPageState(PageState page_state){
 		//check if page state exists
 		for(PageState state : this.getPageStates()){

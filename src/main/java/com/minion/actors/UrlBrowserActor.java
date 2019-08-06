@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,7 +104,9 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-
+							//browser.moveMouseOutOfFrame();
+							browser.moveMouseToNonInteractive(new Point(300, 300));
+							
 							redirect = BrowserUtils.getPageTransition(url, browser, host);
 						  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
 								path_keys.add(redirect.getKey());
@@ -161,8 +164,6 @@ public class UrlBrowserActor extends AbstractActor {
 						//send message to animation detection actor
 						animation_actor.tell(path_message, getSelf() );
 					}
-
-					
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 				})
 				.match(MemberUp.class, mUp -> {

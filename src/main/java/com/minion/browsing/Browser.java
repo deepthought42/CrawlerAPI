@@ -41,6 +41,7 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -167,7 +168,7 @@ public class Browser {
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		//driver.manage().window().maximize();
 
-	    //driver.manage().window().setSize(new Dimension(1024, 768));
+	    driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -252,7 +253,7 @@ public class Browser {
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		//driver.manage().window().maximize();
 
-		//driver.manage().window().setSize(new Dimension(1024, 768));
+		driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -486,6 +487,7 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
+		//Timing.pauseThread(1000);
 
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
@@ -496,6 +498,7 @@ public class Browser {
     {
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
+		//Timing.pauseThread(1000);
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
@@ -655,13 +658,22 @@ public class Browser {
 
 	public void moveMouseOutOfFrame() {
 		try{
-			Actions mouseMoveAction = new Actions(driver).moveByOffset(-5000, 0);
+			Actions mouseMoveAction = new Actions(driver).moveByOffset(-(getViewportSize().getWidth()/3), -(getViewportSize().getHeight()/3) );
 			mouseMoveAction.build().perform();
 		}catch(Exception e){
-			log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
+			//log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
 		}
 	}
 
+	public void moveMouseToNonInteractive(Point point) {
+		try{
+			Actions mouseMoveAction = new Actions(driver).moveByOffset(point.getX(), point.getY());
+			mouseMoveAction.build().perform();
+		}catch(Exception e){
+			//log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
+		}
+	}
+	
 	/**
 	 * 
 	 * @param driver

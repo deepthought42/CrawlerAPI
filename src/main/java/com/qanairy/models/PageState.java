@@ -71,7 +71,12 @@ public class PageState implements Persistable, PathObject {
 	private Set<Form> forms;
 
 	public PageState() {
-		setForms(new HashSet<Form>());
+		setForms(new HashSet<>());
+		setScreenshots(new ArrayList<>());
+		setElements(new ArrayList<>());
+		setScreenshotChecksum(new ArrayList<>());
+		setAnimatedImageUrls(new ArrayList<>());
+		setAnimatedImageChecksums(new ArrayList<>());
 	}
 	/**
 	 * Creates a page instance that is meant to contain information about a
@@ -593,6 +598,19 @@ public class PageState implements Persistable, PathObject {
 	}
 	
 	public void addScreenshot(Screenshot screenshot){
-		this.screenshots.add(screenshot);
+		boolean exists = false;
+		
+		log.warn("Screenshots :: " + this.screenshots);
+		if(this.screenshots == null){
+			this.screenshots = new ArrayList<>();
+		}
+		for(Screenshot screenshot_record : this.screenshots){
+			if(screenshot_record.getKey().equals(screenshot.getKey())){
+				exists = true;
+			}
+		}
+		if(!exists){
+			this.screenshots.add(screenshot);
+		}
 	}
 }

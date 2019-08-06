@@ -1,7 +1,6 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
@@ -18,8 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.minion.api.MessageBroadcaster;
 import com.minion.browsing.Browser;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Account;
@@ -40,6 +38,7 @@ import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
+import com.qanairy.utils.PathUtils;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -67,7 +66,7 @@ public class TestService {
 	private PageStateService page_state_service;
 
 	@Autowired
-	private ElementStateService page_element_service;
+	private ElementStateService element_state_service;
 
 	@Autowired
 	private BrowserService browser_service;
@@ -149,17 +148,18 @@ public class TestService {
 		 }
 	 }
 
-	 public Test save(Test test, String host_url) throws MalformedURLException{
-		Test record = test_repo.findByKey(test.getKey());
+	 public Test save(Test test) throws MalformedURLException, ClientException{
+		 assert test != null;
+		 Test record = test_repo.findByKey(test.getKey());
 
 		if(record == null){
 			List<PathObject> path_objects = new ArrayList<PathObject>();
 			for(PathObject path_obj : test.getPathObjects()){
 				if(path_obj instanceof PageState){
-					path_objects.add(page_state_service.save((PageState)path_obj));
+					log.info("Saving page as path object for test :: " + (PageState)path_obj);
+						path_objects.add(page_state_service.save((PageState)path_obj));
 				}
-				else if(path_obj instanceof ElementState){
-					path_objects.add(page_element_service.save((ElementState)path_obj));
+				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save((ElementState)path_obj));
 				}
 				else if(path_obj instanceof Action){
 					path_objects.add(action_service.save((Action)path_obj));
@@ -175,103 +175,41 @@ public class TestService {
 				}
 			}
 			test.setPathObjects(path_objects);
-			test.setResult(page_state_service.save(test.getResult()));
+			if(test.getResult() != null){
+				log.warn("Saving page as result for test :::   " + test.getResult());				test.setResult(page_state_service.save(test.getResult()));			}
 			
-			if(test.getName() == null || test.getName().isEmpty()){
-				test.setName(generateTestName(test));
-			}
-
 			Set<Group> groups = new HashSet<>();
 			for(Group group : test.getGroups()){
 				groups.add(group_service.save(group));
 			}
 			test.setGroups(groups);
-	  		test = test_repo.save(test);
-			domain_service.addTest(host_url, test);
-
-			try {
-				MessageBroadcaster.broadcastDiscoveredTest(test, host_url);
-			} catch (JsonProcessingException e) {
-				log.error(e.getLocalizedMessage());
-			}
-
-			for(PathObject path_obj : test.getPathObjects()){
-				try {
-					MessageBroadcaster.broadcastPathObject(path_obj, host_url);
-				} catch (JsonProcessingException e) {
-					log.error(e.getLocalizedMessage());
-				}
-			}
+	  		return test_repo.save(test);
 		}
 		else{
-			log.info("Test already exists  !!!!!!!");
-			try {
-				MessageBroadcaster.broadcastTest(test, host_url);
-			} catch (JsonProcessingException e) {
-				log.error(e.getLocalizedMessage());
-			}
-
 			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
+			path_objects = PathUtils.orderPathObjects(test.getPathKeys(), path_objects);
 			record.setPathObjects(path_objects);
-			record.setResult(page_state_service.findByKey(test.getResult().getKey()));
+			
+			if(test.getResult() == null){
+				log.warn("Saving new result to test :: "+test.getResult());
+				PageState result = page_state_service.save(test.getResult());
+				log.warn("result of saving result :: " + result);
+				record.setResult(result);
 
+			}
+	
 			Set<Group> groups = new HashSet<>();
 			for(Group group : test.getGroups()){
 				groups.add(group_service.save(group));
 			}
 			record.setGroups(groups);
 			
-			test = test_repo.save(record);
-
-		}
-
-		return test;
-	}
-
-	 public static String generateTestName(Test test) throws MalformedURLException {
-		 String test_name = "";
-			int page_state_idx = 0;
-			int element_action_cnt = 0;
-			for(PathObject obj : test.getPathObjects()){
-				if(obj instanceof PageState && page_state_idx < 1){
-					String path = (new URL(((PageState)obj).getUrl())).getPath().trim();
-					path = path.replace("/", " ");
-					path = path.trim();
-					if(path.equals("/") || path.isEmpty()){
-						path = "home";
-					}
-					test_name +=  path + " page ";
-					page_state_idx++;
-				}
-				else if(obj instanceof ElementState){
-					if(element_action_cnt > 0){
-						test_name += "> ";
-					}
-					
-					ElementState element = (ElementState)obj;
-					String tag_name = element.getName();
-					
-					if(element.getAttribute("id") != null){
-						tag_name = element.getAttribute("id").getVals().get(0);
-					}
-					else{
-						if(tag_name.equals("a")){
-							tag_name = "link";
-						}
-					}
-					test_name += tag_name + " ";
-					element_action_cnt++;
-				}
-				else if(obj instanceof Action){
-					Action action = ((Action)obj);
-					test_name += action.getName() + " ";
-					if(action.getValue() != null ){
-						test_name += action.getValue() + " ";
-					}
-				}
+			if(record.getName() != null && record.getName().contains("Test #")){
+				record.setName(test.generateTestName());
 			}
 			
-			return test_name.trim();
+			return test_repo.save(record);
+		}
 	}
 
 	public List<TestRecord> runAllTests(Account acct, Domain domain) {

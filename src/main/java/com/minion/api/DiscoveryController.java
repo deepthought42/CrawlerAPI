@@ -123,24 +123,26 @@ public class DiscoveryController {
     	}
 
     	Domain domain = domain_service.findByHost(url);
-
+    	log.warn("domain retrieved from host :: " + domain + "   :   "+ url);
+    	
 		if(diffInMinutes > 1440){
 			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
-			if(!domain_actors.containsKey(domain.getUrl())){
+			if(!domain_actors.containsKey(url)){
 				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 						  .props("domainActor"), "domain_actor"+UUID.randomUUID());
-				domain_actors.put(domain.getUrl(), domain_actor);
+				domain_actors.put(url, domain_actor);
 			}
 		    
 			DiscoveryActionMessage discovery_action_msg = new DiscoveryActionMessage(DiscoveryAction.START, domain, acct, BrowserType.create(domain.getDiscoveryBrowserName()));
-			domain_actors.get(domain.getUrl()).tell(discovery_action_msg, null);
+			domain_actors.get(url).tell(discovery_action_msg, null);
 		}
         else{
         	//Throw error indicating discovery has been or is running
         	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
         	//Fire discovery started event
 	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
-	    	discovery_started_props.put("url", url);
+	    	discovery_started_props.put("protocol",  domain.getProtocol());
+	    	discovery_started_props.put("url", domain.getUrl());
 	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
 	    	discovery_started_props.put("already_running", "true");
 

@@ -127,10 +127,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
-						String path_key = String.join(":::", message.getKeys());
-						if(!discovery_record.getExpandedPathKeys().contains(path_key)){				
-							discovery_record.getExpandedPathKeys().add(path_key);
-						}
+						
 						//get last page state
 						discovery_record.setLastPathRanAt(new Date());
 						
@@ -141,6 +138,10 @@ public class DiscoveryActor extends AbstractActor{
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
 						
+						String path_key = String.join(":::", message.getKeys());
+						if(!discovery_record.getExpandedPathKeys().contains(path_key)){				
+							discovery_record.getExpandedPathKeys().add(path_key);
+						}
 						//increment examined count
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
@@ -264,7 +265,7 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
 	
 		//create multiple exploration actors for parallel execution
-		for(int i=0; i < 20; i++){
+		for(int i=0; i < 5; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 		}

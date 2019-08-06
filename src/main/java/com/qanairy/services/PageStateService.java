@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,12 +128,32 @@ public class PageStateService {
 				page_state_record.setLandable(page_state.isLandable());
 				page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 				
+				log.warn("saving element to page state :: "+page_state );
 				List<ElementState> element_records = new ArrayList<>();
+				
 				for(ElementState element : page_state.getElements()){
-					element_records.add(element_state_service.save(element));
+					boolean err = false;
+					int cnt = 0;
+					do{
+						err = false;
+						try{
+							element_records.add(element_state_service.save(element));
+						}catch(Exception e){
+							log.warn("error saving element to existing page state (FOUND BY KEY) :  "+e.getMessage());
+							e.printStackTrace();
+							err = true;
+						}
+						cnt++;
+					}while(err && cnt < 5);
+					
+					if(err){
+						element_records.add(element);
+					}
 				}
+				log.warn("COMPLETED saving element to page state :: "+page_state );
 
 				page_state_record.setElements(element_records);
+								
 				page_state_record.setForms(page_state.getForms());
 				for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 					page_state_record.addScreenshotChecksum(screenshot_checksum);
@@ -158,7 +179,23 @@ public class PageStateService {
 				//iterate over page elements
 				List<ElementState> element_records = new ArrayList<>(page_state.getElements().size());
 				for(ElementState element : page_state.getElements()){
-					element_records.add(element_state_service.save(element));
+					boolean err = false;
+					int cnt = 0;
+					do{
+						err = false;
+						try{
+							element_records.add(element_state_service.save(element));
+						}catch(Exception e){
+							log.warn("error saving element to new page state :  "+e.getMessage());
+							//e.printStackTrace();
+							err = true;
+						}
+						cnt++;
+					}while(err && cnt < 5);
+					
+					if(err){
+						element_records.add(element);
+					}
 				}
 				/*
 				for(ElementState element : page_state.getElements()){

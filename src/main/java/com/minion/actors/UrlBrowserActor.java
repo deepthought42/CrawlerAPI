@@ -4,7 +4,6 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 import org.openqa.selenium.Point;
@@ -165,10 +164,6 @@ public class UrlBrowserActor extends AbstractActor {
 						//send message to animation detection actor
 						animation_actor.tell(path_message, getSelf() );
 					}
-
-					PathMessage updated_path_msg = new PathMessage(path_keys, path_objects, message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor());
-					message.getDiscoveryActor().tell(updated_path_msg, getSelf());
-					
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 				})
 				.match(MemberUp.class, mUp -> {

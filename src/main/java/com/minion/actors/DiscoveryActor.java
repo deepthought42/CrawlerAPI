@@ -56,7 +56,7 @@ public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
-	private DiscoveryRecord discovery_record = null;
+	private DiscoveryRecord discovery_record;
 		
 	@Autowired
 	private ActorSystem actor_system;
@@ -227,6 +227,15 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
+					if(discovery_record == null){
+						discovery_record = domain_service.getMostRecentDiscoveryRecord(form_msg.getDomain().getUrl());
+						
+						if(discovery_record == null){
+							discovery_record = new DiscoveryRecord(new Date(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getDomain().getUrl(),
+									0, 0, 0,
+									DiscoveryStatus.RUNNING);
+						}
+					}
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());

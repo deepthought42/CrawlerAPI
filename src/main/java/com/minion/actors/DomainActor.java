@@ -56,7 +56,7 @@ public class DomainActor extends AbstractActor{
 	@Autowired
 	private ActorSystem actor_system;
 	
-	private ActorRef discovery_actor = null;
+	private ActorRef discovery_actor;
 
 	//subscribe to cluster changes
 	@Override
@@ -135,8 +135,15 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
 					//forward message to discovery actor
+					log.warn("form message :: "+form_msg);
 					form_msg.setDomainActor(getSelf());
+					log.warn("discovery_actor :: " + discovery_actor);
+					if(discovery_actor == null){
+						discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
+					}
 					discovery_actor.tell(form_msg, getSelf());
+					
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

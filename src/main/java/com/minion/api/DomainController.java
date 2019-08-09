@@ -515,8 +515,12 @@ public class DomainController {
 	    		//start form test creation actor
 	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, BrowserType.create(domain.getDiscoveryBrowserName()), domain);
 		        
-		        //look up discovery for domain and increment
-		        domain_actors.get(domain.getUrl()).tell(form_discovery_msg, ActorRef.noSender());
+	    		if(domain_actors.get(domain.getUrl()) == null){
+	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+  						  .props("domainActor"), "domain_actor"+domain.getUrl());
+	    			domain_actors.put(domain.getUrl(), domain_actor);
+	    		}
+	    		domain_actors.get(domain.getUrl()).tell(form_discovery_msg, ActorRef.noSender());
 	    	}
 	    	else{
 	    		throw new DomainNotFoundException();
@@ -599,7 +603,7 @@ public class DomainController {
     			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
     			if(!domain_actors.containsKey(domain.getUrl())){
     				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-    						  .props("domainActor"), "domain_actor"+UUID.randomUUID());
+    						  .props("domainActor"), "domain_actor"+domain.getUrl());
     				domain_actors.put(domain.getUrl(), domain_actor);
     			}
     		    

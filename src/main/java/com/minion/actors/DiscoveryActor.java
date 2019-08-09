@@ -161,7 +161,7 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 
 				})
-				.match(Test.class, test -> { 
+				.match(Test.class, test -> {
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					
 					//send message to Domain Actor
@@ -227,15 +227,7 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
-					if(discovery_record == null){
-						discovery_record = domain_service.getMostRecentDiscoveryRecord(form_msg.getDomain().getUrl());
-						
-						if(discovery_record == null){
-							discovery_record = new DiscoveryRecord(new Date(), form_msg.getDomain().getDiscoveryBrowserName(), form_msg.getDomain().getUrl(),
-									0, 0, 0,
-									DiscoveryStatus.RUNNING);
-						}
-					}
+					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName());
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
@@ -258,6 +250,22 @@ public class DiscoveryActor extends AbstractActor{
 					log.info("received unknown message of type :: "+o.getClass().getName());
 				})
 				.build();
+	}
+
+	private DiscoveryRecord getDiscoveryRecord(String url, String browser) {
+		DiscoveryRecord discovery_record = null;
+		if(this.discovery_record == null){
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
+			
+			if(discovery_record == null){
+				discovery_record = new DiscoveryRecord(new Date(), browser, url,
+						0, 0, 0,
+						DiscoveryStatus.RUNNING);
+			}
+			return discovery_record;
+		}
+		
+		return this.discovery_record;
 	}
 
 	private void startDiscovery(DiscoveryActionMessage message) throws MalformedURLException {

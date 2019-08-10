@@ -56,7 +56,7 @@ public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
-	private DiscoveryRecord discovery_record = null;
+	private DiscoveryRecord discovery_record;
 		
 	@Autowired
 	private ActorSystem actor_system;
@@ -161,7 +161,7 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 
 				})
-				.match(Test.class, test -> { 
+				.match(Test.class, test -> {
 					discovery_record.setTestCount(discovery_record.getTestCount()+1);
 					
 					//send message to Domain Actor
@@ -227,12 +227,21 @@ public class DiscoveryActor extends AbstractActor{
 					discovery_service.save(discovery_record);
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
+					log.warn("form msg :: " + form_msg);
+					log.warn("form domain :: " + form_msg.getDomain());
+					log.warn("url  :: " + form_msg.getDomain().getUrl());
+					log.warn("form browser :: " + form_msg.getDomain().getDiscoveryBrowserName());
+					discovery_record = getDiscoveryRecord(form_msg.getDomain().getUrl(), form_msg.getDomain().getDiscoveryBrowserName());
 					//look up discovery for domain and increment
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
 			        log.info("Sending form message  :: "+form_msg.toString());
 		    		
-		    		form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
+			        if(form_test_discovery_actor == null){
+			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+			  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
+			        }
+		        	form_test_discovery_actor.tell(form_msg, ActorRef.noSender());
 
 			        discovery_service.save(discovery_record);
 				})
@@ -251,6 +260,24 @@ public class DiscoveryActor extends AbstractActor{
 				.build();
 	}
 
+	private DiscoveryRecord getDiscoveryRecord(String url, String browser) {
+		DiscoveryRecord discovery_record = null;
+		if(this.discovery_record == null){
+			log.warn("discovery actor is null for instance variable in discovery actor");
+			discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
+			
+			if(discovery_record == null){
+				log.warn("was unable to find running discovery record in db");
+				discovery_record = new DiscoveryRecord(new Date(), browser, url,
+						0, 0, 0,
+						DiscoveryStatus.RUNNING);
+			}
+			return discovery_record;
+		}
+		
+		return this.discovery_record;
+	}
+
 	private void startDiscovery(DiscoveryActionMessage message) throws MalformedURLException {
 		browser = message.getBrowser();
 		domain_actor = getSender();
@@ -261,9 +288,11 @@ public class DiscoveryActor extends AbstractActor{
 				  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 		path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 				  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-		form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
-	
+	    if(form_test_discovery_actor == null){
+        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
+        }
+    
 		//create multiple exploration actors for parallel execution
 		for(int i=0; i < 5; i++){
 			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)

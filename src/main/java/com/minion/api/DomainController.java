@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.minion.api.exception.PaymentDueException;
-import com.minion.structs.Message;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.integrations.DeepthoughtApi;
 import com.qanairy.models.Account;
@@ -58,7 +57,6 @@ import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
-import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.RedirectService;
 import com.qanairy.utils.BrowserUtils;
@@ -86,9 +84,6 @@ public class DomainController {
 	
 	@Autowired
 	private DomainService domain_service;
-	
-	@Autowired
-	private DiscoveryRecordService discovery_service;
 	
 	@Autowired
 	private FormRepository form_repo;
@@ -126,7 +121,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
     	
-    	String formatted_url = BrowserUtils.sanitizeUrl(url);
+    	String formatted_url = BrowserUtils.sanitizeUrl(protocol+"://"+url);
     	URL url_obj = new URL(formatted_url);
 		
     	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
@@ -520,8 +515,12 @@ public class DomainController {
 	    		//start form test creation actor
 	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, BrowserType.create(domain.getDiscoveryBrowserName()), domain);
 		        
-		        //look up discovery for domain and increment
-		        domain_actors.get(domain.getUrl()).tell(form_discovery_msg, ActorRef.noSender());
+	    		if(domain_actors.get(domain.getUrl()) == null){
+	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+  						  .props("domainActor"), "domain_actor"+domain.getUrl());
+	    			domain_actors.put(domain.getUrl(), domain_actor);
+	    		}
+	    		domain_actors.get(domain.getUrl()).tell(form_discovery_msg, ActorRef.noSender());
 	    	}
 	    	else{
 	    		throw new DomainNotFoundException();
@@ -604,7 +603,7 @@ public class DomainController {
     			//set discovery path count to 0 in case something happened causing the count to be greater than 0 for more than 24 hours
     			if(!domain_actors.containsKey(domain.getUrl())){
     				ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-    						  .props("domainActor"), "domain_actor"+UUID.randomUUID());
+    						  .props("domainActor"), "domain_actor"+domain.getUrl());
     				domain_actors.put(domain.getUrl(), domain_actor);
     			}
     		    

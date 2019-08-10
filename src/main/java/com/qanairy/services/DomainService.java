@@ -48,9 +48,7 @@ public class DomainService {
 		return domain_repo.findByHost(host);
 	}
 
-	public Domain save(Domain domain) throws MalformedURLException {
-		
-		
+	public Domain save(Domain domain) {
 		return domain_repo.save(domain);	
 	}
 	

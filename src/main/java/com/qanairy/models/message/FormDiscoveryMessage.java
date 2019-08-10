@@ -17,6 +17,7 @@ public class FormDiscoveryMessage {
 	public FormDiscoveryMessage(Form form, BrowserType browser, Domain domain) {
 		setForm(form);
 		setBrowserType(browser);
+		setDomain(domain);
 	}
 
 	public Form getForm() {

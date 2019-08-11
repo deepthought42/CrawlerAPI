@@ -119,6 +119,9 @@ public class DiscoveryActor extends AbstractActor{
 				.match(PathMessage.class, message -> {
 					if(message.getStatus().equals(PathStatus.READY)){
 						PathMessage path_message = message.clone();
+						log.warn("discovery record in discovery actor :: " + discovery_record);
+						
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						String path_key = String.join(":::", message.getKeys());

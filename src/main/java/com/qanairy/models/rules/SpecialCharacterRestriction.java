@@ -19,7 +19,6 @@ public class SpecialCharacterRestriction extends Rule {
 	@GeneratedValue
     @Id
 	private Long id;
-	
 	private String key;
 	private String value;
 	private RuleType type;
@@ -33,13 +32,8 @@ public class SpecialCharacterRestriction extends Rule {
 	@Override
 	public Boolean evaluate(ElementState elem) {
 		Pattern pattern = Pattern.compile(this.value);
-		for(Attribute attribute: elem.getAttributes()){
-			if(attribute.getName().equals("vals")){
-		        Matcher matcher = pattern.matcher(attribute.getVals().toString());
-				return matcher.matches();
-			}
-		}
-		return null;
+        Matcher matcher = pattern.matcher(elem.getText());
+		return !matcher.matches();
 	}
 	
 	@Override

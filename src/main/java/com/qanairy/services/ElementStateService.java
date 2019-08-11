@@ -1,6 +1,8 @@
 package com.qanairy.services;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.neo4j.driver.v1.exceptions.ClientException;
@@ -53,6 +55,29 @@ public class ElementStateService {
 			element.setRules(rule_records);
 
 			element_record = element_repo.save(element);
+
+			//get rules that exit in element but not in element_record
+			List<Rule> rule_removal_list = new ArrayList<>();
+			for(Rule rule : element_record.getRules()){
+				boolean exists = false;
+				for(Rule elem_rule : element.getRules()){
+					if(elem_rule.getType().equals(rule.getType())){
+						exists = true;
+						break;
+					}
+				}
+				
+				if(!exists){
+					rule_removal_list.add(rule);
+				}
+			}
+			
+			log.warn("rule remove list size  ::  " + rule_removal_list.size());
+			//remove removed rules
+			for(Rule rule : rule_removal_list){
+				log.warn("Removing rule :: " +rule.getKey());
+				element_repo.removeRule(element.getKey(), rule.getKey());
+			}
 		}
 		else{
 			element_record.setScreenshot(element.getScreenshot());
@@ -63,6 +88,29 @@ public class ElementStateService {
 			}
 
 			element_record = element_repo.save(element_record);
+			
+			//get rules that exit in element but not in element_record
+			List<Rule> rule_removal_list = new ArrayList<>();
+			for(Rule rule : element_record.getRules()){
+				boolean exists = false;
+				for(Rule elem_rule : element.getRules()){
+					if(elem_rule.getType().equals(rule.getType())){
+						exists = true;
+						break;
+					}
+				}
+				
+				if(!exists){
+					rule_removal_list.add(rule);
+				}
+			}
+			
+			log.warn("rule remove list size  ::  " + rule_removal_list.size());
+			//remove removed rules
+			for(Rule rule : rule_removal_list){
+				log.warn("Removing rule :: " +rule.getKey());
+				element_repo.removeRule(element.getKey(), rule.getKey());
+			}
 		}
 		return element_record;
 	}
@@ -75,8 +123,11 @@ public class ElementStateService {
 		return element_repo.findByTextAndName(text, name);
 	}
 
+	public void removeElementState(ElementState element, String rule_key){
+		element_repo.removeRule(element.getKey(), rule_key);
+	}
+	
 	public boolean doesElementExistInOtherPageStateWithLowerScrollOffset(ElementState element){
-
 		return false;
 	}
 

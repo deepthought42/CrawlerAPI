@@ -12,4 +12,7 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	public ElementState findByTextAndName(@Param("text") String text, @Param("name") String name);
 
 	public ElementState findByScreenshotChecksum(@Param("screenshot_checksum") String screenshotChecksum);
+	
+	@Query("MATCH (:ElementState{key:{element_key}})-[hd:HAS]->(Rule{key:{key}}) DELETE hd")
+	public void removeRule(@Param("element_key") String element_key, @Param("key") String key);
 }

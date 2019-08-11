@@ -1,9 +1,11 @@
 package com.qanairy.models.rules;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.minion.browsing.form.FormField;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Persistable;
 import com.qanairy.models.rules.RuleType;
+import com.qanairy.models.serializer.RuleDeserializer;
 
 /**
  * Defines rule to be used to evaluate if a {@link FormField} has a value that satisfies the 
@@ -11,6 +13,7 @@ import com.qanairy.models.rules.RuleType;
  *
  * @param <T> a generic value that is used to define the type of value returned
  */
+@JsonDeserialize(using = RuleDeserializer.class)
 public abstract class Rule implements Persistable {
 	
 	public abstract void setKey(String key);

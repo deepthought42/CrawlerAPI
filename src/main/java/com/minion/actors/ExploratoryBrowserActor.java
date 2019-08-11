@@ -81,7 +81,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PathMessage.class, message-> {
-					String browser_name = message.getBrowser().toString();
+					String browser_name = message.getDomain().getDiscoveryBrowserName();
 
 					if(message.getPathObjects() != null){
 						PageState result_page = null;

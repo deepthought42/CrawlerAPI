@@ -132,6 +132,11 @@ public class DiscoveryActor extends AbstractActor{
 						    }
 
 							path_expansion_actor.tell(path_message, getSelf() );
+							
+							if(form_discoverer == null){
+								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+							}
 							form_discoverer.tell(path_message, getSelf() );
 						}
 					}
@@ -315,8 +320,10 @@ public class DiscoveryActor extends AbstractActor{
 					  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
 		}
 		
-		form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-				  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+		if(form_discoverer == null){
+			form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+					  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+		}
 		
 		if(path_expansion_actor == null){
 			path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

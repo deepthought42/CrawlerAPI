@@ -1,11 +1,15 @@
 package com.minion.api;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.minion.api.exception.RuleValueRequiredException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.ElementState;
+import com.qanairy.models.rules.Rule;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.RuleService;
 
@@ -53,6 +58,22 @@ public class ElementController {
         ElementState element = element_service.findById(id);
         element.addRule(rule_service.findByType(type, value));
         return element_service.save(element);
+    }
+    
+    /**
+     * Adds {@link Rule} to {@link Element element} with a given id
+     * 
+     * @param id element id
+     * @return {@link Element element}
+     */
+    @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
+    //@PreAuthorize("hasAuthority('create:rule')")
+    @RequestMapping(path="/elements", method = RequestMethod.PUT)
+    public ElementState update(
+    		HttpServletRequest request,
+    		@RequestBody ElementState element_state) throws RuleValueRequiredException 
+    {          
+        return element_service.save(element_state);
     }
 }
 

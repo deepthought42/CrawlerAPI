@@ -125,19 +125,32 @@ public class DiscoveryActor extends AbstractActor{
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						String path_key = String.join(":::", message.getKeys());
-						if(!discovery_record.getExpandedPathKeys().contains(path_key)){				
+						if(!discovery_record.getExpandedPathKeys().contains(path_key)){	
+							if(path_expansion_actor == null){
+								path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+						    }
+
 							path_expansion_actor.tell(path_message, getSelf() );
 							form_discoverer.tell(path_message, getSelf() );
 						}
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
-						
 						//get last page state
+						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
 						discovery_record.setLastPathRanAt(new Date());
 						
 						//check if key already exists before adding to prevent duplicates
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 													
+
+						if(exploratory_browser_actors.isEmpty()){
+							//create multiple exploration actors for parallel execution
+							for(int i=0; i < 5; i++){
+								exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
+										  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
+							}
+						}
 						exploratory_browser_actors.get(discovery_record.getTotalPathCount()%(exploratory_browser_actors.size()-1)).tell(message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXAMINED)){
@@ -181,8 +194,7 @@ public class DiscoveryActor extends AbstractActor{
 			    	}
 			    	*/
 					
-					
-					boolean isLandable = BrowserService.checkIfLandable(test_msg.getBrowser().toString(), test.getResult(), test );
+					boolean isLandable = BrowserService.checkIfLandable(test_msg.getDomain().getDiscoveryBrowserName(), test.getResult(), test );
 					
 					String path_key = String.join(":::", test.getPathKeys());
 
@@ -191,14 +203,12 @@ public class DiscoveryActor extends AbstractActor{
 					log.warn("expanded path key :: " + path_key);
 					log.warn("does discovery record contain expanded path key :: " + discovery_record.getExpandedPathKeys().contains(path_key));
 					log.warn("does discovery record contain expanded page url already? :: " + discovery_record.getExpandedUrls().contains(path_key));
-					
 					log.warn("test spans multiple domains : :   " + test.getSpansMultipleDomains());
 					log.warn("Test result is landable?    ::   "+isLandable);
 					log.warn("Result url   ::::   " + test.getResult().getUrl());
 					log.warn("expanded path key :: " + path_key);
 					log.warn("does discovery record contain expanded path key :: " + discovery_record.getExpandedPathKeys().contains(path_key));
 					log.warn("does discovery record contain expanded page url already? :: " + discovery_record.getExpandedUrls().contains(path_key));
-					
 					log.warn("test spans multiple domains : :   " + test.getSpansMultipleDomains());
 					log.warn("Test result is landable?    ::   "+isLandable);
 					log.warn("Result url   ::::   " + test.getResult().getUrl());
@@ -318,10 +328,12 @@ public class DiscoveryActor extends AbstractActor{
   				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
         }
     
-		//create multiple exploration actors for parallel execution
-		for(int i=0; i < 5; i++){
-			exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
-					  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
+		if(exploratory_browser_actors.isEmpty()){
+			//create multiple exploration actors for parallel execution
+			for(int i=0; i < 5; i++){
+				exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
+						  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
+			}
 		}
 		
 		discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);

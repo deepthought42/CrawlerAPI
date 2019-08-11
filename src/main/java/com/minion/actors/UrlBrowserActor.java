@@ -30,6 +30,7 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
+import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.PageLoadAnimation;
@@ -87,7 +88,7 @@ public class UrlBrowserActor extends AbstractActor {
 					String url = message.getUrl().toString();
 					
 					String host = message.getUrl().getHost();
-					String browser_name = message.getBrowser().toString();
+					String browser_name = message.getDomain().getDiscoveryBrowserName();
 					log.warn("starting transition detection");
 					Redirect redirect = null;
 					PageLoadAnimation animation = null;
@@ -138,9 +139,10 @@ public class UrlBrowserActor extends AbstractActor {
 					log.warn("Done building page states ");
 					//send test to discovery actor
 					
-					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation);
-					message.getDiscoveryActor().tell(test, getSelf());
-					message.getDomainActor().tell(test, getSelf());
+					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation, message.getDomain());
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
+					message.getDiscoveryActor().tell(test_message, getSelf());
+					//message.getDomainActor().tell(test, getSelf());
 
 					log.warn("finished creating landing page test");
 
@@ -159,7 +161,7 @@ public class UrlBrowserActor extends AbstractActor {
 					  	new_path_keys.add(page_state.getKey());
 					  	new_path_objects.add(page_state);
 
-						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor());
+						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain());
 						
 						//send message to animation detection actor
 						animation_actor.tell(path_message, getSelf() );

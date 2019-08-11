@@ -82,7 +82,7 @@ public class AnimationDetectionActor extends AbstractActor{
 							//Tell discovery actor about test
 							msg.getDiscoveryActor().tell(msg.clone(), getSelf());
 							
-							PathMessage updated_path_msg = new PathMessage(msg.getKeys(), msg.getPathObjects(), msg.getDiscoveryActor(), PathStatus.EXAMINED, msg.getBrowser(), msg.getDomainActor());
+							PathMessage updated_path_msg = new PathMessage(msg.getKeys(), msg.getPathObjects(), msg.getDiscoveryActor(), PathStatus.EXAMINED, msg.getBrowser(), msg.getDomainActor(), msg.getDomain());
 							msg.getDiscoveryActor().tell(updated_path_msg, getSelf());
 							
 						}catch(Exception e){

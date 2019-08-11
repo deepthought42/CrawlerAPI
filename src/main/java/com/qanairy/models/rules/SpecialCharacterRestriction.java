@@ -25,7 +25,7 @@ public class SpecialCharacterRestriction extends Rule {
 	private RuleType type;
 	
 	public SpecialCharacterRestriction() {
-		setValue("[a-zA-Z0-9]*");
+		setValue("[^<>!@#$%&*()]");
 		setType(RuleType.SPECIAL_CHARACTER_RESTRICTION);
 		setKey(super.generateKey());
 	}

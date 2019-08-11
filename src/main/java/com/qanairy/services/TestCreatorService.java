@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Group;
 import com.qanairy.models.PageLoadAnimation;
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -56,7 +57,7 @@ public class TestCreatorService {
 	 * @pre browser != null
 	 * @pre msg != null
 	 */
-	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, PageLoadAnimation animation)
+	public Test createLandingPageTest(PageState page_state, String browser_name, Transition transition, PageLoadAnimation animation, Domain domain)
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		page_state.setLandable(true);
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
@@ -78,7 +79,7 @@ public class TestCreatorService {
 	  	path_keys.add(page_state.getKey());
 	  	path_objects.add(page_state);
 
-	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name);
+	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain.getUrl());
 
 		String url = page_state.getUrl();
 		if(!url.contains("http")){
@@ -105,11 +106,11 @@ public class TestCreatorService {
 	 * @param result_page
 	 * @throws MalformedURLException 
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name ) throws MalformedURLException {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name, String domain_host ) throws MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
 
-		boolean leaves_domain = !PathUtils.getFirstPage(path_objects).getUrl().contains(new URL(result_page.getUrl()).getHost());
+		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
 
 		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
 		test.setRunTime(crawl_time);

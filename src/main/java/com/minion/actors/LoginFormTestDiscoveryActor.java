@@ -24,9 +24,11 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.TestUser;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.FormService;
@@ -164,20 +166,22 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							PageState result_page = crawler.performPathExploratoryCrawl(domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
 
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
-							boolean leaves_domain = !PathUtils.getFirstPage(exploratory_path.getPathObjects()).getUrl().contains(new URL(result_page.getUrl()).getHost());
-
+							System.err.println("result page host :: " + new URL(result_page.getUrl()).getHost());
+							System.err.println("domain url :: " + message.getDomain().getUrl());
+							System.err.println("domain equals page state ??    "+message.getDomain().getUrl().trim().equals(new URL(result_page.getUrl()).getHost()));
+							System.err.println("result page matches last page :: " +  result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
+							
+							boolean leaves_domain = !(message.getDomain().getUrl().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
+							System.err.println("DOES IT LEAVE DOMAIN ??  ::  "+leaves_domain);
+							
 							Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login", false, leaves_domain);
-							test.setSpansMultipleDomains(leaves_domain);
 							
 							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L));
-							test = test_service.save(test);
+							test_service.save(test);
 							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
-						
-							for(String key : test.getPathKeys()){
-								log.warning("test key ::   " + key);
-							}
-							
-							message.getDiscoveryActor().tell(test, getSelf());
+
+							TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), BrowserType.create(message.getDomain().getDiscoveryBrowserName()), message.getDomainActor(), message.getDomain());
+							message.getDiscoveryActor().tell(test_message, getSelf());
 						}
 					}
 				})

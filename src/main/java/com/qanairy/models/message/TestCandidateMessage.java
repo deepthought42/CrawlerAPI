@@ -1,6 +1,8 @@
 package com.qanairy.models.message;
 
 import java.util.List;
+
+import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.BrowserType;
@@ -19,14 +21,16 @@ public class TestCandidateMessage {
 	private ActorRef domain_actor;
 	private PageState result_page;
 	private BrowserType browser;
+	private Domain domain;
 	
-	public TestCandidateMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PageState result_page, BrowserType browser, ActorRef domain_actor){
+	public TestCandidateMessage(List<String> keys, List<PathObject> path_objects, ActorRef discovery_actor, PageState result_page, BrowserType browser, ActorRef domain_actor, Domain domain){
 		setDiscoveryActor(discovery_actor);
 		setBrowser(browser);
 		this.keys = keys;
 		this.path_objects = path_objects;
 		this.result_page = result_page;
 		setDomainActor(domain_actor);
+		setDomain(domain);
 	}
 
 	public List<String> getKeys() {
@@ -63,5 +67,13 @@ public class TestCandidateMessage {
 
 	public void setDomainActor(ActorRef domain_actor) {
 		this.domain_actor = domain_actor;
+	}
+
+	public Domain getDomain() {
+		return domain;
+	}
+
+	public void setDomain(Domain domain) {
+		this.domain = domain;
 	}
 }

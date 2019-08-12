@@ -125,7 +125,7 @@ public class DiscoveryActor extends AbstractActor{
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
 						String path_key = String.join(":::", message.getKeys());
-						if(!discovery_record.getExpandedPathKeys().contains(path_key)){	
+						//if(!discovery_record.getExpandedPathKeys().contains(path_key)){	
 							if(path_expansion_actor == null){
 								path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
@@ -138,7 +138,7 @@ public class DiscoveryActor extends AbstractActor{
 										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
 							}
 							form_discoverer.tell(path_message, getSelf() );
-						}
+						//}
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state

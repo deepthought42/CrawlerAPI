@@ -5,6 +5,8 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,8 @@ import io.swagger.annotations.ApiOperation;
  */
 @RestController
 public class ElementController {
+	private static Logger log = LoggerFactory.getLogger(ElementController.class);
+
 	@Autowired
 	private ElementStateService element_service;
 	
@@ -66,13 +70,15 @@ public class ElementController {
      * @param id element id
      * @return {@link Element element}
      */
-    @ApiOperation(value = "adds Rule to Element with given id", response = Iterable.class)
+    @ApiOperation(value = "updates given Element", response = Iterable.class)
     //@PreAuthorize("hasAuthority('create:rule')")
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
     public ElementState update(
     		HttpServletRequest request,
-    		@RequestBody ElementState element_state) throws RuleValueRequiredException 
-    {          
+    		@RequestBody ElementState element_state) 
+    {
+    	System.err.println("updating element state");
+    	log.warn("element update state experienced");
         return element_service.save(element_state);
     }
 }

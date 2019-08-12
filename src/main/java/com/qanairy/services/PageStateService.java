@@ -89,7 +89,14 @@ public class PageStateService {
 			List<ElementState> element_records = new ArrayList<>();
 			for(ElementState element : page_state.getElements()){
 				if(element_map.containsKey(element.getKey())){
-					element_map.put(element.getKey(), element_state_service.save(element));
+					int cnt = 0;
+					do{
+						try{
+							element_map.put(element.getKey(), element_state_service.save(element));
+							break;
+						}
+						catch(ClientException e){}
+					}while(cnt < 3);
 					break;
 				}
 			}
@@ -138,7 +145,7 @@ public class PageStateService {
 						err = false;
 						try{
 							element_records.add(element_state_service.save(element));
-						}catch(Exception e){
+						}catch(ClientException e){
 							log.warn("error saving element to existing page state (FOUND BY KEY) :  "+e.getMessage());
 							e.printStackTrace();
 							err = true;

@@ -18,10 +18,6 @@ public class RuleDeserializer extends JsonDeserializer<Rule> {
 	private static Logger log = LoggerFactory.getLogger(RuleDeserializer.class);
 
     public RuleDeserializer() {
-        this(null);
-    }
-   
-    public RuleDeserializer(Class<Rule> t) {
         super();
     }
  

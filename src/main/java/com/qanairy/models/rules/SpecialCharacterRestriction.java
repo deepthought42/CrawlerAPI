@@ -7,7 +7,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 
 /**

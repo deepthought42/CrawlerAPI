@@ -11,18 +11,9 @@ import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.rules.AlphabeticRestrictionRule;
 import com.qanairy.models.rules.Clickable;
-import com.qanairy.models.rules.DisabledRule;
-import com.qanairy.models.rules.EmailPatternRule;
-import com.qanairy.models.rules.NumericRule;
-import com.qanairy.models.rules.PatternRule;
-import com.qanairy.models.rules.ReadOnlyRule;
-import com.qanairy.models.rules.RequirementRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleFactory;
-import com.qanairy.models.rules.RuleType;
-import com.qanairy.models.rules.SpecialCharacterRestriction;
 import com.qanairy.services.RuleService;
 
 @Service

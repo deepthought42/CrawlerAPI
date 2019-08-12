@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleFactory;
-import com.qanairy.services.FormService;
 
 public class RuleDeserializer extends JsonDeserializer<Rule> {
 	private static Logger log = LoggerFactory.getLogger(RuleDeserializer.class);

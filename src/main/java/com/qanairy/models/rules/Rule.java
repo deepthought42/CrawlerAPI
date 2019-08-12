@@ -28,7 +28,6 @@ public abstract class Rule implements Persistable {
 
 	public abstract void setValue(String value);
 	
-	public Rule(){}
 	/**
 	 * evaluates the rule to determine if it is satisfied
 	 * 

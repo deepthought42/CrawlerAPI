@@ -16,10 +16,6 @@ import com.qanairy.models.rules.RuleFactory;
 
 public class RuleDeserializer extends JsonDeserializer<Rule> {
 	private static Logger log = LoggerFactory.getLogger(RuleDeserializer.class);
-
-    public RuleDeserializer() {
-        super();
-    }
  
     @Override
     public Rule deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {

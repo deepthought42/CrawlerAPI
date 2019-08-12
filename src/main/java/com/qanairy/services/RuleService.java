@@ -66,6 +66,8 @@ public class RuleService {
 
 		Rule rule_record = null;
 
+		log.warn("rule        ::   " + rule);
+		log.warn("rule type   ::   " + rule.getType());
 		if(rule.getType().equals(RuleType.ALPHABETIC_RESTRICTION)){
 			rule_record = alphabetic_restriction_rule_repo.findByKey(rule.getKey());
 			if(rule_record == null){

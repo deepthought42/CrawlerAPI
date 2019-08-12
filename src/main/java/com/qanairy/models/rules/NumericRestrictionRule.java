@@ -23,7 +23,7 @@ public class NumericRestrictionRule extends Rule {
 	private RuleType type;
 	
 	public NumericRestrictionRule() {
-		setValue("[0-9]*");
+		setValue("[0-9]");
 		setType(RuleType.NUMERIC_RESTRICTION);
 		setKey(generateKey());
 	}

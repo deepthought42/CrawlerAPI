@@ -1,39 +1,36 @@
 package com.qanairy.models.message;
 
-import java.net.URL;
-
 import com.qanairy.models.Domain;
+import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
+
 import akka.actor.ActorRef;
 
-public class UrlMessage {
-	private URL url;
-	private ActorRef discovery_actor;
+public class TestMessage {
+
+	private Test test;
+	private Domain domain;
+	private ActorRef discovery_actor;	
 	private ActorRef domain_actor;
 	private BrowserType browser;
-	private Domain domain;
 	
-	public UrlMessage(ActorRef discovery_actor, URL url, BrowserType browser, ActorRef domain_actor, Domain domain){
+	public TestMessage(Test test, ActorRef discovery_actor, BrowserType browser, ActorRef domain_actor, Domain domain){
+		setTest(test);
 		setDiscoveryActor(discovery_actor);
-		setUrl(url);
 		setBrowser(browser);
 		setDomainActor(domain_actor);
 		setDomain(domain);
 	}
-
-	public URL getUrl() {
-		return url;
-	}
-
-	public void setUrl(URL url) {
-		this.url = url;
+	
+	public TestMessage clone(){
+		return new TestMessage(test, getDiscoveryActor(), getBrowser(), getDomainActor(), getDomain());
 	}
 
 	public ActorRef getDiscoveryActor() {
 		return discovery_actor;
 	}
 
-	public void setDiscoveryActor(ActorRef discovery_actor) {
+	private void setDiscoveryActor(ActorRef discovery_actor) {
 		this.discovery_actor = discovery_actor;
 	}
 
@@ -41,7 +38,7 @@ public class UrlMessage {
 		return browser;
 	}
 
-	private void setBrowser(BrowserType browser) {
+	public void setBrowser(BrowserType browser) {
 		this.browser = browser;
 	}
 
@@ -51,6 +48,14 @@ public class UrlMessage {
 
 	public void setDomainActor(ActorRef domain_actor) {
 		this.domain_actor = domain_actor;
+	}
+
+	public Test getTest() {
+		return test;
+	}
+
+	public void setTest(Test test) {
+		this.test = test;
 	}
 
 	public Domain getDomain() {

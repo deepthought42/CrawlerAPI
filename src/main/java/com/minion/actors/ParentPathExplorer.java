@@ -35,6 +35,7 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.TestCandidateMessage;
+import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
@@ -221,8 +222,10 @@ public class ParentPathExplorer extends AbstractActor {
 
 			  		long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
-			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString());
-		  			message.getDiscoveryActor().tell(test, getSelf());
+			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), message.getDomain().getUrl());
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
+
+		  			message.getDiscoveryActor().tell(test_message, getSelf());
 		  			//message.getDomainActor().tell(test, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
@@ -247,9 +250,9 @@ public class ParentPathExplorer extends AbstractActor {
 	 * @throws JsonProcessingException
 	 * @throws MalformedURLException
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name) throws JsonProcessingException, MalformedURLException {
+	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name, String domain_host) throws JsonProcessingException, MalformedURLException {
 		log.warn("Creating test........");
-		boolean leaves_domain = !PathUtils.getFirstPage(path_objects).getUrl().contains(new URL(result_page.getUrl()).getHost());
+		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
 		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
 		
 		Test test_db = test_service.findByKey(test.getKey());

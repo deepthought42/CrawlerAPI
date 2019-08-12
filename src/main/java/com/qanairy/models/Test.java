@@ -394,7 +394,7 @@ public class Test implements Persistable {
 									   test.getResult(), 
 									   test.isRunning(), 
 									   test.getSpansMultipleDomains());
-		
+
 		clone_test.setBrowserStatuses(test.getBrowserStatuses());
 		clone_test.setGroups(new HashSet<>(test.getGroups()));
 		clone_test.setLastRunTimestamp(test.getLastRunTimestamp());

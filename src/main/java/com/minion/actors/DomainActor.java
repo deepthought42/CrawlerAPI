@@ -2,7 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -22,6 +21,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.FormDiscoveryMessage;
+import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
@@ -96,10 +96,11 @@ public class DomainActor extends AbstractActor{
 					//pass message along to discovery actor
 					discovery_actor.tell(message, getSelf());
 				})
-				.match(Test.class, test -> {
+				.match(TestMessage.class, test_msg -> {
+					Test test = test_msg.getTest();
 					test_service.save(test);
 					if(domain == null){
-						String host = new URL(test.firstPage().getUrl()).getHost();
+						String host = test_msg.getDomain().getUrl();
 						log.warn("Host :: " + host);
 						domain = domain_service.findByHost(host);
 						log.warn("loaded domain :: " + domain);
@@ -113,7 +114,7 @@ public class DomainActor extends AbstractActor{
 					
 					log.warn("Domain :: " + domain);
 					log.warn("test result in domain actor   :   " + test.getResult());
-					domain.addPageState(page_state_service.save(test.getResult()));
+					domain.addPageState(page_state_service.save(test.getResult()));	
 					domain = domain_service.save(domain);
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
@@ -130,7 +131,9 @@ public class DomainActor extends AbstractActor{
 					}
 					log.warn("test result in domain actor :: " + test.getResult());
 					domain.addTest(test_service.save(test));
+					log.warn("saved test L::   "+test);
 					domain_service.save(domain);
+					log.warn("saved domain :: "+domain);
 					
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {

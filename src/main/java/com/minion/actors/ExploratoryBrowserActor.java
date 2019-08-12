@@ -81,7 +81,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PathMessage.class, message-> {
-					String browser_name = message.getBrowser().toString();
+					String browser_name = message.getDomain().getDiscoveryBrowserName();
 
 					if(message.getPathObjects() != null){
 						PageState result_page = null;
@@ -108,11 +108,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					  		//crawl test and get result
 					  		//if this result is the same as the result achieved by the original test then replace the original test with this new test
 
-							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor());
+							TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain());
 							parent_path_explorer.tell(msg, getSelf());
 						}
 						else {
-							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor());
+							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 						}

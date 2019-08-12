@@ -23,7 +23,7 @@ public class AlphabeticRestrictionRule extends Rule{
 	private RuleType type;
 
 	public AlphabeticRestrictionRule() {
-		this.value = "[a-zA-Z]*";
+		this.value = "[a-zA-Z]";
 		setType(RuleType.ALPHABETIC_RESTRICTION);
 		setKey(super.generateKey());
 	}

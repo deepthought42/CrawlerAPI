@@ -132,7 +132,7 @@ public class TestService {
 			 }
 
 			 cnt++;
-		 }while(cnt < Integer.MAX_VALUE && page == null);
+		 }while(cnt < 10000 && page == null);
 
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;

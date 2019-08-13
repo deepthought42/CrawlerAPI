@@ -384,17 +384,21 @@ public class DiscoveryActor extends AbstractActor{
 		//stop all discovery processes
 		if(url_browser_actor != null){
 			actor_system.stop(url_browser_actor);
+			url_browser_actor = null;
 		}
 		if(path_expansion_actor != null){
 			actor_system.stop(path_expansion_actor);
+			path_expansion_actor = null;
 		}
 		if(form_discoverer != null){
 			actor_system.stop(form_discoverer);
+			form_discoverer = null;
 		}
 		if(!exploratory_browser_actors.isEmpty()){	
 			for(ActorRef actor : exploratory_browser_actors){
 				actor_system.stop(actor);
 			}
+			exploratory_browser_actors = new ArrayList<>();
 		}
 	}
 }

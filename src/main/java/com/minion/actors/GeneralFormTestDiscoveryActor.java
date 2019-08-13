@@ -97,7 +97,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 						int cnt = 0;
 					  	Browser browser = null;
 					  	
-					  	while(browser == null && cnt < Integer.MAX_VALUE){
+					  	while(browser == null && cnt < 10000){
 					  		try{
 						  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 						  		browser.navigateTo(page.getUrl());
@@ -155,7 +155,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  					browser.close();
 							  				}
 							  			}
-						  			}while(cnt < Integer.MAX_VALUE && result_page == null);
+						  			}while(cnt < 10000 && result_page == null);
 							  		
 							  		final long pathCrawlEndTime = System.currentTimeMillis();
 									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;

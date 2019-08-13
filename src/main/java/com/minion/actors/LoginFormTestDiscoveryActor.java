@@ -214,7 +214,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		//get all tests that contain page state as path object
 		List<Test> tests = test_service.findTestsWithPageState(page.getKey());
 		//get test with smallest path
-		int shortest_length = Integer.MAX_VALUE;
+		int shortest_length = 1000;
 		Test shortest_test = null;
 		for(Test test : tests){
 			if(test.getPathKeys().size() < shortest_length){

@@ -69,7 +69,7 @@ public class BrowserServiceTest {
 		assertTrue(visible_elements.size() == 4);
 		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[1]"));
 		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[2]"));
-		assertTrue(visible_elements.contains("//div[contains(@id,\"test-id1\")]"));
+		assertTrue(visible_elements.contains("(//div)[2]"));
 		assertTrue(visible_elements.contains("//div//span"));
 	}
 }

@@ -634,7 +634,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < Integer.MAX_VALUE);
+		}while(result_page == null && tries < 10000);
 		return result_page;
 	}
 
@@ -717,7 +717,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < Integer.MAX_VALUE);
+		}while(result_page == null && tries < 10000);
 		return result_page;
 	}
 	
@@ -760,7 +760,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < Integer.MAX_VALUE);
+		}while(result_page == null && tries < 10000);
 		return result_page;
 	}
 	

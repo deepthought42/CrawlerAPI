@@ -170,7 +170,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			}
 				    		}
 				    		attempts++;
-				    	}while(test == null && attempts < Integer.MAX_VALUE);
+				    	}while(test == null && attempts < 10000);
 
 				    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct_message.getAccountKey());
 				    	MessageBroadcaster.broadcastTest(test, acct_message.getAccountKey());

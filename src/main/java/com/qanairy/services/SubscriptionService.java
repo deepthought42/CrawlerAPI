@@ -157,7 +157,7 @@ public class SubscriptionService {
     	if(plan.equals(SubscriptionPlan.FREE) && discovered_test_cnt > 200){
     		return true;
     	}
-    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 1000){
+    	else if(plan.equals(SubscriptionPlan.PRO) && discovered_test_cnt > 10000){
     		return true;
     	}
     	else if(plan.equals(SubscriptionPlan.ENTERPRISE)){

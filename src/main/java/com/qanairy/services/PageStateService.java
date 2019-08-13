@@ -62,6 +62,7 @@ public class PageStateService {
 		for(String checksum : page_state.getScreenshotChecksums()){
 			page_state_record = page_state_repo.findByScreenshotChecksumsContains(checksum);
 			if(page_state_record != null){
+				page_state_record.setElements(getElementStates(page_state_record.getKey()));
 				break;
 			}
 		}
@@ -71,16 +72,19 @@ public class PageStateService {
 			for(Screenshot screenshot : page_state.getScreenshots()){
 				page_state_record = findByScreenshotChecksum(screenshot.getChecksum());
 				if(page_state_record != null){
+					page_state_record.setElements(getElementStates(page_state_record.getKey()));
 					break;
 				}
 				page_state_record = findByAnimationImageChecksum(screenshot.getChecksum());
 				if(page_state_record != null){
+					page_state_record.setElements(getElementStates(page_state_record.getKey()));
 					break;
 				}
 			}
 		}
 		
 		if(page_state_record != null){
+			page_state_record.setElements(getElementStates(page_state_record.getKey()));
 			log.warn("UPDATING EXISTING PAGE STATE");
 			page_state_record.setLandable(page_state.isLandable());
 			page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
@@ -134,6 +138,7 @@ public class PageStateService {
 			if(page_state_record != null){
 				page_state_record.setLandable(page_state.isLandable());
 				page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
+				page_state_record.setElements(getElementStates(page_state_record.getKey()));
 				
 				log.warn("saving element to page state :: "+page_state );
 				List<ElementState> element_records = new ArrayList<>();

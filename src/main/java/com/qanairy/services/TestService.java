@@ -156,8 +156,8 @@ public class TestService {
 			List<PathObject> path_objects = new ArrayList<PathObject>();
 			for(PathObject path_obj : test.getPathObjects()){
 				if(path_obj instanceof PageState){
-					log.info("Saving page as path object for test :: " + (PageState)path_obj);
-						path_objects.add(page_state_service.save((PageState)path_obj));
+					log.info("Saving page as path object for test :: " + (PageState)path_obj);	
+					path_objects.add(page_state_service.save((PageState)path_obj));
 				}
 				else if(path_obj instanceof ElementState){						path_objects.add(element_state_service.save((ElementState)path_obj));
 				}

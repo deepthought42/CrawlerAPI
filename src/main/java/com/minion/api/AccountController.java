@@ -100,7 +100,6 @@ public class AccountController {
     	acct.setSubscriptionType("FREE");
     	acct.setApiToken(UUID.randomUUID().toString());
       acct.setSubscriptionType("FREE");
-
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
         acct = account_service.save(acct);

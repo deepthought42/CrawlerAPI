@@ -635,10 +635,10 @@ public class BrowserService {
 					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
 					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && !isElementLargerThanViewport(browser, element)){
 						ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes());
-						visible_element_map.put(element_state.getXpath(), new_element_state);
+						visible_element_map.put(element_state.getXpath().trim(), new_element_state);
 					}
 					else{
-						visible_element_map.put(element_state.getXpath(), null);
+						visible_element_map.put(element_state.getXpath().trim(), null);
 					}
 				}
 			}catch(WebDriverException e){

@@ -3,10 +3,15 @@ package com.minion.browsing;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 
 public class BrowserConnectionFactory {
+	private static Logger log = LoggerFactory.getLogger(BrowserConnectionFactory.class);
 
 	//GOOGLE CLOUD CLUSTER
 	//private static final String[] CHROME_DISCOVERY_HUB_IP_ADDRESS = {"35.239.77.58:4444", "23.251.149.198:4444"};
@@ -23,6 +28,7 @@ public class BrowserConnectionFactory {
 
 	@Deprecated
 	public static Browser getConnection(String browser, BrowserEnvironment environment) throws MalformedURLException{
+		log.warn("getting browser connection");
 		URL hub_url = null;
 		if(environment.equals(BrowserEnvironment.TEST)){
 			hub_url = new URL( "http://"+TEST_HUB_IP_ADDRESS+"/wd/hub" );

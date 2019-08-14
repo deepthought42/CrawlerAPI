@@ -86,7 +86,6 @@ public class ParentPathExplorer extends AbstractActor {
 	 *
 	 * NOTE: Do not change the order of the checks for instance of below. These are in this order because ExploratoryPath
 	 * 		 is also a Test and thus if the order is reversed, then the ExploratoryPath code never runs when it should
-	 * @throws NullPointerException
 	 * @throws IOException
 	 * @throws NoSuchElementException
 	 */
@@ -127,16 +126,19 @@ public class ParentPathExplorer extends AbstractActor {
 			  		
 					boolean results_match = false;
 					boolean error_occurred = false;
+					
 					//do while result matches expected result
 					do{
+						log.warn("starting parent path explorer loop");
 						try{
 							error_occurred = false;
-
+							log.warn("getting browser connection (ParentPathExplorer) :: "+message.getBrowser());
 							browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 							//crawl path using array of preceding elements\
 							browser.navigateTo(first_page.getUrl());
+							log.warn("crawling beginning of parent path");
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host);
-
+							log.warn("done crawling beginning of path");
 							//extract parent element
 							String element_xpath = last_element.getXpath();
 							WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
@@ -161,6 +163,7 @@ public class ParentPathExplorer extends AbstractActor {
 								break;
 							}
 							
+							log.warn("setting up parent end path");
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
@@ -169,9 +172,10 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 							
+							log.warn("crawling end of parent path without building result");
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
-
+							log.warn("done crawling parent end of path");
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){
 								parent_end_path_keys.add(loading_animation.getKey());
@@ -201,9 +205,10 @@ public class ParentPathExplorer extends AbstractActor {
 							last_element = parent_element;
 						}
 						catch(NullPointerException e){
+							e.printStackTrace();
 							log.warn("NullPointerException occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
-							e.printStackTrace();
+							System.exit(0);
 						}
 						catch(WebDriverException e){
 							log.debug("Exception occurred in ParentPathExplorer :: "+e.getMessage());

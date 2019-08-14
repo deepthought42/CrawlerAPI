@@ -44,6 +44,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private int height;
 	private String inner_html;
 	private String css_selector;
+	private String outer_html;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -428,5 +429,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public void setCssSelector(String css_selector) {
 		this.css_selector = css_selector;
+	}
+
+	public void setOuterHtml(String outer_html) {
+		this.outer_html = outer_html;
+	}
+
+	public String getOuterHtml() {
+		return outer_html;
 	}
 }

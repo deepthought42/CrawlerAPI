@@ -72,4 +72,68 @@ public class BrowserServiceTest {
 		assertTrue(visible_elements.contains("(//div)[2]"));
 		assertTrue(visible_elements.contains("//div//span"));
 	}
+	
+	@Test
+	public void verifyListDetectionExtractsAllRepeatedItems(){
+		String html = "<html>"
+						  +"<body>"
+						    +"<div>"
+						    +"<div id='item1' class='product__card'>"
+						        +"<div id='fhaiuhreoaf120945' class='product_img'>"
+						          +"<img src='noImg.jpg' />"
+						        +"</div>"
+						        +"<div class='functions'>"
+						          +"<i class='fa fa-pencil'></i>"
+						          +"<i  class='fa fa-times'></i>"
+						        +"</div>"
+						      +"</div>"
+						      +"<div id='item2' class='product__card'>"
+						        +"<div id='fdyairehwafo121422' class='product_img'>"
+						          +"<img src='noImg.jpg' />"
+						        +"</div>"
+						        +"<div class='functions'>"
+						          +"<i class='fa fa-pencil'></i>"
+						          +"<i  class='fa fa-times'></i>"
+						        +"</div>"
+						      +"</div>"
+						      +"<div id='item3' class='product__card'>"
+						        +"<div id='fdkfdfhaewur129335' class='product_img'>"
+						          +"<img src='noImg.jpg' />"
+						        +"</div>"
+						        +"<div class='functions'>"
+						          +"<i class='fa fa-pencil'></i>"
+						          +"<i  class='fa fa-times'></i>"
+						        +"</div>"
+						      +"</div>"
+						      +"<div id='item4' class='product__card'>"
+						        +"<div id='fsaf2313' class='product_img'>"
+						          +"<img src='noImg.jpg' />"
+					            +"</div>"
+						        +"<div class='functions'>"
+						          +"<i class='fa fa-pencil'></i>"
+						          +"<i  class='fa fa-times'></i>"
+						        +"</div>"
+						      +"</div>"
+						    +"<div id='item' class='product__card'>"
+						        +"<div class='functions'>"
+						          +"<i  class='fa fa-times'></i>"
+						        +"</div>"
+						      +"</div>"						      
+					      +"</body>"
+						+"</html>";
+
+		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
+		
+		BrowserService browser_service = new BrowserService();
+		
+		List<ElementState> list_elements_list = browser_service.findRepeatedElements(element_list);
+		list_elements_list = browser_service.reduceRepeatedElementsListToOnlyParents(list_elements_list);
+		System.err.println("list elements list size :: "+list_elements_list.size());
+		
+		for(ElementState elem : list_elements_list){
+			System.err.println(elem.getOuterHtml());
+			System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+		}
+		assertTrue(4 == list_elements_list.size());
+	}
 }

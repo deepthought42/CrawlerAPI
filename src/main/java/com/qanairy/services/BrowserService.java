@@ -21,6 +21,7 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
@@ -280,6 +281,31 @@ public class BrowserService {
 				ElementState element_state = new ElementState();
 				element_state.setXpath(xpath);
 				element_state.setAttributes(attributes);
+				element_state.setOuterHtml(element.outerHtml());
+				element_state.setInnerHtml(element.html());
+				elements.add(element_state);
+			}
+		}
+
+		return elements;
+	}
+	
+	public static List<ElementState> getAllElementsUsingJSoup(String pageSource) {
+		Map<String, Integer> xpath_cnt_map = new HashMap<>();
+		List<ElementState> elements = new ArrayList<>();
+		Document html_doc = Jsoup.parse(pageSource);
+		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
+		for(Element element: web_elements){
+			int child_node_cnt = element.children().size();			
+			
+			if(!isStructureTag(element.tagName())){
+				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
+				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
+				ElementState element_state = new ElementState();
+				element_state.setXpath(xpath);
+				element_state.setAttributes(attributes);
+				element_state.setOuterHtml(element.outerHtml());
+				element_state.setInnerHtml(element.html());
 				elements.add(element_state);
 			}
 		}
@@ -897,7 +923,7 @@ public class BrowserService {
 				|| "head".equals(tag_name) || "noscript".equals(tag_name)
 				|| "g".equals(tag_name) || "path".equals(tag_name) || "svg".equals(tag_name) || "polygon".equals(tag_name)
 				|| "br".equals(tag_name) || "style".equals(tag_name) || "polyline".equals(tag_name) || "use".equals(tag_name) 
-				|| "template".equals(tag_name) || "audio".equals(tag_name) || "iframe".equals(tag_name);
+				|| "template".equals(tag_name) || "audio".equals(tag_name);
 	}
 
 	/**
@@ -1628,5 +1654,61 @@ public class BrowserService {
 		}while(err && count < 10);
 		
 		return elem_copy;
+	}
+	
+	public List<ElementState> findRepeatedElements(List<ElementState> element_list){
+		//create a map for the various duplicate elements
+		
+		List<ElementState> list_elements = new ArrayList<>();
+		
+		//iterate over all elements in list
+		for(int idx1 = 0; idx1 < element_list.size()-1; idx1++){
+			
+			boolean at_least_one_match = false;
+			//for each element iterate over all elements in list
+			for(int idx2 = idx1+1; idx2 < element_list.size(); idx2++){
+				System.err.println("*****************************************************************");
+
+				//calculate distance between loop1 value and loop2 value
+				int distance = StringUtils.getLevenshteinDistance(element_list.get(idx1).getOuterHtml(), element_list.get(idx2).getOuterHtml());
+				//if value is within threshold then add loop2 value to map for loop1 value xpath
+				double similarity = distance / (((double)(element_list.get(idx1).getOuterHtml().length() + element_list.get(idx2).getOuterHtml().length())/2.0));
+				
+				//calculate distance of children if within 20%				
+				if(distance == 0 || similarity < 0.10){
+					list_elements.add(element_list.get(idx2));
+					at_least_one_match = true;
+				}
+			}
+			if(at_least_one_match){
+				list_elements.add(element_list.get(idx1));
+			}
+		}
+		
+		return list_elements;
+	}
+
+	public List<ElementState> reduceRepeatedElementsListToOnlyParents(List<ElementState> list_elements_list) {
+		List<ElementState> parent_elements = new ArrayList<>();
+		Map<String, ElementState> element_map = new HashMap<>();
+		
+		//check if element is a child of another element in the list. if yes then don't add it to the list
+		for(int idx1=0; idx1 < list_elements_list.size(); idx1++){
+			boolean is_child = false;
+			for(int idx2=0; idx2 < list_elements_list.size(); idx2++){
+				if(idx1 != idx2 && list_elements_list.get(idx2).getInnerHtml().contains(list_elements_list.get(idx1).getOuterHtml())){
+					is_child = true;
+					break;
+				}
+			}
+			
+			if(!is_child){
+				element_map.put(list_elements_list.get(idx1).getOuterHtml(), list_elements_list.get(idx1));
+			}
+		}
+		
+		//remove duplicates
+		
+		return new ArrayList<>(element_map.values());
 	}
 }

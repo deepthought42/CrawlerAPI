@@ -98,7 +98,7 @@ public class DomainActor extends AbstractActor{
 				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
-					Test test_record = test_service.save(test);
+					test_service.save(test);
 					if(domain == null){
 						String host = test_msg.getDomain().getUrl();
 						log.warn("Host :: " + host);
@@ -130,10 +130,9 @@ public class DomainActor extends AbstractActor{
 						log.error(e.getLocalizedMessage());
 					}
 					log.warn("test result in domain actor :: " + test.getResult());
+					domain.addTest(test_service.save(test));
 					log.warn("saved test L::   "+test);
 					domain_service.save(domain);
-
-					domain_service.addTest(domain.getUrl(), test_record);
 					log.warn("saved domain :: "+domain);
 					
 				})

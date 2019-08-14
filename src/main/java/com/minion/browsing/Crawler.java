@@ -240,8 +240,7 @@ public class Crawler {
 	 * @pre path != null
 	 * @pre path != null
 	 */
-	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, ElementState child_element)
-							throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException, NullPointerException{
+	public void crawlParentPathWithoutBuildingResult(List<String> path_keys, List<PathObject> path_objects, Browser browser, String host_channel, ElementState child_element) throws IOException, GridException, WebDriverException, NoSuchAlgorithmException, PagesAreNotMatchingException, URISyntaxException{
 		assert browser != null;
 		assert path_keys != null;
 
@@ -576,15 +575,18 @@ public class Crawler {
 		int tries = 0;
 		Browser browser = null;
 		Map<String, ElementState> visible_element_map = new HashMap<>();
+		boolean no_such_element_exception = false;
 		do{
 			try{
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
-				log.warn("expected path url : "+expected_page.getUrl());
-				browser.navigateTo(expected_page.getUrl());
+				if(!no_such_element_exception){
+					no_such_element_exception = false;
+					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
+					log.warn("expected path url : "+expected_page.getUrl());
+					browser.navigateTo(expected_page.getUrl());
 
-				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
-
+					crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
+				}
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
@@ -602,15 +604,11 @@ public class Crawler {
 				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
-				
-				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
-				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
 			catch(MalformedURLException e){
 				log.warn(e.getMessage());
 			}
 			catch(NullPointerException e){
-				e.printStackTrace();
 				log.warn("Error happened while exploratory actor attempted to crawl test ");
 			}
 			catch (GridException e) {
@@ -631,14 +629,12 @@ public class Crawler {
 				e.printStackTrace();
 			}
 			finally{
-				if(browser != null){
+				if(browser != null && !no_such_element_exception){
 					browser.close();
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 1000);
-		
-		log.warn("done crawling exploratory path");
+		}while(result_page == null && tries < 10000);
 		return result_page;
 	}
 
@@ -686,8 +682,6 @@ public class Crawler {
     			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
-				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
-				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
 			catch(MalformedURLException e){
 				log.warn(e.getMessage());
@@ -696,7 +690,6 @@ public class Crawler {
 				}
 			}
 			catch(NullPointerException e){
-				e.printStackTrace();
 				log.error("Error happened while exploratory actor attempted to crawl test ");
 			} 
 			catch (GridException e) {
@@ -746,10 +739,8 @@ public class Crawler {
 			try{
 				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 				result_page = crawlPath(path_keys, path_objects, browser, host, visible_element_map, visible_elements);
-				PageState last_page = PathUtils.getLastPageState(path_objects);
-				result_page.setLoginRequired(last_page.isLoginRequired());
 			}catch(NullPointerException e){
-				log.error("Error happened while crawler attempted to crawl test path "+e.getMessage());
+				log.error("Error happened while exploratory actor attempted to crawl test "+e.getMessage());
 			} catch (GridException e) {
 				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
 			}

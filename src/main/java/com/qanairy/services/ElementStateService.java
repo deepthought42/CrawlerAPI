@@ -91,10 +91,8 @@ public class ElementStateService {
 			List<Rule> rule_removal_list = new ArrayList<>();
 			for(Rule rule : element_record.getRules()){
 				boolean exists = false;
-				log.warn("element rule count :: " + element.getRules().size());
 				for(Rule elem_rule : element.getRules()){
 					if(elem_rule.getType().equals(rule.getType())){
-						log.warn("rules match :: " +elem_rule.getType());
 						exists = true;
 						break;
 					}
@@ -105,10 +103,8 @@ public class ElementStateService {
 				}
 			}
 			
-			log.warn("rule remove list size existing ::  " + rule_removal_list.size());
 			//remove removed rules
 			for(Rule rule : rule_removal_list){
-				log.warn("Removing rule :: " +rule.getKey());
 				element_repo.removeRule(element.getKey(), rule.getKey());
 			}
 		}

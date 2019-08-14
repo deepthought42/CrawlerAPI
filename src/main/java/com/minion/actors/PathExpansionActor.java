@@ -107,7 +107,6 @@ public class PathExpansionActor extends AbstractActor {
 	 * @throws IllegalAccessException
 	 */
 	public ArrayList<ExploratoryPath> expandPath(PathMessage path)  {
-		log.warn("path size for expansion :: " + path.getPathObjects().size());
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		log.warn("expanding path method called....");
 		//get last page states for page
@@ -209,22 +208,14 @@ public class PathExpansionActor extends AbstractActor {
 		PageState last_page_state = PathUtils.getLastPageState(path_objects);
 		PageState second_to_last_page = PathUtils.getSecondToLastPageState(path_objects);
 		
-		log.warn("####################################################################################################");
-		log.warn("####################################################################################################");
-
 		if(last_page_state == null){
-			log.warn("LAST PAGE STATE IS NULL DURING EXPANSION!!!!!!!!!!!!!!");
 			return new HashSet<>();
 		}
 		
 		if( second_to_last_page == null){
-			log.warn("second to last page state is null. Returning all elements for last page state");
 			return last_page_state.getElements();
 		}
 		
-		log.warn("last page url      ::  " + last_page_state.getUrl());
-		log.warn("second to last url ::  " + second_to_last_page.getUrl());
-		log.warn("Do urls match????    :: " + last_page_state.getUrl().equals(second_to_last_page.getUrl()));
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
@@ -232,25 +223,17 @@ public class PathExpansionActor extends AbstractActor {
 				element_xpath_map.put(element.getXpath(), element);
 			}
 			
-			log.warn("element xpath map size :: " + element_xpath_map.size());
-			log.warn("# elements for last page :: " + last_page_state.getElements().size());
-			log.warn("# elements for second to last page :: " + second_to_last_page.getElements().size());
 			for(ElementState element : second_to_last_page.getElements()){
 				element_xpath_map.remove(element.getXpath());
 			}
 			
-			log.warn("# of elements left in map after filtering  ::   " + element_xpath_map.size());
 			for(String xpath : element_xpath_map.keySet()){
 				log.warn("xpath :: "+xpath);
 			}
-			log.warn("####################################################################################################");
-			log.warn("####################################################################################################");
-
+		
 			return element_xpath_map.values();
 		}
-		log.warn("####################################################################################################");
-		log.warn("####################################################################################################");
-
+		
 		return last_page_state.getElements();
 	}
 }

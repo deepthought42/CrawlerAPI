@@ -45,6 +45,7 @@ public class PageState implements Persistable, PathObject {
 	private String src;
 	private String key;
 	private boolean landable;
+	private boolean login_required;
 	private LocalDateTime last_landability_check;
 	private String screenshot_url;
 	private String browser;
@@ -114,42 +115,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
-		setKey(generateKey());
-	}
-
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 * 
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 * 
-	 * @pre elements != null
-	 * @pre screenshot_url != null;
-	 */
-	public PageState(String url, List<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset, 
-			int viewport_width, int viewport_height, String browser_name){
-		assert elements != null;
-
-		setType(PageState.class.getSimpleName());
-		setUrl(url);
-		setBrowser(browser_name);
-		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setSrc(src);
-		setScreenshotChecksum(new ArrayList<String>());
-		setForms(new HashSet<Form>());
-		setScrollXOffset(scroll_x_offset);
-		setScrollYOffset(scroll_y_offset);
-		setViewportWidth(viewport_width);
-		setViewportHeight(viewport_height);
-		setScreenshots(new ArrayList<Screenshot>());
-		setAnimatedImageUrls(new ArrayList<String>());
-		setAnimatedImageChecksums(new ArrayList<>());
+		setLoginRequired(false);
 		setKey(generateKey());
 	}
 	
@@ -193,6 +159,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
+		setLoginRequired(false);
 		setKey(generateKey());
 	}
 	
@@ -322,6 +289,7 @@ public class PageState implements Persistable, PathObject {
 		PageState page = null;
 		try {
 			page = new PageState(getUrl(), getScreenshotUrl(), elements, isLandable(), getSrc(), getScrollXOffset(), getScrollYOffset(), getViewportWidth(), getViewportHeight(), getBrowser());
+			page.setScreenshotChecksum(getScreenshotChecksums());
 			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
 			page.setAnimatedImageChecksums(this.getAnimatedImageChecksums());
 
@@ -600,7 +568,6 @@ public class PageState implements Persistable, PathObject {
 	public void addScreenshot(Screenshot screenshot){
 		boolean exists = false;
 		
-		log.warn("Screenshots :: " + this.screenshots);
 		if(this.screenshots == null){
 			this.screenshots = new ArrayList<>();
 		}
@@ -612,5 +579,11 @@ public class PageState implements Persistable, PathObject {
 		if(!exists){
 			this.screenshots.add(screenshot);
 		}
+	}
+	public boolean isLoginRequired() {
+		return login_required;
+	}
+	public void setLoginRequired(boolean login_required) {
+		this.login_required = login_required;
 	}
 }

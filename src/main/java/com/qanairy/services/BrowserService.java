@@ -320,15 +320,8 @@ public class BrowserService {
 		
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-		log.warn("finding page state by screenshot checksum");
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 
-		/*
-		if(page_state_record2 == null){
-			log.warn("finding page by animated image checksum");
-			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
-		}
-	*/
 		if(page_state_record2 != null){
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
@@ -364,6 +357,7 @@ public class BrowserService {
 			}
 			
 			PageState page_state = new PageState( url,
+					viewport_screenshot_url,
 					elements_with_screenshots,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(),
@@ -371,7 +365,6 @@ public class BrowserService {
 					browser.getViewportSize().width,
 					browser.getViewportSize().height,
 					browser.getBrowserName());
-			page_state.setScreenshotUrl(viewport_screenshot_url);
 			page_state.addScreenshotChecksum(screenshot_checksum);
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum, browser.getViewportSize().getWidth(), browser.getViewportSize().getHeight());			
 			page_state.addScreenshot(screenshot);
@@ -532,8 +525,10 @@ public class BrowserService {
 		else{
 			//Animation animation = BrowserUtils.getAnimation(browser, page_url.getHost());
 			List<ElementState> visible_elements = getVisibleElements(browser, "", page_url.toString(), viewport_screenshot);
-
+			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
+			
 			PageState page_state = new PageState( url_without_params,
+					viewport_screenshot_url,
 					visible_elements,
 					org.apache.commons.codec.digest.DigestUtils.sha256Hex(Browser.cleanSrc(browser.getDriver().getPageSource())),
 					browser.getXScrollOffset(),
@@ -541,9 +536,6 @@ public class BrowserService {
 					browser.getViewportSize().width,
 					browser.getViewportSize().height,
 					browser.getBrowserName());
-
-			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, page_url.getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
-			page_state.setScreenshotUrl(viewport_screenshot_url);
 
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum, browser.getViewportSize().getWidth(), browser.getViewportSize().getHeight());
 			page_state.addScreenshot(screenshot);

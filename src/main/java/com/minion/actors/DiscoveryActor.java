@@ -210,18 +210,14 @@ public class DiscoveryActor extends AbstractActor{
 					log.warn("does discovery record contain expanded page url already? :: " + discovery_record.getExpandedUrls().contains(path_key));
 					log.warn("test spans multiple domains : :   " + test.getSpansMultipleDomains());
 					log.warn("Test result is landable?    ::   "+isLandable);
-					log.warn("Result url   ::::   " + test.getResult().getUrl());
-					log.warn("expanded path key :: " + path_key);
-					log.warn("does discovery record contain expanded path key :: " + discovery_record.getExpandedPathKeys().contains(path_key));
-					log.warn("does discovery record contain expanded page url already? :: " + discovery_record.getExpandedUrls().contains(path_key));
-					log.warn("test spans multiple domains : :   " + test.getSpansMultipleDomains());
-					log.warn("Test result is landable?    ::   "+isLandable);
+					log.warn("Test result requires login to access? "+test.getResult().isLoginRequired());
 					log.warn("Result url   ::::   " + test.getResult().getUrl());
 					log.warn("test first page url :: " + test.findLastPage().getUrl());
 					log.warn("test length :: " + test.getPathObjects().size());
+					log.warn("##############################################################################################");
 					if(!test.getSpansMultipleDomains()){
 						log.warn("test doesn't span multiple domains");
-						if(isLandable ){
+						if(isLandable && !test.getResult().isLoginRequired()){
 							if(url_browser_actor == null){
 								url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
@@ -234,6 +230,7 @@ public class DiscoveryActor extends AbstractActor{
 							url_browser_actor.tell(url_message, getSelf() );
 						}
 						else {
+							log.warn("sending test for expansion");
 							List<String> final_key_list = new ArrayList<>(test.getPathKeys());
 				  			final_key_list.add(test.getResult().getKey());
 				  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());

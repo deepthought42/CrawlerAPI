@@ -609,6 +609,7 @@ public class Crawler {
 				log.warn(e.getMessage());
 			}
 			catch(NullPointerException e){
+				e.printStackTrace();
 				log.warn("Error happened while exploratory actor attempted to crawl test ");
 			}
 			catch (GridException e) {

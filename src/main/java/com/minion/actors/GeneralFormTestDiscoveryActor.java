@@ -32,6 +32,7 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.PathUtils;
 import com.minion.structs.Message;
 
 import akka.actor.AbstractActor;
@@ -146,6 +147,8 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 							  			try{
 									  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
 							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString(), visible_element_map, visible_elements);
+							  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
+											result_page.setLoginRequired(last_page.isLoginRequired());
 							  				break;
 							  			}catch(Exception e){
 							  				log.warning("Exception occurred while crawling FORM path -- "+e.getMessage());

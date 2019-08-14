@@ -75,7 +75,7 @@ public class PageState implements Persistable, PathObject {
 		setForms(new HashSet<>());
 		setScreenshots(new ArrayList<>());
 		setElements(new ArrayList<>());
-		setScreenshotChecksum(new ArrayList<>());
+		setScreenshotChecksum(new ArrayList<String>());
 		setAnimatedImageUrls(new ArrayList<>());
 		setAnimatedImageChecksums(new ArrayList<>());
 	}
@@ -504,6 +504,9 @@ public class PageState implements Persistable, PathObject {
 	}
 
 	public List<String> getScreenshotChecksums() {
+		if(screenshot_checksums == null){
+			return new ArrayList<String>();
+		}
 		return screenshot_checksums;
 	}
 
@@ -512,6 +515,9 @@ public class PageState implements Persistable, PathObject {
 	}
 	
 	public boolean addScreenshotChecksum(String checksum){
+		if(this.screenshot_checksums == null){
+			this.screenshot_checksums = new ArrayList<String>();
+		}
 		boolean exists = false;
 		for(String screenshot_checksum : getScreenshotChecksums()){
 			if(checksum.equals(screenshot_checksum)){

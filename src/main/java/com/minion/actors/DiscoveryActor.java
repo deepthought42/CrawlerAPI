@@ -215,6 +215,7 @@ public class DiscoveryActor extends AbstractActor{
 					log.warn("test first page url :: " + test.findLastPage().getUrl());
 					log.warn("test length :: " + test.getPathObjects().size());
 					log.warn("##############################################################################################");
+					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					if(!test.getSpansMultipleDomains()){
 						log.warn("test doesn't span multiple domains");
 						if(isLandable && !test.getResult().isLoginRequired()){
@@ -238,7 +239,7 @@ public class DiscoveryActor extends AbstractActor{
 				  			//run reducer on key list
 				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
 				  			
-				  			log.warn("sending test to path expansion actor");
+				  			log.warn("sending test to path expansion actor :: "+browser);
 				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain());
 				  			if(path_expansion_actor == null){
 				  				path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

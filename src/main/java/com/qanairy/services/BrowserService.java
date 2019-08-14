@@ -615,8 +615,7 @@ public class BrowserService {
 		do{
 			err = false;
 			try{
-				int visible_map_size = visible_element_map.size();
-		
+				int visible_map_size = visible_element_map.keySet().size();
 				int start_idx = 0;
 				if(visible_map_size > 1){
 					start_idx = visible_map_size-1;

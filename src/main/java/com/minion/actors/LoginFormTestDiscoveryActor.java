@@ -225,7 +225,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		log.warning("shortest test :: " + shortest_test.getPathKeys().size());
 		//add test path to path objects and keys
 		List<PathObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey());
-		log.warning("path objects size ::   "+test_path_objects);
+		log.warning("path objects size ::   "+test_path_objects.size());
 		for(String key : shortest_test.getPathKeys()){
 			for(PathObject obj : test_path_objects){
 				if(key.equals(obj.getKey())){

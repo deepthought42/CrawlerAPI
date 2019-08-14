@@ -90,7 +90,6 @@ public class PageStateService {
 				}
 				
 				if(page_state_record != null){
-					/*
 					page_state_record.setElements(getElementStates(page_state_record.getKey()));
 					log.warn("UPDATING EXISTING PAGE STATE");
 					page_state_record.setLandable(page_state.isLandable());
@@ -114,7 +113,6 @@ public class PageStateService {
 					page_state_record.setElements(new ArrayList<ElementState>(element_map.values()));
 					page_state_record.setAnimatedImageUrls(page_state.getAnimatedImageUrls());
 					page_state_record.setAnimatedImageChecksums(page_state.getAnimatedImageChecksums());
-					*/
 					Set<Form> forms = new HashSet<Form>();
 					for(Form form : page_state.getForms()){
 						forms.add(form_service.save(form));
@@ -135,8 +133,7 @@ public class PageStateService {
 					}
 					
 					page_state_record = page_state_repo.save(page_state_record);
-					
-					page_state_record.setElements(getElementStates(page_state_record.getKey()));
+					page_state_record.setElements(element_records);
 					page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
 				}
 				else {
@@ -144,7 +141,6 @@ public class PageStateService {
 					page_state_record = findByKey(page_state.getKey());
 		
 					if(page_state_record != null){
-						/*
 						page_state_record.setLandable(page_state.isLandable());
 						page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
 						page_state_record.setElements(getElementStates(page_state_record.getKey()));
@@ -171,13 +167,12 @@ public class PageStateService {
 								element_records.add(element);
 							}
 						}
+						log.warn("COMPLETED saving element to page state :: "+page_state );
 		
 						page_state_record.setElements(element_records);
-						*/
-						page_state_record.setForms(page_state.getForms());
-	
+						
 						log.warn("page state elements set");
-						log.warn("COMPLETED saving element to page state :: "+page_state );
+						page_state_record.setForms(page_state.getForms());
 						log.warn("page state forms set");
 						for(String screenshot_checksum : page_state.getScreenshotChecksums()){
 							page_state_record.addScreenshotChecksum(screenshot_checksum);
@@ -196,7 +191,7 @@ public class PageStateService {
 						}
 						
 						page_state_record = page_state_repo.save(page_state_record);
-						page_state_record.setElements(getElementStates(page_state_record.getKey()));
+						page_state_record.setElements(element_records);
 						page_state_record.setScreenshots(getScreenshots(page_state_record.getKey()));
 					}
 					else{

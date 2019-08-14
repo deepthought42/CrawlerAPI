@@ -29,9 +29,20 @@ public class ElementRuleExtractor {
 		List<Rule> rules = new ArrayList<Rule>();
 
 		for(Attribute attr : elem.getAttributes()){
+			log.warn("Attribute during rule extraction :: " + attr.getName());
+			log.warn("Attribute during rule extraction :: " + attr.getName().equalsIgnoreCase("type"));
+			log.warn("Attribute during rule extraction :: " + (attr.getName().equalsIgnoreCase("type") && attr.getVals().contains("email")));
+			log.warn("attribute values contains email??     "+attr.getVals().contains("email"));
 			Rule rule = RuleFactory.build(attr.getName().toLowerCase(), attr.getVals().get(0));
-			
+			Rule rule_record = null;
+
 			if(rule != null){
+				log.info("RULE :: "+rule);
+				log.info("rule repo key :: "+rule.getKey());
+				log.info("RULE RECORD :: "+rule_record);
+				log.info("INPUT RULES ::  "+ input_rules.keySet().size());
+				log.info("RULE TYPE   ::  "+rule.getType().toString());
+
 				rules.add(rule_service.save(rule));
 			}
 		}

@@ -61,6 +61,9 @@ public class PageState implements Persistable, PathObject {
 	private List<String> animated_image_urls;
 	private List<String> animated_image_checksums;
 	
+	@Relationship(type = "LIST_ITEM")
+	private List<ElementState> list_elements;
+	
 	@Relationship(type = "HAS")
 	private List<Screenshot> screenshots;
 		
@@ -77,6 +80,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshotChecksum(new ArrayList<>());
 		setAnimatedImageUrls(new ArrayList<>());
 		setAnimatedImageChecksums(new ArrayList<>());
+		setListElements(new ArrayList<ElementState>());
 	}
 	/**
 	 * Creates a page instance that is meant to contain information about a
@@ -114,6 +118,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
+		setListElements(new ArrayList<ElementState>());
 		setKey(generateKey());
 	}
 
@@ -150,6 +155,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
+		setListElements(new ArrayList<ElementState>());
 		setKey(generateKey());
 	}
 	
@@ -193,6 +199,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
+		setListElements(new ArrayList<ElementState>());
 		setKey(generateKey());
 	}
 	
@@ -612,5 +619,11 @@ public class PageState implements Persistable, PathObject {
 		if(!exists){
 			this.screenshots.add(screenshot);
 		}
+	}
+	public List<ElementState> getListElements() {
+		return list_elements;
+	}
+	public void setListElements(List<ElementState> list_elements) {
+		this.list_elements = list_elements;
 	}
 }

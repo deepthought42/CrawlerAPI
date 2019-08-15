@@ -251,6 +251,21 @@ public class PathExpansionActor extends AbstractActor {
 		log.warn("####################################################################################################");
 		log.warn("####################################################################################################");
 
-		return last_page_state.getElements();
+		boolean part_of_list = false;
+		List<ElementState> filtered_elements = new ArrayList<>();
+		//filter list elements from last page elements
+		for(ElementState element : last_page_state.getElements()){
+			for(ElementState list_item : last_page_state.getListElements()){
+				if(list_item.getInnerHtml().contains(element.getOuterHtml())){
+					part_of_list = true;
+				}
+			}
+			
+			if(!part_of_list){
+				filtered_elements.add(element);
+			}
+		}
+		
+		return filtered_elements;
 	}
 }

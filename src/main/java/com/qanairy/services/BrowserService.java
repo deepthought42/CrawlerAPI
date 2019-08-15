@@ -77,6 +77,9 @@ public class BrowserService {
 	private ElementRuleExtractor extractor;
 
 	@Autowired
+	private BrowserService browser_service;
+	
+	@Autowired
 	private Crawler crawler;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "src", "href"};
@@ -124,6 +127,7 @@ public class BrowserService {
 		boolean is_browser_closed = true;
 		Map<String, ElementState> visible_element_map = new HashMap<>();
 		List<ElementState> visible_elements = new ArrayList<>();
+		List<ElementState> list_elements_list = new ArrayList<>();
 		
 		do{
 			try{
@@ -137,8 +141,13 @@ public class BrowserService {
 				}
 					
 				if(!elements_built_successfully){
+					String source = browser.getDriver().getPageSource();
+					List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);					
+					list_elements_list = browser_service.findRepeatedElements(all_elements_list);
+					list_elements_list = browser_service.reduceRepeatedElementsListToOnlyParents(list_elements_list);
+					
 					//element_xpath_list = getXpathsUsingJSoup(browser.getDriver().getPageSource());
-					List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+					List<ElementState> element_list = BrowserService.getElementsUsingJSoup(source);
 
 					visible_elements = getVisibleElements(browser, visible_element_map, element_list);
 				}
@@ -211,7 +220,10 @@ public class BrowserService {
 				log.warn("getting visible elements within viewport " + visible_elements.size());
 				List<ElementState> all_visible_elements = getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), new HashMap<Integer, ElementState>(), visible_elements, true);
 				log.warn("building page with # of elements :: " +all_visible_elements.size());
+				
 				PageState page_state = buildPage(browser, all_visible_elements, url_without_params);
+				page_state.setListElements(list_elements_list);
+				
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
 				}
@@ -1689,7 +1701,6 @@ public class BrowserService {
 	}
 
 	public List<ElementState> reduceRepeatedElementsListToOnlyParents(List<ElementState> list_elements_list) {
-		List<ElementState> parent_elements = new ArrayList<>();
 		Map<String, ElementState> element_map = new HashMap<>();
 		
 		//check if element is a child of another element in the list. if yes then don't add it to the list

@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
+import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
@@ -141,11 +142,13 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
+		Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
+		
 		
 		return browser_service.buildPage(browser, visible_elements, url_without_params);
 	}
@@ -410,6 +413,7 @@ public class Crawler {
 			path.setPathKeys(path_keys);
 			path.setPathObjects(path_objects_explored);
 		}
+		Timing.pauseThread(1000);
 	}
 
 	/**

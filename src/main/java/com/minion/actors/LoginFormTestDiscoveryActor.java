@@ -102,7 +102,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							//  clone test
 							//  get username element and add it to path
 							List<ElementState> elements = form.getFormFields();
-							System.err.println("form ELEMENTS SIZE  :: " + form.getFormFields());
 							//find username input element
 							ElementState username_elem = findInputElementByAttribute(elements, "username");
 							
@@ -164,7 +163,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							exploratory_path.addToPathKeys(submit_login.getKey());
 							log.warning("performing path exploratory crawl");
 							PageState result_page = crawler.performPathExploratoryCrawl(domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
-
+							result_page.setLoginRequired(true);
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
 							System.err.println("result page host :: " + new URL(result_page.getUrl()).getHost());
 							System.err.println("domain url :: " + message.getDomain().getUrl());
@@ -226,7 +225,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		log.warning("shortest test :: " + shortest_test.getPathKeys().size());
 		//add test path to path objects and keys
 		List<PathObject> test_path_objects = test_service.getPathObjects(shortest_test.getKey());
-		log.warning("path objects size ::   "+test_path_objects);
+		log.warning("path objects size ::   "+test_path_objects.size());
 		for(String key : shortest_test.getPathKeys()){
 			for(PathObject obj : test_path_objects){
 				if(key.equals(obj.getKey())){

@@ -445,11 +445,12 @@ public class Crawler {
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 
-		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
+		List<PathObject> path_objects_explored = new ArrayList<>();
 
 		String last_url = null;
 		int current_idx = 0;
 		for(PathObject current_obj: ordered_path_objects){
+			path_objects_explored.add(current_obj);
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
@@ -640,7 +641,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 1000);
+		}while(result_page == null && tries < 100000);
 		
 		log.warn("done crawling exploratory path");
 		return result_page;
@@ -728,7 +729,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 10000);
+		}while(result_page == null && tries < 100000);
 		return result_page;
 	}
 	
@@ -773,7 +774,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 10000);
+		}while(result_page == null && tries < 100000);
 		return result_page;
 	}
 	

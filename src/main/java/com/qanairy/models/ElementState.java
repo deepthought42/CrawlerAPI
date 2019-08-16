@@ -54,6 +54,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	@Relationship(type = "HAS")
 	private Set<Rule> rules = new HashSet<>();
+
+	private String template;
 			
 	public ElementState(){}
 	
@@ -96,6 +98,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setHeight(height);
 		setInnerHtml(inner_html);
 		setCssSelector("");
+		setTemplate("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
@@ -136,6 +139,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setHeight(height);
 		setInnerHtml(inner_html);
 		setCssSelector("");
+		setTemplate("");
 		setRules(new HashSet<>());
 		setKey(generateKey());
 	}
@@ -437,5 +441,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	public String getOuterHtml() {
 		return outer_html;
+	}
+
+	public String getTemplate(){
+		return this.template;
+	}
+	
+	public void setTemplate(String template) {
+		this.template = template;
 	}
 }

@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -21,6 +22,7 @@ import com.qanairy.models.Action;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.Template;
 import com.qanairy.services.BrowserService;
 
 public class BrowserServiceTest {
@@ -78,47 +80,77 @@ public class BrowserServiceTest {
 		String html = "<html>"
 						  +"<body>"
 						    +"<div>"
-						    +"<div id='item1' class='product__card'>"
+						    +"<div id=\"item1345\" class=\"product__card\">"
 						        +"<div id='fhaiuhreoaf120945' class='product_img'>"
 						          +"<img src='noImg.jpg' />"
 						        +"</div>"
+						        +"<div>"
+					            	+" fadsf fadsfdsfa fadsfa"
+								+"</div>"
 						        +"<div class='functions'>"
 						          +"<i class='fa fa-pencil'></i>"
 						          +"<i  class='fa fa-times'></i>"
 						        +"</div>"
+						        +"<a href='https://qanairy.com/pricing.html' />"
 						      +"</div>"
 						      +"<div id='item2' class='product__card'>"
 						        +"<div id='fdyairehwafo121422' class='product_img'>"
 						          +"<img src='noImg.jpg' />"
 						        +"</div>"
+						        +"<div>"
+					            	+" this is lklj holmk"
+								+"</div>"
 						        +"<div class='functions'>"
 						          +"<i class='fa fa-pencil'></i>"
 						          +"<i  class='fa fa-times'></i>"
 						        +"</div>"
+						        +"<a href='https://qanairy.com/pricing.html' />"
 						      +"</div>"
 						      +"<div id='item3' class='product__card'>"
-						        +"<div id='fdkfdfhaewur129335' class='product_img'>"
-						          +"<img src='noImg.jpg' />"
+						        +"<div id='fdkfdfhaewur1232429335' class='product_img'>"
+						          +"<img src='http://qanairy.com/quality/noImg3.jpg' />"
 						        +"</div>"
+						        +"<div>"
+					            	+" this is a testafda"
+								+"</div>"
 						        +"<div class='functions'>"
 						          +"<i class='fa fa-pencil'></i>"
 						          +"<i  class='fa fa-times'></i>"
 						        +"</div>"
+						        +"<a href='https://qanairy.com/pricing.html' />"
 						      +"</div>"
 						      +"<div id='item4' class='product__card'>"
 						        +"<div id='fsaf2313' class='product_img'>"
-						          +"<img src='noImg.jpg' />"
+						          +"<img src='http://qanairy.com/noImg2.jpg' />"
 					            +"</div>"
+						        +"<div>"
+					            	+" fdbfsud a testafda"
+								+"</div>"
 						        +"<div class='functions'>"
 						          +"<i class='fa fa-pencil'></i>"
 						          +"<i  class='fa fa-times'></i>"
 						        +"</div>"
+						        +"<a href='https://qanairy.com/about.html' />"
 						      +"</div>"
-						    +"<div id='item' class='product__card'>"
+						      +"<div id='item5' class='product__card'>"
+						        +"<div id='fsaf5672313' class='product_img'>"
+						          +"<img src='http://qanairy.com/noImg.jpg' />"
+					            +"</div>"
+					            +"<div>"
+					            	+" shut up and get on with it"
+								+"</div>"
+						        +"<div class='functions'>"
+						          +"<i class='fa fa-pencil'></i>"
+						          +"<i  class='fa fa-times'></i>"
+						        +"</div>"
+						        +"<a href='https://qanairy.com/features.html' />"
+						      +"</div>"
+						      +"<div id='item' class='product__card'>"
 						        +"<div class='functions'>"
 						          +"<i  class='fa fa-times'></i>"
 						        +"</div>"
-						      +"</div>"						      
+						      +"</div>"
+					        +"</div>"
 					      +"</body>"
 						+"</html>";
 
@@ -126,14 +158,20 @@ public class BrowserServiceTest {
 		
 		BrowserService browser_service = new BrowserService();
 		
-		List<ElementState> list_elements_list = browser_service.findRepeatedElements(element_list);
-		list_elements_list = browser_service.reduceRepeatedElementsListToOnlyParents(list_elements_list);
-		System.err.println("list elements list size :: "+list_elements_list.size());
 		
-		for(ElementState elem : list_elements_list){
-			System.err.println(elem.getOuterHtml());
+		Map<String, Template> template_elements = browser_service.findTemplates(element_list);
+		template_elements = browser_service.reduceTemplatesToParents(template_elements);
+		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
+		
+		System.err.println("list elements list size :: "+template_elements.size());
+		
+
+		for(Template template : template_elements.values()){
+			System.err.println("TEMPLATE :: " + template.getTemplate());
+			for(ElementState elem : template.getElements()){
+				System.err.println("ELEMENT :: " + elem.getOuterHtml());
+			}
 			System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 		}
-		assertTrue(4 == list_elements_list.size());
-	}
+		assertTrue(1 == template_elements.size());	}
 }

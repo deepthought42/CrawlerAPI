@@ -62,8 +62,8 @@ public class PageState implements Persistable, PathObject {
 	private List<String> animated_image_urls;
 	private List<String> animated_image_checksums;
 
-	@Relationship(type = "LIST_ITEM")
-	private List<ElementState> list_elements;
+	@Relationship(type = "HAS")
+	private List<Template> templates;
 
 	@Relationship(type = "HAS")
 	private List<Screenshot> screenshots;
@@ -81,7 +81,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshotChecksum(new ArrayList<String>());
 		setAnimatedImageUrls(new ArrayList<>());
 		setAnimatedImageChecksums(new ArrayList<>());
-		setListElements(new ArrayList<ElementState>());
+		setTemplates(new ArrayList<Template>());
 	}
 	/**
 	 * Creates a page instance that is meant to contain information about a
@@ -119,8 +119,8 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
-    setLoginRequired(false);
-    setListElements(new ArrayList<ElementState>());
+	    setLoginRequired(false);
+	    setTemplates(new ArrayList<Template>());
 		setKey(generateKey());
 	}
 
@@ -157,7 +157,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
-		setListElements(new ArrayList<ElementState>());
+		setTemplates(new ArrayList<Template>());
     setLoginRequired(false);
 		setKey(generateKey());
 	}
@@ -202,7 +202,7 @@ public class PageState implements Persistable, PathObject {
 		setScreenshots(new ArrayList<Screenshot>());
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
-		setListElements(new ArrayList<ElementState>());
+		setTemplates(new ArrayList<Template>());
     setLoginRequired(false);
 		setKey(generateKey());
 	}
@@ -631,12 +631,12 @@ public class PageState implements Persistable, PathObject {
 		}
 	}
 
-	public List<ElementState> getListElements() {
-		return list_elements;
+	public List<Template> getTemplates() {
+		return templates;
 	}
 
-	public void setListElements(List<ElementState> list_elements) {
-		this.list_elements = list_elements;
+	public void setTemplates(List<Template> templates) {
+		this.templates = templates;
   }
 
   public boolean isLoginRequired() {

@@ -51,10 +51,12 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Screenshot;
+import com.qanairy.models.Template;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
+import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.BrowserUtils;
 
 import us.codecraft.xsoup.Xsoup;
@@ -121,44 +123,36 @@ public class BrowserService {
 		boolean error_occurred = false;
 		Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
 		Map<String, ElementState> element_xpaths = new HashMap<>();
-		boolean elements_built_successfully = false;
 
 		Browser browser = null;
 		boolean is_browser_closed = true;
 		Map<String, ElementState> visible_element_map = new HashMap<>();
 		List<ElementState> visible_elements = new ArrayList<>();
-		List<ElementState> list_elements_list = new ArrayList<>();
+		Map<String, Template> template_elements = new HashMap<>();
+		List<ElementState> element_list = new ArrayList<>();
 		
 		do{
 			try{
 				error_occurred = false;
-				if(is_browser_closed){
-					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-					browser.navigateTo(url);
-					is_browser_closed = false;
-					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
-					BrowserUtils.getLoadingAnimation(browser, host);
-				}
-					
-				if(!elements_built_successfully){
-					String source = browser.getDriver().getPageSource();
-					List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);					
-					list_elements_list = browser_service.findRepeatedElements(all_elements_list);
-					list_elements_list = browser_service.reduceRepeatedElementsListToOnlyParents(list_elements_list);
-					
-					//element_xpath_list = getXpathsUsingJSoup(browser.getDriver().getPageSource());
-					List<ElementState> element_list = BrowserService.getElementsUsingJSoup(source);
-
-					visible_elements = getVisibleElements(browser, visible_element_map, element_list);
-				}
+				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(url);
+				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
+				BrowserUtils.getLoadingAnimation(browser, host);
+				
+				String source = browser.getDriver().getPageSource();
+				browser.close();
+				List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);					
+				template_elements = browser_service.findTemplates(all_elements_list);
+				template_elements = browser_service.reduceTemplatesToParents(template_elements);
+				template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
+				//element_xpath_list = getXpathsUsingJSoup(browser.getDriver().getPageSource());
+				element_list = BrowserService.getElementsUsingJSoup(source);
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				error_occurred = true;
-				is_browser_closed = true;
 			} catch (GridException e) {
 				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
 				error_occurred = true;
-				is_browser_closed = true;
 			}
 			catch (NoSuchElementException e){
 				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
@@ -168,11 +162,46 @@ public class BrowserService {
 				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
 				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
 				error_occurred = true;
-				is_browser_closed = true;
 			} catch(Exception e){
 				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
 				error_occurred = true;
+			}
+			finally{
+				if(browser != null && is_browser_closed){
+					browser.close();
+				}
+			}
+		}while(error_occurred);
+		
+		log.warn("done extracting list items. Now retrieving visible elements");
+		do{
+			try{
+				error_occurred = false;
+				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(url);
+				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
+				BrowserUtils.getLoadingAnimation(browser, host);
+
+				visible_elements = getVisibleElements(browser, visible_element_map, element_list);
+			}catch(NullPointerException e){
+				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
+				error_occurred = true;
 				is_browser_closed = true;
+			} catch (GridException e) {
+				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
+				error_occurred = true;
+			}
+			catch (NoSuchElementException e){
+				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
+				error_occurred = true;
+			}
+			catch (WebDriverException e) {
+				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
+				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				error_occurred = true;
+			} catch(Exception e){
+				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
+				error_occurred = true;
 			}
 			finally{
 				if(browser != null && is_browser_closed){
@@ -188,7 +217,6 @@ public class BrowserService {
 		}
 
 		// BUILD ALL PAGE STATES
-		elements_built_successfully = true;
 		int iter_idx=0;
 		boolean err = true;
 		
@@ -222,7 +250,8 @@ public class BrowserService {
 				log.warn("building page with # of elements :: " +all_visible_elements.size());
 				
 				PageState page_state = buildPage(browser, all_visible_elements, url_without_params);
-				page_state.setListElements(list_elements_list);
+				
+				page_state.setTemplates(new ArrayList<>(template_elements.values()));
 				
 				for(ElementState element : page_state.getElements()){
 					element_hash.put(element.getXpath(), element);
@@ -271,7 +300,7 @@ public class BrowserService {
 		for(Element element: web_elements){
 			int child_node_cnt = element.children().size();			
 			String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
-			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element)){
+			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !"iframe".equals(element.tagName())){
 				elements.add(xpath);
 			}
 		}
@@ -287,7 +316,7 @@ public class BrowserService {
 		for(Element element: web_elements){
 			int child_node_cnt = element.children().size();			
 			
-			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element)){
+			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !"iframe".equals(element.tagName())){
 				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
 				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
 				ElementState element_state = new ElementState();
@@ -307,10 +336,8 @@ public class BrowserService {
 		List<ElementState> elements = new ArrayList<>();
 		Document html_doc = Jsoup.parse(pageSource);
 		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
-		for(Element element: web_elements){
-			int child_node_cnt = element.children().size();			
-			
-			if(!isStructureTag(element.tagName())){
+		for(Element element: web_elements){			
+			if(!isStructureTag(element.tagName()) && !"iframe".equals(element.tagName())){
 				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
 				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
 				ElementState element_state = new ElementState();
@@ -318,6 +345,7 @@ public class BrowserService {
 				element_state.setAttributes(attributes);
 				element_state.setOuterHtml(element.outerHtml());
 				element_state.setInnerHtml(element.html());
+				element_state.setTemplate(extractTemplate(element));
 				elements.add(element_state);
 			}
 		}
@@ -1191,7 +1219,7 @@ public class BrowserService {
 	    	try{
 	    		parent = last_element.parent();
 	    		
-	    		if(!isStructureTag(parent.tagName())){
+	    		if(!isStructureTag(parent.tagName()) && !"iframe".equals(element.tagName())){
 		    		if( Xsoup.compile("//"+parent.tagName() + xpath).evaluate(doc).getElements().isEmpty()){
 		    			break;
 		    		}
@@ -1659,58 +1687,196 @@ public class BrowserService {
 		return elem_copy;
 	}
 	
-	public List<ElementState> findRepeatedElements(List<ElementState> element_list){
+	
+	public Map<String, Template> findTemplates(List<ElementState> element_list){
 		//create a map for the various duplicate elements
-		
-		List<ElementState> list_elements = new ArrayList<>();
+		Map<Integer, ElementState> reviewed_element_map = new HashMap<>();
+		Map<String, Template> element_templates = new HashMap<>();
 		
 		//iterate over all elements in list
 		for(int idx1 = 0; idx1 < element_list.size()-1; idx1++){
-			
+			if(reviewed_element_map.containsKey(idx1)){
+				continue;
+			}
 			boolean at_least_one_match = false;
 			//for each element iterate over all elements in list
 			for(int idx2 = idx1+1; idx2 < element_list.size(); idx2++){
-				System.err.println("*****************************************************************");
+				if(reviewed_element_map.containsKey(idx2)){
+					continue;
+				}
+				if(element_list.get(idx1).getTemplate().equals(element_list.get(idx2).getTemplate())){
+					String template_str = element_list.get(idx2).getTemplate();
+					if(!element_templates.containsKey(template_str)){
+						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
+					}
+					element_templates.get(template_str).getElements().add(element_list.get(idx2));
+					continue;
+				}
 
+				//double distance = StringUtils.getJaroWinklerDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
 				//calculate distance between loop1 value and loop2 value
-				int distance = StringUtils.getLevenshteinDistance(element_list.get(idx1).getOuterHtml(), element_list.get(idx2).getOuterHtml());
+				double distance = StringUtils.getLevenshteinDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
 				//if value is within threshold then add loop2 value to map for loop1 value xpath
-				double similarity = distance / (((double)(element_list.get(idx1).getOuterHtml().length() + element_list.get(idx2).getOuterHtml().length())/2.0));
+				double avg_string_size = ((element_list.get(idx1).getTemplate().length() + element_list.get(idx2).getTemplate().length())/2.0);
+				double similarity = distance / avg_string_size;
+				//double sigmoid = new Sigmoid(0,1).value(similarity);
 				
 				//calculate distance of children if within 20%				
-				if(distance == 0 || similarity < 0.10){
-					list_elements.add(element_list.get(idx2));
+				if(distance == 0.0 || similarity < 0.025){
+					System.err.println("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
+					String template_str = element_list.get(idx1).getTemplate();
+					if(!element_templates.containsKey(template_str)){
+						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
+					}
+					element_templates.get(template_str).getElements().add(element_list.get(idx2));
+					reviewed_element_map.put(idx2, element_list.get(idx2));
 					at_least_one_match = true;
 				}
 			}
 			if(at_least_one_match){
-				list_elements.add(element_list.get(idx1));
+				String template_str = element_list.get(idx1).getTemplate();
+				element_templates.get(template_str).getElements().add(element_list.get(idx1));
 			}
 		}
 		
-		return list_elements;
+		return element_templates;
 	}
 
-	public List<ElementState> reduceRepeatedElementsListToOnlyParents(List<ElementState> list_elements_list) {
-		Map<String, ElementState> element_map = new HashMap<>();
+	@Deprecated
+	public Map<String, List<ElementState>> findRepeatedElements(List<ElementState> element_list){
+		//create a map for the various duplicate elements
+		Map<Integer, ElementState> reviewed_element_map = new HashMap<>();
+		Map<String, List<ElementState>> element_templates = new HashMap<>();
+		
+		//iterate over all elements in list
+		for(int idx1 = 0; idx1 < element_list.size()-1; idx1++){
+			if(reviewed_element_map.containsKey(idx1)){
+				continue;
+			}
+			boolean at_least_one_match = false;
+			//for each element iterate over all elements in list
+			for(int idx2 = idx1+1; idx2 < element_list.size(); idx2++){
+				if(reviewed_element_map.containsKey(idx2)){
+					continue;
+				}
+				if(element_list.get(idx1).getTemplate().equals(element_list.get(idx2).getTemplate())){
+					String template = element_list.get(idx1).getTemplate();
+					if(!element_templates.containsKey(template)){
+						element_templates.put(template, new ArrayList<>());
+					}
+					element_templates.get(template).add(element_list.get(idx2));
+				}
+
+				//double distance = StringUtils.getJaroWinklerDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
+				//calculate distance between loop1 value and loop2 value
+				double distance = StringUtils.getLevenshteinDistance(element_list.get(idx1).getTemplate(), element_list.get(idx2).getTemplate());
+				//if value is within threshold then add loop2 value to map for loop1 value xpath
+				double avg_string_size = ((element_list.get(idx1).getTemplate().length() + element_list.get(idx2).getTemplate().length())/2.0);
+				double similarity = distance / avg_string_size;
+				//double sigmoid = new Sigmoid(0,1).value(similarity);
+				
+				//calculate distance of children if within 20%				
+				if(distance == 0.0 || similarity < 0.05){
+					System.err.println("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
+					String template = element_list.get(idx1).getTemplate();
+					if(!element_templates.containsKey(template)){
+						element_templates.put(template, new ArrayList<>());
+					}
+					element_templates.get(template).add(element_list.get(idx2));
+					reviewed_element_map.put(idx2, element_list.get(idx2));
+					at_least_one_match = true;
+				}
+			}
+			if(at_least_one_match){
+				String template = element_list.get(idx1).getTemplate();
+				element_templates.get(template).add(element_list.get(idx1));			}
+		}
+		
+		return element_templates;
+	}
+
+	/**
+	 * Extracts template for element by usin outter tml and removing inner text
+	 * @param element {@link Element}
+	 * 
+	 * @return templated version of element html
+	 */
+	public static String extractTemplate(Element element){
+		String template = element.outerHtml();
+		String inner_text = element.text();
+		String[] text_atoms = inner_text.split(" ");
+		
+		for(String word : text_atoms){
+			template = template.replaceAll("\\b"+word+"\\b", "");
+		}
+
+		//remove all id attributes
+		template = template.replaceAll("\\bid=\"[a-zA-Z0-9]*\"", "");
+		template = template.replaceAll("\\bhref=\".*\"", "");
+		template = template.replaceAll("\\bsrc=\".*\"", "");
+		template = template.replaceAll("\\s", "");
+		
+		return template;
+	}
+
+	
+	@Deprecated
+	public Map<String, Template> reduceRepeatedElementsListToOnlyParents(List<ElementState> list_elements_list) {
+		Map<String, Template> element_map = new HashMap<>();
 		
 		//check if element is a child of another element in the list. if yes then don't add it to the list
 		for(int idx1=0; idx1 < list_elements_list.size(); idx1++){
 			boolean is_child = false;
 			for(int idx2=0; idx2 < list_elements_list.size(); idx2++){
-				if(idx1 != idx2 && list_elements_list.get(idx2).getInnerHtml().contains(list_elements_list.get(idx1).getOuterHtml())){
+				if(idx1 != idx2 && list_elements_list.get(idx2).getTemplate().contains(list_elements_list.get(idx1).getTemplate()) 
+						&& !list_elements_list.get(idx2).getTemplate().equals(list_elements_list.get(idx1).getTemplate())){
 					is_child = true;
 					break;
 				}
 			}
 			
 			if(!is_child){
-				element_map.put(list_elements_list.get(idx1).getOuterHtml(), list_elements_list.get(idx1));
+				element_map.get(list_elements_list.get(idx1).getTemplate()).getElements().add(list_elements_list.get(idx1));
 			}
 		}
 		
 		//remove duplicates
+		log.warn("total elements left after reduction :: " + element_map.values().size());
+		return element_map;
+	}
+	
+	public Map<String, Template> reduceTemplatesToParents(Map<String, Template> list_elements_list) {
+		Map<String, Template> element_map = new HashMap<>();
+		List<Template> template_list = new ArrayList<>(list_elements_list.values());
+		//check if element is a child of another element in the list. if yes then don't add it to the list
+		for(int idx1=0; idx1 < template_list.size(); idx1++){
+			boolean is_child = false;
+			for(int idx2=0; idx2 < template_list.size(); idx2++){
+				if(idx1 != idx2 && template_list.get(idx2).getTemplate().contains(template_list.get(idx1).getTemplate())){
+					is_child = true;
+					break;
+				}
+			}
+			
+			if(!is_child){
+				element_map.put(template_list.get(idx1).getTemplate(), template_list.get(idx1));
+			}
+		}
 		
-		return new ArrayList<>(element_map.values());
+		//remove duplicates
+		log.warn("total elements left after reduction :: " + element_map.values().size());
+		return element_map;
+	}
+
+	public Map<String, Template> reduceTemplateElementsToUnique(Map<String, Template> template_elements) {
+		
+		Map<String, ElementState> element_map = new HashMap<>();
+		for(Template template : template_elements.values()){
+			for(ElementState element: template.getElements()){
+				element_map.put(element.getOuterHtml(), element);
+			}
+			template.setElements(new ArrayList<>(element_map.values()));
+		}
+		return template_elements;
 	}
 }

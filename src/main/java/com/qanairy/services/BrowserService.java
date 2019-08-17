@@ -84,7 +84,7 @@ public class BrowserService {
 	@Autowired
 	private Crawler crawler;
 	
-	private static String[] valid_xpath_attributes = {"class", "id", "name", "title", "src", "href"};
+	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};
 
 	/**
 	 * retrieves a new browser connection
@@ -1701,6 +1701,16 @@ public class BrowserService {
 			boolean at_least_one_match = false;
 			//for each element iterate over all elements in list
 			for(int idx2 = idx1+1; idx2 < element_list.size(); idx2++){
+				
+				//get largest string length
+				int max_length = element_list.get(idx1).getTemplate().length();
+				if(element_list.get(idx2).getTemplate().length() > max_length){
+					max_length = element_list.get(idx2).getTemplate().length();
+				}
+				double length_similarity = Math.abs(element_list.get(idx1).getTemplate().length() - element_list.get(idx2).getTemplate().length()) / max_length;
+				if(length_similarity > 0.05){
+					continue;
+				}
 				if(reviewed_element_map.containsKey(idx2)){
 					continue;
 				}

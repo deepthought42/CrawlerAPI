@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.kms.model.GetKeyPolicyRequest;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.repository.ElementStateRepository;
@@ -22,6 +23,9 @@ public class ElementStateService {
 
 	@Autowired
 	private AttributeService attribute_service;
+
+	@Autowired
+	private ElementStateService element_state_service;
 
 	@Autowired
 	private RuleService rule_service;
@@ -78,10 +82,17 @@ public class ElementStateService {
 			}
 		}
 		else{
+			log.warn("updateing attributes");
 			element_record.setScreenshot(element.getScreenshot());
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 			element_record.setXpath(element.getXpath());
+			log.warn("element record key :: " + element_record.getKey());
+			Set<Rule> rules = element_state_service.getRules(element_record);
+			element_record.setRules(rules);
+			
+			log.warn("element record rules : " + rules.size());
 			for(Rule rule : element.getRules()){
+				log.warn("adding rule :::  " +rule.getKey());
 				element_record.addRule(rule_service.save(rule));
 			}
 
@@ -91,24 +102,37 @@ public class ElementStateService {
 			List<Rule> rule_removal_list = new ArrayList<>();
 			for(Rule rule : element_record.getRules()){
 				boolean exists = false;
+				log.warn("######################################################################");
+				log.warn("Element record Rule :: " +rule.getType() );
+				log.warn("######################################################################");
 				for(Rule elem_rule : element.getRules()){
-					if(elem_rule.getType().equals(rule.getType())){
+					log.warn("element rule type :: " + elem_rule.getType());
+					log.warn("element record rule type :: " + rule.getType());
+					
+					if(elem_rule.getType() == rule.getType()){
+						log.warn("element rule matches record rule");
 						exists = true;
 						break;
 					}
 				}
 				
 				if(!exists){
+					log.warn("Adding rule to removal list :: " + rule.getKey());
 					rule_removal_list.add(rule);
 				}
 			}
 			
 			//remove removed rules
 			for(Rule rule : rule_removal_list){
+				log.warn("removing rule :: " +rule.getKey());
 				element_repo.removeRule(element.getKey(), rule.getKey());
 			}
 		}
 		return element_record;
+	}
+
+	private Set<Rule> getRules(ElementState element) {
+		return element_repo.getRules(element.getKey());
 	}
 
 	public ElementState findByKey(String key){

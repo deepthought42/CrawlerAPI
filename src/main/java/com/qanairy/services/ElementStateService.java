@@ -119,7 +119,7 @@ public class ElementStateService {
 		return element_repo.findByTextAndName(text, name);
 	}
 
-	public void removeElementState(ElementState element, String rule_key){
+	public void removeRule(ElementState element, String rule_key){
 		element_repo.removeRule(element.getKey(), rule_key);
 	}
 	

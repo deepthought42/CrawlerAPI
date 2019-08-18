@@ -36,6 +36,7 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.Sanitizer;
 import org.springframework.stereotype.Component;
 
 import com.minion.aws.UploadObjectSingleOperation;
@@ -505,7 +506,7 @@ public class BrowserService {
 	public PageState buildPage(Browser browser) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 		
-		String browser_url = browser.getDriver().getCurrentUrl();
+		String browser_url = BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl());
 		URL page_url = new URL(browser_url);
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 		
@@ -749,7 +750,7 @@ public class BrowserService {
 			int count = 0;
 			do{
 				try{
-					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
+					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()))).getHost(), checksum, browser.getBrowserName()+"-element");
 				}catch(IOException e){}
 				count++;
 			}while(err && count < 100);
@@ -810,7 +811,7 @@ public class BrowserService {
 			do{
 				err = false;
 				try{
-					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
+					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()))).getHost(), checksum, browser.getBrowserName()+"-element");
 				}catch(IOException e){
 					err = true;
 				}
@@ -1332,7 +1333,7 @@ public class BrowserService {
 					viewport.flush();
 					String screenshot= null;
 					try {
-						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, input_tag.getKey());
+						screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()))).getHost(), checksum, input_tag.getKey());
 					} catch (Exception e) {
 						log.warn("Error retrieving screenshot -- "+e.getLocalizedMessage());
 					}
@@ -1517,7 +1518,7 @@ public class BrowserService {
 
 			img = Browser.getElementScreenshot(elem, browser.getViewportScreenshot(), browser);
 			checksum = PageState.getFileChecksum(img);
-			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
+			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()))).getHost(), checksum, browser.getBrowserName()+"-element");
 		}
 		catch(RasterFormatException e){
 			log.warn("Raster Format Exception (retrieveAndUploadBrowserScreenshot)  2: "+e.getMessage());

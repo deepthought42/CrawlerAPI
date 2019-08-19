@@ -78,7 +78,7 @@ public class BrowserService {
 	@Autowired
 	private Crawler crawler;
 	
-	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};
+	private static String[] valid_xpath_attributes = {"class", "name", "title"};
 
 	/**
 	 * retrieves a new browser connection

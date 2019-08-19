@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.minion.api.exception.RuleValueRequiredException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.ElementState;
-import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.ElementStateService;

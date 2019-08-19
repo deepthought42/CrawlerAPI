@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.amazonaws.services.kms.model.GetKeyPolicyRequest;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.repository.ElementStateRepository;
@@ -19,6 +18,7 @@ import com.qanairy.models.rules.Rule;
 
 @Service
 public class ElementStateService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
 
 	@Autowired

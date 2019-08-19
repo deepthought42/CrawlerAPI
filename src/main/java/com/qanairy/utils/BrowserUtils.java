@@ -217,7 +217,7 @@ public class BrowserUtils {
 		}
 		
 		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
-			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
+			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().	));
 		}
 
 		return null;
@@ -230,7 +230,7 @@ public class BrowserUtils {
 			domain = domain.substring(0, param_index);
 		}
 
-		domain.replace("%2e", ".");
+		domain = domain.replace("%2e", ".");
 		URL new_url = new URL(domain);
 
 		//check if host is subdomain

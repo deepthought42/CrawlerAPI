@@ -217,7 +217,7 @@ public class BrowserUtils {
 		}
 		
 		if(!transition_detected && new_checksum.equals(last_checksum) && image_checksums.size()>2){
-			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().	));
+			return new PageLoadAnimation(image_urls, image_checksums, BrowserUtils.sanitizeUrl(browser.getDriver().getCurrentUrl()));
 		}
 
 		return null;

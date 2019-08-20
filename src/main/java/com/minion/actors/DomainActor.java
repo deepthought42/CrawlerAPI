@@ -101,7 +101,7 @@ public class DomainActor extends AbstractActor{
 					Test test_record = test_service.save(test);
 					if(domain == null){
 						String host = test_msg.getDomain().getUrl();
-						log.warn("Host :: " + host);
+							log.warn("Host :: " + host);
 						domain = domain_service.findByHost(host);
 						log.warn("loaded domain :: " + domain);
 					}
@@ -112,7 +112,6 @@ public class DomainActor extends AbstractActor{
 						}
 					}
 					
-					log.warn("Domain :: " + domain);
 					log.warn("test result in domain actor   :   " + test.getResult());
 					domain.addPageState(page_state_service.save(test.getResult()));	
 					domain = domain_service.save(domain);

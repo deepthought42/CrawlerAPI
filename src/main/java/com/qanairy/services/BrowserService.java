@@ -1711,9 +1711,6 @@ public class BrowserService {
 				if(length_similarity > 0.05){
 					continue;
 				}
-				if(reviewed_element_map.containsKey(idx2)){
-					continue;
-				}
 				if(element_list.get(idx1).getTemplate().equals(element_list.get(idx2).getTemplate())){
 					String template_str = element_list.get(idx2).getTemplate();
 					if(!element_templates.containsKey(template_str)){
@@ -1739,7 +1736,6 @@ public class BrowserService {
 						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));
 					}
 					element_templates.get(template_str).getElements().add(element_list.get(idx2));
-					reviewed_element_map.put(idx2, element_list.get(idx2));
 					at_least_one_match = true;
 				}
 			}

@@ -126,4 +126,14 @@ public class DomainService {
 	public Set<PageLoadAnimation> getAnimations(String host) {
 		return domain_repo.getAnimations(host);
 	}
+
+	public Domain addPageState(String host, PageState page_state) {
+		assert host != null;
+		assert !host.isEmpty();
+		assert page_state != null;
+		
+		Domain domain = domain_repo.findByHost(host);
+		domain.addPageState(page_state);
+		return domain_repo.save(domain);
+	}
 }

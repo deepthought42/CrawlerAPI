@@ -13,9 +13,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.junit.Test;
 import org.openqa.selenium.Dimension;
 
@@ -26,6 +23,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Template;
+import com.qanairy.models.enums.TemplateType;
 import com.qanairy.services.BrowserService;
 
 public class BrowserServiceTest {
@@ -178,7 +176,7 @@ public class BrowserServiceTest {
 		}
 		assertTrue(1 == template_elements.size());	
 	}
-	
+			
 	@Test
 	public void testExpandAllTypeListDetectedCorrectly(){
 		String html = "<html>"
@@ -220,30 +218,72 @@ public class BrowserServiceTest {
 						+"</html>";
 
 		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
-
+		System.err.println("element lsit size :: "+element_list.size());
 		BrowserService browser_service = new BrowserService();
-		
-		
 		Map<String, Template> template_elements = browser_service.findTemplates(element_list);
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 		
-		System.err.println("list elements list size :: "+template_elements.size());
-		
+		assertTrue(1 == template_elements.size());
+	}
 
-		for(String template : template_elements.keySet()){
-			System.err.println("TEMPLATE :: " + template_elements.get(template).getElements().get(0).getInnerHtml());
-			Document html_doc = Jsoup.parseBodyFragment(template_elements.get(template).getElements().get(0).getInnerHtml());
-			List<Element> leaf_elements = html_doc.select("*:not(:has(*))");
-			System.err.println("leaf count :: " + leaf_elements.size());
-			List<Element> elem_list = html_doc.body().getAllElements();
-			System.err.println("All Elements :: " + elem_list.size());
-			System.err.println("RATIO  ::   "+(leaf_elements.size()/(double)elem_list.size()));
-			
-			System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-		}
+	@Test
+	public void templateAtomClassificationTest(){
+		String html = "<li class='nav-item'>"
+				        +"  <a class='nav-link' href='index.html#steps'>How It Works</a>"
+				        +"</li>";
 		
-		assertTrue(false);	
+		BrowserService browser_service = new BrowserService();
+		TemplateType type = browser_service.classifyTemplate(html);
+		System.err.println("Template type :: "+type);
+	
+		assertTrue(TemplateType.ATOM == type);
+	}
+
+	@Test
+	public void templateMoleculeClassificationTest(){
+		String html = "<li class='nav-item1'>"
+						+ "<li class='nav-item'>"
+				        + "  <a class='nav-link' href='index.html#steps'>link 1</a>"
+				        + "</li>"
+				        + "<li class='nav-item'>"
+				        + "  <a class='nav-link' href='index.html#steps'>How It Works</a>"
+				        + "</li>"
+				      +"</li>";
+		
+		BrowserService browser_service = new BrowserService();
+		TemplateType type = browser_service.classifyTemplate(html);
+		System.err.println("Template type :: "+type);
+	
+		assertTrue(TemplateType.MOLECULE == type);
+	}
+	
+	@Test
+	public void templateOrganismClassificationTest(){
+		String html = "<div class='nav-item1'>"
+						+ "<div class='nav-item'>"
+				        + "  <a class='nav-link' href='index.html#steps'>link 1</a>"
+				        + "</div>"
+				        + "<div class='nav-item'>"
+				        + "  <a class='nav-link' href='index.html#steps'>How It Works</a>"
+				        + "</div>"
+				        + "<div class='nav-item2'>"
+							+ "<div class='nav-item21'>"
+					        + "  <a class='nav-link' href='index.html#steps'>link 1</a>"
+					        + "</div>"
+					        + "<div class='nav-item21'>"
+					        + "  <a class='nav-link' href='index.html#steps'>How It Works</a>"
+					        + "</div>"
+					      +"</div>"
+				      +"</div>";
+		
+		System.err.println("browser service :: ");
+		BrowserService browser_service = new BrowserService();
+		System.err.println("classifying template");
+		TemplateType type = browser_service.classifyTemplate(html);
+		System.err.println("Template type :: "+type);
+	
+		assertTrue(TemplateType.ORGANISM == type);
 	}
 	
 	@Test
@@ -598,32 +638,12 @@ public class BrowserServiceTest {
 					      +"</body>"
 						+"</html>";
 
-		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
-		
 		BrowserService browser_service = new BrowserService();
-		
-		
+		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
 		Map<String, Template> template_elements = browser_service.findTemplates(element_list);
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
-		
-		System.err.println("list elements list size :: "+template_elements.size());
-		
 
-		for(String template : template_elements.keySet()){
-			System.err.println("TEMPLATE :: " + template_elements.get(template).getElements().get(0).getInnerHtml());
-			Document html_doc = Jsoup.parseBodyFragment(template_elements.get(template).getElements().get(0).getInnerHtml());
-			List<Element> leaf_elements = html_doc.select("*:not(:has(*))");
-			System.err.println("leaf count :: " + leaf_elements.size());
-			List<Element> elem_list = html_doc.body().getAllElements();
-			System.err.println("All Elements :: " + elem_list.size());
-			System.err.println("RATIO  ::   "+(leaf_elements.size()/(double)elem_list.size()));
-			for(Element elem : elem_list){
-			//	System.err.println("ELEMENT :: " + elem.outerHtml());
-			}
-			System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-		}
-		
-		assertTrue(false);	
+		assertTrue(4 == template_elements.size());	
 	}
 }

@@ -3,7 +3,7 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum TemplateType {
-	NAVIGATION("navigation"), CARD("card"), UNKNOWN("unknown");
+	UNKNOWN("unknown"), ATOM("atom"), MOLECULE("molecule"), ORGANISM("organism"), TEMPLATE("template");
 	
 	private String shortName;
 

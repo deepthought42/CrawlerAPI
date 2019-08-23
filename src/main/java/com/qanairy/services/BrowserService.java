@@ -1700,8 +1700,10 @@ public class BrowserService {
 			}
 			boolean at_least_one_match = false;
 			//for each element iterate over all elements in list
-			for(int idx2 = idx1+1; idx2 < element_list.size(); idx2++){
-				
+			for(int idx2 = 0; idx2 < element_list.size(); idx2++){
+				if(idx1 == idx2){
+					continue;
+				}
 				//get largest string length
 				int max_length = element_list.get(idx1).getTemplate().length();
 				if(element_list.get(idx2).getTemplate().length() > max_length){
@@ -1812,12 +1814,15 @@ public class BrowserService {
 		String inner_text = element.text();
 		String[] text_atoms = inner_text.split(" ");
 		
+		template.replaceAll("<", " <");
+		template.replaceAll(">", "> ");
 		for(String word : text_atoms){
-			template = template.replaceAll("\\b"+word+"\\b", "");
+			template = template.replaceAll("\\s"+word+"\\s", "  ");
+			template = template.replaceAll(">"+word+"<", "> <");
 		}
 
 		//remove all id attributes
-		template = template.replaceAll("\\bid=\"[a-zA-Z0-9]*\"", "");
+		template = template.replaceAll("\\bid=\".*\"", "");
 		template = template.replaceAll("\\bhref=\".*\"", "");
 		template = template.replaceAll("\\bsrc=\".*\"", "");
 		template = template.replaceAll("\\s", "");
@@ -1884,5 +1889,95 @@ public class BrowserService {
 			template.setElements(new ArrayList<>(element_map.values()));
 		}
 		return template_elements;
+	}
+	
+	/**
+	 * 
+	 * Atom - A leaf element or an element that contains only 1 leaf element regardless of depth
+	 * Molecule - Contains at least 2 atoms and cannot contain any molecules
+	 * Organism - Contains at least 2 molecules or at least 1 molecule and 1 atom or at least 1 organism, Must not be an immediate child of body
+	 * Template - An Immediate child of the body tag or the descendant such that the element is the first to have sibling elements
+	 * 
+	 * @param template
+	 * @return
+	 */
+	public TemplateType classifyTemplate(String template){
+		Document html_doc = Jsoup.parseBodyFragment(template);
+		Element root_element = html_doc.body();
+		/*
+		Element root_element = web_elements.remove(0);
+		if(web_elements.isEmpty()){
+			return TemplateType.UNKNOWN;
+		}
+		*/
+		System.err.println("root element ;:: "+root_element.html());
+		System.err.println("total elements in body :: "+root_element.children().size());
+		System.err.println("root element :: "+	root_element.outerHtml());
+		
+
+		return classifyUsingChildren(root_element);
+	}
+	
+	private TemplateType classifyUsingChildren(Element root_element) {
+		assert root_element != null;
+
+		int atom_cnt = 0;
+		int molecule_cnt = 0;
+		int organism_cnt = 0;
+		int template_cnt = 0;
+		if(root_element.children() == null || root_element.children().isEmpty()){
+			System.err.println("element does not have children");
+			return TemplateType.ATOM;
+		}
+			
+		//List<Element> leaf_elements = root_element.select("*:not(:has(*))");
+		//System.err.println("leaf elements in classifying template :: "+leaf_elements.size());
+		//if(leaf_elements.size() == 1){
+		//	return TemplateType.ATOM;
+		//}
+		System.err.println("element children count ::  "+root_element.children().size());
+		for(Element element : root_element.children()){
+			//categorize each eleemnt
+			
+			TemplateType type = classifyUsingChildren(element);
+			System.err.println("classification type "+type);
+			if(type == TemplateType.ATOM){
+				atom_cnt++;
+			}
+			else if(type == TemplateType.MOLECULE){
+				molecule_cnt++;
+			}
+			else if(type == TemplateType.ORGANISM){
+				organism_cnt++;
+			}
+			else if(type == TemplateType.TEMPLATE){
+				template_cnt++;
+			}
+		}
+		
+		System.err.println("atom count :: "+atom_cnt);
+		System.err.println("molecule count  :   "+molecule_cnt);
+		System.err.println("organsim count  :   "+organism_cnt);
+		System.err.println("");
+		
+		if(atom_cnt == 1){
+			return TemplateType.ATOM;
+		}
+		else if(atom_cnt > 1 && molecule_cnt == 0 && organism_cnt == 0 && template_cnt == 0){
+			return TemplateType.MOLECULE;
+		}
+		else if((molecule_cnt > 0 || organism_cnt > 0) && template_cnt == 0){
+			return TemplateType.ORGANISM;
+		}
+		else if(isTopLevelElement()){
+			return TemplateType.TEMPLATE;
+		}
+		return TemplateType.UNKNOWN;
+		
+	}
+
+	private boolean isTopLevelElement() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

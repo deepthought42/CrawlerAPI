@@ -273,7 +273,7 @@ public class Crawler {
 				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
 				//compile child element coordinates and sizes
 				
-				Point click_location = generateRandomLocationWithinElementButNotWithingChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
+				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
 				
 				Action action = (Action)current_obj;
 				
@@ -787,7 +787,7 @@ public class Crawler {
 	 * @pre child_element != null
 	 * @pre offset != null
 	 */
-	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
+	public static Point generateRandomLocationWithinElementButNotWithinChildElements(WebElement web_element, ElementState child_element, Point offset) {
 		assert web_element != null;
 		assert child_element != null;
 		assert offset != null;

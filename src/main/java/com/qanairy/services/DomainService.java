@@ -1,15 +1,10 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+
 import java.util.Optional;
 import java.util.Set;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +26,6 @@ import com.qanairy.models.repository.DomainRepository;
 public class DomainService {
 	private static Logger log = LoggerFactory.getLogger(DomainService.class);
 
-	@Autowired
-	private TestService test_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
-	
 	@Autowired
 	private DomainRepository domain_repo;
 	

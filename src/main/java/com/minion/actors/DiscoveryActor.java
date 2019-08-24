@@ -80,7 +80,6 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
-	private BrowserType browser;
 	
 	//subscribe to cluster changes
 	@Override

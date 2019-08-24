@@ -42,7 +42,6 @@ public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DomainActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
-	private Map<String, PageState> page_state_map = new HashMap<>();
 	
 	@Autowired
 	private PageStateService page_state_service;

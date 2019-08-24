@@ -646,4 +646,8 @@ public class PageState implements Persistable, PathObject {
 	public void setLoginRequired(boolean login_required) {
 		this.login_required = login_required;
 	}
+	
+	public long getId(){
+		return this.id;
+	}
 }

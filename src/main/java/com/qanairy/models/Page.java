@@ -100,4 +100,8 @@ public class Page implements Persistable{
 	public void setKey(String key) {
 		this.key = key;
 	}
+	
+	public long getId(){
+		return this.id;
+	}
 }

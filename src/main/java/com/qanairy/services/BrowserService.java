@@ -1814,8 +1814,8 @@ public class BrowserService {
 		String inner_text = element.text();
 		String[] text_atoms = inner_text.split(" ");
 		
-		template.replaceAll("<", " <");
-		template.replaceAll(">", "> ");
+		template = template.replaceAll("<", " <");
+		template = template.replaceAll(">", "> ");
 		for(String word : text_atoms){
 			template = template.replaceAll("\\s"+word+"\\s", "  ");
 			template = template.replaceAll(">"+word+"<", "> <");

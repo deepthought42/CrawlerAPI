@@ -75,4 +75,8 @@ public class Template implements Persistable{
 	public void setElements(List<ElementState> elements) {
 		this.elements = elements;
 	}
+	
+	public long getId(){
+		return this.id;
+	}
 }

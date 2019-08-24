@@ -123,7 +123,7 @@ public class DiscoveryActor extends AbstractActor{
 						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
-						String path_key = String.join(":::", message.getKeys());
+						//String path_key = String.join(":::", message.getKeys());
 						//if(!discovery_record.getExpandedPathKeys().contains(path_key)){	
 							if(path_expansion_actor == null){
 								path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -309,7 +309,6 @@ public class DiscoveryActor extends AbstractActor{
 	}
 
 	private void startDiscovery(DiscoveryActionMessage message) throws MalformedURLException {
-		browser = message.getBrowser();
 		domain_actor = getSender();
 		//create actors for discovery
 		if(url_browser_actor == null){

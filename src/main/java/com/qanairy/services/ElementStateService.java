@@ -18,10 +18,14 @@ import com.qanairy.models.rules.Rule;
 
 @Service
 public class ElementStateService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
 
 	@Autowired
 	private AttributeService attribute_service;
+
+	@Autowired
+	private ElementStateService element_state_service;
 
 	@Autowired
 	private RuleService rule_service;
@@ -81,6 +85,9 @@ public class ElementStateService {
 			element_record.setScreenshot(element.getScreenshot());
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 			element_record.setXpath(element.getXpath());
+			Set<Rule> rules = element_state_service.getRules(element_record);
+			element_record.setRules(rules);
+			
 			for(Rule rule : element.getRules()){
 				element_record.addRule(rule_service.save(rule));
 			}
@@ -92,7 +99,7 @@ public class ElementStateService {
 			for(Rule rule : element_record.getRules()){
 				boolean exists = false;
 				for(Rule elem_rule : element.getRules()){
-					if(elem_rule.getType().equals(rule.getType())){
+					if(elem_rule.getType() == rule.getType()){
 						exists = true;
 						break;
 					}
@@ -111,6 +118,10 @@ public class ElementStateService {
 		return element_record;
 	}
 
+	private Set<Rule> getRules(ElementState element) {
+		return element_repo.getRules(element.getKey());
+	}
+
 	public ElementState findByKey(String key){
 		return element_repo.findByKey(key);
 	}
@@ -119,7 +130,7 @@ public class ElementStateService {
 		return element_repo.findByTextAndName(text, name);
 	}
 
-	public void removeElementState(ElementState element, String rule_key){
+	public void removeRule(ElementState element, String rule_key){
 		element_repo.removeRule(element.getKey(), rule_key);
 	}
 	

@@ -230,6 +230,7 @@ public class BrowserUtils {
 			domain = domain.substring(0, param_index);
 		}
 
+		domain = domain.replace("%2e", ".");
 		URL new_url = new URL(domain);
 
 		//check if host is subdomain

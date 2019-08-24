@@ -2,6 +2,7 @@ package com.minion.api;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import com.minion.api.exception.RuleValueRequiredException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.RuleService;
 
@@ -74,7 +76,65 @@ public class ElementController {
     		HttpServletRequest request,
     		@RequestBody ElementState element_state) 
     {
-    	System.err.println("updating element state");
+    	Rule min_value_rule = null;
+    	Rule max_value_rule = null;
+    	Rule min_length_rule = null;
+    	Rule max_length_rule = null;
+    	
+    	for(Rule rule : element_state.getRules()){
+    		if(rule.getType().equals(RuleType.MIN_VALUE)){
+    			min_value_rule = rule;
+    		}
+    		else if(rule.getType().equals(RuleType.MAX_VALUE)){
+    			max_value_rule = rule;
+    		}
+    		else if(rule.getType().equals(RuleType.MIN_LENGTH)){
+    			min_length_rule = rule;
+    		}
+    		else if(rule.getType().equals(RuleType.MAX_LENGTH)){
+				max_length_rule = rule;
+			}
+    	}
+    	
+    	//check that min/max rules are valid
+    	if( min_value_rule != null && (min_value_rule.getValue().isEmpty() 
+    			|| !StringUtils.isNumeric(min_value_rule.getValue())
+    			|| Integer.parseInt(min_value_rule.getValue()) <= 0)){
+    		throw new MinValueMustBePositiveNumber();
+    	}
+		if( max_value_rule != null && (max_value_rule.getValue().isEmpty() 
+				|| !StringUtils.isNumeric(max_value_rule.getValue())
+				|| Integer.parseInt(max_value_rule.getValue()) <= 0)){
+			throw new MaxValueMustBePositiveNumber();
+    	}
+		if( min_length_rule != null && (min_length_rule.getValue().isEmpty()
+				|| !StringUtils.isNumeric(min_length_rule.getValue())
+    			|| Integer.parseInt(min_length_rule.getValue()) <= 0)){
+			throw new MinLengthMustBePositiveNumber();
+		}
+		if( max_length_rule != null && (max_length_rule.getValue().isEmpty() 
+				|| !StringUtils.isNumeric(max_length_rule.getValue())
+    			|| Integer.parseInt(max_length_rule.getValue()) <= 0)){
+			throw new MaxLengthMustBePositiveNumber();
+		}
+    	
+		
+		if(min_value_rule != null && max_value_rule != null){
+			int min_value = Integer.parseInt(min_value_rule.getValue());
+			int max_value = Integer.parseInt(max_value_rule.getValue());
+			if(min_value > max_value){
+				throw new MinCannotBeGreaterThanMaxException();
+			}
+		}
+		if(min_length_rule != null && max_length_rule != null){
+			int min_length = Integer.parseInt(min_length_rule.getValue());
+			int max_length = Integer.parseInt(max_length_rule.getValue());
+			if(min_length > max_length){
+				throw new MinCannotBeGreaterThanMaxException();
+			}
+		}
+    	
+    	//check that min/max length rules are valid
     	log.warn("element update state experienced");
         return element_service.save(element_state);
     }
@@ -89,5 +149,69 @@ class RuleExistsException extends RuntimeException {
 
 	public RuleExistsException() {
 		super("The rule is already associated with the requested element.");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class MinValueMustBePositiveNumber extends RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7200878662560716216L;
+
+	public MinValueMustBePositiveNumber() {
+		super("Minimum value rule must contain a positive number");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class MinLengthMustBePositiveNumber extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2254262252488883657L;
+
+	public MinLengthMustBePositiveNumber() {
+		super("Minimum length rule must contain a positive number.");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class MaxLengthMustBePositiveNumber extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4334601359263388271L;
+
+	public MaxLengthMustBePositiveNumber() {
+		super("Max length value rule must contain a positive number.");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class MaxValueMustBePositiveNumber extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 250328142799757755L;
+
+	public MaxValueMustBePositiveNumber() {
+		super("Max value rule must contain a positive number.");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class MinCannotBeGreaterThanMaxException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 250328142799757755L;
+
+	public MinCannotBeGreaterThanMaxException() {
+		super("Minimum value cannot be greater than max value");
 	}
 }

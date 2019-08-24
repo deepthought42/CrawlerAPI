@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
  	<groupId>com.Qanairy</groupId>
-  <version>0.1.36</version>
+  	<version>0.1.36</version>
 	<artifactId>Qanairy</artifactId>
 	<packaging>jar</packaging>
 
@@ -279,6 +279,13 @@
 		      </exclusion>
 		    </exclusions>
 		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    <version>3.7</version>
+		</dependency>
+		
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>

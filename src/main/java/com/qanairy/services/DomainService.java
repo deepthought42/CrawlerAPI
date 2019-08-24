@@ -57,6 +57,8 @@ public class DomainService {
 		assert !host.isEmpty();
 		assert test != null;
 		
+		log.warn("domain host :: "+host);
+		log.warn("test result when adding test :: " + test);
 		Domain domain = domain_repo.findByHost(host);
 		domain.addTest(test);
 		return domain_repo.save(domain);

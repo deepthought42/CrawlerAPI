@@ -66,9 +66,7 @@ public class BrowserServiceTest {
 		String html = "<html><body><div><a class='test-class'>link1</a><a class='test-class'>link2</a></div><div id='test-id1'></div><div><span></span></div></body></html>";
 		
 		List<String> visible_elements = BrowserService.getXpathsUsingJSoup(html);
-		for(String xpath : visible_elements){
-			System.err.println(xpath);
-		}
+
 		assertTrue(visible_elements.size() == 4);
 		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[1]"));
 		assertTrue(visible_elements.contains("(//div//a[contains(@class,\"test-class\")])[2]"));
@@ -156,24 +154,11 @@ public class BrowserServiceTest {
 						+"</html>";
 
 		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
-		
 		BrowserService browser_service = new BrowserService();
-		
-		
 		Map<String, Template> template_elements = browser_service.findTemplates(element_list);
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 		
-		System.err.println("list elements list size :: "+template_elements.size());
-		
-
-		for(Template template : template_elements.values()){
-			System.err.println("TEMPLATE :: " + template.getTemplate());
-			for(ElementState elem : template.getElements()){
-				System.err.println("ELEMENT :: " + elem.getOuterHtml());
-			}
-			System.err.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-		}
 		assertTrue(1 == template_elements.size());	
 	}
 			
@@ -644,6 +629,6 @@ public class BrowserServiceTest {
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 
-		assertTrue(4 == template_elements.size());	
+		assertTrue(3 == template_elements.size());	
 	}
 }

@@ -116,7 +116,7 @@ public class TestService {
 		 
 		 do{
 			 try {
-				browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.TEST);
+				browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.DISCOVERY);
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
@@ -195,7 +195,6 @@ public class TestService {
 				PageState result = page_state_service.save(test.getResult());
 				log.warn("result of saving result :: " + result);
 				record.setResult(result);
-
 			}
 	
 			Set<Group> groups = new HashSet<>();

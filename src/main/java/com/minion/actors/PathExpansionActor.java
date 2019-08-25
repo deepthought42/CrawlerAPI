@@ -1,5 +1,7 @@
 package com.minion.actors;
 
+import static org.assertj.core.api.Assertions.setRemoveAssertJRelatedElementsFromStackTrace;
+
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,10 +10,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.config.Elements;
 import org.springframework.stereotype.Component;
 
 import akka.actor.AbstractActor;
@@ -24,13 +31,17 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 
 import com.minion.browsing.ActionOrderOfOperations;
 import com.qanairy.models.Action;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.Template;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.PathStatus;
+import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
+import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.utils.PathUtils;
 
@@ -47,6 +58,9 @@ public class PathExpansionActor extends AbstractActor {
 	@Autowired
 	private PageStateService page_state_service;
 
+	@Autowired
+	private BrowserService browser_service;
+	
 	private Map<String, ElementState> expanded_elements;
 
 	public PathExpansionActor() {
@@ -227,33 +241,65 @@ public class PathExpansionActor extends AbstractActor {
 				element_xpath_map.remove(element.getXpath());
 			}
 
-			for(String xpath : element_xpath_map.keySet()){
-				log.warn("xpath :: "+xpath);
-			}
 
 			return element_xpath_map.values();
 		}
 		log.warn("####################################################################################################");
 		log.warn("####################################################################################################");
 
-		List<ElementState> filtered_elements = new ArrayList<>();
 		//filter list elements from last page elements
-		/*
- 		boolean part_of_list = false;
-		for(ElementState element : last_page_state.getElements()){
-			for(Template template : last_page_state.getTemplates()){
-				for(ElementState list_item : last_page_state.getListElements()){
-					if(list_item.getInnerHtml().contains(element.getOuterHtml())){
-						part_of_list = true;
-					}
-				}
-			}
+		List<ElementState> filtered_elements = new ArrayList<>();
+		Map<String, Template> template_elements = browser_service.findTemplates(filtered_elements);
+		template_elements = browser_service.reduceTemplatesToParents(template_elements);
+		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 
-			if(!part_of_list){
-				filtered_elements.add(element);
+		Map<String, Template> list_map = new HashMap<>();
+		for(String template : template_elements.keySet()){
+			TemplateType type = browser_service.classifyTemplate(template);
+			if(type == TemplateType.ORGANISM){
+				list_map.put(template, template_elements.get(template));
 			}
 		}
-		 */
+		
+		filtered_elements = removeListElements(filtered_elements, list_map);
+		for(Template template : list_map.values()){
+			List<ElementState> desired_list_elements = extractAllAtomElementsFromSingleTemplatedElement(template);
+			filtered_elements.addAll(desired_list_elements);
+		}
+		
+		return filtered_elements;
+	}
+
+	private List<ElementState> extractAllAtomElementsFromSingleTemplatedElement(Template template) {
+		ElementState element = template.getElements().get(0);
+		List<ElementState> extracted_elements = new ArrayList<>();
+		Document html_doc = Jsoup.parseBodyFragment(element.getOuterHtml());
+		List<Element> leaf_elements = html_doc.body().select("*:not(:has(*))");
+		Map<String, Integer> xpath_cnt_map = new HashMap<>();
+
+		for(Element leaf : leaf_elements){
+			String xpath = BrowserService.generateXpathUsingJsoup(leaf, html_doc, leaf.attributes(), xpath_cnt_map);
+			Set<Attribute> attributes = BrowserService.generateAttributesUsingJsoup(leaf);
+
+			extracted_elements.add(BrowserService.buildElementState(xpath, attributes, leaf));
+		}
+		
+		return extracted_elements;
+	}
+
+	private List<ElementState> removeListElements(List<ElementState> elements,
+			Map<String, Template> list_map) {
+		
+		List<ElementState> filtered_elements = new ArrayList<>();
+		//iterate over filtered elements
+		for(ElementState element : elements){
+			//iterate over templates
+			for(String template : list_map.keySet()){
+				if( !template.contains(element.getTemplate()) ){
+					filtered_elements.add(element);
+				}
+			}
+		}
 		return filtered_elements;
 	}
 }

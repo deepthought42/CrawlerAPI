@@ -114,7 +114,7 @@ public class TestCreationActor extends AbstractActor  {
 					    	Browser browser = null;
 
 				    		try{
-				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
+				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 			    				
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);

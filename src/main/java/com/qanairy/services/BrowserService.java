@@ -340,12 +340,8 @@ public class BrowserService {
 			if(!isStructureTag(element.tagName()) && !"iframe".equals(element.tagName())){
 				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
 				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-				ElementState element_state = new ElementState();
-				element_state.setXpath(xpath);
-				element_state.setAttributes(attributes);
-				element_state.setOuterHtml(element.outerHtml());
-				element_state.setInnerHtml(element.html());
-				element_state.setTemplate(extractTemplate(element));
+				buildElementState(xpath, attributes, element);
+				ElementState element_state = buildElementState(xpath, attributes, element);
 				elements.add(element_state);
 			}
 		}
@@ -353,6 +349,16 @@ public class BrowserService {
 		return elements;
 	}
 	
+	public static ElementState buildElementState(String xpath, Set<Attribute> attributes, Element element) {
+		ElementState element_state = new ElementState();
+		element_state.setXpath(xpath);
+		element_state.setAttributes(attributes);
+		element_state.setOuterHtml(element.outerHtml());
+		element_state.setInnerHtml(element.html());
+		element_state.setTemplate(extractTemplate(element));
+		return element_state;
+	}
+
 	/**
 	 * Checks all parent elements up until and excluding the body tag for any script tags.
 	 * 
@@ -1904,17 +1910,7 @@ public class BrowserService {
 	public TemplateType classifyTemplate(String template){
 		Document html_doc = Jsoup.parseBodyFragment(template);
 		Element root_element = html_doc.body();
-		/*
-		Element root_element = web_elements.remove(0);
-		if(web_elements.isEmpty()){
-			return TemplateType.UNKNOWN;
-		}
-		*/
-		System.err.println("root element ;:: "+root_element.html());
-		System.err.println("total elements in body :: "+root_element.children().size());
-		System.err.println("root element :: "+	root_element.outerHtml());
 		
-
 		return classifyUsingChildren(root_element);
 	}
 	
@@ -1926,21 +1922,12 @@ public class BrowserService {
 		int organism_cnt = 0;
 		int template_cnt = 0;
 		if(root_element.children() == null || root_element.children().isEmpty()){
-			System.err.println("element does not have children");
 			return TemplateType.ATOM;
 		}
-			
-		//List<Element> leaf_elements = root_element.select("*:not(:has(*))");
-		//System.err.println("leaf elements in classifying template :: "+leaf_elements.size());
-		//if(leaf_elements.size() == 1){
-		//	return TemplateType.ATOM;
-		//}
-		System.err.println("element children count ::  "+root_element.children().size());
+		
+		//categorize each eleemnt	
 		for(Element element : root_element.children()){
-			//categorize each eleemnt
-			
 			TemplateType type = classifyUsingChildren(element);
-			System.err.println("classification type "+type);
 			if(type == TemplateType.ATOM){
 				atom_cnt++;
 			}
@@ -1955,18 +1942,13 @@ public class BrowserService {
 			}
 		}
 		
-		System.err.println("atom count :: "+atom_cnt);
-		System.err.println("molecule count  :   "+molecule_cnt);
-		System.err.println("organsim count  :   "+organism_cnt);
-		System.err.println("");
-		
 		if(atom_cnt == 1){
 			return TemplateType.ATOM;
 		}
 		else if(atom_cnt > 1 && molecule_cnt == 0 && organism_cnt == 0 && template_cnt == 0){
 			return TemplateType.MOLECULE;
 		}
-		else if((molecule_cnt > 0 || organism_cnt > 0) && template_cnt == 0){
+		else if((molecule_cnt == 1 && atom_cnt > 0 || molecule_cnt > 1 || organism_cnt > 0) && template_cnt == 0){
 			return TemplateType.ORGANISM;
 		}
 		else if(isTopLevelElement()){

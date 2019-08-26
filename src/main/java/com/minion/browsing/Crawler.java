@@ -414,7 +414,6 @@ public class Crawler {
 			path.setPathKeys(path_keys);
 			path.setPathObjects(path_objects_explored);
 		}
-		Timing.pauseThread(1000);
 	}
 
 	/**
@@ -672,6 +671,7 @@ public class Crawler {
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
+				Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
@@ -725,51 +725,6 @@ public class Crawler {
 			}
 			finally{
 				if(browser != null && !no_such_element_exception){
-					browser.close();
-				}
-			}
-			tries++;
-		}while(result_page == null && tries < 100000);
-		return result_page;
-	}
-	
-	/**
-	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
-	 * @param browser
-	 * @param path
-	 * @param host
-	 * @return
-	 */
-	public PageState performPathCrawl(String browser_name, List<String> path_keys, List<PathObject> path_objects, String host) {
-		PageState result_page = null;
-		int tries = 0;
-		Browser browser = null;
-		Map<Integer, ElementState> visible_element_map = new HashMap<>();
-		List<ElementState> visible_elements = new ArrayList<>();
-		
-		do{
-			try{
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				result_page = crawlPath(path_keys, path_objects, browser, host, visible_element_map, visible_elements);
-				PageState last_page = PathUtils.getLastPageState(path_objects);
-				result_page.setLoginRequired(last_page.isLoginRequired());
-			}catch(NullPointerException e){
-				log.error("Error happened while crawler attempted to crawl test path "+e.getMessage());
-			} catch (GridException e) {
-				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
-			}
-			catch (NoSuchElementException e){
-				log.error("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-			}
-			catch (WebDriverException e) {
-				log.debug("WebDriver exception encountered while performing path crawl"+e.getMessage());
-			} catch (NoSuchAlgorithmException e) {
-				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-			} catch(Exception e){
-				log.info("Exception occurred in performPathCrawl actor. \n"+e.getMessage());
-			}
-			finally{
-				if(browser != null){
 					browser.close();
 				}
 			}

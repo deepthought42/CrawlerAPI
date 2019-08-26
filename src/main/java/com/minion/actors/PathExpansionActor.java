@@ -249,7 +249,14 @@ public class PathExpansionActor extends AbstractActor {
 
 		//filter list elements from last page elements
 		List<ElementState> filtered_elements = new ArrayList<>();
-		Map<String, Template> template_elements = browser_service.findTemplates(filtered_elements);
+		Map<String, Template> templates = getOrganismTemplateMap(filtered_elements);
+		filtered_elements = filterListElements(filtered_elements, templates);
+		
+		return filtered_elements;
+	}
+
+	private Map<String, Template> getOrganismTemplateMap(List<ElementState> elements) {
+		Map<String, Template> template_elements = browser_service.findTemplates(elements);
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 
@@ -261,12 +268,16 @@ public class PathExpansionActor extends AbstractActor {
 			}
 		}
 		
-		filtered_elements = removeListElements(filtered_elements, list_map);
+		return list_map;
+	}
+
+	private List<ElementState> filterListElements(List<ElementState> elements,
+			Map<String, Template> list_map) {
+		List<ElementState> filtered_elements = removeListElements(elements, list_map);
 		for(Template template : list_map.values()){
 			List<ElementState> desired_list_elements = extractAllAtomElementsFromSingleTemplatedElement(template);
-			filtered_elements.addAll(desired_list_elements);
+			elements.addAll(desired_list_elements);
 		}
-		
 		return filtered_elements;
 	}
 

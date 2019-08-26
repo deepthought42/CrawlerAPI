@@ -165,7 +165,7 @@ public class Browser {
 		FirefoxOptions options = new FirefoxOptions();
 		//options.setHeadless(true);
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
-		//driver.manage().window().maximize();
+		driver.manage().window().maximize();
 
 	    driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
@@ -250,7 +250,7 @@ public class Browser {
 		}*/
 		log.info("Requesting chrome remote driver from hub");
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
-		//driver.manage().window().maximize();
+		driver.manage().window().maximize();
 
 		driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);

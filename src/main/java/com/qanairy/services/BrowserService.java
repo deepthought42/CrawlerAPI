@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
+import org.openqa.selenium.NoSuchElementException;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -695,13 +695,17 @@ public class BrowserService {
 				
 				List<ElementState> element_sublist = elements.subList(start_idx, elements.size());
 				for(ElementState element_state : element_sublist){
-					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
-					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && !isElementLargerThanViewport(browser, element)){
-						ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes());
-						visible_element_map.put(element_state.getXpath().trim(), new_element_state);
-					}
-					else{
-						visible_element_map.put(element_state.getXpath().trim(), null);
+					try{
+						WebElement element = browser.findWebElementByXpath(element_state.getXpath());
+						if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && !isElementLargerThanViewport(browser, element)){
+							ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes());
+							visible_element_map.put(element_state.getXpath().trim(), new_element_state);
+						}
+						else{
+							visible_element_map.put(element_state.getXpath().trim(), null);
+						}
+					}catch(NoSuchElementException e){
+						log.warn("Unable to find element :: "+e.getMessage());
 					}
 				}
 			}catch(WebDriverException e){
@@ -1738,7 +1742,7 @@ public class BrowserService {
 				
 				//calculate distance of children if within 20%				
 				if(distance == 0.0 || similarity < 0.025){
-					System.err.println("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
+					log.debug("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
 					String template_str = element_list.get(idx1).getTemplate();
 					if(!element_templates.containsKey(template_str)){
 						element_templates.put(template_str, new Template(TemplateType.UNKNOWN, template_str));

@@ -18,6 +18,7 @@ import com.qanairy.models.rules.Rule;
 
 @Service
 public class ElementStateService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(ElementStateService.class);
 
 	@Autowired

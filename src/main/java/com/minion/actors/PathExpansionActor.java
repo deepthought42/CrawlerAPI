@@ -1,7 +1,5 @@
 package com.minion.actors;
 
-import static org.assertj.core.api.Assertions.setRemoveAssertJRelatedElementsFromStackTrace;
-
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.security.config.Elements;
 import org.springframework.stereotype.Component;
 
 import akka.actor.AbstractActor;

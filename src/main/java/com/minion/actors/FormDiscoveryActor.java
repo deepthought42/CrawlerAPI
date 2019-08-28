@@ -21,7 +21,6 @@ import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.FormService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.Props;
@@ -47,9 +46,6 @@ public class FormDiscoveryActor extends AbstractActor{
 	
 	@Autowired
 	private BrowserService browser_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private ElementRuleExtractor rule_extractor;
@@ -146,7 +142,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 10000);
+					}while(!forms_created && count < 100000);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

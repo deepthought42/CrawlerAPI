@@ -2,8 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -42,7 +40,6 @@ public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DomainActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
-	private Map<String, PageState> page_state_map = new HashMap<>();
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -101,7 +98,7 @@ public class DomainActor extends AbstractActor{
 					Test test_record = test_service.save(test);
 					if(domain == null){
 						String host = test_msg.getDomain().getUrl();
-						log.warn("Host :: " + host);
+							log.warn("Host :: " + host);
 						domain = domain_service.findByHost(host);
 						log.warn("loaded domain :: " + domain);
 					}

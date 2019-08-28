@@ -19,7 +19,6 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.message.FormDiscoveryMessage;
-import com.minion.structs.Message;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

@@ -41,4 +41,12 @@ public class BrowserUtilsTests {
 		
 		assertTrue("http://test4.masschallenge.com".equals(sanitized_url));
 	}
+	
+	@Test
+	public void verifySanitizeUrlWithPath() throws MalformedURLException{
+		String url = "http://zaelab.com/services";
+		String sanitized_url = BrowserUtils.sanitizeUrl(url);
+		
+		assertTrue("http://www.zaelab.com/services".equals(sanitized_url));
+	}
 }

@@ -767,7 +767,11 @@ public class BrowserService {
 						}
 					}
 				}
-			}catch(WebDriverException e){
+			}
+			catch(NoSuchElementException e){
+				log.warn("No such element exception");
+			}
+			catch(WebDriverException e){
 				e.printStackTrace();
 				if(!e.getMessage().contains("no_such_element")){
 					throw e;

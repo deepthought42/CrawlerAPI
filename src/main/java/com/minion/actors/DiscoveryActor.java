@@ -333,7 +333,7 @@ public class DiscoveryActor extends AbstractActor{
     
 		if(exploratory_browser_actors.isEmpty()){
 			//create multiple exploration actors for parallel execution
-			for(int i=0; i < 2; i++){
+			for(int i=0; i < 10; i++){
 				exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 						  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 			}

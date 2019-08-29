@@ -159,7 +159,7 @@ public class BrowserServiceTest {
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 		
-		assertTrue(1 == template_elements.size());	
+		assertTrue(3 == template_elements.size());	
 	}
 			
 	@Test
@@ -629,6 +629,6 @@ public class BrowserServiceTest {
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 
-		assertTrue(3 == template_elements.size());	
+		assertTrue(6 == template_elements.size());	
 	}
 }

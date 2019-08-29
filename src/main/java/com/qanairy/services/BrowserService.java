@@ -1831,7 +1831,9 @@ public class BrowserService {
 		template = template.replaceAll("<", " <");
 		template = template.replaceAll(">", "> ");
 		for(String word : text_atoms){
-			template = template.replaceAll("\\s"+word+"\\s", "  ");
+			word = word.replaceAll("[()]", "");
+			word = word.replaceAll("\"", " ");
+			template = template.replaceAll("\\d"+word+"\\s", "  ");
 			template = template.replaceAll(">"+word+"<", "> <");
 		}
 

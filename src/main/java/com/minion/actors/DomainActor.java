@@ -2,8 +2,6 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -42,7 +40,6 @@ public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DomainActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
-	private Map<String, PageState> page_state_map = new HashMap<>();
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -101,7 +98,7 @@ public class DomainActor extends AbstractActor{
 					Test test_record = test_service.save(test);
 					if(domain == null){
 						String host = test_msg.getDomain().getUrl();
-						log.warn("Host :: " + host);
+							log.warn("Host :: " + host);
 						domain = domain_service.findByHost(host);
 						log.warn("loaded domain :: " + domain);
 					}
@@ -109,17 +106,6 @@ public class DomainActor extends AbstractActor{
 					for(PathObject obj : test.getPathObjects()){
 						if(obj.getKey().contains("pagestate")){
 							domain.addPageState((PageState)obj);
-						}
-					}
-					
-					log.warn("test result in domain actor   :   " + test.getResult());
-					domain.addPageState(page_state_service.save(test.getResult()));	
-					domain = domain_service.save(domain);
-					for(PathObject path_obj : test.getPathObjects()){
-						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
-						} catch (JsonProcessingException e) {
-							log.error(e.getLocalizedMessage());
 						}
 					}
 					
@@ -133,6 +119,17 @@ public class DomainActor extends AbstractActor{
 					domain_service.save(domain);
 
 					domain_service.addTest(domain.getUrl(), test_record);
+					
+					log.warn("test result in domain actor   :   " + test.getResult());
+					domain_service.addPageState(domain.getUrl(), test.getResult());
+					
+					for(PathObject path_obj : test.getPathObjects()){
+						try {
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
+						} catch (JsonProcessingException e) {
+							log.error(e.getLocalizedMessage());
+						}
+					}
 					log.warn("saved domain :: "+domain);
 					
 				})
@@ -147,6 +144,9 @@ public class DomainActor extends AbstractActor{
 					}
 					discovery_actor.tell(form_msg, getSelf());
 					
+				})
+				.match(PageState.class, page_state -> {
+					page_state_service.save(page_state);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

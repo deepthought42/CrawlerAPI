@@ -41,7 +41,6 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import com.minion.util.Timing;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -166,7 +165,7 @@ public class Browser {
 		FirefoxOptions options = new FirefoxOptions();
 		//options.setHeadless(true);
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
-		//driver.manage().window().maximize();
+		driver.manage().window().maximize();
 
 	    driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
@@ -251,7 +250,7 @@ public class Browser {
 		}*/
 		log.info("Requesting chrome remote driver from hub");
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
-		//driver.manage().window().maximize();
+		driver.manage().window().maximize();
 
 		driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);

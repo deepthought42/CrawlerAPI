@@ -114,7 +114,7 @@ public class TestCreationActor extends AbstractActor  {
 					    	Browser browser = null;
 
 				    		try{
-				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
+				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 			    				
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
@@ -170,7 +170,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			}
 				    		}
 				    		attempts++;
-				    	}while(test == null && attempts < 10000);
+				    	}while(test == null && attempts < 100000);
 
 				    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct_message.getAccountKey());
 				    	MessageBroadcaster.broadcastTest(test, acct_message.getAccountKey());
@@ -253,10 +253,8 @@ public class TestCreationActor extends AbstractActor  {
     			Crawler.performAction(action, element, browser.getDriver());
     			Timing.pauseThread(1500L);
 
-    			//******************************************************
     			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.
     			// IF NEXT OBJECT DOESN'T CONTAIN A URL, THEN CREATE NEW PAGE STATE
-    			//******************************************************
 	        	if(idx+1 < path.length()){
 	    			path_obj_json = new JSONObject(path.get(idx+1).toString());
 

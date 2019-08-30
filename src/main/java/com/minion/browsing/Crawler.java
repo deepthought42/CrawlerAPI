@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
+import com.minion.util.Timing;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
@@ -141,11 +142,13 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
+		Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
+		
 		
 		return browser_service.buildPage(browser, visible_elements, url_without_params);
 	}
@@ -270,7 +273,7 @@ public class Crawler {
 				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
 				//compile child element coordinates and sizes
 				
-				Point click_location = generateRandomLocationWithinElementButNotWithingChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
+				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
 				
 				Action action = (Action)current_obj;
 				
@@ -441,11 +444,12 @@ public class Crawler {
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 
-		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
+		List<PathObject> path_objects_explored = new ArrayList<>();
 
 		String last_url = null;
 		int current_idx = 0;
 		for(PathObject current_obj: ordered_path_objects){
+			path_objects_explored.add(current_obj);
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
@@ -636,7 +640,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 1000);
+		}while(result_page == null && tries < 100000);
 		
 		log.warn("done crawling exploratory path");
 		return result_page;
@@ -667,6 +671,7 @@ public class Crawler {
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
+				Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
@@ -724,52 +729,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 10000);
-		return result_page;
-	}
-	
-	/**
-	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
-	 * @param browser
-	 * @param path
-	 * @param host
-	 * @return
-	 */
-	public PageState performPathCrawl(String browser_name, List<String> path_keys, List<PathObject> path_objects, String host) {
-		PageState result_page = null;
-		int tries = 0;
-		Browser browser = null;
-		Map<Integer, ElementState> visible_element_map = new HashMap<>();
-		List<ElementState> visible_elements = new ArrayList<>();
-		
-		do{
-			try{
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				result_page = crawlPath(path_keys, path_objects, browser, host, visible_element_map, visible_elements);
-				PageState last_page = PathUtils.getLastPageState(path_objects);
-				result_page.setLoginRequired(last_page.isLoginRequired());
-			}catch(NullPointerException e){
-				log.error("Error happened while crawler attempted to crawl test path "+e.getMessage());
-			} catch (GridException e) {
-				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
-			}
-			catch (NoSuchElementException e){
-				log.error("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-			}
-			catch (WebDriverException e) {
-				log.debug("WebDriver exception encountered while performing path crawl"+e.getMessage());
-			} catch (NoSuchAlgorithmException e) {
-				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-			} catch(Exception e){
-				log.info("Exception occurred in performPathCrawl actor. \n"+e.getMessage());
-			}
-			finally{
-				if(browser != null){
-					browser.close();
-				}
-			}
-			tries++;
-		}while(result_page == null && tries < 10000);
+		}while(result_page == null && tries < 100000);
 		return result_page;
 	}
 	
@@ -782,7 +742,7 @@ public class Crawler {
 	 * @pre child_element != null
 	 * @pre offset != null
 	 */
-	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
+	public static Point generateRandomLocationWithinElementButNotWithinChildElements(WebElement web_element, ElementState child_element, Point offset) {
 		assert web_element != null;
 		assert child_element != null;
 		assert offset != null;

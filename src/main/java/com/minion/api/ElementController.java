@@ -145,7 +145,7 @@ public class ElementController {
 
     	//check that min/max length rules are valid
     	log.warn("element update state experienced");
-        return element_service.save(element_state);
+      return element_service.save(element_state);
     }
 }
 

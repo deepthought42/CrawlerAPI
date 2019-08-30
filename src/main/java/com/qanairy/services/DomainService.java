@@ -51,7 +51,6 @@ public class DomainService {
 		Domain domain = domain_repo.findByHost(host);
 		domain.addTest(test);
 		return domain_repo.save(domain);
-		//return save(domain);
 	}
 	
 	public int getTestCount(String host_url) {
@@ -116,5 +115,27 @@ public class DomainService {
 
 	public Set<PageLoadAnimation> getAnimations(String host) {
 		return domain_repo.getAnimations(host);
+	}
+
+	/**
+	 * 
+	 * @param host
+	 * @param page_state
+	 * @return
+	 * 
+	 * #pre host != null
+	 * @pre !host.isEmpty()
+	 * @pre page_state != null
+	 */
+	public Domain addPageState(String host, PageState page_state) {
+		assert host != null;
+		assert !host.isEmpty();
+		assert page_state != null;
+		
+		log.warn("domain host :: "+host);
+		log.warn("test result when adding test :: " + page_state);
+		Domain domain = domain_repo.findByHost(host);
+		domain.addPageState(page_state);
+		return domain_repo.save(domain);
 	}
 }

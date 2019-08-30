@@ -90,37 +90,7 @@ public class PageStateService {
 				}
 				
 				if(page_state_record != null){
-					/*
-					page_state_record.setElements(getElementStates(page_state_record.getKey()));
-					log.warn("UPDATING EXISTING PAGE STATE");
-					page_state_record.setLandable(page_state.isLandable());
-					page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
-					
-					Map<String, ElementState> element_map = new HashMap<>();
-					List<ElementState> element_records = new ArrayList<>();
-					for(ElementState element : page_state.getElements()){
-						if(element_map.containsKey(element.getKey())){
-							int cnt = 0;
-							do{
-								try{
-									element_map.put(element.getKey(), element_state_service.save(element));
-									break;
-								}
-								catch(ClientException e){}
-							}while(cnt < 3);
-							break;
-						}
-					}
-					page_state_record.setElements(new ArrayList<ElementState>(element_map.values()));
-					page_state_record.setAnimatedImageUrls(page_state.getAnimatedImageUrls());
-					page_state_record.setAnimatedImageChecksums(page_state.getAnimatedImageChecksums());
-					*/
-					Set<Form> forms = new HashSet<Form>();
-					for(Form form : page_state.getForms()){
-						forms.add(form_service.save(form));
-					}
-					
-					page_state_record.setForms(forms);
+					page_state_record.setForms(page_state.getForms());
 					
 					Map<String, Screenshot> screenshot_map = new HashMap<>();
 					for(Screenshot screenshot : page_state.getScreenshots()){
@@ -144,36 +114,6 @@ public class PageStateService {
 					page_state_record = findByKey(page_state.getKey());
 		
 					if(page_state_record != null){
-						/*
-						page_state_record.setLandable(page_state.isLandable());
-						page_state_record.setLastLandabilityCheck(page_state.getLastLandabilityCheck());
-						page_state_record.setElements(getElementStates(page_state_record.getKey()));
-						
-						log.warn("saving element to page state :: "+page_state );
-						List<ElementState> element_records = new ArrayList<>();
-						
-						for(ElementState element : page_state.getElements()){
-							boolean err = false;
-							int cnt = 0;
-							do{
-								err = false;
-								try{
-									element_records.add(element_state_service.save(element));
-								}catch(ClientException e){
-									log.warn("error saving element to existing page state (FOUND BY KEY) :  "+e.getMessage());
-									e.printStackTrace();
-									err = true;
-								}
-								cnt++;
-							}while(err && cnt < 5);
-							
-							if(err){
-								element_records.add(element);
-							}
-						}
-		
-						page_state_record.setElements(element_records);
-						*/
 						page_state_record.setForms(page_state.getForms());
 	
 						log.warn("page state elements set");

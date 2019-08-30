@@ -78,6 +78,7 @@ public class ElementController {
     		HttpServletRequest request,
     		@RequestBody ElementState element_state)
     {
+
     	Rule min_value_rule = null;
     	Rule max_value_rule = null;
     	Rule min_length_rule = null;

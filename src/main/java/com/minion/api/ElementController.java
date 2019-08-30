@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import com.minion.api.exception.RuleValueRequiredException;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.rules.Rule;
+import com.qanairy.models.rules.RuleType;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.services.RuleService;
 

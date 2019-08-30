@@ -69,10 +69,7 @@ public class DiscoveryRecordService {
 		return discovery_repo.getAllAccounts(key);
 	}
 
-	public void getAllDiscoveriesWithinTimeframe(int low, int high) {
-		assert low > 0;
-		assert high >= low;
-		
-		discovery_repo.getAllDiscoveriesForTimeframe(low, high);		
+	public List<DiscoveryRecord> getAllDiscoveriesFromTwoDaysAgo() {
+		discovery_repo.getAllDiscoveriesFromTwoDaysAgo();		
 	}
 }

@@ -1,7 +1,11 @@
 package com.qanairy.services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.qanairy.models.DiscoveryRecord;
 
 @Service
 public class EngagementEmailService {
@@ -13,7 +17,7 @@ public class EngagementEmailService {
 	 */
 	void send48HourInactivitySinceDiscoveryEmails() {
 		// get all discoveries that were started 2 days ago
-		discovery_service.getAllDiscoveriesWithinTimeframe(48, 72);
+		List<DiscoveryRecord> disccoveries = discovery_service.getAllDiscoveriesFromTwoDaysAgo();
 		// for each discovery
 			// get count of tests created in discovery
 			// get number of paths explored

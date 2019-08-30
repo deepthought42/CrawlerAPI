@@ -1,5 +1,8 @@
 package com.minion.api;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -80,8 +83,12 @@ public class ElementController {
     	Rule max_value_rule = null;
     	Rule min_length_rule = null;
     	Rule max_length_rule = null;
-    	
+    	Map<String, Integer> rule_duplicate_map = new HashMap<>();
     	for(Rule rule : element_state.getRules()){
+    		if(!rule_duplicate_map.containsKey(rule.getKey())){
+    			rule_duplicate_map.put(rule.getKey(), 0);
+    		}
+    		rule_duplicate_map.put(rule.getKey(), rule_duplicate_map.get(rule.getKey())+1);
     		if(rule.getType().equals(RuleType.MIN_VALUE)){
     			min_value_rule = rule;
     		}
@@ -96,6 +103,11 @@ public class ElementController {
 			}
     	}
     	
+    	for(int value : rule_duplicate_map.values()){
+    		if(value > 1){
+    			throw new DuplicatesNotAllowedException();
+    		}
+    	}
     	//check that min/max rules are valid
     	if( min_value_rule != null && (min_value_rule.getValue().isEmpty() 
     			|| !StringUtils.isNumeric(min_value_rule.getValue())
@@ -157,7 +169,7 @@ class MinValueMustBePositiveNumber extends RuntimeException {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 7200878662560716216L;
+	private static final long serialVersionUID = 4419265853468867824L;
 
 	public MinValueMustBePositiveNumber() {
 		super("Minimum value rule must contain a positive number");
@@ -209,9 +221,22 @@ class MinCannotBeGreaterThanMaxException extends RuntimeException {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 250328142799757755L;
+	private static final long serialVersionUID = 4423969190558092393L;
 
 	public MinCannotBeGreaterThanMaxException() {
 		super("Minimum value cannot be greater than max value");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class DuplicatesNotAllowedException extends RuntimeException {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6335991211635956501L;
+
+	public DuplicatesNotAllowedException() {
+		super("Elements cannot have duplcate rules");
 	}
 }

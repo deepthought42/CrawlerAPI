@@ -120,7 +120,7 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	
+    	url = url.toLowerCase();
     	String formatted_url = BrowserUtils.sanitizeUrl(protocol+"://"+url);
     	URL url_obj = new URL(formatted_url);
 		

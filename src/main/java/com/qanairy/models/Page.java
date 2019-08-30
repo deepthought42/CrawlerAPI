@@ -1,6 +1,7 @@
 package com.qanairy.models;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -21,6 +22,9 @@ public class Page implements Persistable{
 	
 	@Relationship(type = "HAS")
 	private Set<PageState> page_states;
+
+	@Relationship(type = "HAS")
+	private List<Template> templates;
 
 	@Override
 	public String generateKey() {
@@ -81,11 +85,23 @@ public class Page implements Persistable{
 		this.page_states = page_states;
 	}
 
+	public List<Template> getTemplates() {
+		return templates;
+	}
+
+	public void setTemplates(List<Template> templates) {
+		this.templates = templates;
+	}
+	
 	public String getKey() {
 		return key;
 	}
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+	
+	public long getId(){
+		return this.id;
 	}
 }

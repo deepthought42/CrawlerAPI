@@ -203,7 +203,7 @@ public class PageState implements Persistable, PathObject {
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
 		setTemplates(new ArrayList<Template>());
-    setLoginRequired(false);
+		setLoginRequired(false);
 		setKey(generateKey());
 	}
 

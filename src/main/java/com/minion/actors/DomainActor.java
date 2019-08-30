@@ -109,17 +109,6 @@ public class DomainActor extends AbstractActor{
 						}
 					}
 					
-					log.warn("test result in domain actor   :   " + test.getResult());
-					domain.addPageState(page_state_service.save(test.getResult()));	
-					domain = domain_service.save(domain);
-					for(PathObject path_obj : test.getPathObjects()){
-						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
-						} catch (JsonProcessingException e) {
-							log.error(e.getLocalizedMessage());
-						}
-					}
-					
 					try {
 						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 					} catch (JsonProcessingException e) {
@@ -130,6 +119,17 @@ public class DomainActor extends AbstractActor{
 					domain_service.save(domain);
 
 					domain_service.addTest(domain.getUrl(), test_record);
+					
+					log.warn("test result in domain actor   :   " + test.getResult());
+					domain_service.addPageState(domain.getUrl(), test.getResult());
+					
+					for(PathObject path_obj : test.getPathObjects()){
+						try {
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
+						} catch (JsonProcessingException e) {
+							log.error(e.getLocalizedMessage());
+						}
+					}
 					log.warn("saved domain :: "+domain);
 					
 				})
@@ -144,6 +144,9 @@ public class DomainActor extends AbstractActor{
 					}
 					discovery_actor.tell(form_msg, getSelf());
 					
+				})
+				.match(PageState.class, page_state -> {
+					page_state_service.save(page_state);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

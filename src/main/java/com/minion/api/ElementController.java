@@ -74,6 +74,7 @@ public class ElementController {
     		HttpServletRequest request,
     		@RequestBody ElementState element_state) 
     {
+    	//validate that element does not have duplicate rules
     	System.err.println("updating element state");
     	log.warn("element update state experienced");
         return element_service.save(element_state);

@@ -62,7 +62,7 @@ public class ElementStateService {
 			for(Rule rule : element_record.getRules()){
 				boolean exists = false;
 				for(Rule elem_rule : element.getRules()){
-					if(elem_rule.getType().equals(rule.getType())){
+					if(elem_rule.getType() == rule.getType()){
 						exists = true;
 						break;
 					}

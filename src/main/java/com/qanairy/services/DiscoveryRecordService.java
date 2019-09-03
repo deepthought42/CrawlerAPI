@@ -70,6 +70,6 @@ public class DiscoveryRecordService {
 	}
 
 	public List<DiscoveryRecord> getAllDiscoveriesFromTwoDaysAgo() {
-		discovery_repo.getAllDiscoveriesFromTwoDaysAgo();		
+		return discovery_repo.getAllDiscoveriesFromTwoDaysAgo();		
 	}
 }

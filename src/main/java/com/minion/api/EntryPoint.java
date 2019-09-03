@@ -5,10 +5,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Initializes the system and launches it. 
@@ -21,7 +23,8 @@ import org.springframework.context.annotation.PropertySources;
 	@PropertySource("classpath:application.properties"),
 	@PropertySource("classpath:auth0.properties")
 })
-@EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class })
+@EnableAutoConfiguration(exclude = { FreeMarkerAutoConfiguration.class, DataSourceAutoConfiguration.class })
+@EnableScheduling
 public class EntryPoint {
 	
 	public static void main(String[] args){

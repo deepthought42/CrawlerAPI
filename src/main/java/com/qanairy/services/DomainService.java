@@ -1,7 +1,7 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
-
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -117,6 +118,10 @@ public class DomainService {
 		return domain_repo.getAnimations(host);
 	}
 
+	public List<Account> getAccountsForDomain(String url) {
+		return domain_repo.getAllAccountsForDomain(url);
+	}
+	
 	/**
 	 * 
 	 * @param host

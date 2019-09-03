@@ -1,11 +1,13 @@
 package com.qanairy.models.repository;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import com.qanairy.models.Account;
 import com.qanairy.models.Action;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -77,5 +79,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	
 	@Query("MATCH (p:PageLoadAnimation) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p")
 	public Set<PageLoadAnimation> getAnimations(@Param("domain_host") String host);
+	
+	@Query("MATCH (a:Account)-[:HAS_DISCOVERY_RECORD]->(:Domain{host:{url}}) RETURN a")
+	public List<Account> getAllAccountsForDomain(@Param("url") String url);
 
 }

@@ -16,5 +16,5 @@ public interface DiscoveryRecordRepository extends Neo4jRepository<DiscoveryReco
 	public List<Account> getAllAccounts(@Param("key") String key);
 
 	@Query("MATCH (n:DiscoveryRecord) WHERE duration.inDays(datetime(n.started_at), datetime()).days > 1 AND duration.inDays(datetime(n.started_at), datetime()).days < 3 RETURN n")
-	public void getAllDiscoveriesFromTwoDaysAgo();
+	public List<DiscoveryRecord> getAllDiscoveriesFromTwoDaysAgo();
 }

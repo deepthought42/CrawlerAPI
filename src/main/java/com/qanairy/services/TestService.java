@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Browser;
+import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Account;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
@@ -34,6 +35,7 @@ import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.TestRecordRepository;
@@ -67,9 +69,6 @@ public class TestService {
 
 	@Autowired
 	private ElementStateService element_state_service;
-
-	@Autowired
-	private BrowserService browser_service;
 
 	@Autowired
 	private RedirectService redirect_service;
@@ -116,7 +115,7 @@ public class TestService {
 		 
 		 do{
 			 try {
-				browser = browser_service.getConnection(browser_name.trim(), BrowserEnvironment.DISCOVERY);
+				 BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
@@ -268,9 +267,8 @@ public class TestService {
      return test_repo.findTestWithElementState(page_state_key, element_state_key);
    }
 
-   public void init(Crawler crawler, BrowserService browser_service){
+   public void init(Crawler crawler){
      this.crawler = crawler;
-     this.browser_service = browser_service;
    }
 
    public Test findByKey(String key){

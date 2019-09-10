@@ -17,6 +17,7 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
@@ -87,7 +88,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  		
 				  		try{
 				  			System.err.println("Getting browser for form extraction");
-					  		browser = BrowserConnectionFactory.getConnection(message.getBrowser().toString(), BrowserEnvironment.DISCOVERY);
+					  		browser = BrowserConnectionFactory.getConnection(BrowserType.create(message.getBrowser().toString()), BrowserEnvironment.DISCOVERY);
 					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
 					  		
 							PageState page_state = null;
@@ -97,9 +98,7 @@ public class FormDiscoveryActor extends AbstractActor{
 									break;
 								}
 							}
-				  			System.err.println("Looking up page state by key");
 							  
-					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
 					  		System.err.println("FORM DISCOVERY ACTOR EXTRACTED FORMS :: " + forms.size());
 
@@ -108,19 +107,17 @@ public class FormDiscoveryActor extends AbstractActor{
 							  	for(ElementState field : form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
-									
-									System.err.println("Total RULES   :::   "+rules.size());
 									field.getRules().addAll(rules);
 									System.err.println("Total INPUT FIELD RULES   :::   "+field.getRules().size());
 
 								}
-							  							  	
+							  	System.err.println("startin form prediction ");					  	
 							    DeepthoughtApi.predict(form);
 						       
 							    System.err.println("PREDICTION DONE !!! ");
 							    System.err.println("********************************************************");
 							  	
-							    form = form_service.save(form);
+							    form_service.save(form);
 							  	page_state.addForm(form);
 							  	
 							  	//page_state_service.save(page_state);
@@ -132,7 +129,8 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	forms_created = true;
 						  	return;
 						} catch(Exception e){
-					  		log.debug(e.getMessage());
+							e.printStackTrace();
+					  		log.warning(e.getMessage());
 					  		forms_created = false;
 					  		//e.printStackTrace();
 					  	}

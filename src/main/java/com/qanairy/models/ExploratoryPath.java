@@ -170,7 +170,6 @@ public class ExploratoryPath {
 	}
 
 	public boolean checkIfSpansMultipleDomains() {
-		log.debug("Last page url :: " + this.findLastPage().getUrl());
 		String domain = "";
 		
 		//iterate over path

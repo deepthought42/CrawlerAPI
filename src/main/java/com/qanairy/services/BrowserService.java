@@ -54,6 +54,7 @@ import com.qanairy.models.Screenshot;
 import com.qanairy.models.Template;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
@@ -117,7 +118,7 @@ public class BrowserService {
 		return !last_page.getUrl().equals(page_state.getUrl());
 	}
 
-	public List<PageState> buildPageStates(String url, String browser_name, String host, List<PathObject> path_objects, List<String> path_keys) 
+	public List<PageState> buildPageStates(String url, BrowserType browser_type, String host, List<PathObject> path_objects, List<String> path_keys) 
 			throws MalformedURLException, IOException, Exception{
 		List<PageState> page_states = new ArrayList<>();
 		boolean error_occurred = false;
@@ -134,7 +135,7 @@ public class BrowserService {
 		do{
 			try{
 				error_occurred = false;
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
 				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 				BrowserUtils.getLoadingAnimation(browser, host);
@@ -177,7 +178,7 @@ public class BrowserService {
 		do{
 			try{
 				error_occurred = false;
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo(url);
 				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 				BrowserUtils.getLoadingAnimation(browser, host);
@@ -227,7 +228,7 @@ public class BrowserService {
 				Collections.sort(remaining_elements);
 				if(err){
 					log.warn("getting browser connection");
-					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 					BrowserUtils.getLoadingAnimation(browser, host);
@@ -1383,7 +1384,7 @@ public class BrowserService {
 			weights[0] = 0.3;
 
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(form_elem, browser),
-									"Form #1", weights, FormType.values(), FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
+									"Form #1", weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
@@ -1429,14 +1430,10 @@ public class BrowserService {
 				form.addFormFields(group_inputs);
 			}
 
-
 			for(double d: form.getPrediction()){
 				log.info("PREDICTION ::: "+d);
 			}
 
-			for(FormType type : form.getTypeOptions()){
-				log.info(" FORM TYPE          :::::     "+type);
-			}
 			log.info("weights :: "+ form.getPrediction());
 			form.setType(FormType.UNKNOWN);
 

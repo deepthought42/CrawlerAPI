@@ -43,7 +43,7 @@ public class TestTests {
 	@Before
 	public void setUp(){
 		MockitoAnnotations.initMocks(this);
-		test_service.init(crawler, browser_service);
+		test_service.init(crawler);
 	}
 	
 	@org.junit.Test

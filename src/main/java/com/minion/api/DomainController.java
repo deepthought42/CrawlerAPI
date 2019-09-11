@@ -472,7 +472,7 @@ public class DomainController {
     @RequestMapping(path="{domain_id}/forms", method = RequestMethod.PUT)
     public @ResponseBody void updateForm(HttpServletRequest request,
     							 @PathVariable(value="domain_id", required=true) long domain_id,
-    							 @RequestParam(value="key", required=true) String key,
+    							 @RequestParam(value="id", required=true) long form_id,
     							 @RequestParam(value="name", required=false) String name,
     							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
@@ -486,12 +486,13 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Form form_record = form_repo.findByKey(key);
+		Optional<Form> form_record_opt = form_repo.findById(form_id);
 		
-		if(form_record == null){
+		if(!form_record_opt.isPresent()){
 			throw new FormNotFoundException();
 		}
 		else{
+			Form form_record = form_record_opt.get();
 			if(name!=null && !name.isEmpty()){
 				form_record.setName(name);
 			}

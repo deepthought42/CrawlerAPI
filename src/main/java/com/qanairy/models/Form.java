@@ -27,12 +27,10 @@ public class Form {
     @Id
 	private Long id;
 
-    @JsonIgnore
 	private String key;
 	private Long memory_id;
 	private String name;
     
-	@JsonIgnore
 	private double[] predictions;
 	private Date date_discovered;
 	private String status;
@@ -196,5 +194,10 @@ public class Form {
 	
 	public Long getId() {
 		return id;
+	}
+	
+	@Override
+	public Form clone(){
+		return new Form(form_tag, form_fields, submit_field, name, predictions, this.getType(), date_discovered, this.getStatus());
 	}
 }

@@ -493,17 +493,29 @@ public class DomainController {
 		}
 		else{
 			Form form_record = form_record_opt.get();
+			
+			//get elements
+			//get rules for each element
+			//get form tag
+			//get submit tag
+
 			if(name!=null && !name.isEmpty()){
 				form_record.setName(name);
 			}
-			form_record.setType(FormType.create(form_type.toLowerCase()));
+			form_record.setType(FormType.create(form_type));
 			
 			if(!form_record.getType().equals(FormType.UNKNOWN)){
 				form_record.setStatus(FormStatus.CLASSIFIED);
 			}
 			
-	        //learn from form classification    
-	    	DeepthoughtApi.learn(form_record);
+	        //learn from form classification   
+			Form learnable_form = form_record.clone();
+			learnable_form.setPredictions(new double[0]);
+			learnable_form.setDateDiscovered(null);
+			learnable_form.setStatus(null);
+			learnable_form.setMemoryId(null);
+			
+	    	DeepthoughtApi.learn(learnable_form, form_record.getMemoryId());
 	    
 	    	form_record = form_repo.save(form_record);
 	

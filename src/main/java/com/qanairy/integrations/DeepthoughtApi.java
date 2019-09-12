@@ -16,7 +16,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +39,7 @@ public class DeepthoughtApi {
 	    builder.addTextBody("json_object", form_json);
 	    builder.addTextBody("input_vocab_label", "html");
 	    builder.addTextBody("output_vocab_label", "form_type");
-	    builder.addTextBody("new_output_features", Arrays.toString(Arrays.stream(LabelSetsService.getFormTypeOptions()).map(Enum::name).toArray(String[]::new)));
+	    builder.addTextBody("new_output_features", Arrays.toString(LabelSetsService.getFormTypeOptions()));
 	    
 	    HttpEntity multipart = builder.build();
 	    httpPost.setEntity(multipart);
@@ -99,7 +98,7 @@ public class DeepthoughtApi {
 	  	 form.setPredictions(weights);
 	}
 	
-	public static void learn(Form form) throws UnsupportedOperationException, IOException{
+	public static void learn(Form form, Long memory_id) throws UnsupportedOperationException, IOException{
 		log.info("FORM ::    "+form);
 		log.info("FORM MEMORY ID   :::   "+form.getMemoryId());
 		log.info("feature value :: "+form.getType());
@@ -109,7 +108,7 @@ public class DeepthoughtApi {
 	    HttpPost httpPost = new HttpPost("http://198.211.117.122:9080/rl/learn");
 	 
 	    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-	    builder.addTextBody("memory_id", form.getMemoryId().toString());
+	    builder.addTextBody("memory_id", memory_id.toString());
 	    builder.addTextBody("feature_value", form.getType().toString());
 	    
 	    //builder.addTextBody("isRewarded", Boolean.toString(isRewarded));

@@ -11,6 +11,4 @@ public class LabelSetsService {
 		// TODO Auto-generated method stub
 		return FormType.values();
 	}
-
-	
 }

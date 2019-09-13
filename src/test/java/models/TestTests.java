@@ -18,7 +18,6 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 
 public class TestTests {
@@ -36,9 +35,6 @@ public class TestTests {
 	
 	@Spy
 	private TestService test_service;
-	
-	@Mock
-	private BrowserService browser_service;
 	
 	@Before
 	public void setUp(){

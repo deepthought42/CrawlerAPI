@@ -11,7 +11,6 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 
@@ -55,6 +54,7 @@ public class Form {
 		setSubmitField(submit_field);
 		setType(determineFormType());
 		setName(name);
+		setType(type);
 		setPredictions(predictions);
 		setDateDiscovered(date_discovered);
 		setStatus(status);

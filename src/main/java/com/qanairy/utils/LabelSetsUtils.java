@@ -1,14 +1,13 @@
-package com.qanairy.services;
+package com.qanairy.utils;
 
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.enums.FormType;
 
 @Service
-public class LabelSetsService {
+public class LabelSetsUtils {
 
 	public static FormType[] getFormTypeOptions() {
-		// TODO Auto-generated method stub
 		return FormType.values();
 	}
 }

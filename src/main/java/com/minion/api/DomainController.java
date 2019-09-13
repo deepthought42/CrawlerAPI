@@ -58,6 +58,7 @@ import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.FormService;
 import com.qanairy.services.RedirectService;
 import com.qanairy.utils.BrowserUtils;
 import com.segment.analytics.Analytics;
@@ -87,6 +88,9 @@ public class DomainController {
 	
 	@Autowired
 	private FormRepository form_repo;
+
+	@Autowired
+	private FormService form_service;
 	
 	@Autowired
     private ActorSystem actor_system;
@@ -486,19 +490,12 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Optional<Form> form_record_opt = form_repo.findById(form_id);
+		Form form_record = form_service.findById(form_id);
 		
-		if(!form_record_opt.isPresent()){
+		if(form_record == null){
 			throw new FormNotFoundException();
 		}
 		else{
-			Form form_record = form_record_opt.get();
-			
-			//get elements
-			//get rules for each element
-			//get form tag
-			//get submit tag
-
 			if(name!=null && !name.isEmpty()){
 				form_record.setName(name);
 			}
@@ -508,14 +505,8 @@ public class DomainController {
 				form_record.setStatus(FormStatus.CLASSIFIED);
 			}
 			
-	        //learn from form classification   
-			Form learnable_form = form_record.clone();
-			learnable_form.setPredictions(new double[0]);
-			learnable_form.setDateDiscovered(null);
-			learnable_form.setStatus(null);
-			learnable_form.setMemoryId(null);
-			
-	    	DeepthoughtApi.learn(learnable_form, form_record.getMemoryId());
+	        //learn from form classification   			
+	    	DeepthoughtApi.learn(form_record, form_record.getMemoryId());
 	    
 	    	form_record = form_repo.save(form_record);
 	

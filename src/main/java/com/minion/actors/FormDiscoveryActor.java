@@ -112,11 +112,7 @@ public class FormDiscoveryActor extends AbstractActor{
 
 								}
 							  	System.err.println("startin form prediction ");		
-							  	Form learnable_form = form.clone();
-								learnable_form.setDateDiscovered(null);
-								learnable_form.setStatus(null);
-								learnable_form.setMemoryId(null);
-							    DeepthoughtApi.predict(learnable_form);
+							    DeepthoughtApi.predict(form);
 						       
 							    System.err.println("PREDICTION DONE !!! ");
 							    System.err.println("********************************************************");

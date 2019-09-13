@@ -1,8 +1,11 @@
 package com.qanairy.models.repository;
 
+import java.util.List;
+
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
+import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 
@@ -14,4 +17,13 @@ public interface FormRepository extends Neo4jRepository<Form, Long> {
 	
 	@Query("Match (p:PageState)-[:HAS]->(:Form{key:{key}}) RETURN p")
 	public PageState getPageState(@Param("key") String key);
+
+	@Query("Match (:Form{key:{key}})-[:HAS]->(e) RETURN e")
+	public List<ElementState> getElementStates(@Param("key") String key);
+	
+	@Query("Match (:Form{key:{key}})-[:HAS_SUBMIT]->(e) RETURN e")
+	public ElementState getSubmitElement(@Param("key") String key);
+	
+	@Query("Match (:Form{key:{key}})-[:DEFINED_BY]->(e) RETURN e")
+	public ElementState getFormElement(@Param("key") String key);
 }

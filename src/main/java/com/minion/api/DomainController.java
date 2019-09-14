@@ -505,9 +505,13 @@ public class DomainController {
 				form_record.setStatus(FormStatus.CLASSIFIED);
 			}
 			
+			try {
 	        //learn from form classification   			
-	    	DeepthoughtApi.learn(form_record, form_record.getMemoryId());
-	    
+				DeepthoughtApi.learn(form_record, form_record.getMemoryId());
+			}catch(Exception e) {
+				log.error("There was an error sending learn request to RL engine for form record "+form_record.getId()+" with memory id "+form_record.getMemoryId());
+			}
+			
 	    	form_record = form_repo.save(form_record);
 	
 			Optional<Domain> optional_domain = domain_service.findById(domain_id);

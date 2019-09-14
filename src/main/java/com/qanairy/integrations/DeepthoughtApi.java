@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qanairy.models.Form;
-import com.qanairy.services.LabelSetsService;
+import com.qanairy.utils.LabelSetsUtils;
 
 @Component
 public class DeepthoughtApi {
@@ -40,7 +40,7 @@ public class DeepthoughtApi {
 	    builder.addTextBody("json_object", form_json);
 	    builder.addTextBody("input_vocab_label", "html");
 	    builder.addTextBody("output_vocab_label", "form_type");
-	    builder.addTextBody("new_output_features", Arrays.toString(LabelSetsService.getFormTypeOptions()));
+	    builder.addTextBody("new_output_features", Arrays.toString(LabelSetsUtils.getFormTypeOptions()));
 	    
 	    HttpEntity multipart = builder.build();
 	    httpPost.setEntity(multipart);

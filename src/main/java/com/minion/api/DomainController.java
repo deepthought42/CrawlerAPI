@@ -513,7 +513,7 @@ public class DomainController {
 			}
 			
 	    	form_record = form_repo.save(form_record);
-	
+	    	PageState page = form_service.getPageState(form_record);
 			Optional<Domain> optional_domain = domain_service.findById(domain_id);
 			log.info("Does the domain exist :: "+optional_domain.isPresent());
 	    	if(optional_domain.isPresent()){
@@ -522,7 +522,7 @@ public class DomainController {
 	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
 	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
 	    		//start form test creation actor
-	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain);
+	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain, page);
 		        
 	    		if(domain_actors.get(domain.getUrl()) == null){
 	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

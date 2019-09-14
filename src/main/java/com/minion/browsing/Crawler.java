@@ -5,7 +5,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -37,6 +36,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
@@ -579,10 +579,9 @@ public class Crawler {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
-		Map<String, ElementState> visible_element_map = new HashMap<>();
 		do{
 			try{
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 				PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 				log.warn("expected path url : "+expected_page.getUrl());
 				browser.navigateTo(expected_page.getUrl());
@@ -603,7 +602,7 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
+				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 				
@@ -658,13 +657,13 @@ public class Crawler {
 		int tries = 0;
 		Browser browser = null;
 		PathMessage new_path = path.clone();
-		Map<String, ElementState> visible_element_map = new HashMap<>();
 		boolean no_such_element_exception = false;
+		
 		do{
 			try{
 				if(!no_such_element_exception){
 					no_such_element_exception = false;
-					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 					browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));
@@ -688,7 +687,7 @@ public class Crawler {
 				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 
-    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
+    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());

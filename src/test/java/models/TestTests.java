@@ -22,15 +22,6 @@ import com.qanairy.services.TestService;
 
 public class TestTests {
 	@Mock
-	private PageState page_state;
-	
-	@Mock
-	private PageState page_state1;
-	
-	@Mock
-	private Test test;
-	
-	@Mock
 	private Crawler crawler;
 	
 	@Spy

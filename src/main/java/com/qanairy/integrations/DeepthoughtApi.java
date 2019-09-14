@@ -145,6 +145,8 @@ public class DeepthoughtApi {
             	log.info("***********************************************************");
             case 500:
             	return;
+            default:
+            	return;
         }
 	    client.close();
 	}

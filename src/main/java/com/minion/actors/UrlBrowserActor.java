@@ -52,7 +52,7 @@ public class UrlBrowserActor extends AbstractActor {
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
-	DiscoveryRecordRepository discovery_repo;
+	private DiscoveryRecordRepository discovery_repo;
 
 	@Autowired
 	private ActorSystem actor_system;

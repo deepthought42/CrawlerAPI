@@ -637,13 +637,17 @@ public class PageState implements Persistable, PathObject {
 
 	public void setTemplates(List<Template> templates) {
 		this.templates = templates;
-  }
+	}
 
-  public boolean isLoginRequired() {
+	public boolean isLoginRequired() {
 		return login_required;
 	}
 
 	public void setLoginRequired(boolean login_required) {
 		this.login_required = login_required;
+	}
+	
+	public Long getId() {
+		return this.id;
 	}
 }

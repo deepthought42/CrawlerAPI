@@ -121,94 +121,13 @@ public class BrowserService {
 	public List<PageState> buildPageStates(String url, BrowserType browser_type, String host, List<PathObject> path_objects, List<String> path_keys) 
 			throws MalformedURLException, IOException, Exception{
 		List<PageState> page_states = new ArrayList<>();
-		boolean error_occurred = false;
 		Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
 		Map<String, ElementState> element_xpaths = new HashMap<>();
 
 		Browser browser = null;
-		boolean is_browser_closed = true;
-		List<ElementState> visible_elements = new ArrayList<>();
 		Map<String, Template> template_elements = new HashMap<>();
-		List<ElementState> element_list = new ArrayList<>();
-		
-		do{
-			try{
-				error_occurred = false;
-				browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
-				browser.navigateTo(url);
-				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
-				BrowserUtils.getLoadingAnimation(browser, host);
-				
-				String source = browser.getDriver().getPageSource();
-				browser.close();
-				List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);					
-				template_elements = browser_service.findTemplates(all_elements_list);
-				template_elements = browser_service.reduceTemplatesToParents(template_elements);
-				template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
-				//element_xpath_list = getXpathsUsingJSoup(browser.getDriver().getPageSource());
-				element_list = BrowserService.getElementsUsingJSoup(source);
-			}catch(NullPointerException e){
-				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
-				error_occurred = true;
-			} catch (GridException e) {
-				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
-				error_occurred = true;
-			}
-			catch (NoSuchElementException e){
-				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
-				error_occurred = true;
-			}
-			catch (WebDriverException e) {
-				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
-				error_occurred = true;
-			} catch(Exception e){
-				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
-				error_occurred = true;
-			}
-			finally{
-				if(browser != null && is_browser_closed){
-					browser.close();
-				}
-			}
-		}while(error_occurred);
-		
-		log.warn("done extracting list items. Now retrieving visible elements");
-		do{
-			try{
-				error_occurred = false;
-				browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
-				browser.navigateTo(url);
-				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
-				BrowserUtils.getLoadingAnimation(browser, host);
-
-				visible_elements = getVisibleElements(browser, element_list);
-			}catch(NullPointerException e){
-				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
-				error_occurred = true;
-				is_browser_closed = true;
-			} catch (GridException e) {
-				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
-				error_occurred = true;
-			}
-			catch (NoSuchElementException e){
-				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
-				error_occurred = true;
-			}
-			catch (WebDriverException e) {
-				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
-				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
-				error_occurred = true;
-			} catch(Exception e){
-				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
-				error_occurred = true;
-			}
-			finally{
-				if(browser != null && is_browser_closed){
-					browser.close();
-				}
-			}
-		}while(error_occurred);
+		List<ElementState> element_list = crawlPathAndBuildElementList(url, host, browser_type, path_keys, path_objects, template_elements);
+		List<ElementState> visible_elements = crawlPathAndBuildVisibleElementList(url, host, browser_type, path_keys, path_objects, element_list);
 		
 		log.warn("####  returning elements list : "+visible_elements.size()+ "   :    "+url);
 
@@ -279,11 +198,122 @@ public class BrowserService {
 		}
 
 		element_xpaths = new HashMap<String, ElementState>();
-		
-		error_occurred = false;
 		return page_states;
 	}
 	
+	private List<ElementState> crawlPathAndBuildVisibleElementList(
+			  String url, 
+			  String host, 
+			  BrowserType browser_type, 
+			  List<String> path_keys, 
+			  List<PathObject> path_objects,
+			  List<ElementState> elements) {
+		boolean error_occurred = false;
+		Browser browser = null;
+		log.warn("done extracting list items. Now retrieving visible elements");
+		do{
+			try{
+				error_occurred = false;
+				browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(url);
+				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
+				BrowserUtils.getLoadingAnimation(browser, host);
+
+				return getVisibleElements(browser, elements);
+			}catch(NullPointerException e){
+				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
+				error_occurred = true;
+			} catch (GridException e) {
+				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
+				error_occurred = true;
+			}
+			catch (NoSuchElementException e){
+				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
+				error_occurred = true;
+			}
+			catch (WebDriverException e) {
+				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
+				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				error_occurred = true;
+			} catch(Exception e){
+				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
+				error_occurred = true;
+			}
+			finally{
+				if(browser != null){
+					browser.close();
+				}
+			}
+		}while(error_occurred);
+
+		return new ArrayList<ElementState>();
+	}
+
+	/**
+	 * Crawls path and builds all elements that are present at end of crawl
+	 * 
+	 * @param url
+	 * @param host
+	 * @param browser_type
+	 * @param path_keys
+	 * @param path_objects
+	 * @param template_elements
+	 * @return
+	 */
+	private List<ElementState> crawlPathAndBuildElementList(
+			String url, 
+			String host, 
+			BrowserType browser_type, 
+			List<String> path_keys, 
+			List<PathObject> path_objects, 
+			Map<String, Template> template_elements) {
+		boolean error_occurred = false;
+		Browser browser = null;
+		do{
+			try{
+				error_occurred = false;
+				browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
+				browser.navigateTo(url);
+				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
+				BrowserUtils.getLoadingAnimation(browser, host);
+				
+				String source = browser.getDriver().getPageSource();
+				browser.close();
+				List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);					
+				template_elements = browser_service.findTemplates(all_elements_list);
+				template_elements = browser_service.reduceTemplatesToParents(template_elements);
+				template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
+				//element_xpath_list = getXpathsUsingJSoup(browser.getDriver().getPageSource());
+				return BrowserService.getElementsUsingJSoup(source);
+			}catch(NullPointerException e){
+				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
+				error_occurred = true;
+			} catch (GridException e) {
+				log.warn("Grid exception encountered while trying to build page states"+e.getMessage());
+				error_occurred = true;
+			}
+			catch (NoSuchElementException e){
+				log.error("Unable to locate element while performing build page states   ::    "+ e.getMessage());
+				error_occurred = true;
+			}
+			catch (WebDriverException e) {
+				//TODO: HANDLE EXCEPTION THAT OCCURS BECAUSE THE PAGE ELEMENT IS NOT ON THE PAGE
+				log.debug("WebDriver exception encountered while trying to crawl exporatory path"+e.getMessage());
+				error_occurred = true;
+			} catch(Exception e){
+				log.warn("Exception occurred in getting page states. \n"+e.getMessage());
+				error_occurred = true;
+			}
+			finally{
+				if(browser != null){
+					browser.close();
+				}
+			}
+		}while(error_occurred);
+		
+		return new ArrayList<ElementState>();
+	}
+
 	private boolean isElementLargerThanViewport(Browser browser, WebElement elementState) {
 		int height = elementState.getSize().getHeight();
 		int width = elementState.getSize().getWidth();

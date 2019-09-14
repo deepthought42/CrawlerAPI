@@ -32,7 +32,6 @@ import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
-import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -50,9 +49,6 @@ import com.qanairy.utils.BrowserUtils;
 public class UrlBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private DiscoveryRecordRepository discovery_repo;
 
 	@Autowired
 	private ActorSystem actor_system;

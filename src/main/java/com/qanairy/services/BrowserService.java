@@ -101,7 +101,7 @@ public class BrowserService {
 	public Browser getConnection(String browser_name, BrowserEnvironment browser_env) throws MalformedURLException {
 		assert browser_name != null;
 		assert !browser_name.isEmpty();
-		return BrowserConnectionFactory.getConnection(browser_name, browser_env);
+		return BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), browser_env);
 	}
 
 	/**
@@ -127,7 +127,6 @@ public class BrowserService {
 
 		Browser browser = null;
 		boolean is_browser_closed = true;
-		Map<String, ElementState> visible_element_map = new HashMap<>();
 		List<ElementState> visible_elements = new ArrayList<>();
 		Map<String, Template> template_elements = new HashMap<>();
 		List<ElementState> element_list = new ArrayList<>();
@@ -183,7 +182,7 @@ public class BrowserService {
 				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 				BrowserUtils.getLoadingAnimation(browser, host);
 
-				visible_elements = getVisibleElements(browser, visible_element_map, element_list);
+				visible_elements = getVisibleElements(browser, element_list);
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				error_occurred = true;
@@ -679,31 +678,22 @@ public class BrowserService {
 	 * 
 	 * @pre visible_element_map != null
 	 */
-	public List<ElementState> getVisibleElements(Browser browser, Map<String, ElementState> visible_element_map, List<ElementState> elements)
+	public List<ElementState> getVisibleElements(Browser browser, List<ElementState> elements)
 															 throws WebDriverException, GridException, IOException{		
-		assert visible_element_map != null;
+		assert elements != null;
 		long start_time = System.currentTimeMillis();
-
+		List<ElementState> visible_elements = new ArrayList<>();
 		boolean err = false;
+		
 		do{
 			err = false;
 			try{
-				int visible_map_size = visible_element_map.keySet().size();
-				int start_idx = 0;
-				if(visible_map_size > 1){
-					start_idx = visible_map_size-1;
-				}
-				
-				List<ElementState> element_sublist = elements.subList(start_idx, elements.size());
-				for(ElementState element_state : element_sublist){
+				for(ElementState element_state : elements){
 					try{
 						WebElement element = browser.findWebElementByXpath(element_state.getXpath());
 						if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && !isElementLargerThanViewport(browser, element)){
 							ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes());
-							visible_element_map.put(element_state.getXpath().trim(), new_element_state);
-						}
-						else{
-							visible_element_map.put(element_state.getXpath().trim(), null);
+							visible_elements.add(new_element_state);
 						}
 					}catch(NoSuchElementException e){
 						log.warn("Unable to find element :: "+e.getMessage());
@@ -719,14 +709,6 @@ public class BrowserService {
 		}while(err);
 		
 		log.warn("total time get all visible elements :: " + (System.currentTimeMillis() - start_time));
-
-		List<ElementState> visible_elements = new ArrayList<>();
-		for(ElementState element : visible_element_map.values()){
-			if(element != null){
-				visible_elements.add(element);
-			}
-		}
-		
 		return visible_elements;
 	}
 	

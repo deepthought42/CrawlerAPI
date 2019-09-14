@@ -1,23 +1,29 @@
 package com.qanairy.models.message;
 
+import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
 import com.qanairy.models.Form;
-import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.PageState;
 
 import akka.actor.ActorRef;
 
+/**
+ * Message that transports {@link Form}, {@link DiscoveryRecord}, {@link PageState}, and {@link Domain} objects
+ */
 public class FormDiscoveryMessage {
 
 	private Form form;
-	private BrowserType browser;
+	private DiscoveryRecord discovery;
+	private PageState page;
 	private ActorRef domain_actor;
 	private ActorRef discovery_actor; 
 	private Domain domain;
 	
-	public FormDiscoveryMessage(Form form, BrowserType browser, Domain domain) {
+	public FormDiscoveryMessage(Form form, DiscoveryRecord discovery, Domain domain, PageState page) {
 		setForm(form);
-		setBrowserType(browser);
+		setDiscovery(discovery);
 		setDomain(domain);
+		setPage(page);
 	}
 
 	public Form getForm() {
@@ -26,14 +32,6 @@ public class FormDiscoveryMessage {
 
 	private void setForm(Form form) {
 		this.form = form;
-	}
-
-	public BrowserType getBrowserType() {
-		return browser;
-	}
-
-	private void setBrowserType(BrowserType browser_type) {
-		this.browser = browser_type;
 	}
 
 	public void setDomainActor(ActorRef domain_actor) {
@@ -58,5 +56,21 @@ public class FormDiscoveryMessage {
 
 	private void setDomain(Domain domain) {
 		this.domain = domain;
+	}
+
+	public DiscoveryRecord getDiscovery() {
+		return discovery;
+	}
+
+	public void setDiscovery(DiscoveryRecord discovery) {
+		this.discovery = discovery;
+	}
+
+	public PageState getPage() {
+		return page;
+	}
+
+	public void setPage(PageState page) {
+		this.page = page;
 	}
 }

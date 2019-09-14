@@ -520,8 +520,9 @@ public class DomainController {
 	    		Domain domain = optional_domain.get();
 	        		
 	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
+	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
 	    		//start form test creation actor
-	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, BrowserType.create(domain.getDiscoveryBrowserName()), domain);
+	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain);
 		        
 	    		if(domain_actors.get(domain.getUrl()) == null){
 	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

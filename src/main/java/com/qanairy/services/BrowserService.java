@@ -132,6 +132,9 @@ public class BrowserService {
 		log.warn("####  returning elements list : "+visible_elements.size()+ "   :    "+url);
 
 		for(ElementState elem : visible_elements){
+			if(elem == null) {
+				continue;
+			}
 			element_xpaths.put(elem.getXpath(), elem);
 		}
 
@@ -434,6 +437,9 @@ public class BrowserService {
 			//extract visible elements from list of elementstates provided
 			List<ElementState> visible_elements = new ArrayList<>();
 			for(ElementState element : all_elements){
+				if(element == null) {
+					continue;
+				}
 				if(isElementVisibleInPane(browser, element)){
 					ElementState new_element_state = element.clone();
 					WebElement new_element = browser.findWebElementByXpath(element.getXpath());
@@ -770,6 +776,9 @@ public class BrowserService {
 				
 				List<ElementState> element_sublist = elements.subList(start_idx, elements.size());
 				for(ElementState element_state : element_sublist){
+					if(element_state == null) {
+						continue;
+					}
 					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
 					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && isElementVisibleInPane(browser, element.getLocation(), element.getSize())){
 						ElementState new_element_state = buildElementState(browser, element, page_screenshot, element_state.getXpath(), element_state.getAttributes());
@@ -1024,6 +1033,10 @@ public class BrowserService {
 	}
 	
 	public static boolean isElementVisibleInPane(Browser browser, Point location, Dimension size){
+		assert browser != null;
+		assert location != null;
+		assert size != null;
+		
 		int y_offset = browser.getYScrollOffset();
 		int x_offset = browser.getXScrollOffset();
 
@@ -1038,6 +1051,9 @@ public class BrowserService {
 	}
 
 	public static boolean isElementVisibleInPane(Browser browser, ElementState elem){
+		assert elem != null;
+		assert browser != null;
+		
 		int x_offset = browser.getXScrollOffset();
 		int y_offset = browser.getYScrollOffset();
 

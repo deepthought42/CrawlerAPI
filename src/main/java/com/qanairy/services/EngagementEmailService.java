@@ -34,7 +34,8 @@ public class EngagementEmailService {
 			List<Account> accounts = domain_service.getAccountsForDomain(record.getDomainUrl());
 			for(Account account : accounts){				
 				//send email to user
-				email_service.sendHtmlMessage(account.getUsername(), "Discovery progress report : "+record.getDomainUrl(), "Discovery on "+record.getDomainUrl()+" has so far reviewed "+record.getExaminedPathCount() + " out of " + record.getTotalPathCount() + " possible scenarios and generated "+record.getTestCount()+". Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
+				//email_service.sendHtmlMessage(account.getUsername(), "Discovery progress report : "+record.getDomainUrl(), "Discovery on "+record.getDomainUrl()+" has so far reviewed "+record.getExaminedPathCount() + " out of " + record.getTotalPathCount() + " possible scenarios and generated "+record.getTestCount()+". Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
+				email_service.sendHtmlMessage("bkindred@qanairy.com", "Discovery progress report : "+record.getDomainUrl(), "Discovery on "+record.getDomainUrl()+" has so far reviewed "+record.getExaminedPathCount() + " out of " + record.getTotalPathCount() + " possible scenarios and generated "+record.getTestCount()+". Visit the <a href='app.qanairy.com/discovery>Discovery panel</a> to start classifying your tests");
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package browser;
 
 import static org.junit.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -130,7 +129,7 @@ public class BrowserTest {
 	}
 	
 	public void scrollToElementInChrome() throws MalformedURLException{
-		Browser browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+		Browser browser = BrowserConnectionFactory.getConnection(BrowserType.create("chrome"), BrowserEnvironment.DISCOVERY);
 		browser.navigateTo("https://qa-testbed.qanairy.com/viewport_pages/element_out_of_view_y_axis.html");
 		WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 		

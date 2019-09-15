@@ -1,4 +1,4 @@
-package com.qanairy.quartz;
+package com.qanairy.config;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -23,12 +23,12 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.scheduling.quartz.SimpleTriggerFactoryBean;
 import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 
-import com.qanairy.config.AutoWiringSpringBeanJobFactory;
+import com.qanairy.quartz.EmailAfterFourtyEightHours;
 
 @Configuration
 @EnableAutoConfiguration
 @ConditionalOnExpression("'${using.spring.schedulerFactory}'=='true'")
-public class QuartzScheduler  {
+public class SpringQuartzScheduler {
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -49,15 +49,33 @@ public class QuartzScheduler  {
         return jobFactory;
     }
 
+    @Bean
+    public SchedulerFactoryBean scheduler(Trigger trigger, JobDetail job, DataSource quartzDataSource) {
+
+        SchedulerFactoryBean schedulerFactory = new SchedulerFactoryBean();
+        schedulerFactory.setConfigLocation(new ClassPathResource("quartz.properties"));
+
+        logger.debug("Setting the Scheduler up");
+        schedulerFactory.setJobFactory(springBeanJobFactory());
+        schedulerFactory.setJobDetails(job);
+        schedulerFactory.setTriggers(trigger);
+
+        // Comment the following line to use the default Quartz job store.
+        schedulerFactory.setDataSource(quartzDataSource);
+
+        return schedulerFactory;
+    }
 
     @Bean
-	public JobDetailFactoryBean jobDetail() {
-	    JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
-	    jobDetailFactory.setJobClass(EmailAfterFourtyEightHours.class);
-	    jobDetailFactory.setDescription("Invoke Sample Job service...");
-	    jobDetailFactory.setDurability(true);
-	    return jobDetailFactory;
-	}
+    public JobDetailFactoryBean jobDetail() {
+
+        JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
+        jobDetailFactory.setJobClass(EmailAfterFourtyEightHours.class);
+        jobDetailFactory.setName("Fourty_eight_hours_after_discovery_started_email");
+        jobDetailFactory.setDescription("Send email to users that started a discovery 3 days ago..");
+        jobDetailFactory.setDurability(true);
+        return jobDetailFactory;
+    }
 
     @Bean
     public SimpleTriggerFactoryBean trigger(JobDetail job) {
@@ -70,11 +88,12 @@ public class QuartzScheduler  {
 
         trigger.setRepeatInterval(frequencyInSec * 1000);
         trigger.setRepeatCount(SimpleTrigger.REPEAT_INDEFINITELY);
-        trigger.setName("Qrtz_Trigger");
+        trigger.setName("Qrtz_Three_Day_Email_Trigger");
         return trigger;
     }
 
     @Bean
+    @QuartzDataSource
     @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource quartzDataSource() {
         return DataSourceBuilder.create().build();

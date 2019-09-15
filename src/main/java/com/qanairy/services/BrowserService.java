@@ -141,7 +141,7 @@ public class BrowserService {
 		// BUILD ALL PAGE STATES
 		int iter_idx=0;
 		boolean err = true;
-		
+		int npe_count = 0;
 		while(element_xpaths.size() > 0){
 			log.warn("building page with remaining element xpaths :: " +element_xpaths.size());
 			try{
@@ -164,6 +164,10 @@ public class BrowserService {
 					iter_idx=0;
 				}
 
+				if(npe_count > 3) {
+					visible_elements.remove(0);
+					npe_count = 0;
+				}
 				log.warn("getting current url from browser");
 				String browser_url = browser.getDriver().getCurrentUrl();
 				String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
@@ -187,6 +191,7 @@ public class BrowserService {
 				iter_idx++;
 			}
 			catch(NullPointerException e){
+				npe_count++;
 				err=true;
 				e.printStackTrace();
 			}
@@ -1046,8 +1051,8 @@ public class BrowserService {
 		int height = size.getHeight();
 		int width = size.getWidth();
 
-		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) < (browser.getViewportSize().getWidth())
-				&& ((y-y_offset)+height) < (browser.getViewportSize().getHeight());
+		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) <= (browser.getViewportSize().getWidth())
+				&& ((y-y_offset)+height) <= (browser.getViewportSize().getHeight());
 	}
 
 	public static boolean isElementVisibleInPane(Browser browser, ElementState elem){
@@ -1063,8 +1068,8 @@ public class BrowserService {
 		int height = elem.getHeight();
 		int width = elem.getWidth();
 
-		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) < (browser.getViewportSize().getWidth())
-				&& ((y-y_offset)+height) < (browser.getViewportSize().getHeight());
+		return x >= x_offset && y >= y_offset && ((x-x_offset)+width) <= (browser.getViewportSize().getWidth())
+				&& ((y-y_offset)+height) <= (browser.getViewportSize().getHeight());
 	}
 
 	public static boolean isElementVisibleInPane(int x_offset, int y_offset, WebElement elem, Dimension viewport_size){

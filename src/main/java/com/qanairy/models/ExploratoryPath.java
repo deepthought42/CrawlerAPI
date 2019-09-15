@@ -169,30 +169,6 @@ public class ExploratoryPath {
 		return false;
 	}
 
-	public boolean checkIfSpansMultipleDomains() {
-		log.debug("Last page url :: " + this.findLastPage().getUrl());
-		String domain = "";
-		
-		//iterate over path
-		List<PathObject> path_obj_list = getPathObjects();
-		
-		for(PathObject obj : path_obj_list){
-			if(obj instanceof PageState){
-				PageState page = (PageState)obj;
-				String curr_domain = page.getUrl().toString();
-				if(domain.isEmpty()){
-					domain = curr_domain;
-				}
-				else if(!domain.equals(curr_domain)){
-					return true;
-				}
-			}
-		}
-		
-		//if path domains change then return true
-		return false;
-	}
-
 	public PageState firstPage() {
 		
 		for(PathObject obj : getPathObjects()){

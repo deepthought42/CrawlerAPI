@@ -71,7 +71,7 @@ public class ElementStateService {
 			
 			//get rules that exit in element but not in element_record
 			List<Rule> rule_removal_list = new ArrayList<>();
-			List<Rule> element_record_rules = element_repo.getRules(element_record.getKey());
+			Set<Rule> element_record_rules = element_repo.getRules(element_record.getKey());
 			log.warn("element record rules  :: "  +element_record_rules.size());
 			for(Rule rule : element_record_rules ){
 				boolean exists = false;
@@ -123,5 +123,9 @@ public class ElementStateService {
 
 	public ElementState findById(long id) {
 		return element_repo.findById(id).get();
+	}
+
+	public Set<Rule> getRules(String element_key) {
+		return element_repo.getRules(element_key);
 	}
 }

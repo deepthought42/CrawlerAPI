@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.PageState;
 import com.qanairy.models.Test;
-import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestService;
 
 @SpringBootTest
@@ -30,13 +29,10 @@ public class TestServiceTest {
 	@Spy
 	private TestService test_service;
 	
-	@Mock
-	private BrowserService browser_service;
-	
 	@Before
 	public void setUp(){
 		MockitoAnnotations.initMocks(this);
-		test_service.init(crawler, browser_service);
+		test_service.init(crawler);
 	}
 	
 	/*

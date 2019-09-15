@@ -7,3 +7,5 @@ LOG_FILE_IS_UNDEFINED
 src/main/resources/qanairy.jks
 *.properties
 *.p12
+.settings/org.eclipse.jdt.core.prefs
+.classpath

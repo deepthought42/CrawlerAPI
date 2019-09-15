@@ -3,8 +3,8 @@ package com.qanairy.models.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum FormType {
-	LOGIN("login"), REGISTRATION("registration"), CONTACT_COMPANY("contact_company"), SUBSCRIBE("subscribe"), 
-	LEAD("lead"), SEARCH("search"), PASSWORD_RESET("password_reset"), PAYMENT("payment"), UNKNOWN("unknown");
+	LOGIN("LOGIN"), REGISTRATION("REGISTRATION"), CONTACT_COMPANY("CONTACT_COMPANY"), SUBSCRIBE("SUBSCRIBE"), 
+	LEAD("LEAD"), SEARCH("SEARCH"), PASSWORD_RESET("PASSWORD_RESET"), PAYMENT("PAYMENT"), UNKNOWN("UNKNOWN");
 	
 	private String shortName;
 

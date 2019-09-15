@@ -242,6 +242,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 	private ElementState findInputElementByAttribute(List<ElementState> elements, String search_val) {
 		for(ElementState element : elements){
 			//check if element is type email
+			log.warning("element get type :: "+element.getType().contains(search_val));
 			if(element.getType().contains(search_val)){
 				return element;
 			}
@@ -249,11 +250,16 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 			//check if element has value username in any attributes
 			for(Attribute attribute : element.getAttributes()){
 				for(String val : attribute.getVals()){
+					log.warning("element attribute value  :: "+val.contains(search_val));
+
 					if(val.contains(search_val)){
 						return element;
 					}
 				}
 			}
+			log.warning("element attribute value  :: "+element.getName().contains(search_val));
+			log.warning("element xpath value  :: "+element.getXpath().contains(search_val));
+
 			if(element.getName().contains(search_val)){
 				return element;
 			}

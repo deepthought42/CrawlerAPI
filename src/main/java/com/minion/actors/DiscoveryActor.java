@@ -125,6 +125,7 @@ public class DiscoveryActor extends AbstractActor{
 						
 						//String path_key = String.join(":::", message.getKeys());
 						//if(!discovery_record.getExpandedPathKeys().contains(path_key)){	
+							
 							if(path_expansion_actor == null){
 								path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());

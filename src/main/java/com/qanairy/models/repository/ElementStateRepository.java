@@ -1,6 +1,6 @@
 package com.qanairy.models.repository;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -20,5 +20,5 @@ public interface ElementStateRepository extends Neo4jRepository<ElementState, Lo
 	public void removeRule(@Param("element_key") String element_key, @Param("key") String key);
 
 	@Query("MATCH (:ElementState{key:{element_key}})-[:HAS]->(r) RETURN r")
-	public List<Rule> getRules(@Param("element_key") String element_key);
+	public Set<Rule> getRules(@Param("element_key") String element_key);
 }

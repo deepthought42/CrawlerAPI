@@ -47,7 +47,6 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.utils.BrowserUtils;
-import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -127,7 +126,7 @@ public class TestCreationActor extends AbstractActor  {
 								String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 								
 				    			PageState result_page = browser_service.buildPage(browser, elements, url_without_params);
-								boolean leaves_domain = !(domain.getUrl().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
+								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
 
 								test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);

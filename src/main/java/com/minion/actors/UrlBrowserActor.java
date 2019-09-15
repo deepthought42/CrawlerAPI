@@ -32,7 +32,6 @@ import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
-import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -50,9 +49,6 @@ import com.qanairy.utils.BrowserUtils;
 public class UrlBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	DiscoveryRecordRepository discovery_repo;
 
 	@Autowired
 	private ActorSystem actor_system;
@@ -92,7 +88,7 @@ public class UrlBrowserActor extends AbstractActor {
 					log.warn("starting transition detection");
 					Redirect redirect = null;
 					PageLoadAnimation animation = null;
-
+					BrowserType browser_type = BrowserType.create(browser_name);
 					List<String> path_keys = null;
 					List<PathObject> path_objects = null;
 					
@@ -102,7 +98,7 @@ public class UrlBrowserActor extends AbstractActor {
 						Browser browser = null;
 						
 						try{
-							browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+							browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
 							//browser.moveMouseOutOfFrame();
@@ -134,7 +130,7 @@ public class UrlBrowserActor extends AbstractActor {
 					}while(redirect == null);
 					
 					log.warn("loading animation detection complete");
-					List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host, path_objects, path_keys);
+					List<PageState> page_states = browser_service.buildPageStates(url, browser_type, host, path_objects, path_keys);
 
 					log.warn("Done building page states ");
 					//send test to discovery actor

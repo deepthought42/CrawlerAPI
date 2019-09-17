@@ -175,7 +175,7 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							
 							Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login", false, leaves_domain);
 							
-							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L));
+							test.addRecord(new TestRecord(new Date(), TestStatus.UNVERIFIED, domain.getDiscoveryBrowserName(), result_page, 0L, test.getPathKeys()));
 							test_service.save(test);
 							MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 

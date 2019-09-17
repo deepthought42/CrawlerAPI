@@ -81,13 +81,17 @@ public class Crawler {
 
 		PathObject last_obj = null;
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		log.warn("path objects :: " + path_objects.size());
+		log.warn("ordered path objects :: " + ordered_path_objects.size());
 
+		log.warn("path keys :: " + path_keys.size());
 		ElementState last_element = null;
 
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected.
 		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
-
+		log.warn("expected page returned :: "+expected_page);
+		log.warn("expected page url :: " + expected_page.getUrl());
 		browser.navigateTo(expected_page.getUrl());
 
 		for(PathObject current_obj: ordered_path_objects){

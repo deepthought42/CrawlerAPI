@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -115,13 +116,14 @@ public class TestService {
 		 
 		 do{
 			 try {
-				 BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, visible_element_map, visible_elements);
+				 browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
+				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
 				 pages_dont_match = true;
 			 }
 			 catch (Exception e) {
+				 e.printStackTrace();
 				 log.error(e.getLocalizedMessage());
 			 }
 			 finally{
@@ -137,11 +139,11 @@ public class TestService {
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
 		 if(pages_dont_match){
-			return new TestRecord(new Date(), TestStatus.FAILING, browser_name.trim(), page, pathCrawlRunTime);
+			return new TestRecord(new Date(), TestStatus.FAILING, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 		 }
 		 else{
 			 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
-	 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime);
+	 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
 			 return test_record;
 		 }

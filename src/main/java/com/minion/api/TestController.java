@@ -118,8 +118,8 @@ public class TestController {
 									@RequestParam(value="name", required=true) String name,
 									@RequestParam(value="firefox", required=false) String firefox_status,
 									@RequestParam(value="chrome", required=false) String chrome_status) throws JsonProcessingException, MalformedURLException{
-		Map<String, String> browser_statuses = new HashMap<String, String>();
-
+		Test test = test_service.findByKey(key);
+		Map<String, String> browser_statuses = test.getBrowserStatuses();
 		TestStatus status = TestStatus.FAILING;
 
 		if(firefox_status!=null && !firefox_status.isEmpty()){
@@ -132,8 +132,9 @@ public class TestController {
 				status = TestStatus.PASSING;
 			}
 		}
-		if(chrome_status!=null && !chrome_status.isEmpty()){
-			browser_statuses.put("chrome", chrome_status.toUpperCase());
+		if(chrome_status != null && !chrome_status.isEmpty()){
+			log.warn("chrome status :: "+chrome_status);
+			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
 			if(chrome_status.equalsIgnoreCase("failing")){
 				status = TestStatus.FAILING;
 			}
@@ -141,13 +142,13 @@ public class TestController {
 				status = TestStatus.PASSING;
 			}
 		}
-		Test test = test_service.findByKey(key);
+		
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);
 		test.setStatus(status);
 		//test.setRecords(records);
 		//update status of last test record
-		test_service.save(test);
+		test_repo.save(test);
 
 		//get last test record
 		TestRecord record = test_repo.getMostRecentRecord(test.getKey());

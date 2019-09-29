@@ -146,13 +146,12 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		Timing.pauseThread(1000);
+		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-		
 		
 		return browser_service.buildPage(browser, visible_elements, url_without_params);
 	}

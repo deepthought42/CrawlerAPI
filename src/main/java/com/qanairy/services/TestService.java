@@ -1,6 +1,7 @@
 package com.qanairy.services;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.driver.v1.exceptions.ClientException;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
@@ -77,9 +77,6 @@ public class TestService {
 	private AnimationService animation_service;
 
 	@Autowired
-	private TestService test_service;
-
-	@Autowired
 	private TestRecordRepository test_record_repo;
 
 	@Autowired
@@ -115,13 +112,14 @@ public class TestService {
 		 
 		 do{
 			 try {
-				 BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
-				page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, null, visible_element_map, visible_elements);
+				 browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
+				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
 				 pages_dont_match = true;
 			 }
 			 catch (Exception e) {
+				 e.printStackTrace();
 				 log.error(e.getLocalizedMessage());
 			 }
 			 finally{
@@ -137,21 +135,25 @@ public class TestService {
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
 		 if(pages_dont_match){
-			return new TestRecord(new Date(), TestStatus.FAILING, browser_name.trim(), page, pathCrawlRunTime);
+			 log.warn("pages don't match");
+			 return new TestRecord(new Date(), TestStatus.FAILING, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 		 }
 		 else{
-			 passing = Test.isTestPassing(test.getResult(), page, last_test_status);
-	 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime);
+			 log.warn("pages match and test is passing");
+			 log.warn("getting test result :: "+test.getResult());
+			 passing = Test.isTestPassing(getResult(test.getKey()), page, last_test_status);
+	 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
 			 return test_record;
 		 }
 	 }
 
-	 public Test save(Test test) throws MalformedURLException, ClientException{
+	 public Test save(Test test) throws MalformedURLException {
 		 assert test != null;
 		 Test record = test_repo.findByKey(test.getKey());
 
 		if(record == null){
+			log.warn("test record is null while saving");
 			List<PathObject> path_objects = new ArrayList<PathObject>();
 			for(PathObject path_obj : test.getPathObjects()){
 				if(path_obj instanceof PageState){
@@ -185,6 +187,7 @@ public class TestService {
 	  		return test_repo.save(test);
 		}
 		else{
+			log.warn("test record already exists");
 			List<PathObject> path_objects = test_repo.getPathObjects(test.getKey());
 			path_objects = PathUtils.orderPathObjects(test.getPathKeys(), path_objects);
 			record.setPathObjects(path_objects);
@@ -233,8 +236,9 @@ public class TestService {
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 
     	for(Test test : tests){
-			TestRecord record = test_service.runTest(test, domain.getDiscoveryBrowserName(), test.getStatus());
+			TestRecord record = runTest(test, domain.getDiscoveryBrowserName(), test.getStatus());
 
+			log.warn("run test returned record  ::  "+record);
 			test_results.put(test.getKey(), record);
 			TestStatus is_passing = TestStatus.PASSING;
 			//update overall passing status based on all browser passing statuses
@@ -285,5 +289,9 @@ public class TestService {
 
    public Set<Group> getGroups(String key) {
      return test_repo.getGroups(key);
+   }
+   
+   public PageState getResult(String key) {
+	   return test_repo.getResult(key);
    }
 }

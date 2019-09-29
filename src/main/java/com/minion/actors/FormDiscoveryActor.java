@@ -74,9 +74,7 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, message -> {
-				  	System.err.println("FORM DISCOVERY HAS STARTED");
-					
+				.match(PathMessage.class, message -> {					
 					//get first page in path
 				  	PageState last_page = PathUtils.getFirstPage(message.getPathObjects());
 				  	String host = new URL(last_page.getUrl()).getHost();
@@ -87,7 +85,6 @@ public class FormDiscoveryActor extends AbstractActor{
 				  	do{
 				  		
 				  		try{
-				  			System.err.println("Getting browser for form extraction");
 					  		browser = BrowserConnectionFactory.getConnection(BrowserType.create(message.getBrowser().toString()), BrowserEnvironment.DISCOVERY);
 					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
 					  		
@@ -100,32 +97,22 @@ public class FormDiscoveryActor extends AbstractActor{
 							}
 							  
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-					  		System.err.println("FORM DISCOVERY ACTOR EXTRACTED FORMS :: " + forms.size());
 
 						  	for(Form form : forms){
-						  		System.err.println("Total input fields for form :: "+form.getFormFields().size());
 							  	for(ElementState field : form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
 									field.getRules().addAll(rules);
-									System.err.println("Total INPUT FIELD RULES   :::   "+field.getRules().size());
-
 								}
-							  	System.err.println("startin form prediction ");		
 							    DeepthoughtApi.predict(form);
-						       
-							    System.err.println("PREDICTION DONE !!! ");
-							    System.err.println("********************************************************");
 							  	
 							    form_service.save(form);
 							  	page_state.addForm(form);
 							  	
 							  	//page_state_service.save(page_state);
 							  	message.getDomainActor().tell(page_state, getSelf());
-						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);
 						  	}
-						  	System.err.println("FORM DISCOVERY HAS ENDED");
 						  	forms_created = true;
 						  	return;
 						} catch(Exception e){

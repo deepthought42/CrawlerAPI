@@ -1,6 +1,7 @@
 package com.qanairy.models;
 
 import java.util.Date;
+import java.util.List;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -33,6 +34,7 @@ public class TestRecord implements Persistable {
 	private String browser;
 	private TestStatus status;
 	private long run_time_length;
+	private List<String> path_keys;
 
 	@Relationship(type = "HAS_RESULT", direction = Relationship.OUTGOING)
 	private PageState result;
@@ -40,12 +42,13 @@ public class TestRecord implements Persistable {
 	//Empty constructor for spring
 	public TestRecord(){}
 	
-	public TestRecord(Date ran_at, TestStatus status, String browser_name, PageState result, long run_time){
+	public TestRecord(Date ran_at, TestStatus status, String browser_name, PageState result, long run_time, List<String> path_keys){
 		setRanAt(ran_at);
 		setResult(result);
 		setRunTime(run_time);
 		setStatus(status);
 		setBrowser(browser_name);
+		setPathKeys(path_keys);
 		setKey(generateKey());
 	}
 	
@@ -116,5 +119,13 @@ public class TestRecord implements Persistable {
 	@Override
 	public String generateKey() {
 		return "testrecord::"+getRanAt().hashCode()+getResult().getKey();
+	}
+
+	public List<String> getPathKeys() {
+		return path_keys;
+	}
+
+	public void setPathKeys(List<String> path_keys) {
+		this.path_keys = path_keys;
 	}
 }

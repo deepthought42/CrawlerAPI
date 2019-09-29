@@ -147,9 +147,6 @@ public class UrlBrowserActor extends AbstractActor {
 
 					for(PageState page_state : page_states){
 						log.warn("discovery path does not have expanded page state");
-						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-						System.err.println("page state  ::   " + page_state);
-						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 
 						List<String> new_path_keys = new ArrayList<String>(path_keys);
 					  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);

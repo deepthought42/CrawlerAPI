@@ -81,13 +81,17 @@ public class Crawler {
 
 		PathObject last_obj = null;
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		log.warn("path objects :: " + path_objects.size());
+		log.warn("ordered path objects :: " + ordered_path_objects.size());
 
+		log.warn("path keys :: " + path_keys.size());
 		ElementState last_element = null;
 
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected.
 		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
-
+		log.warn("expected page returned :: "+expected_page);
+		log.warn("expected page url :: " + expected_page.getUrl());
 		browser.navigateTo(expected_page.getUrl());
 
 		for(PathObject current_obj: ordered_path_objects){
@@ -142,13 +146,12 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
-		Timing.pauseThread(1000);
+		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-		
 		
 		return browser_service.buildPage(browser, visible_elements, url_without_params);
 	}

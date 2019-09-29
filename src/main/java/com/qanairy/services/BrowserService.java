@@ -1829,7 +1829,6 @@ public class BrowserService {
 				
 				//calculate distance of children if within 20%				
 				if(distance == 0.0 || similarity < 0.05){
-					System.err.println("Distance ;  Similarity :: "+distance + "  ;  "+similarity);
 					String template = element_list.get(idx1).getTemplate();
 					if(!element_templates.containsKey(template)){
 						element_templates.put(template, new ArrayList<>());

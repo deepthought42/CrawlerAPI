@@ -165,13 +165,8 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 							PageState result_page = crawler.performPathExploratoryCrawl(domain.getDiscoveryBrowserName(), exploratory_path, domain.getUrl());
 							result_page.setLoginRequired(true);
 							log.warning("exploratory path keys being saved for test   ::   " + exploratory_path.getPathKeys());
-							System.err.println("result page host :: " + new URL(result_page.getUrl()).getHost());
-							System.err.println("domain url :: " + message.getDomain().getUrl());
-							System.err.println("domain equals page state ??    "+message.getDomain().getUrl().trim().equals(new URL(result_page.getUrl()).getHost()));
-							System.err.println("result page matches last page :: " +  result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
-							
+
 							boolean leaves_domain = !(message.getDomain().getUrl().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(exploratory_path.getPathObjects()).getUrl()).getHost()));
-							System.err.println("DOES IT LEAVE DOMAIN ??  ::  "+leaves_domain);
 							
 							Test test = new Test(exploratory_path.getPathKeys(), exploratory_path.getPathObjects(), result_page, user.getUsername()+" user login", false, leaves_domain);
 							
@@ -208,8 +203,6 @@ public class LoginFormTestDiscoveryActor extends AbstractActor {
 		//get page state		
 		PageState page = form_service.getPageState(form);
 		
-		System.err.println("page state for form :: "+page);
-		System.err.println("TEST SERVICE VALUE :: " + test_service);
 		//get all tests that contain page state as path object
 		List<Test> tests = test_service.findTestsWithPageState(page.getKey());
 		//get test with smallest path

@@ -279,40 +279,8 @@ public class PageState implements Persistable, PathObject {
 			return false;
 
 		PageState that = (PageState) o;
-		//boolean pages_match = false;
-		boolean keys_match = this.getKey().equals(that.getKey());
-		//boolean checksums_match = this.getScreenshotUrl().equals(that.getScreenshotUrl());
-		/*
-		if(!pages_match){
-			pages_match = this.getUrl().equals(that.getUrl()) && Browser.cleanSrc(this.getSrc()).equals(Browser.cleanSrc(that.getSrc()));
-		}
-		*/
-		/*
-		if(!pages_match && this.getElements().size() == that.getElements().size()){
-			System.err.println("Checking page elements match ....... ");
-			//check if elements match
-			Map<String, ElementState> element_map = new HashMap<String,ElementState>();
 
-			System.err.println("Element states for this page state :: "+this.getElements().size());
-			for(ElementState elem : this.getElements()){
-				element_map.put(elem.getKey(), elem);
-			}
-
-			System.err.println("Element states for that page state :: "+that.getElements().size());
-			for(ElementState elem: that.getElements()){
-				element_map.remove(elem.getKey());
-			}
-
-			if(element_map.keySet().isEmpty()){
-				pages_match = true;
-			}
-			System.err.println("Element keys left in map   :: "+element_map.keySet().size());
-
-		}
-		*/
-		//boolean sources_match = this.getSrc().equals(that.getSrc());
-
-		return keys_match;
+		return this.getKey().equals(that.getKey());
 	}
 
 	/**

@@ -438,6 +438,9 @@ public class PageState implements Persistable, PathObject {
 			//e.printStackTrace();
 		}
 
+		//strip off index.html from end
+		url_without_params.replace("index.html", "");
+		url_without_params.replace("index.htm", "");
 
 		String key = "";
 		List<ElementState> elements = getElements().stream().collect(Collectors.toList());

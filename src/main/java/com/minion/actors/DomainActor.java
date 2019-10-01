@@ -17,7 +17,9 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.message.DiscoveryActionMessage;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
@@ -40,6 +42,7 @@ public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DomainActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
+	private DiscoveryAction discovery_action;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -86,12 +89,18 @@ public class DomainActor extends AbstractActor{
 						discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
 					}
+					discovery_action = message.getAction();
+					
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getUrl() + " WITH ACTION   :: " + message.getAction());
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					
 					//pass message along to discovery actor
 					discovery_actor.tell(message, getSelf());
+				})
+				.match(DiscoveryActionRequest.class, message-> {
+					
+					getSender().tell(discovery_action, getSelf());
 				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();

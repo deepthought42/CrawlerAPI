@@ -149,6 +149,7 @@ public class BrowserTest {
 				WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 				
 				Set<Attribute> attributes = browser.extractAttributes(element);
+		
 				Map<String, List<String>> attribute_map = new HashMap<String, List<String>>();
 				for(Attribute attr : attributes){
 					attribute_map.put(attr.getName(), attr.getVals());

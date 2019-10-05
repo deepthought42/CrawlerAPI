@@ -117,7 +117,6 @@ public class DomainService {
 		return domain_repo.getAnimations(host);
 	}
 
-
 	/**
 	 * 
 	 * @param host
@@ -132,7 +131,9 @@ public class DomainService {
 		assert host != null;
 		assert !host.isEmpty();
 		assert page_state != null;
-    
+		
+		log.warn("domain host :: "+host);
+		log.warn("test result when adding test :: " + page_state);
 		Domain domain = domain_repo.findByHost(host);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);

@@ -76,6 +76,7 @@ public class AnimationDetectionActor extends AbstractActor{
 							if(animation.getImageUrls().size() > 1){
 								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
 								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
+								//page_state_service.save(first_page_state);
 							}
 
 							//Tell discovery actor about test

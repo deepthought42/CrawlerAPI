@@ -9,6 +9,4 @@ public class DiscoveryStoppedException extends Exception {
 	 * 
 	 */
 	private static final long serialVersionUID = -2136313898636540125L;
-
-	public DiscoveryStoppedException() {}
 }

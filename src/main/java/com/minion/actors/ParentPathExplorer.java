@@ -26,7 +26,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
-import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageLoadAnimation;
@@ -45,7 +44,6 @@ import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
-import com.qanairy.api.exceptions.DiscoveryStoppedException;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;

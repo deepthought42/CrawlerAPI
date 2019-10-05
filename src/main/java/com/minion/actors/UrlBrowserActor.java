@@ -87,14 +87,10 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(UrlMessage.class, message -> {
-					
 					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
 					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
-					log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
-					log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
-
 					if(discovery_action == DiscoveryAction.STOP) {
 						log.warn("path message discovery actor returning");
 						return;
@@ -145,32 +141,22 @@ public class UrlBrowserActor extends AbstractActor {
 								browser.close();
 							}
 						}
-						log.warn("Transition :: " + redirect);
-						log.warn("Animation returned   :: " + animation);
 					}while(redirect == null);
 					
 					log.warn("loading animation detection complete");
 					List<PageState> page_states = browser_service.buildPageStates(url, browser_type, host, path_objects, path_keys);
-
 					log.warn("Done building page states ");
 					//send test to discovery actor
 					
 					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation, message.getDomain());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
 					message.getDiscoveryActor().tell(test_message, getSelf());
-					//message.getDomainActor().tell(test, getSelf());
-
-					log.warn("finished creating landing page test");
-
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 
 					for(PageState page_state : page_states){
-						log.warn("discovery path does not have expanded page state");
-
 						List<String> new_path_keys = new ArrayList<String>(path_keys);
 					  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
-					  	
 					  	new_path_keys.add(page_state.getKey());
 					  	new_path_objects.add(page_state);
 

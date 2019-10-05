@@ -17,7 +17,9 @@ import com.qanairy.models.Domain;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
+import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.message.DiscoveryActionMessage;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
@@ -40,6 +42,7 @@ public class DomainActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DomainActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
+	private DiscoveryAction discovery_action;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -86,6 +89,8 @@ public class DomainActor extends AbstractActor{
 						discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 								  .props("discoveryActor"), "discovery_actor"+UUID.randomUUID());
 					}
+					discovery_action = message.getAction();
+					
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					log.warn("RUNNING DOMAIN ACTOR WITH HOST :: " + domain.getUrl() + " WITH ACTION   :: " + message.getAction());
 					log.warn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -93,14 +98,16 @@ public class DomainActor extends AbstractActor{
 					//pass message along to discovery actor
 					discovery_actor.tell(message, getSelf());
 				})
+				.match(DiscoveryActionRequest.class, message-> {
+					log.warn("dicovery action request received by domain Actor. RETURNING   :::   " + discovery_action);
+					getSender().tell(discovery_action, getSelf());
+				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();
 					Test test_record = test_service.save(test);
 					if(domain == null){
 						String host = test_msg.getDomain().getUrl();
-							log.warn("Host :: " + host);
 						domain = domain_service.findByHost(host);
-						log.warn("loaded domain :: " + domain);
 					}
 					
 					for(PathObject obj : test.getPathObjects()){
@@ -114,13 +121,8 @@ public class DomainActor extends AbstractActor{
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
-					log.warn("test result in domain actor :: " + test.getResult());
-					log.warn("saved test L::   "+test);
 					domain_service.save(domain);
-
 					domain_service.addTest(domain.getUrl(), test_record);
-					
-					log.warn("test result in domain actor   :   " + test.getResult());
 					domain_service.addPageState(domain.getUrl(), test.getResult());
 					
 					for(PathObject path_obj : test.getPathObjects()){
@@ -129,9 +131,7 @@ public class DomainActor extends AbstractActor{
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}
-					}
-					log.warn("saved domain :: "+domain);
-					
+					}					
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
 					//forward message to discovery actor

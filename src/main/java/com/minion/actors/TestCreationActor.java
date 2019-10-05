@@ -47,7 +47,6 @@ import com.qanairy.services.BrowserService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.ElementStateService;
 import com.qanairy.utils.BrowserUtils;
-import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -114,7 +113,7 @@ public class TestCreationActor extends AbstractActor  {
 					    	Browser browser = null;
 
 				    		try{
-				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.TEST);
+				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
 			    				
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
@@ -127,7 +126,7 @@ public class TestCreationActor extends AbstractActor  {
 								String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 								
 				    			PageState result_page = browser_service.buildPage(browser, elements, url_without_params);
-								boolean leaves_domain = !(domain.getUrl().trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
+								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
 
 								test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);
@@ -170,7 +169,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			}
 				    		}
 				    		attempts++;
-				    	}while(test == null && attempts < 10000);
+				    	}while(test == null && attempts < 100000);
 
 				    	MessageBroadcaster.broadcastTestCreatedConfirmation(test, acct_message.getAccountKey());
 				    	MessageBroadcaster.broadcastTest(test, acct_message.getAccountKey());
@@ -253,10 +252,8 @@ public class TestCreationActor extends AbstractActor  {
     			Crawler.performAction(action, element, browser.getDriver());
     			Timing.pauseThread(1500L);
 
-    			//******************************************************
     			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.
     			// IF NEXT OBJECT DOESN'T CONTAIN A URL, THEN CREATE NEW PAGE STATE
-    			//******************************************************
 	        	if(idx+1 < path.length()){
 	    			path_obj_json = new JSONObject(path.get(idx+1).toString());
 

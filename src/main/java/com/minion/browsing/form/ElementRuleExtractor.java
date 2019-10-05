@@ -1,9 +1,7 @@
 package com.minion.browsing.form;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +15,11 @@ import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleFactory;
 import com.qanairy.services.RuleService;
 
+/**
+ * Extracts rules for input {@link ElementState}s
+ * @author brand
+ *
+ */
 @Service
 public class ElementRuleExtractor {
 	private static Logger log = LoggerFactory.getLogger(ElementRuleExtractor.class);
@@ -25,7 +28,6 @@ public class ElementRuleExtractor {
 	private RuleService rule_service;
 
 	public List<Rule> extractInputRules(ElementState elem){
-		Map<String, Boolean> input_rules = new HashMap<String, Boolean>();
 		List<Rule> rules = new ArrayList<Rule>();
 
 		for(Attribute attr : elem.getAttributes()){

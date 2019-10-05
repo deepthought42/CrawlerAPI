@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.qanairy.models.Domain;
 import com.qanairy.models.Group;
+import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
@@ -43,4 +44,10 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 
 	@Query("MATCH (:Test{key:{key}})-[:HAS_GROUP]-(g) RETURN g")
 	public Set<Group> getGroups(@Param("key") String key);
+	
+	@Query("MATCH (t:Test{key:{key}}),(tr:TestRecord{key:{test_record_key}}) CREATE (t)-[r:HAS_TEST_RECORD]->(tr) RETURN r")
+	public void addTestRecord(@Param("key") String key, @Param("test_record_key") String test_record_key);
+	
+	@Query("MATCH (:Test{key:{key}})-[:HAS_RESULT]->(p:PageState) RETURN p")
+	public PageState getResult(@Param("key") String key);
 }

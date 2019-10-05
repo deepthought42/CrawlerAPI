@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,17 +23,22 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.PathStatus;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
-import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -50,9 +56,6 @@ import com.qanairy.utils.BrowserUtils;
 public class UrlBrowserActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(UrlBrowserActor.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	DiscoveryRecordRepository discovery_repo;
 
 	@Autowired
 	private ActorSystem actor_system;
@@ -84,6 +87,15 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(UrlMessage.class, message -> {
+					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(), timeout);
+					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+					
+					if(discovery_action == DiscoveryAction.STOP) {
+						log.warn("path message discovery actor returning");
+						return;
+					}
+					
 					//String discovery_key = message.getOptions().get("discovery_key").toString();
 					String url = message.getUrl().toString();
 					
@@ -92,7 +104,7 @@ public class UrlBrowserActor extends AbstractActor {
 					log.warn("starting transition detection");
 					Redirect redirect = null;
 					PageLoadAnimation animation = null;
-
+					BrowserType browser_type = BrowserType.create(browser_name);
 					List<String> path_keys = null;
 					List<PathObject> path_objects = null;
 					
@@ -102,7 +114,7 @@ public class UrlBrowserActor extends AbstractActor {
 						Browser browser = null;
 						
 						try{
-							browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+							browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
 							//browser.moveMouseOutOfFrame();
@@ -129,35 +141,22 @@ public class UrlBrowserActor extends AbstractActor {
 								browser.close();
 							}
 						}
-						log.warn("Transition :: " + redirect);
-						log.warn("Animation returned   :: " + animation);
 					}while(redirect == null);
 					
 					log.warn("loading animation detection complete");
-					List<PageState> page_states = browser_service.buildPageStates(url, browser_name, host, path_objects, path_keys);
-
+					List<PageState> page_states = browser_service.buildPageStates(url, browser_type, host, path_objects, path_keys);
 					log.warn("Done building page states ");
 					//send test to discovery actor
 					
 					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation, message.getDomain());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
 					message.getDiscoveryActor().tell(test_message, getSelf());
-					//message.getDomainActor().tell(test, getSelf());
-
-					log.warn("finished creating landing page test");
-
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 
 					for(PageState page_state : page_states){
-						log.warn("discovery path does not have expanded page state");
-						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-						System.err.println("page state  ::   " + page_state);
-						System.err.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-
 						List<String> new_path_keys = new ArrayList<String>(path_keys);
 					  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
-					  	
 					  	new_path_keys.add(page_state.getKey());
 					  	new_path_objects.add(page_state);
 

@@ -44,7 +44,6 @@ public class TestDto {
 				this.path.add(new PageStateDto((PageState)ordered_path_objects.get(idx)));
 			}
 			else if(ordered_path_objects.get(idx).getType().equals("ElementState")){
-				System.err.println("PATH OBJECT :: " + ordered_path_objects.get(idx));
 				this.path.add(new ElementActionDto((ElementState)ordered_path_objects.get(idx), (Action)ordered_path_objects.get(++idx)));
 			}
 		}

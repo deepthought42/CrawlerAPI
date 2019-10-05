@@ -1,6 +1,5 @@
 package com.qanairy.models;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -30,10 +29,10 @@ public class Form {
 	private String key;
 	private Long memory_id;
 	private String name;
+    
 	private double[] predictions;
-	private String[] type_options;
 	private Date date_discovered;
-	private String status;	
+	private String status;
 	private String type;
 	
 	@Relationship(type = "DEFINED_BY")
@@ -48,21 +47,27 @@ public class Form {
 	public Form(){}
 	
 	public Form(ElementState form_tag, List<ElementState> form_fields, ElementState submit_field, 
-				String name, double[] predictions, FormType[] type_options, FormType type, Date date_discovered, 
+				String name, double[] predictions, FormType type, Date date_discovered, 
 				FormStatus status){
 		setFormTag(form_tag);
 		setFormFields(form_fields);
 		setSubmitField(submit_field);
 		setType(determineFormType());
 		setName(name);
+		setType(type);
 		setPredictions(predictions);
-		setTypeOptions(type_options);
 		setDateDiscovered(date_discovered);
 		setStatus(status);
 		setKey(generateKey());
 	}
 	
 	private String generateKey() {
+		//List<ElementState> sorted_fields = new ArrayList<>();
+		//order form fields
+		/*for(ElementState elem : getFormFields()){
+			elements_key += elem.getKey();
+		}
+		*/
 		String elements_key = "";
 		for(ElementState elem : getFormFields()){
 			elements_key += elem.getKey();
@@ -179,18 +184,6 @@ public class Form {
 		this.predictions = predictions;
 	}
 
-	public FormType[] getTypeOptions() {
-		FormType[] type_options = new FormType[this.type_options.length];
-		for(int idx=0; idx<this.type_options.length; idx++){
-			type_options[idx] = FormType.valueOf(this.type_options[idx].toUpperCase());
-		}
-		return type_options;
-	}
-
-	public void setTypeOptions(FormType[] type_options) {
-	    this.type_options = Arrays.stream(type_options).map(Enum::name).toArray(String[]::new);
-	}
-
 	public Long getMemoryId() {
 		return memory_id;
 	}
@@ -201,5 +194,10 @@ public class Form {
 	
 	public Long getId() {
 		return id;
+	}
+	
+	@Override
+	public Form clone(){
+		return new Form(form_tag, form_fields, submit_field, name, predictions, this.getType(), date_discovered, this.getStatus());
 	}
 }

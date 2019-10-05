@@ -1,6 +1,7 @@
 package com.minion.actors;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +24,15 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.repository.DiscoveryRecordRepository;
 import com.qanairy.models.rules.NumericRule;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.models.rules.RuleType;
-import com.qanairy.services.ActionService;
-import com.qanairy.services.BrowserService;
-import com.qanairy.services.ElementStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
-import com.minion.structs.Message;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -55,16 +54,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	private Crawler crawler;
 	
 	@Autowired
-	private BrowserService browser_service;
-	
-	@Autowired
 	private TestService test_service;
-	
-	@Autowired
-	private ActionService action_service;
-	
-	@Autowired
-	private ElementStateService page_element_service;
 	
 	@Autowired
 	private DiscoveryRecordRepository discovery_repo;
@@ -88,106 +78,85 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(Message.class, message -> {
-					if(message.getData() instanceof Test){
-						Test test = ((Test)message.getData());
-			
-						//get first page in path
-						PageState page = test.firstPage();
-			
-						int cnt = 0;
-					  	Browser browser = null;
-					  	
-					  	while(browser == null && cnt < 10000){
-					  		try{
-						  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
-						  		browser.navigateTo(page.getUrl());
+				.match(FormDiscoveryMessage.class, message -> {
+					int cnt = 0;
+				  	Browser browser = null;
+				  	
+				  	while(browser == null && cnt < 1000){
+				  		try{
+						  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+						  	path_object_lists.addAll(generateAllFormPaths(message.getPage(), message.getForm()));
+						  							  	
+						  	//Evaluate all tests now
+						  	List<Test> tests = new ArrayList<Test>();
+					  		for(List<PathObject> path_object_list : path_object_lists) {
+	
+						  		List<String> path_keys = new ArrayList<String>();
+						  		path_keys.add(message.getPage().getKey());
 						  		
-						  		List<Form> forms = browser_service.extractAllForms(test.getResult(), browser);
-							  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
-							  	for(Form form : forms){
-							  		browser.scrollTo(form.getFormTag().getXLocation(), form.getFormTag().getYLocation());
-									BrowserUtils.getLoadingAnimation(browser, page.getUrl());
-
-							  		path_object_lists.addAll(generateAllFormTestPaths(test, form));
-							  	}
-							  	
-						  		browser.close();
-							  	
-							  	//Evaluate all tests now
-							  	List<Test> tests = new ArrayList<Test>();
-							  	for(List<PathObject> path_obj_list : path_object_lists){
-							  		List<String> path_keys = new ArrayList<String>(test.getPathKeys());
-							  		
-							  		List<PathObject> test_path_objects = new ArrayList<PathObject>(test.getPathObjects());
-							  		for(PathObject obj : path_obj_list){
-							  			path_keys.add(obj.getKey());
-				
-							  			if(obj.getType().equals("ElementState")){
-							  				ElementState page_elem = (ElementState)obj;
-							  				page_element_service.save(page_elem);
-							  				test_path_objects.add(page_elem);
-							  			}
-							  			else if(obj.getType().equals("Action")){
-							  				Action action = (Action)obj;
-							  				test_path_objects.add(action);
-							  			}
-							  		}
-							  		
-									final long pathCrawlStartTime = System.currentTimeMillis();
-									
-							  		log.info("Crawling potential form test path");
-							  		
-							  		cnt = 0;
-							  		PageState result_page = null;
-							  		Map<Integer, ElementState> visible_element_map = new HashMap<>();
-							  		List<ElementState> visible_elements = new ArrayList<>();
-							  		
-							  		do{
-							  			try{
-									  		browser = BrowserConnectionFactory.getConnection(message.getOptions().get("browser").toString(), BrowserEnvironment.DISCOVERY);
-							  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getOptions().get("host").toString(), visible_element_map, visible_elements);
-							  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
-											result_page.setLoginRequired(last_page.isLoginRequired());
-							  				break;
-							  			}catch(Exception e){
-							  				log.warning("Exception occurred while crawling FORM path -- "+e.getMessage());
-							  			}
-							  			finally{
-							  				if(browser != null){
-							  					browser.close();
-							  				}
-							  			}
-						  			}while(cnt < 10000 && result_page == null);
-							  		
-							  		final long pathCrawlEndTime = System.currentTimeMillis();
-									long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
-																		
-							  		Test new_test = new Test(path_keys, test_path_objects, result_page, false, test.getSpansMultipleDomains());
-				
-							  		new_test.setRunTime(crawl_time_in_ms);
-							  		new_test.setLastRunTimestamp(test.getLastRunTimestamp());
-							  		
-							  		new_test = test_service.save(new_test);
-							  		tests.add(new_test);
-							  		
-							  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getOptions().get("discovery_key").toString());
-									discovery_record.setTestCount(discovery_record.getTestCount()+1);
-									discovery_record = discovery_repo.save(discovery_record);
-									MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
-							  	}
-								break;
-							}catch(Exception e){
-								log.warning(e.getLocalizedMessage());
-							}
-					  		finally{
-					  			if(browser != null){
-					  				browser.close();
-					  			}
+						  		List<PathObject> test_path_objects = new ArrayList<PathObject>();
+						  		test_path_objects.add(message.getPage());
+						  		
+						  		for(PathObject obj : path_object_list){
+						  			path_keys.add(obj.getKey());
+						  			test_path_objects.add(obj);
+						  		}
+					  		
+						  		
+								final long pathCrawlStartTime = System.currentTimeMillis();
+								
+						  		log.info("Crawling potential form test path");
+						  		
+						  		cnt = 0;
+						  		PageState result_page = null;
+						  		Map<Integer, ElementState> visible_element_map = new HashMap<>();
+						  		List<ElementState> visible_elements = new ArrayList<>();
+						  		
+						  		do{
+						  			try{
+								  		browser = BrowserConnectionFactory.getConnection(BrowserType.create(message.getDomain().getDiscoveryBrowserName()), BrowserEnvironment.DISCOVERY);
+						  				result_page = crawler.crawlPath(path_keys, test_path_objects, browser, message.getDomain().getUrl(), visible_element_map, visible_elements);
+						  				PageState last_page = PathUtils.getLastPageState(test_path_objects);
+										result_page.setLoginRequired(last_page.isLoginRequired());
+						  				break;
+						  			}catch(Exception e){
+						  				log.warning("Exception occurred while crawling FORM path -- "+e.getMessage());
+						  			}
+						  			finally{
+						  				if(browser != null){
+						  					browser.close();
+						  				}
+						  			}
+					  			}while(cnt < 100000 && result_page == null);
+						  		
+						  		final long pathCrawlEndTime = System.currentTimeMillis();
+								long crawl_time_in_ms = pathCrawlEndTime - pathCrawlStartTime;
+								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(message.getDomain().getUrl(), result_page.getUrl(), test_path_objects);
+	
+						  		Test new_test = new Test(path_keys, test_path_objects, result_page, false, leaves_domain);
+			
+						  		new_test.setRunTime(crawl_time_in_ms);
+						  		new_test.setLastRunTimestamp(new Date());
+						  		
+						  		new_test = test_service.save(new_test);
+						  		tests.add(new_test);
+						  		
+						  		DiscoveryRecord discovery_record = discovery_repo.findByKey(message.getDiscovery().getKey());
+								discovery_record.setTestCount(discovery_record.getTestCount()+1);
+								discovery_record = discovery_repo.save(discovery_record);
+								MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);  	
 					  		}
-							cnt++;
-						}					  	
-					}
+							break;
+						}catch(Exception e){
+							log.warning(e.getLocalizedMessage());
+						}
+				  		finally{
+				  			if(browser != null){
+				  				browser.close();
+				  			}
+				  		}
+						cnt++;
+					}					  	
 					postStop();
 
 				})
@@ -246,7 +215,31 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 		return form_tests;
 	}
 	
-
+	/**
+	 * 
+	 * @param test
+	 * @param form
+	 * @return
+	 */
+	public List<List<PathObject>> generateAllFormPaths(PageState page, Form form){
+		List<List<PathObject>> form_tests = new ArrayList<List<PathObject>>();
+		log.info("FORM FIELDS COUNT     :::    "+form.getFormFields().size());
+		
+		//for each field in the complex field generate a set of tests for all known rules
+		for(ElementState input_elem : form.getFormFields()){			
+			//CHECK IF FORM FIELD ALREADY EXISTS IN PATH
+			List<Rule> rules = extractor.extractInputRules(input_elem);
+			log.info("Total RULES   :::   "+rules.size());
+			for(Rule rule : rules){
+				List<List<PathObject>> path_list = generateFormRuleTests(input_elem, rule, form.getSubmitField());
+				form_tests.addAll(path_list);
+			}
+			log.info("FORM TESTS    :::   "+form_tests.size());
+		}
+		return form_tests;
+	}
+	
+	
 	public static List<List<PathObject>> generateLengthBoundaryTests(ElementState input, Rule rule){
 		List<List<PathObject>> tests = new ArrayList<List<PathObject>>();
 

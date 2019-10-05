@@ -25,9 +25,6 @@ public class ElementStateService {
 	private AttributeService attribute_service;
 
 	@Autowired
-	private ElementStateService element_state_service;
-
-	@Autowired
 	private RuleService rule_service;
 
 	@Autowired
@@ -42,9 +39,10 @@ public class ElementStateService {
 	 */
 	public ElementState save(ElementState element) throws ClientException{
 		assert element != null;
-		
+		log.warn("saving element state :: " + element.getKey());
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
+			log.warn("no element record found for :: "+element.getKey());
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
 			for(Attribute attribute : element.getAttributes()){
@@ -54,40 +52,17 @@ public class ElementStateService {
 			
 			Set<Rule> rule_records = new HashSet<>();
 			for(Rule rule : element.getRules()){
+				log.warn("adding rule to rule records :: " + rule.getType());
 				rule_records.add(rule_service.save(rule));
 			}
 			element.setRules(rule_records);
 
 			element_record = element_repo.save(element);
-
-			//get rules that exit in element but not in element_record
-			List<Rule> rule_removal_list = new ArrayList<>();
-			for(Rule rule : element_record.getRules()){
-				boolean exists = false;
-				for(Rule elem_rule : element.getRules()){
-					if(elem_rule.getType().equals(rule.getType())){
-						exists = true;
-						break;
-					}
-				}
-				
-				if(!exists){
-					rule_removal_list.add(rule);
-				}
-			}
-			
-			//remove removed rules
-			for(Rule rule : rule_removal_list){
-				element_repo.removeRule(element.getKey(), rule.getKey());
-			}
 		}
 		else{
 			element_record.setScreenshot(element.getScreenshot());
 			element_record.setScreenshotChecksum(element.getScreenshotChecksum());
 			element_record.setXpath(element.getXpath());
-			Set<Rule> rules = element_state_service.getRules(element_record);
-			element_record.setRules(rules);
-			
 			for(Rule rule : element.getRules()){
 				element_record.addRule(rule_service.save(rule));
 			}
@@ -96,9 +71,15 @@ public class ElementStateService {
 			
 			//get rules that exit in element but not in element_record
 			List<Rule> rule_removal_list = new ArrayList<>();
-			for(Rule rule : element_record.getRules()){
+			Set<Rule> element_record_rules = element_repo.getRules(element_record.getKey());
+			log.warn("element record rules  :: "  +element_record_rules.size());
+			for(Rule rule : element_record_rules ){
 				boolean exists = false;
+				
+				log.warn("checking if rule should be removed :: " + rule.getType());
 				for(Rule elem_rule : element.getRules()){
+					log.warn("element rule type :: "+elem_rule.getType());
+					log.warn("rule type :: " + rule.getType());
 					if(elem_rule.getType() == rule.getType()){
 						exists = true;
 						break;
@@ -106,20 +87,18 @@ public class ElementStateService {
 				}
 				
 				if(!exists){
+					log.warn("adding rule to removal list  ::  "+rule);
 					rule_removal_list.add(rule);
 				}
 			}
 			
 			//remove removed rules
 			for(Rule rule : rule_removal_list){
-				element_repo.removeRule(element.getKey(), rule.getKey());
+				log.warn("removing rule :: " + rule);
+				element_repo.removeRule(element.getKey(), rule.generateKey());
 			}
 		}
 		return element_record;
-	}
-
-	private Set<Rule> getRules(ElementState element) {
-		return element_repo.getRules(element.getKey());
 	}
 
 	public ElementState findByKey(String key){
@@ -130,7 +109,7 @@ public class ElementStateService {
 		return element_repo.findByTextAndName(text, name);
 	}
 
-	public void removeRule(ElementState element, String rule_key){
+	public void removeElementState(ElementState element, String rule_key){
 		element_repo.removeRule(element.getKey(), rule_key);
 	}
 	
@@ -144,5 +123,9 @@ public class ElementStateService {
 
 	public ElementState findById(long id) {
 		return element_repo.findById(id).get();
+	}
+
+	public Set<Rule> getRules(String element_key) {
+		return element_repo.getRules(element_key);
 	}
 }

@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
+import com.minion.util.Timing;
+import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
@@ -36,11 +38,19 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.DiscoveryAction;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
+
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -80,13 +90,17 @@ public class Crawler {
 
 		PathObject last_obj = null;
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
+		log.warn("path objects :: " + path_objects.size());
+		log.warn("ordered path objects :: " + ordered_path_objects.size());
 
+		log.warn("path keys :: " + path_keys.size());
 		ElementState last_element = null;
 
 		//boolean screenshot_matches = false;
 		//check if page is the same as expected.
 		PageState expected_page = PathUtils.getFirstPage(ordered_path_objects);
-
+		log.warn("expected page returned :: "+expected_page);
+		log.warn("expected page url :: " + expected_page.getUrl());
 		browser.navigateTo(expected_page.getUrl());
 
 		for(PathObject current_obj: ordered_path_objects){
@@ -141,6 +155,7 @@ public class Crawler {
 			last_obj = current_obj;
 		}
 
+		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
@@ -270,7 +285,7 @@ public class Crawler {
 				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
 				//compile child element coordinates and sizes
 				
-				Point click_location = generateRandomLocationWithinElementButNotWithingChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
+				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
 				
 				Action action = (Action)current_obj;
 				
@@ -441,11 +456,12 @@ public class Crawler {
 		List<String> path_keys = new ArrayList<String>(keys);
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(keys, path_object_list);
 
-		List<PathObject> path_objects_explored = new ArrayList<>(ordered_path_objects);
+		List<PathObject> path_objects_explored = new ArrayList<>();
 
 		String last_url = null;
 		int current_idx = 0;
 		for(PathObject current_obj: ordered_path_objects){
+			path_objects_explored.add(current_obj);
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
@@ -575,10 +591,9 @@ public class Crawler {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
-		Map<String, ElementState> visible_element_map = new HashMap<>();
 		do{
 			try{
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 				PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 				log.warn("expected path url : "+expected_page.getUrl());
 				browser.navigateTo(expected_page.getUrl());
@@ -599,7 +614,7 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
+				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 				
@@ -636,7 +651,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 1000);
+		}while(result_page == null && tries < 100000);
 		
 		log.warn("done crawling exploratory path");
 		return result_page;
@@ -648,25 +663,38 @@ public class Crawler {
 	 * @param path
 	 * @param host
 	 * @return
+	 * @throws Exception 
 	 */
-	public PageState performPathExploratoryCrawl(String browser_name, PathMessage path, String host) {
+	public PageState performPathExploratoryCrawl(String browser_name, PathMessage path, String host) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
 		PathMessage new_path = path.clone();
-		Map<String, ElementState> visible_element_map = new HashMap<>();
 		boolean no_such_element_exception = false;
+		
 		do{
+			Timeout timeout = Timeout.create(Duration.ofSeconds(5));
+			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(), timeout);
+			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+			
+			log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
+			log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
+
+			if(discovery_action == DiscoveryAction.STOP) {
+				log.warn("path message discovery actor returning");
+				throw new DiscoveryStoppedException();
+			}
 			try{
 				if(!no_such_element_exception){
 					no_such_element_exception = false;
-					browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+					browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 					browser.navigateTo(expected_page.getUrl());
 					browser.moveMouseToNonInteractive(new Point(300,300));
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
+				Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
@@ -683,7 +711,7 @@ public class Crawler {
 				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 
-    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list);
+    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
@@ -724,52 +752,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 10000);
-		return result_page;
-	}
-	
-	/**
-	 * Handles setting up browser for path crawl and in the event of an error, the method retries until successful
-	 * @param browser
-	 * @param path
-	 * @param host
-	 * @return
-	 */
-	public PageState performPathCrawl(String browser_name, List<String> path_keys, List<PathObject> path_objects, String host) {
-		PageState result_page = null;
-		int tries = 0;
-		Browser browser = null;
-		Map<Integer, ElementState> visible_element_map = new HashMap<>();
-		List<ElementState> visible_elements = new ArrayList<>();
-		
-		do{
-			try{
-				browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
-				result_page = crawlPath(path_keys, path_objects, browser, host, visible_element_map, visible_elements);
-				PageState last_page = PathUtils.getLastPageState(path_objects);
-				result_page.setLoginRequired(last_page.isLoginRequired());
-			}catch(NullPointerException e){
-				log.error("Error happened while crawler attempted to crawl test path "+e.getMessage());
-			} catch (GridException e) {
-				log.debug("Grid exception encountered while trying to crawl exporatory path"+e.getMessage());
-			}
-			catch (NoSuchElementException e){
-				log.error("Unable to locate element while performing path crawl   ::    "+ e.getMessage());
-			}
-			catch (WebDriverException e) {
-				log.debug("WebDriver exception encountered while performing path crawl"+e.getMessage());
-			} catch (NoSuchAlgorithmException e) {
-				log.error("No Such Algorithm exception encountered while trying to crawl exporatory path"+e.getMessage());
-			} catch(Exception e){
-				log.info("Exception occurred in performPathCrawl actor. \n"+e.getMessage());
-			}
-			finally{
-				if(browser != null){
-					browser.close();
-				}
-			}
-			tries++;
-		}while(result_page == null && tries < 10000);
+		}while(result_page == null && tries < 100000);
 		return result_page;
 	}
 	
@@ -782,7 +765,7 @@ public class Crawler {
 	 * @pre child_element != null
 	 * @pre offset != null
 	 */
-	public static Point generateRandomLocationWithinElementButNotWithingChildElements(WebElement web_element, ElementState child_element, Point offset) {
+	public static Point generateRandomLocationWithinElementButNotWithinChildElements(WebElement web_element, ElementState child_element, Point offset) {
 		assert web_element != null;
 		assert child_element != null;
 		assert offset != null;

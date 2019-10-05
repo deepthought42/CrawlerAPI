@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -80,7 +79,7 @@ public class TestController {
 
     @Autowired
     private TestService test_service;
-
+    
     @Autowired
     private SubscriptionService subscription_service;
 
@@ -110,6 +109,7 @@ public class TestController {
 	 * @param test
 	 * @return
      * @throws JsonProcessingException
+     * @throws MalformedURLException 
 	 */
     @PreAuthorize("hasAuthority('update:tests')")
 	@RequestMapping(method=RequestMethod.PUT)
@@ -117,9 +117,9 @@ public class TestController {
 									@RequestParam(value="key", required=true) String key,
 									@RequestParam(value="name", required=true) String name,
 									@RequestParam(value="firefox", required=false) String firefox_status,
-									@RequestParam(value="chrome", required=false) String chrome_status) throws JsonProcessingException{
-		Map<String, String> browser_statuses = new HashMap<String, String>();
-
+									@RequestParam(value="chrome", required=false) String chrome_status) throws JsonProcessingException, MalformedURLException{
+		Test test = test_service.findByKey(key);
+		Map<String, String> browser_statuses = test.getBrowserStatuses();
 		TestStatus status = TestStatus.FAILING;
 
 		if(firefox_status!=null && !firefox_status.isEmpty()){
@@ -132,8 +132,9 @@ public class TestController {
 				status = TestStatus.PASSING;
 			}
 		}
-		if(chrome_status!=null && !chrome_status.isEmpty()){
-			browser_statuses.put("chrome", chrome_status.toUpperCase());
+		if(chrome_status != null && !chrome_status.isEmpty()){
+			log.warn("chrome status :: "+chrome_status);
+			browser_statuses.put("chrome", TestStatus.valueOf(chrome_status.toUpperCase()).toString());
 			if(chrome_status.equalsIgnoreCase("failing")){
 				status = TestStatus.FAILING;
 			}
@@ -141,7 +142,7 @@ public class TestController {
 				status = TestStatus.PASSING;
 			}
 		}
-		Test test = test_repo.findByKey(key);
+		
 		test.setName(name);
 		test.setBrowserStatuses(browser_statuses);
 		test.setStatus(status);
@@ -155,7 +156,7 @@ public class TestController {
 		test_record_repo.save(record);
 
 		record = test_record_repo.updateStatus(record.getKey(), status.toString());
-		test = test_repo.findByKey(test.getKey());
+		test = test_service.findByKey(test.getKey());
 		return test;
     }
 
@@ -354,7 +355,7 @@ public class TestController {
 														  @RequestParam(value="test_keys", required=true) List<String> test_keys,
 														  @RequestParam(value="browser", required=true) String browser,
 														  @RequestParam(value="host_url", required=true) String host)
-																  throws MalformedURLException, UnknownAccountException, GridException, WebDriverException, NoSuchAlgorithmException, PaymentDueException, StripeException, JsonProcessingException{
+																  throws UnknownAccountException, PaymentDueException, StripeException, JsonProcessingException{
 
     	Principal principal = request.getUserPrincipal();
     	String id = principal.getName().replace("auth0|", "");
@@ -383,14 +384,16 @@ public class TestController {
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
     	for(String key : test_keys){
+    		log.warn("Running test with key :: " + key);
     		Test test = test_repo.findByKey(key);
     		TestStatus last_test_status = test.getStatus();
 
 			test.setStatus(TestStatus.RUNNING);
 			test.setBrowserStatus(browser.trim(), TestStatus.RUNNING.toString());
 			test = test_repo.save(test);
-
+			
     		TestRecord record = test_service.runTest(test, browser, last_test_status);
+    		log.warn("run tests returned record  ::  "+record);
 			test_results.put(test.getKey(), record);
 
 			//set browser status first since we use browser statuses to determine overall test status
@@ -409,18 +412,23 @@ public class TestController {
 				}
 			}
 
-			test.addRecord(record);
-			test.setResult(record.getResult());
-			test.setStatus(is_passing);
-			test.setLastRunTimestamp(new Date());
-			test.setRunTime(record.getRunTime());
-			test_repo.save(test);
+			
+			record = test_record_repo.save(record);
+			log.warn("record key :: " + record.getKey());
+			test = test_service.findByKey(test.getKey());
 
+			test.addRecord(record);
+			test.setStatus(is_passing);
+			test.setBrowserStatus(browser, is_passing.toString());
+			test_repo.save(test);
+			
+			log.warn("adding test record to account ");
 			acct.addTestRecord(record);
 			account_service.save(acct);
 			MessageBroadcaster.broadcastTestStatus(host, record, test);
     	}
 
+    	log.warn("returning test results");
 		return test_results;
 	}
 
@@ -509,8 +517,8 @@ public class TestController {
     @PreAuthorize("hasAuthority('delete:groups')")
 	@RequestMapping(path="/remove/group", method = RequestMethod.POST)
 	public @ResponseBody void removeGroup(@RequestParam(value="group_key", required=true) String group_key,
-										  	 @RequestParam(value="test_key", required=true) String test_key){
-		Test test = test_repo.findByKey(test_key);
+										  @RequestParam(value="test_key", required=true) String test_key){
+		Test test = test_service.findByKey(test_key);
 		Group group = group_repo.findByKey(group_key);
 		test.removeGroup(group);
 		test_repo.save(test);
@@ -561,8 +569,8 @@ public class TestController {
     	if(acct == null){
     		throw new UnknownAccountException();
     	}
-    	Test test = test_repo.findByKey(test_key);
-    	test.setPathObjects(test_repo.getPathObjects(test.getKey()));
+    	Test test = test_service.findByKey(test_key);
+    	test.setPathObjects(test_service.getPathObjects(test.getKey()));
 		//convert test to ide test
 		/*
 		 * {

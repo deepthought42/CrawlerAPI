@@ -58,6 +58,7 @@ import com.qanairy.models.repository.FormRepository;
 import com.qanairy.models.repository.TestUserRepository;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.FormService;
 import com.qanairy.services.RedirectService;
 import com.qanairy.utils.BrowserUtils;
 import com.segment.analytics.Analytics;
@@ -87,6 +88,9 @@ public class DomainController {
 	
 	@Autowired
 	private FormRepository form_repo;
+
+	@Autowired
+	private FormService form_service;
 	
 	@Autowired
     private ActorSystem actor_system;
@@ -120,7 +124,7 @@ public class DomainController {
     	else if(acct.getSubscriptionToken() == null){
     		throw new MissingSubscriptionException();
     	}
-    	
+    	url = url.toLowerCase();
     	String formatted_url = BrowserUtils.sanitizeUrl(protocol+"://"+url);
     	URL url_obj = new URL(formatted_url);
 		
@@ -472,7 +476,7 @@ public class DomainController {
     @RequestMapping(path="{domain_id}/forms", method = RequestMethod.PUT)
     public @ResponseBody void updateForm(HttpServletRequest request,
     							 @PathVariable(value="domain_id", required=true) long domain_id,
-    							 @RequestParam(value="key", required=true) String key,
+    							 @RequestParam(value="id", required=true) long form_id,
     							 @RequestParam(value="name", required=false) String name,
     							 @RequestParam(value="type", required=true) String form_type) throws IOException, UnknownAccountException {
 		Principal principal = request.getUserPrincipal();
@@ -486,7 +490,7 @@ public class DomainController {
     		throw new MissingSubscriptionException();
     	}
 		
-		Form form_record = form_repo.findByKey(key);
+		Form form_record = form_service.findById(form_id);
 		
 		if(form_record == null){
 			throw new FormNotFoundException();
@@ -495,25 +499,30 @@ public class DomainController {
 			if(name!=null && !name.isEmpty()){
 				form_record.setName(name);
 			}
-			form_record.setType(FormType.create(form_type.toLowerCase()));
+			form_record.setType(FormType.create(form_type));
 			
 			if(!form_record.getType().equals(FormType.UNKNOWN)){
 				form_record.setStatus(FormStatus.CLASSIFIED);
 			}
 			
-	        //learn from form classification    
-	    	DeepthoughtApi.learn(form_record);
-	    
+			try {
+	        //learn from form classification   			
+				DeepthoughtApi.learn(form_record, form_record.getMemoryId());
+			}catch(Exception e) {
+				log.error("There was an error sending learn request to RL engine for form record "+form_record.getId()+" with memory id "+form_record.getMemoryId());
+			}
+			
 	    	form_record = form_repo.save(form_record);
-	
+	    	PageState page = form_service.getPageState(form_record);
 			Optional<Domain> optional_domain = domain_service.findById(domain_id);
 			log.info("Does the domain exist :: "+optional_domain.isPresent());
 	    	if(optional_domain.isPresent()){
 	    		Domain domain = optional_domain.get();
 	        		
 	    		log.info("domain exists with domain :: "+domain.getUrl()+ "  ::   "+domain.getDiscoveryBrowserName());
+	    		DiscoveryRecord discovery_record = domain_service.getMostRecentDiscoveryRecord(domain.getUrl());
 	    		//start form test creation actor
-	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, BrowserType.create(domain.getDiscoveryBrowserName()), domain);
+	    		FormDiscoveryMessage form_discovery_msg = new FormDiscoveryMessage(form_record, discovery_record, domain, page);
 		        
 	    		if(domain_actors.get(domain.getUrl()) == null){
 	    			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

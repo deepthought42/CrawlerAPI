@@ -17,11 +17,11 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.FormService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.Props;
@@ -49,9 +49,6 @@ public class FormDiscoveryActor extends AbstractActor{
 	private BrowserService browser_service;
 	
 	@Autowired
-	private PageStateService page_state_service;
-	
-	@Autowired
 	private ElementRuleExtractor rule_extractor;
 	
 	@Autowired
@@ -77,9 +74,7 @@ public class FormDiscoveryActor extends AbstractActor{
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(PathMessage.class, message -> {
-				  	System.err.println("FORM DISCOVERY HAS STARTED");
-					
+				.match(PathMessage.class, message -> {					
 					//get first page in path
 				  	PageState last_page = PathUtils.getFirstPage(message.getPathObjects());
 				  	String host = new URL(last_page.getUrl()).getHost();
@@ -90,8 +85,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  	do{
 				  		
 				  		try{
-				  			System.err.println("Getting browser for form extraction");
-					  		browser = BrowserConnectionFactory.getConnection(message.getBrowser().toString(), BrowserEnvironment.DISCOVERY);
+					  		browser = BrowserConnectionFactory.getConnection(BrowserType.create(message.getBrowser().toString()), BrowserEnvironment.DISCOVERY);
 					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
 					  		
 							PageState page_state = null;
@@ -101,42 +95,29 @@ public class FormDiscoveryActor extends AbstractActor{
 									break;
 								}
 							}
-				  			System.err.println("Looking up page state by key");
 							  
-					  		System.err.println("FORM DISCOVERY ACTOR IS EXTRACTING FORMS " );
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-					  		System.err.println("FORM DISCOVERY ACTOR EXTRACTED FORMS :: " + forms.size());
 
 						  	for(Form form : forms){
-						  		System.err.println("Total input fields for form :: "+form.getFormFields().size());
 							  	for(ElementState field : form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);
-									
-									System.err.println("Total RULES   :::   "+rules.size());
 									field.getRules().addAll(rules);
-									System.err.println("Total INPUT FIELD RULES   :::   "+field.getRules().size());
-
 								}
-							  							  	
 							    DeepthoughtApi.predict(form);
-						       
-							    System.err.println("PREDICTION DONE !!! ");
-							    System.err.println("********************************************************");
 							  	
-							    form = form_service.save(form);
+							    form_service.save(form);
 							  	page_state.addForm(form);
+							  	
 							  	//page_state_service.save(page_state);
 							  	message.getDomainActor().tell(page_state, getSelf());
-							  	//message.getDiscoveryActor().tell(page_state, getSelf());
-						        System.err.println("SENDING FORM FOR BROADCAST    !!!!!!!!!!!!!@@@@@@@@@!!!!!!!!!!!!!");
 							  	MessageBroadcaster.broadcastDiscoveredForm(form, host);
 						  	}
-						  	System.err.println("FORM DISCOVERY HAS ENDED");
 						  	forms_created = true;
 						  	return;
 						} catch(Exception e){
-					  		log.debug(e.getMessage());
+							e.printStackTrace();
+					  		log.warning(e.getMessage());
 					  		forms_created = false;
 					  		//e.printStackTrace();
 					  	}
@@ -146,7 +127,7 @@ public class FormDiscoveryActor extends AbstractActor{
 				  			}
 				  		}
 				  		count++;
-					}while(!forms_created && count < 10000);
+					}while(!forms_created && count < 100000);
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

@@ -6,45 +6,14 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-
-import com.minion.browsing.Crawler;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.services.BrowserService;
-import com.qanairy.services.TestService;
 
 public class TestTests {
-	@Mock
-	private PageState page_state;
-	
-	@Mock
-	private PageState page_state1;
-	
-	@Mock
-	private Test test;
-	
-	@Mock
-	private Crawler crawler;
-	
-	@Spy
-	private TestService test_service;
-	
-	@Mock
-	private BrowserService browser_service;
-	
-	@Before
-	public void setUp(){
-		MockitoAnnotations.initMocks(this);
-		test_service.init(crawler, browser_service);
-	}
 	
 	@org.junit.Test
 	public void generateTestNameTestWithLongPath() throws MalformedURLException{

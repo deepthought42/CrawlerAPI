@@ -3,10 +3,15 @@ package com.qanairy.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.services.TestService;
 
 public class PathUtils {
+	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
 	/**
 	 * Retrieves the last {@link PageState} in the given list of {@link PathObject}s
@@ -81,7 +86,9 @@ public class PathUtils {
 	public static PageState getFirstPage(List<PathObject> ordered_path_objects) {
 		//find first page
 		for(PathObject obj : ordered_path_objects){
-			if(obj instanceof PageState){
+			log.warn("object type :: "+obj.getType());
+			if(obj.getType().equals("PageState")){
+				log.warn("returning page state object :: "+obj);
 				return ((PageState)obj);
 			}
 		}

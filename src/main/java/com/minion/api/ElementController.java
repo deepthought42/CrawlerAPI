@@ -1,5 +1,7 @@
 package com.minion.api;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,16 +38,16 @@ public class ElementController {
 
 	@Autowired
 	private ElementStateService element_service;
-	
+
 	@Autowired
 	private RuleService rule_service;
-	
+
     @Autowired
     protected WebSecurityConfig appConfig;
-    
+
     /**
      * Adds {@link Rule} to {@link Element element} with a given id
-     * 
+     *
      * @param id element id
      * @return {@link Element element}
      */
@@ -56,16 +58,16 @@ public class ElementController {
     		HttpServletRequest request,
 			@PathVariable(value="id", required=true) long id,
 			@RequestParam(value="type", required=true) String type,
-			@RequestParam(value="value", required=false) String value) throws RuleValueRequiredException 
-    {  
+			@RequestParam(value="value", required=false) String value) throws RuleValueRequiredException
+    {
         ElementState element = element_service.findById(id);
         element.addRule(rule_service.findByType(type, value));
         return element_service.save(element);
     }
-    
+
     /**
      * Adds {@link Rule} to {@link Element element} with a given id
-     * 
+     *
      * @param id element id
      * @return {@link Element element}
      */
@@ -74,14 +76,19 @@ public class ElementController {
     @RequestMapping(path="/elements", method = RequestMethod.PUT)
     public ElementState update(
     		HttpServletRequest request,
-    		@RequestBody ElementState element_state) 
+    		@RequestBody ElementState element_state)
     {
+
     	Rule min_value_rule = null;
     	Rule max_value_rule = null;
     	Rule min_length_rule = null;
     	Rule max_length_rule = null;
-    	
+    	Map<String, Integer> rule_duplicate_map = new HashMap<>();
     	for(Rule rule : element_state.getRules()){
+    		if(!rule_duplicate_map.containsKey(rule.getKey())){
+    			rule_duplicate_map.put(rule.getKey(), 0);
+    		}
+    		rule_duplicate_map.put(rule.getKey(), rule_duplicate_map.get(rule.getKey())+1);
     		if(rule.getType().equals(RuleType.MIN_VALUE)){
     			min_value_rule = rule;
     		}
@@ -95,14 +102,19 @@ public class ElementController {
 				max_length_rule = rule;
 			}
     	}
-    	
+
+    	for(int value : rule_duplicate_map.values()){
+    		if(value > 1){
+    			throw new DuplicatesNotAllowedException();
+    		}
+    	}
     	//check that min/max rules are valid
-    	if( min_value_rule != null && (min_value_rule.getValue().isEmpty() 
+    	if( min_value_rule != null && (min_value_rule.getValue().isEmpty()
     			|| !StringUtils.isNumeric(min_value_rule.getValue())
     			|| Integer.parseInt(min_value_rule.getValue()) <= 0)){
     		throw new MinValueMustBePositiveNumber();
     	}
-		if( max_value_rule != null && (max_value_rule.getValue().isEmpty() 
+		if( max_value_rule != null && (max_value_rule.getValue().isEmpty()
 				|| !StringUtils.isNumeric(max_value_rule.getValue())
 				|| Integer.parseInt(max_value_rule.getValue()) <= 0)){
 			throw new MaxValueMustBePositiveNumber();
@@ -112,13 +124,13 @@ public class ElementController {
     			|| Integer.parseInt(min_length_rule.getValue()) <= 0)){
 			throw new MinLengthMustBePositiveNumber();
 		}
-		if( max_length_rule != null && (max_length_rule.getValue().isEmpty() 
+		if( max_length_rule != null && (max_length_rule.getValue().isEmpty()
 				|| !StringUtils.isNumeric(max_length_rule.getValue())
     			|| Integer.parseInt(max_length_rule.getValue()) <= 0)){
 			throw new MaxLengthMustBePositiveNumber();
 		}
-    	
-		
+
+
 		if(min_value_rule != null && max_value_rule != null){
 			int min_value = Integer.parseInt(min_value_rule.getValue());
 			int max_value = Integer.parseInt(max_value_rule.getValue());
@@ -133,17 +145,17 @@ public class ElementController {
 				throw new MinCannotBeGreaterThanMaxException();
 			}
 		}
-    	
+
     	//check that min/max length rules are valid
-    	log.warn("element update state experienced");
-        return element_service.save(element_state);
+    	log.warn("element update state experienced in element controller");
+      return element_service.save(element_state);
     }
 }
 
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 class RuleExistsException extends RuntimeException {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 7200878662560716216L;
 
@@ -155,9 +167,9 @@ class RuleExistsException extends RuntimeException {
 @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 class MinValueMustBePositiveNumber extends RuntimeException {
 	/**
-	 * 
+	 *
 	 */
-	private static final long serialVersionUID = 7200878662560716216L;
+	private static final long serialVersionUID = 4419265853468867824L;
 
 	public MinValueMustBePositiveNumber() {
 		super("Minimum value rule must contain a positive number");
@@ -168,7 +180,7 @@ class MinValueMustBePositiveNumber extends RuntimeException {
 class MinLengthMustBePositiveNumber extends RuntimeException {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -2254262252488883657L;
 
@@ -181,7 +193,7 @@ class MinLengthMustBePositiveNumber extends RuntimeException {
 class MaxLengthMustBePositiveNumber extends RuntimeException {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 4334601359263388271L;
 
@@ -194,7 +206,7 @@ class MaxLengthMustBePositiveNumber extends RuntimeException {
 class MaxValueMustBePositiveNumber extends RuntimeException {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 250328142799757755L;
 
@@ -207,11 +219,24 @@ class MaxValueMustBePositiveNumber extends RuntimeException {
 class MinCannotBeGreaterThanMaxException extends RuntimeException {
 
 	/**
-	 * 
+	 *
 	 */
-	private static final long serialVersionUID = 250328142799757755L;
+	private static final long serialVersionUID = 4423969190558092393L;
 
 	public MinCannotBeGreaterThanMaxException() {
 		super("Minimum value cannot be greater than max value");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class DuplicatesNotAllowedException extends RuntimeException {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 6335991211635956501L;
+
+	public DuplicatesNotAllowedException() {
+		super("Elements cannot have duplcate rules");
 	}
 }

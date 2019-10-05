@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,9 +18,10 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.FormType;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
-import com.minion.structs.Message;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -29,6 +31,10 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 
 /**
  * Handles discovery and creation of various form tests
@@ -63,7 +69,13 @@ public class FormTestDiscoveryActor extends AbstractActor {
 		return receiveBuilder()
 				.match(FormDiscoveryMessage.class, message -> {
 					Form form = message.getForm();
-
+					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(), timeout);
+					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+					if(discovery_action == DiscoveryAction.STOP) {
+						return;
+					}
+					
 					if(form.getType().equals(FormType.LOGIN)){
 						log.info("LOGIN type recieved");
 						final ActorRef loginFormTestDiscoveryActor = actor_system.actorOf(SpringExtProvider.get(actor_system)

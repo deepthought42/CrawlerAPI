@@ -2,6 +2,7 @@ package com.qanairy.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,22 @@ public class FormService {
 		}
 		
 		return form_record;
+	}
+
+	public Form findById(long form_id) {
+		Optional<Form> opt_form = form_repo.findById(form_id);
+		
+		if(opt_form.isPresent()){
+			Form form = opt_form.get();
+			form.setFormFields(form_repo.getElementStates(form.getKey()));
+			for(ElementState element : form.getFormFields()){
+				element.setRules(element_service.getRules(element.getKey()));
+			}
+			form.setFormTag(form_repo.getFormElement(form.getKey()));
+			form.setSubmitField(form_repo.getSubmitElement(form.getKey()));
+			return form;
+		}
+		return null;
 	}
 
 }

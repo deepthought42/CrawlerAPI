@@ -23,6 +23,7 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
+import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -48,6 +49,9 @@ public class DomainActor extends AbstractActor{
 	
 	@Autowired
 	private TestService test_service;
+	
+	@Autowired
+	private PageStateService page_state_service;
 	
 	@Autowired
 	private ActorSystem actor_system;

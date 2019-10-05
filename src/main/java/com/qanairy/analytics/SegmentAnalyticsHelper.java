@@ -17,10 +17,7 @@ import com.segment.analytics.messages.TrackMessage;
 @Service
 public class SegmentAnalyticsHelper {
 
-	@Value(value = "${segment.analytics.writeKey}")
-	private static String writeKey;
-	
-	private static Analytics analytics = Analytics.builder(writeKey).build();
+	private static Analytics analytics = Analytics.builder("2fhUNnmoIEy5DZj9yhysv9j7QQcgWQlT").build();
 	
 	public static void sendTestFinishedRunningEvent(String userId, Test test) {
 		Map<String, Object> properties = new LinkedHashMap<>();

@@ -109,7 +109,7 @@ public class BrowserUtils {
 				last_checksum = new_checksum;
 				url_futures.add(ScreenshotUploadService.uploadPageStateScreenshot(screenshot, host, new_checksum));
 			}
-		}while((System.currentTimeMillis() - start_ms) < 2000);
+		}while((System.currentTimeMillis() - start_ms) < 5000);
 
 		for(Future<String> future: url_futures){
 			try {

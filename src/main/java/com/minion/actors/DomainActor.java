@@ -23,7 +23,6 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.DomainService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 
 import akka.actor.AbstractActor;
@@ -43,9 +42,6 @@ public class DomainActor extends AbstractActor{
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private Domain domain = null;
 	private DiscoveryAction discovery_action;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private DomainService domain_service;
@@ -116,6 +112,19 @@ public class DomainActor extends AbstractActor{
 						}
 					}
 					
+					log.warn("test result in domain actor   :   " + test.getResult());
+					domain = domain_service.save(domain);
+					
+					domain_service.addPageState(domain.getUrl(), test.getResult());	
+
+					for(PathObject path_obj : test.getPathObjects()){
+						try {
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
+						} catch (JsonProcessingException e) {
+							log.error(e.getLocalizedMessage());
+						}
+					}
+          
 					try {
 						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
 					} catch (JsonProcessingException e) {

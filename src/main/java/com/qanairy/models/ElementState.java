@@ -330,9 +330,8 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		
 		key += this.getName();
 		key += this.getText();
-		key += this.getWidth();
-		key += this.getHeight();
 		key += this.getInnerHtml();
+		key += this.getScreenshotChecksum();
 		
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}

@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.qanairy.analytics.SegmentAnalyticsService;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
@@ -103,8 +103,8 @@ public class AccountController {
         acct = account_service.save(acct);
 
     	
-	   	SegmentAnalyticsService.identify(acct);
-	   	SegmentAnalyticsService.signupEvent(acct.getUserId(), "FREE");
+	   	SegmentAnalyticsHelper.identify(acct);
+	   	SegmentAnalyticsHelper.signupEvent(acct.getUserId(), "FREE");
 
         return ResponseEntity.accepted().body(acct);
     }

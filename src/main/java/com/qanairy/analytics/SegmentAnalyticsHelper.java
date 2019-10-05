@@ -15,7 +15,7 @@ import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 
 @Service
-public class SegmentAnalyticsService {
+public class SegmentAnalyticsHelper {
 
 	@Value(value = "${segment.analytics.writeKey}")
 	private static String writeKey;

@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import com.qanairy.analytics.SegmentAnalyticsService;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.dto.TestDto;
@@ -359,7 +359,7 @@ public class TestController {
         }
     	 */
     	
-	   	SegmentAnalyticsService.testRunStarted(acct.getUserId(), test_keys.size());
+    	SegmentAnalyticsHelper.testRunStarted(acct.getUserId(), test_keys.size());
 
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
@@ -395,7 +395,7 @@ public class TestController {
 			
 			record = test_record_repo.save(record);
 
-		   	SegmentAnalyticsService.sendTestFinishedRunningEvent(acct.getUserId(), test);
+			SegmentAnalyticsHelper.sendTestFinishedRunningEvent(acct.getUserId(), test);
 			test = test_service.findByKey(test.getKey());
 
 			test.addRecord(record);

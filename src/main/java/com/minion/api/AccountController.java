@@ -40,9 +40,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.IdentifyMessage;
-import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.mashape.unirest.http.HttpResponse;
@@ -105,15 +102,8 @@ public class AccountController {
         // log username of user requesting account creation
         acct = account_service.save(acct);
 
-    	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("email", username);
-    	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getUsername())
-    		    .traits(traits)
-    		);
-	   	SegmentAnalyticsService.identify(acct);
-
     	
+	   	SegmentAnalyticsService.identify(acct);
 	   	SegmentAnalyticsService.signupEvent(acct.getUserId(), "FREE");
 
         return ResponseEntity.accepted().body(acct);

@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.Account;
-import com.relevantcodes.extentreports.model.Test;
+import com.qanairy.models.Test;
 import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -22,9 +22,9 @@ public class SegmentAnalyticsService {
 	
 	private static Analytics analytics = Analytics.builder(writeKey).build();
 	
-	public static void sendTestFinishedRuningEvent(String userId, Test test) {
+	public static void sendTestFinishedRunningEvent(String userId, Test test) {
 		Map<String, Object> properties = new LinkedHashMap<>();
-        properties.put("testId", test.getId());
+        properties.put("testId", test.getKey());
         final String anonymousId = UUID.randomUUID().toString();
 
 		analytics.enqueue(

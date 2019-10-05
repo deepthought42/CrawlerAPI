@@ -34,8 +34,6 @@ import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -137,22 +135,6 @@ public class DiscoveryController {
 			domain_actors.get(url).tell(discovery_action_msg, null);
 		}
         else{
-        	//Throw error indicating discovery has been or is running
-        	//return new ResponseEntity<String>("Discovery is already running", HttpStatus.INTERNAL_SERVER_ERROR);
-        	//Fire discovery started event
-	    	Map<String, String> discovery_started_props = new HashMap<String, String>();
-	    	discovery_started_props.put("protocol",  domain.getProtocol());
-	    	discovery_started_props.put("url", domain.getUrl());
-	    	discovery_started_props.put("browser", domain.getDiscoveryBrowserName());
-	    	discovery_started_props.put("already_running", "true");
-
-	    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
-	    	analytics.enqueue(TrackMessage.builder("Existing discovery found")
-	    		    .userId(acct.getUsername())
-	    		    .properties(discovery_started_props)
-	    		);
-
         	throw new ExistingDiscoveryFoundException();
         }
 		

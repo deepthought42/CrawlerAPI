@@ -99,7 +99,7 @@ public class DomainActor extends AbstractActor{
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(DiscoveryActionRequest.class, message-> {
-					
+					log.warn("dicovery action request received by domain Actor. RETURNING   :::   " + discovery_action);
 					getSender().tell(discovery_action, getSelf());
 				})
 				.match(TestMessage.class, test_msg -> {
@@ -107,9 +107,7 @@ public class DomainActor extends AbstractActor{
 					Test test_record = test_service.save(test);
 					if(domain == null){
 						String host = test_msg.getDomain().getUrl();
-							log.warn("Host :: " + host);
 						domain = domain_service.findByHost(host);
-						log.warn("loaded domain :: " + domain);
 					}
 					
 					for(PathObject obj : test.getPathObjects()){
@@ -123,13 +121,8 @@ public class DomainActor extends AbstractActor{
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
-					log.warn("test result in domain actor :: " + test.getResult());
-					log.warn("saved test L::   "+test);
 					domain_service.save(domain);
-
 					domain_service.addTest(domain.getUrl(), test_record);
-					
-					log.warn("test result in domain actor   :   " + test.getResult());
 					domain_service.addPageState(domain.getUrl(), test.getResult());
 					
 					for(PathObject path_obj : test.getPathObjects()){
@@ -138,9 +131,7 @@ public class DomainActor extends AbstractActor{
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}
-					}
-					log.warn("saved domain :: "+domain);
-					
+					}					
 				})
 				.match(FormDiscoveryMessage.class, form_msg -> {
 					//forward message to discovery actor

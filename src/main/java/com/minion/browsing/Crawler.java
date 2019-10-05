@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import com.minion.util.Timing;
+import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
 import com.qanairy.models.ExploratoryPath;
@@ -37,11 +39,18 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.DiscoveryAction;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.repository.ActionRepository;
 import com.qanairy.services.BrowserService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
+
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 
 /**
  * Provides methods for crawling web pages using Selenium
@@ -654,8 +663,9 @@ public class Crawler {
 	 * @param path
 	 * @param host
 	 * @return
+	 * @throws Exception 
 	 */
-	public PageState performPathExploratoryCrawl(String browser_name, PathMessage path, String host) {
+	public PageState performPathExploratoryCrawl(String browser_name, PathMessage path, String host) throws Exception {
 		PageState result_page = null;
 		int tries = 0;
 		Browser browser = null;
@@ -663,6 +673,17 @@ public class Crawler {
 		boolean no_such_element_exception = false;
 		
 		do{
+			Timeout timeout = Timeout.create(Duration.ofSeconds(5));
+			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(), timeout);
+			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+			
+			log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
+			log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
+
+			if(discovery_action == DiscoveryAction.STOP) {
+				log.warn("path message discovery actor returning");
+				throw new DiscoveryStoppedException();
+			}
 			try{
 				if(!no_such_element_exception){
 					no_such_element_exception = false;

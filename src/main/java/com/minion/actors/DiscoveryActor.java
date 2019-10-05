@@ -86,7 +86,7 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
-	
+	private final int DISCOVERY_ACTOR_COUNT = 30;
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -125,7 +125,12 @@ public class DiscoveryActor extends AbstractActor{
 					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
 					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+					
+					log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
+					log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
+
 					if(discovery_action == DiscoveryAction.STOP) {
+						log.warn("path message discovery actor returning");
 						return;
 					}
 					
@@ -164,7 +169,7 @@ public class DiscoveryActor extends AbstractActor{
 
 						if(exploratory_browser_actors.isEmpty()){
 							//create multiple exploration actors for parallel execution
-							for(int i=0; i < 5; i++){
+							for(int i=0; i < DISCOVERY_ACTOR_COUNT; i++){
 								exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 							}
@@ -221,7 +226,12 @@ public class DiscoveryActor extends AbstractActor{
 						Timeout timeout = Timeout.create(Duration.ofSeconds(5));
 						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+						log.warn("discovery action received from domain :: "+discovery_action);
+						log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
+
 						if(discovery_action == DiscoveryAction.STOP) {
+							log.warn("test message discovery actor returning");
+
 							return;
 						}
 						
@@ -264,10 +274,14 @@ public class DiscoveryActor extends AbstractActor{
 			        Timeout timeout = Timeout.create(Duration.ofSeconds(5));
 					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+					log.warn("form discovery action receieved from domain actor  :   "+discovery_action);
+					log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
+
 					if(discovery_action == DiscoveryAction.STOP) {
+						log.warn("ending discovery");
 						return;
 					}
-					
+					log.warn("NOT STOPPING DISCOVERY!!!!");
 			        if(form_test_discovery_actor == null){
 			        	form_test_discovery_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 			  				  .props("formTestDiscoveryActor"), "form_test_discovery_actor"+UUID.randomUUID());
@@ -334,7 +348,7 @@ public class DiscoveryActor extends AbstractActor{
     
 		if(exploratory_browser_actors.isEmpty()){
 			//create multiple exploration actors for parallel execution
-			for(int i=0; i < 25; i++){
+			for(int i=0; i < DISCOVERY_ACTOR_COUNT; i++){
 				exploratory_browser_actors.add(actor_system.actorOf(SpringExtProvider.get(actor_system)
 						  .props("exploratoryBrowserActor"), "exploratory_browser_actor"+UUID.randomUUID()));
 			}

@@ -2,6 +2,7 @@ package com.minion.actors;
 
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,13 +23,19 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
+import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.PathStatus;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
@@ -80,6 +87,19 @@ public class UrlBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(UrlMessage.class, message -> {
+					
+					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(), timeout);
+					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+					
+					log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
+					log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
+
+					if(discovery_action == DiscoveryAction.STOP) {
+						log.warn("path message discovery actor returning");
+						return;
+					}
+					
 					//String discovery_key = message.getOptions().get("discovery_key").toString();
 					String url = message.getUrl().toString();
 					

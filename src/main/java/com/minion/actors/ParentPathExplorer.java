@@ -3,6 +3,7 @@ package com.minion.actors;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
+import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageLoadAnimation;
@@ -33,7 +35,9 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
@@ -41,6 +45,7 @@ import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
+import com.qanairy.api.exceptions.DiscoveryStoppedException;
 
 import akka.actor.AbstractActor;
 import akka.cluster.Cluster;
@@ -49,6 +54,10 @@ import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberRemoved;
 import akka.cluster.ClusterEvent.MemberUp;
 import akka.cluster.ClusterEvent.UnreachableMember;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 
 @Component
 @Scope("prototype")
@@ -129,16 +138,23 @@ public class ParentPathExplorer extends AbstractActor {
 					
 					//do while result matches expected result
 					do{
-						log.warn("starting parent path explorer loop");
+						Timeout timeout = Timeout.create(Duration.ofSeconds(5));
+						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(), timeout);
+						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
+						
+						log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
+						log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
+
+						if(discovery_action == DiscoveryAction.STOP) {
+							log.warn("path message discovery actor returning");
+							return;
+						}
 						try{
 							error_occurred = false;
-							log.warn("getting browser connection (ParentPathExplorer) :: "+message.getBrowser());
 							browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
 							//crawl path using array of preceding elements\
 							browser.navigateTo(first_page.getUrl());
-							log.warn("crawling beginning of parent path");
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host);
-							log.warn("done crawling beginning of path");
 							//extract parent element
 							String element_xpath = last_element.getXpath();
 							WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
@@ -163,7 +179,6 @@ public class ParentPathExplorer extends AbstractActor {
 								break;
 							}
 							
-							log.warn("setting up parent end path");
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
@@ -172,10 +187,8 @@ public class ParentPathExplorer extends AbstractActor {
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
 							
-							log.warn("crawling end of parent path without building result");
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
-							log.warn("done crawling parent end of path");
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){
 								parent_end_path_keys.add(loading_animation.getKey());

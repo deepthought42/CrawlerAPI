@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+
+import com.qanairy.analytics.SegmentAnalyticsService;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.dto.TestDto;
@@ -370,16 +372,8 @@ public class TestController {
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
     	 */
-
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
-    	//Fire test run started event
-	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
-	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
-	   	analytics.enqueue(TrackMessage.builder("Running tests")
-	   		    .userId(acct.getUsername())
-	   		    .properties(run_test_batch_props)
-	   		);
+    	
+	   	SegmentAnalyticsService.testRunStarted(acct.getUserId(), test_keys.size());
 
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
@@ -414,14 +408,15 @@ public class TestController {
 
 			
 			record = test_record_repo.save(record);
-			log.warn("record key :: " + record.getKey());
+
+		   	SegmentAnalyticsService.sendTestFinishedRuningEvent(acct.getUserId(), test);
 			test = test_service.findByKey(test.getKey());
 
 			test.addRecord(record);
 			test.setStatus(is_passing);
 			test.setBrowserStatus(browser, is_passing.toString());
 			test_repo.save(test);
-			
+
 			log.warn("adding test record to account ");
 			acct.addTestRecord(record);
 			account_service.save(acct);

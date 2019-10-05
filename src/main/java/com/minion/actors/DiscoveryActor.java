@@ -6,9 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -38,8 +36,6 @@ import com.qanairy.services.DiscoveryRecordService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.EmailService;
 import com.qanairy.utils.PathUtils;
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.TrackMessage;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -354,20 +350,6 @@ public class DiscoveryActor extends AbstractActor{
 		log.info("Sending URL to UrlBrowserActor");
 		UrlMessage url_message = new UrlMessage(getSelf(), new URL(message.getDomain().getProtocol() + "://"+message.getDomain().getUrl()), message.getBrowser(), domain_actor, message.getDomain());
 		url_browser_actor.tell(url_message, getSelf() );
-		
-		//Fire discovery started event
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
-		Map<String, String> traits = new HashMap<String, String>();
-        traits.put("user_id", message.getAccount().getUserId());
-        traits.put("url", message.getDomain().getUrl());
-    	traits.put("browser", message.getBrowser().toString());
-        traits.put("discovery_started", "true");
-    	traits.put("discovery_key", discovery_record.getKey());
-        analytics.enqueue(TrackMessage.builder("Started Discovery")
-    		    .userId(message.getAccount().getUsername())
-    		    .properties(traits)
-		);
 	}
 
 	private void stopDiscovery(DiscoveryActionMessage message) {

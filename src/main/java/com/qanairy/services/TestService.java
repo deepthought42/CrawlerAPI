@@ -41,9 +41,6 @@ import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.TestRecordRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.utils.PathUtils;
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.IdentifyMessage;
-import com.segment.analytics.messages.TrackMessage;
 
 @Component
 public class TestService {
@@ -214,24 +211,8 @@ public class TestService {
 	}
 
 	public List<TestRecord> runAllTests(Account acct, Domain domain) {
-		Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-    	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("account", acct.getUsername());
-        traits.put("api_key", acct.getApiToken());
-    	analytics.enqueue(IdentifyMessage.builder()
-		    .userId(acct.getUsername())
-		    .traits(traits)
-		);
-
 		//Fire discovery started event
     	Set<Test> tests = domain_service.getVerifiedTests(domain.getUrl());
-	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
-	   	run_test_batch_props.put("total tests", Integer.toString(tests.size()));
-	   	analytics.enqueue(TrackMessage.builder("Running tests")
-   		    .userId(acct.getUsername())
-   		    .properties(run_test_batch_props)
-   		);
-
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
     	List<TestRecord> test_records = new ArrayList<TestRecord>();
 

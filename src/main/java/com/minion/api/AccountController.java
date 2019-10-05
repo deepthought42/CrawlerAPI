@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
@@ -39,9 +40,6 @@ import com.qanairy.models.TestRecord;
 import com.qanairy.models.dto.exceptions.UnknownAccountException;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.IdentifyMessage;
-import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.mashape.unirest.http.HttpResponse;
@@ -96,28 +94,17 @@ public class AccountController {
     	customerParams.put("description", "Customer for "+username);
     	Customer customer = this.stripeClient.createCustomer(null, username);
     	//Subscription subscription = this.stripeClient.subscribe(pro_tier, customer);
-      acct = new Account(user_id, username, customer.getId(), "");
+    	acct = new Account(user_id, username, customer.getId(), "");
     	acct.setSubscriptionType("FREE");
     	acct.setApiToken(UUID.randomUUID().toString());
-      acct.setSubscriptionType("FREE");
+    	acct.setSubscriptionType("FREE");
         //final String username = usernameService.getUsername();
         // log username of user requesting account creation
         acct = account_service.save(acct);
 
-        Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-    	Map<String, String> traits = new HashMap<String, String>();
-        traits.put("email", username);
-    	analytics.enqueue(IdentifyMessage.builder()
-    		    .userId(acct.getUsername())
-    		    .traits(traits)
-    		);
-
-    	Map<String, String> account_signup_properties = new HashMap<String, String>();
-    	account_signup_properties.put("plan", "FREE");
-    	analytics.enqueue(TrackMessage.builder("Signed Up")
-    		    .userId(acct.getUsername())
-    		    .properties(account_signup_properties)
-    		);
+    	
+	   	SegmentAnalyticsHelper.identify(acct);
+	   	SegmentAnalyticsHelper.signupEvent(acct.getUserId(), "FREE");
 
         return ResponseEntity.accepted().body(acct);
     }

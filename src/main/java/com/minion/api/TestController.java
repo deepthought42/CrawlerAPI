@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
@@ -27,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.api.exceptions.DomainNotOwnedByAccountException;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
 import com.qanairy.dto.TestDto;
@@ -39,13 +39,8 @@ import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 import com.qanairy.services.SubscriptionService;
 import com.qanairy.services.TestService;
-
-import com.segment.analytics.Analytics;
-import com.segment.analytics.messages.TrackMessage;
 import com.stripe.exception.StripeException;
-
 import io.swagger.annotations.ApiOperation;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.api.exception.PaymentDueException;
 import com.qanairy.models.Account;
@@ -258,8 +253,6 @@ public class TestController {
     		throw new MissingSubscriptionException();
     	}
 
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
 		Test test = test_repo.findByKey(key);
 		test.setStatus(status);
 		test.getBrowserStatuses().put(browser_name, status.toString());
@@ -270,11 +263,6 @@ public class TestController {
 	   	//Fire discovery started event
 	   	Map<String, String> set_initial_correctness_props= new HashMap<String, String>();
 	   	set_initial_correctness_props.put("test_key", test.getKey());
-	   	analytics.enqueue(TrackMessage.builder("Set initial test status")
-	   		    .userId(acct.getUsername())
-	   		    .properties(set_initial_correctness_props)
-	   		);
-
 		return test;
 	}
 
@@ -370,16 +358,8 @@ public class TestController {
     		throw new PaymentDueException("Your plan has 0 test runs available. Upgrade now to run more tests");
         }
     	 */
-
-    	Analytics analytics = Analytics.builder("TjYM56IfjHFutM7cAdAEQGGekDPN45jI").build();
-
-    	//Fire test run started event
-	   	Map<String, String> run_test_batch_props= new HashMap<String, String>();
-	   	run_test_batch_props.put("total tests", Integer.toString(test_keys.size()));
-	   	analytics.enqueue(TrackMessage.builder("Running tests")
-	   		    .userId(acct.getUsername())
-	   		    .properties(run_test_batch_props)
-	   		);
+    	
+    	SegmentAnalyticsHelper.testRunStarted(acct.getUserId(), test_keys.size());
 
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
@@ -411,17 +391,17 @@ public class TestController {
 					break;
 				}
 			}
-
 			
 			record = test_record_repo.save(record);
-			log.warn("record key :: " + record.getKey());
+
+			SegmentAnalyticsHelper.sendTestFinishedRunningEvent(acct.getUserId(), test);
 			test = test_service.findByKey(test.getKey());
 
 			test.addRecord(record);
 			test.setStatus(is_passing);
 			test.setBrowserStatus(browser, is_passing.toString());
 			test_repo.save(test);
-			
+
 			log.warn("adding test record to account ");
 			acct.addTestRecord(record);
 			account_service.save(acct);

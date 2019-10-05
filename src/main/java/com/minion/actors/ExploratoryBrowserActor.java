@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Crawler;
+import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
@@ -81,14 +82,17 @@ public class ExploratoryBrowserActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(PathMessage.class, message-> {
-					String browser_name = message.getDomain().getDiscoveryBrowserName();
-
+					String browser_name = message.getDomain().getDiscoveryBrowserName();					
+					
 					if(message.getPathObjects() != null){
 						PageState result_page = null;
 
 						String host = new URL(PathUtils.getFirstPage(message.getPathObjects()).getUrl()).getHost();
-						result_page = crawler.performPathExploratoryCrawl(browser_name, message, host);
-
+						try {
+							result_page = crawler.performPathExploratoryCrawl(browser_name, message, host);
+						} catch(DiscoveryStoppedException e) {
+							return;
+						}
 						//get page states
 						List<PageState> page_states = new ArrayList<PageState>();
 						for(PathObject path_obj : message.getPathObjects()){

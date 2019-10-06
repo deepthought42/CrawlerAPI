@@ -673,8 +673,8 @@ public class Crawler {
 		boolean no_such_element_exception = false;
 		
 		do{
-			Timeout timeout = Timeout.create(Duration.ofSeconds(5));
-			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(), timeout);
+			Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain()), timeout);
 			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 			
 			log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);

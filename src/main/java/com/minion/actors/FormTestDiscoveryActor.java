@@ -69,8 +69,8 @@ public class FormTestDiscoveryActor extends AbstractActor {
 		return receiveBuilder()
 				.match(FormDiscoveryMessage.class, message -> {
 					Form form = message.getForm();
-					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
-					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(), timeout);
+					Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					if(discovery_action == DiscoveryAction.STOP) {
 						return;

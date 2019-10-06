@@ -18,6 +18,7 @@ import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.DiscoveryAction;
+import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
@@ -99,7 +100,17 @@ public class DomainActor extends AbstractActor{
 					discovery_actor.tell(message, getSelf());
 				})
 				.match(DiscoveryActionRequest.class, message-> {
+					if(discovery_action == null) {
+						DiscoveryStatus status = domain_service.getMostRecentDiscoveryRecord(message.getDomain().getUrl()).getStatus();
+						if(status == DiscoveryStatus.RUNNING) {
+							discovery_action = DiscoveryAction.START;
+						}
+						else {
+							discovery_action = DiscoveryAction.STOP;
+						}
+					}
 					log.warn("dicovery action request received by domain Actor. RETURNING   :::   " + discovery_action);
+
 					getSender().tell(discovery_action, getSelf());
 				})
 				.match(TestMessage.class, test_msg -> {

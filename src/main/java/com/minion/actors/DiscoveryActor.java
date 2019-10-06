@@ -119,7 +119,7 @@ public class DiscoveryActor extends AbstractActor{
 				})
 				.match(PathMessage.class, message -> {
 					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
-					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(), timeout);
+					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
 					log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
@@ -216,8 +216,8 @@ public class DiscoveryActor extends AbstractActor{
 					boolean isLandable = BrowserService.checkIfLandable(test_msg.getDomain().getDiscoveryBrowserName(), test.getResult(), test );
 					BrowserType browser = BrowserType.create(discovery_record.getBrowserName());
 					if(!test.getSpansMultipleDomains()){
-						Timeout timeout = Timeout.create(Duration.ofSeconds(5));
-						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(), timeout);
+						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 						log.warn("discovery action received from domain :: "+discovery_action);
 						log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
@@ -264,8 +264,8 @@ public class DiscoveryActor extends AbstractActor{
 			        discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 			        form_msg.setDiscoveryActor(getSelf());
 		    		
-			        Timeout timeout = Timeout.create(Duration.ofSeconds(5));
-					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(), timeout);
+			        Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+					Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(form_msg.getDomain()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					log.warn("form discovery action receieved from domain actor  :   "+discovery_action);
 					log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));

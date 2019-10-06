@@ -137,8 +137,8 @@ public class ParentPathExplorer extends AbstractActor {
 					
 					//do while result matches expected result
 					do{
-						Timeout timeout = Timeout.create(Duration.ofSeconds(5));
-						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(), timeout);
+						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
+						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 						
 						log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);

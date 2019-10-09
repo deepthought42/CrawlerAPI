@@ -102,7 +102,6 @@ public class TestService {
 		 final long pathCrawlStartTime = System.currentTimeMillis();
 
 		 int cnt = 0;
-		 boolean pages_dont_match = false;
 		 Browser browser = null;
 		 Map<Integer, ElementState> visible_element_map = new HashMap<>();
 		 List<ElementState> visible_elements = new ArrayList<>();
@@ -113,7 +112,6 @@ public class TestService {
 				 page = crawler.crawlPath(test.getPathKeys(), test.getPathObjects(), browser, new URL(PathUtils.getFirstPage(test.getPathObjects()).getUrl()).getHost(), visible_element_map, visible_elements);
 			 } catch(PagesAreNotMatchingException e){
 				 log.warn(e.getLocalizedMessage());
-				 pages_dont_match = true;
 			 }
 			 catch (Exception e) {
 				 e.printStackTrace();
@@ -126,23 +124,15 @@ public class TestService {
 			 }
 
 			 cnt++;
-		 }while(cnt < 100000 && page == null);
+		 }while(cnt < 1000 && page == null);
 
 		 final long pathCrawlEndTime = System.currentTimeMillis();
 		 long pathCrawlRunTime = pathCrawlEndTime - pathCrawlStartTime;
 
-		 if(pages_dont_match){
-			 log.warn("pages don't match");
-			 return new TestRecord(new Date(), TestStatus.FAILING, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
-		 }
-		 else{
-			 log.warn("pages match and test is passing");
-			 log.warn("getting test result :: "+test.getResult());
-			 passing = Test.isTestPassing(getResult(test.getKey()), page, last_test_status);
-	 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
+		 passing = Test.isTestPassing(getResult(test.getKey()), page, last_test_status);
+ 		 test_record = new TestRecord(new Date(), passing, browser_name.trim(), page, pathCrawlRunTime, test.getPathKeys());
 
-			 return test_record;
-		 }
+		 return test_record;
 	 }
 
 	 public Test save(Test test) throws MalformedURLException {

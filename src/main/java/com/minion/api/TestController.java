@@ -364,7 +364,6 @@ public class TestController {
     	Map<String, TestRecord> test_results = new HashMap<String, TestRecord>();
 
     	for(String key : test_keys){
-    		log.warn("Running test with key :: " + key);
     		Test test = test_repo.findByKey(key);
     		TestStatus last_test_status = test.getStatus();
 
@@ -373,7 +372,6 @@ public class TestController {
 			test = test_repo.save(test);
 			
     		TestRecord record = test_service.runTest(test, browser, last_test_status);
-    		log.warn("run tests returned record  ::  "+record);
 			test_results.put(test.getKey(), record);
 
 			//set browser status first since we use browser statuses to determine overall test status
@@ -402,7 +400,6 @@ public class TestController {
 			test.setBrowserStatus(browser, is_passing.toString());
 			test_repo.save(test);
 
-			log.warn("adding test record to account ");
 			acct.addTestRecord(record);
 			account_service.save(acct);
 			MessageBroadcaster.broadcastTestStatus(host, record, test);

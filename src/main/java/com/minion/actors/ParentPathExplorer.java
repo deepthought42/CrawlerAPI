@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -105,8 +106,6 @@ public class ParentPathExplorer extends AbstractActor {
 
 			  		List<String> final_path_keys = new ArrayList<String>(message.getKeys());
 			  		List<PathObject> final_path_objects = new ArrayList<PathObject>(message.getPathObjects());
-			  		Browser browser = null;
-
 			  		List<String> path_keys = new ArrayList<>(message.getKeys());
 					List<PathObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
 					
@@ -134,7 +133,8 @@ public class ParentPathExplorer extends AbstractActor {
 			  		
 					boolean results_match = false;
 					boolean error_occurred = false;
-					
+			  		Browser browser = null;
+
 					//do while result matches expected result
 					do{
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
@@ -246,6 +246,25 @@ public class ParentPathExplorer extends AbstractActor {
 						}
 					}while((results_match || error_occurred) && !last_element.getName().equals("body"));
 
+					//check if test already exists that contains subset of current test consisting of last set of page-element-action
+					//find last page state
+				    int last_page_idx = 0;
+				    for(int idx = path_keys.size(); idx >= 0; idx--) {
+					    if(path_keys.get(idx).contains("pagestate")) {
+					 	    last_page_idx = idx;
+					 	    break;
+					    }
+				    }
+				   
+				    List<String> path_key_sublist = path_keys.subList(last_page_idx, path_keys.size());
+					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
+					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+					for(Test test : matching_tests) {
+						path_object_lists.add(test_service.getPathObjects(test.getKey()));
+					}
+					
+					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
+					
 			  		long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
 			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), message.getDomain().getUrl());

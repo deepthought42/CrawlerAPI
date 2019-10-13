@@ -293,11 +293,9 @@ public class TestService {
 		   //check if any subpath of test matches path_objects based on url, xpath and action
 		   int current_idx = 0;
 		   for(PathObject path_object : test_path_objects) {
-			   if(path_object.getKey().contains("pagestate")) {
-				   if(((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
-					   current_idx++;
-					   break;
-				   }
+			   if(path_object.getKey().contains("pagestate") && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
+				   current_idx++;
+				   break;
 			   }
 			   current_idx++;
 		   }

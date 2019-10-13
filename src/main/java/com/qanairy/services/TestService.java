@@ -266,12 +266,30 @@ public class TestService {
 	   return test_repo.getResult(key);
    }
 
-   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> tests_path_object_lists) {
+   /**
+    * Checks if url, xpath and remaining keys in path_keys list are present in any of the test paths provided in test_path_object_lists
+    * 
+    * @param path_keys
+    * @param tests_path_object_lists
+    * 
+    * @pre path_keys != null
+    * @pre !path_keys.isEmpty()
+    * @pre test_path_object_lists != null
+    * @pre !test_path_object_lists.isEmpty()
+    * 
+    * @return
+    */
+   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists) {
+	   assert path_keys != null;
+	   assert !path_keys.isEmpty();
+	   assert test_path_object_lists != null;
+	   assert !test_path_object_lists.isEmpty();
+   
 	   //load path objects using path keys
 	   List<PathObject> path_objects = loadPathObjects(path_keys);
 	   
 	   //find all tests with page state at index
-	   for(List<PathObject> test_path_objects : tests_path_object_lists) {
+	   for(List<PathObject> test_path_objects : test_path_object_lists) {
 		   //check if any subpath of test matches path_objects based on url, xpath and action
 		   int current_idx = 0;
 		   for(PathObject path_object : test_path_objects) {

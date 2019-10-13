@@ -245,11 +245,13 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 						}
 					}while((results_match || error_occurred) && !last_element.getName().equals("body"));
-
+					long end = System.currentTimeMillis();
+			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
+			  		
 					//check if test already exists that contains subset of current test consisting of last set of page-element-action
 					//find last page state
 				    int last_page_idx = 0;
-				    for(int idx = path_keys.size(); idx >= 0; idx--) {
+				    for(int idx = path_keys.size()-1; idx >= 0; idx--) {
 					    if(path_keys.get(idx).contains("pagestate")) {
 					 	    last_page_idx = idx;
 					 	    break;
@@ -265,8 +267,10 @@ public class ParentPathExplorer extends AbstractActor {
 					
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
 					
-			  		long end = System.currentTimeMillis();
-			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
+					if(is_duplicate_path) {
+						return;
+					}
+			  		
 			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), message.getDomain().getUrl());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
 

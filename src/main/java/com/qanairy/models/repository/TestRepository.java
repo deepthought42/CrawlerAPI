@@ -50,4 +50,7 @@ public interface TestRepository extends Neo4jRepository<Test, Long> {
 	
 	@Query("MATCH (:Test{key:{key}})-[:HAS_RESULT]->(p:PageState) RETURN p")
 	public PageState getResult(@Param("key") String key);
+	
+	@Query("MATCH (t:Test) WHERE {path_obj_key} in t.path_keys RETURN t")
+	public Set<Test> findAllTestRecordsContainingKey(@Param("path_obj_key") String path_object_key);
 }

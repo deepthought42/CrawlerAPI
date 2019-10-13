@@ -265,4 +265,82 @@ public class TestService {
    public PageState getResult(String key) {
 	   return test_repo.getResult(key);
    }
+
+   /**
+    * Checks if url, xpath and remaining keys in path_keys list are present in any of the test paths provided in test_path_object_lists
+    * 
+    * @param path_keys
+    * @param tests_path_object_lists
+    * 
+    * @pre path_keys != null
+    * @pre !path_keys.isEmpty()
+    * @pre test_path_object_lists != null
+    * @pre !test_path_object_lists.isEmpty()
+    * 
+    * @return
+    */
+   public boolean checkIfEndOfPathAlreadyExistsInAnotherTest(List<String> path_keys, List<List<PathObject>> test_path_object_lists) {
+	   assert path_keys != null;
+	   assert !path_keys.isEmpty();
+	   assert test_path_object_lists != null;
+	   assert !test_path_object_lists.isEmpty();
+   
+	   //load path objects using path keys
+	   List<PathObject> path_objects = loadPathObjects(path_keys);
+	   
+	   //find all tests with page state at index
+	   for(List<PathObject> test_path_objects : test_path_object_lists) {
+		   //check if any subpath of test matches path_objects based on url, xpath and action
+		   int current_idx = 0;
+		   for(PathObject path_object : test_path_objects) {
+			   if(path_object.getKey().contains("pagestate") && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
+				   current_idx++;
+				   break;
+			   }
+			   current_idx++;
+		   }
+		   
+		   boolean matching_test_found = true;
+		   //check if next element has the same xpath as the next element in path objects
+		   if(((ElementState)test_path_objects.get(current_idx+1)).getXpath().equalsIgnoreCase(((ElementState)path_objects.get(1)).getXpath())){
+			   current_idx += 2;
+			   //check if remaining keys in path_objects match following keys in test_path_objects
+			   for(PathObject obj : path_objects.subList(2, path_objects.size())) {
+				   if(!obj.getKey().equalsIgnoreCase(test_path_objects.get(current_idx).getKey())) {
+					   matching_test_found = false;
+					   break;
+				   }
+				   current_idx++;
+			   }
+		   }
+		   
+		   if(matching_test_found) {
+			   return true;
+		   }
+	   }
+	   
+	   return false;
+   }
+
+	private List<PathObject> loadPathObjects(List<String> path_keys) {
+		//load path objects using path keys
+		List<PathObject> path_objects = new ArrayList<PathObject>();
+		for(String key : path_keys) {
+			if(key.contains("pagestate")) {
+				path_objects.add(page_state_service.findByKey(key));
+			}
+			else if(key.contains("elementstate")) {
+				path_objects.add(element_state_service.findByKey(key));
+			}
+			else if(key.contains("action")) {
+				path_objects.add(action_service.findByKey(key));
+			}
+	    }
+		
+		return path_objects;
+	}
+
+	public Set<Test> findAllTestRecordsContainingKey(String path_object_key) {
+		return test_repo.findAllTestRecordsContainingKey(path_object_key);
+	}
 }

@@ -82,7 +82,7 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
-	private final int DISCOVERY_ACTOR_COUNT = 30;
+	private final int DISCOVERY_ACTOR_COUNT = 100;
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -219,12 +219,8 @@ public class DiscoveryActor extends AbstractActor{
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 						Future<Object> future = Patterns.ask(domain_actor, new DiscoveryActionRequest(test_msg.getDomain()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-						log.warn("discovery action received from domain :: "+discovery_action);
-						log.warn("discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
-
+						
 						if(discovery_action == DiscoveryAction.STOP) {
-							log.warn("test message discovery actor returning");
-
 							return;
 						}
 						

@@ -1,8 +1,10 @@
 package com.qanairy.models;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -61,17 +63,19 @@ public class Form {
 		setKey(generateKey());
 	}
 	
+	/**
+	 * Generates key for form based on element within it and the key of the form tag itself
+	 * 
+	 * @return
+	 */
 	private String generateKey() {
-		//List<ElementState> sorted_fields = new ArrayList<>();
-		//order form fields
-		/*for(ElementState elem : getFormFields()){
-			elements_key += elem.getKey();
-		}
-		*/
 		String elements_key = "";
-		for(ElementState elem : getFormFields()){
-			elements_key += elem.getKey();
+		List<ElementState> elements = getFormFields().stream().collect(Collectors.toList());
+		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
+		for(ElementState element : elements){
+			elements_key += element.getKey();
 		}
+		
 		return "form::"+elements_key+""+getFormTag().getKey();
 	}
 

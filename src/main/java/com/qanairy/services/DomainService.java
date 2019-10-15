@@ -37,24 +37,28 @@ public class DomainService {
 		return domain_repo.findByHost(host);
 	}
 
+	public Domain findByUrl(String url) {
+		return domain_repo.findByUrl(url);
+	}
+	
 	public Domain save(Domain domain) {
 		return domain_repo.save(domain);	
 	}
 	
-	public Domain addTest(String host, Test test) throws MalformedURLException{
-		assert host != null;
-		assert !host.isEmpty();
+	public Domain addTest(String url, Test test) throws MalformedURLException{
+		assert url != null;
+		assert !url.isEmpty();
 		assert test != null;
 		
-		log.warn("domain host :: "+host);
+		log.warn("domain host :: "+url);
 		log.warn("test result when adding test :: " + test);
-		Domain domain = domain_repo.findByHost(host);
+		Domain domain = domain_repo.findByUrl(url);
 		domain.addTest(test);
 		return domain_repo.save(domain);
 	}
 	
-	public int getTestCount(String host_url) {
-		return domain_repo.getTestCount(host_url);
+	public int getTestCount(String url) {
+		return domain_repo.getTestCount(url);
 	}
 
 	public DiscoveryRecord getMostRecentDiscoveryRecord(String url) {
@@ -113,8 +117,8 @@ public class DomainService {
 		return domain_repo.getTestRecords(url);
 	}
 
-	public Set<PageLoadAnimation> getAnimations(String host) {
-		return domain_repo.getAnimations(host);
+	public Set<PageLoadAnimation> getAnimations(String url) {
+		return domain_repo.getAnimations(url);
 	}
 
 
@@ -128,12 +132,12 @@ public class DomainService {
 	 * @pre !host.isEmpty()
 	 * @pre page_state != null
 	 */
-	public Domain addPageState(String host, PageState page_state) {
-		assert host != null;
-		assert !host.isEmpty();
+	public Domain addPageState(String url, PageState page_state) {
+		assert url != null;
+		assert !url.isEmpty();
 		assert page_state != null;
     
-		Domain domain = domain_repo.findByHost(host);
+		Domain domain = domain_repo.findByUrl(url);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);
 	}

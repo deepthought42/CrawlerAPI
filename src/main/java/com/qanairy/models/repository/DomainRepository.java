@@ -25,7 +25,8 @@ import com.qanairy.models.TestUser;
 public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Domain findByKey(@Param("key") String key);
 	public Domain findByHost(@Param("host") String host);
-	
+	public Domain findByUrl(@Param("url") String url);
+
 	@Query("MATCH (p:PageState) MATCH a=(p)-[]->(:Screenshot) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p,a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
@@ -50,14 +51,14 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->(z) MATCH c=(p)-[]->() MATCH d=(z)-[]->() WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,b,c,d")
 	public Set<Test> getVerifiedTests(@Param("domain_host") String host);
 
-	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
-	public int getTestCount(@Param("domain_host") String host);
+	@Query("MATCH (n:Domain{url:{url}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
+	public int getTestCount(@Param("url") String url);
 
-	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
-	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("domain_host") String host);
+	@Query("MATCH (n:Domain{url:{url}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) RETURN d")
+	public Set<DiscoveryRecord> getDiscoveryRecords(@Param("url") String url);
 	
-	@Query("MATCH (n:Domain{host:{host}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) WHERE NOT d.status = 'STOPPED' RETURN d ORDER BY d.started_at DESC LIMIT 1")
-	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("host") String host);
+	@Query("MATCH (n:Domain{url:{url}})-[:HAS_DISCOVERY_RECORD]->(d:DiscoveryRecord) WHERE NOT d.status = 'STOPPED' RETURN d ORDER BY d.started_at DESC LIMIT 1")
+	public DiscoveryRecord getMostRecentDiscoveryRecord(@Param("url") String url);
 	
 	//needs work done still to make it return all test records by month
 	@Query("MATCH (n:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) RETURN COUNT(t)")
@@ -72,8 +73,8 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH (t)-[:HAS_PATH_OBJECT]->(a:Redirect) RETURN a")
 	public Set<Redirect> getRedirects(@Param("domain_host") String host);
 	
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH b=(t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
-	public Set<TestRecord> getTestRecords(@Param("domain_host") String host);
+	@Query("MATCH (:Domain{url:{url}})-[:HAS_TEST]->(t:Test) MATCH b=(t)-[:HAS_TEST_RECORD]->(tr) RETURN tr")
+	public Set<TestRecord> getTestRecords(@Param("url") String url);
 	
 	@Query("MATCH (p:PageLoadAnimation) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p")
 	public Set<PageLoadAnimation> getAnimations(@Param("domain_host") String host);

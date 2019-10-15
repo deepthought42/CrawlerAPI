@@ -90,9 +90,7 @@ public class Crawler {
 
 		PathObject last_obj = null;
 		List<PathObject> ordered_path_objects = PathUtils.orderPathObjects(path_keys, path_objects);
-		log.warn("path objects :: " + path_objects.size());
-		log.warn("ordered path objects :: " + ordered_path_objects.size());
-
+		
 		log.warn("path keys :: " + path_keys.size());
 		ElementState last_element = null;
 
@@ -677,11 +675,7 @@ public class Crawler {
 			Future<Object> future = Patterns.ask(path.getDomainActor(), new DiscoveryActionRequest(path.getDomain()), timeout);
 			DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 			
-			log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
-			log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
-
 			if(discovery_action == DiscoveryAction.STOP) {
-				log.warn("path message discovery actor returning");
 				throw new DiscoveryStoppedException();
 			}
 			try{

@@ -25,6 +25,7 @@ public class DiscoveryRecord implements Persistable {
 	private Date started_at;
 	private String browser_name;
 	private String domain_url;
+	private String host;
 	private Date last_path_ran_at;
 	private DiscoveryStatus status;
 	private int total_path_count;

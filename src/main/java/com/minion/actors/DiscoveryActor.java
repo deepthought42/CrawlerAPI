@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.Domain;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
@@ -118,7 +119,7 @@ public class DiscoveryActor extends AbstractActor{
 					}
 				})
 				.match(PathMessage.class, message -> {
-					Timeout timeout = Timeout.create(Duration.ofSeconds(5));
+					Timeout timeout = Timeout.create(Duration.ofSeconds(60));
 					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
@@ -314,6 +315,7 @@ public class DiscoveryActor extends AbstractActor{
 
 	private void startDiscovery(DiscoveryActionMessage message) throws MalformedURLException {
 		domain_actor = getSender();
+		
 		//create actors for discovery
 		if(url_browser_actor == null){
 			url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
@@ -343,7 +345,7 @@ public class DiscoveryActor extends AbstractActor{
 			}
 		}
 		
-		discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getUrl(), 0, 1, 0, DiscoveryStatus.RUNNING);
+		discovery_record = new DiscoveryRecord(new Date(), message.getDomain().getDiscoveryBrowserName(), message.getDomain().getHost(), 0, 1, 0, DiscoveryStatus.RUNNING);
 		//create new discovery
 		discovery_service.save(discovery_record);
 

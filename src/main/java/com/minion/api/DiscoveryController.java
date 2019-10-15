@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
@@ -112,6 +113,7 @@ public class DiscoveryController {
     	}
     	*/
 
+    	//update domain host if not set		
     	DiscoveryRecord last_discovery_record = domain_service.getMostRecentDiscoveryRecord(url);
 
     	Date now = new Date();
@@ -119,8 +121,26 @@ public class DiscoveryController {
     	if(last_discovery_record != null){
     		diffInMinutes = Math.abs((int)((now.getTime() - last_discovery_record.getStartTime().getTime()) / (1000 * 60) ));
     	}
+    	log.warn("Starting discovery for url :: " + url);
+    	Domain domain = domain_service.findByUrl(url);
+    	
+    	//next 2 if statements are for conversion to primarily use url with path over host and track both in domains. 
+    	//Basically backwards compatibility. if they are still here after June 2020 then remove it
+    	if(domain == null) {
+    		log.warn("domain is null");
+    		URL temp_url = new URL("http://"+url);
+    		String host = temp_url.getHost();
+    		domain = domain_service.findByHost(host);
+    		log.warn("retrieved domain  "+domain+"  for host  : "+host);
+    	}
+		if(domain.getUrl() == null || domain.getUrl().isEmpty()) {
+			String host = domain.getHost();
+			domain.setUrl(url);
+			domain.setHost(host);
+			domain_service.save(domain);
+			log.warn("saved domain :: "+domain + "  with url :: "+domain.getUrl());
+		}
 
-    	Domain domain = domain_service.findByHost(url);
     	log.warn("domain retrieved from host :: " + domain + "   :   "+ url);
     	
 		if(diffInMinutes > 1440){
@@ -178,7 +198,7 @@ public class DiscoveryController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByHost(url);
+    	Domain domain = domain_service.findByUrl(url);
 
     	if(!domain_actors.containsKey(domain.getUrl())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

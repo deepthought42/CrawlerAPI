@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.qanairy.models.PageLoadAnimation;
-import com.qanairy.models.repository.DomainRepository;
 import com.qanairy.models.repository.PageLoadAnimationRepository;
 
 @Service
 public class PageLoadAnimationService {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(PageService.class.getName());
 
 	@Autowired

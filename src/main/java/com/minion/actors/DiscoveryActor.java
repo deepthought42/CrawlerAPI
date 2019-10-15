@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
-import com.qanairy.models.Domain;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;

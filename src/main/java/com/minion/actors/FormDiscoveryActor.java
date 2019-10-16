@@ -99,6 +99,8 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
 
 						  	for(Form form : forms){
+						  		//check if form exists before creating a new one
+						  		
 							  	for(ElementState field : form.getFormFields()){
 									//for each field in the complex field generate a set of tests for all known rules
 							  		List<Rule> rules = rule_extractor.extractInputRules(field);

@@ -109,7 +109,6 @@ public class DomainActor extends AbstractActor{
 							discovery_action = DiscoveryAction.STOP;
 						}
 					}
-					log.warn("dicovery action request received by domain Actor. RETURNING   :::   " + discovery_action);
 
 					getSender().tell(discovery_action, getSelf());
 				})
@@ -117,8 +116,8 @@ public class DomainActor extends AbstractActor{
 					Test test = test_msg.getTest();
 					Test test_record = test_service.save(test);
 					if(domain == null){
-						String host = test_msg.getDomain().getUrl();
-						domain = domain_service.findByHost(host);
+						String url = test_msg.getDomain().getUrl();
+						domain = domain_service.findByUrl(url);
 					}
 					
 					for(PathObject obj : test.getPathObjects()){
@@ -134,14 +133,14 @@ public class DomainActor extends AbstractActor{
 
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost());
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}
 					}
           
 					try {
-						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getUrl());
+						MessageBroadcaster.broadcastDiscoveredTest(test, domain.getHost());
 					} catch (JsonProcessingException e) {
 						log.error(e.getLocalizedMessage());
 					}
@@ -151,7 +150,7 @@ public class DomainActor extends AbstractActor{
 					
 					for(PathObject path_obj : test.getPathObjects()){
 						try {
-							MessageBroadcaster.broadcastPathObject(path_obj, domain.getUrl());
+							MessageBroadcaster.broadcastPathObject(path_obj, domain.getHost());
 						} catch (JsonProcessingException e) {
 							log.error(e.getLocalizedMessage());
 						}

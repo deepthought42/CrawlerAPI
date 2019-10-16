@@ -169,7 +169,7 @@ public class TestController {
 			   								 	 	@RequestParam(value="url", required=true) String url)
 			   										 throws UnknownAccountException, DomainNotOwnedByAccountException {
 		int failed_tests = 0;
-		Domain domain = domain_service.findByHost(url);
+		Domain domain = domain_service.findByUrl(url);
 		try{
 			Iterator<Test> tests = domain.getTests().iterator();
 

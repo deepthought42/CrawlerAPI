@@ -21,6 +21,7 @@ public class Domain implements Persistable{
 	private Long id;
 	
 	private String host;
+	private String url;
 	private String key;
 	private String protocol;
 	private String logo_url;
@@ -56,14 +57,15 @@ public class Domain implements Persistable{
 	 * @param browser name of the browser ie. chrome, firefox, etc.
 	 * @param logo_url url of logo image file
 	 */
-	public Domain( String protocol, String url, String browser, String logo_url){
+	public Domain( String protocol, String url, String browser, String logo_url, String host){
 		setUrl(url);
 		setLogoUrl(logo_url);
 		setProtocol(protocol);
 		setDiscoveryBrowserName(browser);
+		setHost(host);
 		setKey(generateKey());
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -79,12 +81,19 @@ public class Domain implements Persistable{
 		return false;
 	}
 
-	
 	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	
+	public String getHost() {
 		return host;
 	}
 
-	public void setUrl(String host) {
+	public void setHost(String host) {
 		this.host = host;
 	}
 

@@ -78,8 +78,11 @@ public class TestCreatorService {
 
 	  	path_keys.add(page_state.getKey());
 	  	path_objects.add(page_state);
-
-	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain.getUrl());
+	  	
+	  	log.warn("domain url :: "+domain.getUrl());
+	  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
+	  	
+	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost());
 
 		String url = page_state.getUrl();
 		if(!url.contains("http")){
@@ -109,6 +112,7 @@ public class TestCreatorService {
 	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name, String domain_host ) throws MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
+	  	log.warn("domain url :: "+domain_host);
 
 		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
 

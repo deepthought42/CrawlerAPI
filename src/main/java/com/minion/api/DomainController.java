@@ -125,16 +125,16 @@ public class DomainController {
     	url = url.toLowerCase();
     	String formatted_url = BrowserUtils.sanitizeUrl(protocol+"://"+url);
     	URL url_obj = new URL(formatted_url);
-		
-    	Domain domain = new Domain(protocol, url_obj.getHost(), browser_name, logo_url);
+		String sanitized_url = url_obj.getHost()+url_obj.getPath();
+    	Domain domain = new Domain(protocol, sanitized_url, browser_name, logo_url, url_obj.getHost());
 		try{
 			domain = domain_service.save(domain);
 		}catch(Exception e){
-			domain = domain_service.findByHost(url_obj.getHost());
+			domain = domain_service.findByUrl(sanitized_url);
 		}
 		
     	acct.addDomain(domain);
-    	acct.setLastDomain(url_obj.getHost());
+    	acct.setLastDomain(formatted_url);
     	account_service.save(acct);
     	
     	return domain;
@@ -362,7 +362,7 @@ public class DomainController {
     	}
     	Optional<Domain> domain = domain_service.findById(domain_id);
     	if(domain.isPresent()){
-    		return domain_service.getForms(domain.get().getUrl());
+    		return domain_service.getForms(domain.get().getHost());
     	}
     	else{
     		throw new DomainNotFoundException();
@@ -667,7 +667,7 @@ public class DomainController {
 		discovery_service.save(last_discovery_record);
 		WorkAllowanceStatus.haltWork(acct.getUsername());
 		*/
-    	Domain domain = domain_service.findByHost(url);
+    	Domain domain = domain_service.findByUrl(url);
 
     	if(!domain_actors.containsKey(domain.getUrl())){
 			ActorRef domain_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)

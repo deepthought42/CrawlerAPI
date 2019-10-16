@@ -33,6 +33,7 @@ import com.qanairy.models.repository.AccountRepository;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
+import com.qanairy.utils.BrowserUtils;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -108,17 +109,14 @@ public class IdeTestExportController {
 	    		test_repo.save(test);
 	    	}
     	}
-    	URL domain_url = new URL(test_json.getString("domain_url"));
-    	String host = domain_url.getHost();
-    	int dot_idx = host.indexOf('.');
-    	int last_dot_idx = host.lastIndexOf('.');
-    	String formatted_url = host;
-    	if(dot_idx == last_dot_idx){
-    		formatted_url = "www."+host;
-    	}
-    	Domain domain = domain_service.findByHost(formatted_url);
+    	
+    	String formatted_url = BrowserUtils.sanitizeUrl(test_json.getString("domain_url"));
+    	URL domain_url = new URL(formatted_url);
+		formatted_url = domain_url.getHost()+domain_url.getPath();
+		
+    	Domain domain = domain_service.findByUrl(formatted_url);
     	if(domain == null){
-    		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","");
+    		domain = new Domain(domain_url.getProtocol(), formatted_url,"chrome","", domain_url.getHost());
     		domain = domain_service.save(domain);
     	}
 

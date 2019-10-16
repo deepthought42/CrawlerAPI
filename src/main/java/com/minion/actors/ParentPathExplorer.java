@@ -28,6 +28,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.qanairy.models.Animation;
+import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
 import com.qanairy.models.PageLoadAnimation;
@@ -140,9 +141,6 @@ public class ParentPathExplorer extends AbstractActor {
 						Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 						Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
 						DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
-						
-						log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
-						log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
 
 						if(discovery_action == DiscoveryAction.STOP) {
 							log.warn("path message discovery actor returning");
@@ -262,7 +260,7 @@ public class ParentPathExplorer extends AbstractActor {
 					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
 					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					for(Test test : matching_tests) {
-						path_object_lists.add(test_service.getPathObjects(test.getKey()));
+						path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
 					}
 					
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
@@ -271,8 +269,12 @@ public class ParentPathExplorer extends AbstractActor {
 						return;
 					}
 			  		
-			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), message.getDomain().getUrl());
-					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
+					Domain domain = message.getDomain();
+					log.warn("domain url :: "+domain.getUrl());
+				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
+				  	
+			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
+					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain);
 
 		  			message.getDiscoveryActor().tell(test_message, getSelf());
 		  			//message.getDomainActor().tell(test, getSelf());

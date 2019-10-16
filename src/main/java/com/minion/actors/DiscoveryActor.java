@@ -122,9 +122,6 @@ public class DiscoveryActor extends AbstractActor{
 					Future<Object> future = Patterns.ask(message.getDomainActor(), new DiscoveryActionRequest(message.getDomain()), timeout);
 					DiscoveryAction discovery_action = (DiscoveryAction) Await.result(future, timeout.duration());
 					
-					log.warn("path message discovery action receieved from domain actor  :   "+discovery_action);
-					log.warn("path message discovery action received from domain :: "+ (discovery_action == DiscoveryAction.STOP));
-
 					if(discovery_action == DiscoveryAction.STOP) {
 						log.warn("path message discovery actor returning");
 						return;

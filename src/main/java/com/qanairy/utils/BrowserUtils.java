@@ -98,7 +98,7 @@ public class BrowserUtils {
 			String new_checksum = PageState.getFileChecksum(screenshot);
 
 			transition_detected = !new_checksum.equals(last_checksum);
-			log.warn("animation new checksum :: " +new_checksum);
+			log.debug("animation new checksum :: " +new_checksum);
 			if( transition_detected ){
 				if( animated_state_checksum_hash.containsKey(new_checksum)){
 					break;

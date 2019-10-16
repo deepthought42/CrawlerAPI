@@ -260,7 +260,7 @@ public class ParentPathExplorer extends AbstractActor {
 					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
 					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					for(Test test : matching_tests) {
-						path_object_lists.add(test_service.getPathObjects(test.getKey()));
+						path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
 					}
 					
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);

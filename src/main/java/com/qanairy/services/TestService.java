@@ -254,8 +254,28 @@ public class TestService {
      return test_repo.findTestWithPageState(key);
    }
 
+   /**
+    * Retrieves list of path objects from database and puts them in the correct order
+    * 
+    * @param test_key key of {@link Test} that we want path objects for
+    * 
+    * @return List of ordered {@link PathObject}s
+    */
    public List<PathObject> getPathObjects(String test_key) {
-     return test_repo.getPathObjects(test_key);
+	   Test test = test_repo.findByKey(test_key);
+	   List<PathObject> path_obj_list = test_repo.getPathObjects(test_key);
+	   //order path objects
+	   List<PathObject> ordered_list = new ArrayList<PathObject>();
+	   for(String key : test.getPathKeys()) {
+		   for(PathObject path_obj : path_obj_list) {
+			   if(path_obj.getKey().equals(key)) {
+				   ordered_list.add(path_obj);
+				   break;
+			   }
+		   }
+	   }
+	   
+	   return ordered_list;
    }
 
    public Set<Group> getGroups(String key) {
@@ -292,37 +312,47 @@ public class TestService {
 	   for(List<PathObject> test_path_objects : test_path_object_lists) {
 		   //check if any subpath of test matches path_objects based on url, xpath and action
 		   int current_idx = 0;
+		   
+		   log.warn("path object list size when checking if end of path is unique :: "+test_path_objects.size());
 		   for(PathObject path_object : test_path_objects) {
-			   if(path_object.getKey().contains("pagestate") && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
+			   log.warn("path object :: "+path_object.getKey());
+			   if(path_object != null && path_object.getKey().contains("pagestate") && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
 				   current_idx++;
 				   break;
 			   }
 			   current_idx++;
 		   }
+
+		   log.warn("------------------------------------------------------------------------------");
+		   log.warn("path objects size :: "+path_objects.size());
+		   log.warn("test path objects size :: "+test_path_objects.size());
+		   log.warn("------------------------------------------------------------------------------");
 		   
-		   boolean matching_test_found = true;
 		   //check if next element has the same xpath as the next element in path objects
-		   if(((ElementState)test_path_objects.get(current_idx+1)).getXpath().equalsIgnoreCase(((ElementState)path_objects.get(1)).getXpath())){
-			   current_idx += 2;
-			   //check if remaining keys in path_objects match following keys in test_path_objects
-			   for(PathObject obj : path_objects.subList(2, path_objects.size())) {
-				   if(!obj.getKey().equalsIgnoreCase(test_path_objects.get(current_idx).getKey())) {
-					   matching_test_found = false;
-					   break;
-				   }
+		   if(test_path_objects.size() > 1) {
+			   boolean matching_test_found = true;
+			   if(((ElementState)test_path_objects.get(current_idx)).getXpath().equalsIgnoreCase(((ElementState)path_objects.get(1)).getXpath())) {
 				   current_idx++;
+				   //check if remaining keys in path_objects match following keys in test_path_objects
+				   for(PathObject obj : path_objects.subList(2, path_objects.size())) {
+					   if(!obj.getKey().equalsIgnoreCase(test_path_objects.get(current_idx).getKey())) {
+						   matching_test_found = false;
+						   break;
+					   }
+					   current_idx++;
+				   }	
 			   }
-		   }
-		   
-		   if(matching_test_found) {
-			   return true;
+
+			   if(matching_test_found) {
+				   return true;
+			   }
 		   }
 	   }
 	   
 	   return false;
    }
 
-	private List<PathObject> loadPathObjects(List<String> path_keys) {
+	public List<PathObject> loadPathObjects(List<String> path_keys) {
 		//load path objects using path keys
 		List<PathObject> path_objects = new ArrayList<PathObject>();
 		for(String key : path_keys) {

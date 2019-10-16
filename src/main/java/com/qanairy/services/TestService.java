@@ -315,7 +315,6 @@ public class TestService {
 		   
 		   log.warn("path object list size when checking if end of path is unique :: "+test_path_objects.size());
 		   for(PathObject path_object : test_path_objects) {
-			   log.warn("path object :: "+path_object.getKey());
 			   if(path_object != null && path_object.getKey().contains("pagestate") && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
 				   current_idx++;
 				   break;

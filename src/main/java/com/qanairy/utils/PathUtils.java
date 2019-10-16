@@ -86,9 +86,7 @@ public class PathUtils {
 	public static PageState getFirstPage(List<PathObject> ordered_path_objects) {
 		//find first page
 		for(PathObject obj : ordered_path_objects){
-			log.warn("object type :: "+obj.getType());
 			if(obj.getType().equals("PageState")){
-				log.warn("returning page state object :: "+obj);
 				return ((PageState)obj);
 			}
 		}

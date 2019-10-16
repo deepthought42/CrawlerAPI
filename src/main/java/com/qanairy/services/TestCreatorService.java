@@ -27,6 +27,7 @@ import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.Transition;
 import com.qanairy.models.enums.TestStatus;
+import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
 @Component
@@ -84,10 +85,8 @@ public class TestCreatorService {
 	  	
 	  	Test test = createTest(path_keys, path_objects, page_state, 1L, browser_name, domain_url.getHost());
 
-		String url = page_state.getUrl();
-		if(!url.contains("http")){
-			url = "http://"+url;
-		}
+	  	String url = BrowserUtils.sanitizeUrl(page_state.getUrl());
+		
 		String url_path = new URL(url).getPath();
 		url_path = url_path.replace("/", " ").trim();
 		if(url_path.isEmpty()){

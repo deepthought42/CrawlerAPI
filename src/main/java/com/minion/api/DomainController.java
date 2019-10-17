@@ -126,6 +126,12 @@ public class DomainController {
     	String formatted_url = BrowserUtils.sanitizeUrl(protocol+"://"+url);
     	URL url_obj = new URL(formatted_url);
 		String sanitized_url = url_obj.getHost()+url_obj.getPath();
+		
+		//check if qanairy domain. prevent creating if user email isn't a qanairy.com email
+		if(sanitized_url.contains("qanairy.com") && !acct.getUsername().contains("qanairy.com")) {
+			throw new QanairyEmployeesOnlyException();
+		}
+		
     	Domain domain = new Domain(protocol, sanitized_url, browser_name, logo_url, url_obj.getHost());
 		try{
 			domain = domain_service.save(domain);
@@ -688,6 +694,16 @@ class RequiredFieldMissingException extends RuntimeException {
 
 	public RequiredFieldMissingException() {
 		super("Please fill in or select all required fields.");
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+class QanairyEmployeesOnlyException extends RuntimeException {
+
+	private static final long serialVersionUID = 7200878662560716215L;
+
+	public QanairyEmployeesOnlyException() {
+		super("It looks like you tried to add a Qanairy domain. If you would like to test Qanairy, please apply by emailing us at careers@qanairy.com.");
 	}
 }
 

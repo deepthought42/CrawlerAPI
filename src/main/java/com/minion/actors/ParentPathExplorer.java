@@ -264,11 +264,15 @@ public class ParentPathExplorer extends AbstractActor {
 					}
 					
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
-					
 					if(is_duplicate_path) {
 						return;
 					}
 			  		
+					boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(message.getResultPage(), path_keys);
+					if(is_result_matches_other_page_in_path) {
+						return;
+					}
+					
 					Domain domain = message.getDomain();
 					log.warn("domain url :: "+domain.getUrl());
 				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());

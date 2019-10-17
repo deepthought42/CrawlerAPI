@@ -372,4 +372,13 @@ public class TestService {
 	public Set<Test> findAllTestRecordsContainingKey(String path_object_key) {
 		return test_repo.findAllTestRecordsContainingKey(path_object_key);
 	}
+
+	public boolean checkIfEndOfPathAlreadyExistsInPath(PageState resultPage, List<String> path_keys) {
+		for(String key : path_keys) {
+			if(resultPage.getKey().equalsIgnoreCase(key)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

@@ -80,6 +80,7 @@ public class Browser {
 	public Browser(String browser, URL hub_node_url) throws MalformedURLException {
 		assert browser != null;
 		
+		log.warn("getting browser connection :: "+browser);
 		this.setBrowserName(browser);
 		if("chrome".equals(browser)){
 			this.driver = openWithChrome(hub_node_url);
@@ -116,7 +117,6 @@ public class Browser {
 	 */
 	public void navigateTo(String url) throws MalformedURLException{
 		getDriver().get(url);
-		//waitForPageToLoad();
 		log.debug("successfully navigated to "+url);
 	}
 

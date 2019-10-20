@@ -13,10 +13,11 @@ import com.segment.analytics.messages.TrackMessage;
 
 public class SegmentAnalyticsHelper {
 
-	private static Analytics analytics = Analytics.builder("2fhUNnmoIEy5DZj9yhysv9j7QQcgWQlT").build();
+	private static final String WRITE_KEY = "2fhUNnmoIEy5DZj9yhysv9j7QQcgWQlT";
+	//private static final String WRITE_KEY = "";
 	
 	public static Analytics buildSegment() {
-		return Analytics.builder("2fhUNnmoIEy5DZj9yhysv9j7QQcgWQlT").build();
+		return Analytics.builder(WRITE_KEY).build();
 	}
 	
 	public static void sendTestFinishedRunningEvent(String userId, Test test) {

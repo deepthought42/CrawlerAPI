@@ -612,8 +612,10 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+				//List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
+				Point offset = new Point(browser.getXScrollOffset(), browser.getYScrollOffset());
 				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-			
+				
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
@@ -688,7 +690,6 @@ public class Crawler {
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
-				Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
@@ -702,11 +703,9 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-
-    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-			
+				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
+				
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());

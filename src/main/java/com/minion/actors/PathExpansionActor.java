@@ -40,6 +40,7 @@ import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
 /**
@@ -57,6 +58,9 @@ public class PathExpansionActor extends AbstractActor {
 
 	@Autowired
 	private BrowserService browser_service;
+	
+	@Autowired
+	private TestService test_service;
 	
 	private Map<String, ElementState> expanded_elements;
 
@@ -123,7 +127,6 @@ public class PathExpansionActor extends AbstractActor {
 		//get last page states for page
 		PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 
-
 		if(last_page == null){
 			log.warn("expansion --  last page is null");
 			return null;
@@ -177,8 +180,8 @@ public class PathExpansionActor extends AbstractActor {
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					for(Action action : action_list){
-						ArrayList<String> keys = new ArrayList<String>(new_path.getKeys());
-						ArrayList<PathObject> path_objects = new ArrayList<PathObject>(new_path.getPathObjects());
+						List<String> keys = new ArrayList<String>(new_path.getKeys());
+						List<PathObject> path_objects = new ArrayList<PathObject>(new_path.getPathObjects());
 
 						keys.add(action.getKey());
 						path_objects.add(action);
@@ -187,10 +190,28 @@ public class PathExpansionActor extends AbstractActor {
 						//check for element action sequence.
 						//if one exists with one of the actions in the action_list
 						// 	 then load the existing path and process it for path expansion action path
-						/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
-						/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-							continue;
-						}*/
+						//REFACTOR THIS INTO OWN METHOD
+						int last_page_idx = 0;
+					    for(int idx = keys.size()-1; idx >= 0; idx--) {
+						    if(keys.get(idx).contains("pagestate")) {
+						 	    last_page_idx = idx;
+						 	    break;
+						    }
+					    }
+					   
+					    List<String> path_key_sublist = keys.subList(last_page_idx, keys.size());
+						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
+						List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+						for(Test test : matching_tests) {
+							path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
+						}
+						boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(keys, path_object_lists);
+						//END REFACTOR BLOCK
+
+						if(is_duplicate_path) {
+							break;
+						}
+						
 						pathList.add(action_path);
 					}
 				}
@@ -269,7 +290,8 @@ public class PathExpansionActor extends AbstractActor {
 	}
 
 	private List<ElementState> filterListElements(List<ElementState> elements,
-			Map<String, Template> list_map) {
+			Map<String, Template> list_map
+	) {
 		List<ElementState> filtered_elements = removeListElements(elements, list_map);
 		for(Template template : list_map.values()){
 			List<ElementState> desired_list_elements = extractAllAtomElementsFromSingleTemplatedElement(template);

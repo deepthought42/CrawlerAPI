@@ -37,9 +37,12 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
+import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.DiscoveryActionRequest;
+import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
@@ -165,7 +168,7 @@ public class ParentPathExplorer extends AbstractActor {
 							String element_xpath = last_element.getXpath();
 							WebElement current_element = browser.getDriver().findElement(By.xpath(element_xpath));
 							WebElement parent_web_element = browser_service.getParentElement(current_element);
-
+							
 							//if parent element does not have width then continue
 							Dimension element_size = parent_web_element.getSize();
 							if(!BrowserService.hasWidthAndHeight(element_size)
@@ -242,7 +245,8 @@ public class ParentPathExplorer extends AbstractActor {
 								browser.close();
 							}
 						}
-					}while((results_match || error_occurred) && !last_element.getName().equals("body"));
+					}while((results_match || error_occurred) && last_element.getName() != null && !last_element.getName().equals("body"));
+					
 					long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
 			  		
@@ -265,11 +269,8 @@ public class ParentPathExplorer extends AbstractActor {
 					
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
 					if(is_duplicate_path) {
-						return;
-					}
-			  		
-					boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(message.getResultPage(), path_keys);
-					if(is_result_matches_other_page_in_path) {
+						PathMessage path_message = new PathMessage(path_keys, path_objects, message.getDiscoveryActor(), PathStatus.EXAMINED, BrowserType.create(browser.getBrowserName()), message.getDomainActor(), message.getDomain());
+						message.getDiscoveryActor().tell(path_message, self());
 						return;
 					}
 					

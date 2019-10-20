@@ -360,7 +360,12 @@ public class Test implements Persistable {
 	public PageState findLastPage(){
 		for(int idx=this.getPathKeys().size()-1; idx >= 0; idx--){
 			for(PathObject path_obj: this.getPathObjects()){
-				if(path_obj.getKey().equals(this.getPathKeys().get(idx)) && path_obj.getType().equals("PageState")){
+				String path_key = this.getPathKeys().get(idx);
+				boolean path_keys_match = path_obj.getKey().equals(path_key);
+				log.warn("path object value :: " + path_obj);
+				
+				boolean is_path_object_page_state = path_obj.getKey().contains("pagestate");
+				if(path_keys_match && is_path_object_page_state){
 					return (PageState)path_obj;
 				}
 			}
@@ -412,6 +417,12 @@ public class Test implements Persistable {
 		this.archived = is_archived;
 	}
 	
+	/**
+	 * Generates a name for this test using the information available in the path
+	 * 
+	 * @return
+	 * @throws MalformedURLException
+	 */
 	public String generateTestName() throws MalformedURLException {
 		 String test_name = "";
 			int page_state_idx = 0;
@@ -434,13 +445,21 @@ public class Test implements Persistable {
 					
 					ElementState element = (ElementState)obj;
 					String tag_name = element.getName();
+					if(tag_name == null) {
+						tag_name = "";
+					}
 					
 					if(element.getAttribute("id") != null){
 						tag_name = element.getAttribute("id").getVals().get(0);
 					}
 					else{
 						if(tag_name.equals("a")){
-							tag_name = "link";
+							if(element.getInnerHtml() != null && !element.getInnerHtml().isEmpty()) {
+								tag_name += "\"" + element.getInnerHtml() + "\"";
+							}
+							else {
+								tag_name = "link";
+							}
 						}
 					}
 					test_name += tag_name + " ";

@@ -128,44 +128,6 @@ public class PageState implements Persistable, PathObject {
 	 * Creates a page instance that is meant to contain information about a
 	 * state of a webpage
 	 *
-	 * @param url
-	 * @param screenshot
-	 * @param elements
-	 * @throws IOException
-	 *
-	 * @pre elements != null
-	 * @pre screenshot_url != null;
-	 */
-	public PageState(String url, List<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset,
-			int viewport_width, int viewport_height, String browser_name){
-		assert elements != null;
-
-		setType(PageState.class.getSimpleName());
-		setUrl(url);
-		setBrowser(browser_name);
-		setLastLandabilityCheck(LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneId.systemDefault()));
-		setElements(elements);
-		setLandable(false);
-		setImageWeight(0);
-		setSrc(src);
-		setScreenshotChecksum(new ArrayList<String>());
-		setForms(new HashSet<Form>());
-		setScrollXOffset(scroll_x_offset);
-		setScrollYOffset(scroll_y_offset);
-		setViewportWidth(viewport_width);
-		setViewportHeight(viewport_height);
-		setScreenshots(new ArrayList<Screenshot>());
-		setAnimatedImageUrls(new ArrayList<String>());
-		setAnimatedImageChecksums(new ArrayList<>());
-		setTemplates(new ArrayList<Template>());
-    setLoginRequired(false);
-		setKey(generateKey());
-	}
-
-	/**
-	 * Creates a page instance that is meant to contain information about a
-	 * state of a webpage
-	 *
 	 * @param html
 	 * @param url
 	 * @param browsers_screenshots
@@ -442,8 +404,15 @@ public class PageState implements Persistable, PathObject {
 		url_without_params.replace("index.html", "");
 		url_without_params.replace("index.htm", "");
 
+		List<ElementState> visible_elements = new ArrayList<>();
+		//trim null values
+		for(ElementState element : getElements()) {
+			if(element != null) {
+				visible_elements.add(element);
+			}
+		}
 		String key = "";
-		List<ElementState> elements = getElements().stream().collect(Collectors.toList());
+		List<ElementState> elements = visible_elements.stream().collect(Collectors.toList());
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
 		for(ElementState element : elements){
 			key += element.getKey();

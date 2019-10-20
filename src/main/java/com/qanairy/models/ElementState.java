@@ -42,6 +42,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private int y_location;
 	private int width;
 	private int height;
+	private boolean is_displayed;
 	private String inner_html;
 	private String css_selector;
 	private String outer_html;
@@ -57,7 +58,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 
 	private String template;
 			
-	public ElementState(){}
+	public ElementState(){
+		setType("ElementState");
+	}
 	
 	/**
 	 * 
@@ -75,10 +78,9 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @pre !screenshot_url.isEmpty()
 	 */
 	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, 
-			Map<String, String> css_map, String screenshot_url, int x_location, int y_location, int width, int height,
+			String screenshot_url, int x_location, int y_location, int width, int height,
 			String inner_html, String screenshot_checksum){
 		assert attributes != null;
-		assert css_map != null;
 		assert xpath != null;
 		assert name != null;
 		assert screenshot_url != null;
@@ -91,7 +93,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setScreenshot(screenshot_url);
 		setScreenshotChecksum(screenshot_checksum);
 		setText(text);
-		setCssValues(css_map);
 		setXLocation(x_location);
 		setYLocation(y_location);
 		setWidth(width);
@@ -117,7 +118,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	 * @pre !screenshot_url.isEmpty()
 	 *  
 	 */
-	public ElementState(String text, String xpath, String name, Set<Attribute> attributes, Map<String, String> css_map, 
+	public ElementState(String text, String xpath, String name, Set<Attribute> attributes,
 						String screenshot_url, String checksum, int x_location, int y_location, int width, int height,
 						String inner_html){
 		assert name != null;
@@ -131,7 +132,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		setAttributes(attributes);
 		setScreenshot(screenshot_url);
 		setText(text);
-		setCssValues(css_map);
 		setScreenshotChecksum(checksum);
 		setXLocation(x_location);
 		setYLocation(y_location);
@@ -291,7 +291,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	}
 
 	public String getType() {
-		return this.type;
+		return "ElementState";
 	}
 
 	public void setType(String type) {
@@ -315,11 +315,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public String generateKey() {
 		String key = "";
 		
+		/**
 		List<String> css_keys = getCssValues().keySet().stream().collect(Collectors.toList());
 		Collections.sort(css_keys, (o1, o2) -> o1.compareTo(o2));
 		for(String css_key : css_keys){
 			key += css_key+cssValues.get(css_key);
 		}
+		**/
 		
 		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
 		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
@@ -332,7 +334,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		key += this.getText();
 		key += this.getInnerHtml();
 		key += this.getScreenshotChecksum();
-		
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 	
@@ -363,7 +364,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public ElementState clone() {
 		ElementState page_elem = new ElementState();
 		page_elem.setAttributes(this.getAttributes());
-		page_elem.setCssValues(this.getCssValues());
 		page_elem.setKey(this.getKey());
 		page_elem.setName(this.getName());
 		page_elem.setScreenshot(this.getScreenshot());
@@ -448,5 +448,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public void setTemplate(String template) {
 		this.template = template;
+	}
+
+	public boolean isDisplayed() {
+		return is_displayed;
+	}
+
+	public void setIsDisplayed(boolean is_displayed) {
+		this.is_displayed = is_displayed;
 	}
 }

@@ -39,10 +39,8 @@ public class ElementStateService {
 	 */
 	public ElementState save(ElementState element) throws ClientException{
 		assert element != null;
-		log.warn("saving element state :: " + element.getKey());
 		ElementState element_record = element_repo.findByKey(element.getKey());
 		if(element_record == null){
-			log.warn("no element record found for :: "+element.getKey());
 			//iterate over attributes
 			Set<Attribute> new_attributes = new HashSet<Attribute>();
 			for(Attribute attribute : element.getAttributes()){
@@ -72,7 +70,6 @@ public class ElementStateService {
 			//get rules that exit in element but not in element_record
 			List<Rule> rule_removal_list = new ArrayList<>();
 			Set<Rule> element_record_rules = element_repo.getRules(element_record.getKey());
-			log.warn("element record rules  :: "  +element_record_rules.size());
 			for(Rule rule : element_record_rules ){
 				boolean exists = false;
 				

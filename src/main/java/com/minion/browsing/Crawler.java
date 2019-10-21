@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -686,11 +687,11 @@ public class Crawler {
 					browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 					PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 					browser.navigateTo(expected_page.getUrl());
-					browser.moveMouseToNonInteractive(new Point(300,300));
+					//browser.moveMouseToNonInteractive(new Point(300,300));
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
-				Timing.pauseThread(1500);
+				Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
@@ -706,8 +707,9 @@ public class Crawler {
 				//verify that screenshot does not match previous page
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-				
-				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
+				List<ElementState> all_visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), new HashMap<Integer, ElementState>(), visible_elements, true);
+
+				result_page = browser_service.buildPage(browser, all_visible_elements, browser_url);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
@@ -746,7 +748,7 @@ public class Crawler {
 				}
 			}
 			tries++;
-		}while(result_page == null && tries < 100000);
+		}while(result_page == null && tries < 100);
 		return result_page;
 	}
 	

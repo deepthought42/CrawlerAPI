@@ -315,13 +315,12 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	public String generateKey() {
 		String key = "";
 		
-		/**
 		List<String> css_keys = getCssValues().keySet().stream().collect(Collectors.toList());
 		Collections.sort(css_keys, (o1, o2) -> o1.compareTo(o2));
 		for(String css_key : css_keys){
 			key += css_key+cssValues.get(css_key);
 		}
-		**/
+		
 		
 		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
 		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));

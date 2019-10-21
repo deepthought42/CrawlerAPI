@@ -6,6 +6,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -198,13 +199,35 @@ public class ParentPathExplorer extends AbstractActor {
 							
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
+							
 							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
 							if(loading_animation != null){
 								parent_end_path_keys.add(loading_animation.getKey());
 								parent_end_path_objects.add(loading_animation);
 							}
 							
-							PageState result = browser_service.buildPage(browser);
+							/*
+							List<ElementState> elements = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+							for(ElementState element : elements) {
+								WebElement elem = browser.getDriver().findElement(By.xpath(element.getXpath()));
+								element.setIsDisplayed(elem.isDisplayed());
+								element.setXLocation(elem.getLocation().getX());
+								element.setYLocation(elem.getLocation().getY());
+								element.setWidth(elem.getSize().getWidth());
+								element.setHeight(elem.getSize().getHeight());
+							}
+							List<ElementState> visible_elements = browser_service.extractVisibleElements(host, BrowserType.create(browser.getBrowserName()), browser, elements);
+							List<ElementState> all_visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), new HashMap<Integer, ElementState>(), visible_elements, true);
+
+							PageState result = browser_service.buildPage(browser, all_visible_elements, browser.getDriver().getCurrentUrl());
+							
+							*/
+							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
+							
+							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
+							if(result == null){
+								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
+							}
 							
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){

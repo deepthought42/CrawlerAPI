@@ -29,6 +29,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * A reference to a web page
@@ -386,24 +387,21 @@ public class PageState implements Persistable, PathObject {
 		//NOTE: generating key using screenshot can be problematic in situations where the screen is a different size, shape, or slight differences in rendering
 		//String screenshot = getScreenshotUrl();
 		URL url = null;
-		String url_without_params = null;
+		String url_without_params = "";
 		try {
-			url = new URL(this.getUrl());
-			url_without_params = url.getProtocol()+"://"+url.getHost()+url.getPath();
+			url_without_params = BrowserUtils.sanitizeUrl(this.getUrl());
 		} catch (MalformedURLException e) {
 			int param_index = this.getUrl().indexOf("?");
 			url_without_params = this.getUrl();
 			if(param_index >= 0){
 				url_without_params = url_without_params.substring(0, param_index);
 			}
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
+			//strip off index.html from end
+			url_without_params.replace("index.html", "");
+			url_without_params.replace("index.htm", "");
 		}
-
-		//strip off index.html from end
-		url_without_params.replace("index.html", "");
-		url_without_params.replace("index.htm", "");
-
+		
+		/*
 		List<ElementState> visible_elements = new ArrayList<>();
 		//trim null values
 		for(ElementState element : getElements()) {
@@ -417,7 +415,8 @@ public class PageState implements Persistable, PathObject {
 		for(ElementState element : elements){
 			key += element.getKey();
 		}
-
+		*/
+		String key = screenshot_url;
 		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+key);
 	}
 

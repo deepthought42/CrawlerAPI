@@ -209,7 +209,7 @@ public class BrowserService {
 		return page_states;
 	}
 	
-	private List<ElementState> extractVisibleElements(
+	public List<ElementState> extractVisibleElements(
 			String host, 
 			BrowserType browser_type, 
 			Browser browser,

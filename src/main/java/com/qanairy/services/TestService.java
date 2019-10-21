@@ -315,7 +315,9 @@ public class TestService {
 		   
 		   log.warn("path object list size when checking if end of path is unique :: "+test_path_objects.size());
 		   for(PathObject path_object : test_path_objects) {
-			   if(path_object != null && path_object.getKey().contains("pagestate") && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
+			   if(path_object != null
+					   && path_object.getKey().contains("pagestate") 
+					   && ((PageState)path_object).getUrl().equalsIgnoreCase(((PageState)path_objects.get(0)).getUrl())){
 				   current_idx++;
 				   break;
 			   }
@@ -331,9 +333,13 @@ public class TestService {
 		   if(test_path_objects.size() > 1) {
 			   boolean matching_test_found = true;
 			   if(((ElementState)test_path_objects.get(current_idx)).getXpath().equalsIgnoreCase(((ElementState)path_objects.get(1)).getXpath())) {
+				   log.warn("test path xpath   ::  "+((ElementState)test_path_objects.get(current_idx)).getXpath());
+				   log.warn("path object xpath   ::  "+((ElementState)path_objects.get(1)).getXpath());
+
 				   current_idx++;
 				   //check if remaining keys in path_objects match following keys in test_path_objects
 				   for(PathObject obj : path_objects.subList(2, path_objects.size())) {
+					   log.warn("object ::  "+obj);
 					   if(!obj.getKey().equalsIgnoreCase(test_path_objects.get(current_idx).getKey())) {
 						   matching_test_found = false;
 						   break;
@@ -341,13 +347,18 @@ public class TestService {
 					   current_idx++;
 				   }	
 			   }
+			   else {
+				   matching_test_found = false;
+			   }
 
 			   if(matching_test_found) {
+				   log.warn("matching test found");
 				   return true;
 			   }
 		   }
 	   }
 	   
+	   log.warn("matching test    NOT    found!!!");
 	   return false;
    }
 

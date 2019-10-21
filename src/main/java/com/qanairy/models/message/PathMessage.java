@@ -10,6 +10,10 @@ import com.qanairy.models.enums.BrowserType;
 
 import akka.actor.ActorRef;
 
+/**
+ * 
+ * 
+ */
 public class PathMessage {
 
 	private List<String> keys;

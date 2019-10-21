@@ -149,7 +149,6 @@ public class BrowserService {
 				List<ElementState> remaining_elements = new ArrayList<ElementState>(element_xpaths.values());
 				Collections.sort(remaining_elements);
 				if(err){
-					log.warn("getting browser connection");
 					browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);

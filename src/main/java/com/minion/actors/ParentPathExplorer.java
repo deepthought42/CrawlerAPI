@@ -204,13 +204,8 @@ public class ParentPathExplorer extends AbstractActor {
 								parent_end_path_objects.add(loading_animation);
 							}
 							
-							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
+							PageState result = browser_service.buildPage(browser);
 							
-							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
-							if(result == null){
-								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
-							}
-
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){
 								final_path_keys = new ArrayList<>(beginning_path_keys);
@@ -269,6 +264,20 @@ public class ParentPathExplorer extends AbstractActor {
 					
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
 					if(is_duplicate_path) {
+						PathMessage path_message = new PathMessage(path_keys, path_objects, message.getDiscoveryActor(), PathStatus.EXAMINED, BrowserType.create(browser.getBrowserName()), message.getDomainActor(), message.getDomain());
+						message.getDiscoveryActor().tell(path_message, self());
+						return;
+					}
+					
+					boolean duplicate_page_state = false;
+					for(String key : path_keys) {
+						if(key.equals(message.getResultPage().getKey())) {
+							duplicate_page_state = true;
+							break;
+						}
+					}
+					
+					if(duplicate_page_state) {
 						PathMessage path_message = new PathMessage(path_keys, path_objects, message.getDiscoveryActor(), PathStatus.EXAMINED, BrowserType.create(browser.getBrowserName()), message.getDomainActor(), message.getDomain());
 						message.getDiscoveryActor().tell(path_message, self());
 						return;

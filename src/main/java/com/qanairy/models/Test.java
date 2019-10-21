@@ -361,9 +361,7 @@ public class Test implements Persistable {
 		for(int idx=this.getPathKeys().size()-1; idx >= 0; idx--){
 			for(PathObject path_obj: this.getPathObjects()){
 				String path_key = this.getPathKeys().get(idx);
-				boolean path_keys_match = path_obj.getKey().equals(path_key);
-				log.warn("path object value :: " + path_obj);
-				
+				boolean path_keys_match = path_obj.getKey().equals(path_key);				
 				boolean is_path_object_page_state = path_obj.getKey().contains("pagestate");
 				if(path_keys_match && is_path_object_page_state){
 					return (PageState)path_obj;
@@ -454,12 +452,7 @@ public class Test implements Persistable {
 					}
 					else{
 						if(tag_name.equals("a")){
-							if(element.getInnerHtml() != null && !element.getInnerHtml().isEmpty()) {
-								tag_name += "\"" + element.getInnerHtml() + "\"";
-							}
-							else {
-								tag_name = "link";
-							}
+							tag_name = "link";
 						}
 					}
 					test_name += tag_name + " ";

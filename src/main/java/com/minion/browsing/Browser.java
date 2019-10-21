@@ -80,7 +80,6 @@ public class Browser {
 	public Browser(String browser, URL hub_node_url) throws MalformedURLException {
 		assert browser != null;
 		
-		log.warn("getting browser connection :: "+browser);
 		this.setBrowserName(browser);
 		if("chrome".equals(browser)){
 			this.driver = openWithChrome(hub_node_url);
@@ -631,15 +630,6 @@ public class Browser {
 
 	public void setViewportSize(Dimension viewport_size) {
 		this.viewport_size = viewport_size;
-	}
-
-	public void moveMouseOutOfFrame() {
-		try{
-			Actions mouseMoveAction = new Actions(driver).moveByOffset(-(getViewportSize().getWidth()/3), -(getViewportSize().getHeight()/3) );
-			mouseMoveAction.build().perform();
-		}catch(Exception e){
-			//log.warn("Exception occurred while moving mouse out of frame :: " + e.getMessage());
-		}
 	}
 
 	public void moveMouseToNonInteractive(Point point) {

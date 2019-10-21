@@ -613,8 +613,6 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-				//List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-				Point offset = new Point(browser.getXScrollOffset(), browser.getYScrollOffset());
 				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 				
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);

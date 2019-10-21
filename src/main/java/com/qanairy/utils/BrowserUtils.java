@@ -245,8 +245,8 @@ public class BrowserUtils {
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
 		
-		new_key.replace("/index.html", "");
-		new_key.replace("/index.htm", "");
+		new_key = new_key.replace("/index.html", "");
+		new_key = new_key.replace("/index.htm", "");
 		
 		return new_url.getProtocol()+"://"+new_key;
 	}

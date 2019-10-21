@@ -11,13 +11,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -386,7 +384,6 @@ public class PageState implements Persistable, PathObject {
 	public String generateKey() {
 		//NOTE: generating key using screenshot can be problematic in situations where the screen is a different size, shape, or slight differences in rendering
 		//String screenshot = getScreenshotUrl();
-		URL url = null;
 		String url_without_params = "";
 		try {
 			url_without_params = BrowserUtils.sanitizeUrl(this.getUrl());

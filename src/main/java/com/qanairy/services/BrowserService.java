@@ -129,9 +129,8 @@ public class BrowserService {
 		Map<String, ElementState> element_hash = new HashMap<String, ElementState>();
 		Map<String, ElementState> element_xpaths = new HashMap<>();
 
-		Browser browser = null;
 		Map<String, Template> template_elements = new HashMap<>();
-		List<ElementState> visible_elements = crawlPathAndBuildElementList(url, host, browser_type, path_keys, path_objects, template_elements, browser);
+		List<ElementState> visible_elements = crawlPathAndBuildElementList(url, host, browser_type, path_keys, path_objects, template_elements);
 
 		for(ElementState elem : visible_elements){
 			if(elem == null) {
@@ -148,6 +147,8 @@ public class BrowserService {
 			try{
 				List<ElementState> remaining_elements = new ArrayList<ElementState>(element_xpaths.values());
 				Collections.sort(remaining_elements);
+				Browser browser = null;
+
 				if(err){
 					browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 					browser.navigateTo(url);
@@ -236,9 +237,9 @@ public class BrowserService {
 			BrowserType browser_type, 
 			List<String> path_keys, 
 			List<PathObject> path_objects, 
-			Map<String, Template> template_elements,
-			Browser browser) {
+			Map<String, Template> template_elements) {
 		boolean error_occurred = false;
+		Browser browser = null;
 		do{
 			try{
 				error_occurred = false;
@@ -291,15 +292,6 @@ public class BrowserService {
 		}while(error_occurred);
 		
 		return new ArrayList<ElementState>();
-	}
-
-	@Deprecated
-	private boolean isElementLargerThanViewport(Browser browser, WebElement elementState) {
-		int height = elementState.getSize().getHeight();
-		int width = elementState.getSize().getWidth();
-
-		return width >= browser.getViewportSize().getWidth()
-				 || height >= browser.getViewportSize().getHeight();
 	}
 	
 	private boolean isElementLargerThanViewport(Dimension viewport_size, Dimension element_dimension) {
@@ -682,7 +674,6 @@ public class BrowserService {
 			Browser browser, List<ElementState> elements
 	) {		
 		assert elements != null;
-		long start_time = System.currentTimeMillis();
 		List<ElementState> visible_elements = new ArrayList<>();
 
 		for(ElementState element_state : elements){

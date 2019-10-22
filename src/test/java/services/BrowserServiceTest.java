@@ -153,7 +153,7 @@ public class BrowserServiceTest {
 					      +"</body>"
 						+"</html>";
 
-		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
+		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(html);
 		BrowserService browser_service = new BrowserService();
 		Map<String, Template> template_elements = browser_service.findTemplates(element_list);
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
@@ -202,7 +202,7 @@ public class BrowserServiceTest {
 					      +"</body>"
 						+"</html>";
 
-		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
+		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(html);
 		System.err.println("element lsit size :: "+element_list.size());
 		BrowserService browser_service = new BrowserService();
 		Map<String, Template> template_elements = browser_service.findTemplates(element_list);
@@ -624,7 +624,7 @@ public class BrowserServiceTest {
 						+"</html>";
 
 		BrowserService browser_service = new BrowserService();
-		List<ElementState> element_list = BrowserService.getAllElementsUsingJSoup(html);
+		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(html);
 		Map<String, Template> template_elements = browser_service.findTemplates(element_list);
 		template_elements = browser_service.reduceTemplatesToParents(template_elements);
 		template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);

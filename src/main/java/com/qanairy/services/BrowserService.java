@@ -287,7 +287,7 @@ public class BrowserService {
 				
 				String source = browser.getDriver().getPageSource();
 				browser.close();
-				List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);					
+				List<ElementState> all_elements_list = BrowserService.getElementsUsingJSoup(source);					
 				template_elements = browser_service.findTemplates(all_elements_list);
 				template_elements = browser_service.reduceTemplatesToParents(template_elements);
 				template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
@@ -357,28 +357,6 @@ public class BrowserService {
 			if(child_node_cnt == 0 && !isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !"iframe".equals(element.tagName())){
 				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
 				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-				ElementState element_state = new ElementState();
-				element_state.setXpath(xpath);
-				element_state.setAttributes(attributes);
-				element_state.setOuterHtml(element.outerHtml());
-				element_state.setInnerHtml(element.html());
-				elements.add(element_state);
-			}
-		}
-
-		return elements;
-	}
-	
-	public static List<ElementState> getAllElementsUsingJSoup(String pageSource) {
-		Map<String, Integer> xpath_cnt_map = new HashMap<>();
-		List<ElementState> elements = new ArrayList<>();
-		Document html_doc = Jsoup.parse(pageSource);
-		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
-		for(Element element: web_elements){			
-			if(!isStructureTag(element.tagName()) && !"iframe".equals(element.tagName())){
-				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
-				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
-				buildElementState(xpath, attributes, element);
 				ElementState element_state = buildElementState(xpath, attributes, element);
 				elements.add(element_state);
 			}
@@ -394,6 +372,7 @@ public class BrowserService {
 		element_state.setOuterHtml(element.outerHtml());
 		element_state.setInnerHtml(element.html());
 		element_state.setTemplate(extractTemplate(element));
+		element_state.setName(element.tagName());
 		return element_state;
 	}
 

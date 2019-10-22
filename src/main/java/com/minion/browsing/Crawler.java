@@ -704,7 +704,6 @@ public class Crawler {
 				//verify that screenshot does not match previous page
 				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-
     			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);

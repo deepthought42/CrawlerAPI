@@ -195,11 +195,6 @@ public class ParentPathExplorer extends AbstractActor {
 							
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
-							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
-							if(loading_animation != null){
-								parent_end_path_keys.add(loading_animation.getKey());
-								parent_end_path_objects.add(loading_animation);
-							}
 							
 							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
 							

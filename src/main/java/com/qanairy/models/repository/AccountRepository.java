@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import com.qanairy.models.Group;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
 import com.qanairy.models.Domain;
@@ -45,4 +46,10 @@ public interface AccountRepository extends Neo4jRepository<Account, Long> {
 
 	@Query("MATCH (account:Account{api_key:{api_key}})-[:HAS_DOMAIN]->(domain:Domain{host:{host}) RETURN domain")
 	public Domain getAccountDomainByApiKeyAndHost(@Param("api_key") String api_key, @Param("host") String host);
+	
+	@Query("MATCH (account:Account{api_key:{api_key}})-[:HAS_DOMAIN]->(domain:Domain) RETURN domain")
+	public List<Domain> getDomainsByApiKey(@Param("api_key") String api_key);
+
+	@Query("MATCH (account:Account{api_key:{api_key}})-[:HAS_DOMAIN]->(domain:Domain) MATCH (domain)-[]->(g:Group) RETURN g")
+	public List<Group> getGroupsByDomain(String api_key);
 }

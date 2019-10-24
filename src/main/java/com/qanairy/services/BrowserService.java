@@ -287,12 +287,12 @@ public class BrowserService {
 				
 				String source = browser.getDriver().getPageSource();
 				browser.close();
-				List<ElementState> all_elements_list = BrowserService.getElementsUsingJSoup(source);					
+				List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);					
 				template_elements = browser_service.findTemplates(all_elements_list);
 				template_elements = browser_service.reduceTemplatesToParents(template_elements);
 				template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
 				//element_xpath_list = getXpathsUsingJSoup(browser.getDriver().getPageSource());
-				return BrowserService.getElementsUsingJSoup(source);
+				return BrowserService.getChildElementsUsingJSoup(source);
 			}catch(NullPointerException e){
 				log.warn("Error happened while browser service attempted to build page states  :: "+e.getMessage());
 				error_occurred = true;
@@ -322,9 +322,9 @@ public class BrowserService {
 		return new ArrayList<ElementState>();
 	}
 
-	private boolean isElementLargerThanViewport(Browser browser, WebElement elementState) {
-		int height = elementState.getSize().getHeight();
-		int width = elementState.getSize().getWidth();
+	private boolean isElementLargerThanViewport(Browser browser, Dimension element_size) {
+		int height = element_size.getHeight();
+		int width = element_size.getWidth();
 
 		return width >= browser.getViewportSize().getWidth()
 				 || height >= browser.getViewportSize().getHeight();
@@ -346,7 +346,7 @@ public class BrowserService {
 		return elements;
 	}
 
-	public static List<ElementState> getElementsUsingJSoup(String pageSource) {
+	public static List<ElementState> getChildElementsUsingJSoup(String pageSource) {
 		Map<String, Integer> xpath_cnt_map = new HashMap<>();
 		List<ElementState> elements = new ArrayList<>();
 		Document html_doc = Jsoup.parse(pageSource);
@@ -365,6 +365,23 @@ public class BrowserService {
 		return elements;
 	}
 	
+	public static List<ElementState> getAllElementsUsingJSoup(String pageSource) {
+		Map<String, Integer> xpath_cnt_map = new HashMap<>();
+		List<ElementState> elements = new ArrayList<>();
+		Document html_doc = Jsoup.parse(pageSource);
+		List<Element> web_elements = Xsoup.compile("//body//*").evaluate(html_doc).getElements();
+		for(Element element: web_elements){			
+			if(!isStructureTag(element.tagName()) && !doesElementBelongToScriptTag(element) && !"iframe".equals(element.tagName())){
+				String xpath = generateXpathUsingJsoup(element, html_doc, element.attributes(), xpath_cnt_map);
+				Set<Attribute> attributes = generateAttributesUsingJsoup(element);
+				ElementState element_state = buildElementState(xpath, attributes, element);
+				elements.add(element_state);
+			}
+		}
+
+		return elements;
+	}
+	
 	public static ElementState buildElementState(String xpath, Set<Attribute> attributes, Element element) {
 		ElementState element_state = new ElementState();
 		element_state.setXpath(xpath);
@@ -373,6 +390,7 @@ public class BrowserService {
 		element_state.setInnerHtml(element.html());
 		element_state.setTemplate(extractTemplate(element));
 		element_state.setName(element.tagName());
+		element_state.setText(element.text());
 		return element_state;
 	}
 
@@ -425,6 +443,7 @@ public class BrowserService {
 					continue;
 				}
 				if(isElementVisibleInPane(browser, element)){
+					/*
 					ElementState new_element_state = element.clone();
 					WebElement new_element = browser.findWebElementByXpath(element.getXpath());
 					Point location = new_element.getLocation();
@@ -434,8 +453,10 @@ public class BrowserService {
 					new_element_state.setYLocation(location.getY());
 					new_element_state.setWidth(size.getWidth());
 					new_element_state.setHeight(size.getHeight());
+					
 					new_element_state.setKey( new_element_state.generateKey());
-					visible_elements.add(new_element_state);
+					*/
+					visible_elements.add(element);
 				}
 			}
 
@@ -711,8 +732,12 @@ public class BrowserService {
 				for(ElementState element_state : elements){
 					try{
 						WebElement element = browser.findWebElementByXpath(element_state.getXpath());
-						if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && !isElementLargerThanViewport(browser, element)){
-							ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes());
+						Point location = element.getLocation();
+						Dimension element_size = element.getSize();
+						if(element.isDisplayed() && hasWidthAndHeight(element_size) && !isElementLargerThanViewport(browser, element_size)){
+							Map<String, String> css_props = Browser.loadCssProperties(element);
+
+							ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size);
 							visible_elements.add(new_element_state);
 						}
 					}catch(NoSuchElementException e){
@@ -764,7 +789,8 @@ public class BrowserService {
 						continue;
 					}
 					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
-					if(element.isDisplayed() && hasWidthAndHeight(element.getSize()) && isElementVisibleInPane(browser, element.getLocation(), element.getSize())){
+					Dimension element_size = element.getSize();
+					if(element.isDisplayed() && hasWidthAndHeight(element_size) && isElementVisibleInPane(browser, element.getLocation(), element_size)){
 						ElementState new_element_state = buildElementState(browser, element, page_screenshot, element_state.getXpath(), element_state.getAttributes());
 						if(new_element_state != null){
 							visible_elements.add(new_element_state);
@@ -921,10 +947,11 @@ public class BrowserService {
 	 * @return
 	 * @throws IOException
 	 */
-	public ElementState buildElementState(Browser browser, WebElement elem, String xpath, Set<Attribute> attributes) throws IOException{
+	public ElementState buildElementState(Browser browser, WebElement elem, String xpath, Set<Attribute> attributes, Map<String, String> css_props, Point location, Dimension element_size) throws IOException{
 		long start_time = System.currentTimeMillis();
 
 		String checksum = "";
+		/*
 		ElementState page_element = null;
 		String element_tag_name = elem.getTagName();
 		Point location = elem.getLocation();
@@ -937,9 +964,9 @@ public class BrowserService {
 		if(!elem.isDisplayed() || has_negative_position || is_structure_tag || !has_width_and_height || !is_child){
 			return null;
 		}
-		
 		Map<String, String> css_props = Browser.loadCssProperties(elem);
-		page_element = new ElementState(elem.getText(), xpath, elem.getTagName(), attributes, css_props, null, checksum, 
+		 */
+		ElementState page_element = new ElementState(elem.getText(), xpath, elem.getTagName(), attributes, css_props, null, checksum, 
 										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
 		
 		//element_state_service.save(page_element);
@@ -1414,7 +1441,6 @@ public class BrowserService {
 				if(input_tag == null || input_tag.getScreenshot()== null || input_tag.getScreenshot().isEmpty()){
 
 					browser.scrollToElement(input_elem);
-					//Crawler.performAction(new Action("click"), input_tag, browser.getDriver());
 					BufferedImage viewport = browser.getViewportScreenshot();
 
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
@@ -1840,10 +1866,14 @@ public class BrowserService {
 		template = template.replaceAll(">", "> ");
 		for(String word : text_atoms){
 			word = word.replaceAll("[()]", "");
-			word = word.replaceAll("\"", " ");
+			word = word.replace("\"", " ");
+			word = word.replace("[", "");
+			word = word.replaceAll("]", "");
 			template = template.replaceAll("\\d"+word+"\\s", "  ");
 			template = template.replaceAll(">"+word+"<", "> <");
 		}
+
+		
 
 		//remove all id attributes
 		template = template.replaceAll("\\bid=\".*\"", "");

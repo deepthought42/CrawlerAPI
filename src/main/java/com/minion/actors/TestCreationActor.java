@@ -287,7 +287,7 @@ public class TestCreationActor extends AbstractActor  {
 		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element);
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
-		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, new HashMap<String, String>(), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 
 		elem = page_element_service.save(elem);
 		return elem;

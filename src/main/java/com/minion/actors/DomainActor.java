@@ -46,13 +46,13 @@ public class DomainActor extends AbstractActor{
 	private DiscoveryAction discovery_action;
 	
 	@Autowired
+	private PageStateService page_state_service;
+	
+	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
 	private TestService test_service;
-	
-	@Autowired
-	private PageStateService page_state_service;
 	
 	@Autowired
 	private ActorSystem actor_system;

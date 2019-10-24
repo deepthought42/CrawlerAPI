@@ -27,7 +27,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
-import com.qanairy.models.Animation;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
@@ -149,17 +148,8 @@ public class ParentPathExplorer extends AbstractActor {
 						try{
 							error_occurred = false;
 							browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
-							PageState first_page_state = PathUtils.getFirstPage(message.getPathObjects());
-
 							//crawl path using array of preceding elements\
 							browser.navigateTo(first_page.getUrl());
-							Animation animation = BrowserUtils.getAnimation(browser, first_page_state.getUrl());
-							if(animation.getImageUrls().size() > 1){
-								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
-								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
-							}
-							log.warn("crawling beginning of parent path");
-
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host);
 							//extract parent element
 							String element_xpath = last_element.getXpath();
@@ -264,11 +254,15 @@ public class ParentPathExplorer extends AbstractActor {
 					}
 					
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
-					
 					if(is_duplicate_path) {
 						return;
 					}
 			  		
+					boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(message.getResultPage(), path_keys);
+					if(is_result_matches_other_page_in_path) {
+						return;
+					}
+					
 					Domain domain = message.getDomain();
 					log.warn("domain url :: "+domain.getUrl());
 				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());

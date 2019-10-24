@@ -895,13 +895,15 @@ public class BrowserService {
 		Point location = elem.getLocation();
 		Dimension element_size = elem.getSize();
 
-		//boolean negative_position = doesElementHaveNegativePosition(location);
+		/*
+		boolean negative_position = doesElementHaveNegativePosition(location);
 		boolean is_structure_tag = isStructureTag(element_tag_name);
 		boolean has_width_and_height = hasWidthAndHeight(element_size);
 		
 		if(!elem.isDisplayed() || is_structure_tag || !has_width_and_height){
 			return null;
 		}
+		*/
 		
 		String checksum = "";
 		String screenshot = null;
@@ -930,7 +932,6 @@ public class BrowserService {
 			}while(err && count < 100);
 					
 			page_element.setScreenshot(screenshot);
-			page_element.setScreenshotChecksum(checksum);
 		}
 		img.flush();
 

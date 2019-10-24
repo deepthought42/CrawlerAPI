@@ -84,8 +84,6 @@ public class PathExpansionActor extends AbstractActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 			.match(PathMessage.class, message -> {
-				log.warn("expanding path  ::  "+message.getPathObjects().size());
-
 				//get sublist of path from beginning to page state index
 				List<ExploratoryPath> exploratory_paths = expandPath(message);
 				log.warn("total path expansions found :: "+exploratory_paths.size());
@@ -119,7 +117,6 @@ public class PathExpansionActor extends AbstractActor {
 	 */
 	public ArrayList<ExploratoryPath> expandPath(PathMessage path)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
-		log.warn("expanding path method called....");
 		//get last page states for page
 		PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 
@@ -133,7 +130,6 @@ public class PathExpansionActor extends AbstractActor {
 			expanded_elements.put(page_element.getKey(), page_element);
 			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
 			boolean higher_order_page_state_found = false;
-			log.warn("Element page states count :: "+element_page_states.size());
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page : element_page_states){
 				if(last_page.getScrollXOffset() > page.getScrollXOffset()
@@ -166,7 +162,6 @@ public class PathExpansionActor extends AbstractActor {
 				//List<Rule> rules = extractor.extractInputRules(page_element);
 				//page_element.getRules().addAll(rules);
 
-				log.warn("expanding path!!!!!!!!!!!!!!!!!");
 				//page element is not an input or a form
 				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain());
 
@@ -184,13 +179,7 @@ public class PathExpansionActor extends AbstractActor {
 						path_objects.add(action);
 
 						ExploratoryPath action_path = new ExploratoryPath(keys, path_objects);
-						//check for element action sequence.
-						//if one exists with one of the actions in the action_list
-						// 	 then load the existing path and process it for path expansion action path
-						/****  NOTE: THE FOLLOWING 3 LINES NEED TO BE FIXED TO WORK CORRECTLY ******/
-						/*if(ExploratoryPath.hasExistingElementActionSequence(action_path)){
-							continue;
-						}*/
+
 						pathList.add(action_path);
 					}
 				}

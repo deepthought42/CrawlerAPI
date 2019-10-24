@@ -162,6 +162,8 @@ public class Browser {
 	 */
 	public static WebDriver openWithFirefox(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 		FirefoxOptions options = new FirefoxOptions();
+		options.addArguments("user-agent=QanairyBot");
+
 		//options.setHeadless(true);
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		driver.manage().window().maximize();
@@ -231,7 +233,8 @@ public class Browser {
 	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
-		
+		options.addArguments("user-agent=QanairyBot");
+
 		//options.setHeadless(true);
 
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.

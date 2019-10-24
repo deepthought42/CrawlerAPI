@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +19,12 @@ import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
+import com.qanairy.models.Test;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.services.PageStateService;
+import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -48,6 +51,9 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 	@Autowired
 	private PageStateService page_state_service;
+
+	@Autowired
+	private TestService test_service;
 
 	@Autowired
 	private Crawler crawler;
@@ -102,8 +108,31 @@ public class ExploratoryBrowserActor extends AbstractActor {
 							}
 						}
 
-						boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
+						int last_page_idx = 0;
+					    for(int idx = message.getKeys().size()-1; idx >= 0; idx--) {
+						    if(message.getKeys().get(idx).contains("pagestate")) {
+						 	    last_page_idx = idx;
+						 	    break;
+						    }
+					    }
+					    List<String> path_key_sublist = message.getKeys().subList(last_page_idx, message.getKeys().size());
+						Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
+						List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
+						for(Test test : matching_tests) {
+							path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
+						}
+						//boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(message.getKeys(), path_object_lists);
+						boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(result_page, message.getKeys());
+						if(is_result_matches_other_page_in_path) {
+							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain());
+					  		//send path message with examined status to discovery actor
+							message.getDiscoveryActor().tell(path, getSelf());
+							return;
+						}
 						
+						TestCandidateMessage msg = new TestCandidateMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), result_page, message.getBrowser(), message.getDomainActor(), message.getDomain());
+						parent_path_explorer.tell(msg, getSelf());
+						/*
 						if(!ExploratoryPath.hasCycle(page_states, result_page, message.getPathObjects().size() == 1)
 								&& !isResultAnimatedState){
 							//check if result is an animated image from previous page
@@ -119,6 +148,7 @@ public class ExploratoryBrowserActor extends AbstractActor {
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());
 						}
+						*/
 					}
 
 					//PLACE CALL TO LEARNING SYSTEM HERE

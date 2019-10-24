@@ -12,6 +12,9 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -27,6 +30,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
@@ -58,6 +62,7 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
+import us.codecraft.xsoup.Xsoup;
 
 @Component
 @Scope("prototype")
@@ -164,11 +169,13 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							
 							//if parent element is not visible in pane then break
-							ElementState parent_element = null;
-							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", browser.extractAttributes(parent_web_element));
+							
+							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", attributes);
 							if(parent_element == null){
 								break;
 							}
+							
 							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight()) 
 									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
 								//parent as same location and size as child, stop exploring parents
@@ -248,11 +255,12 @@ public class ParentPathExplorer extends AbstractActor {
 						path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
 					}
 					
+					/*
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
 					if(is_duplicate_path) {
 						return;
 					}
-			  		
+			  		*/
 					boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(message.getResultPage(), path_keys);
 					if(is_result_matches_other_page_in_path) {
 						return;

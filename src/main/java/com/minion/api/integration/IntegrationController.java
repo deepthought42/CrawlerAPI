@@ -33,21 +33,6 @@ public class IntegrationController {
 	@Autowired
 	private TestService test_service;
 	
-	/**
-	 * 
-	 * @param api_key
-	 * @return
-	 * @throws InvalidApiKeyException
-	 */
-    @RequestMapping(path = "apiKeys", method = RequestMethod.GET)
-	public List<Domain> getDomains(@RequestBody String api_key) throws InvalidApiKeyException {
-		Account acct = account_repo.getAccountByApiKey(api_key);
-		if(acct == null){
-    		throw new InvalidApiKeyException("Invalid API key");
-    	}
-    	return account_repo.getDomainsByApiKey(api_key);
-	}
-	
     /**
 	 * 
 	 * @param api_key
@@ -76,7 +61,7 @@ public class IntegrationController {
 	 */
     @RequestMapping(method = RequestMethod.GET)
 	public String runAllTests(@RequestBody String host,
-						   @RequestBody String api_key) throws InvalidApiKeyException{
+						   	  @RequestBody String api_key) throws InvalidApiKeyException{
     	Account acct = account_repo.getAccountByApiKey(api_key);
 		if(acct == null){
     		throw new InvalidApiKeyException("Invalid API key");

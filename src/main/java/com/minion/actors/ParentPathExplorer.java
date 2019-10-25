@@ -12,9 +12,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -34,7 +31,6 @@ import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -48,7 +44,6 @@ import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
-import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -62,7 +57,6 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
-import us.codecraft.xsoup.Xsoup;
 
 @Component
 @Scope("prototype")

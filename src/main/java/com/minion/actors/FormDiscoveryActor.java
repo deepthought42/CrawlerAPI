@@ -17,7 +17,6 @@ import com.qanairy.models.ElementState;
 import com.qanairy.models.Form;
 import com.qanairy.models.PageState;
 import com.qanairy.models.enums.BrowserEnvironment;
-import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.rules.Rule;
 import com.qanairy.services.BrowserService;

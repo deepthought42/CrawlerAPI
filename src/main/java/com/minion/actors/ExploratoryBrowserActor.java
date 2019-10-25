@@ -16,14 +16,12 @@ import org.springframework.stereotype.Component;
 
 import com.minion.browsing.Crawler;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
-import com.qanairy.models.ExploratoryPath;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestCandidateMessage;
-import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
@@ -48,9 +46,6 @@ public class ExploratoryBrowserActor extends AbstractActor {
 
 	@Autowired
 	private ActorSystem actor_system;
-
-	@Autowired
-	private PageStateService page_state_service;
 
 	@Autowired
 	private TestService test_service;
@@ -121,9 +116,11 @@ public class ExploratoryBrowserActor extends AbstractActor {
 						for(Test test : matching_tests) {
 							path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
 						}
+						
+						boolean isResultAnimatedState = isResultAnimatedState( page_states, result_page);
 						//boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(message.getKeys(), path_object_lists);
 						boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(result_page, message.getKeys());
-						if(is_result_matches_other_page_in_path) {
+						if(is_result_matches_other_page_in_path || isResultAnimatedState) {
 							PathMessage path = new PathMessage(message.getKeys(), message.getPathObjects(), message.getDiscoveryActor(), PathStatus.EXAMINED, message.getBrowser(), message.getDomainActor(), message.getDomain());
 					  		//send path message with examined status to discovery actor
 							message.getDiscoveryActor().tell(path, getSelf());

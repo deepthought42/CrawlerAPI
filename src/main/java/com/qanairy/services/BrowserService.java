@@ -83,6 +83,9 @@ public class BrowserService {
 	private BrowserService browser_service;
 	
 	@Autowired
+	private DomainService domain_service;
+	
+	@Autowired
 	private Crawler crawler;
 	
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};
@@ -1408,12 +1411,13 @@ public class BrowserService {
 	public List<Form> extractAllForms(PageState page, Browser browser) throws Exception{
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 		List<Form> form_list = new ArrayList<Form>();
-
+		log.warn("extracting forms from page with url    ::     "+browser.getDriver().getCurrentUrl());
 		List<WebElement> form_elements = browser.getDriver().findElements(By.xpath("//form"));
-
+		log.warn("form elements found using xpath //form    :: "+form_elements.size());
 		BufferedImage page_screenshot = ImageIO.read(new URL(page.getScreenshotUrl()));
 		String host = new URL(page.getUrl()).getHost();
 		for(WebElement form_elem : form_elements){
+			log.warn("scrolling to form element");
 			browser.scrollToElement(form_elem);
 			BrowserUtils.detectShortAnimation(browser, page.getUrl());
 
@@ -1423,8 +1427,9 @@ public class BrowserService {
 			double[] weights = new double[1];
 			weights[0] = 0.3;
 
+			Set<Form> forms = domain_service.getForms(host);
 			Form form = new Form(form_tag, new ArrayList<ElementState>(), findFormSubmitButton(form_elem, browser),
-									"Form #1", weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
+									"Form #"+(forms.size()+1), weights, FormType.UNKNOWN, new Date(), FormStatus.DISCOVERED );
 
 			List<WebElement> input_elements =  form_elem.findElements(By.xpath(form_tag.getXpath() +"//input"));
 
@@ -1433,14 +1438,13 @@ public class BrowserService {
 			input_elements = BrowserService.filterNotVisibleInViewport(browser.getXScrollOffset(), browser.getYScrollOffset(), input_elements, browser.getViewportSize());
 			input_elements = BrowserService.filterNoWidthOrHeight(input_elements);
 			input_elements = BrowserService.filterElementsWithNegativePositions(input_elements);
+			
 			for(WebElement input_elem : input_elements){
 				Set<Attribute> attributes = browser.extractAttributes(input_elem);
-
 				String form_element_url = retrieveAndUploadBrowserScreenshot(browser, form_elem, page_screenshot, host);
 				ElementState input_tag = new ElementState(input_elem.getText(), generateXpath(input_elem, "", xpath_map, browser.getDriver(), attributes), input_elem.getTagName(), attributes, Browser.loadCssProperties(input_elem), form_element_url, input_elem.getLocation().getX(), input_elem.getLocation().getY(), input_elem.getSize().getWidth(), input_elem.getSize().getHeight(), input_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
 
 				if(input_tag == null || input_tag.getScreenshot()== null || input_tag.getScreenshot().isEmpty()){
-
 					browser.scrollToElement(input_elem);
 					BufferedImage viewport = browser.getViewportScreenshot();
 
@@ -1459,7 +1463,6 @@ public class BrowserService {
 					img.flush();
 					input_tag.setScreenshot(screenshot);
 					input_tag.setScreenshotChecksum(checksum);
-					
 					input_tag.getRules().addAll(extractor.extractInputRules(input_tag));
 				}
 

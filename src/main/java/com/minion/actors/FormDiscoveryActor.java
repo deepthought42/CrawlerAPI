@@ -83,21 +83,26 @@ public class FormDiscoveryActor extends AbstractActor{
 				  	int count = 0;
 				  	
 				  	do{
-				  		
 				  		try{
-					  		browser = BrowserConnectionFactory.getConnection(BrowserType.create(message.getBrowser().toString()), BrowserEnvironment.DISCOVERY);
+				  			log.warning("form discovery getting browser connection ::   "+message.getBrowser().toString());
+					  		browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
+					  		browser.navigateTo(last_page.getUrl());
+					  		log.warning("browser retrived :: "+browser);
+					  		log.warning("crawling path without building result  ::   "+message.getKeys());
+					  		log.warning("total path objects    ::   "+message.getPathObjects());
 					  		crawler.crawlPathWithoutBuildingResult(message.getKeys(), message.getPathObjects(), browser, host);
-					  		
-							PageState page_state = null;
+
+					  		PageState page_state = null;
 							for(int idx=message.getPathObjects().size()-1; idx >= 0; idx--){
 								if(message.getPathObjects().get(idx) instanceof PageState){
 									page_state = (PageState)message.getPathObjects().get(idx);
 									break;
 								}
 							}
-							  
+							 
+							log.warning("extracting all forms");
 						  	List<Form> forms = browser_service.extractAllForms(page_state, browser);
-
+						  	log.warning("forms extracted :: "+forms.size());
 						  	for(Form form : forms){
 						  		//check if form exists before creating a new one
 						  		
@@ -118,7 +123,7 @@ public class FormDiscoveryActor extends AbstractActor{
 						  	forms_created = true;
 						  	return;
 						} catch(Exception e){
-							e.printStackTrace();
+							//e.printStackTrace();
 					  		log.warning(e.getMessage());
 					  		forms_created = false;
 					  		//e.printStackTrace();

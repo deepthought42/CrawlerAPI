@@ -120,10 +120,9 @@ public class PathExpansionActor extends AbstractActor {
 		//get last page states for page
 		PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 
-
 		if(last_page == null){
 			log.warn("expansion --  last page is null");
-			return null;
+			return pathList;
 		}
 		//iterate over all elements
 		for(ElementState page_element : getElementStatesForExpansion(path.getPathObjects())){
@@ -159,16 +158,11 @@ public class PathExpansionActor extends AbstractActor {
 				continue;
 			}
 			else{
-				//List<Rule> rules = extractor.extractInputRules(page_element);
-				//page_element.getRules().addAll(rules);
-
 				//page element is not an input or a form
 				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain());
 
 				new_path.getPathObjects().add(page_element);
 				new_path.getKeys().add(page_element.getKey());
-
-				//page_element.addRules(ElementRuleExtractor.extractMouseRules(page_element));
 
 				for(List<Action> action_list : ActionOrderOfOperations.getActionLists()){
 					for(Action action : action_list){
@@ -226,7 +220,6 @@ public class PathExpansionActor extends AbstractActor {
 			for(ElementState element : second_to_last_page.getElements()){
 				element_xpath_map.remove(element.getXpath());
 			}
-
 
 			return element_xpath_map.values();
 		}

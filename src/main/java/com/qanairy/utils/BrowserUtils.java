@@ -52,7 +52,7 @@ public class BrowserUtils {
 
 			if( transition_detected ){
 				try{
-		        	BufferedImage img = browser.getViewportScreenshot();
+		        	BufferedImage img = browser.getFullPageScreenshot();
 					images.add(img);
 				}catch(Exception e){}
 				start_ms = System.currentTimeMillis();
@@ -92,7 +92,7 @@ public class BrowserUtils {
 		List<Future<String>> url_futures = new ArrayList<>();
 		do{
 			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
+			BufferedImage screenshot = browser.getFullPageScreenshot();
 
 			//calculate screenshot checksum
 			String new_checksum = PageState.getFileChecksum(screenshot);
@@ -138,7 +138,7 @@ public class BrowserUtils {
 
 		do{
 			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
+			BufferedImage screenshot = browser.getFullPageScreenshot();
 
 			//calculate screenshot checksum
 			new_checksum = PageState.getFileChecksum(screenshot);
@@ -188,7 +188,7 @@ public class BrowserUtils {
 
 		do{
 			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
+			BufferedImage screenshot = browser.getFullPageScreenshot();
 
 			//calculate screenshot checksum
 			new_checksum = PageState.getFileChecksum(screenshot);

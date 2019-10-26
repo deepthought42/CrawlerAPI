@@ -41,6 +41,8 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.assertthat.selenium_shutterbug.core.Shutterbug;
+import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
@@ -294,6 +296,16 @@ public class Browser {
 	 */
 	public BufferedImage getViewportScreenshot() throws IOException, GridException{
 		return ImageIO.read(((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE));
+	}
+	
+	/**
+	 * Gets image as a base 64 string
+	 * 
+	 * @return File png file of image
+	 * @throws IOException
+	 */
+	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
+		return Shutterbug.shootPage(driver,ScrollStrategy.WHOLE_PAGE, 500).getImage();
 	}
 	
 	/**

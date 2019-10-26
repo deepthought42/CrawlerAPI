@@ -82,7 +82,7 @@ public class GeneralFormTestDiscoveryActor extends AbstractActor {
 					int cnt = 0;
 				  	Browser browser = null;
 				  	
-				  	while(browser == null && cnt < 1000){
+				  	while(browser == null && cnt < 10000){
 				  		try{
 						  	List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 						  	path_object_lists.addAll(generateAllFormPaths(message.getPage(), message.getForm()));

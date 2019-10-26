@@ -244,11 +244,14 @@ public class BrowserUtils {
 		if(new_key.charAt(new_key.length()-1) == '/'){
 			new_key = new_key.substring(0, new_key.length()-1);
 		}
+		
+		new_key = new_key.replace("index.html", "");
+		new_key = new_key.replace("index.htm", "");
+		
 		return new_url.getProtocol()+"://"+new_key;
 	}
 
 	public static ElementState updateElementLocations(Browser browser, ElementState element) {
-		
 		WebElement web_elem = browser.findWebElementByXpath(element.getXpath());
 		Point location = web_elem.getLocation();
 		if(location.getX() != element.getXLocation() || location.getY() != element.getYLocation()){

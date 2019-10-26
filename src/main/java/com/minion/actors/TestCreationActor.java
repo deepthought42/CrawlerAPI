@@ -119,7 +119,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
 				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-								List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+								List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
 
 				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 				    			String browser_url = browser.getDriver().getCurrentUrl();

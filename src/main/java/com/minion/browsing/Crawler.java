@@ -155,7 +155,7 @@ public class Crawler {
 
 		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-		List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+		List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
@@ -611,7 +611,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
+				List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
 				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
@@ -703,8 +703,7 @@ public class Crawler {
 								
 				//verify that screenshot does not match previous page
 				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> element_list = BrowserService.getElementsUsingJSoup(browser.getDriver().getPageSource());
-
+				List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
     			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
 			
 				result_page = browser_service.buildPage(browser, visible_elements, browser_url);

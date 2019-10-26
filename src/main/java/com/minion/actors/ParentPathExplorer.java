@@ -27,10 +27,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -44,7 +44,6 @@ import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
-import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -108,10 +107,10 @@ public class ParentPathExplorer extends AbstractActor {
 			  		List<PathObject> final_path_objects = new ArrayList<PathObject>(message.getPathObjects());
 			  		List<String> path_keys = new ArrayList<>(message.getKeys());
 					List<PathObject> path_objects = PathUtils.orderPathObjects(path_keys, message.getPathObjects());
-					
+
 					//get index of last page element in path
 			  		int last_elem_idx = PathUtils.getIndexOfLastElementState(path_keys);
-					
+
 					//get array of all elements preceding last page element
 					List<String> beginning_path_keys = path_keys.subList(0, last_elem_idx);
 					List<PathObject> beginning_path_objects = path_objects.subList(0, last_elem_idx);
@@ -130,7 +129,7 @@ public class ParentPathExplorer extends AbstractActor {
 			  		PageState last_page = PathUtils.getLastPageState(path_objects);
 			  		PageState first_page = PathUtils.getFirstPage(path_objects);
 			  		String host = new URL(last_page.getUrl()).getHost();
-			  		
+
 					boolean results_match = false;
 					boolean error_occurred = false;
 			  		Browser browser = null;
@@ -162,37 +161,34 @@ public class ParentPathExplorer extends AbstractActor {
 										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element.getLocation(), element_size)){
 								break;
 							}
-							
+
 							//if parent element is not visible in pane then break
-							ElementState parent_element = null;
-							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", browser.extractAttributes(parent_web_element));
+
+							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", attributes);
 							if(parent_element == null){
 								break;
 							}
-							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight()) 
+
+							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight())
 									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
 								//parent as same location and size as child, stop exploring parents
 								break;
 							}
-							
+
 							List<String> parent_end_path_keys = new ArrayList<>();
 							parent_end_path_keys.add(parent_element.getKey());
 							parent_end_path_keys.addAll(end_path_keys);
-							
+
 							List<PathObject> parent_end_path_objects = new ArrayList<>();
 							parent_end_path_objects.add(parent_element);
 							parent_end_path_objects.addAll(end_path_objects);
-							
+
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
-							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
-							if(loading_animation != null){
-								parent_end_path_keys.add(loading_animation.getKey());
-								parent_end_path_objects.add(loading_animation);
-							}
-							
+
 							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
-							
+
 							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 							if(result == null){
 								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
@@ -235,7 +231,7 @@ public class ParentPathExplorer extends AbstractActor {
 					}while((results_match || error_occurred) && !last_element.getName().equals("body"));
 					long end = System.currentTimeMillis();
 			  		log.warn("time(ms) spent generating ALL parent xpaths :: " + (end-start));
-			  		
+
 					//check if test already exists that contains subset of current test consisting of last set of page-element-action
 					//find last page state
 				    int last_page_idx = 0;
@@ -245,28 +241,29 @@ public class ParentPathExplorer extends AbstractActor {
 					 	    break;
 					    }
 				    }
-				   
+
 				    List<String> path_key_sublist = path_keys.subList(last_page_idx, path_keys.size());
 					Set<Test> matching_tests = test_service.findAllTestRecordsContainingKey(path_key_sublist.get(0));
 					List<List<PathObject>> path_object_lists = new ArrayList<List<PathObject>>();
 					for(Test test : matching_tests) {
 						path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
 					}
-					
+
+					/*
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
 					if(is_duplicate_path) {
 						return;
 					}
-			  		
+			  		*/
 					boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(message.getResultPage(), path_keys);
 					if(is_result_matches_other_page_in_path) {
 						return;
 					}
-					
+
 					Domain domain = message.getDomain();
 					log.warn("domain url :: "+domain.getUrl());
 				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
-				  	
+
 			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain);
 
@@ -299,13 +296,13 @@ public class ParentPathExplorer extends AbstractActor {
 		log.warn("Creating test........");
 		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
 		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
-		
+
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db == null){
 			test.setRunTime(crawl_time);
 			test.setLastRunTimestamp(new Date());
 			addFormGroupsToPath(test);
-			
+
 			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
 			test.addRecord(test_record);
 		}
@@ -318,7 +315,7 @@ public class ParentPathExplorer extends AbstractActor {
 	 * Adds Group labeled "form" to test if the test has any elements in it that have form in the xpath
 	 *
 	 * @param test {@linkplain Test} that you want to label
-	 * @throws MalformedURLException 
+	 * @throws MalformedURLException
 	 */
 	private void addFormGroupsToPath(Test test) throws MalformedURLException {
 		//check if test has any form elements

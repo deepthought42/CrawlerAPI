@@ -123,9 +123,11 @@ public class TestCreatorService {
 
 			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
 			test.addRecord(test_record);
+			
+			return test;
 		}
 
-		return test;
+		return test_db;
 	}
 
 	/**

@@ -272,7 +272,6 @@ public class ParentPathExplorer extends AbstractActor {
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain);
 
 		  			message.getDiscoveryActor().tell(test_message, getSelf());
-		  			//message.getDomainActor().tell(test, getSelf());
 				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());

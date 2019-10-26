@@ -134,22 +134,18 @@ public class DiscoveryActor extends AbstractActor{
 						discovery_record = getDiscoveryRecord(message.getDomain().getUrl(), message.getDomain().getDiscoveryBrowserName());
 						discovery_record.setExaminedPathCount(discovery_record.getExaminedPathCount()+1);
 						
-						//String path_key = String.join(":::", message.getKeys());
-						//if(!discovery_record.getExpandedPathKeys().contains(path_key)){	
-							
-							if(path_expansion_actor == null){
-								path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
-						    }
+						if(path_expansion_actor == null){
+							path_expansion_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("pathExpansionActor"), "path_expansion"+UUID.randomUUID());
+					    }
 
-							path_expansion_actor.tell(path_message, getSelf() );
-							
-							if(form_discoverer == null){
-								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
-							}
-							form_discoverer.tell(path_message, getSelf() );
-						//}
+						path_expansion_actor.tell(path_message, getSelf() );
+						
+						if(form_discoverer == null){
+							form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+									  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+						}
+						form_discoverer.tell(path_message, getSelf() );
 					}
 					else if(message.getStatus().equals(PathStatus.EXPANDED)){
 						//get last page state
@@ -159,7 +155,6 @@ public class DiscoveryActor extends AbstractActor{
 						//check if key already exists before adding to prevent duplicates
 						discovery_record.setTotalPathCount(discovery_record.getTotalPathCount()+1);
 													
-
 						if(exploratory_browser_actors.isEmpty()){
 							//create multiple exploration actors for parallel execution
 							for(int i=0; i < DISCOVERY_ACTOR_COUNT; i++){
@@ -192,7 +187,6 @@ public class DiscoveryActor extends AbstractActor{
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);
 
 					discovery_service.save(discovery_record);
-
 				})
 				.match(TestMessage.class, test_msg -> {
 					Test test = test_msg.getTest();

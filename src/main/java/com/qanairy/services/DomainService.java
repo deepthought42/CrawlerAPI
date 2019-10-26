@@ -121,7 +121,6 @@ public class DomainService {
 		return domain_repo.getAnimations(url);
 	}
 
-
 	/**
 	 * 
 	 * @param host
@@ -138,6 +137,8 @@ public class DomainService {
 		assert page_state != null;
     
 		Domain domain = domain_repo.findByUrl(url);
+		log.warn("domain url :: "+url);
+		log.warn("test result when adding test :: " + page_state);
 		domain.addPageState(page_state);
 		return domain_repo.save(domain);
 	}

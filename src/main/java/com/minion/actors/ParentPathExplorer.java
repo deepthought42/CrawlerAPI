@@ -27,11 +27,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
-import com.qanairy.models.Animation;
+import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.Group;
-import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
@@ -45,7 +44,6 @@ import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestService;
-import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
 import akka.actor.AbstractActor;
@@ -149,17 +147,8 @@ public class ParentPathExplorer extends AbstractActor {
 						try{
 							error_occurred = false;
 							browser = BrowserConnectionFactory.getConnection(message.getBrowser(), BrowserEnvironment.DISCOVERY);
-							PageState first_page_state = PathUtils.getFirstPage(message.getPathObjects());
-
 							//crawl path using array of preceding elements\
 							browser.navigateTo(first_page.getUrl());
-							Animation animation = BrowserUtils.getAnimation(browser, first_page_state.getUrl());
-							if(animation.getImageUrls().size() > 1){
-								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
-								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
-							}
-							log.warn("crawling beginning of parent path");
-
 							crawler.crawlPathWithoutBuildingResult(beginning_path_keys, beginning_path_objects, browser, host);
 							//extract parent element
 							String element_xpath = last_element.getXpath();
@@ -174,11 +163,13 @@ public class ParentPathExplorer extends AbstractActor {
 							}
 							
 							//if parent element is not visible in pane then break
-							ElementState parent_element = null;
-							parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", browser.extractAttributes(parent_web_element));
+							
+							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", attributes);
 							if(parent_element == null){
 								break;
 							}
+							
 							if((parent_element.getWidth() <= last_element.getWidth() || parent_element.getHeight() <= last_element.getHeight()) 
 									&& (parent_element.getXLocation() >= last_element.getXLocation() || parent_element.getYLocation() >= last_element.getYLocation())){
 								//parent as same location and size as child, stop exploring parents
@@ -195,11 +186,6 @@ public class ParentPathExplorer extends AbstractActor {
 							
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
-							PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
-							if(loading_animation != null){
-								parent_end_path_keys.add(loading_animation.getKey());
-								parent_end_path_objects.add(loading_animation);
-							}
 							
 							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
 							
@@ -263,11 +249,12 @@ public class ParentPathExplorer extends AbstractActor {
 						path_object_lists.add(test_service.loadPathObjects(test.getPathKeys()));
 					}
 					
+					/*
 					boolean is_duplicate_path = test_service.checkIfEndOfPathAlreadyExistsInAnotherTest(path_keys, path_object_lists);
 					if(is_duplicate_path) {
 						return;
 					}
-			  		
+			  		*/
 					boolean is_result_matches_other_page_in_path = test_service.checkIfEndOfPathAlreadyExistsInPath(message.getResultPage(), path_keys);
 					if(is_result_matches_other_page_in_path) {
 						return;

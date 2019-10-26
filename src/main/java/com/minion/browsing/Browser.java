@@ -162,6 +162,8 @@ public class Browser {
 	 */
 	public static WebDriver openWithFirefox(URL hub_node_url) throws MalformedURLException, UnreachableBrowserException, GridException{
 		FirefoxOptions options = new FirefoxOptions();
+		options.addArguments("user-agent=QanairyBot");
+
 		//options.setHeadless(true);
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		driver.manage().window().maximize();
@@ -231,7 +233,8 @@ public class Browser {
 	public static WebDriver openWithChrome(URL hub_node_url) 
 			throws MalformedURLException, UnreachableBrowserException, WebDriverException, GridException {
 		ChromeOptions options = new ChromeOptions();
-		
+		options.addArguments("user-agent=QanairyBot");
+
 		//options.setHeadless(true);
 
 		//cap.setCapability("video", "True"); // NOTE: "True" is a case sensitive string, not boolean.
@@ -436,6 +439,27 @@ public class Browser {
 		return driver.findElement(By.xpath(xpath));
 	}
 	
+	/**
+	 * Reads all css styles and loads them into a hash for a given {@link WebElement element}
+	 * 
+	 * NOTE: THIS METHOD IS VERY SLOW DUE TO SLOW NATURE OF getCssValue() METHOD. AS cssList GROWS
+	 * SO WILL THE TIME IN AT LEAST A LINEAR FASHION. THIS LIST CURRENTLY TAKES ABOUT .4 SECONDS TO CHECK ENTIRE LIST OF 13 CSS ATTRIBUTE TYPES
+	 * @param element the element to for which css styles should be loaded.
+	 */
+	public static Map<String, String> loadCssProperties(WebElement element){
+		String[] cssList = {"visible", "display", "position", "color", "font-family", "font-size"};
+		Map<String, String> css_map = new HashMap<String, String>();
+		
+		for(String propertyName : cssList){
+			String element_value = element.getCssValue(propertyName);
+			if(element_value != null && !element_value.isEmpty()){
+				css_map.put(propertyName, element_value);
+			}
+		}
+		
+		return css_map;
+	}
+	
 	public String getBrowserName() {
 		return browser_name;
 	}
@@ -464,8 +488,6 @@ public class Browser {
 	public void scrollToElement(WebElement elem) 
     { 
 		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
-		//Timing.pauseThread(1000);
-
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());

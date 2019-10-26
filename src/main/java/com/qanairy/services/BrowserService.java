@@ -83,6 +83,9 @@ public class BrowserService {
 	private BrowserService browser_service;
 	
 	@Autowired
+	private FormService form_service;
+	
+	@Autowired
 	private DomainService domain_service;
 	
 	@Autowired
@@ -1485,6 +1488,10 @@ public class BrowserService {
 			form.setName("Form #1");
 			log.info("name :: "+form.getName());
 
+			Form form_record = form_service.findByKey(form.getKey());
+			if(form_record != null) {
+				continue;
+			}
 			form_list.add(form);
 		}
 		return form_list;

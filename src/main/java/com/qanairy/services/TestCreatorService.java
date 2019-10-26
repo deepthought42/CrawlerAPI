@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Group;
 import com.qanairy.models.PageLoadAnimation;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -33,10 +34,7 @@ import com.qanairy.utils.PathUtils;
 @Component
 public class TestCreatorService {
 	private static Logger log = LoggerFactory.getLogger(TestCreatorService.class.getName());
-
-	@Autowired
-	private PageStateService page_state_service;
-
+	
 	@Autowired
 	private TestService test_service;
 
@@ -100,28 +98,32 @@ public class TestCreatorService {
 		test.addGroup(group);
 
 		return test;
-	}
+	}	
 
 	/**
-	 * Generates {@link Test Tests} for path
-	 * @param path
+	 * Generates {@link Test Tests} for test
+	 * @param test
 	 * @param result_page
-	 * @throws MalformedURLException 
+	 * @throws JsonProcessingException
+	 * @throws MalformedURLException
 	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name, String domain_host ) throws MalformedURLException {
+	public Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name, String domain_host) throws JsonProcessingException, MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
-	  	log.warn("domain url :: "+domain_host);
-
-		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
-
-		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
-		test.setRunTime(crawl_time);
-		test.setLastRunTimestamp(new Date());
-		addFormGroupsToPath(test);
 		
-		TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
-		test.addRecord(test_record);
+		log.warn("Creating test........");
+		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
+		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
+
+		Test test_db = test_service.findByKey(test.getKey());
+		if(test_db == null){
+			test.setRunTime(crawl_time);
+			test.setLastRunTimestamp(new Date());
+			addFormGroupsToPath(test);
+
+			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
+			test.addRecord(test_record);
+		}
 
 		return test;
 	}

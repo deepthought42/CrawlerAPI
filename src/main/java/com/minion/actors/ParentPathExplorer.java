@@ -43,6 +43,7 @@ import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.PageStateService;
+import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
 
@@ -66,6 +67,9 @@ public class ParentPathExplorer extends AbstractActor {
 
 	@Autowired
 	private PageStateService page_state_service;
+
+	@Autowired
+	private TestCreatorService test_creator_service;
 
 	@Autowired
 	private BrowserService browser_service;
@@ -264,7 +268,7 @@ public class ParentPathExplorer extends AbstractActor {
 					log.warn("domain url :: "+domain.getUrl());
 				  	URL domain_url = new URL(domain.getProtocol()+"://"+domain.getUrl());
 
-			  		Test test = createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
+			  		Test test = test_creator_service.createTest(final_path_keys, final_path_objects, message.getResultPage(), (end-start), message.getBrowser().toString(), domain_url.getHost());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), domain);
 
 		  			message.getDiscoveryActor().tell(test_message, getSelf());
@@ -284,32 +288,6 @@ public class ParentPathExplorer extends AbstractActor {
 				})
 				.build();
 	}
-
-	/**
-	 * Generates {@link Test Tests} for test
-	 * @param test
-	 * @param result_page
-	 * @throws JsonProcessingException
-	 * @throws MalformedURLException
-	 */
-	private Test createTest(List<String> path_keys, List<PathObject> path_objects, PageState result_page, long crawl_time, String browser_name, String domain_host) throws JsonProcessingException, MalformedURLException {
-		log.warn("Creating test........");
-		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
-		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
-
-		Test test_db = test_service.findByKey(test.getKey());
-		if(test_db == null){
-			test.setRunTime(crawl_time);
-			test.setLastRunTimestamp(new Date());
-			addFormGroupsToPath(test);
-
-			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
-			test.addRecord(test_record);
-		}
-
-		return test;
-	}
-
 
 	/**
 	 * Adds Group labeled "form" to test if the test has any elements in it that have form in the xpath

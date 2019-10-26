@@ -151,6 +151,7 @@ public class UrlBrowserActor extends AbstractActor {
 					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation, message.getDomain());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
 					message.getDiscoveryActor().tell(test_message, getSelf());
+					
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 

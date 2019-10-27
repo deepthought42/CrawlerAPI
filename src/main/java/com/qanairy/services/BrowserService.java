@@ -9,8 +9,6 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -127,30 +125,16 @@ public class BrowserService {
 	public List<PageState> buildPageStates(String url, BrowserType browser_type, String host, List<PathObject> path_objects, List<String> path_keys)
 			throws MalformedURLException, IOException, Exception{
 		List<PageState> page_states = new ArrayList<>();
-//		Map<String, ElementState> element_xpaths = new HashMap<>();
-
 		Browser browser = null;
 		Map<String, Template> template_elements = new HashMap<>();
 		List<ElementState> visible_elements = crawlPathAndBuildElementList(url, host, browser_type, path_keys, path_objects, template_elements);
-		//List<ElementState> visible_elements = crawlPathAndBuildVisibleElementList(url, host, browser_type, path_keys, path_objects, element_list);
-
 		log.warn("####  returning elements list : "+visible_elements.size()+ "   :    "+url);
 
-		/*
-		for(ElementState elem : visible_elements){
-			if(elem == null) {
-				continue;
-			}
-			element_xpaths.put(elem.getXpath(), elem);
-		}
-*/
 		// BUILD ALL PAGE STATES
 		boolean err = true;
 		do{
 			log.warn("building page with remaining element xpaths :: " +visible_elements.size());
 			try{
-				//List<ElementState> remaining_elements = new ArrayList<ElementState>(element_xpaths.values());
-				//Collections.sort(remaining_elements);
 				if(err){
 					log.warn("getting browser connection");
 					browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
@@ -160,13 +144,6 @@ public class BrowserService {
 				}
 				err = false;
 
-				/*
-				if(!isElementVisibleInPane(browser, remaining_elements.get(0))){
-					browser.scrollToElement(remaining_elements.get(0));
-					//browser.scrollTo(remaining_elements.get(0).getXLocation(), remaining_elements.get(0).getYLocation());
-					BrowserUtils.detectShortAnimation(browser, url);
-				}
-*/
 				log.warn("getting current url from browser");
 				String browser_url = browser.getDriver().getCurrentUrl();
 				String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
@@ -179,11 +156,7 @@ public class BrowserService {
 
 				page_state.setTemplates(new ArrayList<>(template_elements.values()));
 
-				//element_xpaths = BrowserService.filterElementStatesFromList(element_xpaths, element_hash.keySet());
-
-				//if(remaining_elements.size() != element_xpaths.size() && page_state.getElements().size() > 0){
 				page_states.add(page_state);
-				//}
 			}
 			catch(NullPointerException e){
 				err=true;
@@ -199,7 +172,6 @@ public class BrowserService {
 			}
 		}while(err);
 
-		//element_xpaths = new HashMap<String, ElementState>();
 		return page_states;
 	}
 
@@ -423,18 +395,6 @@ public class BrowserService {
 			viewport_screenshot.flush();
 			return page_state;
 		}
-	}
-
-	private static Map<String, ElementState> filterElementStatesFromList(Map<String, ElementState> elements,
-			Collection<String> values) {
-		HashMap<String, ElementState> elements_hash = new HashMap<>(elements);
-
-		for(String xpath : values){
-			if(xpath != null){
-				elements_hash.remove(xpath);
-			}
-		}
-		return elements_hash;
 	}
 
 	/**

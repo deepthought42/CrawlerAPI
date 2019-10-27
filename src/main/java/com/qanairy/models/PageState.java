@@ -280,7 +280,7 @@ public class PageState implements Persistable, PathObject {
 			return false;
 
 		PageState that = (PageState) o;
-
+		
 		return this.getKey().equals(that.getKey());
 	}
 

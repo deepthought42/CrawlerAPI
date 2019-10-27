@@ -437,6 +437,9 @@ public class BrowserService {
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 
+		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
+		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+
 		if(page_state_record2 != null){
 			viewport_screenshot.flush();
 			page_state_record2.setElements(page_state_service.getElementStates(page_state_record2.getKey()));
@@ -451,24 +454,12 @@ public class BrowserService {
 					continue;
 				}
 				if(isElementVisibleInPane(browser, element)){
-					/*
-					ElementState new_element_state = element.clone();
-					WebElement new_element = browser.findWebElementByXpath(element.getXpath());
-					Point location = new_element.getLocation();
-					Dimension size = new_element.getSize();
-
-					new_element_state.setXLocation(location.getX());
-					new_element_state.setYLocation(location.getY());
-					new_element_state.setWidth(size.getWidth());
-					new_element_state.setHeight(size.getHeight());
-
-					new_element_state.setKey( new_element_state.generateKey());
-					*/
+					
 					visible_elements.add(element);
 				}
 			}
-
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(url).getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
+			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
 
 			List<ElementState> elements_with_screenshots = new ArrayList<>();
 			for(ElementState element_state : visible_elements){
@@ -487,6 +478,8 @@ public class BrowserService {
 					browser.getViewportSize().height,
 					browser.getBrowserName());
 			page_state.addScreenshotChecksum(screenshot_checksum);
+			page_state.addScreenshotChecksum(full_page_screenshot_checksum);
+			page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
 			Screenshot screenshot = new Screenshot(viewport_screenshot_url, browser.getBrowserName(), screenshot_checksum, browser.getViewportSize().getWidth(), browser.getViewportSize().getHeight());
 			page_state.addScreenshot(screenshot);
 

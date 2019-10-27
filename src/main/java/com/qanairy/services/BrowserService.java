@@ -454,7 +454,6 @@ public class BrowserService {
 					continue;
 				}
 				if(isElementVisibleInPane(browser, element)){
-					
 					visible_elements.add(element);
 				}
 			}
@@ -845,7 +844,7 @@ public class BrowserService {
 		String screenshot = null;
 		ElementState page_element_record = null;
 		ElementState page_element = null;
-		BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser);
+		BufferedImage img = browser.getElementScreenshot(elem);
 		String checksum = PageState.getFileChecksum(img);
 		page_element_record = element_state_service.findByScreenshotChecksum(checksum);
 
@@ -909,7 +908,7 @@ public class BrowserService {
 		String checksum = "";
 		String screenshot = null;
 		ElementState page_element = null;
-		BufferedImage img = Browser.getElementScreenshot(elem, page_screenshot, browser);
+		BufferedImage img = browser.getElementScreenshot(elem);
 		checksum = PageState.getFileChecksum(img);
 		ElementState page_element_record = element_state_service.findByScreenshotChecksum(checksum);
 
@@ -1434,7 +1433,7 @@ public class BrowserService {
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
 					}
-					BufferedImage img = Browser.getElementScreenshot(input_elem, viewport, browser);
+					BufferedImage img = browser.getElementScreenshot(input_elem);
 					String checksum = PageState.getFileChecksum(img);
 					viewport.flush();
 					String screenshot= null;
@@ -1630,7 +1629,7 @@ public class BrowserService {
 			err = false;
 			try{
 				BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-				img = Browser.getElementScreenshot(elem, viewport_screenshot, browser);
+				img = browser.getElementScreenshot(elem);
 				checksum = PageState.getFileChecksum(img);
 				screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, host, checksum, browser.getBrowserName()+"-element");
 			}
@@ -1674,7 +1673,7 @@ public class BrowserService {
 		do{
 			err = false;
 			try{
-				img = Browser.getElementScreenshot(elem_copy, page_img, x_offset, y_offset);
+				img = browser.getElementScreenshot(elem_copy);
 				checksum = PageState.getFileChecksum(img);
 				screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, host, checksum, browser.getBrowserName()+"-element");
 				elem_copy.setScreenshot(screenshot_url);

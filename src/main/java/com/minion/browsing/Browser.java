@@ -309,35 +309,16 @@ public class Browser {
 	}
 	
 	/**
-	 * Gets image as a base 64 string
-	 * 
-	 * @return File png file of image
-	 * @throws IOException
-	 */
-	public BufferedImage getElementScreenshot(WebElement elem) throws IOException, GridException{
-		return ImageIO.read(elem.getScreenshotAs(OutputType.FILE));
-	}
-	
-	/**
 	 * 
 	 * @param screenshot
 	 * @param elem
 	 * @return
 	 * @throws IOException
 	 */	
-	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, Browser browser) throws IOException{
+	public BufferedImage getElementScreenshot(ElementState element) throws IOException{
 		//calculate element position within screen
-		Point point = getLocationInViewport(elem, browser.x_scroll_offset, browser.y_scroll_offset);
-		Dimension dimension = elem.getSize();
-		
-		// Get width and height of the element
-		int elem_width = dimension.getWidth();
-		int elem_height = dimension.getHeight();
-		
-		int point_x = point.getX();
-		int point_y = point.getY();
-		
-		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
+		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
+		return Shutterbug.shootElement(driver, web_element).getImage();
 	}
 	
 	/**
@@ -347,12 +328,9 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-		
-	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
 		//calculate element position within screen
-		Point point = getLocationInViewport(elem, x_offset, y_offset);
-		
-		return page_screenshot.getSubimage(point.getX(), point.getY(), elem.getWidth(), elem.getHeight());
+		return Shutterbug.shootElement(driver, element).getImage();
 	}
 	
 	/**

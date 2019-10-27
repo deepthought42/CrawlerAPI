@@ -305,7 +305,6 @@ public class PageState implements Persistable, PathObject {
 			page.setScreenshotChecksum(getScreenshotChecksums());
 			page.setAnimatedImageUrls(this.getAnimatedImageUrls());
 			page.setAnimatedImageChecksums(this.getAnimatedImageChecksums());
-
 		} catch (NoSuchAlgorithmException | IOException e) {
 			log.info("Error cloning page : " + this.getKey() + ";  "+e.getMessage());
 		}

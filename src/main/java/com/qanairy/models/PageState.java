@@ -49,7 +49,6 @@ public class PageState implements Persistable, PathObject {
 	private LocalDateTime last_landability_check;
 	private String screenshot_url;
 	private String full_page_screenshot_url;
-	private String full_page_checksum;
 	private String browser;
 
 	private String url;
@@ -160,7 +159,7 @@ public class PageState implements Persistable, PathObject {
 		setAnimatedImageUrls(new ArrayList<String>());
 		setAnimatedImageChecksums(new ArrayList<>());
 		setTemplates(new ArrayList<Template>());
-		setLoginRequired(false);
+    setLoginRequired(false);
 		setKey(generateKey());
 	}
 
@@ -627,11 +626,5 @@ public class PageState implements Persistable, PathObject {
 	}
 	public void setFullPageScreenshotUrl(String full_page_screenshot_url) {
 		this.full_page_screenshot_url = full_page_screenshot_url;
-	}
-	public String getFullPageChecksum() {
-		return full_page_checksum;
-	}
-	public void setFullPageChecksum(String full_page_checksum) {
-		this.full_page_checksum = full_page_checksum;
 	}
 }

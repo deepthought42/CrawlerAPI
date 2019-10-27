@@ -162,14 +162,15 @@ public class ParentPathExplorer extends AbstractActor {
 
 							//if parent element does not have width then continue
 							Dimension element_size = parent_web_element.getSize();
-							if(!BrowserService.hasWidthAndHeight(element_size)){
+							if(!BrowserService.hasWidthAndHeight(element_size)
+										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element.getLocation(), element_size)){
 								break;
 							}
 
 							//if parent element is not visible in pane then break
 
 							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, element_xpath+"/..", attributes);
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", attributes);
 							if(parent_element == null){
 								break;
 							}
@@ -191,7 +192,7 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
-							BufferedImage viewport_screenshot = browser.getFullPageScreenshot();
+							BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 							String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
 							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);

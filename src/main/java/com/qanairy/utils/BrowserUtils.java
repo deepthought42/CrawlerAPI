@@ -188,7 +188,7 @@ public class BrowserUtils {
 
 		do{
 			//get element screenshot
-			BufferedImage screenshot = browser.getViewportScreenshot();
+			BufferedImage screenshot = browser.getFullPageScreenshot();
 
 			//calculate screenshot checksum
 			new_checksum = PageState.getFileChecksum(screenshot);

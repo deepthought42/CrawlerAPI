@@ -106,11 +106,11 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				//if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+				//		|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+					//browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
-				}
+				//}
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -157,8 +157,7 @@ public class Crawler {
 		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, viewport_screenshot, visible_element_map, element_list, true);
+		List<ElementState> visible_elements = browser_service.getVisibleElements(browser, visible_element_map, element_list, true);
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 		
@@ -193,11 +192,11 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				//if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+				//		|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+					//browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
-				}
+				//}
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -269,11 +268,11 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				//if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+				//		|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+					//browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
-				}
+				//}
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
@@ -352,11 +351,11 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){				
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				//if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+				//		|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){				
+				//	browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
-				}
+				//}
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;
@@ -466,11 +465,11 @@ public class Crawler {
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
 				
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
-						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
-					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
+				//if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+				//		|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
+				//	browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
-				}
+				//}
 			}
 			else if(current_obj instanceof Redirect){
 				Redirect redirect = (Redirect)current_obj;

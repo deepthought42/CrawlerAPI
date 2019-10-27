@@ -122,7 +122,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 								List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
 
-				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getFullPageScreenshot(), visible_element_map, element_list, true);
+				    			List<ElementState> elements = browser_service.getVisibleElements(browser, visible_element_map, element_list, true);
 				    			String browser_url = browser.getDriver().getCurrentUrl();
 								String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 								
@@ -285,11 +285,10 @@ public class TestCreationActor extends AbstractActor  {
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
 		Set<Attribute> attributes = browser.extractAttributes(element);
-		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
-		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element, viewport_screenshot, (new URL(browser.getDriver().getCurrentUrl())).getHost());
+		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element, (new URL(browser.getDriver().getCurrentUrl())).getHost());
 
 		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
-		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
+		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, new HashMap<>(), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 
 		elem = page_element_service.save(elem);
 		return elem;

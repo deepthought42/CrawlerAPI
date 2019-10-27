@@ -483,6 +483,15 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
+	public void scrollToElement(ElementState element_state) 
+    { 
+		WebElement elem = driver.findElement(By.xpath(element_state.getXpath()));
+		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView(block: \"center\");", elem);
+		Point offsets = getViewportScrollOffset();
+		this.setXScrollOffset(offsets.getX());
+		this.setYScrollOffset(offsets.getY());
+    }
+	
 	public void scrollTo(int x_offset, int y_offset) 
     {
 		//only scroll to position if it isn't the same position

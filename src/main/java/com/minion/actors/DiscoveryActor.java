@@ -57,8 +57,9 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-	private Cluster cluster = Cluster.get(getContext().getSystem());
+	private final int DISCOVERY_ACTOR_COUNT = 40;
 
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
 		
 	@Autowired
@@ -82,7 +83,6 @@ public class DiscoveryActor extends AbstractActor{
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
-	private final int DISCOVERY_ACTOR_COUNT = 100;
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {

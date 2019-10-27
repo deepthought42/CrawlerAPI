@@ -1,5 +1,6 @@
 package com.minion.browsing;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -156,7 +157,8 @@ public class Crawler {
 		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 		List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getFullPageScreenshot(), visible_element_map, element_list, true);
+		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, viewport_screenshot, visible_element_map, element_list, true);
 		String browser_url = browser.getDriver().getCurrentUrl();
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 		

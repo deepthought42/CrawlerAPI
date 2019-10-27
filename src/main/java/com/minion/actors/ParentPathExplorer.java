@@ -1,5 +1,6 @@
 package com.minion.actors;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -191,7 +192,8 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
-							String screenshot_checksum = PageState.getFileChecksum(browser.getFullPageScreenshot());
+							BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+							String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
 							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 							if(result == null){

@@ -48,6 +48,7 @@ public class PageState implements Persistable, PathObject {
 	private boolean login_required;
 	private LocalDateTime last_landability_check;
 	private String screenshot_url;
+	private String full_page_screenshot_url;
 	private String browser;
 
 	private String url;
@@ -620,5 +621,11 @@ public class PageState implements Persistable, PathObject {
 	
 	public Long getId() {
 		return this.id;
+	}
+	public String getFullPageScreenshotUrl() {
+		return full_page_screenshot_url;
+	}
+	public void setFullPageScreenshotUrl(String full_page_screenshot_url) {
+		this.full_page_screenshot_url = full_page_screenshot_url;
 	}
 }

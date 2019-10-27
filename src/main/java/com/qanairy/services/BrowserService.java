@@ -178,7 +178,9 @@ public class BrowserService {
 				String browser_url = browser.getDriver().getCurrentUrl();
 				String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 				log.warn("getting visible elements within viewport " + visible_elements.size());
-				List<ElementState> all_visible_elements = getVisibleElementsWithinViewport(browser, browser.getFullPageScreenshot(), new HashMap<Integer, ElementState>(), visible_elements, true);
+				BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+
+				List<ElementState> all_visible_elements = getVisibleElementsWithinViewport(browser, viewport_screenshot, new HashMap<Integer, ElementState>(), visible_elements, true);
 				log.warn("building page with # of elements :: " +all_visible_elements.size());
 
 				PageState page_state = buildPage(browser, all_visible_elements, url_without_params);
@@ -431,7 +433,7 @@ public class BrowserService {
 	public PageState buildPage(Browser browser, List<ElementState> all_elements, String url) throws GridException, IOException, NoSuchAlgorithmException{
 		assert browser != null;
 
-		BufferedImage viewport_screenshot = browser.getFullPageScreenshot();
+		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 
@@ -628,7 +630,7 @@ public class BrowserService {
 		URL page_url = new URL(browser_url);
 		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 
-		BufferedImage viewport_screenshot = browser.getFullPageScreenshot();
+		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 		if(page_state_record2 == null){
@@ -1434,7 +1436,7 @@ public class BrowserService {
 
 				if(input_tag == null || input_tag.getScreenshot()== null || input_tag.getScreenshot().isEmpty()){
 					browser.scrollToElement(input_elem);
-					BufferedImage viewport = browser.getFullPageScreenshot();
+					BufferedImage viewport = browser.getViewportScreenshot();
 
 					if(input_elem.getLocation().getX() < 0 || input_elem.getLocation().getY() < 0){
 						continue;
@@ -1537,7 +1539,8 @@ public class BrowserService {
 
 				for(WebElement child : children){
 					Set<Attribute> attributes = browser.extractAttributes(child);
-					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, child);
+					BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, child, viewport_screenshot, (new URL(browser.getDriver().getCurrentUrl())).getHost());
 
 					ElementState elem = new ElementState(child.getText(), generateXpath(child, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), child.getTagName(), attributes, Browser.loadCssProperties(child), screenshot_url, child.getLocation().getX(), child.getLocation().getY(), child.getSize().getWidth(), child.getSize().getHeight(), child.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 
@@ -1553,7 +1556,8 @@ public class BrowserService {
 			else{
 				if(child_inputs.size() == 0){
 					Set<Attribute> attributes = browser.extractAttributes(page_elem);
-					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, page_elem);
+					BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+					String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, page_elem, viewport_screenshot, (new URL(browser.getDriver().getCurrentUrl())).getHost());
 
 					ElementState input_tag = new ElementState(page_elem.getText(), generateXpath(page_elem, "", new HashMap<String,Integer>(), browser.getDriver(), attributes), page_elem.getTagName(), attributes, Browser.loadCssProperties(page_elem), screenshot_url, page_elem.getLocation().getX(), page_elem.getLocation().getY(), page_elem.getSize().getWidth(), page_elem.getSize().getHeight(), page_elem.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
 
@@ -1605,42 +1609,13 @@ public class BrowserService {
 		if(submit_element == null){
 			return null;
 		}
-
-		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, submit_element);
+		
+		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+		String screenshot_url = retrieveAndUploadBrowserScreenshot(browser, submit_element, viewport_screenshot, (new URL(browser.getDriver().getCurrentUrl())).getHost());
 		ElementState elem = new ElementState(submit_element.getText(), generateXpath(submit_element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes), submit_element.getTagName(), attributes, Browser.loadCssProperties(submit_element), screenshot_url, submit_element.getLocation().getX(), submit_element.getLocation().getY(), submit_element.getSize().getWidth(), submit_element.getSize().getHeight(), submit_element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))) );
 
 
 		return elem;
-	}
-
-	/**
-	 *
-	 * @param driver
-	 * @param elem
-	 * @return
-	 * @throws Exception
-	 */
-	public String retrieveAndUploadBrowserScreenshot(Browser browser, WebElement elem) throws IOException{
-		BufferedImage img = null;
-		String checksum = "";
-		String screenshot_url = "";
-		try{
-
-			img = Browser.getElementScreenshot(elem, browser.getFullPageScreenshot(), browser);
-			checksum = PageState.getFileChecksum(img);
-			screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
-		}
-		catch(RasterFormatException e){
-			log.warn("Raster Format Exception (retrieveAndUploadBrowserScreenshot)  2: "+e.getMessage());
-		} catch (GridException e) {
-			log.warn("Grid Exception occurred while retrieving and uploading "+e.getMessage());
-		}
-		finally{
-			if(img != null){
-				img.flush();
-			}
-		}
-		return screenshot_url;
 	}
 
 	/**
@@ -1661,7 +1636,8 @@ public class BrowserService {
 		do{
 			err = false;
 			try{
-				img = Browser.getElementScreenshot(elem, browser.getFullPageScreenshot(), browser);
+				BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+				img = Browser.getElementScreenshot(elem, viewport_screenshot, browser);
 				checksum = PageState.getFileChecksum(img);
 				screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, host, checksum, browser.getBrowserName()+"-element");
 			}

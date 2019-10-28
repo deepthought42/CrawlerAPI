@@ -477,7 +477,7 @@ public class Browser {
 	
 	public void scrollToElement(WebElement elem) 
     { 
-		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
+		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
@@ -486,7 +486,7 @@ public class Browser {
 	public void scrollToElement(ElementState element_state) 
     { 
 		WebElement elem = driver.findElement(By.xpath(element_state.getXpath()));
-		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView(block: \"center\");", elem);
+		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());

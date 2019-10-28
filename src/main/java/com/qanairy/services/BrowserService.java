@@ -532,7 +532,12 @@ public class BrowserService {
 
 		BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 		String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
+		
+		BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
+		String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+		PageState page_state_record2 = page_state_service.findByScreenshotChecksum(full_page_screenshot_checksum);
+
+		//PageState page_state_record2 = page_state_service.findByScreenshotChecksum(screenshot_checksum);
 		if(page_state_record2 == null){
 			page_state_record2 = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
 		}

@@ -192,7 +192,7 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
-							BufferedImage viewport_screenshot = browser.getViewportScreenshot();
+							BufferedImage viewport_screenshot = browser.getFullPageScreenshot();
 							String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
 							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);

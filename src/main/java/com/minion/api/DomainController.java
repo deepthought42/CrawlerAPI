@@ -136,7 +136,16 @@ public class DomainController {
 		try{
 			domain = domain_service.save(domain);
 		}catch(Exception e){
-			domain = domain_service.findByUrl(sanitized_url);
+			domain = null;
+		}
+		
+		if(domain == null) {
+			domain = domain_service.findByUrl(sanitized_url);	
+		}
+		//temporary while url is being phased in
+		if(domain == null) {
+			domain = domain_service.findByHost(url_obj.getHost());
+			domain.setUrl(sanitized_url);
 		}
 		
     	acct.addDomain(domain);

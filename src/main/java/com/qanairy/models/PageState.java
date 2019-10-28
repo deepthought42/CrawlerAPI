@@ -424,7 +424,7 @@ public class PageState implements Persistable, PathObject {
 	public String generateKey() {
 		//NOTE: generating key using screenshot can be problematic in situations where the screen is a different size, shape, or slight differences in rendering
 		//String screenshot = getScreenshotUrl();
-		/*
+		
 		URL url = null;
 		String url_without_params = null;
 		try {
@@ -450,8 +450,8 @@ public class PageState implements Persistable, PathObject {
 		for(ElementState element : elements){
 			key += element.getKey();
 		}
-	*/
-		return "pagestate::" + full_page_checksum;
+
+		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+key);
 	}
 
 	public void addForm(Form form) {

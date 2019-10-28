@@ -122,7 +122,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 								List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
 
-				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getFullPageScreenshot(), visible_element_map, element_list, true);
+				    			List<ElementState> elements = browser_service.getVisibleElements(browser, element_list);
 				    			String browser_url = browser.getDriver().getCurrentUrl();
 								String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 								

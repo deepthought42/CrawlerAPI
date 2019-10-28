@@ -7,6 +7,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -170,7 +171,7 @@ public class ParentPathExplorer extends AbstractActor {
 							//if parent element is not visible in pane then break
 
 							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", attributes);
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, element_xpath+"/..", attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize());
 							if(parent_element == null){
 								break;
 							}

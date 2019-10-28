@@ -704,7 +704,9 @@ public class BrowserService {
 					WebElement element = browser.findWebElementByXpath(element_state.getXpath());
 					Dimension element_size = element.getSize();
 					if(element.isDisplayed() && hasWidthAndHeight(element_size) && isElementVisibleInPane(browser, element.getLocation(), element_size)){
-						ElementState new_element_state = buildElementState(browser, element, page_screenshot, element_state.getXpath(), element_state.getAttributes());
+						Map<String, String> css_props = Browser.loadCssProperties(element);
+
+						ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes(), css_props, element.getLocation(), element.getSize());
 						if(new_element_state != null){
 							visible_elements.add(new_element_state);
 							visible_element_map.put(visible_map_size, new_element_state);
@@ -739,6 +741,7 @@ public class BrowserService {
 	 * @return
 	 * @throws IOException
 	 */
+	@Deprecated
 	public ElementState buildElementState(Browser browser, WebElement elem, BufferedImage page_screenshot) throws IOException{
 		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
 
@@ -791,66 +794,6 @@ public class BrowserService {
 
 		return page_element;
 	}
-
-	/**
-	 *
-	 * @param browser
-	 * @param elem
-	 * @param page_screenshot
-	 * @param xpath
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public ElementState buildElementState(Browser browser, WebElement elem, BufferedImage page_screenshot, String xpath, Set<Attribute> attributes) throws IOException{
-		String element_tag_name = elem.getTagName();
-		Point location = elem.getLocation();
-		Dimension element_size = elem.getSize();
-
-		/*
-		boolean negative_position = doesElementHaveNegativePosition(location);
-		boolean is_structure_tag = isStructureTag(element_tag_name);
-		boolean has_width_and_height = hasWidthAndHeight(element_size);
-
-		if(!elem.isDisplayed() || is_structure_tag || !has_width_and_height){
-			return null;
-		}
-		*/
-
-		String checksum = "";
-		String screenshot = null;
-		ElementState page_element = null;
-		BufferedImage img = browser.getElementScreenshot(elem);
-		checksum = PageState.getFileChecksum(img);
-		ElementState page_element_record = element_state_service.findByScreenshotChecksum(checksum);
-
-		if(page_element_record != null){
-			page_element = page_element_record;
-		}
-		else{
-			Map<String, String> css_props = Browser.loadCssProperties(elem);
-			page_element = new ElementState(elem.getText(), xpath, element_tag_name, attributes, css_props, null, checksum, location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
-
-			boolean err = false;
-			int count = 0;
-			do{
-				err = false;
-				try{
-					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
-				}catch(IOException e){
-					err = true;
-				}
-				count++;
-			}while(err && count < 100);
-
-			page_element.setScreenshot(screenshot);
-		}
-		img.flush();
-
-		return page_element;
-	}
-
 
 	/**
 	 *

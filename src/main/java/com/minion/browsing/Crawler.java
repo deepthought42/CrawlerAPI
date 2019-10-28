@@ -141,7 +141,6 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel);
@@ -193,14 +192,16 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
-				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+				/*if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
+				*/
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
+				browser.scrollToElement(last_element);
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){

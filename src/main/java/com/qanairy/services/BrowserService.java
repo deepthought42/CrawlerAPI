@@ -127,8 +127,7 @@ public class BrowserService {
 		List<PageState> page_states = new ArrayList<>();
 		Browser browser = null;
 		Map<String, Template> template_elements = new HashMap<>();
-		List<ElementState> visible_elements = crawlPathAndBuildElementList(url, host, browser_type, path_keys, path_objects, template_elements);
-		log.warn("####  returning elements list : "+visible_elements.size()+ "   :    "+url);
+		List<ElementState> visible_elements = new ArrayList<>();
 
 		// BUILD ALL PAGE STATES
 		boolean err = true;
@@ -141,6 +140,16 @@ public class BrowserService {
 					browser.navigateTo(url);
 					crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
 					BrowserUtils.getLoadingAnimation(browser, host);
+					
+					String source = browser.getDriver().getPageSource();
+					List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);
+					template_elements = browser_service.findTemplates(all_elements_list);
+					template_elements = browser_service.reduceTemplatesToParents(template_elements);
+					template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
+					List<ElementState> child_elements = BrowserService.getChildElementsUsingJSoup(source);
+					visible_elements = getVisibleElements(browser, child_elements);
+					log.warn("####  returning elements list : "+visible_elements.size()+ "   :    "+url);
+
 				}
 				err = false;
 
@@ -363,9 +372,9 @@ public class BrowserService {
 				if(element == null) {
 					continue;
 				}
-				if(isElementVisibleInPane(browser, element)){
-					visible_elements.add(element);
-				}
+				//if(isElementVisibleInPane(browser, element)){
+				visible_elements.add(element);
+				//}
 			}
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(url).getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
 			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
@@ -389,6 +398,7 @@ public class BrowserService {
 			page_state.addScreenshotChecksum(screenshot_checksum);
 			page_state.addScreenshotChecksum(full_page_screenshot_checksum);
 			page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
+			page_state.setFullPageChecksum(full_page_screenshot_checksum);
 			Screenshot screenshot = new Screenshot(full_page_screenshot_url, browser.getBrowserName(), full_page_screenshot_checksum, browser.getViewportSize().getWidth(), browser.getViewportSize().getHeight());
 			page_state.addScreenshot(screenshot);
 

@@ -1,6 +1,5 @@
 package com.minion.browsing;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -157,12 +156,7 @@ public class Crawler {
 
 		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-		List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-		List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-		String browser_url = browser.getDriver().getCurrentUrl();
-		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-		
-		return browser_service.buildPage(browser, visible_elements, url_without_params);
+		return browser_service.buildPage(browser);
 	}
 
 	/**
@@ -290,7 +284,7 @@ public class Crawler {
 				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
 				//compile child element coordinates and sizes
 				
-				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
+				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element);
 				
 				Action action = (Action)current_obj;
 				
@@ -582,7 +576,7 @@ public class Crawler {
 	public static void performAction(Action action, ElementState elem, WebDriver driver, Point location) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		actionFactory.execAction(element, action.getValue(), action.getName(), location);
+		actionFactory.execAction(element, action.getValue(), action.getName());
 	}
 	
 	public static void scrollDown(WebDriver driver, int distance)
@@ -623,10 +617,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-			
-				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
+				result_page = browser_service.buildPage(browser);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
@@ -714,11 +705,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-			
-				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
+				result_page = browser_service.buildPage(browser);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
@@ -770,10 +757,9 @@ public class Crawler {
 	 * @pre child_element != null
 	 * @pre offset != null
 	 */
-	public static Point generateRandomLocationWithinElementButNotWithinChildElements(WebElement web_element, ElementState child_element, Point offset) {
+	public static Point generateRandomLocationWithinElementButNotWithinChildElements(WebElement web_element, ElementState child_element) {
 		assert web_element != null;
 		assert child_element != null;
-		assert offset != null;
 		
 		Point elem_location = web_element.getLocation();
 

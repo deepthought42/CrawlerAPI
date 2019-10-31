@@ -308,6 +308,12 @@
 		    <groupId>com.assertthat</groupId>
 		    <artifactId>selenium-shutterbug</artifactId>
 		    <version>0.9.3</version>
+		    <exclusions>
+		        <exclusion>
+				    <groupId>org.seleniumhq.selenium</groupId>
+				    <artifactId>selenium-java</artifactId>
+				</exclusion>
+	     	</exclusions>
 		</dependency>
 	</dependencies>
 </project>

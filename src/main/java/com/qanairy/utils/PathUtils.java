@@ -100,7 +100,7 @@ public class PathUtils {
 		int page_states_seen = 0;
 		
 		for(int idx = path_objects.size()-1; idx >=0; idx--){
-			if(path_objects.get(idx) instanceof PageState){
+			if(path_objects.get(idx).getKey().contains("pagestate")){
 				if(page_states_seen >= 1){
 					return (PageState)path_objects.get(idx);
 				}

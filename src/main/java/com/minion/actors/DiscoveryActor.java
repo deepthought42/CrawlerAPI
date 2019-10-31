@@ -57,7 +57,7 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-	private final int DISCOVERY_ACTOR_COUNT = 40;
+	private final int DISCOVERY_ACTOR_COUNT = 100;
 
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;

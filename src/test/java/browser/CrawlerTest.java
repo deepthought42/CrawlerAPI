@@ -38,7 +38,7 @@ public class CrawlerTest {
 				child_element.setWidth(child_web_element.getSize().getWidth());
 				child_element.setHeight(child_web_element.getSize().getHeight());
 				System.err.println("gnerating actual click location");
-				Point coord = Crawler.generateRandomLocationWithinElementButNotWithinChildElements(web_element, child_element, new Point(0,0));
+				Point coord = Crawler.generateRandomLocationWithinElementButNotWithinChildElements(web_element, child_element);
 				
 				System.err.println("child coordinate  :   "+child_element.getXLocation() + "  ,  "+child_element.getYLocation());
 				System.err.println("child size  :    "+child_element.getWidth() + "  ,  "+child_element.getHeight());

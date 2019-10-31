@@ -163,8 +163,7 @@ public class ParentPathExplorer extends AbstractActor {
 
 							//if parent element does not have width then continue
 							Dimension element_size = parent_web_element.getSize();
-							if(!BrowserService.hasWidthAndHeight(element_size)
-										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element.getLocation(), element_size)){
+							if(!BrowserService.hasWidthAndHeight(element_size)){
 								break;
 							}
 
@@ -193,13 +192,15 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
-							BufferedImage viewport_screenshot = browser.getFullPageScreenshot();
-							String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
+							PageState page_state = browser_service.buildPage(browser);
+							PageState result = page_state_service.findByKey(page_state.getKey());
+							
+							//BufferedImage viewport_screenshot = browser.getFullPageScreenshot();
+							//String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
 
-							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
-							if(result == null){
-								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
-							}
+							//if(result == null){
+							//	result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
+							//}
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){

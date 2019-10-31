@@ -127,7 +127,9 @@ public class PathExpansionActor extends AbstractActor {
 		//iterate over all elements
 		for(ElementState page_element : getElementStatesForExpansion(path.getPathObjects())){
 			expanded_elements.put(page_element.getKey(), page_element);
-			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
+			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
+			
+			/*
 			boolean higher_order_page_state_found = false;
 			//check if there is a page state with a lower x or y scroll offset
 			for(PageState page : element_page_states){
@@ -140,7 +142,7 @@ public class PathExpansionActor extends AbstractActor {
 			if(higher_order_page_state_found){
 				continue;
 			}
-
+	*/
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -227,7 +229,7 @@ public class PathExpansionActor extends AbstractActor {
 		log.warn("####################################################################################################");
 
 		//filter list elements from last page elements
-		List<ElementState> filtered_elements = new ArrayList<>();
+		List<ElementState> filtered_elements = new ArrayList<>(last_page_state.getElements());
 		Map<String, Template> templates = getOrganismTemplateMap(filtered_elements);
 		filtered_elements = filterListElements(filtered_elements, templates);
 		

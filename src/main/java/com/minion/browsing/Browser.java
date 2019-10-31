@@ -57,8 +57,8 @@ public class Browser {
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
 	private WebDriver driver = null;
 	private String browser_name; 
-	private int y_scroll_offset;
-	private int x_scroll_offset;
+	private long y_scroll_offset;
+	private long x_scroll_offset;
 	private Dimension viewport_size;
 	private static final String JS_GET_VIEWPORT_WIDTH = "var width = undefined; if (window.innerWidth) {width = window.innerWidth;} else if (document.documentElement && document.documentElement.clientWidth) {width = document.documentElement.clientWidth;} else { var b = document.getElementsByTagName('body')[0]; if (b.clientWidth) {width = b.clientWidth;}};return width;";
 	private static final String JS_GET_VIEWPORT_HEIGHT = "var height = undefined;  if (window.innerHeight) {height = window.innerHeight;}  else if (document.documentElement && document.documentElement.clientHeight) {height = document.documentElement.clientHeight;}  else { var b = document.getElementsByTagName('body')[0]; if (b.clientHeight) {height = b.clientHeight;}};return height;";
@@ -98,8 +98,8 @@ public class Browser {
 		else if("opera".equals(browser)){
 			this.driver = openWithOpera(hub_node_url);
 		}
-		setYScrollOffset(0);
-		setXScrollOffset(0);
+		setYScrollOffset(extractYOffset(driver));
+		setXScrollOffset(extractXOffset(driver));
 		setViewportSize(getViewportSize(driver));
 	}
 	
@@ -341,12 +341,11 @@ public class Browser {
 	 * @throws IOException
 	 */
 		
-	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot) throws IOException{
-		//calculate element position within screen		
-		int point_x = elem.getXLocation();
+	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, Browser browser) throws IOException{
+		//calculate element position within screen
+		int point_x = elem.getXLocation()+10;
 		int point_y = elem.getYLocation();
-		
-		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
+		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth()+10, elem.getHeight());
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
@@ -459,19 +458,19 @@ public class Browser {
 	}
 	
 
-	public int getYScrollOffset() {
+	public long getYScrollOffset() {
 		return y_scroll_offset;
 	}
 
-	public void setYScrollOffset(int y_scroll_offset) {
+	public void setYScrollOffset(long y_scroll_offset) {
 		this.y_scroll_offset = y_scroll_offset;
 	}
 
-	public int getXScrollOffset() {
+	public long getXScrollOffset() {
 		return x_scroll_offset;
 	}
 
-	public void setXScrollOffset(int x_scroll_offset) {
+	public void setXScrollOffset(long x_scroll_offset) {
 		this.x_scroll_offset = x_scroll_offset;
 	}
 	
@@ -634,6 +633,16 @@ public class Browser {
 		return new Dimension(width, height);
 	}
 
+	private static long extractXOffset(WebDriver driver) {
+		JavascriptExecutor executor = (JavascriptExecutor) driver;
+		return (Long) executor.executeScript("return window.pageXOffset;");
+	}
+	
+	private static long extractYOffset(WebDriver driver) {
+		JavascriptExecutor executor = (JavascriptExecutor) driver;
+		return (Long) executor.executeScript("return window.pageYOffset;");
+	}
+	
 	private static int extractViewportWidth(WebDriver driver) {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		int viewportWidth = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_WIDTH, new Object[0]).toString());

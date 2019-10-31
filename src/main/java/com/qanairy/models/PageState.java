@@ -29,6 +29,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.qanairy.utils.BrowserUtils;
 
 /**
  * A reference to a web page
@@ -55,8 +56,8 @@ public class PageState implements Persistable, PathObject {
 	private String url;
 	private int total_weight;
 	private int image_weight;
-	private int scrollXOffset;
-	private int scrollYOffset;
+	private long scrollXOffset;
+	private long scrollYOffset;
 	private int viewport_width;
 	private int viewport_height;
 	private String type;
@@ -98,7 +99,7 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre screenshot_url != null;
 	 */
-	public PageState(String url, String screenshot_url, List<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset,
+	public PageState(String url, String screenshot_url, List<ElementState> elements, String src, long scroll_x_offset, long scroll_y_offset,
 			int viewport_width, int viewport_height, String browser_name) throws MalformedURLException, IOException{
 		assert elements != null;
 		assert screenshot_url != null;
@@ -138,7 +139,7 @@ public class PageState implements Persistable, PathObject {
 	 * @pre elements != null
 	 * @pre screenshot_url != null;
 	 */
-	public PageState(String url, List<ElementState> elements, String src, int scroll_x_offset, int scroll_y_offset,
+	public PageState(String url, List<ElementState> elements, String src, long scroll_x_offset, long scroll_y_offset,
 			int viewport_width, int viewport_height, String browser_name){
 		assert elements != null;
 
@@ -181,7 +182,7 @@ public class PageState implements Persistable, PathObject {
 	 * @throws NoSuchAlgorithmException
 	 */
 	public PageState(String url, String screenshot_url, List<ElementState> elements, boolean isLandable,
-			String src, int scroll_x_offset, int scroll_y_offset, int viewport_width, int viewport_height,
+			String src, long scroll_x_offset, long scroll_y_offset, int viewport_width, int viewport_height,
 			String browser_name) throws IOException, NoSuchAlgorithmException {
 		assert elements != null;
 		assert screenshot_url != null;
@@ -425,33 +426,15 @@ public class PageState implements Persistable, PathObject {
 		//NOTE: generating key using screenshot can be problematic in situations where the screen is a different size, shape, or slight differences in rendering
 		//String screenshot = getScreenshotUrl();
 		
-		URL url = null;
-		String url_without_params = null;
-		try {
-			url = new URL(this.getUrl());
-			url_without_params = url.getProtocol()+"://"+url.getHost()+url.getPath();
-		} catch (MalformedURLException e) {
-			int param_index = this.getUrl().indexOf("?");
-			url_without_params = this.getUrl();
-			if(param_index >= 0){
-				url_without_params = url_without_params.substring(0, param_index);
-			}
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-		}
-
-		//strip off index.html from end
-		url_without_params.replace("index.html", "");
-		url_without_params.replace("index.htm", "");
-
-		String key = "";
+		String key = getUrl();
 		List<ElementState> elements = getElements().stream().collect(Collectors.toList());
 		Collections.sort(elements, (o1, o2) -> o1.getKey().compareTo(o2.getKey()));
 		for(ElementState element : elements){
 			key += element.getKey();
 		}
-
-		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(url_without_params+key);
+		
+		
+		return "pagestate::" + org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
 
 	public void addForm(Form form) {
@@ -487,19 +470,19 @@ public class PageState implements Persistable, PathObject {
 		this.src = src;
 	}
 
-	public int getScrollXOffset() {
+	public long getScrollXOffset() {
 		return scrollXOffset;
 	}
 
-	public void setScrollXOffset(int scrollXOffset) {
+	public void setScrollXOffset(long scrollXOffset) {
 		this.scrollXOffset = scrollXOffset;
 	}
 
-	public int getScrollYOffset() {
+	public long getScrollYOffset() {
 		return scrollYOffset;
 	}
 
-	public void setScrollYOffset(int scrollYOffset) {
+	public void setScrollYOffset(long scrollYOffset) {
 		this.scrollYOffset = scrollYOffset;
 	}
 

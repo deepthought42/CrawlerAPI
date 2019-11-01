@@ -53,9 +53,6 @@ public class PathExpansionActor extends AbstractActor {
 	private Cluster cluster = Cluster.get(getContext().getSystem());
 
 	@Autowired
-	private PageStateService page_state_service;
-
-	@Autowired
 	private BrowserService browser_service;
 	
 	private Map<String, ElementState> expanded_elements;
@@ -156,7 +153,7 @@ public class PathExpansionActor extends AbstractActor {
 
 
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
-			if(page_element.getXpath().contains("form")){
+			if(page_element.isPartOfForm()){
 				continue;
 			}
 			else{

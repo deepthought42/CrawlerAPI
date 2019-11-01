@@ -45,6 +45,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String inner_html;
 	private String css_selector;
 	private String outer_html;
+	private boolean part_of_form;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -450,5 +451,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public void setTemplate(String template) {
 		this.template = template;
+	}
+
+	public boolean isPartOfForm() {
+		return part_of_form;
+	}
+
+	public void setIsPartOfForm(boolean is_part_of_form) {
+		this.part_of_form = is_part_of_form;
 	}
 }

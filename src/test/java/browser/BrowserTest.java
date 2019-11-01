@@ -88,7 +88,7 @@ public class BrowserTest {
 			Set<Attribute> attributes = browser.extractAttributes(element);
 
 			BrowserService browser_service = new BrowserService();
-			String xpath = browser_service.generateXpath(element, "", xpath_map, browser.getDriver(), attributes);
+			String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
 			System.err.println("XPATH :: " + xpath);
 			//log.info("clean src: " +clean_src);
 		//	Assert.assertTrue("concat('This is a embedded ', '\"', 'path', '\"', '')".equals(clean_src));

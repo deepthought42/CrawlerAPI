@@ -170,7 +170,8 @@ public class ParentPathExplorer extends AbstractActor {
 							//if parent element is not visible in pane then break
 
 							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, element_xpath+"/..", attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize());
+							String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize());
 							if(parent_element == null){
 								break;
 							}

@@ -1,7 +1,6 @@
 package browser;
 
 import static org.junit.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -18,7 +17,6 @@ import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
@@ -33,7 +31,6 @@ import com.qanairy.services.BrowserService;
 /**
  * 
  */
-@SpringBootTest
 public class BrowserTest {
 
 	@Test
@@ -76,11 +73,8 @@ public class BrowserTest {
 		}
 	}
 	
-	
 	@Test
 	public void verifyGenerateParentXpath(){
-		Map<String, Integer> xpath_map = new HashMap<String, Integer>();
-
 		try{
 			Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
 			browser.navigateTo("https://staging-marketing.qanairy.com");
@@ -130,7 +124,7 @@ public class BrowserTest {
 	}
 	
 	public void scrollToElementInChrome() throws MalformedURLException{
-		Browser browser = BrowserConnectionFactory.getConnection("chrome", BrowserEnvironment.DISCOVERY);
+		Browser browser = BrowserConnectionFactory.getConnection(BrowserType.CHROME, BrowserEnvironment.DISCOVERY);
 		browser.navigateTo("https://qa-testbed.qanairy.com/viewport_pages/element_out_of_view_y_axis.html");
 		WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 		
@@ -144,7 +138,7 @@ public class BrowserTest {
 		int cnt = 0;
 		do{
 			try{
-				Browser browser = BrowserConnectionFactory.getConnection("firefox", BrowserEnvironment.DISCOVERY);
+				Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
 				browser.navigateTo("https://qa-testbed.qanairy.com/elements/index.html");
 				WebElement element = browser.getDriver().findElement(By.xpath("//button"));
 				

@@ -1,18 +1,14 @@
 package com.minion.actors;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import javax.imageio.ImageIO;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
@@ -25,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
@@ -36,10 +31,8 @@ import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
@@ -195,13 +188,6 @@ public class ParentPathExplorer extends AbstractActor {
 
 							PageState page_state = browser_service.buildPage(browser);
 							PageState result = page_state_service.findByKey(page_state.getKey());
-							
-							//BufferedImage viewport_screenshot = browser.getFullPageScreenshot();
-							//String screenshot_checksum = PageState.getFileChecksum(viewport_screenshot);
-
-							//if(result == null){
-							//	result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
-							//}
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){
@@ -219,7 +205,7 @@ public class ParentPathExplorer extends AbstractActor {
 							last_element = parent_element;
 						}
 						catch(NullPointerException e){
-							e.printStackTrace();
+							//e.printStackTrace();
 							log.warn("NullPointerException occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
 							System.exit(0);

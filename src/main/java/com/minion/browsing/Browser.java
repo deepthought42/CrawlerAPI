@@ -343,9 +343,9 @@ public class Browser {
 		
 	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, Browser browser) throws IOException{
 		//calculate element position within screen
-		int point_x = elem.getXLocation()+10;
+		int point_x = elem.getXLocation()+5;
 		int point_y = elem.getYLocation();
-		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth()+10, elem.getHeight());
+		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth()+5, elem.getHeight());
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){

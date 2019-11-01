@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.qanairy.analytics.SegmentAnalyticsHelper;
 import com.qanairy.api.exceptions.MissingSubscriptionException;
-import com.qanairy.auth.Auth0ManagementApi;
 import com.qanairy.config.WebSecurityConfig;
 import com.qanairy.models.Account;
 import com.qanairy.models.AccountUsage;
@@ -42,7 +41,6 @@ import com.qanairy.services.AccountService;
 import com.qanairy.services.DomainService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
-import com.mashape.unirest.http.HttpResponse;
 
 /**
  *	API for interacting with {@link User} data
@@ -207,7 +205,7 @@ public class AccountController {
     	String id = principal.getName().replace("auth0|", "");
     	Account account = account_service.findByUserId(id);
 		//remove Auth0 account
-    	HttpResponse<String> response = Auth0ManagementApi.deleteUser(account.getUserId());
+    	//HttpResponse<String> response = Auth0ManagementApi.deleteUser(account.getUserId());
     	//log.info("AUTH0 Response body      :::::::::::      "+response.getBody());
     	//log.info("AUTH0 Response status      :::::::::::      "+response.getStatus());
     	//log.info("AUTH0 Response status text      :::::::::::      "+response.getStatusText());

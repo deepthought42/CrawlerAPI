@@ -39,7 +39,6 @@ import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.PathUtils;
 
 /**
@@ -126,20 +125,6 @@ public class PathExpansionActor extends AbstractActor {
 			expanded_elements.put(page_element.getKey(), page_element);
 			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
 			
-			/*
-			boolean higher_order_page_state_found = false;
-			//check if there is a page state with a lower x or y scroll offset
-			for(PageState page : element_page_states){
-				if(last_page.getScrollXOffset() > page.getScrollXOffset()
-						|| last_page.getScrollYOffset() > page.getScrollYOffset()){
-					higher_order_page_state_found = true;
-				}
-			}
-
-			if(higher_order_page_state_found){
-				continue;
-			}
-	*/
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -156,7 +141,7 @@ public class PathExpansionActor extends AbstractActor {
 			if(page_element.isPartOfForm()){
 				continue;
 			}
-			else{
+			else {
 				//page element is not an input or a form
 				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain());
 

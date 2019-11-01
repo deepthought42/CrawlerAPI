@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import org.openqa.selenium.NoSuchElementException;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -69,9 +71,6 @@ public class BrowserService {
 
 	@Autowired
 	private PageStateService page_state_service;
-
-	@Autowired
-	private ElementStateService element_state_service;
 
 	@Autowired
 	private ElementRuleExtractor extractor;
@@ -554,9 +553,17 @@ public class BrowserService {
 	
 	private boolean isElementPartOfForm(Browser browser, String xpath) {
 		if(xpath.charAt(0) == '('){
-			xpath = xpath.replace("(", "");
+			Pattern p = Pattern.compile("\\((\\/.*)\\)");
+			Matcher m = p.matcher(xpath);
+
+			// if an occurrence if a pattern was found in a given string...
+		    if (m.find()) {
+		        // ...then you can use group() methods.
+		        //System.out.println(m.group(1)); // first expression from round brackets (Testing)
+		        xpath = m.group(1);
+		    }
 			try {
-				browser.getDriver().findElement(By.xpath("(//form"+xpath));
+				browser.getDriver().findElement(By.xpath("//form"+xpath));
 			}
 			catch(Exception e) {
 				return false;
@@ -564,7 +571,7 @@ public class BrowserService {
 		}
 		else {
 			try {
-				browser.getDriver().findElement(By.xpath("(//form"+xpath));
+				browser.getDriver().findElement(By.xpath("//form"+xpath));
 			}
 			catch(Exception e) {
 				return false;
@@ -633,67 +640,6 @@ public class BrowserService {
 		}while(err);
 
 		return visible_elements;
-	}
-
-	/**
-	 *
-	 * @param browser
-	 * @param elem
-	 * @param page_screenshot
-	 * @param xpath
-	 * @return
-	 * @throws IOException
-	 */
-	@Deprecated
-	public ElementState buildElementState(Browser browser, WebElement elem, BufferedImage page_screenshot) throws IOException{
-		String element_tag_name = elem.getTagName();
-		Point location = elem.getLocation();
-		Dimension element_size = elem.getSize();
-
-		boolean is_visible_in_pane = isElementVisibleInPane(browser, elem.getLocation(), elem.getSize());
-		boolean is_structure_tag = isStructureTag(element_tag_name);
-		boolean has_width_and_height = hasWidthAndHeight(element_size);
-
-		if(!elem.isDisplayed() || !is_visible_in_pane || is_structure_tag || !has_width_and_height){
-			return null;
-		}
-
-		String screenshot = null;
-		ElementState page_element_record = null;
-		ElementState page_element = null;
-		BufferedImage img = browser.getElementScreenshot(elem);
-		String checksum = PageState.getFileChecksum(img);
-		page_element_record = element_state_service.findByScreenshotChecksum(checksum);
-
-		if(page_element_record != null){
-			page_element = page_element_record;
-		}
-		else{
-			Map<String, String> css_props = Browser.loadCssProperties(elem);
-			Set<Attribute> attributes = browser.extractAttributes(elem);
-
-			page_element = new ElementState(elem.getText(), null, element_tag_name, attributes, css_props, null, checksum, location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
-
-			boolean err = false;
-			int count = 0;
-			do{
-				try{
-					screenshot = UploadObjectSingleOperation.saveImageToS3(img, (new URL(browser.getDriver().getCurrentUrl())).getHost(), checksum, browser.getBrowserName()+"-element");
-				}catch(IOException e){}
-				count++;
-			}while(err && count < 100);
-
-			//TODO: refactor xpath to generation to be faster. Generating xpath can take over 1.6s
-			String element_xpath = generateXpath(elem, browser.getDriver(), attributes);
-
-			page_element.setScreenshot(screenshot);
-			page_element.setScreenshotChecksum(checksum);
-			page_element.setXpath(element_xpath);
-			//page_element = element_state_service.save(page_element);
-		}
-		img.flush();
-
-		return page_element;
 	}
 
 	/**
@@ -955,7 +901,7 @@ public class BrowserService {
 	public String generateXpath(WebElement element, WebDriver driver, Set<Attribute> attributes){
 		List<String> attributeChecks = new ArrayList<>();
 		List<String> valid_attributes = Arrays.asList(valid_xpath_attributes);
-		String xpath = "//"+element.getTagName();
+		String xpath = "/"+element.getTagName();
 		for(Attribute attr : attributes){
 			if(valid_attributes.contains(attr.getName())){
 				String attribute_values = ArrayUtility.joinArray(attr.getVals().toArray(new String[attr.getVals().size()]));
@@ -978,8 +924,9 @@ public class BrowserService {
 		}
 
 	    WebElement parent = element;
+	    String parent_tag_name = parent.getTagName();
 	    int count = 0;
-	    while(!"html".equals(parent.getTagName()) && !"body".equals(parent.getTagName()) && parent != null && count < 3){
+	    while(!"html".equals(parent_tag_name) && !"body".equals(parent_tag_name) && count < 3){
 	    	try{
 	    		parent = getParentElement(parent);
 	    		if(driver.findElements(By.xpath("//"+parent.getTagName() + xpath)).size() == 1){
@@ -1008,7 +955,7 @@ public class BrowserService {
 		List<String> attributeChecks = new ArrayList<>();
 		List<String> valid_attributes = Arrays.asList(valid_xpath_attributes);
 		Element element_copy = element.clone();
-		String xpath = "//"+element.tagName();
+		String xpath = "/"+element.tagName();
 		for(org.jsoup.nodes.Attribute attr : attributes.asList()){
 			if(valid_attributes.contains(attr.getKey())){
 				String attribute_values = attr.getValue();
@@ -1034,8 +981,9 @@ public class BrowserService {
 
 		Element last_element = element;
 		Element parent = null;
+		String last_element_tagname = last_element.tagName();
 	    int count = 0;
-	    while(!"html".equals(last_element.tagName()) && !"body".equals(last_element.tagName()) && count < 3){
+	    while(!"html".equals(last_element_tagname) && !"body".equals(last_element_tagname) && count < 3){
 	    	try{
 	    		parent = last_element.parent();
 
@@ -1111,7 +1059,7 @@ public class BrowserService {
 	 */
 	public static String uniqifyXpath(Element elem, String xpath, Document doc, Map<String, Integer> xpath_cnt){
 		try {
-			List<Element> elements = Xsoup.compile(xpath).evaluate(doc).getElements(); //driver.findElements(By.xpath(xpath));
+			List<Element> elements = Xsoup.compile(xpath).evaluate(doc).getElements();
 			if(elements.size() > 1){
 				int count = 0;
 				if(xpath_cnt.containsKey(xpath)){
@@ -1403,7 +1351,6 @@ public class BrowserService {
 		do{
 			err = false;
 			try{
-				BufferedImage viewport_screenshot = browser.getViewportScreenshot();
 				img = browser.getElementScreenshot(elem);
 				checksum = PageState.getFileChecksum(img);
 				screenshot_url = UploadObjectSingleOperation.saveImageToS3(img, host, checksum, browser.getBrowserName()+"-element");

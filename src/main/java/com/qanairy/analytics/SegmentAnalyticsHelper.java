@@ -12,8 +12,6 @@ import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
 
 public class SegmentAnalyticsHelper {
-
-	private static Analytics analytics = Analytics.builder("2fhUNnmoIEy5DZj9yhysv9j7QQcgWQlT").build();
 	
 	public static Analytics buildSegment() {
 		return Analytics.builder("2fhUNnmoIEy5DZj9yhysv9j7QQcgWQlT").build();

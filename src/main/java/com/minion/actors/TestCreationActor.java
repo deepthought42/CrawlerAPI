@@ -1,14 +1,11 @@
 package com.minion.actors;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -41,6 +38,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.ActionService;
@@ -107,14 +105,13 @@ public class TestCreationActor extends AbstractActor  {
 				    	int attempts = 0;
 				    	Test test = null;
 				    	Domain domain = null;
-				    	Map<Integer, ElementState> visible_element_map = new HashMap<>();
 		    			do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
 					    	Browser browser = null;
 
 				    		try{
-				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				    			browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 			    				
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);

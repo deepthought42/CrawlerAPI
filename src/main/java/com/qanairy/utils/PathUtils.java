@@ -11,6 +11,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.services.TestService;
 
 public class PathUtils {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
 	/**

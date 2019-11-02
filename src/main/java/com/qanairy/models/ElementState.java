@@ -123,8 +123,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 						String inner_html){
 		assert name != null;
 		assert xpath != null;
-		assert checksum != null;
-		assert !checksum.isEmpty();
 		
 		setType("ElementState");
 		setName(name);
@@ -322,19 +320,18 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 			key += css_key+cssValues.get(css_key);
 		}
 
-/*
 		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
 		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
 		
 		for(Attribute attribute : attributes){
 			key += attribute.getKey();
 		}
-	*/	
+
 		key += this.getName();
 		key += this.getText();
 		//key += this.getWidth();
 		//key += this.getHeight();
-		//key += this.getInnerHtml();
+		key += this.getInnerHtml();
 		
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}

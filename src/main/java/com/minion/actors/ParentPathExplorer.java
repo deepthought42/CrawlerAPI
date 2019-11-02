@@ -1,5 +1,6 @@
 package com.minion.actors;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
@@ -164,7 +166,11 @@ public class ParentPathExplorer extends AbstractActor {
 
 							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
 							String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize());
+							BufferedImage element_screenshot = browser.getElementScreenshot(parent_web_element);
+							String checksum = PageState.getFileChecksum(element_screenshot);
+							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
+							
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum);
 							if(parent_element == null){
 								break;
 							}

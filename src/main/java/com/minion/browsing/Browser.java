@@ -340,7 +340,6 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-		
 	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, Browser browser) throws IOException{
 		//calculate element position within screen
 		int point_x = elem.getXLocation()+5;
@@ -491,7 +490,7 @@ public class Browser {
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollTo(int x_offset, int y_offset) 
+	public void scrollTo(long x_offset, long y_offset) 
     {
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");

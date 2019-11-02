@@ -113,13 +113,7 @@ public class PathExpansionActor extends AbstractActor {
 	 */
 	public ArrayList<ExploratoryPath> expandPath(PathMessage path)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
-		//get last page states for page
-		PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 
-		if(last_page == null){
-			log.warn("expansion --  last page is null");
-			return pathList;
-		}
 		//iterate over all elements
 		for(ElementState page_element : getElementStatesForExpansion(path.getPathObjects())){
 			expanded_elements.put(page_element.getKey(), page_element);
@@ -207,6 +201,7 @@ public class PathExpansionActor extends AbstractActor {
 
 			return element_xpath_map.values();
 		}
+		
 		log.warn("####################################################################################################");
 		log.warn("####################################################################################################");
 

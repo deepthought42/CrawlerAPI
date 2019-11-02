@@ -19,7 +19,22 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 
 public class CrawlerTest {
+	@Test
+	public void verifycharacter() {
+		String xpath = "(//div/input[contains(@name,\"FNAME\") and contains(@class,\"form-control\") and contains(@id,\"mce-FNAME\")])[1]";
+		Pattern p = Pattern.compile("\\((\\/.*)\\)");
+		Matcher m = p.matcher(xpath);
 
+	    // if an occurrence if a pattern was found in a given string...
+	    if (m.find()) {
+	        // ...then you can use group() methods.
+	        xpath = m.group(1); // whole matched expression
+	    }
+		assertTrue(xpath.equals("//div/input[contains(@name,\"FNAME\") and contains(@class,\"form-control\") and contains(@id,\"mce-FNAME\")]"));
+		
+	}
+	
+	
 	@Test
 	public void verifyClickCoordinateGenerationForParentElement() throws MalformedURLException{
 		boolean error = false;

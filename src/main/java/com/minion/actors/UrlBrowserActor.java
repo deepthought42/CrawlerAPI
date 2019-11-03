@@ -117,7 +117,6 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-							//browser.moveMouseOutOfFrame();
 							browser.moveMouseToNonInteractive(new Point(300, 300));
 							
 							redirect = BrowserUtils.getPageTransition(url, browser, host);

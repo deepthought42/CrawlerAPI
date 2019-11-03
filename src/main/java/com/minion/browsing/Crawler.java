@@ -597,6 +597,7 @@ public class Crawler {
 				PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 				log.warn("expected path url : "+expected_page.getUrl());
 				browser.navigateTo(expected_page.getUrl());
+				browser.moveMouseToNonInteractive(new Point(300,300));
 
 				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 

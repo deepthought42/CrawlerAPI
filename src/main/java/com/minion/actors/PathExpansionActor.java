@@ -194,27 +194,29 @@ public class PathExpansionActor extends AbstractActor {
 			return last_page_state.getElements();
 		}
 
+		List<ElementState> expandable_elements = new ArrayList<>();
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
 			log.warn("last page state url matches second to last page state url");
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : last_page_state.getElements()){
-				element_xpath_map.put(element.getXpath(), element);
+				element_xpath_map.put(element.getKey(), element);
 			}
 
 			for(ElementState element : second_to_last_page.getElements()){
-				element_xpath_map.remove(element.getXpath());
+				element_xpath_map.remove(element.getKey());
 			}
 
 			log.warn("returning elements :: "+element_xpath_map.values().size());
 			return element_xpath_map.values();
+			//expandable_elements.addAll(element_xpath_map.values());
 		}
 		
 		log.warn("####################################################################################################");
 		log.warn("####################################################################################################");
 
 		//filter list elements from last page elements
-		List<ElementState> filtered_elements = new ArrayList<>(last_page_state.getElements());
+		List<ElementState> filtered_elements = new ArrayList<>(expandable_elements);
 		Map<String, Template> templates = getOrganismTemplateMap(filtered_elements);
 		filtered_elements = filterListElements(filtered_elements, templates);
 		

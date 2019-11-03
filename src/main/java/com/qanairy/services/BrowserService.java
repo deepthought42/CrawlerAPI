@@ -584,6 +584,7 @@ public class BrowserService {
 
 		ElementState page_element = new ElementState(elem.getText(), xpath, elem.getTagName(), attributes, css_props, screenshot_url, checksum,
 										location.getX(), location.getY(), element_size.getWidth(), element_size.getHeight(), elem.getAttribute("innerHTML") );
+		page_element.setOuterHtml(elem.getAttribute("outerHTML"));
 		page_element.setIsPartOfForm(false);
 		page_element.setTemplate(extractTemplate(elem.getAttribute("outerHTML"), elem.getText()));
 
@@ -1300,7 +1301,12 @@ public class BrowserService {
 				if(element_list.get(idx2).getTemplate().length() > max_length){
 					max_length = element_list.get(idx2).getTemplate().length();
 				}
-				double length_similarity = Math.abs(element_list.get(idx1).getTemplate().length() - element_list.get(idx2).getTemplate().length()) / max_length;
+				
+				if(max_length == 0) {
+					continue;
+				}
+				int length_diff = Math.abs(element_list.get(idx1).getTemplate().length() - element_list.get(idx2).getTemplate().length());
+				double length_similarity = length_diff / max_length;
 				if(length_similarity > 0.05){
 					continue;
 				}

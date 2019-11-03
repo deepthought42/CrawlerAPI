@@ -284,11 +284,11 @@ public class Crawler {
 				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
 				//compile child element coordinates and sizes
 				
-				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element);
+				//Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element);
 				
 				Action action = (Action)current_obj;
 				
-				performAction(action, last_element, browser.getDriver(), click_location);
+				performAction(action, last_element, browser.getDriver());
 				
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -691,17 +691,15 @@ public class Crawler {
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
-				Timing.pauseThread(2000);
+				//Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
 				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
-				if(!browser_url.equals(last_page_state.getUrl())){
-					if(loading_animation != null){
-						new_path.getKeys().add(loading_animation.getKey());
-						new_path.getPathObjects().add(loading_animation);
-					}
+				if(!browser_url.equals(last_page_state.getUrl()) && loading_animation != null){
+					new_path.getKeys().add(loading_animation.getKey());
+					new_path.getPathObjects().add(loading_animation);
 				}
 								
 				//verify that screenshot does not match previous page

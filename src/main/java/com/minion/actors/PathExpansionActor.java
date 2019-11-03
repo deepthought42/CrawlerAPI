@@ -113,9 +113,13 @@ public class PathExpansionActor extends AbstractActor {
 	 */
 	public ArrayList<ExploratoryPath> expandPath(PathMessage path)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
+		//get last page states for page
+	
+		Collection<ElementState> elements = getElementStatesForExpansion(path.getPathObjects());
+		log.warn("element states to be expanded :: "+elements.size());
 
 		//iterate over all elements
-		for(ElementState page_element : getElementStatesForExpansion(path.getPathObjects())){
+		for(ElementState page_element : elements){
 			expanded_elements.put(page_element.getKey(), page_element);
 			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
 			
@@ -181,14 +185,17 @@ public class PathExpansionActor extends AbstractActor {
 		PageState second_to_last_page = PathUtils.getSecondToLastPageState(path_objects);
 
 		if(last_page_state == null){
+			log.warn("last page state is null. returning emtpy hash");
 			return new HashSet<>();
 		}
 
 		if( second_to_last_page == null){
+			log.warn("second to last page state is null. returning last page state elements with size :: "+last_page_state.getElements().size());
 			return last_page_state.getElements();
 		}
 
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
+			log.warn("last page state url matches second to last page state url");
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : last_page_state.getElements()){
@@ -199,6 +206,7 @@ public class PathExpansionActor extends AbstractActor {
 				element_xpath_map.remove(element.getXpath());
 			}
 
+			log.warn("returning elements :: "+element_xpath_map.values().size());
 			return element_xpath_map.values();
 		}
 		

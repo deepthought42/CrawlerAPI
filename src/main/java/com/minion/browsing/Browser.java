@@ -48,6 +48,10 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.coordinates.WebDriverCoordsProvider;
+
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
  */
@@ -170,7 +174,7 @@ public class Browser {
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		driver.manage().window().maximize();
 
-	    driver.manage().window().setSize(new Dimension(1024, 768));
+	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -256,7 +260,7 @@ public class Browser {
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		driver.manage().window().maximize();
 
-		driver.manage().window().setSize(new Dimension(1024, 768));
+		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -340,11 +344,29 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, Browser browser) throws IOException{
+	public static BufferedImage getElementScreenshot(ElementState element_state, BufferedImage page_screenshot, Browser browser) throws IOException{
 		//calculate element position within screen
-		int point_x = elem.getXLocation()+5;
-		int point_y = elem.getYLocation();
-		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth()+5, elem.getHeight());
+		int point_x = element_state.getXLocation()+10;
+		int point_y = element_state.getYLocation();
+		int width = element_state.getWidth();
+		int height = element_state.getHeight();
+		if((point_x+width) >= page_screenshot.getWidth()) {
+			width = page_screenshot.getWidth()-point_x-1;
+		}
+		
+		return page_screenshot.getSubimage(point_x, point_y, width, height);
+	}
+	
+	/**
+	 * 
+	 * @param screenshot
+	 * @param elem
+	 * @return
+	 * @throws IOException
+	 */
+	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, Browser browser) throws IOException{
+		Screenshot myScreenshot = new AShot().coordsProvider(new WebDriverCoordsProvider()).takeScreenshot(browser.getDriver(), elem);
+        return myScreenshot.getImage();
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){

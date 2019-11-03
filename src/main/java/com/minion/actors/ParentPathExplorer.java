@@ -1,6 +1,5 @@
 package com.minion.actors;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
@@ -61,9 +59,6 @@ import scala.concurrent.Future;
 public class ParentPathExplorer extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(ParentPathExplorer.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private PageStateService page_state_service;
 
 	@Autowired
 	private TestCreatorService test_creator_service;
@@ -166,11 +161,8 @@ public class ParentPathExplorer extends AbstractActor {
 
 							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
 							String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
-							BufferedImage element_screenshot = browser.getElementScreenshot(parent_web_element);
-							String checksum = PageState.getFileChecksum(element_screenshot);
-							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
-							
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum);
+
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), "", "");
 							if(parent_element == null){
 								break;
 							}
@@ -192,8 +184,7 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
-							PageState page_state = browser_service.buildPage(browser);
-							PageState result = page_state_service.findByKey(page_state.getKey());
+							PageState result = browser_service.buildPage(browser);
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){
@@ -214,7 +205,6 @@ public class ParentPathExplorer extends AbstractActor {
 							//e.printStackTrace();
 							log.warn("NullPointerException occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
-							System.exit(0);
 						}
 						catch(WebDriverException e){
 							log.debug("Exception occurred in ParentPathExplorer :: "+e.getMessage());

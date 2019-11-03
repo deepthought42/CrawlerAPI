@@ -27,7 +27,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	public Domain findByHost(@Param("host") String host);
 	public Domain findByUrl(@Param("url") String url);
 
-	@Query("MATCH (p:PageState) MATCH a=(p)-[]->(:Screenshot) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p,a")
+	@Query("MATCH (p:PageState) OPTIONAL MATCH a=(p)-->(:Screenshot) WHERE (:Domain{host:{domain_host}})-[:HAS_TEST]->(:Test) RETURN p,a")
 	public Set<PageState> getPageStates(@Param("domain_host") String host);
 
 	@Query("MATCH (:Domain{host:{domain_host}})-[]->(t:Test) MATCH (t)-[]->(e:ElementState) OPTIONAL MATCH b=(e)-->() RETURN e,b")
@@ -45,7 +45,7 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long> {
 	@Query("MATCH (:Domain{host:{domain_host}})-[]->(p:PageState) MATCH (p)-[]->(f:Form) MATCH  a=(f)-[:DEFINED_BY]->() MATCH b=(f)-[:HAS]->(e) OPTIONAL MATCH c=(e)-->() return a,b,c")
 	public Set<Form> getForms(@Param("domain_host") String host);
 	
-	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH z=(p)-[]->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
+	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test{status:'UNVERIFIED'}) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) OPTIONAL MATCH z=(p)-->(:Screenshot) OPTIONAL MATCH y=(t)-->(:Group) RETURN a,y,z")
 	public Set<Test> getUnverifiedTests(@Param("domain_host") String host);
 
 	@Query("MATCH (:Domain{host:{domain_host}})-[:HAS_TEST]->(t:Test) MATCH a=(t)-[:HAS_RESULT]->(p:PageState) MATCH b=(t)-[]->(z) MATCH c=(p)-[]->() MATCH d=(z)-[]->() WHERE t.status='PASSING' OR t.status='FAILING' OR t.status='RUNNING' RETURN a,b,c,d")

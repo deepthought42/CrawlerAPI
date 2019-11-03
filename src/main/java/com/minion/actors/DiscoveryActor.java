@@ -216,7 +216,7 @@ public class DiscoveryActor extends AbstractActor{
 						}
 						
 						log.warn("test doesn't span multiple domains");
-						if(isLandable && !test.getResult().isLoginRequired()){
+						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
 							if(url_browser_actor == null){
 								url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 										  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
@@ -229,8 +229,10 @@ public class DiscoveryActor extends AbstractActor{
 				  			final_key_list.add(test.getResult().getKey());
 				  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
 				  			final_object_list.add(test.getResult());
+				  			log.warn("test.getResult() element states  :: "+test.getResult().getElements().size());
 				  			//run reducer on key list
 				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
+				  			final_object_list = PathUtils.reducePathObjects(final_object_list);
 				  			
 				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain());
 				  			if(path_expansion_actor == null){
@@ -239,6 +241,14 @@ public class DiscoveryActor extends AbstractActor{
 				  		    }
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
+							
+							if(isLandable) {
+								if(form_discoverer == null){
+									form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+								}
+								form_discoverer.tell(path, getSelf() );
+							}
 						}
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);

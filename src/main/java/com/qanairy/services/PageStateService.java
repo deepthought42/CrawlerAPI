@@ -33,9 +33,6 @@ public class PageStateService {
 	private ScreenshotService screenshot_service;
 	
 	@Autowired
-	private FormService form_service;
-	
-	@Autowired
 	private PageStateRepository page_state_repo;
 	
 	@Autowired
@@ -68,7 +65,8 @@ public class PageStateService {
 				for(String checksum : page_state.getScreenshotChecksums()){
 					page_state_record = page_state_repo.findByScreenshotChecksumsContains(checksum);
 					if(page_state_record != null){
-						page_state_record.setElements(getElementStates(page_state_record.getKey()));
+						page_state_record.setScreenshotChecksum(page_state.getScreenshotChecksums());
+						page_state_record = page_state_repo.save(page_state_record);
 						break;
 					}
 				}

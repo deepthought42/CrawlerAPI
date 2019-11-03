@@ -346,9 +346,9 @@ public class Browser {
 	 */
 	public static BufferedImage getElementScreenshot(ElementState element_state, BufferedImage page_screenshot, Browser browser) throws IOException{
 		//calculate element position within screen
-		int point_x = element_state.getXLocation()+10;
+		int point_x = element_state.getXLocation()+5;
 		int point_y = element_state.getYLocation();
-		int width = element_state.getWidth();
+		int width = element_state.getWidth()+5;
 		int height = element_state.getHeight();
 		if((point_x+width) >= page_screenshot.getWidth()) {
 			width = page_screenshot.getWidth()-point_x-1;
@@ -617,7 +617,7 @@ public class Browser {
 	 * @param element {@link WebElement}
 	 * @return {@link Point} coordinates
 	 */
-	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
+	public static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
 		int y_coord = element.getYLocation() - y_offset;
 		int x_coord = element.getXLocation() - x_offset;
 

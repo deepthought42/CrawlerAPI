@@ -39,7 +39,7 @@ public class BrowserTest {
 		
 		String clean_src = Browser.cleanSrc(src_example);
 		//log.info("clean src: " +clean_src);
-		Assert.assertTrue("<html><head></head></html>".equals(clean_src));
+		assertTrue("<html><head></head></html>".equals(clean_src));
 	}
 	
 	@Test
@@ -55,7 +55,7 @@ public class BrowserTest {
 		assertTrue("section[contains(@class,\\\"dashboard-content-wrapper col-lg-10 col-lg-offset-1 col-xs-12 col-xs-offset-0 bordered-box\\\")]".equals(clean_src));
 	}
 
-	@Test
+	//@Test
 	public void verifyGenerateXpathUsingJsoup(){
 		try{
 			Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
@@ -73,7 +73,7 @@ public class BrowserTest {
 		}
 	}
 	
-	@Test
+	//@Test
 	public void verifyGenerateParentXpath(){
 		try{
 			Browser browser = BrowserConnectionFactory.getConnection(BrowserType.FIREFOX, BrowserEnvironment.DISCOVERY);
@@ -114,9 +114,9 @@ public class BrowserTest {
 			
 			com.qanairy.models.Test test = new com.qanairy.models.Test(path_keys, path_objects, page, "Testing Test 1", false, false);
 			
-			Assert.assertEquals(test.getPathKeys().size(), path_keys.size());
-			Assert.assertEquals(test.getPathObjects().size(), path_objects.size());
-			Assert.assertEquals(test.getRunTime(), 0L);
+			assertEquals(test.getPathKeys().size(), path_keys.size());
+			assertEquals(test.getPathObjects().size(), path_objects.size());
+			assertEquals(test.getRunTime(), 0L);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

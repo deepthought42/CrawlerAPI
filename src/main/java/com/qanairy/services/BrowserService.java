@@ -47,7 +47,6 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
-import com.qanairy.models.Screenshot;
 import com.qanairy.models.Template;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -169,7 +168,7 @@ public class BrowserService {
 		return page_states;
 	}
 
-	private boolean isElementLargerThanViewport(Browser browser, Dimension element_size) {
+	public boolean isElementLargerThanViewport(Browser browser, Dimension element_size) {
 		int height = element_size.getHeight();
 		int width = element_size.getWidth();
 
@@ -452,7 +451,7 @@ public class BrowserService {
 			if(element.isDisplayed() && hasWidthAndHeight(element_size)){
 				Map<String, String> css_props = Browser.loadCssProperties(element);
 				
-				ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size, element_state, "", "");
+				ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size, element_state, "", "");
 				visible_elements.add(new_element_state);
 			}
 		}
@@ -513,7 +512,7 @@ public class BrowserService {
 						String checksum = PageState.getFileChecksum(element_screenshot);
 						String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
 						
-						ElementState new_element_state = buildElementState(browser, element, element_state.getXpath(), element_state.getAttributes(), css_props, element.getLocation(), element.getSize(), element_state, screenshot_url, checksum);
+						ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, element.getLocation(), element.getSize(), element_state, screenshot_url, checksum);
 						if(new_element_state != null){
 							visible_elements.add(new_element_state);
 							visible_element_map.put(visible_map_size, new_element_state);
@@ -548,7 +547,16 @@ public class BrowserService {
 	 * @return
 	 * @throws IOException
 	 */
-	public ElementState buildElementState(Browser browser, WebElement elem, String xpath, Set<Attribute> attributes, Map<String, String> css_props, Point location, Dimension element_size, ElementState element_state, String screenshot_url, String checksum) throws IOException{
+	public ElementState buildElementState(
+			String xpath, 
+			Set<Attribute> attributes, 
+			Map<String, String> css_props, 
+			Point location, 
+			Dimension element_size, 
+			ElementState element_state, 
+			String screenshot_url, 
+			String checksum
+	) throws IOException{
 		long start_time = System.currentTimeMillis();
 
 		ElementState page_element = new ElementState(element_state.getText(), xpath, element_state.getName(), attributes, css_props, screenshot_url, checksum,

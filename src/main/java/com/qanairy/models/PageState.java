@@ -29,7 +29,6 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.qanairy.utils.BrowserUtils;
 
 /**
  * A reference to a web page

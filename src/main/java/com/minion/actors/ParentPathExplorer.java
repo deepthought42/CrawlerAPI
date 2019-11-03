@@ -37,7 +37,6 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;

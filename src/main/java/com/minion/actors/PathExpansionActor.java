@@ -200,16 +200,20 @@ public class PathExpansionActor extends AbstractActor {
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : last_page_state.getElements()){
-				element_xpath_map.put(element.getKey(), element);
+				element_xpath_map.put(element.getXpath(), element);
 			}
 
 			for(ElementState element : second_to_last_page.getElements()){
-				element_xpath_map.remove(element.getKey());
+				element_xpath_map.remove(element.getXpath());
 			}
 
+			
 			log.warn("returning elements :: "+element_xpath_map.values().size());
 			return element_xpath_map.values();
-			//expandable_elements.addAll(element_xpath_map.values());
+
+
+			//check path for mouseover event and if mouseover event exists then remove the element event was performed on from list
+			
 		}
 		
 		log.warn("####################################################################################################");

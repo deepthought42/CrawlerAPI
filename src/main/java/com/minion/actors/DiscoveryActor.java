@@ -250,11 +250,13 @@ public class DiscoveryActor extends AbstractActor{
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
 							
-							if(form_discoverer == null){
-								form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+							if(isLandable) {
+								if(form_discoverer == null){
+									form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+								}
+								form_discoverer.tell(path, getSelf() );
 							}
-							form_discoverer.tell(path, getSelf() );
 						}
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);

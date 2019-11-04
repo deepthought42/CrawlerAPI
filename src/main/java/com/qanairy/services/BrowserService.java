@@ -39,14 +39,12 @@ import org.springframework.stereotype.Component;
 import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
-import com.minion.browsing.Crawler;
 import com.minion.browsing.form.ElementRuleExtractor;
 import com.minion.util.ArrayUtility;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
-import com.qanairy.models.PathObject;
 import com.qanairy.models.Template;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserEnvironment;
@@ -55,6 +53,7 @@ import com.qanairy.models.enums.FormStatus;
 import com.qanairy.models.enums.FormType;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.utils.BrowserUtils;
+import com.qanairy.utils.PathUtils;
 
 import us.codecraft.xsoup.Xsoup;
 
@@ -71,6 +70,9 @@ public class BrowserService {
 
 	@Autowired
 	private BrowserService browser_service;
+
+	@Autowired
+	private ElementStateService element_service;
 	
 	@Autowired
 	private PageStateService page_state_service;
@@ -80,9 +82,6 @@ public class BrowserService {
 
 	@Autowired
 	private DomainService domain_service;
-
-	@Autowired
-	private Crawler crawler;
 
 	private static String[] valid_xpath_attributes = {"class", "id", "name", "title"};
 
@@ -113,59 +112,8 @@ public class BrowserService {
 	 */
 	public static boolean checkIfLandable(String browser, PageState page_state, Test test){
 		//find last page in path
-		PageState last_page = test.findLastPage();
+		PageState last_page = PathUtils.getLastPageState(test.getPathObjects());
 		return !last_page.getUrl().equals(page_state.getUrl());
-	}
-
-	public List<PageState> buildPageStates(String url, BrowserType browser_type, String host, List<PathObject> path_objects, List<String> path_keys)
-			throws MalformedURLException, IOException, Exception{
-		List<PageState> page_states = new ArrayList<>();
-		Browser browser = null;
-		Map<String, Template> template_elements = new HashMap<>();
-
-		// BUILD ALL PAGE STATES
-		boolean err = true;
-		do{
-			err=false;
-			try{
-				log.warn("getting browser connection");
-				browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
-				browser.navigateTo(url);
-				crawler.crawlPathWithoutBuildingResult(path_keys, path_objects, browser, host);
-				BrowserUtils.getLoadingAnimation(browser, host);
-				
-				String source = browser.getDriver().getPageSource();
-				List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);
-				template_elements = browser_service.findTemplates(all_elements_list);
-				template_elements = browser_service.reduceTemplatesToParents(template_elements);
-				template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
-
-				PageState page_state = buildPage(browser);
-
-				page_state.setTemplates(new ArrayList<>(template_elements.values()));
-
-				page_states.add(page_state);
-			}
-			catch(NullPointerException e){
-				err=true;
-				e.printStackTrace();
-			}
-			catch(WebDriverException e){
-				err=true;
-				log.debug("WebDriverException occurred while buildin page states");
-			}
-			catch(Exception e){
-				log.warn("Exception occurred while building page states :: " + e.getMessage());
-				err=true;
-			}
-			finally {
-				if(browser != null) {
-					browser.close();
-				}
-			}
-		}while(err);
-
-		return page_states;
 	}
 
 	public boolean isElementLargerThanViewport(Browser browser, Dimension element_size) {
@@ -282,20 +230,10 @@ public class BrowserService {
 			String browser_url = browser.getDriver().getCurrentUrl();
 			String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 			
-			BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
-			String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
 			
-			for(ElementState element : visible_elements) {
-				String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
-				BufferedImage element_screenshot = Browser.getElementScreenshot(element, full_page_screenshot, browser);
-				String checksum = PageState.getFileChecksum(element_screenshot);
-				String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
-				element.setScreenshot(screenshot_url);
-				element.setScreenshotChecksum(checksum);
-			}
 			//extract visible elements from list of elementstates provided
 			String viewport_screenshot_url = UploadObjectSingleOperation.saveImageToS3(viewport_screenshot, new URL(url_without_params).getHost(), screenshot_checksum, browser.getBrowserName()+"-viewport");
-			String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url_without_params).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
+			
 			page_state = new PageState( url_without_params,
 					viewport_screenshot_url,
 					visible_elements,
@@ -305,17 +243,19 @@ public class BrowserService {
 					browser.getViewportSize().width,
 					browser.getViewportSize().height,
 					browser.getBrowserName());
-			page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
-			page_state.setFullPageChecksum(full_page_screenshot_checksum);
-			page_state.addScreenshotChecksum(full_page_screenshot_checksum);
 
 			PageState page_state_record = page_state_service.findByKey(page_state.getKey());
-			if(page_state_record != null) {
-				page_state = page_state_record;
+			if(page_state_record == null) {
+				BufferedImage full_page_screenshot = browser.getFullPageScreenshot();
+				String full_page_screenshot_checksum = PageState.getFileChecksum(full_page_screenshot);
+				String full_page_screenshot_url = UploadObjectSingleOperation.saveImageToS3(full_page_screenshot, new URL(url_without_params).getHost(), full_page_screenshot_checksum, browser.getBrowserName()+"-full");
+				page_state.setFullPageScreenshotUrl(full_page_screenshot_url);
+				page_state.setFullPageChecksum(full_page_screenshot_checksum);
+				page_state.addScreenshotChecksum(screenshot_checksum);
+
+				full_page_screenshot.flush();
 			}
-			page_state.addScreenshotChecksum(screenshot_checksum);
 			
-			full_page_screenshot.flush();
 		}
 		viewport_screenshot.flush();
 		return page_state;
@@ -441,6 +381,8 @@ public class BrowserService {
 	public List<ElementState> getVisibleElements(Browser browser, List<ElementState> elements)
 															 throws WebDriverException, GridException, IOException{
 		assert elements != null;
+		String host = new URL(browser.getDriver().getCurrentUrl()).getHost();
+
 		long start_time = System.currentTimeMillis();
 		List<ElementState> visible_elements = new ArrayList<>();
 		for(ElementState element_state : elements){
@@ -450,8 +392,20 @@ public class BrowserService {
 			
 			if(element.isDisplayed() && hasWidthAndHeight(element_size)){
 				Map<String, String> css_props = Browser.loadCssProperties(element);
-				
 				ElementState new_element_state = buildElementState(element_state.getXpath(), element_state.getAttributes(), css_props, location, element_size, element_state, "", "");
+				
+				ElementState element_state_record = element_service.findByKey(new_element_state.getKey());
+				if(element_state_record == null) {
+					BufferedImage element_screenshot = browser.getElementScreenshot(element);
+					String checksum = PageState.getFileChecksum(element_screenshot);
+					String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
+					new_element_state.setScreenshot(screenshot_url);
+					new_element_state.setScreenshotChecksum(checksum);
+				}
+				else {
+					new_element_state = element_state_record;
+				}
+				
 				visible_elements.add(new_element_state);
 			}
 		}

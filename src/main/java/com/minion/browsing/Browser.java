@@ -48,9 +48,6 @@ import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
 
-import ru.yandex.qatools.ashot.AShot;
-import ru.yandex.qatools.ashot.Screenshot;
-import ru.yandex.qatools.ashot.coordinates.WebDriverCoordsProvider;
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -322,7 +319,7 @@ public class Browser {
 	public BufferedImage getElementScreenshot(ElementState element) throws IOException{
 		//calculate element position within screen
 		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
-		return Shutterbug.shootElement(driver, web_element).getImage();
+		return Shutterbug.shootElementVerticallyCentered(driver, web_element).getImage();
 	}
 	
 	/**
@@ -334,7 +331,7 @@ public class Browser {
 	 */
 	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
 		//calculate element position within screen
-		return Shutterbug.shootElement(driver, element).getImage();
+		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage();
 	}
 	
 	/**
@@ -355,18 +352,6 @@ public class Browser {
 		}
 		
 		return page_screenshot.getSubimage(point_x, point_y, width, height);
-	}
-	
-	/**
-	 * 
-	 * @param screenshot
-	 * @param elem
-	 * @return
-	 * @throws IOException
-	 */
-	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, Browser browser) throws IOException{
-		Screenshot myScreenshot = new AShot().coordsProvider(new WebDriverCoordsProvider()).takeScreenshot(browser.getDriver(), elem);
-        return myScreenshot.getImage();
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){

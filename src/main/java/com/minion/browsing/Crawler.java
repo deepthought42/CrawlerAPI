@@ -103,17 +103,17 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
-/*
+
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
-				*/
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
 				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -186,16 +186,16 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
-				/*if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
+				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
 					BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 				}
-				*/
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
 				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -274,6 +274,7 @@ public class Crawler {
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
 				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -282,11 +283,11 @@ public class Crawler {
 				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
 				//compile child element coordinates and sizes
 				
-				//Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element);
+				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element);
 				
 				Action action = (Action)current_obj;
 				
-				performAction(action, last_element, browser.getDriver());
+				performAction(action, last_element, browser.getDriver(), click_location);
 				
 				Point p = browser.getViewportScrollOffset();
 				browser.setXScrollOffset(p.getX());
@@ -373,6 +374,7 @@ public class Crawler {
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
 				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -488,6 +490,7 @@ public class Crawler {
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
 				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){

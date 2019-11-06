@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
-import com.minion.util.Timing;
 import com.qanairy.api.exceptions.DiscoveryStoppedException;
 import com.qanairy.api.exceptions.PagesAreNotMatchingException;
 import com.qanairy.models.Action;
@@ -113,6 +112,8 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
+				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -140,7 +141,6 @@ public class Crawler {
 				}
 				//if redirect follows an action then watch page transition
 				BrowserUtils.getPageTransition(redirect.getStartUrl(), browser, host_channel);
-				//browser.waitForPageToLoad();
 			}
 			else if(current_obj instanceof PageLoadAnimation){
 				BrowserUtils.getLoadingAnimation(browser, host_channel);
@@ -155,12 +155,7 @@ public class Crawler {
 
 		//Timing.pauseThread(1000);
 		//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-		List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-		List<ElementState> visible_elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
-		String browser_url = browser.getDriver().getCurrentUrl();
-		String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
-		
-		return browser_service.buildPage(browser, visible_elements, url_without_params);
+		return browser_service.buildPage(browser);
 	}
 
 	/**
@@ -199,6 +194,8 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
+				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -267,6 +264,7 @@ public class Crawler {
 		for(PathObject current_obj: ordered_path_objects){
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
+				
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
@@ -275,6 +273,8 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
+				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -283,7 +283,7 @@ public class Crawler {
 				WebElement elem = browser.getDriver().findElement(By.xpath(last_element.getXpath()));
 				//compile child element coordinates and sizes
 				
-				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element, new Point(browser.getXScrollOffset(), browser.getYScrollOffset()));
+				Point click_location = generateRandomLocationWithinElementButNotWithinChildElements(elem, child_element);
 				
 				Action action = (Action)current_obj;
 				
@@ -350,6 +350,7 @@ public class Crawler {
 			if(current_obj instanceof PageState){
 				expected_page = (PageState)current_obj;
 				last_url = expected_page.getUrl();
+				
 				if(browser.getXScrollOffset() != expected_page.getScrollXOffset()
 						|| browser.getYScrollOffset() != expected_page.getScrollYOffset()){				
 					browser.scrollTo(expected_page.getScrollXOffset(), expected_page.getScrollYOffset());
@@ -372,6 +373,8 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
+				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -486,6 +489,8 @@ public class Crawler {
 			}
 			else if(current_obj instanceof ElementState){
 				last_element = (ElementState) current_obj;
+				browser.scrollToElement(last_element);
+				//BrowserUtils.detectShortAnimation(browser, expected_page.getUrl());
 			}
 			//String is action in this context
 			else if(current_obj instanceof Action){
@@ -570,7 +575,7 @@ public class Crawler {
 	public static void performAction(Action action, ElementState elem, WebDriver driver, Point location) throws NoSuchElementException{
 		ActionFactory actionFactory = new ActionFactory(driver);
 		WebElement element = driver.findElement(By.xpath(elem.getXpath()));
-		actionFactory.execAction(element, action.getValue(), action.getName(), location);
+		actionFactory.execAction(element, action.getValue(), action.getName());
 	}
 	
 	public static void scrollDown(WebDriver driver, int distance)
@@ -595,6 +600,7 @@ public class Crawler {
 				PageState expected_page = PathUtils.getFirstPage(path.getPathObjects());
 				log.warn("expected path url : "+expected_page.getUrl());
 				browser.navigateTo(expected_page.getUrl());
+				browser.moveMouseToNonInteractive(new Point(300,300));
 
 				crawlPathExplorer(path.getPathKeys(), path.getPathObjects(), browser, host, path);
 
@@ -611,10 +617,7 @@ public class Crawler {
 				}
 								
 				//verify that screenshot does not match previous page
-				List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-			
-				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
+				result_page = browser_service.buildPage(browser);
 				
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
@@ -688,25 +691,19 @@ public class Crawler {
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
-				Timing.pauseThread(2000);
+				//Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state
 				PageState last_page_state = PathUtils.getLastPageState(new_path.getPathObjects());
 				PageLoadAnimation loading_animation = BrowserUtils.getLoadingAnimation(browser, host);
-				if(!browser_url.equals(last_page_state.getUrl())){
-					if(loading_animation != null){
-						new_path.getKeys().add(loading_animation.getKey());
-						new_path.getPathObjects().add(loading_animation);
-					}
+				if(!browser_url.equals(last_page_state.getUrl()) && loading_animation != null){
+					new_path.getKeys().add(loading_animation.getKey());
+					new_path.getPathObjects().add(loading_animation);
 				}
 								
 				//verify that screenshot does not match previous page
-				//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-				List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-    			List<ElementState> visible_elements = browser_service.getVisibleElements(browser, element_list);
-			
-				result_page = browser_service.buildPage(browser, visible_elements, browser_url);
+				result_page = browser_service.buildPage(browser);
 				PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
 				result_page.setLoginRequired(last_page.isLoginRequired());
 			}
@@ -758,10 +755,9 @@ public class Crawler {
 	 * @pre child_element != null
 	 * @pre offset != null
 	 */
-	public static Point generateRandomLocationWithinElementButNotWithinChildElements(WebElement web_element, ElementState child_element, Point offset) {
+	public static Point generateRandomLocationWithinElementButNotWithinChildElements(WebElement web_element, ElementState child_element) {
 		assert web_element != null;
 		assert child_element != null;
-		assert offset != null;
 		
 		Point elem_location = web_element.getLocation();
 

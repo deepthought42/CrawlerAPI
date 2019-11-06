@@ -1,6 +1,10 @@
 package browser;
 
+import static org.junit.Assert.assertTrue;
+
 import java.net.MalformedURLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.openqa.selenium.By;
@@ -15,7 +19,22 @@ import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.BrowserType;
 
 public class CrawlerTest {
+	@Test
+	public void verifycharacter() {
+		String xpath = "(//div/input[contains(@name,\"FNAME\") and contains(@class,\"form-control\") and contains(@id,\"mce-FNAME\")])[1]";
+		Pattern p = Pattern.compile("\\((\\/.*)\\)");
+		Matcher m = p.matcher(xpath);
 
+	    // if an occurrence if a pattern was found in a given string...
+	    if (m.find()) {
+	        // ...then you can use group() methods.
+	        xpath = m.group(1); // whole matched expression
+	    }
+		assertTrue(xpath.equals("//div/input[contains(@name,\"FNAME\") and contains(@class,\"form-control\") and contains(@id,\"mce-FNAME\")]"));
+		
+	}
+	
+	
 	@Test
 	public void verifyClickCoordinateGenerationForParentElement() throws MalformedURLException{
 		boolean error = false;
@@ -38,7 +57,7 @@ public class CrawlerTest {
 				child_element.setWidth(child_web_element.getSize().getWidth());
 				child_element.setHeight(child_web_element.getSize().getHeight());
 				System.err.println("gnerating actual click location");
-				Point coord = Crawler.generateRandomLocationWithinElementButNotWithinChildElements(web_element, child_element, new Point(0,0));
+				Point coord = Crawler.generateRandomLocationWithinElementButNotWithinChildElements(web_element, child_element);
 				
 				System.err.println("child coordinate  :   "+child_element.getXLocation() + "  ,  "+child_element.getYLocation());
 				System.err.println("child size  :    "+child_element.getWidth() + "  ,  "+child_element.getHeight());

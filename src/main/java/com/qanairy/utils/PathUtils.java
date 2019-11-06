@@ -11,6 +11,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.services.TestService;
 
 public class PathUtils {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestService.class);
 
 	/**
@@ -69,7 +70,7 @@ public class PathUtils {
 		return reduced_path_obj;
 	}
 
-	public static List<PathObject> reducePathObjects(List<String> path_keys, List<PathObject> ordered_path_objects) {
+	public static List<PathObject> reducePathObjects(List<PathObject> ordered_path_objects) {
 		//scrub path objects for duplicates
 		List<PathObject> reduced_path_objs = new ArrayList<>();
 		PathObject last_path_obj = null;
@@ -98,9 +99,9 @@ public class PathUtils {
 		assert(path_objects != null);
 		
 		int page_states_seen = 0;
-		
+		log.warn("path objects length while getting second to last page state ;: "+path_objects.size());
 		for(int idx = path_objects.size()-1; idx >=0; idx--){
-			if(path_objects.get(idx) instanceof PageState){
+			if(path_objects.get(idx).getKey().contains("pagestate")){
 				if(page_states_seen >= 1){
 					return (PageState)path_objects.get(idx);
 				}
@@ -116,12 +117,11 @@ public class PathUtils {
 		List<String> reduced_path_keys = new ArrayList<>();
 		String last_path_key = null;
 		for(String key : final_key_list){
-			if(last_path_key == null || !key.equals(last_path_key)){
+			if(!key.equals(last_path_key)){
 				last_path_key = key;
 				reduced_path_keys.add(key);
 			}
 		}
-				
 		return reduced_path_keys;
 	}
 }

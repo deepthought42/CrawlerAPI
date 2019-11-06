@@ -7,7 +7,9 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Component;
 import com.minion.api.MessageBroadcaster;
 import com.qanairy.models.Account;
 import com.qanairy.models.DiscoveryRecord;
+import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.enums.BrowserType;
@@ -57,8 +60,9 @@ import scala.concurrent.Future;
 @Scope("prototype")
 public class DiscoveryActor extends AbstractActor{
 	private static Logger log = LoggerFactory.getLogger(DiscoveryActor.class.getName());
-	private Cluster cluster = Cluster.get(getContext().getSystem());
+	private final int DISCOVERY_ACTOR_COUNT = 100;
 
+	private Cluster cluster = Cluster.get(getContext().getSystem());
 	private DiscoveryRecord discovery_record;
 		
 	@Autowired
@@ -76,13 +80,14 @@ public class DiscoveryActor extends AbstractActor{
 	@Autowired
 	private EmailService email_service;
 	
+	private Map<String, PageState> explored_pages = new HashMap<>();
+	
 	private ActorRef domain_actor;
 	private ActorRef url_browser_actor;
 	private ActorRef form_discoverer;
 	private ActorRef form_test_discovery_actor;
 	private ActorRef path_expansion_actor;
 	private List<ActorRef> exploratory_browser_actors = new ArrayList<>();
-	private final int DISCOVERY_ACTOR_COUNT = 100;
 	//subscribe to cluster changes
 	@Override
 	public void preStart() {
@@ -215,22 +220,27 @@ public class DiscoveryActor extends AbstractActor{
 							return;
 						}
 						
-						log.warn("test doesn't span multiple domains");
-						if(isLandable && !test.getResult().isLoginRequired()){
-							if(url_browser_actor == null){
-								url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
-										  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
+						log.warn("test doesn't span multiple domains. Is it landable??    ::   "+isLandable);
+						if(isLandable && !test.getResult().isLoginRequired() && test.getPathKeys().size() > 1){
+							if(!explored_pages.containsKey(test.getResult().getUrl())) {
+								explored_pages.put(test.getResult().getUrl(), test.getResult());
+								if(url_browser_actor == null){
+									url_browser_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("urlBrowserActor"), "urlBrowserActor"+UUID.randomUUID());
+								}
+								UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain());
+								url_browser_actor.tell(url_message, getSelf() );
 							}
-							UrlMessage url_message = new UrlMessage(getSelf(), new URL(test.getResult().getUrl()), browser, domain_actor, test_msg.getDomain());
-							url_browser_actor.tell(url_message, getSelf() );
 						}
 						else {
 							List<String> final_key_list = new ArrayList<>(test.getPathKeys());
 				  			final_key_list.add(test.getResult().getKey());
 				  			List<PathObject> final_object_list = new ArrayList<>(test.getPathObjects());
 				  			final_object_list.add(test.getResult());
+				  			log.warn("test.getResult() element states  :: "+test.getResult().getElements().size());
 				  			//run reducer on key list
 				  			final_key_list = PathUtils.reducePathKeys(final_key_list);
+				  			final_object_list = PathUtils.reducePathObjects(final_object_list);
 				  			
 				  			PathMessage path = new PathMessage(final_key_list, final_object_list, getSelf(), PathStatus.EXAMINED, browser, domain_actor, test_msg.getDomain());
 				  			if(path_expansion_actor == null){
@@ -239,6 +249,14 @@ public class DiscoveryActor extends AbstractActor{
 				  		    }
 					  		//send path message with examined status to discovery actor
 							path_expansion_actor.tell(path, getSelf());
+							
+							if(isLandable) {
+								if(form_discoverer == null){
+									form_discoverer = actor_system.actorOf(SpringExtProvider.get(actor_system)
+											  .props("formDiscoveryActor"), "form_discovery"+UUID.randomUUID());
+								}
+								form_discoverer.tell(path, getSelf() );
+							}
 						}
 					}
 					MessageBroadcaster.broadcastDiscoveryStatus(discovery_record);

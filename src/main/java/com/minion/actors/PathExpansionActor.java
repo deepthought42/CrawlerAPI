@@ -39,7 +39,6 @@ import com.qanairy.models.enums.PathStatus;
 import com.qanairy.models.enums.TemplateType;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.utils.PathUtils;
 
 /**
@@ -51,9 +50,6 @@ import com.qanairy.utils.PathUtils;
 public class PathExpansionActor extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(PathExpansionActor.class);
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private PageStateService page_state_service;
 
 	@Autowired
 	private BrowserService browser_service;
@@ -118,29 +114,15 @@ public class PathExpansionActor extends AbstractActor {
 	public ArrayList<ExploratoryPath> expandPath(PathMessage path)  {
 		ArrayList<ExploratoryPath> pathList = new ArrayList<ExploratoryPath>();
 		//get last page states for page
-		PageState last_page = PathUtils.getLastPageState(path.getPathObjects());
+	
+		Collection<ElementState> elements = getElementStatesForExpansion(path.getPathObjects());
+		log.warn("element states to be expanded :: "+elements.size());
 
-		if(last_page == null){
-			log.warn("expansion --  last page is null");
-			return pathList;
-		}
 		//iterate over all elements
-		for(ElementState page_element : getElementStatesForExpansion(path.getPathObjects())){
+		for(ElementState page_element : elements){
 			expanded_elements.put(page_element.getKey(), page_element);
-			Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
-			boolean higher_order_page_state_found = false;
-			//check if there is a page state with a lower x or y scroll offset
-			for(PageState page : element_page_states){
-				if(last_page.getScrollXOffset() > page.getScrollXOffset()
-						|| last_page.getScrollYOffset() > page.getScrollYOffset()){
-					higher_order_page_state_found = true;
-				}
-			}
-
-			if(higher_order_page_state_found){
-				continue;
-			}
-
+			//Set<PageState> element_page_states = page_state_service.getElementPageStatesWithSameUrl(last_page.getUrl(), page_element.getKey());
+			
 			//PLACE ACTION PREDICTION HERE INSTEAD OF DOING THE FOLLOWING LOOP
 			/*DataDecomposer data_decomp = new DataDecomposer();
 			try {
@@ -154,10 +136,10 @@ public class PathExpansionActor extends AbstractActor {
 
 
 			//skip all elements that are within a form because form paths are already expanded by {@link FormTestDiscoveryActor}
-			if(page_element.getXpath().contains("form")){
+			if(page_element.isPartOfForm()){
 				continue;
 			}
-			else{
+			else {
 				//page element is not an input or a form
 				PathMessage new_path = new PathMessage(new ArrayList<>(path.getKeys()), new ArrayList<>(path.getPathObjects()), path.getDiscoveryActor(), PathStatus.EXPANDED, path.getBrowser(), path.getDomainActor(), path.getDomain());
 
@@ -203,14 +185,18 @@ public class PathExpansionActor extends AbstractActor {
 		PageState second_to_last_page = PathUtils.getSecondToLastPageState(path_objects);
 
 		if(last_page_state == null){
+			log.warn("last page state is null. returning emtpy hash");
 			return new HashSet<>();
 		}
 
 		if( second_to_last_page == null){
+			log.warn("second to last page state is null. returning last page state elements with size :: "+last_page_state.getElements().size());
 			return last_page_state.getElements();
 		}
 
+		List<ElementState> expandable_elements = new ArrayList<>();
 		if(last_page_state.getUrl().equals(second_to_last_page.getUrl())){
+			log.warn("last page state url matches second to last page state url");
 			Map<String, ElementState> element_xpath_map = new HashMap<>();
 			//build hash of element xpaths in last page state
 			for(ElementState element : last_page_state.getElements()){
@@ -221,13 +207,20 @@ public class PathExpansionActor extends AbstractActor {
 				element_xpath_map.remove(element.getXpath());
 			}
 
+			
+			log.warn("returning elements :: "+element_xpath_map.values().size());
 			return element_xpath_map.values();
+
+
+			//check path for mouseover event and if mouseover event exists then remove the element event was performed on from list
+			
 		}
+		
 		log.warn("####################################################################################################");
 		log.warn("####################################################################################################");
 
 		//filter list elements from last page elements
-		List<ElementState> filtered_elements = new ArrayList<>();
+		List<ElementState> filtered_elements = new ArrayList<>(expandable_elements);
 		Map<String, Template> templates = getOrganismTemplateMap(filtered_elements);
 		filtered_elements = filterListElements(filtered_elements, templates);
 		

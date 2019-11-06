@@ -41,10 +41,13 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.assertthat.selenium_shutterbug.core.Shutterbug;
+import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Form;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
+
 
 /**
  * Handles the management of selenium browser instances and provides various methods for interacting with the browser 
@@ -55,8 +58,8 @@ public class Browser {
 	private static Logger log = LoggerFactory.getLogger(Browser.class);
 	private WebDriver driver = null;
 	private String browser_name; 
-	private int y_scroll_offset;
-	private int x_scroll_offset;
+	private long y_scroll_offset;
+	private long x_scroll_offset;
 	private Dimension viewport_size;
 	private static final String JS_GET_VIEWPORT_WIDTH = "var width = undefined; if (window.innerWidth) {width = window.innerWidth;} else if (document.documentElement && document.documentElement.clientWidth) {width = document.documentElement.clientWidth;} else { var b = document.getElementsByTagName('body')[0]; if (b.clientWidth) {width = b.clientWidth;}};return width;";
 	private static final String JS_GET_VIEWPORT_HEIGHT = "var height = undefined;  if (window.innerHeight) {height = window.innerHeight;}  else if (document.documentElement && document.documentElement.clientHeight) {height = document.documentElement.clientHeight;}  else { var b = document.getElementsByTagName('body')[0]; if (b.clientHeight) {height = b.clientHeight;}};return height;";
@@ -96,8 +99,8 @@ public class Browser {
 		else if("opera".equals(browser)){
 			this.driver = openWithOpera(hub_node_url);
 		}
-		setYScrollOffset(0);
-		setXScrollOffset(0);
+		setYScrollOffset(extractYOffset(driver));
+		setXScrollOffset(extractXOffset(driver));
 		setViewportSize(getViewportSize(driver));
 	}
 	
@@ -168,7 +171,7 @@ public class Browser {
 	    RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		driver.manage().window().maximize();
 
-	    driver.manage().window().setSize(new Dimension(1024, 768));
+	    //driver.manage().window().setSize(new Dimension(1024, 768));
 	    // Puts an Implicit wait, Will wait for 10 seconds before throwing exception
 	    //driver.manage().timeouts().implicitlyWait(300, TimeUnit.SECONDS);
 	    
@@ -254,7 +257,7 @@ public class Browser {
 		RemoteWebDriver driver = new RemoteWebDriver(hub_node_url, options);
 		driver.manage().window().maximize();
 
-		driver.manage().window().setSize(new Dimension(1024, 768));
+		//driver.manage().window().setSize(new Dimension(1024, 768));
 	    //driver.manage().timeouts().implicitlyWait(30L, TimeUnit.SECONDS);
 	    //driver.manage().timeouts().pageLoadTimeout(30L, TimeUnit.SECONDS);
 		return driver;
@@ -302,8 +305,8 @@ public class Browser {
 	 * @return File png file of image
 	 * @throws IOException
 	 */
-	public BufferedImage getElementScreenshot(WebElement elem) throws IOException, GridException{
-		return ImageIO.read(elem.getScreenshotAs(OutputType.FILE));
+	public BufferedImage getFullPageScreenshot() throws IOException, GridException{
+		return Shutterbug.shootPage(driver,ScrollStrategy.WHOLE_PAGE, 500).getImage();
 	}
 	
 	/**
@@ -313,19 +316,10 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */	
-	public static BufferedImage getElementScreenshot(WebElement elem, BufferedImage page_screenshot, Browser browser) throws IOException{
+	public BufferedImage getElementScreenshot(ElementState element) throws IOException{
 		//calculate element position within screen
-		Point point = getLocationInViewport(elem, browser.x_scroll_offset, browser.y_scroll_offset);
-		Dimension dimension = elem.getSize();
-		
-		// Get width and height of the element
-		int elem_width = dimension.getWidth();
-		int elem_height = dimension.getHeight();
-		
-		int point_x = point.getX();
-		int point_y = point.getY();
-		
-		return page_screenshot.getSubimage(point_x, point_y, elem_width, elem_height);
+		WebElement web_element = driver.findElement(By.xpath(element.getXpath()));
+		return Shutterbug.shootElementVerticallyCentered(driver, web_element).getImage();
 	}
 	
 	/**
@@ -335,12 +329,9 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
-		
-	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot, int x_offset, int y_offset) throws IOException{
+	public BufferedImage getElementScreenshot(WebElement element) throws IOException{
 		//calculate element position within screen
-		Point point = getLocationInViewport(elem, x_offset, y_offset);
-		
-		return page_screenshot.getSubimage(point.getX(), point.getY(), elem.getWidth(), elem.getHeight());
+		return Shutterbug.shootElementVerticallyCentered(driver, element).getImage();
 	}
 	
 	/**
@@ -350,13 +341,17 @@ public class Browser {
 	 * @return
 	 * @throws IOException
 	 */
+	public static BufferedImage getElementScreenshot(ElementState element_state, BufferedImage page_screenshot, Browser browser) throws IOException{
+		//calculate element position within screen
+		int point_x = element_state.getXLocation()+5;
+		int point_y = element_state.getYLocation();
+		int width = element_state.getWidth()+5;
+		int height = element_state.getHeight();
+		if((point_x+width) >= page_screenshot.getWidth()) {
+			width = page_screenshot.getWidth()-point_x-1;
+		}
 		
-	public static BufferedImage getElementScreenshot(ElementState elem, BufferedImage page_screenshot) throws IOException{
-		//calculate element position within screen		
-		int point_x = elem.getXLocation();
-		int point_y = elem.getYLocation();
-		
-		return page_screenshot.getSubimage(point_x, point_y, elem.getWidth(), elem.getHeight());
+		return page_screenshot.getSubimage(point_x, point_y, width, height);
 	}
 	
 	public static List<Form> extractAllSelectOptions(PageState page, WebDriver driver){
@@ -469,31 +464,40 @@ public class Browser {
 	}
 	
 
-	public int getYScrollOffset() {
+	public long getYScrollOffset() {
 		return y_scroll_offset;
 	}
 
-	public void setYScrollOffset(int y_scroll_offset) {
+	public void setYScrollOffset(long y_scroll_offset) {
 		this.y_scroll_offset = y_scroll_offset;
 	}
 
-	public int getXScrollOffset() {
+	public long getXScrollOffset() {
 		return x_scroll_offset;
 	}
 
-	public void setXScrollOffset(int x_scroll_offset) {
+	public void setXScrollOffset(long x_scroll_offset) {
 		this.x_scroll_offset = x_scroll_offset;
 	}
 	
 	public void scrollToElement(WebElement elem) 
     { 
-		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", elem);
+		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
 		Point offsets = getViewportScrollOffset();
 		this.setXScrollOffset(offsets.getX());
 		this.setYScrollOffset(offsets.getY());
     }
 	
-	public void scrollTo(int x_offset, int y_offset) 
+	public void scrollToElement(ElementState element_state) 
+    { 
+		WebElement elem = driver.findElement(By.xpath(element_state.getXpath()));
+		((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView({block: \"center\"});", elem);
+		Point offsets = getViewportScrollOffset();
+		this.setXScrollOffset(offsets.getX());
+		this.setYScrollOffset(offsets.getY());
+    }
+	
+	public void scrollTo(long x_offset, long y_offset) 
     {
 		//only scroll to position if it isn't the same position
 		((JavascriptExecutor)driver).executeScript("window.scrollTo("+ x_offset +","+ y_offset +");");
@@ -598,7 +602,7 @@ public class Browser {
 	 * @param element {@link WebElement}
 	 * @return {@link Point} coordinates
 	 */
-	private static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
+	public static Point getLocationInViewport(ElementState element, int x_offset, int y_offset) {
 		int y_coord = element.getYLocation() - y_offset;
 		int x_coord = element.getXLocation() - x_offset;
 
@@ -635,6 +639,16 @@ public class Browser {
 		return new Dimension(width, height);
 	}
 
+	private static long extractXOffset(WebDriver driver) {
+		JavascriptExecutor executor = (JavascriptExecutor) driver;
+		return (Long) executor.executeScript("return window.pageXOffset;");
+	}
+	
+	private static long extractYOffset(WebDriver driver) {
+		JavascriptExecutor executor = (JavascriptExecutor) driver;
+		return (Long) executor.executeScript("return window.pageYOffset;");
+	}
+	
 	private static int extractViewportWidth(WebDriver driver) {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		int viewportWidth = Integer.parseInt(js.executeScript(JS_GET_VIEWPORT_WIDTH, new Object[0]).toString());

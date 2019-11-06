@@ -353,22 +353,6 @@ public class Test implements Persistable {
 	}
 	
 	/**
-	 * Gets the last Vertex in a path that is of type {@link PageState}
-	 * 
-	 * @return
-	 */
-	public PageState findLastPage(){
-		for(int idx=this.getPathKeys().size()-1; idx >= 0; idx--){
-			for(PathObject path_obj: this.getPathObjects()){
-				if(path_obj.getKey().equals(this.getPathKeys().get(idx)) && path_obj.getType().equals("PageState")){
-					return (PageState)path_obj;
-				}
-			}
-		}
-		return null;
-	}
-	
-	/**
 	 * Generates a key using both path and result in order to guarantee uniqueness of key as well 
 	 * as easy identity of {@link Test} when generated in the wild via discovery
 	 * 

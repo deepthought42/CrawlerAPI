@@ -29,6 +29,7 @@ import com.qanairy.models.repository.TestUserRepository;
 @Controller
 @RequestMapping("/test_users")
 public class TestUserController {
+	@SuppressWarnings("unused")
 	private static Logger log = LoggerFactory.getLogger(TestUserController.class);
 
 	@Autowired

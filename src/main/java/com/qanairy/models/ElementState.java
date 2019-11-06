@@ -45,6 +45,7 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	private String inner_html;
 	private String css_selector;
 	private String outer_html;
+	private boolean part_of_form;
 	
 	@Properties
 	private Map<String, String> cssValues = new HashMap<>();
@@ -122,8 +123,6 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 						String inner_html){
 		assert name != null;
 		assert xpath != null;
-		assert checksum != null;
-		assert !checksum.isEmpty();
 		
 		setType("ElementState");
 		setName(name);
@@ -320,19 +319,17 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 		for(String css_key : css_keys){
 			key += css_key+cssValues.get(css_key);
 		}
-		
+
 		List<Attribute> attributes = getAttributes().stream().collect(Collectors.toList());
 		Collections.sort(attributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
 		
 		for(Attribute attribute : attributes){
 			key += attribute.getKey();
 		}
-		
+
 		key += this.getName();
 		key += this.getText();
-		key += this.getWidth();
-		key += this.getHeight();
-		key += this.getInnerHtml();
+		key += this.getXpath();
 		
 		return "elementstate::"+org.apache.commons.codec.digest.DigestUtils.sha256Hex(key);
 	}
@@ -449,5 +446,13 @@ public class ElementState implements Persistable, PathObject, Comparable<Element
 	
 	public void setTemplate(String template) {
 		this.template = template;
+	}
+
+	public boolean isPartOfForm() {
+		return part_of_form;
+	}
+
+	public void setIsPartOfForm(boolean is_part_of_form) {
+		this.part_of_form = is_part_of_form;
 	}
 }

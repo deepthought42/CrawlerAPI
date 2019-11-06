@@ -4,7 +4,9 @@ import static com.qanairy.config.SpringExtension.SpringExtProvider;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.openqa.selenium.Point;
@@ -39,10 +41,12 @@ import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.PathMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.models.message.UrlMessage;
+import com.qanairy.models.ElementState;
 import com.qanairy.models.PageLoadAnimation;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Redirect;
+import com.qanairy.models.Template;
 import com.qanairy.services.BrowserService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.utils.BrowserUtils;
@@ -107,6 +111,8 @@ public class UrlBrowserActor extends AbstractActor {
 					BrowserType browser_type = BrowserType.create(browser_name);
 					List<String> path_keys = null;
 					List<PathObject> path_objects = null;
+					Map<String, Template> template_elements = new HashMap<>();
+					PageState page_state = null;
 					
 					do{
 						path_keys = new ArrayList<>();
@@ -117,8 +123,6 @@ public class UrlBrowserActor extends AbstractActor {
 							browser = BrowserConnectionFactory.getConnection(browser_type, BrowserEnvironment.DISCOVERY);
 							log.warn("navigating to url :: "+url);
 							browser.navigateTo(url);
-							//browser.moveMouseOutOfFrame();
-							browser.moveMouseToNonInteractive(new Point(300, 300));
 							
 							redirect = BrowserUtils.getPageTransition(url, browser, host);
 						  	if(redirect != null && ((redirect.getUrls().size() > 1 && BrowserUtils.doesHostChange(redirect.getUrls())) || (redirect.getUrls().size() > 2 && !BrowserUtils.doesHostChange(redirect.getUrls())))){
@@ -131,6 +135,18 @@ public class UrlBrowserActor extends AbstractActor {
 								path_keys.add(animation.getKey());
 								path_objects.add(animation);
 							}
+							browser.moveMouseToNonInteractive(new Point(300, 300));
+
+							String source = browser.getDriver().getPageSource();
+							
+							List<ElementState> all_elements_list = BrowserService.getAllElementsUsingJSoup(source);
+							template_elements = browser_service.findTemplates(all_elements_list);
+							template_elements = browser_service.reduceTemplatesToParents(template_elements);
+							template_elements = browser_service.reduceTemplateElementsToUnique(template_elements);
+
+							page_state = browser_service.buildPage(browser);
+
+							page_state.setTemplates(new ArrayList<>(template_elements.values()));
 							break;
 						}
 						catch(Exception e){
@@ -141,31 +157,30 @@ public class UrlBrowserActor extends AbstractActor {
 								browser.close();
 							}
 						}
-					}while(redirect == null);
+					}while(page_state == null);
 					
+					/*
 					log.warn("loading animation detection complete");
 					List<PageState> page_states = browser_service.buildPageStates(url, browser_type, host, path_objects, path_keys);
 					log.warn("Done building page states ");
 					//send test to discovery actor
-					
-					Test test = test_creator_service.createLandingPageTest(page_states.get(0), browser_name, redirect, animation, message.getDomain());
+					*/
+					Test test = test_creator_service.createLandingPageTest(page_state, browser_name, redirect, animation, message.getDomain());
 					TestMessage test_message = new TestMessage(test, message.getDiscoveryActor(), message.getBrowser(), message.getDomainActor(), message.getDomain());
 					message.getDiscoveryActor().tell(test_message, getSelf());
 					
 					final ActorRef animation_actor = actor_system.actorOf(SpringExtProvider.get(actor_system)
 							  .props("animationDetectionActor"), "animation_detection"+UUID.randomUUID());
 
-					for(PageState page_state : page_states){
-						List<String> new_path_keys = new ArrayList<String>(path_keys);
-					  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
-					  	new_path_keys.add(page_state.getKey());
-					  	new_path_objects.add(page_state);
+					List<String> new_path_keys = new ArrayList<String>(path_keys);
+				  	List<PathObject> new_path_objects = new ArrayList<PathObject>(path_objects);
+				  	new_path_keys.add(page_state.getKey());
+				  	new_path_objects.add(page_state);
 
-						PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain());
-						
-						//send message to animation detection actor
-						animation_actor.tell(path_message, getSelf() );
-					}
+					PathMessage path_message = new PathMessage(new ArrayList<>(new_path_keys), new ArrayList<>(new_path_objects), message.getDiscoveryActor(), PathStatus.READY, BrowserType.create(browser_name), message.getDomainActor(), message.getDomain());
+					
+					//send message to animation detection actor
+					animation_actor.tell(path_message, getSelf() );
 					//log.warn("Total Test execution time (browser open, crawl, build test, save data) : " + browserActorRunTime);
 				})
 				.match(MemberUp.class, mUp -> {

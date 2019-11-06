@@ -1,16 +1,15 @@
 package com.minion.actors;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import javax.imageio.ImageIO;
 
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.selenium.By;
@@ -23,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.minion.aws.UploadObjectSingleOperation;
 import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
@@ -34,15 +33,12 @@ import com.qanairy.models.Group;
 import com.qanairy.models.PageState;
 import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
-import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
 import com.qanairy.models.enums.DiscoveryAction;
-import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.TestCandidateMessage;
 import com.qanairy.models.message.TestMessage;
 import com.qanairy.services.BrowserService;
-import com.qanairy.services.PageStateService;
 import com.qanairy.services.TestCreatorService;
 import com.qanairy.services.TestService;
 import com.qanairy.utils.PathUtils;
@@ -64,9 +60,6 @@ import scala.concurrent.Future;
 public class ParentPathExplorer extends AbstractActor {
 	private static Logger log = LoggerFactory.getLogger(ParentPathExplorer.class.getName());
 	private Cluster cluster = Cluster.get(getContext().getSystem());
-
-	@Autowired
-	private PageStateService page_state_service;
 
 	@Autowired
 	private TestCreatorService test_creator_service;
@@ -161,15 +154,19 @@ public class ParentPathExplorer extends AbstractActor {
 
 							//if parent element does not have width then continue
 							Dimension element_size = parent_web_element.getSize();
-							if(!BrowserService.hasWidthAndHeight(element_size)
-										|| !BrowserService.isElementVisibleInPane(browser, parent_web_element.getLocation(), element_size)){
+							if(!BrowserService.hasWidthAndHeight(element_size)){
 								break;
 							}
 
 							//if parent element is not visible in pane then break
 
 							Set<Attribute> attributes = browser.extractAttributes(parent_web_element);
-							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, ImageIO.read(new URL(last_page.getScreenshotUrl())), element_xpath+"/..", attributes);
+							String parent_xpath = browser_service.generateXpath(parent_web_element, browser.getDriver(), attributes);
+							BufferedImage element_screenshot = browser.getElementScreenshot(parent_web_element);
+							String checksum = PageState.getFileChecksum(element_screenshot);
+							String screenshot_url = UploadObjectSingleOperation.saveImageToS3(element_screenshot, host, checksum, browser.getBrowserName()+"-element");
+							
+							ElementState parent_element = browser_service.buildElementState(browser, parent_web_element, parent_xpath, attributes, new HashMap<>(), parent_web_element.getLocation(), parent_web_element.getSize(), screenshot_url, checksum);
 							if(parent_element == null){
 								break;
 							}
@@ -191,12 +188,7 @@ public class ParentPathExplorer extends AbstractActor {
 							//finish crawling using array of elements following last page element
 							crawler.crawlParentPathWithoutBuildingResult(parent_end_path_keys, parent_end_path_objects, browser, host, last_element);
 
-							String screenshot_checksum = PageState.getFileChecksum(browser.getViewportScreenshot());
-
-							PageState result = page_state_service.findByScreenshotChecksum(screenshot_checksum);
-							if(result == null){
-								result = page_state_service.findByAnimationImageChecksum(screenshot_checksum);
-							}
+							PageState result = browser_service.buildPage(browser);
 
 							//if result matches expected page then build new path using parent element state and break from loop
 							if(result != null && result.equals(message.getResultPage())){
@@ -217,7 +209,6 @@ public class ParentPathExplorer extends AbstractActor {
 							e.printStackTrace();
 							log.warn("NullPointerException occurred in ParentPathExplorer :: "+e.getMessage());
 							error_occurred = true;
-							System.exit(0);
 						}
 						catch(WebDriverException e){
 							log.debug("Exception occurred in ParentPathExplorer :: "+e.getMessage());

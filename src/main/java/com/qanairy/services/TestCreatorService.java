@@ -60,7 +60,6 @@ public class TestCreatorService {
 			throws MalformedURLException, IOException, NullPointerException, GridException, WebDriverException, NoSuchAlgorithmException{
 		page_state.setLandable(true);
 		page_state.setLastLandabilityCheck(LocalDateTime.now());
-		//page_state = page_state_service.save(page_state);
 
 	  	List<String> path_keys = new ArrayList<String>();
 	  	List<PathObject> path_objects = new ArrayList<PathObject>();
@@ -127,7 +126,7 @@ public class TestCreatorService {
 			return test;
 		}
 
-		return test_db;
+		return test;
 	}
 
 	/**

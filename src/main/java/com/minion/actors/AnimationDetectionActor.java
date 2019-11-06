@@ -76,12 +76,8 @@ public class AnimationDetectionActor extends AbstractActor{
 							if(animation.getImageUrls().size() > 1){
 								first_page_state.getAnimatedImageUrls().addAll(animation.getImageUrls());
 								first_page_state.getAnimatedImageChecksums().addAll(animation.getImageChecksums());
-								//page_state_service.save(first_page_state);
 							}
 
-							//Tell discovery actor about test
-							msg.getDiscoveryActor().tell(msg.clone(), getSelf());
-							
 							PathMessage updated_path_msg = new PathMessage(msg.getKeys(), msg.getPathObjects(), msg.getDiscoveryActor(), PathStatus.EXAMINED, msg.getBrowser(), msg.getDomainActor(), msg.getDomain());
 							msg.getDiscoveryActor().tell(updated_path_msg, getSelf());
 							

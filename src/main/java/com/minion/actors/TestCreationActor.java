@@ -5,9 +5,7 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -40,6 +38,7 @@ import com.qanairy.models.PathObject;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.enums.BrowserEnvironment;
+import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.TestStatus;
 import com.qanairy.models.repository.TestRepository;
 import com.qanairy.services.ActionService;
@@ -106,26 +105,21 @@ public class TestCreationActor extends AbstractActor  {
 				    	int attempts = 0;
 				    	Test test = null;
 				    	Domain domain = null;
-				    	Map<Integer, ElementState> visible_element_map = new HashMap<>();
 		    			do{
 				    		List<String> path_keys = new ArrayList<String>();
 				        	List<PathObject> path_objects = new ArrayList<PathObject>();
 					    	Browser browser = null;
 
 				    		try{
-				    			browser = BrowserConnectionFactory.getConnection(browser_name, BrowserEnvironment.DISCOVERY);
+				    			browser = BrowserConnectionFactory.getConnection(BrowserType.create(browser_name), BrowserEnvironment.DISCOVERY);
 			    				
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
 				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
-								List<ElementState> element_list = BrowserService.getChildElementsUsingJSoup(browser.getDriver().getPageSource());
-
-				    			List<ElementState> elements = browser_service.getVisibleElementsWithinViewport(browser, browser.getViewportScreenshot(), visible_element_map, element_list, true);
-				    			String browser_url = browser.getDriver().getCurrentUrl();
-								String url_without_params = BrowserUtils.sanitizeUrl(browser_url);
 								
-				    			PageState result_page = browser_service.buildPage(browser, elements, url_without_params);
+								
+				    			PageState result_page = browser_service.buildPage(browser);
 								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
 
 								test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
@@ -284,9 +278,9 @@ public class TestCreationActor extends AbstractActor  {
 		WebElement element = browser.findWebElementByXpath(temp_xpath);
 		//use WebElement to generate system usable xpath
 		Set<Attribute> attributes = browser.extractAttributes(element);
-		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element);
+		String screenshot_url = browser_service.retrieveAndUploadBrowserScreenshot(browser, element, (new URL(browser.getDriver().getCurrentUrl())).getHost());
 
-		String xpath = browser_service.generateXpath(element, "", new HashMap<String, Integer>(), browser.getDriver(), attributes);
+		String xpath = browser_service.generateXpath(element, browser.getDriver(), attributes);
 		ElementState elem = new ElementState(element.getText(), xpath, element.getTagName(), attributes, Browser.loadCssProperties(element), screenshot_url, element.getLocation().getX(), element.getLocation().getY(), element.getSize().getWidth(), element.getSize().getHeight(), element.getAttribute("innerHTML"), PageState.getFileChecksum(ImageIO.read(new URL(screenshot_url))));
 
 		elem = page_element_service.save(elem);

@@ -139,9 +139,9 @@ public class Browser {
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 		Pattern script_pattern = Pattern.compile("<script (.*)></script>",
 	            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-		src = script_pattern.matcher(src).replaceAll("");
-		src = link_pattern.matcher(src).replaceAll("");
-		return p.matcher(src).replaceAll("");
+		String src_matcher = script_pattern.matcher(src).replaceAll("");
+		src_matcher = link_pattern.matcher(src_matcher).replaceAll("");
+		return p.matcher(src_matcher).replaceAll("");
 	}
 	
 	/**

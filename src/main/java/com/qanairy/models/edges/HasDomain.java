@@ -1,7 +1,5 @@
 package com.qanairy.models.edges;
 
-import java.util.Collection;
-
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.RelationshipEntity;

@@ -2,10 +2,7 @@ package api;
 
 import org.testng.Assert;
 import org.testng.annotations.*;
-import static org.hamcrest.Matchers.*;
-import org.hamcrest.Matchers;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -123,7 +123,7 @@ public class TestCreatorService {
 		
 		log.warn("Creating test........");
 		boolean leaves_domain = !(domain_host.trim().equals(new URL(result_page.getUrl()).getHost()) || result_page.getUrl().contains(new URL(PathUtils.getLastPageState(path_objects).getUrl()).getHost()));
-		Test test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
+		Test test = new Test(path_keys, path_objects, result_page, leaves_domain);
 
 		Test test_db = test_service.findByKey(test.getKey());
 		if(test_db == null){

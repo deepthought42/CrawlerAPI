@@ -28,7 +28,7 @@ import com.minion.browsing.Browser;
 import com.minion.browsing.BrowserConnectionFactory;
 import com.minion.browsing.Crawler;
 import com.minion.structs.Message;
-import com.minion.util.Timing;
+import com.minion.util.TimingUtils;
 import com.qanairy.models.Action;
 import com.qanairy.models.Attribute;
 import com.qanairy.models.Domain;
@@ -116,14 +116,14 @@ public class TestCreationActor extends AbstractActor  {
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
-				    			Timing.pauseThread(1000);
+				    			TimingUtils.pauseThread(1000);
 				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 								
 								
 				    			PageState result_page = browser_service.buildPage(browser);
 								boolean leaves_domain = BrowserUtils.doesSpanMutlipleDomains(domain.getUrl(), result_page.getUrl(), path_objects);
 
-								test = new Test(path_keys, path_objects, result_page, false, leaves_domain);
+								test = new Test(path_keys, path_objects, result_page, leaves_domain);
 								test.setSpansMultipleDomains(leaves_domain);
 								
 						    	Test test_record = test_repo.findByKey(test.getKey());
@@ -245,7 +245,7 @@ public class TestCreationActor extends AbstractActor  {
     			path_objects.add(action);
 
     			Crawler.performAction(action, element, browser.getDriver());
-    			Timing.pauseThread(1500L);
+    			TimingUtils.pauseThread(1500L);
 
     			// CHECK IF NEXT OBJECT IS  A URL BEFORE EXECUTING NEXT STEP.
     			// IF NEXT OBJECT DOESN'T CONTAIN A URL, THEN CREATE NEW PAGE STATE

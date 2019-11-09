@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,14 +14,11 @@ import org.openqa.selenium.WebDriverException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jca.context.SpringContextResourceAdapter;
 import org.springframework.stereotype.Component;
 
 import com.qanairy.models.Group;
 import com.qanairy.models.PageLoadAnimation;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.qanairy.analytics.SegmentAnalyticsHelper;
-import com.qanairy.models.Account;
 import com.qanairy.models.Domain;
 import com.qanairy.models.ElementState;
 import com.qanairy.models.PageState;
@@ -31,19 +27,14 @@ import com.qanairy.models.Redirect;
 import com.qanairy.models.Test;
 import com.qanairy.models.TestRecord;
 import com.qanairy.models.Transition;
-import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.TestStatus;
-import com.qanairy.models.message.AccountRequest;
-import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.utils.BrowserUtils;
 import com.qanairy.utils.PathUtils;
 
-import akka.actor.ActorRef;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-import scala.concurrent.Await;
-import scala.concurrent.Future;
-
+/**
+ * 
+ * 
+ */
 @Component
 public class TestCreatorService {
 	private static Logger log = LoggerFactory.getLogger(TestCreatorService.class.getName());
@@ -125,8 +116,7 @@ public class TestCreatorService {
 			PageState result_page, 
 			long crawl_time, 
 			String browser_name, 
-			String domain_host,
-			ActorRef discovery_actor
+			String domain_host
 	) throws JsonProcessingException, MalformedURLException {
 		assert path_keys != null;
 		assert path_objects != null;
@@ -144,6 +134,7 @@ public class TestCreatorService {
 			TestRecord test_record = new TestRecord(test.getLastRunTimestamp(), TestStatus.UNVERIFIED, browser_name, result_page, crawl_time, test.getPathKeys());
 			test.addRecord(test_record);
 			
+			/*
 			Timeout timeout = Timeout.create(Duration.ofSeconds(120));
 			Future<Object> future = Patterns.ask(discovery_actor, new AccountRequest(), timeout);
 			Account account;
@@ -153,7 +144,7 @@ public class TestCreatorService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+			*/
 			return test;
 		}
 

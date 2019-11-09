@@ -59,6 +59,8 @@ public class PageState implements Persistable, PathObject {
 	private long scrollYOffset;
 	private int viewport_width;
 	private int viewport_height;
+	private long full_page_width;
+	private long full_page_height;
 	private String type;
 	private List<String> screenshot_checksums;
 	private List<String> animated_image_urls;
@@ -616,5 +618,17 @@ public class PageState implements Persistable, PathObject {
 	}
 	public void setFullPageChecksum(String full_page_checksum) {
 		this.full_page_checksum = full_page_checksum;
+	}
+	public long getFullPageWidth() {
+		return full_page_width;
+	}
+	public void setFullPageWidth(long full_page_width) {
+		this.full_page_width = full_page_width;
+	}
+	public long getFullPageHeight() {
+		return full_page_height;
+	}
+	public void setFullPageHeight(long full_page_height) {
+		this.full_page_height = full_page_height;
 	}
 }

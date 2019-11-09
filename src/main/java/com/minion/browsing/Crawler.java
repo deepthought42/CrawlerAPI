@@ -546,7 +546,7 @@ public class Crawler {
 			last_obj = current_obj;
 			current_idx++;
 		}
-
+		
 		if(path.getKeys().size() != path_keys.size()){
 			return new PathMessage(path_keys, path_objects_explored, path.getDiscoveryActor(), path.getStatus(), path.getBrowser(), path.getDomainActor(), path.getDomain());
 		}
@@ -615,7 +615,7 @@ public class Crawler {
 						path.getPathObjects().add(loading_animation);
 					}
 				}
-								
+						
 				//verify that screenshot does not match previous page
 				result_page = browser_service.buildPage(browser);
 				
@@ -691,7 +691,6 @@ public class Crawler {
 					
 					new_path = crawlPathExplorer(new_path.getKeys(), new_path.getPathObjects(), browser, host, path);
 				}
-				//Timing.pauseThread(2000);
 				String browser_url = browser.getDriver().getCurrentUrl();
 				browser_url = BrowserUtils.sanitizeUrl(browser_url);
 				//get last page state

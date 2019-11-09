@@ -116,6 +116,7 @@ public class TestCreationActor extends AbstractActor  {
 				    			long start_time = System.currentTimeMillis();
 				    			domain = buildTestPathFromPathJson(path_json, path_keys, path_objects, browser);
 				    			long end_time = System.currentTimeMillis();
+				    			Timing.pauseThread(1000);
 				    			//List<String> xpath_list = BrowserService.getXpathsUsingJSoup(browser.getDriver().getPageSource());
 								
 								

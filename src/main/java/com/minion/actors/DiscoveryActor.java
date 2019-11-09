@@ -29,6 +29,7 @@ import com.qanairy.models.enums.BrowserType;
 import com.qanairy.models.enums.DiscoveryAction;
 import com.qanairy.models.enums.DiscoveryStatus;
 import com.qanairy.models.enums.PathStatus;
+import com.qanairy.models.message.AccountRequest;
 import com.qanairy.models.message.DiscoveryActionMessage;
 import com.qanairy.models.message.DiscoveryActionRequest;
 import com.qanairy.models.message.FormDiscoveryMessage;
@@ -81,7 +82,7 @@ public class DiscoveryActor extends AbstractActor{
 	private EmailService email_service;
 	
 	private Map<String, PageState> explored_pages = new HashMap<>();
-	
+	private Account account;
 	private ActorRef domain_actor;
 	private ActorRef url_browser_actor;
 	private ActorRef form_discoverer;
@@ -116,6 +117,7 @@ public class DiscoveryActor extends AbstractActor{
 				.match(DiscoveryActionMessage.class, message-> {
 					if(message.getAction().equals(DiscoveryAction.START)){
 						startDiscovery(message);
+						setAccount(message.getAccount());
 					}
 					else if(message.getAction().equals(DiscoveryAction.STOP)){
 						//look up discovery record if it's null
@@ -288,6 +290,9 @@ public class DiscoveryActor extends AbstractActor{
 
 			        discovery_service.save(discovery_record);
 				})
+				.match(AccountRequest.class, account_request_msg -> {
+					getSender().tell(this.getAccount(), getSelf());
+				})
 				.match(MemberUp.class, mUp -> {
 					log.info("Member is Up: {}", mUp.member());
 				})
@@ -396,5 +401,13 @@ public class DiscoveryActor extends AbstractActor{
 			}
 			exploratory_browser_actors = new ArrayList<>();
 		}
+	}
+	
+	public Account getAccount() {
+		return account;
+	}
+
+	public void setAccount(Account account) {
+		this.account = account;
 	}
 }

@@ -101,7 +101,7 @@ public class AccountController {
         acct = account_service.save(acct);
 
     	
-	   	SegmentAnalyticsHelper.identify(acct);
+	   	SegmentAnalyticsHelper.identify(Long.toString(acct.getId()));
 	   	SegmentAnalyticsHelper.signupEvent(acct.getUserId(), "FREE");
 
         return ResponseEntity.accepted().body(acct);
